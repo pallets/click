@@ -981,6 +981,7 @@ class Parameter(object):
         self.help = help
         self.callback = callback
         self.nargs = nargs
+        self.multiple = False
         self.expose_value = expose_value
         self.default = default
         self.is_eager = is_eager
@@ -1012,7 +1013,7 @@ class Parameter(object):
         value as necessary.
         """
         if self.type is not None:
-            if self.nargs != 1 and value is not None:
+            if (self.nargs != 1 or self.multiple) and value is not None:
                 value = tuple(self.type(x, self, ctx) for x in value)
             else:
                 value = self.type(value, self, ctx)
@@ -1080,6 +1081,10 @@ class Option(Parameter):
     :param flag_value: which value should be used for this flag if it's
                        enabled.  This is set to a boolean automatically if
                        the option string contains a slash to mark two options.
+    :param multiple: if this is set to True then the argument is accepted
+                     multiple times and recorded.  This is similar to nargs
+                     in how it works but supports arbitrary number of
+                     arguments.
     :param allow_from_autoenv: if this is enabled then the value of this
                                parameter will be pulled from an environment
                                variable in case a prefix is defined on the
@@ -1090,7 +1095,8 @@ class Option(Parameter):
     def __init__(self, param_decls=None, show_default=None,
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
-                 allow_from_autoenv=True, type=None, **attrs):
+                 multiple=False, allow_from_autoenv=True, type=None,
+                 **attrs):
         Parameter.__init__(self, param_decls, type=type, **attrs)
         if prompt is True:
             prompt = self.name.replace('_', ' ').capitalize()
@@ -1117,6 +1123,7 @@ class Option(Parameter):
         self.show_default = show_default
         self.is_flag = is_flag
         self.flag_value = flag_value
+        self.multiple = multiple
 
         if self.is_flag and isinstance(self.flag_value, bool) \
            and type is None:
@@ -1129,6 +1136,9 @@ class Option(Parameter):
 
         # Sanity check for stuff we don't support
         if __debug__:
+            if self.multiple and self.is_bool_flag:
+                raise TypeError('Boolean flags and multiple values are not '
+                                'compatible.')
             if self.prompt and self.is_flag and not self.is_bool_flag:
                 raise TypeError('Cannot prompt for flags that are not bools.')
             if not self.is_bool_flag and self.secondary_opts:
@@ -1202,10 +1212,12 @@ class Option(Parameter):
                 parser.add_option(pos_opt)
                 parser.add_option(neg_opt)
             else:
-                parser.add_option(*self.opts, action='store_const',
+                action = self.multiple and 'append_const' or 'store_const'
+                parser.add_option(*self.opts, action=action,
                                   const=self.flag_value,
                                   **kwargs)
         else:
+            kwargs['action'] = self.multiple and 'append' or 'store'
             parser.add_option(*self.opts, **kwargs)
 
     def get_default(self, ctx):

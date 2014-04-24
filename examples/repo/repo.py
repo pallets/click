@@ -70,3 +70,12 @@ def setuser(repo, username, email, password):
     print('Username: %s' % username)
     print('E-Mail: %s' % email)
     print('Password: %s' % ('*' * len(password)))
+
+
+@cli.command()
+@click.option('--message', '-m', required=True, multiple=True)
+@pass_repo
+def commit(repo, message):
+    """Commits outstanding changes."""
+    print('Repo: %s' % repo)
+    print('\n'.join(message))
