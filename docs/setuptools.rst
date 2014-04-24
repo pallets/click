@@ -6,7 +6,7 @@ modules that are distributed with setuptools instead of using UNIX
 shebangs.  There are a bunch of reasons for this.
 
 The first one is that setuptools automatically generates executable
-wrapeprs for Windows so your command line utilies work on Windows too.
+wrappers for Windows so your command line utilies work on Windows too.
 
 The second reason is that setuptools scripts work with virtualenv on UNIX
 without the virtualenv having to be activated.  This is a very useful
