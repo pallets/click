@@ -96,6 +96,16 @@ def get_terminal_size():
     return int(cr[1]), int(cr[0])
 
 
+def safecall(func):
+    """Wraps a function so that it swallows exceptions."""
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            pass
+    return wrapper
+
+
 class TextWrapper(textwrap.TextWrapper):
 
     def _cutdown(self, ucstr, space_left):
@@ -815,14 +825,20 @@ class File(ParamType):
             # type is used with prompts.
             if ctx is not None:
                 if was_opened:
-                    ctx.call_on_close(f.close)
+                    ctx.call_on_close(safecall(f.close))
                 else:
-                    ctx.call_on_close(f.flush)
+                    ctx.call_on_close(safecall(f.flush))
             return f
         except (IOError, OSError) as e:
             if isinstance(value, bytes):
                 value = value.decode(sys.getfilesystemencoding(), 'replace')
-            self.fail('Could not open file %s: %s' % (value, e),
+            if hasattr(e, 'strerror'):
+                msg = e.strerror
+            else:
+                msg = str(e)
+            if isinstance(msg, bytes):
+                msg = msg.decode('utf-8', 'replace')
+            self.fail('Could not open file %s: %s' % (value, msg),
                       param, ctx)
 
 
