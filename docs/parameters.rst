@@ -57,7 +57,7 @@ different behavior and some are supported out of the box:
 
 Custom parameter types can be implemented by subclassing
 :class:`click.ParamType`.  For simple cases passing a python function that
-failes with a `ValueError` is also supported though discouraged.
+fails with a `ValueError` is also supported though discouraged.
 
 Parameter Names
 ---------------
