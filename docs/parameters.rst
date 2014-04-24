@@ -9,9 +9,9 @@ when to use which so here is a quick overview of the differences.  As the
 name indicates an option is optional.  While arguments can be optional
 within reason they are much more restricted in how they can be optional.
 
-To help you pick when to use what the recommendation is to use arguments
-exclusively for things like going to subcommands or input filenames /
-URLs and have everything else be an option instead.
+To help you decide between options and arguments, the recommendation is
+to use arguments exclusively for things like going to subcommands or input 
+filenames / URLs and have everything else be an option instead.
 
 Differences
 -----------
