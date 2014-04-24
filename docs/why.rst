@@ -31,7 +31,7 @@ In case ``optparse`` ever gets deprecated and removed from Python,
 Click is designed to be fun to work with and at the same time not stand in
 your way.  It's not overly flexible at the same time either.  Currently
 for instance it does not allow you to customize the help pages too much.
-This is intentional because click is desigend to allow you to nest command
+This is intentional because click is designed to allow you to nest command
 line utilities.  The idae is that you can have a system that works
 together with another system by tacking two click instances together and
 they will continue working as they should.
