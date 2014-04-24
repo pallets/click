@@ -78,7 +78,7 @@ script can be written like this then::
 
     @cli.command()
     def dropdb():
-        print('Initialized the database')
+        print('Dropped the database')
 
     if __name__ == '__main__':
         cli()
