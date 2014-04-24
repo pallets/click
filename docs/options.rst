@@ -5,7 +5,7 @@ Options
 
 Adding options to commands can be accomplished by the :func:`option`
 decorator.  Since options can come in various different versions there
-have a ton of parameters to configure their behavior.
+are a ton of parameters to configure their behavior.
 
 Basic Value Options
 -------------------
@@ -102,8 +102,8 @@ Feature Switches
 
 In addition to boolean flag there are also feature switches.  These are
 implemented by setting multiple options to the same parameter name and by
-defining a flag value.  To select a default the default flag can be set to
-`True` on the one that should be the default.
+defining a flag value.  To set a default flag assign a value of `True` to
+the flag that should be the default.
 
 Example::
 
