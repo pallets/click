@@ -22,6 +22,7 @@ import optparse
 import textwrap
 import struct
 from itertools import chain
+from functools import update_wrapper
 
 
 PY2 = sys.version_info[0] == 2
@@ -167,6 +168,58 @@ def echo(message=None, file=None):
     file.flush()
 
 
+def pass_context(f):
+    """Marks a callback that it wants to receive the current context
+    object as first argument.
+    """
+    f.__click_pass_context__ = True
+    return f
+
+
+def pass_obj(f):
+    """Similar to :func:`pass_context` but only pass the object on the
+    context onwards (:attr:`Context.obj`).  This is useful if that object
+    represents the state of a nested system.
+    """
+    @pass_context
+    def new_func(*args, **kwargs):
+        ctx = args[0]
+        return ctx.invoke(f, ctx.obj, *args[1:], **kwargs)
+    return update_wrapper(new_func, f)
+
+
+def make_pass_decorator(object_type):
+    """Given an object type this creates a decorator that will work
+    similar to :func:`pass_obj` but instead of passing the object of the
+    current context, it will find the innermost context of type
+    :func:`object_type`.
+
+    This generates a decorator that works roughly like this::
+
+        from functools import update_wrapper
+
+        def decorator(f):
+            @pass_context
+            def new_func(ctx, *args, **kwargs):
+                obj = ctx.find_object(object_type)
+                return ctx.invoke(f, obj, *args, **kwargs)
+            return update_wrapper(new_func, f)
+        return decorator
+    """
+    def decorator(f):
+        @pass_context
+        def new_func(*args, **kwargs):
+            ctx = args[0]
+            obj = ctx.find_object(object_type)
+            if obj is None:
+                raise RuntimeError('Managed to invoke callback without a '
+                                   'context object of type %r existing'
+                                   % object_type.__name__)
+            return ctx.invoke(f, obj, *args[1:], **kwargs)
+        return update_wrapper(new_func, f)
+    return decorator
+
+
 class Context(object):
     """The context is a special internal object that holds state relevant
     for the script execution at every single level.  It's normally invisible
@@ -278,6 +331,14 @@ class Context(object):
             node = node.parent
         return node
 
+    def find_object(self, object_type):
+        """Finds the closest object of a given type."""
+        node = self
+        while node.parent is not None:
+            if isinstance(node.obj, object_type):
+                return node.obj
+            node = node.parent
+
     def fail(self, message):
         """Aborts the execution of the program with a specific error
         message.
@@ -305,6 +366,15 @@ class Context(object):
         context and command.
         """
         return self._parser.format_help().rstrip()
+
+    def invoke(*args, **kwargs):
+        """Invokes a command callback in exactly the way it expects.
+        """
+        self, callback = args[:2]
+        args = args[2:]
+        if getattr(callback, '__click_pass_context__', False):
+            args = (self,) + args
+        return callback(*args, **kwargs)
 
 
 class UsageError(Exception):
@@ -400,11 +470,6 @@ class Command(object):
     :param callback: the callback to invoke.  This is optional.
     :param params: the parameters to register with this command.  This can
                    be either :class:`Option` or :class:`Argument` objects.
-    :param pass_context: if this is set to `True` then the callback will
-                         be passed the context as first argument.
-    :param pass_params: if this is set to `True` then the callback will
-                         be passed all non hidden parameters as keyword
-                         arguments.
     :param help: the help string to use for this command.
     :param short_help: the short help to use for this command.  This is
                        shown on the command listing of the parent command.
@@ -413,9 +478,9 @@ class Command(object):
     """
     allow_extra_args = False
 
-    def __init__(self, name, callback=None, params=None, pass_context=False,
-                 pass_params=True, help=None, short_help=None,
-                 options_metavar='[OPTIONS]', add_help_option=True):
+    def __init__(self, name, callback=None, params=None, help=None,
+                 short_help=None, options_metavar='[OPTIONS]',
+                 add_help_option=True):
         #: the name the command things it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
         #: with this information.  You should instead use the
@@ -428,8 +493,6 @@ class Command(object):
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
         self.params = params or []
-        self.pass_context = pass_context
-        self.pass_params = pass_params
         self.help = help
         self.options_metavar = options_metavar
         if short_help is None and help:
@@ -497,10 +560,8 @@ class Command(object):
         """Given a context, this invokes the attached callback (if it exists)
         in the right way.
         """
-        func_args = self.pass_context and (ctx,) or ()
-        func_kwargs = self.pass_params and ctx.params or {}
         if self.callback is not None:
-            self.callback(*func_args, **func_kwargs)
+            ctx.invoke(self.callback, **ctx.params)
 
     def main(self, args=None, prog_name=None, **extra):
         """This is the way to invoke a script with all the bells and

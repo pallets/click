@@ -65,8 +65,8 @@ Each time a command invokes a new context is created and linked with the
 parent context.  Normally you can't see these contexts, but they are
 there.  Contexts are passed to parameter callbacks together with the
 value automatically.  Commands can also ask for the context to be passed
-by passing ``pass_context=True`` to the :func:`command` or :func:`group`
-decorator.  In that case the context is passed as first argument.
+by marking themselves with the :func:`pass_context` decorator.  In that
+case the context is passed as first argument.
 
 The context can also carry a program specified object that can be
 used for the program's purposes.  What this means is that you can build a
@@ -74,12 +74,14 @@ script like this::
 
     import click
 
-    @click.group(pass_context=True)
+    @click.group()
     @click.option('--debug/--no-debug', default=False)
+    @click.pass_context
     def cli(ctx, debug):
         ctx.obj['DEBUG'] = debug
 
-    @cli.command(pass_context=True)
+    @cli.command()
+    @click.pass_context
     def sync(ctx):
         print('Debug is %s' % (ctx.obj['DEBUG'] and 'on' or 'off'))
 
@@ -93,6 +95,41 @@ reach to a parent ``context.parent`` can be used.
 In addition to that instead of passing an object down nothing stops the
 application from modifying global state.  For instance you could just flip
 a global ``DEBUG`` variable and be done with it.
+
+Decorating Commands
+-------------------
+
+As you have seen in the earlier example a decorator can change how a
+command is invoked.  What actually happens behind the scenes is that
+callbacks are always invoked through the :meth:`Context.invoke` method
+which automatically invokes a command correctly (by either passing the
+context or not).
+
+This is very useful when you want to write custom decorators.  For
+instance a common pattern would be to configure an object representing
+state and then storing it on the context and then to use a custom
+decorator to find the most recent object of this sort and pass it as first
+argument.
+
+For instance the :func:`pass_obj` decorator can be implemented like this::
+
+    import click
+    from functools import update_wrapper
+
+    def pass_obj(f):
+        @click.pass_context
+        def new_func(ctx, *args, **kwargs):
+            return ctx.invoke(f, ctx.obj, *args, **kwargs)
+        return update_wrapper(new_func, f)
+
+The :meth:`Context.invoke` command will automatically invoke the function
+in the correct way.  So the function will either be called with ``f(ctx,
+obj)`` or ``f(obj)`` depending on if it itself is decorated with
+:func:`with_context`.
+
+This is a very powerful context that can be used to build very complex
+nested applications.  See :ref:`complex-guide` for more information.
+
 
 Group Invocation Without Command
 --------------------------------
@@ -109,7 +146,8 @@ Example::
 
     import click
 
-    @click.group(pass_context=True, invoke_without_command=True)
+    @click.group(invoke_without_command=True)
+    @click.pass_context
     def cli(ctx):
         if ctx.invoked_subcommand is None:
             print('I was invoked without subcommand')

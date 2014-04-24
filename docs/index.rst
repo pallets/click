@@ -52,6 +52,7 @@ of the library.
    prompts
    documentation
    setuptools
+   complex
 
 API Reference
 -------------

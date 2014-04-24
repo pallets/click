@@ -25,6 +25,10 @@ Decorators
 
 .. autofunction:: help_option
 
+.. autofunction:: pass_context
+
+.. autofunction:: pass_obj
+
 Helper Functions
 ----------------
 
