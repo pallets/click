@@ -4,7 +4,7 @@ Why Click?
 There are so many libraries out there for writing command line utilities,
 why does click exist?
 
-This question is easy to answer: beacuse there is not a single command
+This question is easy to answer: because there is not a single command
 line utility for Python out there which ticks the following boxes:
 
 *   is lazily composable without restrictions
@@ -31,8 +31,8 @@ In case ``optparse`` ever gets deprecated and removed from Python,
 Click is designed to be fun to work with and at the same time not stand in
 your way.  It's not overly flexible at the same time either.  Currently
 for instance it does not allow you to customize the help pages too much.
-This is intentional because click is desigend to allow you to nest command
-line utilities.  The idae is that you can have a system that works
+This is intentional because click is designed to allow you to nest command
+line utilities.  The idea is that you can have a system that works
 together with another system by tacking two click instances together and
 they will continue working as they should.
 
