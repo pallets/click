@@ -4,7 +4,7 @@ Commands and Groups
 .. currentmodule:: click
 
 The most important feature of click is the concept of arbitrarily nesting
-command line utilities.  This is implemented through the :class:`Command`
+command line utilities.  This is implemented through :class:`Command`
 and :class:`Group` (actually :class:`MultiCommand`).
 
 Callback Invocation
@@ -61,7 +61,7 @@ This allows tools to act completely independent of each other.  But how
 does on command talk to a nested on?  The answer to this is the
 :class:`Context`.
 
-Each time a command invokes a new context is created and linked with the
+Each time a command invokes, a new context is created and linked with the
 parent context.  Normally you can't see these contexts, but they are
 there.  Contexts are passed to parameter callbacks together with the
 value automatically.  Commands can also ask for the context to be passed
