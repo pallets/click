@@ -471,6 +471,8 @@ class Command(object):
     :param params: the parameters to register with this command.  This can
                    be either :class:`Option` or :class:`Argument` objects.
     :param help: the help string to use for this command.
+    :param epilog: like the help string but it's printed at the end of the
+                   help page after everything else.
     :param short_help: the short help to use for this command.  This is
                        shown on the command listing of the parent command.
     :param add_help_option: by default each command registers a ``--help``
@@ -479,8 +481,8 @@ class Command(object):
     allow_extra_args = False
 
     def __init__(self, name, callback=None, params=None, help=None,
-                 short_help=None, options_metavar='[OPTIONS]',
-                 add_help_option=True):
+                 epilog=None, short_help=None,
+                 options_metavar='[OPTIONS]', add_help_option=True):
         #: the name the command things it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
         #: with this information.  You should instead use the
@@ -494,6 +496,7 @@ class Command(object):
         #: will automatically be handled before non eager ones.
         self.params = params or []
         self.help = help
+        self.epilog = epilog
         self.options_metavar = options_metavar
         if short_help is None and help:
             short_help = help.split('.')[0].strip()
@@ -518,7 +521,8 @@ class Command(object):
                 yield param
 
     def _make_parser(self, ctx):
-        parser = _SimplifiedOptionParser(ctx, description=self.help)
+        parser = _SimplifiedOptionParser(ctx, description=self.help,
+                                         epilog=self.epilog)
         for param in self.params:
             param._add_to_parser(parser, ctx)
         return parser
