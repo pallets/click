@@ -29,6 +29,8 @@ Decorators
 
 .. autofunction:: pass_obj
 
+.. autofunction:: make_pass_decorator
+
 Helper Functions
 ----------------
 
