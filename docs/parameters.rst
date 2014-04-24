@@ -63,9 +63,9 @@ Parameter Names
 ---------------
 
 Parameters (both options and arguments) accept a number of positional
-arguments which are the parameter declarations.  Each string string with a
+arguments which are the parameter declarations.  Each string with a
 single dash is added as short argument, each string starting with a double
-dash as long one.  If a string is added without any dashes it's the
+dash as a long one.  If a string is added without any dashes it's the
 internal parameter name which is also used as variable name.
 
 If a parameter does not have a name without dashes added one is generated
