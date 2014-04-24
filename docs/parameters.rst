@@ -68,7 +68,7 @@ single dash is added as short argument, each string starting with a double
 dash as long one.  If a string is added without any dashes it's the
 internal parameter name which is also used as variable name.
 
-If a parameter does not have a name without dashes added one is generated
+If a parameter is not given a name without dashes a name is generated
 automatically by taking the longest argument and converting all dashes to
 underscores.  So for an option with ``('-f', '--foo-bar')`` the parameter
 name is `foo_bar`.  For an option with ``('-x',)`` the parameter is `x`.
