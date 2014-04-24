@@ -9,9 +9,9 @@ when to use which so here is a quick overview of the differences.  As the
 name indicates an option is optional.  While arguments can be optional
 within reason they are much more restricted in how they can be optional.
 
-To help you pick when to use what the recommendation is to use arguments
-exclusively for things like going to subcommands or input filenames /
-URLs and have everything else be an option instead.
+To help you decide between options and arguments, the recommendation is
+to use arguments exclusively for things like going to subcommands or input 
+filenames / URLs and have everything else be an option instead.
 
 Differences
 -----------
@@ -63,12 +63,12 @@ Parameter Names
 ---------------
 
 Parameters (both options and arguments) accept a number of positional
-arguments which are the parameter declarations.  Each string string with a
+arguments which are the parameter declarations.  Each string with a
 single dash is added as short argument, each string starting with a double
 dash as long one.  If a string is added without any dashes it's the
 internal parameter name which is also used as variable name.
 
-If a parameter does not have a name without dashes added one is generated
+If a parameter is not given a name without dashes a name is generated
 automatically by taking the longest argument and converting all dashes to
 underscores.  So for an option with ``('-f', '--foo-bar')`` the parameter
 name is `foo_bar`.  For an option with ``('-x',)`` the parameter is `x`.
