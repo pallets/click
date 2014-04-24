@@ -24,7 +24,7 @@ To understand how this works you need to understand two concepts: contexts
 and the calling convention.
 
 Contexts
---------
+````````
 
 Whenever a Click command is executed a :class:`Context` object is created
 which holds state for this particular invocation.  For instance it
@@ -44,7 +44,7 @@ Most of the time you don't see the context object, but when writing more
 complex applications it comes in handy.  This brings is to the next point
 
 Calling Convention
-------------------
+``````````````````
 
 When a Click command callback is executed it's passed all the non hidden
 parameters as keyword arguments.  Notably absent is the context.  However
