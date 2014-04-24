@@ -94,7 +94,7 @@ environment variables.
 Example usage::
 
     @click.command()
-    @click.argument('--src', envvar='SOURCE', type=click.File('r'))
+    @click.argument('--src', envvar='SRC', type=click.File('r'))
     def echo(src):
         print(src.read())
 
