@@ -103,7 +103,7 @@ Example usage::
 
 And from the command line::
 
-    $ export SRC=hello.txt
+    $ export SOURCE=hello.txt
     $ python echo.py
     Hello!
 
