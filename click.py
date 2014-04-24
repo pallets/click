@@ -804,6 +804,8 @@ class File(ParamType):
 
     def convert(self, value, param, ctx):
         try:
+            if hasattr(value, 'read') or hasattr(value, 'write'):
+                return value
             f, was_opened = open_stream(value, self.mode, self.encoding,
                                         self.errors)
             # If a context is provided we automatically close the file
@@ -916,8 +918,10 @@ class Parameter(object):
         """Given a context variable this calculates the default value."""
         # Otherwise go with the regular default.
         if callable(self.default):
-            return self.default()
-        return self.default
+            rv = self.default()
+        else:
+            rv = self.default
+        return self.type(rv, self, ctx)
 
     def _add_to_parser(self, parser, ctx):
         raise NotImplementedError()
