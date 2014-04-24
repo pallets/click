@@ -279,7 +279,7 @@ Values from Environment Variables
 
 A very useful feature of click is the ability to accept parameters from
 environment variables in addition to regular parameters.  This allows
-tools to be much easier automated.  For instance you might want to pass
+tools to be automated much easier.  For instance you might want to pass
 the config file as ``--config`` parameter but also support exporting a
 ``TOOL_CONFIG=hello.cfg`` key / value pair for a nicer development
 experience.
