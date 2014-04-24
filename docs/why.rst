@@ -4,7 +4,7 @@ Why Click?
 There are so many libraries out there for writing command line utilities,
 why does click exist?
 
-This question is easy to answer: beacuse there is not a single command
+This question is easy to answer: because there is not a single command
 line utility for Python out there which ticks the following boxes:
 
 *   is lazily composable without restrictions

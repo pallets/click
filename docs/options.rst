@@ -205,7 +205,7 @@ In such cases you need two concepts: eager parameters and a callback.  An
 eager parameter is a parameter that is handled before others and a
 callback is what executes after the parameter is handled.  The eagerness
 is necessary so that an earlier required parameter does not produce an
-error message.  For isntance if ``--version`` was not eager and a
+error message.  For instance if ``--version`` was not eager and a
 parameter ``--foo`` was required and defined before, you would need to
 specify it for ``--version`` to work.
 
