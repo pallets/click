@@ -49,7 +49,7 @@ implements two commands for managing databases::
 
     @click.command()
     def dropdb():
-        print('Initialized the database')
+        print('Dropped the database')
 
     cli.add_command(initdb)
     cli.add_command(dropdb)
