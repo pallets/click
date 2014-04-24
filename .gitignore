@@ -1,0 +1,7 @@
+.DS_Store
+*.pyc
+*.pyo
+*.egg-ignore
+dist
+build
+docs/_build
