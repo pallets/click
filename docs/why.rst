@@ -21,8 +21,8 @@ from the standard library.
 
 click is actually implemented as a wrapper around ``optparse`` and does
 not implement any parsing itself.  The reason it's not based on
-``argparse`` is that ``argparse``\'s design does not allow proper nesting
-of commands by design and has some deficiencies when it comes to POSIX
+``argparse`` is that ``argparse`` does not allow proper nesting of
+commands by design and has some deficiencies when it comes to POSIX
 compliant argument handling.
 
 In case ``optparse`` ever gets deprecated and removed from Python,
