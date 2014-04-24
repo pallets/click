@@ -20,8 +20,6 @@ import inspect
 import getpass
 import optparse
 import textwrap
-import fcntl
-import termios
 import struct
 from itertools import chain
 
@@ -75,6 +73,8 @@ def get_terminal_size():
     """
     def ioctl_gwinsz(fd):
         try:
+            import fcntl
+            import termios
             cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
         except Exception:
             return
