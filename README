@@ -13,3 +13,5 @@ click
   -   arbitrary nesting of commands
   -   automatic help page generation
   -   supports lazy loading of subcommands at runtime  
+
+  Read the docs at http://click.pocoo.org/
