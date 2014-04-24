@@ -52,6 +52,28 @@ And on the command line::
     $ python findme.py --pos 2.0 3.0
     2.0 / 3.0
 
+Multiple Options
+----------------
+
+Similar to ``nargs`` there is also the case where sometimes you want to
+support a parameter to be provided multiple times to and have all values
+recorded and not just the last one.  For instance ``git commit -m foo -m
+bar`` would record two lines for the commit message.  ``foo`` and ``bar``.
+This can be accomplished with the ``multiple`` flag:
+
+Example::
+
+    @click.command()
+    @click.option('--message', '-m', multiple=True)
+    def commit(message):
+        print('\n'.join(message))
+
+And on the command line::
+
+    $ python commit.py -m foo -m bar
+    foo
+    bar
+
 Boolean Flags
 -------------
 
