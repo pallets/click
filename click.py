@@ -1012,12 +1012,11 @@ class Parameter(object):
         """Given a value and context this runs the logic to convert the
         value as necessary.
         """
-        if self.type is not None:
-            if (self.nargs != 1 or self.multiple) and value is not None:
-                value = tuple(self.type(x, self, ctx) for x in value)
-            else:
-                value = self.type(value, self, ctx)
-        return value
+        def _convert(value, level):
+            if level == 0:
+                return self.type(value, self, ctx)
+            return tuple(_convert(x, level - 1) for x in value)
+        return _convert(value, (self.nargs != 1) + bool(self.multiple))
 
     def full_process_value(self, ctx, value):
         value = self.process_value(ctx, value)
