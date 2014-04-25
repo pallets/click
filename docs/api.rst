@@ -81,6 +81,8 @@ Types
 
 .. autoclass:: File
 
+.. autoclass:: Choice
+
 .. autoclass:: ParamType
 
 Exceptions

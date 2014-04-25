@@ -166,6 +166,39 @@ And on the command line::
     $ python info.py
     DARWIN
 
+.. _choice-opts:
+
+Choice Options
+--------------
+
+Sometimes you want to have a parameter be a choice of a list of values.
+In that case you can use :class:`Choice` type.  It can be instanciated
+with a list of valid values.
+
+Example::
+
+    @click.command()
+    @click.option('--hash-type', type=click.Choice(['md5', 'sha1']))
+    def digest(hash_type):
+        print(hash_type)
+
+What it looks like::
+
+    $ python digest.py --hash-type=md5
+    md5
+
+    $ python digest.py --hash-type=foo
+    Usage: digest.py [OPTIONS]
+
+    Error: Invalid value for hash_type: invalid choice: foo. (chose from md5, sha1)
+
+    $ python digest.py --help
+    Usage: digest.py [OPTIONS]
+
+    Options:
+      --hash-type=[md5|sha1]
+      --help                Show this message and exit.
+
 .. _option-prompting:
 
 Prompting

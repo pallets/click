@@ -53,7 +53,11 @@ different behavior and some are supported out of the box:
 
 :class:`click.File`:
     A parameter that is an opened file.  It can be opened for reading or
-    writing.
+    writing.  See :ref:`file-args` for an example.
+
+:class:`click.Choice`:
+    A parameter that represents a choice of something.  See
+    :ref:`choice-opts` for an example.
 
 Custom parameter types can be implemented by subclassing
 :class:`click.ParamType`.  For simple cases passing a python function that

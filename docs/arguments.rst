@@ -52,6 +52,8 @@ And what it looks like::
     foo.txt
     bar.txt
 
+.. _file-args:
+
 File Arguments
 --------------
 

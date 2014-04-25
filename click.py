@@ -762,6 +762,9 @@ class ParamType(object):
         if value is not None:
             return self.convert(value, param, ctx)
 
+    def get_metavar(self, param):
+        """Returns the metavar default for this param if it provides one."""
+
     def convert(self, param, ctx, value):
         """Converts the value.  This is not invoked for values that are
         `None` (the missing value).
@@ -812,6 +815,25 @@ class StringParamType(ParamType):
 
     def __repr__(self):
         return 'STRING'
+
+
+class Choice(ParamType):
+    name = 'choice'
+
+    def __init__(self, choices):
+        self.choices = choices
+
+    def get_metavar(self, param):
+        return '[%s]' % '|'.join(self.choices)
+
+    def convert(self, value, param, ctx):
+        if value in self.choices:
+            return value
+        self.fail('invalid choice: %s. (chose from %s)' %
+                  (value, ', '.join(self.choices)), param, ctx)
+
+    def __repr__(self):
+        return 'Choice(%r)' % list(self.choices)
 
 
 class IntParamType(ParamType):
@@ -991,6 +1013,9 @@ class Parameter(object):
     def make_metavar(self):
         if self.metavar is not None:
             return self.metavar
+        metavar = self.type.get_metavar(self)
+        if metavar is not None:
+            return metavar
         metavar = self.name.upper()
         if self.nargs != 1:
             metavar += '...'
