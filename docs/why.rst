@@ -42,5 +42,56 @@ Click was written to support the `Flask <http://flask.pocoo.org/>`_
 microframework ecosystem because no tool could provide it with the
 functionality it needed.
 
-To get an understanding of what Click is all about I strongly recommend
+To get an understanding of what click is all about I strongly recommend
 looking at the :ref:`complex-guide` chapter to see what it's useful for.
+
+Why not Argparse?
+-----------------
+
+Click is internally based on optparse instead of argparse.  This however
+is an implementation detail that a user does not have to concern himself
+with.  The reason however click is not using argparse is that it has some
+problematic behaviors that make handling arbitrary command line interfaces
+hard:
+
+*   argparse has builtin magic behavior to guess if something is an
+    argument or an option.  This becomes a problem when dealing with
+    incomplete command lines as it's not possible to know without having a
+    full understanding of the command line how the parser is going to
+    behave.  This goes against click's ambitions of dispatching to
+    subparsers.
+*   argparse currently does not support disabling of interspearsed
+    arguments.  Without this feature it's not possible to safely implement
+    click's nested parsing nature.
+
+Why not Docopt etc.?
+--------------------
+
+Docopt and many tools like it are cool in how they work but very few of
+these tools deal with nesting of commands.  To the best of the developer's
+knowledge, click is the first Python library that tries to aim for
+composability of applications that goes beyond what the system itself
+supports.
+
+For instance a Click subcommand could accept all the arguments unparsed
+and then be parsed with docopt if that command would want to work that
+way.
+
+Why Hardcoded Behaviors?
+------------------------
+
+The other question is why click goes away from optparse and hardcodes
+certain behaviors instead of staying configurable.  There are multiple
+reasons for this.  The biggest one is that too much configurability makes
+it hard to achieve a consistent command line experience.
+
+The best example for this is optparse's ``callback`` functionality for
+accepting arbitrary number of arguments.  Due to syntactical ambuiguities
+on the command line there is no way to implement fully variadic arguments.
+There are always tradeoffs that need to be made and in case of
+``argparse`` these tradeoffs have been critical enough, that a system like
+click cannot even be implemented on top of it.
+
+In this particular case click attempts to stay with a handful of accepted
+paradigms for building command line interfaces that can be well documented
+and tested.

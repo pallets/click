@@ -74,6 +74,25 @@ And on the command line::
     foo
     bar
 
+Counting
+--------
+
+If you have used ``optparse`` or ``argparse`` before you might be missing
+support for counting.  This is a very rarely useful feature, usually only
+useful for implementing verbosity flags.  It can however be emulated by
+using the multiple flag and taking the length of the end result::
+
+    @click.command()
+    @click.option('-v', '--verbose', is_flag=True, multiple=True)
+    def log(verbose):
+        verbosity = len(verbose)
+        print('Verbosity: %s' % verbosity)
+
+And on the command line::
+
+    $ python log.py -vvv
+    Verbosity: 3
+
 Boolean Flags
 -------------
 

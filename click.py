@@ -1015,7 +1015,7 @@ class Parameter(object):
         def _convert(value, level):
             if level == 0:
                 return self.type(value, self, ctx)
-            return tuple(_convert(x, level - 1) for x in value)
+            return tuple(_convert(x, level - 1) for x in value or ())
         return _convert(value, (self.nargs != 1) + bool(self.multiple))
 
     def full_process_value(self, ctx, value):
@@ -1135,9 +1135,6 @@ class Option(Parameter):
 
         # Sanity check for stuff we don't support
         if __debug__:
-            if self.multiple and self.is_bool_flag:
-                raise TypeError('Boolean flags and multiple values are not '
-                                'compatible.')
             if self.prompt and self.is_flag and not self.is_bool_flag:
                 raise TypeError('Cannot prompt for flags that are not bools.')
             if not self.is_bool_flag and self.secondary_opts:
@@ -1196,27 +1193,28 @@ class Option(Parameter):
             'metavar': self.make_metavar(),
         }
 
+        action = self.multiple and 'append' or 'store'
+
         if self.is_flag:
             kwargs.pop('nargs', None)
             if self.is_bool_flag and self.secondary_opts:
-                pos_opt = optparse.Option(*self.opts, action='store_true',
+                pos_opt = optparse.Option(*self.opts, action=action + '_true',
                                           **kwargs)
                 kwargs.pop('default', None)
                 kwargs.pop('help', None)
                 neg_opt = optparse.Option(*self.secondary_opts,
-                                          action='store_false',
+                                          action=action + '_false',
                                           help=optparse.SUPPRESS_HELP,
                                           **kwargs)
                 pos_opt._negative_version = neg_opt
                 parser.add_option(pos_opt)
                 parser.add_option(neg_opt)
             else:
-                action = self.multiple and 'append_const' or 'store_const'
-                parser.add_option(*self.opts, action=action,
+                parser.add_option(*self.opts, action=action + '_const',
                                   const=self.flag_value,
                                   **kwargs)
         else:
-            kwargs['action'] = self.multiple and 'append' or 'store'
+            kwargs['action'] = action
             parser.add_option(*self.opts, **kwargs)
 
     def get_default(self, ctx):
