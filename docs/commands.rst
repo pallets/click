@@ -89,7 +89,7 @@ script like this::
         cli(obj={})
 
 If the object is provided each context will pass the object onwards to
-it's children, but at any level a context's object can be overridden.  To
+its children, but at any level a context's object can be overridden.  To
 reach to a parent ``context.parent`` can be used.
 
 In addition to that instead of passing an object down nothing stops the
