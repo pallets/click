@@ -79,3 +79,7 @@ def commit(repo, message):
     """Commits outstanding changes."""
     print('Repo: %s' % repo)
     print('\n'.join(message))
+    
+    
+if __name__=="__main__":
+    cli()
