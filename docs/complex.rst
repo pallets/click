@@ -41,7 +41,7 @@ Because the parent data is however available it's possible to navigate to
 it if needed.
 
 Most of the time you don't see the context object, but when writing more
-complex applications it comes in handy.  This brings is to the next point
+complex applications it comes in handy.  This brings us to the next point.
 
 Calling Convention
 ``````````````````
@@ -68,7 +68,7 @@ configuration, and then has extra subcommands that do other things.
 The Root Command
 ````````````````
 
-At the toplevel we need a group that can hold all our commands.  In this
+At the top level we need a group that can hold all our commands.  In this
 case we use the basic :func:`click.group` which allows us to register
 other click commands below it.
 

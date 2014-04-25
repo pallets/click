@@ -35,8 +35,8 @@ unlimited) number of arguments is accepted.  This can be controlled with
 the ``nargs`` parameter.  If it's set to ``-1`` then an unlimited number
 of arguments is accepted.
 
-The value is then passed as tuple.  Note that only one argument really can
-be set to ``nargs=-1`` and right now only the last.
+The value is then passed as a tuple.  Note that only one argument really
+can be set to ``nargs=-1`` and right now only the last.
 
 Example::
 
