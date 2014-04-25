@@ -1322,7 +1322,7 @@ class Argument(Parameter):
         if not found:
             value = self.value_from_envvar(ctx)
             if self.nargs != 1:
-                value = (value,)
+                value = (value or ()) and (value,)
         return value, args
 
 
