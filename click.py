@@ -1315,7 +1315,6 @@ class Argument(Parameter):
             args = []
         else:
             values = args[:self.nargs]
-            values += [None] * (self.nargs - len(values))
             args = args[self.nargs:]
             value = tuple(values)
             found = value
