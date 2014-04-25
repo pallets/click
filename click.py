@@ -1311,18 +1311,18 @@ class Argument(Parameter):
                 found = False
         elif self.nargs < 0:
             value = tuple(args)
-            found = not value
+            found = value
             args = []
         else:
             values = args[:self.nargs]
             values += [None] * (self.nargs - len(values))
             args = args[self.nargs:]
             value = tuple(values)
-            found = not value
+            found = value
         if not found:
             value = self.value_from_envvar(ctx)
             if self.nargs != 1:
-                value = (value,)
+                value = (value or ()) and (value,)
         return value, args
 
 
