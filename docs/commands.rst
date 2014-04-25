@@ -58,10 +58,10 @@ debug argument which is passed to its callback, but not to the sync
 command itself.  The sync command only accepts its own arguments.
 
 This allows tools to act completely independent of each other.  But how
-does on command talk to a nested on?  The answer to this is the
+does one command talk to a nested one?  The answer to this is the
 :class:`Context`.
 
-Each time a command invokes a new context is created and linked with the
+Each time a command is invoked a new context is created and linked with the
 parent context.  Normally you can't see these contexts, but they are
 there.  Contexts are passed to parameter callbacks together with the
 value automatically.  Commands can also ask for the context to be passed
