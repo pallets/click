@@ -30,14 +30,14 @@ And on the command line::
 In this case the option is of type :data:`INT` because the default value
 is an integer.
 
-The name of the parameter is the longest
+The name of the parameter is the longest.
 
 Multi Value Options
 -------------------
 
 Sometimes you have options that take more than one argument.  For options
 only a fixed number of arguments is supported.  This can be configured by
-the ``nargs`` parameter.  The values are then stored as tuple:
+the ``nargs`` parameter.  The values are then stored as a tuple.
 
 Example::
 
@@ -122,7 +122,7 @@ And on the command line::
 Feature Switches
 ----------------
 
-In addition to boolean flag there are also feature switches.  These are
+In addition to boolean flags there are also feature switches.  These are
 implemented by setting multiple options to the same parameter name and by
 defining a flag value.  To set a default flag assign a value of `True` to
 the flag that should be the default.
@@ -154,7 +154,7 @@ Prompting
 
 Sometimes you want parameters that can either be provided from the command
 line or if not, you want to ask for user input.  This can be implemented
-with click by defining a prompt string:
+with click by defining a prompt string.
 
 Example::
 
@@ -221,7 +221,7 @@ Callbacks and Eager Options
 
 Sometimes you want a parameter to completely change the execution flow.
 This for instance is the case when you want to have a ``--version``
-parameter that prints out the version and then exists the application.
+parameter that prints out the version and then exits the application.
 
 In such cases you need two concepts: eager parameters and a callback.  An
 eager parameter is a parameter that is handled before others and a
@@ -310,7 +310,7 @@ This is supported by click in two ways.  One is to automatically build
 environment variables which is supported for options only.  To enable this
 feature the ``auto_envvar_prefix`` parameter needs to be passed to the
 script that is invoked.  Each command and parameter is then added as
-underscore separated variable in uppercase.  So if you have a subcommand
+underscore-separated variable in uppercase.  So if you have a subcommand
 called ``foo`` taking an option called ``bar`` and the prefix is
 ``MY_TOOL`` then the variable is ``MY_TOOL_FOO_BAR``.
 

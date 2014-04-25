@@ -6,7 +6,7 @@ Complex Applications
 .. currentmodule:: click
 
 Click is designed to write complex and simple CLI tools alike.  However
-the power of it's design is the ability to arbitrarily nest systems
+the power of its design is the ability to arbitrarily nest systems
 together.  For instance in case you have ever used Django you will have
 realized that it provides a command line utility.  But so does Celery for
 instance.  So when using Celery with Django there are two tools that need
@@ -34,14 +34,14 @@ an application defined object optionally.
 
 Context objects build a linked list until they hit top one.  Each context
 is linked to the parent context.  This allows a command to work below
-another command and store it's own information there without having to be
+another command and store its own information there without having to be
 afraid of messing up the state of the parent command.
 
 Because the parent data is however available it's possible to navigate to
 it if needed.
 
 Most of the time you don't see the context object, but when writing more
-complex applications it comes in handy.  This brings is to the next point
+complex applications it comes in handy.  This brings us to the next point.
 
 Calling Convention
 ``````````````````
@@ -68,7 +68,7 @@ configuration, and then has extra subcommands that do other things.
 The Root Command
 ````````````````
 
-At the toplevel we need a group that can hold all our commands.  In this
+At the top level we need a group that can hold all our commands.  In this
 case we use the basic :func:`click.group` which allows us to register
 other click commands below it.
 
@@ -140,7 +140,7 @@ Interleaved Commands
 While not relevant for this particular program we want to build there is
 also quite good support for interleaving systems.  Imagine for instance
 there would be this super cool plugin for our version control system that
-needs a lot of configuration and wants to store it's own configuration as
+needs a lot of configuration and wants to store its own configuration as
 :attr:`~Context.obj`.  If we would then attach another command below that,
 all the sudden we would get the plugin config instead of our repo object.
 
