@@ -19,6 +19,7 @@ import codecs
 import inspect
 import getpass
 import optparse
+import re
 import textwrap
 import struct
 from itertools import chain
@@ -834,6 +835,21 @@ class Choice(ParamType):
 
     def __repr__(self):
         return 'Choice(%r)' % list(self.choices)
+
+
+class Regex(Choice):
+    name = 'regex'
+
+    def convert(self, value, param, ctx):
+        for pattern in self.choices:
+            if re.match(pattern, value):
+                return value
+            continue
+        self.fail('invalid value: %s. (can\'t match either of [%s])' %
+                  (value, ', '.join(self.choices)), param, ctx)
+
+    def __repr__(self):
+        return 'Regex(%r)' % list(self.choices)
 
 
 class IntParamType(ParamType):
