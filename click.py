@@ -48,26 +48,39 @@ if PY2:
                 f = _wrap_stream_for_codec(f, encoding, errors)
         return f, False
 else:
+    import io
     text_type = str
     raw_input = input
+
+    def _make_binary_stream(f, stream_name):
+        buf = getattr(f, 'buffer', None)
+        if buf is not None and isinstance(buf, io.BufferedReader):
+            return buf
+        raise TypeError('%s is a stream that does not give access to its '
+                        'underlying binary stream.  Please do not set '
+                        'sys.stdout directly to a StringIO object or '
+                        'something similar.' % stream_name)
 
     def open_stream(filename, mode='r', encoding=None, errors='strict'):
         if filename != '-':
             if encoding is not None:
-                return open(filename, mode, encoding=encoding, errors=errors), True
+                return open(filename, mode, encoding=encoding,
+                            errors=errors), True
             return open(filename, mode), True
+
         if 'w' in mode:
             f = sys.stdout
             if encoding is not None or 'b' in mode:
-                f = f.buffer.raw
+                f = _make_binary_stream(f, 'stdout')
                 if encoding is not None:
                     f = _wrap_stream_for_codec(f, encoding, errors)
         else:
             f = sys.stdin
             if 'b' in mode:
-                f = f.buffer.raw
+                f = _make_binary_stream(f, 'stdin')
                 if encoding is not None:
                     f = _wrap_stream_for_codec(f, encoding, errors)
+
         return f, False
 
 
@@ -85,7 +98,8 @@ def get_terminal_size():
         try:
             import fcntl
             import termios
-            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+            cr = struct.unpack(
+                'hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
         except Exception:
             return
         return cr

@@ -56,6 +56,7 @@ of the library.
    setuptools
    complex
    advanced
+   python3
 
 API Reference
 -------------
