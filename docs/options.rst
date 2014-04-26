@@ -190,7 +190,7 @@ What it looks like::
     $ python digest.py --hash-type=foo
     Usage: digest.py [OPTIONS]
 
-    Error: Invalid value for hash_type: invalid choice: foo. (chose from md5, sha1)
+    Error: Invalid value for hash_type: invalid choice: foo. (choose from md5, sha1)
 
     $ python digest.py --help
     Usage: digest.py [OPTIONS]
