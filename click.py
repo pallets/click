@@ -829,7 +829,7 @@ class Choice(ParamType):
     def convert(self, value, param, ctx):
         if value in self.choices:
             return value
-        self.fail('invalid choice: %s. (chose from %s)' %
+        self.fail('invalid choice: %s. (choose from %s)' %
                   (value, ', '.join(self.choices)), param, ctx)
 
     def __repr__(self):
