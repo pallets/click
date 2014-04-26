@@ -1,5 +1,5 @@
-click
-=====
+Welcome to the Click Documentation
+==================================
 
 click is a Python package for creating beautiful command line interfaces
 in a composable way with as little amount of code as necessary.  It's the
