@@ -172,7 +172,7 @@ Choice Options
 --------------
 
 Sometimes you want to have a parameter be a choice of a list of values.
-In that case you can use :class:`Choice` type.  It can be instanciated
+In that case you can use :class:`Choice` type.  It can be instantiated
 with a list of valid values.
 
 Example::

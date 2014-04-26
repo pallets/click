@@ -73,7 +73,7 @@ knowledge, click is the first Python library that tries to aim for
 composability of applications that goes beyond what the system itself
 supports.
 
-For instance a Click subcommand could accept all the arguments unparsed
+For instance a click subcommand could accept all the arguments unparsed
 and then be parsed with docopt if that command would want to work that
 way.
 
@@ -86,7 +86,7 @@ reasons for this.  The biggest one is that too much configurability makes
 it hard to achieve a consistent command line experience.
 
 The best example for this is optparse's ``callback`` functionality for
-accepting arbitrary number of arguments.  Due to syntactical ambuiguities
+accepting arbitrary number of arguments.  Due to syntactical ambiguities
 on the command line there is no way to implement fully variadic arguments.
 There are always tradeoffs that need to be made and in case of
 ``argparse`` these tradeoffs have been critical enough, that a system like
