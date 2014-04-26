@@ -906,6 +906,35 @@ class File(ParamType):
             self.fail('Could not open file %s: %s' % (value, msg),
                       param, ctx)
 
+class CompressedFile(ParamType):
+    import bz2, gzip, zipfile
+    name = 'compressed_filename'
+    opener = {".bz2": bz2.BZ2File, ".gz": gzip.open, ".zip": zipfile.ZipFile}
+    
+    def convert(self, value, param, ctx):
+        # make sure file exists first
+        if os.path.exists(value):
+            file_name = os.path.basename(value)
+            file_name_no_ext, file_ext = os.path.splitext(file_name)
+            if file_ext in self.opener:
+                open_file = self.opener[file_ext](value)
+                # Zipped file api requires the user to pass the name of the
+                # file as the second argument. We're assuming the zipped file
+                # has the same name as the zipped archive.
+                if file_ext == ".zip":
+                    try:
+                        open_file = self.opener[file_ext].open(open_file, \
+                                                            file_name_no_ext)
+                    except KeyError as e:
+                        msg = e
+                        self.fail('Could not open file %s: %s' % (value, msg))
+                return open_file
+            else:
+                msg = "Format unsupported"
+                self.fail('Could not open file %s: %s' % (value, msg))
+        else:
+            msg = "Does not exist"
+            self.fail('Could not open file %s: %s' % (value, msg))
 
 def convert_type(ty, default=None):
     """Converts a callable or python ty into the most appropriate param
