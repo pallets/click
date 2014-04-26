@@ -4,14 +4,14 @@ Arguments
 .. currentmodule:: click
 
 Arguments work similar to options but are positional.  They also only
-support subset of the features of options due to their syntactical nature.
+support a subset of the features of options due to their syntactical nature.
 Click also will not attempt to document arguments for you and wants you to
 document them manually to avoid ugly looking help pages.
 
 Basic Arguments
 ---------------
 
-The most basic option is a simple string arguments of one value.  If no
+The most basic option is a simple string argument of one value.  If no
 type is provided the type of the default value is used.  If no default
 value is provided the type is assumed to be :data:`STRING`.
 
@@ -59,7 +59,7 @@ File Arguments
 
 Since all the examples have already worked with file names it makes sense
 to explain how to deal with files properly.  Command line tools are more
-fun if they work with files the unix way which is to accept ``-`` as
+fun if they work with files the unix way which is to accept ``-`` as a
 special file that refers to stdin/stdout.
 
 Click supports this through the :class:`click.File` type which
