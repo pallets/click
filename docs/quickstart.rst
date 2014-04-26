@@ -16,7 +16,9 @@ for high-level usage.
 
 A function becomes a click command line tool by decorating it through
 :func:`click.command`.  In the most simple version just decorating a
-function with this decorator will make it into a callable script::
+function with this decorator will make it into a callable script:
+
+.. click:example::
 
     import click
 
@@ -30,14 +32,26 @@ What's happening is that the decorator converts the function into a
     if __name__ == '__main__':
         hello()
 
+And what it looks like:
+
+.. click:run::
+
+    invoke(hello, args=[])
+
+And the corresponding help page:
+
+.. click:run::
+
+    invoke(hello, args=['--help'])
+
 Nesting Commands
 ----------------
 
 Commands can be attached to other commands of type :class:`Group`.  This
 allows arbitrary nesting of scripts.  As an example here is a script that
-implements two commands for managing databases::
+implements two commands for managing databases:
 
-    import click
+.. click:example::
 
     @click.group()
     def cli():
@@ -54,9 +68,6 @@ implements two commands for managing databases::
     cli.add_command(initdb)
     cli.add_command(dropdb)
 
-    if __name__ == '__main__':
-        cli()
-
 As you can see the :func:`group` decorator works like the :func:`command`
 decorator but creates a :class:`Group` object instead which can be given
 multiple subcommands that can be attached with
@@ -64,9 +75,9 @@ multiple subcommands that can be attached with
 
 For simple scripts it's also possible to automatically attach and create a
 command by using the :meth:`Group.command` decorator instead.  The above
-script can be written like this then::
+script can be written like this then:
 
-    import click
+.. click:example::
 
     @click.group()
     def cli():
@@ -80,15 +91,12 @@ script can be written like this then::
     def dropdb():
         print('Dropped the database')
 
-    if __name__ == '__main__':
-        cli()
-
 Adding Parameters
 -----------------
 
-To add parameters the :func:`option` and :func:`argument` decorators::
+To add parameters the :func:`option` and :func:`argument` decorators:
 
-    import click
+.. click:example::
 
     @click.command()
     @click.option('--count', default=1, help='number of greetings')
@@ -97,14 +105,8 @@ To add parameters the :func:`option` and :func:`argument` decorators::
         for x in range(count):
             print('Hello %s!' % name)
 
-    if __name__ == '__main__':
-        hello()
+What it looks like:
 
-What it looks like::
+.. click:run::
 
-    $ python hello.py
-    Usage: hello.py [OPTIONS] NAME
-
-    Options:
-      --count=COUNT  number of greetings
-      --help         Show this message and exit.
+    invoke(hello, args=['--help'])

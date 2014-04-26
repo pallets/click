@@ -15,7 +15,9 @@ Click in three points:
 -   automatic help page generation
 -   supports lazy loading of subcommands at runtime
 
-What does it look like?  A simple example can be this::
+What does it look like?  A simple example can be this:
+
+.. click:example::
 
     import click
 

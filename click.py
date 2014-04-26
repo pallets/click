@@ -107,6 +107,12 @@ def safecall(func):
     return wrapper
 
 
+# The prompt functions to use.  The doc tools currently override these
+# functions to customize them.
+hidden_prompt_func = getpass.getpass
+visible_prompt_func = raw_input
+
+
 class TextWrapper(textwrap.TextWrapper):
 
     def _cutdown(self, ucstr, space_left):
@@ -162,7 +168,8 @@ def echo(message=None, file=None):
         file = sys.stdout
     if message:
         if PY2 and isinstance(message, text_type):
-            message = message.encode(file.encoding)
+            message = message.encode(getattr(file, 'encoding', None)
+                                     or 'utf-8', 'replace')
         file.write(message)
     file.write('\n')
     file.flush()
@@ -1558,7 +1565,7 @@ def confirm(text, default=False, abort=False):
     prompt = '%s [%s]: ' % (text, default and 'Yn' or 'yN')
     while 1:
         try:
-            value = raw_input(prompt).lower().strip()
+            value = visible_prompt_func(prompt).lower().strip()
         except (KeyboardInterrupt, EOFError):
             raise Abort()
         if value in ('y', 'yes'):
@@ -1599,7 +1606,7 @@ def prompt(text, default=None, hide_input=False,
     result = None
 
     def prompt_func(text):
-        f = hide_input and getpass.getpass or raw_input
+        f = hide_input and hidden_prompt_func or visible_prompt_func
         try:
             return f(text)
         except (KeyboardInterrupt, EOFError):

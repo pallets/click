@@ -13,24 +13,23 @@ Basic Value Options
 The most basic option is a value option.  These options accept one
 argument which is a value.  If no type is provided the type of the default
 value is used.  If no default value is provided the type is assumed to be
-:data:`STRING`.
+:data:`STRING`.  The name of the parameter is the longest option defined.
 
-Example::
+.. click:example::
 
     @click.command()
     @click.option('--n', default=1)
     def dots(n):
         print('.' * n)
 
-And on the command line::
+And on the command line:
 
-    $ python dots.py --n=2
-    ..
+.. click:run::
+
+   invoke(dots, args=['--n=2'])
 
 In this case the option is of type :data:`INT` because the default value
 is an integer.
-
-The name of the parameter is the longest.
 
 Multi Value Options
 -------------------
@@ -39,18 +38,18 @@ Sometimes you have options that take more than one argument.  For options
 only a fixed number of arguments is supported.  This can be configured by
 the ``nargs`` parameter.  The values are then stored as a tuple.
 
-Example::
-
+.. click:example::
 
     @click.command()
     @click.option('--pos', nargs=2, type=float)
     def findme(pos):
         print('%s / %s' % pos)
 
-And on the command line::
+And on the command line:
 
-    $ python findme.py --pos 2.0 3.0
-    2.0 / 3.0
+.. click:run::
+
+    invoke(findme, args=['--pos', '2.0', '3.0'])
 
 Multiple Options
 ----------------
@@ -61,18 +60,20 @@ recorded and not just the last one.  For instance ``git commit -m foo -m
 bar`` would record two lines for the commit message.  ``foo`` and ``bar``.
 This can be accomplished with the ``multiple`` flag:
 
-Example::
+Example:
+
+.. click:example::
 
     @click.command()
     @click.option('--message', '-m', multiple=True)
     def commit(message):
         print('\n'.join(message))
 
-And on the command line::
+And on the command line:
 
-    $ python commit.py -m foo -m bar
-    foo
-    bar
+.. click:run::
+
+    invoke(commit, args=['-m', 'foo', '-m', 'bar'])
 
 Counting
 --------
@@ -80,7 +81,9 @@ Counting
 If you have used ``optparse`` or ``argparse`` before you might be missing
 support for counting.  This is a very rarely useful feature, usually only
 useful for implementing verbosity flags.  It can however be emulated by
-using the multiple flag and taking the length of the end result::
+using the multiple flag and taking the length of the end result:
+
+.. click:example::
 
     @click.command()
     @click.option('-v', '--verbose', is_flag=True, multiple=True)
@@ -88,10 +91,11 @@ using the multiple flag and taking the length of the end result::
         verbosity = len(verbose)
         print('Verbosity: %s' % verbosity)
 
-And on the command line::
+And on the command line:
 
-    $ python log.py -vvv
-    Verbosity: 3
+.. click:run::
+
+    invoke(log, args=['-vvv'])
 
 Boolean Flags
 -------------
@@ -101,7 +105,9 @@ accomplished by defining two flags in one go separated by a slash (``/``)
 for enabling or disabling the option.  Click always wants you to provide
 an enable and disable flag so that you can change the default later.
 
-Example::
+Example:
+
+.. click:example::
 
     import os
 
@@ -113,15 +119,17 @@ Example::
             rv = rv.upper() + '!!!!111'
         print(rv)
 
-And on the command line::
+And on the command line:
 
-    $ python info.py --shout
-    DARWIN!!!!111
-    $ python info.py --no-shout
-    Darwin
+.. click:run::
+
+    invoke(info, args=['--shout'])
+    invoke(info, args=['--no-shout'])
 
 If you really don't want an off-switch you can just define one and
-manually inform click that something is a flag::
+manually inform click that something is a flag:
+
+.. click:example::
 
     import os
 
@@ -133,10 +141,11 @@ manually inform click that something is a flag::
             rv = rv.upper() + '!!!!111'
         print(rv)
 
-And on the command line::
+And on the command line:
 
-    $ python info.py --shout
-    DARWIN!!!!111
+.. click:run::
+
+    invoke(info, args=['--shout'])
 
 Feature Switches
 ----------------
@@ -146,7 +155,7 @@ implemented by setting multiple options to the same parameter name and by
 defining a flag value.  To set a default flag assign a value of `True` to
 the flag that should be the default.
 
-Example::
+.. click:example::
 
     import os
 
@@ -157,14 +166,13 @@ Example::
     def info(transformation):
         print(getattr(os.uname()[0], transformation)())
 
-And on the command line::
+And on the command line:
 
-    $ python info.py --upper
-    DARWIN
-    $ python info.py --lower
-    darwin
-    $ python info.py
-    DARWIN
+.. click:run::
+
+    invoke(info, args=['--upper'])
+    invoke(info, args=['--lower'])
+    invoke(info)
 
 .. _choice-opts:
 
@@ -175,29 +183,24 @@ Sometimes you want to have a parameter be a choice of a list of values.
 In that case you can use :class:`Choice` type.  It can be instanciated
 with a list of valid values.
 
-Example::
+Example:
+
+.. click:example::
 
     @click.command()
     @click.option('--hash-type', type=click.Choice(['md5', 'sha1']))
     def digest(hash_type):
         print(hash_type)
 
-What it looks like::
+What it looks like:
 
-    $ python digest.py --hash-type=md5
-    md5
+.. click:run::
 
-    $ python digest.py --hash-type=foo
-    Usage: digest.py [OPTIONS]
-
-    Error: Invalid value for hash_type: invalid choice: foo. (choose from md5, sha1)
-
-    $ python digest.py --help
-    Usage: digest.py [OPTIONS]
-
-    Options:
-      --hash-type=[md5|sha1]
-      --help                Show this message and exit.
+    invoke(digest, args=['--hash-type=md5'])
+    println()
+    invoke(digest, args=['--hash-type=foo'])
+    println()
+    invoke(digest, args=['--help'])
 
 .. _option-prompting:
 
@@ -208,44 +211,45 @@ Sometimes you want parameters that can either be provided from the command
 line or if not, you want to ask for user input.  This can be implemented
 with click by defining a prompt string.
 
-Example::
+Example:
 
-    import os
+.. click:example::
 
     @click.command()
     @click.option('--name', prompt=True)
     def hello(name):
         print('Hello %s!' % name)
 
-And what it looks like::
+And what it looks like:
 
-    $ python hello.py --name=John
-    Hello John!
-    $ python hello.py
-    Name: John
-    Hello John!
+.. click:run::
+
+    invoke(hello, args=['--name=John'])
+    invoke(hello, input=['John'])
 
 If you are not happy with the default prompt string you can ask for
-a different one::
+a different one:
 
-    import os
+.. click:example::
 
     @click.command()
     @click.option('--name', prompt='Your name please')
     def hello(name):
         print('Hello %s!' % name)
 
-What it looks like::
+What it looks like:
 
-    $ python hello.py
-    Your name please: John
-    Hello John!
+.. click:run::
+
+    invoke(hello, input=['John'])
 
 Password Prompts
 ----------------
 
 Click also supports hidden prompts and asking for confirmation.  This is
-useful for password input::
+useful for password input:
+
+.. click:example::
 
     @click.command()
     @click.option('--password', prompt=True, hide_input=True,
@@ -253,15 +257,16 @@ useful for password input::
     def encrypt(password):
         print('Encrypting password to %s' % password.encode('rot13'))
 
-What it looks like::
+What it looks like:
 
-    $ python encrypt.py
-    Password:
-    Repeat for confirmation:
-    Encrypting password to frpher
+.. click:run::
+
+    invoke(encrypt, input=['secret', 'secret'])
 
 Because this combination of parameters is quite common this can also be
-replaced with the :func:`password_option` decorator::
+replaced with the :func:`password_option` decorator:
+
+.. click:example::
 
     @click.command()
     @click.password_option()
@@ -288,7 +293,9 @@ A callback is a function that is invoked with two parameters: the current
 such as quitting the application and gives access to other already
 processed parameters.
 
-Here an example for a ``--version`` flag::
+Here an example for a ``--version`` flag:
+
+.. click:example::
 
     def print_version(ctx, value):
         if not value:
@@ -306,12 +313,12 @@ The `expose_value` parameter prevents the now pretty pointless ``version``
 parameter to be passed to the callback.  If that was not specified a
 boolean would be passed to the `hello` script.
 
-What it looks like::
+What it looks like:
 
-    $ python hello.py 
-    Hello World!
-    $ python hello.py --version
-    Version 1.0
+.. click:run::
+
+    invoke(hello)
+    invoke(hello, args=['--version'])
 
 Yes Parameters
 --------------
@@ -319,7 +326,9 @@ Yes Parameters
 For dangerous operations it's very useful to be able to ask a user for
 confirmation.  This can be done by adding a boolean ``--yes`` flag and
 asking for confirmation if the user did not provide it and to fail in a
-callback::
+callback:
+
+.. click:example::
 
     def abort_if_false(ctx, value):
         if not value:
@@ -332,16 +341,17 @@ callback::
     def dropdb():
         print('Dropped all tables!')
 
-And what it looks like on the command line::
+And what it looks like on the command line:
 
-    $ python dropdb.py
-    Are you sure you want to drop the db? [yN]: n 
-    Aborted!
-    $ python dropdb.py --yes
-    Dropped all tables!
+.. click:run::
+
+    invoke(dropdb, input=['n'])
+    invoke(dropdb, args=['--yes'])
 
 Because this combination of parameters is quite common this can also be
-replaced with the :func:`confirmation_option` decorator::
+replaced with the :func:`confirmation_option` decorator:
+
+.. click:example::
 
     @click.command()
     @click.confirmation_option('Are you sure you want to drop the db?')
@@ -366,7 +376,9 @@ underscore-separated variable in uppercase.  So if you have a subcommand
 called ``foo`` taking an option called ``bar`` and the prefix is
 ``MY_TOOL`` then the variable is ``MY_TOOL_FOO_BAR``.
 
-Example usage::
+Example usage:
+
+.. click:example::
 
     @click.command()
     @click.option('--username')
@@ -376,16 +388,19 @@ Example usage::
     if __name__ == '__main__':
         greet(auto_envvar_prefix='GREETER')
 
-And from the command line::
+And from the command line:
 
-    $ export GREETER_USERNAME=john
-    $ python greet.py
-    Hello john!
+.. click:run::
+
+    invoke(greet, env={'GREETER_USERNAME': 'john'},
+           auto_envvar_prefix='GREETER')
 
 The second option is to manually pull values in from specific environment
 variables by defining the name of the environment variable on the option.
 
-Example usage::
+Example usage:
+
+.. click:example::
 
     @click.command()
     @click.option('--username', envvar='USERNAME')
@@ -395,11 +410,11 @@ Example usage::
     if __name__ == '__main__':
         greet()
 
-And from the command line::
+And from the command line:
 
-    $ export USERNAME=john
-    $ python greet.py
-    Hello john!
+.. click:run::
+
+    invoke(greet, env={'USERNAME': 'john'})
 
 In that case it can also be a list of different environment variables
 where the first one is picked.

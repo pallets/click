@@ -15,17 +15,20 @@ The most basic option is a simple string argument of one value.  If no
 type is provided the type of the default value is used.  If no default
 value is provided the type is assumed to be :data:`STRING`.
 
-Example::
+Example:
+
+.. click:example::
 
     @click.command()
     @click.argument('filename')
     def touch(filename):
         print(filename)
 
-And what it looks like::
+And what it looks like:
 
-    $ python touch.py foo.txt
-    foo.txt
+.. click:run::
+
+    invoke(touch, args=['foo.txt'])
 
 Variadic Arguments
 ------------------
@@ -38,7 +41,9 @@ of arguments is accepted.
 The value is then passed as a tuple.  Note that only one argument really
 can be set to ``nargs=-1`` and right now only the last.
 
-Example::
+Example:
+
+.. click:example::
 
     @click.command()
     @click.argument('files', nargs=-1)
@@ -46,11 +51,11 @@ Example::
         for file in files:
             print(file)
 
-And what it looks like::
+And what it looks like:
 
-    $ python touch.py foo.txt bar.txt
-    foo.txt
-    bar.txt
+.. click:run::
+
+    invoke(touch, args=['foo.txt', 'bar.txt'])
 
 .. _file-args:
 
@@ -66,7 +71,9 @@ Click supports this through the :class:`click.File` type which
 intelligently handles files for you.  It also deals with unicode and bytes
 correctly for all versions of Python so your script stays very portable.
 
-Example::
+Example:
+
+.. click:example::
 
     @click.command()
     @click.argument('input', type=click.File('rb'))
@@ -78,13 +85,13 @@ Example::
                 break
             output.write(chunk)
 
-And what it does::
+And what it does:
 
-    $ python inout.py - hello.txt
-    hello
-    ^D
-    $ python inout.py hello.txt -
-    hello
+.. click:run::
+
+    with isolated_filesystem():
+        invoke(inout, args=['-', 'hello.txt'], input=['hello'])
+        invoke(inout, args=['hello.txt', '-'])
 
 Environment Variables
 ---------------------
@@ -93,21 +100,23 @@ Like options, arguments can also get values from an environment variable.
 Unlike options however this is only supported for explicitly named
 environment variables.
 
-Example usage::
+Example usage:
+
+.. click:example::
 
     @click.command()
-    @click.argument('--src', envvar='SRC', type=click.File('r'))
+    @click.argument('src', envvar='SRC', type=click.File('r'))
     def echo(src):
         print(src.read())
 
-    if __name__ == '__main__':
-        echo()
+And from the command line:
 
-And from the command line::
+.. click:run::
 
-    $ export SRC=hello.txt
-    $ python echo.py
-    Hello!
+    with isolated_filesystem():
+        with open('hello.txt', 'w') as f:
+            f.write('Hello World!')
+        invoke(echo, env={'SRC': 'hello.txt'})
 
 In that case it can also be a list of different environment variables
 where the first one is picked.
