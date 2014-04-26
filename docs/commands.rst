@@ -169,6 +169,8 @@ And how it works in practice::
     I am about to invoke sync
     The subcommand
 
+.. _custom-multi-commands:
+
 Custom Multi Commands
 ---------------------
 
@@ -206,3 +208,9 @@ A custom multi command just needs to implement a list and load method::
 
     if __name__ == '__main__':
         cli()
+
+These custom classes can also be used with decorators::
+
+    @click.command(cls=MyCLI)
+    def cli():
+        pass

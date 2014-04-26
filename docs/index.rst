@@ -53,6 +53,7 @@ of the library.
    documentation
    setuptools
    complex
+   advanced
 
 API Reference
 -------------

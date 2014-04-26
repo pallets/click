@@ -632,8 +632,8 @@ class MultiCommand(Command):
     allow_extra_args = True
 
     def __init__(self, name=None, invoke_without_command=False,
-                 no_args_is_help=None,
-                 subcommand_metavar='COMMAND [ARGS]...', **attrs):
+                 no_args_is_help=None, subcommand_metavar='COMMAND [ARGS]...',
+                 **attrs):
         Command.__init__(self, name, **attrs)
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
@@ -1365,7 +1365,7 @@ def _make_command(f, name, attrs, cls):
                callback=f, params=params, **attrs)
 
 
-def command(name=None, **attrs):
+def command(name=None, cls=None, **attrs):
     """Creates a new :class:`Command` and uses the decorated function as
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as paramters to the command.
@@ -1379,20 +1379,25 @@ def command(name=None, **attrs):
     Once decorated the function turns into a :class:`Command` instance
     that can be invoked as a command line utility or be attached to a
     command :class:`Group`.
+
+    :param name: the name of the command.  This defaults to the function
+                 name.
+    :param cls: the command class to instanciate.  This defaults to
+                :class:`Command`.
     """
+    if cls is None:
+        cls = Command
     def decorator(f):
-        return _make_command(f, name, attrs, Command)
+        return _make_command(f, name, attrs, cls)
     return decorator
 
 
 def group(name=None, **attrs):
     """Creates a new :class:`Group` with a function as callback.  This
-    works otherwise the same as :func:`command` just that the generated
-    class is different.
+    works otherwise the same as :func:`command` just that the `cls`
+    parameter is set to :class:`Group`.
     """
-    def decorator(f):
-        return _make_command(f, name, attrs, Group)
-    return decorator
+    return command(name, cls=Group, **attrs)
 
 
 def _param_memo(f, param):
