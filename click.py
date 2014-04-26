@@ -21,6 +21,7 @@ import getpass
 import optparse
 import textwrap
 import struct
+import shutil
 from itertools import chain
 from functools import update_wrapper
 
@@ -72,6 +73,12 @@ def get_terminal_size():
     """Returns the current size of the terminal as tuple in the form
     ``(width, height)`` in columns and rows.
     """
+    # If shutil has get_terminal_size() (Python 3.3 and later) use that
+    shutil_get_terminal_size = getattr(shutil, 'get_terminal_size', None)
+    if shutil_get_terminal_size:
+        sz = shutil_get_terminal_size()
+        return sz.columns, sz.lines
+
     def ioctl_gwinsz(fd):
         try:
             import fcntl
