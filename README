@@ -1,4 +1,4 @@
-click
+$ click_
 
   click is a Python package for creating beautiful command line interfaces
   in a composable way with as little amount of code as necessary.  It's the
@@ -15,3 +15,5 @@ click
   -   supports lazy loading of subcommands at runtime  
 
   Read the docs at http://click.pocoo.org/
+
+  This library is work in progress.  Please give feedback!
