@@ -25,7 +25,9 @@ aliases on the help page to avoid confusion.
 
 This following example implements a subclass of :class:`Group` that
 accepts a prefix for a command.  So if there is a command called
-``push`` it would accept ``pus`` as alias if it's unique::
+``push`` it would accept ``pus`` as alias if it's unique:
+
+.. click:example::
 
     class AliasedGroup(click.Group):
 
@@ -41,7 +43,9 @@ accepts a prefix for a command.  So if there is a command called
                 return click.Group.get_command(self, ctx, matches[0])
             ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
 
-And it can be used like this then::
+And it can be used like this then:
+
+.. click:example::
 
     @click.command(cls=AliasedGroup)
     def cli():

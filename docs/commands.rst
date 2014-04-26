@@ -18,9 +18,9 @@ passes ``--help`` to the script).
 For groups and multi commands the situation looks different.  In that case
 the callback fires whenever a subcommand fires (unless this behavior is
 changed).  What this means in practice is that an outer command runs
-when an inner command runs::
+when an inner command runs:
 
-    import click
+.. click:example::
 
     @click.group()
     @click.option('--debug/--no-debug', default=False)
@@ -31,24 +31,13 @@ when an inner command runs::
     def sync():
         print('Synching')
 
-    if __name__ == '__main__':
-        cli()
+Here is what this looks like:
 
-Here is what this looks like::
+.. click:run::
 
-    $ python tool.py
-    Usage: tool.py [OPTIONS] COMMAND [ARGS]...
-
-    Commands:
-      sync  
-
-    Options:
-      --debug / --no-debug  
-      --help                Show this message and exit.
-        
-    $ python tool.py --debug sync
-    Debug mode is on
-    Synching    
+    invoke(cli, prog_name='tool.py')
+    println()
+    invoke(cli, prog_name='tool.py', args=['--debug', 'sync'])
 
 Nested Handling and Contexts
 ----------------------------
@@ -70,9 +59,9 @@ case the context is passed as first argument.
 
 The context can also carry a program specified object that can be
 used for the program's purposes.  What this means is that you can build a
-script like this::
+script like this:
 
-    import click
+.. click:example::
 
     @click.group()
     @click.option('--debug/--no-debug', default=False)
@@ -111,9 +100,10 @@ state and then storing it on the context and then to use a custom
 decorator to find the most recent object of this sort and pass it as first
 argument.
 
-For instance the :func:`pass_obj` decorator can be implemented like this::
+For instance the :func:`pass_obj` decorator can be implemented like this:
 
-    import click
+.. click:example::
+
     from functools import update_wrapper
 
     def pass_obj(f):
@@ -142,9 +132,9 @@ always invoked instead of showing the help page.  The context object also
 includes information about if the invocation would go to a subcommand or
 not.
 
-Example::
+Example:
 
-    import click
+.. click:example::
 
     @click.group(invoke_without_command=True)
     @click.pass_context
@@ -157,9 +147,6 @@ Example::
     @cli.command()
     def sync():
         print('The subcommand')
-
-    if __name__ == '__main__':
-        cli()
 
 And how it works in practice::
 
@@ -178,7 +165,9 @@ In addition to using :func:`click.group` you can also build your own
 custom multi commands.  This is useful when you want to support commands
 being loaded lazily from plugins.
 
-A custom multi command just needs to implement a list and load method::
+A custom multi command just needs to implement a list and load method:
+
+.. click:example::
 
     import click
     import os
@@ -209,7 +198,9 @@ A custom multi command just needs to implement a list and load method::
     if __name__ == '__main__':
         cli()
 
-These custom classes can also be used with decorators::
+These custom classes can also be used with decorators:
+
+.. click:example::
 
     @click.command(cls=MyCLI)
     def cli():

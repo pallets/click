@@ -118,6 +118,7 @@ class ExampleRunner(object):
     def __init__(self):
         self.namespace = {
             'click': click,
+            '__file__': 'dummy.py',
         }
 
     def declare(self, source):

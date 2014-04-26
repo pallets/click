@@ -73,7 +73,9 @@ case we use the basic :func:`click.group` which allows us to register
 other click commands below it.
 
 For this command we also want to accept some parameters that configure the
-state of our tool::
+state of our tool:
+
+.. click:example::
 
     import os
     import click
@@ -112,7 +114,9 @@ The First Child Command
 ```````````````````````
 
 So let's add our first child command to it.  Let's go with the clone
-command::
+command:
+
+.. click:example::
 
     @cli.command()
     @click.argument('src')
@@ -125,7 +129,9 @@ you can imagine one way is to use the :func:`pass_context` function which
 again will make our callback also get the context passed on which we
 memorized the repo.  Even better there is a second version of this
 decorator called :func:`pass_obj` which will just pass the stored object,
-in our case the repo::
+in our case the repo:
+
+.. click:example::
 
     @cli.command()
     @click.argument('src')
@@ -155,12 +161,16 @@ level where the object stored on the context was a repo.
 Built-in support for this is provided by the :func:`make_pass_decorator`
 factory which will create decorators for us that find objects.  So in our
 case we know that we want to find the closest ``Repo`` object.  So let's
-make a decorator for this::
+make a decorator for this:
+
+.. click:example::
 
     pass_repo = click.make_pass_decorator(Repo)
 
 If we now use ``pass_repo`` instead of ``pass_obj`` we will always get a
-repo instead of something else::
+repo instead of something else:
+
+.. click:example::
 
     @cli.command()
     @click.argument('src')

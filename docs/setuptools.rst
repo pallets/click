@@ -25,7 +25,9 @@ Imagine this layout::
         cli.py
     setup.py
 
-Contents of ``cli.py``::
+Contents of ``cli.py``:
+
+.. click:example::
 
     import click
 
@@ -70,7 +72,8 @@ package::
     $ . venv/bin/activate
     $ pip install --editable .
 
-Afterwards your command should be available::
+Afterwards your command should be available:
 
-    $ yourscript
-    Hello World!
+.. click:run::
+
+    invoke(cli, prog_name='yourscript', prog_prefix='')
