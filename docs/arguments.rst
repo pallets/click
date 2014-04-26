@@ -90,7 +90,8 @@ And what it does:
 .. click:run::
 
     with isolated_filesystem():
-        invoke(inout, args=['-', 'hello.txt'], input=['hello'])
+        invoke(inout, args=['-', 'hello.txt'], input=['hello'],
+               terminate_input=True)
         invoke(inout, args=['hello.txt', '-'])
 
 Environment Variables

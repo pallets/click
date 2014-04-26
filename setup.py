@@ -7,7 +7,7 @@ setup(
     author_email='armin.ronacher@active-4.com',
     version='0.1',
     url='http://github.com/mitsuhiko/click',
-    py_modules=['click'],
+    packages=['click'],
     description='A simple wrapper around optparse for '
                 'powerful command line utilities.',
     classifiers=[

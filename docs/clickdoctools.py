@@ -26,31 +26,32 @@ class EchoingStdin(object):
     def __getattr__(self, x):
         return getattr(self._input, x)
 
-    def read(self, n=-1):
-        rv = self._input.read(n)
+    def _echo(self, rv):
+        mark = False
+        if rv.endswith('\xff'):
+            rv = rv[:-1]
+            mark = True
         self._output.write(rv)
+        if mark:
+            self._output.write('^D\n')
         return rv
+
+    def read(self, n=-1):
+        return self._echo(self._input.read(n))
 
     def readline(self, n=-1):
-        rv = self._input.readline(n)
-        self._output.write(rv)
-        return rv
+        return self._echo(self._input.readline(n))
 
     def readlines(self):
-        rv = self._input.readlines()
-        for line in rv:
-            self._output.write(rv)
-        return rv
+        return [self._echo(x) for x in self._input.readlines()]
 
     def __iter__(self):
-        for x in self._input:
-            self._output.write(x)
-            yield x
+        return iter(self._echo(x) for x in self._input)
 
 
 @contextlib.contextmanager
 def isolation(input=None, env=None):
-    if click.PY2 and isinstance(input, unicode):
+    if isinstance(input, unicode):
         input = input.encode('utf-8')
     input = StringIO(input or '')
     output = StringIO()
@@ -71,10 +72,10 @@ def isolation(input=None, env=None):
 
     sys.stdout = output
     sys.stderr = output
-    old_visible_prompt_func = click.visible_prompt_func
-    old_hidden_prompt_func = click.hidden_prompt_func
-    click.visible_prompt_func = visible_input
-    click.hidden_prompt_func = hidden_input
+    old_visible_prompt_func = click.helpers.visible_prompt_func
+    old_hidden_prompt_func = click.helpers.hidden_prompt_func
+    click.helpers.visible_prompt_func = visible_input
+    click.helpers.hidden_prompt_func = hidden_input
 
     old_env = {}
     try:
@@ -94,8 +95,8 @@ def isolation(input=None, env=None):
                 os.environ[key] = value
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-        click.visible_prompt_func = old_visible_prompt_func
-        click.hidden_prompt_func = old_hidden_prompt_func
+        click.helpers.visible_prompt_func = old_visible_prompt_func
+        click.helpers.hidden_prompt_func = old_hidden_prompt_func
 
 
 @contextlib.contextmanager
@@ -130,7 +131,8 @@ class ExampleRunner(object):
         buffer = []
 
         def invoke(cmd, args=None, prog_name=None, prog_prefix='python ',
-                   input=None, env=None, auto_envvar_prefix=None):
+                   input=None, terminate_input=False, env=None,
+                   auto_envvar_prefix=None):
             if env:
                 for key, value in sorted(env.items()):
                     if ' ' in value:
@@ -146,6 +148,8 @@ class ExampleRunner(object):
             )).rstrip())
             if isinstance(input, (tuple, list)):
                 input = '\n'.join(input) + '\n'
+                if terminate_input:
+                    input += '\xff'
             with isolation(input=input, env=env) as output:
                 try:
                     cmd.main(args=args, prog_name=prog_name,
