@@ -4,12 +4,12 @@ Python 3 Support
 .. currentmodule:: click
 
 Click supports Python 3 but like all other command line utility libraries,
-click suffers from the Unicode text model in Python 3.  All examples in
-the documentation were written so that they run on both Python 2.x and
+it suffers from the Unicode text model in Python 3.  All examples in the
+documentation were written so that they run on both Python 2.x and
 Python 3.3 or higher.
 
 At the moment the strong recommendation is to use Python 2 for these
-utilities unless you can avoid it.
+utilities unless Python 3 is a hard requirement.
 
 .. _python3-limitations:
 
@@ -21,17 +21,17 @@ At the moment click suffers from a few problems on Python 3:
 *   The command line in Unix traditionally is in bytes and not unicode.
     While there are encoding hits for all of this, there are generally
     some situations where this can break.  The most common one is SSH
-    connections to machines with different locale.
+    connections to machines with different locales.
 
-    As such in misconfigured environments on Python 3 currently can cause
-    a wide range of unicode problems caused by lack of support for
-    roundtripping surrogate escapes.  This will be fixed on a case by case
-    basis going forward.
+    Misconfigured environments can currently cause a wide range of unicode
+    problems on Python 3 due to the lack of support for roundtripping
+    surrogate escapes.  This will be fixed on a case by case basis going
+    forward.
 
 *   Standard input and output on Python 3 is opened in unicode mode by
     default.  Click has to reopen the stream in binary mode in certain
     situations.  Because there is no standardized way to do this, this
-    might not always work.  Primarily this can become a problem in when
+    might not always work.  Primarily this can become a problem when
     testing command line applications.
 
     This is not supported::
@@ -43,11 +43,11 @@ At the moment click suffers from a few problems on Python 3:
 
         input = 'Input here'
         in_stream = io.BytesIO(input.encode('utf-8'))
-        sys.stdin = io.TextIOWrapper(stream, encoding='utf-8')
+        sys.stdin = io.TextIOWrapper(in_stream, encoding='utf-8')
         out_stream = io.BytesIO()
         sys.stdout = io.TextIOWrapper(out_stream, encoding='utf-8')
 
-    Remember that in that case you ened to use ``out_stream.getvalue()``
+    Remember that in that case you need to use ``out_stream.getvalue()``
     and not ``sys.stdout.getvalue()`` if you want to access the buffer
     contents as the wrapper will not forward that method.
 
@@ -60,23 +60,24 @@ by following the best practices for both languages.
 On Python 2 the following is true:
 
 *   ``sys.stdin``, ``sys.stdout``, and ``sys.stderr`` are opened in binary
-    mode but under some circumstances support unicode output.  Click
+    mode but under some circumstances they support unicode output.  Click
     attempts to not subvert this but provides support for forcing streams
-    to be unicode based.
-*   ``sys.argv`` is always bytes based.  Click will pass bytes to all
+    to be unicode-based.
+*   ``sys.argv`` is always bytes-based.  Click will pass bytes to all
     input types and convert as necessary.  The :class:`STRING` type
     automatically will decode properly the input value into a string by
     trying the most appropriate encodings.
 *   When dealing with files, click will never go through the unicode APIs
-    and instead use the operating system's byte APIs to open the files.
+    and will instead use the operating system's byte APIs to open the
+    files.
 
 On Python 3 the following is true:
 
-*   ``sys.stdin``, ``sys.stdout`` and ``sys.stderr`` are by text based.
-    When click needs a binary stream it attempts to discover the
-    nderlying binary stream.  See :ref:`python3-limitations` for how this
-    works.
-*   ``sys.argv`` is always unicode based.  This also means that the native
+*   ``sys.stdin``, ``sys.stdout`` and ``sys.stderr`` are by default
+    text-based.  When click needs a binary stream it attempts to discover
+    the underlying binary stream.  See :ref:`python3-limitations` for how
+    this works.
+*   ``sys.argv`` is always unicode-based.  This also means that the native
     type for input values to the types in click is unicode and not bytes.
 
     This causes problems when the terminal is incorrectly set and Python
