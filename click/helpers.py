@@ -1,7 +1,6 @@
 import os
-import shutil
+import sys
 import struct
-import getpass
 
 from ._compat import raw_input
 from .utils import echo
@@ -11,8 +10,12 @@ from .types import convert_type
 
 # The prompt functions to use.  The doc tools currently override these
 # functions to customize how they work.
-hidden_prompt_func = getpass.getpass
 visible_prompt_func = raw_input
+
+
+def hidden_prompt_func(prompt):
+    import getpass
+    return getpass.getpass(prompt)
 
 
 def prompt(text, default=None, hide_input=False,
@@ -115,10 +118,12 @@ def get_terminal_size():
     ``(width, height)`` in columns and rows.
     """
     # If shutil has get_terminal_size() (Python 3.3 and later) use that
-    shutil_get_terminal_size = getattr(shutil, 'get_terminal_size', None)
-    if shutil_get_terminal_size:
-        sz = shutil_get_terminal_size()
-        return sz.columns, sz.lines
+    if sys.version_info >= (3, 3):
+        import shutil
+        shutil_get_terminal_size = getattr(shutil, 'get_terminal_size', None)
+        if shutil_get_terminal_size:
+            sz = shutil_get_terminal_size()
+            return sz.columns, sz.lines
 
     def ioctl_gwinsz(fd):
         try:

@@ -1,13 +1,13 @@
 import os
 import sys
-import optparse
 from itertools import chain
 
 from .types import convert_type, BOOL
 from .utils import echo
 from .exceptions import UsageError, Abort
 from .helpers import prompt, confirm
-from ._optparse import _SimplifiedOptionParser
+
+from . import _optparse
 
 
 class Context(object):
@@ -227,7 +227,7 @@ class Command(object):
                 yield param
 
     def _make_parser(self, ctx):
-        parser = _SimplifiedOptionParser(
+        parser = _optparse._SimplifiedOptionParser(
             ctx, description=self.help, epilog=self.epilog)
         for param in self.params:
             param._add_to_parser(parser, ctx)
@@ -716,14 +716,13 @@ class Option(Parameter):
         if self.is_flag:
             kwargs.pop('nargs', None)
             if self.is_bool_flag and self.secondary_opts:
-                pos_opt = optparse.Option(*self.opts, action=action + '_true',
-                                          **kwargs)
+                pos_opt = _optparse.make_option(
+                    *self.opts, action=action + '_true', **kwargs)
                 kwargs.pop('default', None)
                 kwargs.pop('help', None)
-                neg_opt = optparse.Option(*self.secondary_opts,
-                                          action=action + '_false',
-                                          help=optparse.SUPPRESS_HELP,
-                                          **kwargs)
+                neg_opt = _optparse.make_option(
+                    *self.secondary_opts, action=action + '_false',
+                    help=_optparse.SUPPRESS_HELP, **kwargs)
                 pos_opt._negative_version = neg_opt
                 parser.add_option(pos_opt)
                 parser.add_option(neg_opt)
