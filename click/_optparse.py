@@ -12,6 +12,8 @@ sys.modules['gettext'] = None
 from optparse import IndentedHelpFormatter, OptionParser, Option
 if _gettext is not None:
     sys.modules['gettext'] = _gettext
+else:
+    del sys.modules['gettext']
 
 from .helpers import get_terminal_size
 from .formatting import TextWrapper
