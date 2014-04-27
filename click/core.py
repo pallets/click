@@ -9,6 +9,8 @@ from .helpers import prompt, confirm
 
 from . import _optparse
 
+_missing = object()
+
 
 class Context(object):
     """The context is a special internal object that holds state relevant
@@ -615,6 +617,7 @@ class Option(Parameter):
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, allow_from_autoenv=True, type=None,
                  **attrs):
+        default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
         if prompt is True:
             prompt_text = self.name.replace('_', ' ').capitalize()
@@ -632,7 +635,7 @@ class Option(Parameter):
             else:
                 is_flag = bool(self.secondary_opts)
 
-        if is_flag and self.default is None:
+        if is_flag and default_is_missing:
             self.default = False
             if show_default is None:
                 show_default = False
