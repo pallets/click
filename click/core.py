@@ -354,15 +354,18 @@ class MultiCommand(Command):
         return parser
 
     def _format_extra_help(self, ctx):
-        commands = self.list_commands()
+        commands = self.list_commands(ctx)
         if not commands:
             return
 
         longest = len(sorted(commands, key=len)[-1])
 
         subcommand_info = []
-        for subcommand in self.list_commands():
+        for subcommand in self.list_commands(ctx):
             cmd = self.get_command(ctx, subcommand)
+            # What is this, the tool lied about a command.  Ignore it
+            if cmd is None:
+                continue
             help = cmd.short_help or ''
             subcommand_info.append('  %-*s  %s' % (longest, subcommand, help))
 
@@ -400,7 +403,7 @@ class MultiCommand(Command):
         """
         raise NotImplementedError()
 
-    def list_commands(self):
+    def list_commands(self, ctx):
         """Returns a list of subcommand names in the order they should
         appear.
         """
@@ -443,7 +446,7 @@ class Group(MultiCommand):
     def get_command(self, ctx, cmd_name):
         return self.commands.get(cmd_name)
 
-    def list_commands(self):
+    def list_commands(self, ctx):
         return sorted(self.commands)
 
 

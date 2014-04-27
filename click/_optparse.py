@@ -9,7 +9,8 @@ import sys
 # might have a problem but I don't think anyone will actually notice.
 _gettext = sys.modules.get('gettext')
 sys.modules['gettext'] = None
-from optparse import IndentedHelpFormatter, OptionParser, Option
+from optparse import IndentedHelpFormatter, OptionParser, Option, \
+     SUPPRESS_HELP
 if _gettext is not None:
     sys.modules['gettext'] = _gettext
 else:
@@ -86,4 +87,6 @@ class _SimplifiedOptionParser(OptionParser):
         raise UsageError(msg, self.__ctx)
 
 
+# Re-exports
 make_option = Option
+SUPPRESS_HELP = SUPPRESS_HELP

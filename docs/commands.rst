@@ -176,7 +176,7 @@ A custom multi command just needs to implement a list and load method:
 
     class MyCLI(click.MultiCommand):
 
-        def list_commands(self):
+        def list_commands(self, ctx):
             rv = []
             for filename in os.listdir(plugin_folder):
                 if filename.endswith('.py'):
