@@ -126,7 +126,7 @@ class Context(object):
     def find_object(self, object_type):
         """Finds the closest object of a given type."""
         node = self
-        while node.parent is not None:
+        while node is not None:
             if isinstance(node.obj, object_type):
                 return node.obj
             node = node.parent
@@ -211,7 +211,7 @@ class Command(object):
             if len(short_help) > 45:
                 short_help = None
             elif short_help:
-                short_help = short_help[0].lower() + short_help[1:] + '.'
+                short_help = short_help + '.'
         self.short_help = short_help
         if add_help_option:
             help_option()(self)
@@ -373,30 +373,28 @@ class MultiCommand(Command):
 
         return 'Commands:\n%s' % '\n'.join(subcommand_info)
 
-    def make_context(self, info_name, args, parent=None, **extra):
-        # Multi-commands invoked without any arguments is a shortcut to
-        # invoking it with --help unless supresssed.
-        if not args and self.no_args_is_help:
-            args = ['--help']
-        return Command.make_context(self, info_name, args, parent, **extra)
-
     def invoke(self, ctx):
         if not ctx.args:
             if self.invoke_without_command:
                 return Command.invoke(self, ctx)
+            elif self.no_args_is_help:
+                echo(ctx.format_help())
+                ctx.exit()
             ctx.fail('Missing command')
-        cmd_name = ctx.args[0]
 
+        cmd_name = ctx.args[0]
         cmd = self.get_command(ctx, cmd_name)
         if cmd is None:
             ctx.fail('No such command "%s"' % cmd_name)
+        return self.invoke_subcommand(ctx, cmd, cmd_name, ctx.args[1:])
 
+    def invoke_subcommand(self, ctx, cmd, cmd_name, args):
         # Whenever we dispatch to a subcommand we also invoke the regular
         # callback.  This is done so that parameters can be handled.
         ctx.invoked_subcommand = cmd_name
         Command.invoke(self, ctx)
 
-        with cmd.make_context(cmd_name, ctx.args[1:], parent=ctx) as cmd_ctx:
+        with cmd.make_context(cmd_name, args, parent=ctx) as cmd_ctx:
             return cmd.invoke(cmd_ctx)
 
     def get_command(self, ctx, cmd_name):
