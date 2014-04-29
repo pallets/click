@@ -2,7 +2,7 @@ import os
 import sys
 import struct
 
-from ._compat import raw_input, PY2, text_type
+from ._compat import raw_input, PY2, text_type, string_types
 from .utils import get_best_encoding
 from .exceptions import Abort, UsageError
 from .types import convert_type
@@ -162,6 +162,8 @@ def echo(message=None, file=None):
     """
     if file is None:
         file = sys.stdout
+    if not isinstance(message, string_types):
+        message = text_type(message)
     if message:
         if PY2 and isinstance(message, text_type):
             encoding = get_best_encoding(file)

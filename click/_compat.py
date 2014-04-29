@@ -18,6 +18,7 @@ if PY2:
     text_type = unicode
     bytes = str
     raw_input = raw_input
+    string_types = (str, unicode)
 
     def open_stream(filename, mode='r', encoding=None, errors='strict'):
         if filename != '-':
@@ -39,6 +40,7 @@ else:
     import io
     text_type = str
     raw_input = input
+    string_types = (str,)
 
     def _make_binary_stream(f, stream_name):
         buf = getattr(f, 'buffer', None)

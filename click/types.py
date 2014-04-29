@@ -40,7 +40,8 @@ class ParamType(object):
         if param is None:
             message = 'Invalid value: %s' % message
         else:
-            message = 'Invalid value for %s: %s' % (param.name, message)
+            names = ' / '.join(param.opts) or param.name
+            message = 'Invalid value for "%s": %s' % (names, message)
         raise UsageError(message, ctx=ctx)
 
 

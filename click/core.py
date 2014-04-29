@@ -599,9 +599,10 @@ class Parameter(object):
         return value
 
     def get_missing_message(self, ctx):
-        return 'Missing %s "%s".' % (
+        return 'Missing %s %s.' % (
             self.param_type_name,
-            ' / '.join(chain(self.opts, self.secondary_opts)),
+            ' / '.join('"%s"' % x for x in chain(
+                self.opts, self.secondary_opts)),
         )
 
     def value_from_envvar(self, ctx):
