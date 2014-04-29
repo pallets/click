@@ -1,6 +1,8 @@
 import os
 import sys
 import click
+import shutil
+import tempfile
 import contextlib
 
 from cStringIO import StringIO
@@ -46,10 +48,6 @@ class Result(object):
         self.output = output
         self.exit_code = exit_code
         self.exception = exception
-
-    @property
-    def okay(self):
-        return self.exception is None
 
 
 class CliRunner(object):
@@ -119,10 +117,24 @@ class CliRunner(object):
             except Exception as e:
                 exception = e
                 exit_code = -1
-            output = out.getvalue().decode('utf-8')
+            output = out.getvalue().decode('utf-8').replace('\r\n', '\n')
 
         return Result(output=output, exit_code=exit_code,
                       exception=exception)
+
+    @contextlib.contextmanager
+    def isolated_filesystem(self):
+        cwd = os.getcwd()
+        t = tempfile.mkdtemp()
+        os.chdir(t)
+        try:
+            yield
+        finally:
+            os.chdir(cwd)
+            try:
+                shutil.rmtree(t)
+            except (OSError, IOError):
+                pass
 
 
 @pytest.fixture(scope='function')
