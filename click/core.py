@@ -309,7 +309,7 @@ class Command(object):
                                    'because Python 3 was configured to use '
                                    'ASCII as encoding for the environment. '
                                    'Either switch to Python 2 or consult '
-                                   'http://bugs.python.org/issue13643 '
+                                   'http://click.pocoo.org/python3/ '
                                    'for mitigation steps.')
 
         if args is None:

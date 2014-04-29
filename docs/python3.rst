@@ -25,8 +25,9 @@ At the moment click suffers from a few problems on Python 3:
 
     Misconfigured environments can currently cause a wide range of unicode
     problems on Python 3 due to the lack of support for roundtripping
-    surrogate escapes.  This will be fixed on a case-by-case basis going
-    forward.
+    surrogate escapes.  This will not be fixed in Click itself!
+
+    For more information see :ref:`python3-surrogates`.
 
 *   Standard input and output on Python 3 is opened in unicode mode by
     default.  Click has to reopen the stream in binary mode in certain
@@ -88,3 +89,64 @@ On Python 3 the following is true:
     filesystem encoding.  Surrogates are supported for filenames, so it
     should be possible to open files through the :class:`File` type even
     if the environment is misconfigured.
+
+.. _python3-surrogates:
+
+Python 3 Surrogate Handling
+---------------------------
+
+Click on Python 3 does all the unicode handling in the standard library
+and is subject to it's behavior.  On Python 2 click does all the unicode
+handling itself which means there are differences in error behavior.
+
+The most glaring difference is that on Python 2 Unicode will "just work"
+but requires extra care on Python 3.  The reason for this is that on
+Python 3 the encoding detection is done in the interpreter and on Linux
+and certain other operating systems it's encoding handling is problematic.
+
+The biggest source of frustration there is that click scripts invoked by
+init systems (sysvinit, upstart, systemd, etc.), deployment tools (salt,
+puppet) or cronjobs (cron) will refuse to work unless a unicode locale is
+exported.
+
+If click encounters such an environment it will prevent further execution
+to force you to force a locale.  This is done because click cannot know
+about the state of the system once it's invoked and restore the values
+before Python's unicode handling kicked in.
+
+If you see something like this error on Python 3::
+
+    Traceback (most recent call last):
+      ...
+    RuntimeError: Click will abort further execution because Python 3 was
+      configured to use ASCII as encoding for the environment. Either switch
+      to Python 2 or consult for http://click.pocoo.org/python3/
+      mitigation steps.
+
+You are dealing with an environment where Python 3 thinks you are
+restricted to ASCII data.  The solution for these problems is different
+depending on which locale your computer is running in.
+
+For instance if you have a German linux machine you can fix the problem
+by exporting the locale to ``de_DE.utf-8``::
+
+    export LC_ALL=de_DE.utf-8
+    export LANG=de_DE.utf-8
+
+If you are on an american machine ``en_EN.utf-8`` is the encoding of
+choice.  On some newer linux systems you can also try ``C.UTF-8`` as
+locale::
+
+    export LC_ALL=C.UTF-8
+    export LANG=C.UTF-8
+
+You need to do this before you invoke your Python script.  If you are
+curious about the reasons for this you can join the discussions in the
+Python 3 bug tracker:
+
+*   `ASCII is a bad filesystem default encoding
+    <http://bugs.python.org/issue13643#msg149941>`_
+*   `Use surrogateescape as default error handler
+    <http://bugs.python.org/issue19977>`_
+*   `Python 3 raises Unicode errors in the C locale
+    <http://bugs.python.org/issue19846>`_
