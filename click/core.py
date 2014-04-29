@@ -4,7 +4,7 @@ import codecs
 from itertools import chain
 
 from .types import convert_type, BOOL
-from .utils import echo
+from .utils import echo, make_str
 from .exceptions import UsageError, Abort
 from .helpers import prompt, confirm
 
@@ -264,7 +264,8 @@ class Command(object):
 
         if args and not self.allow_extra_args:
             ctx.fail('Got unexpected extra argument%s (%s)'
-                     % (len(args) != 1 and 's' or '', ' '.join(args)))
+                     % (len(args) != 1 and 's' or '',
+                        ' '.join(map(make_str, args))))
 
         ctx.args = args
 
@@ -316,7 +317,8 @@ class Command(object):
         else:
             args = list(args)
         if prog_name is None:
-            prog_name = os.path.basename(sys.argv and sys.argv[0] or __file__)
+            prog_name = make_str(os.path.basename(
+                sys.argv and sys.argv[0] or __file__))
         try:
             try:
                 with self.make_context(prog_name, args, **extra) as ctx:
@@ -401,7 +403,7 @@ class MultiCommand(Command):
                 ctx.exit()
             ctx.fail('Missing command')
 
-        cmd_name = ctx.args[0]
+        cmd_name = make_str(ctx.args[0])
         cmd = self.get_command(ctx, cmd_name)
         if cmd is None:
             ctx.fail('No such command "%s"' % cmd_name)

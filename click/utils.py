@@ -1,4 +1,5 @@
 import sys
+import codecs
 
 from ._compat import PY2, text_type
 
@@ -13,14 +14,40 @@ def safecall(func):
     return wrapper
 
 
+def is_ascii_encoding(encoding):
+    """Checks if a given encoding is ascii."""
+    try:
+        return codecs.lookup(encoding).name == 'ascii'
+    except LookupError:
+        return False
+
+
+def get_best_encoding(stream):
+    """Returns the best encoding that should be used for a stream."""
+    enc = getattr(stream, 'encoding', None)
+    if enc is None or is_ascii_encoding(enc):
+        return 'utf-8'
+    return enc
+
+
 def echo(message=None, file=None):
     """Prints a message to the given file or stdout."""
     if file is None:
         file = sys.stdout
     if message:
         if PY2 and isinstance(message, text_type):
-            message = message.encode(getattr(file, 'encoding', None)
-                                     or 'utf-8', 'replace')
+            encoding = get_best_encoding(file)
+            message = message.encode(encoding, 'replace')
         file.write(message)
     file.write('\n')
     file.flush()
+
+
+def make_str(value):
+    """Converts a value into a valid string."""
+    if isinstance(value, bytes):
+        try:
+            return value.decode(sys.getfilesystemencoding())
+        except UnicodeError:
+            return value.decode('utf-8', 'replace')
+    return text_type(value)
