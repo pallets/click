@@ -52,6 +52,9 @@ Commands
 .. autoclass:: Group
    :members:
 
+.. autoclass:: CommandCollection
+   :members:
+
 Parameters
 ----------
 

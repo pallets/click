@@ -205,3 +205,52 @@ These custom classes can also be used with decorators:
     @click.command(cls=MyCLI)
     def cli():
         pass
+
+Merging Multi Commands
+----------------------
+
+In addition to implementing custom multi commands it can also be
+interesting to merge multiple together into one script.  While this is
+generally not as recommended as nesting one below the other the merging
+approach can be useful in some circumstances for a nicer shell experience.
+
+A default implementation for such a merging system is the
+:class:`CommandCollection` class.  It accepts a list of other multi
+commands and makes the commands available on the same class class.  It
+accepts a list of other multi commands and makes the commands available on
+the same level.
+
+Example usage:
+
+.. click:example::
+
+    import click
+
+    @click.group()
+    def cli1():
+        pass
+
+    @cli1.command()
+    def cmd1():
+        """Command on cli1"""
+
+    @click.group()
+    def cli2():
+        pass
+
+    @cli1.command()
+    def cmd2():
+        """Command on cli2"""
+
+    cli = click.CommandCollection(sources=[cli1, cli2])
+
+    if __name__ == '__main__':
+        cli()
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(cli, prog_name='cli', args=['--help'])
+
+In case a command exists on more than one source, the first source wins.

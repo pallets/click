@@ -15,8 +15,8 @@
 """
 
 # Core classes
-from .core import Context, Command, MultiCommand, Group, Parameter, \
-     Option, Argument
+from .core import Context, Command, MultiCommand, Group, CommandCollection, \
+     Parameter, Option, Argument
 
 # Decorators
 from .decorators import pass_context, pass_obj, make_pass_decorator, \
@@ -35,8 +35,8 @@ from .exceptions import UsageError, Abort
 
 __all__ = [
     # Core classes
-    'Context', 'Command', 'MultiCommand', 'Group', 'Parameter',
-    'Option', 'Argument',
+    'Context', 'Command', 'MultiCommand', 'Group', 'CommandCollection',
+    'Parameter', 'Option', 'Argument',
 
     # Decorators
     'pass_context', 'pass_obj', 'make_pass_decorator', 'command', 'group',
