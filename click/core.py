@@ -1,5 +1,6 @@
 import os
 import sys
+import codecs
 from itertools import chain
 
 from .types import convert_type, BOOL
@@ -8,6 +9,7 @@ from .exceptions import UsageError, Abort
 from .helpers import prompt, confirm
 
 from . import _optparse
+from ._compat import PY2
 
 _missing = object()
 
@@ -292,6 +294,23 @@ class Command(object):
         :param extra: extra keyword arguments are forwarded to the context
                       constructor.
         """
+        # If we are on python 3 we will verify that the environment is
+        # sane at this point of reject further execution to avoid a
+        # broken script.
+        if not PY2:
+            try:
+                import locale
+                fs_enc = codecs.lookup(locale.getpreferredencoding()).name
+            except Exception:
+                fs_enc = 'ascii'
+            if fs_enc == 'ascii':
+                raise RuntimeError('Click will abort further execution '
+                                   'because Python 3 was configured to use '
+                                   'ASCII as encoding for the environment. '
+                                   'Either switch to Python 2 or consult '
+                                   'http://bugs.python.org/issue13643 '
+                                   'for mitigation steps.')
+
         if args is None:
             args = sys.argv[1:]
         else:
