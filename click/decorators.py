@@ -2,7 +2,7 @@ import inspect
 
 from functools import update_wrapper
 
-from .utils import echo
+from .helpers import echo
 
 
 def pass_context(f):

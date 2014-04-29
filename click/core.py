@@ -4,9 +4,9 @@ import codecs
 from itertools import chain
 
 from .types import convert_type, BOOL
-from .utils import echo, make_str
+from .utils import make_str
 from .exceptions import UsageError, Abort
-from .helpers import prompt, confirm
+from .helpers import prompt, confirm, echo
 
 from . import _optparse
 from ._compat import PY2

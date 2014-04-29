@@ -30,19 +30,6 @@ def get_best_encoding(stream):
     return enc
 
 
-def echo(message=None, file=None):
-    """Prints a message to the given file or stdout."""
-    if file is None:
-        file = sys.stdout
-    if message:
-        if PY2 and isinstance(message, text_type):
-            encoding = get_best_encoding(file)
-            message = message.encode(encoding, 'replace')
-        file.write(message)
-    file.write('\n')
-    file.flush()
-
-
 def make_str(value):
     """Converts a value into a valid string."""
     if isinstance(value, bytes):

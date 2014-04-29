@@ -34,6 +34,8 @@ Decorators
 Helper Functions
 ----------------
 
+.. autofunction:: echo
+
 .. autofunction:: prompt
 
 .. autofunction:: confirm

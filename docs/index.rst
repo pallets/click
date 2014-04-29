@@ -27,7 +27,7 @@ What does it look like?  A simple example can be this:
                   help='the person to greet', required=True)
     def hello(count, name):
         for x in range(count):
-            print('Hello %s!' % name)
+            click.echo('Hello %s!' % name)
 
     if __name__ == '__main__':
         hello()

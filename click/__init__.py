@@ -27,7 +27,7 @@ from .decorators import pass_context, pass_obj, make_pass_decorator, \
 from .types import ParamType, File, Choice, STRING, INT, FLOAT, BOOL
 
 # Helper functions
-from .helpers import prompt, confirm, get_terminal_size
+from .helpers import prompt, confirm, get_terminal_size, echo
 
 # Exceptions
 from .exceptions import UsageError, Abort
@@ -47,7 +47,7 @@ __all__ = [
     'ParamType', 'File', 'Choice', 'STRING', 'INT', 'FLOAT', 'BOOL',
 
     # Helper functions
-    'prompt', 'confirm', 'get_terminal_size',
+    'prompt', 'confirm', 'get_terminal_size', 'echo',
 
     # Exceptions
     'UsageError', 'Abort',

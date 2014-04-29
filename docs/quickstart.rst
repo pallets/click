@@ -24,7 +24,7 @@ function with this decorator will make it into a callable script:
 
     @click.command()
     def hello():
-        print('Hello World!')
+        click.echo('Hello World!')
 
 What's happening is that the decorator converts the function into a
 :class:`Command` which then can be invoked::
@@ -44,6 +44,23 @@ And the corresponding help page:
 
     invoke(hello, args=['--help'])
 
+Echoing
+-------
+
+Why does this example use :func:`echo` instead of the regular
+:func:`print` function?  The answer to this question is that click
+attempts to support both Python 2 and Python 3 the same way and to be very
+robust even when the environment is misconfigured.  Click wants to be
+functional at least on a basic level even if everything is completely
+broken.
+
+What this means is that the :func:`echo` function applies some error
+correction in case the terminal is misconfigured instead of dying with an
+:exc:`UnicodeError`.
+
+If you don't need this, you can also use the `print()` construct /
+function.
+
 Nesting Commands
 ----------------
 
@@ -59,11 +76,11 @@ implements two commands for managing databases:
 
     @click.command()
     def initdb():
-        print('Initialized the database')
+        click.echo('Initialized the database')
 
     @click.command()
     def dropdb():
-        print('Dropped the database')
+        click.echo('Dropped the database')
 
     cli.add_command(initdb)
     cli.add_command(dropdb)
@@ -85,11 +102,11 @@ script can be written like this then:
 
     @cli.command()
     def initdb():
-        print('Initialized the database')
+        click.echo('Initialized the database')
 
     @cli.command()
     def dropdb():
-        print('Dropped the database')
+        click.echo('Dropped the database')
 
 Adding Parameters
 -----------------
@@ -103,7 +120,7 @@ To add parameters the :func:`option` and :func:`argument` decorators:
     @click.argument('name')
     def hello(count, name):
         for x in range(count):
-            print('Hello %s!' % name)
+            click.echo('Hello %s!' % name)
 
 What it looks like:
 
