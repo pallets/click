@@ -1,5 +1,12 @@
 Copyright (c) 2014 by Armin Ronacher.
 
+Click uses parts of optparse written by Gregory P. Ward and maintained by the
+Python software foundation.  This is limited to code in the _optparse.py
+module:
+
+Copyright (c) 2001-2006 Gregory P. Ward.  All rights reserved.
+Copyright (c) 2002-2006 Python Software Foundation.  All rights reserved.
+
 Some rights reserved.
 
 Redistribution and use in source and binary forms, with or without

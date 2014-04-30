@@ -147,12 +147,12 @@ def test_boolean_option(runner):
 
 def test_file_option(runner):
     @click.command()
-    @click.option('--file', type=click.File('wb'))
+    @click.option('--file', type=click.File('w'))
     def input(file):
         file.write('Hello World!\n')
 
     @click.command()
-    @click.option('--file', type=click.File('rb'))
+    @click.option('--file', type=click.File('r'))
     def output(file):
         click.echo(file.read())
 

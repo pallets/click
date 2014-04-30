@@ -5,9 +5,15 @@ import shutil
 import tempfile
 import contextlib
 
-from cStringIO import StringIO
-
 import pytest
+
+PY2 = sys.version_info[0] == 2
+if PY2:
+    from cStringIO import StringIO
+    iteritems = lambda x: x.iteritems()
+else:
+    import io
+    iteritems = lambda x: iter(x.items())
 
 
 class EchoingStdin(object):
@@ -54,12 +60,25 @@ class CliRunner(object):
 
     @contextlib.contextmanager
     def isolation(self, input=None, env=None):
-        if isinstance(input, unicode):
+        if input is not None and not isinstance(input, bytes):
             input = input.encode('utf-8')
-        input = StringIO(input or '')
-        output = StringIO()
-        sys.stdin = EchoingStdin(input, output)
-        sys.stdin.encoding = 'utf-8'
+
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+
+        if PY2:
+            input = StringIO(input or '')
+            output = StringIO()
+            sys.stdin = EchoingStdin(input, output)
+            sys.stdin.encoding = 'utf-8'
+            sys.stdout = sys.stderr = output
+        else:
+            real_input = io.BytesIO(input)
+            output = io.BytesIO()
+            input = io.TextIOWrapper(real_input, encoding='utf-8')
+            sys.stdin = EchoingStdin(real_input, output)
+            sys.stdout = sys.stderr = io.TextIOWrapper(output,
+                                                       encoding='utf-8')
 
         def visible_input(prompt=None):
             sys.stdout.write(prompt or '')
@@ -73,10 +92,6 @@ class CliRunner(object):
             sys.stdout.flush()
             return input.readline().rstrip('\r\n')
 
-        old_stdout = sys.stdout
-        sys.stdout = output
-        old_stderr = sys.stderr
-        sys.stderr = output
         old_visible_prompt_func = click.helpers.visible_prompt_func
         old_hidden_prompt_func = click.helpers.hidden_prompt_func
         click.helpers.visible_prompt_func = visible_input
@@ -85,12 +100,12 @@ class CliRunner(object):
         old_env = {}
         try:
             if env:
-                for key, value in env.iteritems():
+                for key, value in iteritems(env):
                     old_env[key] = os.environ.get(value)
                     os.environ[key] = value
             yield output
         finally:
-            for key, value in old_env.iteritems():
+            for key, value in iteritems(old_env):
                 if value is None:
                     try:
                         del os.environ[key]
