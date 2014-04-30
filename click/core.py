@@ -165,10 +165,38 @@ class Context(object):
         """Invokes a command callback in exactly the way it expects.
         """
         self, callback = args[:2]
+
+        # It's also possible to invoke another command which might or
+        # might not have a callback.
+        if isinstance(callback, Command):
+            callback = callback.callback
+            if callback is None:
+                raise TypeError('The given command does not have a '
+                                'callback that can be invoked.')
+
         args = args[2:]
         if getattr(callback, '__click_pass_context__', False):
             args = (self,) + args
         return callback(*args, **kwargs)
+
+    def forward(*args, **kwargs):
+        """Similar to :meth:`forward` but fills in default keyword
+        arguments from the current context if the other command expects
+        it.  This cannot invoke callbacks directly, only other commands.
+        """
+        self, cmd = args[:2]
+
+        # It's also possible to invoke another command which might or
+        # might not have a callback.
+        if not isinstance(cmd, Command):
+            raise TypeError('Callback is not a command.')
+
+        for param_name in cmd.iter_param_names():
+            if param_name in self.params and \
+               param_name not in kwargs:
+                kwargs[param_name] = self.params[param_name]
+
+        return self.invoke(cmd, **kwargs)
 
 
 class Command(object):
@@ -229,6 +257,11 @@ class Command(object):
         for param in self.params:
             if not param.is_eager:
                 yield param
+
+    def iter_param_names(self):
+        """Iterates over all parameter names."""
+        for param in self.iter_params_for_processing():
+            yield param.name
 
     def _make_parser(self, ctx):
         parser = _optparse._SimplifiedOptionParser(
