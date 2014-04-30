@@ -153,6 +153,8 @@ class DateTimeParamType(ParamType):
     name = 'datetime'
 
     def convert(self, value, param, ctx):
+        if isinstance(value, datetime.datetime):
+            return value
         value = re.sub(r'[^0-9]', '', value)
         if len(value) == 14:
             return datetime.datetime.strptime(value, '%Y%m%d%H%M%S')
@@ -167,6 +169,8 @@ class DateParamType(ParamType):
     name = 'date'
 
     def convert(self, value, param, ctx):
+        if isinstance(value, datetime.date):
+            return value
         value = re.sub(r'[^0-9]', '', value)
         if len(value) == 8:
             return datetime.datetime.strptime(value, '%Y%m%d').date()
@@ -181,6 +185,8 @@ class TimeParamType(ParamType):
     name = 'time'
 
     def convert(self, value, param, ctx):
+        if isinstance(value, datetime.time):
+            return value
         value = re.sub(r'[^0-9]', '', value)
         if len(value) == 6:
             return datetime.datetime.strptime(value, '%H%M%S').time()
