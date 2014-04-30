@@ -1,4 +1,6 @@
 import sys
+import datetime
+import re
 
 from ._compat import open_stream, text_type
 from .exceptions import UsageError
@@ -147,6 +149,48 @@ class FloatParamType(ParamType):
         return 'FLOAT'
 
 
+class DateTimeParamType(ParamType):
+    name = 'datetime'
+
+    def convert(self, value, param, ctx):
+        value = re.sub(r'[^0-9]', '', value)
+        if len(value) == 14:
+            return datetime.datetime.strptime(value, '%Y%m%d%H%M%S')
+        else:
+            self.fail('%s is not a valid datetime' % value, param, ctx)
+
+    def __repr__(self):
+        return 'DATETIME'
+
+
+class DateParamType(ParamType):
+    name = 'date'
+
+    def convert(self, value, param, ctx):
+        value = re.sub(r'[^0-9]', '', value)
+        if len(value) == 8:
+            return datetime.datetime.strptime(value, '%Y%m%d').date()
+        else:
+            self.fail('%s is not a valid date' % value, param, ctx)
+
+    def __repr__(self):
+        return 'DATE'
+
+
+class TimeParamType(ParamType):
+    name = 'time'
+
+    def convert(self, value, param, ctx):
+        value = re.sub(r'[^0-9]', '', value)
+        if len(value) == 6:
+            return datetime.datetime.strptime(value, '%H%M%S').time()
+        else:
+            self.fail('%s is not a valid time' % value, param, ctx)
+
+    def __repr__(self):
+        return 'TIME'
+
+
 class File(ParamType):
     """Declares a parameter to be a file for reading or writing.  The file
     is automatically closed once the context tears down (after the command
@@ -218,6 +262,12 @@ def convert_type(ty, default=None):
         return BOOL
     if ty is float:
         return FLOAT
+    if ty is datetime.datetime:
+        return DATETIME
+    if ty is datetime.date:
+        return DATE
+    if ty is datetime.time:
+        return TIME
     if guessed_type:
         return STRING
     return FuncParamType(ty)
@@ -238,3 +288,15 @@ FLOAT = FloatParamType()
 #: A boolean parameter.  This is the default for boolean flags.  This can
 #: also be selected by using ``bool`` as a type.
 BOOL = BoolParamType()
+
+#: A datetime parameter. This can also be selected by using
+#: ``datetime.datetime`` as a type.
+DATETIME = DateTimeParamType()
+
+#: A date parameter. This can also be selected by using
+#: ``datetime.date`` as a type.
+DATE = DateParamType()
+
+#: A time parameter. This can also be selected by using
+#: ``datetime.time`` as a type.
+TIME = TimeParamType()
