@@ -19,14 +19,11 @@ There are many alternatives to click and you can have a look at them if
 you enjoy them better.  The obvious ones are ``optparse`` and ``argparse``
 from the standard library.
 
-click is actually implemented as a wrapper around ``optparse`` and does
-not implement any parsing itself.  The reason it's not based on
-``argparse`` is that ``argparse`` does not allow proper nesting of
-commands by design and has some deficiencies when it comes to POSIX
-compliant argument handling.
-
-In case ``optparse`` ever gets deprecated and removed from Python,
-``click`` will ship a version of it.
+click is actually implemented as a wrapper around a mild fork of
+``optparse`` and does not implement any parsing itself.  The reason it's
+not based on ``argparse`` is that ``argparse`` does not allow proper
+nesting of commands by design and has some deficiencies when it comes to
+POSIX compliant argument handling.
 
 Click is designed to be fun to work with and at the same time not stand in
 your way.  It's not overly flexible at the same time either.  Currently
