@@ -35,7 +35,7 @@ following for instance will only accept floats::
 Confirmation Prompts
 --------------------
 
-To ask a user if he wants to continue with an action the :func:`confirm`
+To ask if a user wants to continue with an action the :func:`confirm`
 function comes in handy.  By default it returns the result of the prompt
 as boolean value::
 
