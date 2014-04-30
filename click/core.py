@@ -517,7 +517,6 @@ class Parameter(object):
     :param default: the default value if omitted.  This can also be a callable
                     in which case it's invoked when the default is needed
                     without any arguments.
-    :param help: the help string.
     :param callback: a callback that should be executed after the parameter
                      was matched.  This is called as ``fn(ctx, value)`` and
                      needs to return the value.
@@ -536,14 +535,12 @@ class Parameter(object):
     param_type_name = 'parameter'
 
     def __init__(self, param_decls=None, type=None, required=False,
-                 default=None, help=None, callback=None, nargs=1,
-                 metavar=None, expose_value=True, is_eager=False,
-                 envvar=None):
+                 default=None, callback=None, nargs=1, metavar=None,
+                 expose_value=True, is_eager=False, envvar=None):
         self.name, self.opts, self.secondary_opts = \
             self._parse_decls(param_decls or ())
         self.type = convert_type(type, default)
         self.required = required
-        self.help = help
         self.callback = callback
         self.nargs = nargs
         self.multiple = False
@@ -657,6 +654,7 @@ class Option(Parameter):
                                parameter will be pulled from an environment
                                variable in case a prefix is defined on the
                                context.
+    :param help: the help string.
     """
     param_type_name = 'option'
 
@@ -664,7 +662,7 @@ class Option(Parameter):
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, allow_from_autoenv=True, type=None,
-                 **attrs):
+                 help=None, **attrs):
         default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
         if prompt is True:
@@ -704,6 +702,7 @@ class Option(Parameter):
             self.is_bool_flag = False
 
         self.allow_from_autoenv = allow_from_autoenv
+        self.help = help
 
         # Sanity check for stuff we don't support
         if __debug__:
