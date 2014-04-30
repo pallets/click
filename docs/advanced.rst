@@ -58,3 +58,41 @@ And it can be used like this then:
     @cli.command()
     def pop():
         pass
+
+Invoking Other Commands
+-----------------------
+
+Sometimes it might be interesting to invoke one command from another
+command.  This is generally a pattern that is discouraged with click but
+possible nonetheless.  For this you can use the :func:`Context.invoke`
+or :func:`Context.forward` methods.
+
+They work similar but the difference is that :func:`Context.invoke` merely
+invokes another command with the arguments you provide as a caller,
+whereas :func:`Context.forward` fills in the arguments from the current
+command.  Both accept the command as first argument and everything else is
+passed onwards as you would expect.
+
+Example:
+
+.. click:example::
+
+    cli = click.Group()
+
+    @cli.command()
+    @click.option('--count', default=1)
+    def test(count):
+        click.echo('Count: %d' % count)
+
+    @cli.command()
+    @click.option('--count', default=1)
+    @click.pass_context
+    def dist(ctx, count):
+        ctx.forward(test)
+        ctx.invoke(test, count=42)
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(cli, prog_name='cli', args=['dist'])
