@@ -257,7 +257,6 @@ class Command(object):
         """
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
         opts, args = ctx._parser.parse_args(args=args)
-        opts = opts.__dict__
 
         for param in ctx.command.iter_params_for_processing():
             value, args = param.handle_parse_result(ctx, opts, args)
@@ -373,7 +372,7 @@ class MultiCommand(Command):
     def _make_parser(self, ctx):
         parser = Command._make_parser(self, ctx)
         parser.usage += ' ' + self.subcommand_metavar
-        parser.disable_interspersed_args()
+        parser.allow_interspersed_args = False
         return parser
 
     def _format_extra_help(self, ctx):
@@ -771,13 +770,13 @@ class Option(Parameter):
         if self.is_flag:
             kwargs.pop('nargs', None)
             if self.is_bool_flag and self.secondary_opts:
-                pos_opt = _optparse.make_option(
-                    *self.opts, action=action + '_true', **kwargs)
+                pos_opt = _optparse.Option(
+                    *self.opts, action=action + '_const', const=True, **kwargs)
                 kwargs.pop('default', None)
                 kwargs.pop('help', None)
-                neg_opt = _optparse.make_option(
-                    *self.secondary_opts, action=action + '_false',
-                    help=_optparse.SUPPRESS_HELP, **kwargs)
+                neg_opt = _optparse.Option(
+                    *self.secondary_opts, action=action + '_const',
+                    const=False, help=_optparse.SUPPRESS_HELP, **kwargs)
                 pos_opt._negative_version = neg_opt
                 parser.add_option(pos_opt)
                 parser.add_option(neg_opt)
