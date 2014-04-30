@@ -1,6 +1,8 @@
 Advanced Patterns
 =================
 
+.. currentmodule:: click
+
 In addition to common functionality that is implemented in the library
 itself, there are countless of patterns that can be implemented by extending
 click.  This page should give some inspiration of what can be
