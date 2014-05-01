@@ -82,8 +82,8 @@ state of our tool:
 
 
     class Repo(object):
-        def __init__(self, home, debug):
-            self.home = os.path.abspath(home)
+        def __init__(self, home=None, debug=False):
+            self.home = os.path.abspath(home or '.')
             self.debug = debug
 
 
@@ -159,9 +159,10 @@ created our repo.  Because of that we can start a search for the last
 level where the object stored on the context was a repo.
 
 Built-in support for this is provided by the :func:`make_pass_decorator`
-factory which will create decorators for us that find objects.  So in our
-case we know that we want to find the closest ``Repo`` object.  So let's
-make a decorator for this:
+factory which will create decorators for us that find objects (it
+internally calls into :meth:`Context.find_object`).  So in our case we
+know that we want to find the closest ``Repo`` object.  So let's make a
+decorator for this:
 
 .. click:example::
 
@@ -178,3 +179,41 @@ repo instead of something else:
     @pass_repo
     def clone(repo, src, dest):
         pass
+
+Ensuring Objects
+````````````````
+
+The above example only works if there was an outer command that created a
+``Repo`` object and stored it on the context.  For some more advanced use
+cases this might be a problem for you.  The default behavior of
+:func:`make_pass_decorator` is to call into :meth:`Context.find_object`
+which will find the object.  If it can't find the object it will raise an
+error.  The alternative behavior is to use :meth:`Context.ensure_object`
+which will find the object, or if it cannot find it, will create one and
+store it on the innermost context.  This behavior can also be enabled for
+:func:`make_pass_decorator` by passing ``ensure=True``:
+
+.. click:example::
+
+    pass_repo = click.make_pass_decorator(Repo, ensure=True)
+
+In this case the innermost context gets such an object created if it's
+missing.  This might replace objects being placed there earlier.  In this
+case the command stays executable, even if the outer command does not run.
+For this to work the object type needs to have a constructor that accepts
+no arguments.
+
+As such it runs standalone:
+
+.. click:example::
+
+    @click.command()
+    @pass_repo
+    def cp(repo):
+        click.echo(repo)
+
+As you can see:
+
+.. click:run::
+
+    invoke(cp, [])

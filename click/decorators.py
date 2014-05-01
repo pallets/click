@@ -25,7 +25,7 @@ def pass_obj(f):
     return update_wrapper(new_func, f)
 
 
-def make_pass_decorator(object_type):
+def make_pass_decorator(object_type, ensure=False):
     """Given an object type this creates a decorator that will work
     similar to :func:`pass_obj` but instead of passing the object of the
     current context, it will find the innermost context of type
@@ -42,12 +42,19 @@ def make_pass_decorator(object_type):
                 return ctx.invoke(f, obj, *args, **kwargs)
             return update_wrapper(new_func, f)
         return decorator
+
+    :param object_type: the type of the object to pass.
+    :param ensure: if set to `True`, a new object will be created and
+                   remembered on the context if it's not there yet.
     """
     def decorator(f):
         @pass_context
         def new_func(*args, **kwargs):
             ctx = args[0]
-            obj = ctx.find_object(object_type)
+            if ensure:
+                obj = ctx.ensure_object(object_type)
+            else:
+                obj = ctx.find_object(object_type)
             if obj is None:
                 raise RuntimeError('Managed to invoke callback without a '
                                    'context object of type %r existing'

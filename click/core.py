@@ -133,6 +133,15 @@ class Context(object):
                 return node.obj
             node = node.parent
 
+    def ensure_object(self, object_type):
+        """Like :meth:`find_object` but sets the innermost object to a
+        new instance of `object_type` if it does not exist.
+        """
+        rv = self.find_object(object_type)
+        if rv is None:
+            self.obj = rv = object_type()
+        return rv
+
     def fail(self, message):
         """Aborts the execution of the program with a specific error
         message.
