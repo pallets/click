@@ -92,7 +92,7 @@ def command(name=None, cls=None, **attrs):
 
     :param name: the name of the command.  This defaults to the function
                  name.
-    :param cls: the command class to instanciate.  This defaults to
+    :param cls: the command class to instantiate.  This defaults to
                 :class:`Command`.
     """
     if cls is None:
