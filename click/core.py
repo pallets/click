@@ -260,7 +260,9 @@ class Command(object):
         order of processing.  This iterator returns all eager parameters
         first, followed by all non-eager parameters.
         """
-        yield self.params['help']
+        for param in self.params:
+            if param.name == 'help':
+                yield param
         for param in self.params:
             if param.is_eager and param.name != 'help':
                 yield param
