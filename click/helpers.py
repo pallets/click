@@ -162,12 +162,13 @@ def echo(message=None, file=None):
     """
     if file is None:
         file = sys.stdout
-    if not isinstance(message, string_types):
-        message = text_type(message)
-    if message:
-        if PY2 and isinstance(message, text_type):
-            encoding = get_best_encoding(file)
-            message = message.encode(encoding, 'replace')
-        file.write(message)
+    if message is not None:
+        if not isinstance(message, string_types):
+            message = text_type(message)
+        if message:
+            if PY2 and isinstance(message, text_type):
+                encoding = get_best_encoding(file)
+                message = message.encode(encoding, 'replace')
+            file.write(message)
     file.write('\n')
     file.flush()

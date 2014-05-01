@@ -15,5 +15,5 @@ class UsageError(Exception):
         self.ctx = ctx
 
 
-class Abort(KeyboardInterrupt):
+class Abort(RuntimeError):
     """An internal signalling exception that signals click to abort."""
