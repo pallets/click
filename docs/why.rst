@@ -46,7 +46,7 @@ Why not Argparse?
 -----------------
 
 Click is internally based on optparse instead of argparse.  This however
-is an implementation detail that a user does not have to concern himself
+is an implementation detail that a user does not have to be concerned
 with.  The reason however click is not using argparse is that it has some
 problematic behaviors that make handling arbitrary command line interfaces
 hard:
