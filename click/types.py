@@ -1,3 +1,4 @@
+import os
 import sys
 
 from ._compat import open_stream, text_type
@@ -171,6 +172,9 @@ class File(ParamType):
         try:
             if hasattr(value, 'read') or hasattr(value, 'write'):
                 return value
+            elif isinstance(value, str) and value.startswith('~/'):
+                value = os.path.join(os.environ['HOME'], value[2:])
+
             f, was_opened = open_stream(value, self.mode, self.encoding,
                                         self.errors)
             # If a context is provided we automatically close the file
