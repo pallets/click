@@ -112,13 +112,6 @@ class HelpFormatter(object):
             strings = self.format_option_strings(opt)
             self.option_strings[opt] = strings
             max_len = max(max_len, len(strings) + self.current_indent)
-        self.indent()
-        for group in parser.option_groups:
-            for opt in group.option_list:
-                strings = self.format_option_strings(opt)
-                self.option_strings[opt] = strings
-                max_len = max(max_len, len(strings) + self.current_indent)
-        self.dedent()
         self.dedent()
         self.help_position = min(max_len + 2, self.max_help_position)
         self.help_width = max(self.width - self.help_position, 11)
@@ -293,12 +286,6 @@ class OptionContainer(object):
         self._short_opt = {}            # single letter -> Option instance
         self._long_opt = {}             # long option -> Option instance
 
-    def _share_option_mappings(self, parser):
-        # For use by OptionGroup constructor -- use shared option
-        # mappings from the OptionParser that owns this OptionGroup.
-        self._short_opt = parser._short_opt
-        self._long_opt = parser._long_opt
-
     def add_option(self, *args, **kwargs):
         if isinstance(args[0], str):
             option = self.option_class(*args, **kwargs)
@@ -364,29 +351,6 @@ class OptionContainer(object):
         return '\n'.join(result)
 
 
-class OptionGroup(OptionContainer):
-
-    def __init__(self, parser, title, description=None):
-        self.parser = parser
-        OptionContainer.__init__(
-            self, parser.option_class, description)
-        self.title = title
-
-    def _create_option_list(self):
-        self.option_list = []
-        self._share_option_mappings(self.parser)
-
-    def set_title(self, title):
-        self.title = title
-
-    def format_help(self, formatter):
-        result = formatter.format_heading(self.title)
-        formatter.indent()
-        result += OptionContainer.format_help(self, formatter)
-        formatter.dedent()
-        return result
-
-
 class OptionParser(OptionContainer):
     standard_option_list = []
 
@@ -413,7 +377,6 @@ class OptionParser(OptionContainer):
 
     def _create_option_list(self):
         self.option_list = []
-        self.option_groups = []
         self._create_option_mappings()
 
     def _populate_option_list(self, option_list):
@@ -426,34 +389,6 @@ class OptionParser(OptionContainer):
         self.rargs = None
         self.largs = None
         self.values = None
-
-    def _get_all_options(self):
-        options = self.option_list[:]
-        for group in self.option_groups:
-            options.extend(group.option_list)
-        return options
-
-    def add_option_group(self, *args, **kwargs):
-        if isinstance(args[0], str):
-            group = OptionGroup(self, *args, **kwargs)
-        elif len(args) == 1 and not kwargs:
-            group = args[0]
-            if not isinstance(group, OptionGroup):
-                raise TypeError('not an OptionGroup instance: %r' % group)
-            if group.parser is not self:
-                raise ValueError('invalid OptionGroup (wrong parser)')
-        else:
-            raise TypeError('invalid arguments')
-
-        self.option_groups.append(group)
-        return group
-
-    def get_option_group(self, opt_str):
-        option = (self._short_opt.get(opt_str) or
-                  self._long_opt.get(opt_str))
-        if option and option.container is not self:
-            return option.container
-        return None
 
     def parse_args(self, args, values=None):
         rargs = args
@@ -630,9 +565,6 @@ class OptionParser(OptionContainer):
         if self.option_list:
             result.append(OptionContainer.format_option_help(self, formatter))
             result.append('\n')
-        for group in self.option_groups:
-            result.append(group.format_help(formatter))
-            result.append('\n')
         formatter.dedent()
         # Drop the last '\n', or the header if no options or option groups:
         return ''.join(result[:-1])
@@ -700,7 +632,7 @@ class _SimplifiedOptionParser(OptionParser):
 
     def format_option_help(self, formatter):
         rv = OptionParser.format_option_help(self, formatter)
-        extra_help = self.__ctx.command._format_extra_help(self.__ctx)
+        extra_help = self.__ctx.command.format_extra_help(self.__ctx)
         if extra_help:
             rv = '%s\n%s' % (rv, extra_help)
         return rv

@@ -162,13 +162,13 @@ class Context(object):
         """Helper method to get formatted usage string for the current
         context and command.
         """
-        return self._parser.get_usage()
+        return self.command.format_usage(self)
 
     def format_help(self):
         """Helper method to get formatted help page for the current
         context and command.
         """
-        return self._parser.format_help().rstrip()
+        return self.command.format_help(self)
 
     def invoke(*args, **kwargs):
         """Invokes a command callback in exactly the way it expects.
@@ -279,7 +279,15 @@ class Command(object):
             param._add_to_parser(parser, ctx)
         return parser
 
-    def _format_extra_help(self, ctx):
+    def format_usage(self, ctx):
+        """Formats the usage line."""
+        return ctx._parser.get_usage()
+
+    def format_help(self, ctx):
+        """Formats the help."""
+        return ctx._parser.format_help().rstrip()
+
+    def format_extra_help(self, ctx):
         pass
 
     def make_context(self, info_name, args, parent=None, **extra):
@@ -417,7 +425,7 @@ class MultiCommand(Command):
         parser.allow_interspersed_args = False
         return parser
 
-    def _format_extra_help(self, ctx):
+    def format_extra_help(self, ctx):
         commands = self.list_commands(ctx)
         if not commands:
             return
