@@ -117,7 +117,7 @@ class HelpFormatter(object):
         self.help_width = max(self.width - self.help_position, 11)
 
     def format_option_strings(self, option):
-        if option.takes_value():
+        if option.takes_value:
             metavar = option.metavar or option.dest.upper()
             short_opts = [self._short_opt_fmt % (sopt, metavar)
                           for sopt in option._short_opts]
@@ -163,44 +163,7 @@ class Option(object):
     def __init__(self, *opts, **attrs):
         self._short_opts = []
         self._long_opts = []
-        self._set_opt_strings(self._check_opt_strings(opts))
-        self._set_attrs(attrs)
-        self._check_attrs()
 
-    def _check_attrs(self):
-        if self.action is None:
-            self.action = 'store'
-        elif self.action not in self.ACTIONS:
-            raise TypeError('invalid action: %r' % self.action)
-
-        takes_value = (self.action in self.STORE_ACTIONS or
-                       self.takes_value)
-        if self.dest is None and takes_value:
-            # Glean a destination from the first long option string,
-            # or from the first short option string if no long options.
-            if self._long_opts:
-                # eg. '--foo-bar' -> 'foo_bar'
-                self.dest = self._long_opts[0][2:].replace('-', '_')
-            else:
-                self.dest = self._short_opts[0][1]
-
-        if self.action in self.TYPED_ACTIONS:
-            if self.nargs is None:
-                self.nargs = 1
-        elif self.nargs is not None:
-            raise TypeError(
-                '\'nargs\' must not be supplied for action %r' % self.action)
-
-    def _check_opt_strings(self, opts):
-        # Filter out None because early versions of Optik had exactly
-        # one short option and one long option, either of which
-        # could be None.
-        opts = [opt for opt in opts if opt]
-        if not opts:
-            raise TypeError('at least one option string must be supplied')
-        return opts
-
-    def _set_opt_strings(self, opts):
         for opt in opts:
             if len(opt) < 2:
                 raise TypeError(
@@ -213,13 +176,12 @@ class Option(object):
                         'must be of the form -x, (x any non-dash char)' % opt)
                 self._short_opts.append(opt)
             else:
-                if not (opt[0:2] == '--' and opt[2] != '-'):
+                if not (opt[:2] == '--' and opt[2] != '-'):
                     raise TypeError(
                         'invalid long option string %r: '
                         'must start with --, followed by non-dash' % opt)
                 self._long_opts.append(opt)
 
-    def _set_attrs(self, attrs):
         for attr in self.ATTRS:
             if attr in attrs:
                 setattr(self, attr, attrs[attr])
@@ -231,37 +193,32 @@ class Option(object):
             raise TypeError('invalid keyword arguments: %s' %
                             ', '.join(attrs))
 
-    def __str__(self):
-        return '/'.join(self._short_opts + self._long_opts)
+        if self.action is None:
+            self.action = 'store'
+        if self.action in self.TYPED_ACTIONS:
+            if self.nargs is None:
+                self.nargs = 1
 
+    @property
     def takes_value(self):
         return self.action in self.TAKES_VALUE_ACTIONS
 
     def get_opt_string(self):
         if self._long_opts:
             return self._long_opts[0]
-        else:
-            return self._short_opts[0]
+        return self._short_opts[0]
 
     def process(self, opt, value, values, parser):
-        # And then take whatever action is expected of us.
-        # This is a separate method to make life easier for
-        # subclasses to add new actions.
-        return self.take_action(
-            self.action, self.dest, opt, value, values, parser)
-
-    def take_action(self, action, dest, opt, value, values, parser):
-        if action == 'store':
-            values[dest] = value
-        elif action == 'store_const':
-            values[dest] = self.const
-        elif action == 'append':
-            values.setdefault(dest, []).append(value)
-        elif action == 'append_const':
-            values.setdefault(dest, []).append(self.const)
+        if self.action == 'store':
+            values[self.dest] = value
+        elif self.action == 'store_const':
+            values[self.dest] = self.const
+        elif self.action == 'append':
+            values.setdefault(self.dest, []).append(value)
+        elif self.action == 'append_const':
+            values.setdefault(self.dest, []).append(self.const)
         else:
             raise ValueError('unknown action %r' % self.action)
-        return 1
 
 
 SUPPRESS_HELP = object()
@@ -482,7 +439,7 @@ class OptionParser(OptionContainer):
 
         opt = self._match_long_opt(opt)
         option = self._long_opt[opt]
-        if option.takes_value():
+        if option.takes_value:
             nargs = option.nargs
             if len(rargs) < nargs:
                 if nargs == 1:
@@ -514,7 +471,7 @@ class OptionParser(OptionContainer):
 
             if not option:
                 self.fail('no such option: %s' % opt)
-            if option.takes_value():
+            if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
                 # next arg, and stop consuming characters of arg.
                 if i < len(arg):
