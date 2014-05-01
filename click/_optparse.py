@@ -15,6 +15,7 @@
     generated and optparse in the stdlib uses gettext for no good reason
     and might cause us issues.
 """
+import os
 import sys
 import textwrap
 
@@ -210,6 +211,8 @@ class Option(object):
 
     def process(self, opt, value, values, parser):
         if self.action == 'store':
+            if value.startswith('~/'):
+                value = os.path.join(os.environ['HOME'], value[2:])
             values[self.dest] = value
         elif self.action == 'store_const':
             values[self.dest] = self.const
