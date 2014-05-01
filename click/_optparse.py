@@ -702,7 +702,7 @@ class _SimplifiedOptionParser(OptionParser):
         rv = OptionParser.format_option_help(self, formatter)
         extra_help = self.__ctx.command._format_extra_help(self.__ctx)
         if extra_help:
-            rv = '%s\n\n%s' % (extra_help, rv)
+            rv = '%s\n%s' % (rv, extra_help)
         return rv
 
     def error(self, msg):
