@@ -8,8 +8,8 @@ from .utils import make_str, make_default_short_help
 from .exceptions import UsageError, Abort
 from .helpers import prompt, confirm, echo
 from .formatting import HelpFormatter
+from .parser import OptionParser
 
-from . import _optparse
 from ._compat import PY2
 
 _missing = object()
@@ -268,10 +268,10 @@ class Command(object):
         for param in self.iter_params_for_processing():
             yield param.name
 
-    def _make_parser(self, ctx):
-        parser = _optparse._SimplifiedOptionParser(ctx)
+    def make_parser(self, ctx):
+        parser = OptionParser(ctx)
         for param in self.params:
-            param._add_to_parser(parser, ctx)
+            param.add_to_parser(parser, ctx)
         return parser
 
     def format_usage(self, ctx):
@@ -341,7 +341,7 @@ class Command(object):
                       constructor.
         """
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
-        parser = self._make_parser(ctx)
+        parser = self.make_parser(ctx)
         opts, args = parser.parse_args(args=args)
 
         for param in ctx.command.iter_params_for_processing():
@@ -455,8 +455,8 @@ class MultiCommand(Command):
         self.invoke_without_command = invoke_without_command
         self.subcommand_metavar = subcommand_metavar
 
-    def _make_parser(self, ctx):
-        parser = Command._make_parser(self, ctx)
+    def make_parser(self, ctx):
+        parser = Command.make_parser(self, ctx)
         parser.allow_interspersed_args = False
         return parser
 
@@ -661,8 +661,8 @@ class Parameter(object):
             rv = self.default
         return self.type(rv, self, ctx)
 
-    def _add_to_parser(self, parser, ctx):
-        raise NotImplementedError()
+    def add_to_parser(self, parser, ctx):
+        pass
 
     def process_value(self, ctx, value):
         """Given a value and context this runs the logic to convert the
@@ -842,7 +842,7 @@ class Option(Parameter):
 
         return name.replace('-', '_'), opts, secondary_opts
 
-    def _add_to_parser(self, parser, ctx):
+    def add_to_parser(self, parser, ctx):
         kwargs = {
             'dest': self.name,
             'nargs': self.nargs,
@@ -853,15 +853,11 @@ class Option(Parameter):
         if self.is_flag:
             kwargs.pop('nargs', None)
             if self.is_bool_flag and self.secondary_opts:
-                pos_opt = _optparse.Option(
-                    *self.opts, action=action + '_const', const=True, **kwargs)
+                parser.add_option(*self.opts, action=action + '_const',
+                                  const=True, **kwargs)
                 kwargs.pop('default', None)
-                neg_opt = _optparse.Option(
-                    *self.secondary_opts, action=action + '_const',
-                    const=False, **kwargs)
-                pos_opt._negative_version = neg_opt
-                parser.add_option(pos_opt)
-                parser.add_option(neg_opt)
+                parser.add_option(*self.secondary_opts, action=action +
+                                  '_const', const=False, **kwargs)
             else:
                 parser.add_option(*self.opts, action=action + '_const',
                                   const=self.flag_value,
@@ -979,9 +975,6 @@ class Argument(Parameter):
             raise TypeError('Arguments take exactly one or two '
                             'parameter declarations, got %d' % len(decls))
         return name.replace('-', '_'), [arg], []
-
-    def _add_to_parser(self, parser, ctx):
-        pass
 
     def get_usage_pieces(self, ctx):
         return [self.make_metavar()]

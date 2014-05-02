@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-    click._optparse
-    ~~~~~~~~~~~~~~~
+    click.parser
+    ~~~~~~~~~~~~
 
-    This module is largely a copy paste from the stdlib's optparse module
-    with the features removed that we do not need from optparse because
-    we implement them in click on a higher level (for instance type
-    handling, help formatting and a lot more).
+    This module started out as largely a copy paste from the stdlib's
+    optparse module with the features removed that we do not need from
+    optparse because we implement them in click on a higher level (for
+    instance type handling, help formatting and a lot more).
 
     The plan is to remove more and more from here over time.
 
@@ -15,8 +15,6 @@
     generated and optparse in the stdlib uses gettext for no good reason
     and might cause us issues.
 """
-import sys
-
 from .exceptions import UsageError
 
 
@@ -77,40 +75,34 @@ class Option(object):
             return self._long_opts[0]
         return self._short_opts[0]
 
-    def process(self, opt, value, values, parser):
+    def process(self, opt, value, opts, parser):
         if self.action == 'store':
-            values[self.dest] = value
+            opts[self.dest] = value
         elif self.action == 'store_const':
-            values[self.dest] = self.const
+            opts[self.dest] = self.const
         elif self.action == 'append':
-            values.setdefault(self.dest, []).append(value)
+            opts.setdefault(self.dest, []).append(value)
         elif self.action == 'append_const':
-            values.setdefault(self.dest, []).append(self.const)
+            opts.setdefault(self.dest, []).append(self.const)
         else:
             raise ValueError('unknown action %r' % self.action)
 
 
-class OptionContainer(object):
+class OptionParser(object):
 
-    def __init__(self, option_class):
-        # Initialize the option list and related data structures.
-        # This method must be provided by subclasses, and it must
-        # initialize at least the following instance attributes:
-        # option_list, _short_opt, _long_opt.
-        self._create_option_list()
-
-        self.option_class = option_class
-
-    def _create_option_mappings(self):
-        # For use by OptionParser constructor -- create the master
-        # option mappings used by this OptionParser and all
-        # OptionGroups that it owns.
-        self._short_opt = {}            # single letter -> Option instance
-        self._long_opt = {}             # long option -> Option instance
+    def __init__(self, ctx):
+        self.ctx = ctx
+        self.allow_interspersed_args = True
+        self.option_list = []
+        self._short_opt = {}
+        self._long_opt = {}
+        self.rargs = None
+        self.largs = None
+        self.opts = None
 
     def add_option(self, *args, **kwargs):
         if isinstance(args[0], str):
-            option = self.option_class(*args, **kwargs)
+            option = Option(*args, **kwargs)
         elif len(args) == 1 and not kwargs:
             option = args[0]
             if not isinstance(option, Option):
@@ -127,64 +119,20 @@ class OptionContainer(object):
 
         return option
 
-    def add_options(self, option_list):
-        for option in option_list:
-            self.add_option(option)
-
-    def get_option(self, opt_str):
-        return (self._short_opt.get(opt_str) or
-                self._long_opt.get(opt_str))
-
-    def has_option(self, opt_str):
-        return (opt_str in self._short_opt or
-                opt_str in self._long_opt)
-
-    def remove_option(self, opt_str):
-        option = self._short_opt.get(opt_str)
-        if option is None:
-            option = self._long_opt.get(opt_str)
-        if option is None:
-            raise ValueError('no such option %r' % opt_str)
-
-        for opt in option._short_opts:
-            del self._short_opt[opt]
-        for opt in option._long_opts:
-            del self._long_opt[opt]
-        option.container.option_list.remove(option)
-
-
-class OptionParser(OptionContainer):
-
-    def __init__(self, option_list=None, option_class=Option):
-        OptionContainer.__init__(self, option_class)
-        self.allow_interspersed_args = True
-        if option_list:
-            self.add_options(option_list)
-        self._init_parsing_state()
-
-    def _create_option_list(self):
-        self.option_list = []
-        self._create_option_mappings()
-
-    def _init_parsing_state(self):
-        self.rargs = None
-        self.largs = None
-        self.values = None
-
-    def parse_args(self, args, values=None):
+    def parse_args(self, args, opts=None):
         rargs = args
-        if values is None:
-            values = {}
+        if opts is None:
+            opts = {}
         self.rargs = rargs
         self.largs = largs = []
-        self.values = values
+        self.opts = opts
 
-        self._process_args(largs, rargs, values)
+        self._process_args(largs, rargs, opts)
 
         args = largs + rargs
-        return values, args
+        return opts, args
 
-    def _process_args(self, largs, rargs, values):
+    def _process_args(self, largs, rargs, opts):
         while rargs:
             arg = rargs[0]
             # We handle bare '--' explicitly, and bare '-' is handled by the
@@ -195,11 +143,11 @@ class OptionParser(OptionContainer):
                 return
             elif arg[0:2] == '--':
                 # process a single long option (possibly with value(s))
-                self._process_long_opt(rargs, values)
+                self._process_long_opt(rargs, opts)
             elif arg[:1] == '-' and len(arg) > 1:
                 # process a cluster of short options (possibly with
                 # value(s) for the last one only)
-                self._process_short_opts(rargs, values)
+                self._process_short_opts(rargs, opts)
             elif self.allow_interspersed_args:
                 largs.append(arg)
                 del rargs[0]
@@ -248,7 +196,7 @@ class OptionParser(OptionContainer):
             self.error('no such option: %s.  (Possible options: %s)'
                        % (opt, ', '.join(possibilities)))
 
-    def _process_long_opt(self, rargs, values):
+    def _process_long_opt(self, rargs, opts):
         arg = rargs.pop(0)
 
         # Value explicitly attached to arg?  Pretend it's the next
@@ -282,9 +230,9 @@ class OptionParser(OptionContainer):
         else:
             value = None
 
-        option.process(opt, value, values, self)
+        option.process(opt, value, opts, self)
 
-    def _process_short_opts(self, rargs, values):
+    def _process_short_opts(self, rargs, opts):
         arg = rargs.pop(0)
         stop = False
         i = 1
@@ -318,25 +266,10 @@ class OptionParser(OptionContainer):
             else:
                 value = None
 
-            option.process(opt, value, values, self)
+            option.process(opt, value, opts, self)
 
             if stop:
                 break
 
-    def exit(self, status=0, msg=None):
-        if msg:
-            sys.stderr.write(msg)
-        sys.exit(status)
-
     def error(self, msg):
-        raise Exception(msg)
-
-
-class _SimplifiedOptionParser(OptionParser):
-
-    def __init__(self, ctx, **extra):
-        OptionParser.__init__(self, **extra)
-        self.__ctx = ctx
-
-    def error(self, msg):
-        raise UsageError(msg, self.__ctx)
+        raise UsageError(msg, self.ctx)
