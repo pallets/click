@@ -20,7 +20,7 @@ value is used.  If no default value is provided the type is assumed to be
     @click.command()
     @click.option('--n', default=1)
     def dots(n):
-        click.echo('.' * n)
+        click.utils.echo('.' * n)
 
 And on the command line:
 
@@ -43,7 +43,7 @@ the ``nargs`` parameter.  The values are then stored as a tuple.
     @click.command()
     @click.option('--pos', nargs=2, type=float)
     def findme(pos):
-        click.echo('%s / %s' % pos)
+        click.utils.echo('%s / %s' % pos)
 
 And on the command line:
 
@@ -67,7 +67,7 @@ Example:
     @click.command()
     @click.option('--message', '-m', multiple=True)
     def commit(message):
-        click.echo('\n'.join(message))
+        click.utils.echo('\n'.join(message))
 
 And on the command line:
 
@@ -89,7 +89,7 @@ using the multiple flag and taking the length of the end result:
     @click.option('-v', '--verbose', is_flag=True, multiple=True)
     def log(verbose):
         verbosity = len(verbose)
-        click.echo('Verbosity: %s' % verbosity)
+        click.utils.echo('Verbosity: %s' % verbosity)
 
 And on the command line:
 
@@ -117,7 +117,7 @@ Example:
         rv = os.uname()[0]
         if shout:
             rv = rv.upper() + '!!!!111'
-        click.echo(rv)
+        click.utils.echo(rv)
 
 And on the command line:
 
@@ -139,7 +139,7 @@ manually inform click that something is a flag:
         rv = os.uname()[0]
         if shout:
             rv = rv.upper() + '!!!!111'
-        click.echo(rv)
+        click.utils.echo(rv)
 
 And on the command line:
 
@@ -164,7 +164,7 @@ the flag that should be the default.
                   default=True)
     @click.option('--lower', 'transformation', flag_value='lower')
     def info(transformation):
-        click.echo(getattr(os.uname()[0], transformation)())
+        click.utils.echo(getattr(os.uname()[0], transformation)())
 
 And on the command line:
 
@@ -190,7 +190,7 @@ Example:
     @click.command()
     @click.option('--hash-type', type=click.Choice(['md5', 'sha1']))
     def digest(hash_type):
-        click.echo(hash_type)
+        click.utils.echo(hash_type)
 
 What it looks like:
 
@@ -218,7 +218,7 @@ Example:
     @click.command()
     @click.option('--name', prompt=True)
     def hello(name):
-        click.echo('Hello %s!' % name)
+        click.utils.echo('Hello %s!' % name)
 
 And what it looks like:
 
@@ -235,7 +235,7 @@ a different one:
     @click.command()
     @click.option('--name', prompt='Your name please')
     def hello(name):
-        click.echo('Hello %s!' % name)
+        click.utils.echo('Hello %s!' % name)
 
 What it looks like:
 
@@ -255,7 +255,7 @@ useful for password input:
     @click.option('--password', prompt=True, hide_input=True,
                   confirmation_prompt=True)
     def encrypt(password):
-        click.echo('Encrypting password to %s' % password.encode('rot13'))
+        click.utils.echo('Encrypting password to %s' % password.encode('rot13'))
 
 What it looks like:
 
@@ -271,7 +271,7 @@ replaced with the :func:`password_option` decorator:
     @click.command()
     @click.password_option()
     def encrypt(password):
-        click.echo('Encrypting password to %s' % password.encode('rot13'))
+        click.utils.echo('Encrypting password to %s' % password.encode('rot13'))
 
 Callbacks and Eager Options
 ---------------------------
@@ -300,14 +300,14 @@ Here an example for a ``--version`` flag:
     def print_version(ctx, value):
         if not value:
             return
-        click.echo('Version 1.0')
+        click.utils.echo('Version 1.0')
         ctx.exit()
 
     @click.command()
     @click.option('--version', is_flag=True, callback=print_version,
                   expose_value=False, is_eager=True)
     def hello():
-        click.echo('Hello World!')
+        click.utils.echo('Hello World!')
 
 The `expose_value` parameter prevents the now pretty pointless ``version``
 parameter to be passed to the callback.  If that was not specified a
@@ -339,7 +339,7 @@ callback:
                   expose_value=False,
                   prompt='Are you sure you want to drop the db?')
     def dropdb():
-        click.echo('Dropped all tables!')
+        click.utils.echo('Dropped all tables!')
 
 And what it looks like on the command line:
 
@@ -356,7 +356,7 @@ replaced with the :func:`confirmation_option` decorator:
     @click.command()
     @click.confirmation_option('Are you sure you want to drop the db?')
     def dropdb():
-        click.echo('Dropped all tables!')
+        click.utils.echo('Dropped all tables!')
 
 Values from Environment Variables
 ---------------------------------
@@ -383,7 +383,7 @@ Example usage:
     @click.command()
     @click.option('--username')
     def greet(username):
-        click.echo('Hello %s!' % username)
+        click.utils.echo('Hello %s!' % username)
 
     if __name__ == '__main__':
         greet(auto_envvar_prefix='GREETER')
@@ -405,7 +405,7 @@ Example usage:
     @click.command()
     @click.option('--username', envvar='USERNAME')
     def greet(username):
-        click.echo('Hello %s!' % username)
+        click.utils.echo('Hello %s!' % username)
 
     if __name__ == '__main__':
         greet()

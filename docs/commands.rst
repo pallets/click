@@ -25,11 +25,11 @@ when an inner command runs:
     @click.group()
     @click.option('--debug/--no-debug', default=False)
     def cli(debug):
-        click.echo('Debug mode is %s' % ('on' if debug else 'off'))
+        click.utils.echo('Debug mode is %s' % ('on' if debug else 'off'))
 
     @cli.command()
     def sync():
-        click.echo('Synching')
+        click.utils.echo('Synching')
 
 Here is what this looks like:
 
@@ -72,7 +72,7 @@ script like this:
     @cli.command()
     @click.pass_context
     def sync(ctx):
-        click.echo('Debug is %s' % (ctx.obj['DEBUG'] and 'on' or 'off'))
+        click.utils.echo('Debug is %s' % (ctx.obj['DEBUG'] and 'on' or 'off'))
 
     if __name__ == '__main__':
         cli(obj={})
@@ -140,13 +140,13 @@ Example:
     @click.pass_context
     def cli(ctx):
         if ctx.invoked_subcommand is None:
-            click.echo('I was invoked without subcommand')
+            click.utils.echo('I was invoked without subcommand')
         else:
-            click.echo('I am about to invoke %s' % ctx.invoked_subcommand)
+            click.utils.echo('I am about to invoke %s' % ctx.invoked_subcommand)
 
     @cli.command()
     def sync():
-        click.echo('The subcommand')
+        click.utils.echo('The subcommand')
 
 And how it works in practice::
 

@@ -24,7 +24,7 @@ function with this decorator will make it into a callable script:
 
     @click.command()
     def hello():
-        click.echo('Hello World!')
+        click.utils.echo('Hello World!')
 
 What's happening is that the decorator converts the function into a
 :class:`Command` which then can be invoked::
@@ -76,11 +76,11 @@ implements two commands for managing databases:
 
     @click.command()
     def initdb():
-        click.echo('Initialized the database')
+        click.utils.echo('Initialized the database')
 
     @click.command()
     def dropdb():
-        click.echo('Dropped the database')
+        click.utils.echo('Dropped the database')
 
     cli.add_command(initdb)
     cli.add_command(dropdb)
@@ -102,11 +102,11 @@ script can be written like this then:
 
     @cli.command()
     def initdb():
-        click.echo('Initialized the database')
+        click.utils.echo('Initialized the database')
 
     @cli.command()
     def dropdb():
-        click.echo('Dropped the database')
+        click.utils.echo('Dropped the database')
 
 Adding Parameters
 -----------------
@@ -120,7 +120,7 @@ To add parameters the :func:`option` and :func:`argument` decorators:
     @click.argument('name')
     def hello(count, name):
         for x in range(count):
-            click.echo('Hello %s!' % name)
+            click.utils.echo('Hello %s!' % name)
 
 What it looks like:
 

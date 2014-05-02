@@ -22,7 +22,7 @@ Example:
     @click.command()
     @click.argument('filename')
     def touch(filename):
-        click.echo(filename)
+        click.utils.echo(filename)
 
 And what it looks like:
 
@@ -49,7 +49,7 @@ Example:
     @click.argument('files', nargs=-1)
     def touch(files):
         for file in files:
-            click.echo(file)
+            click.utils.echo(file)
 
 And what it looks like:
 
@@ -108,7 +108,7 @@ Example usage:
     @click.command()
     @click.argument('src', envvar='SRC', type=click.File('r'))
     def echo(src):
-        click.echo(src.read())
+        click.utils.echo(src.read())
 
 And from the command line:
 
