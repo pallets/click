@@ -20,11 +20,8 @@ from .exceptions import UsageError
 
 class Option(object):
     ATTRS = ['action', 'type', 'dest', 'nargs', 'const']
-    ACTIONS = ('store', 'store_const', 'append', 'append_const')
-    STORE_ACTIONS = ('store', 'store_const', 'append', 'append_const')
     TYPED_ACTIONS = ('store', 'append')
     TAKES_VALUE_ACTIONS = ('store', 'append')
-    CONST_ACTIONS = ('store_const', 'append_const')
 
     def __init__(self, *opts, **attrs):
         self._short_opts = []
@@ -38,10 +35,10 @@ class Option(object):
 
         for attr in self.ATTRS:
             if attr in attrs:
-                setattr(self, attr, attrs[attr])
-                del attrs[attr]
+                setattr(self, attr, attrs.pop(attr))
             else:
                 setattr(self, attr, None)
+
         if attrs:
             attrs = sorted(attrs.keys())
             raise TypeError('invalid keyword arguments: %s' % ', '.join(attrs))
@@ -74,7 +71,6 @@ class OptionParser(object):
     def __init__(self, ctx):
         self.ctx = ctx
         self.allow_interspersed_args = True
-        self.option_list = []
         self._short_opt = {}
         self._long_opt = {}
         self.rargs = None
@@ -91,7 +87,6 @@ class OptionParser(object):
         else:
             raise TypeError('invalid arguments')
 
-        self.option_list.append(option)
         option.container = self
         for opt in option._short_opts:
             self._short_opt[opt] = option
