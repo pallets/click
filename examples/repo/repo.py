@@ -30,6 +30,8 @@ def cli(ctx, repo_home):
 @click.argument('dest', required=False)
 @click.option('--shallow/--deep', default=False,
               help='Makes a checkout shallow or deep.  Deep by default.')
+@click.option('--with-readline/--without-readline', default=False,
+              help='Makes a checkout shallow or deep.  Deep by default.')
 @pass_repo
 def clone(repo, src, dest, shallow):
     """Clones a repository.

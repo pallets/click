@@ -6,7 +6,7 @@
     This module is largely a copy paste from the stdlib's optparse module
     with the features removed that we do not need from optparse because
     we implement them in click on a higher level (for instance type
-    handling and some other things).
+    handling, help formatting and a lot more).
 
     The plan is to remove more and more from here over time.
 
@@ -16,139 +16,8 @@
     and might cause us issues.
 """
 import sys
-import textwrap
 
-from .helpers import get_terminal_size
-from .formatting import TextWrapper
 from .exceptions import UsageError
-
-
-class HelpFormatter(object):
-
-    def __init__(self, indent_increment, max_help_position, width,
-                 short_first):
-        self.parser = None
-        self.indent_increment = indent_increment
-        if width is None:
-            width = min(get_terminal_size()[0], 80) - 2
-        self.width = width
-        self.help_position = self.max_help_position = \
-            min(max_help_position, max(width - 20, indent_increment * 2))
-        self.current_indent = 0
-        self.level = 0
-        self.help_width = None
-        self.short_first = short_first
-        self.option_strings = {}
-        self._short_opt_fmt = '%s %s'
-        self._long_opt_fmt = '%s=%s'
-
-    def set_parser(self, parser):
-        self.parser = parser
-
-    def indent(self):
-        self.current_indent += self.indent_increment
-        self.level += 1
-
-    def dedent(self):
-        self.current_indent -= self.indent_increment
-        assert self.current_indent >= 0, 'Indent decreased below 0.'
-        self.level -= 1
-
-    def format_usage(self, usage):
-        raise NotImplementedError('subclasses must implement')
-
-    def format_heading(self, heading):
-        raise NotImplementedError('subclasses must implement')
-
-    def _format_text(self, text):
-        """
-        Format a paragraph of free-form text for inclusion in the
-        help output at the current indentation level.
-        """
-        text_width = max(self.width - self.current_indent, 11)
-        indent = ' ' * self.current_indent
-        return textwrap.fill(text,
-                             text_width,
-                             initial_indent=indent,
-                             subsequent_indent=indent)
-
-    def format_description(self, description):
-        if description:
-            return self._format_text(description) + '\n'
-        else:
-            return ''
-
-    def format_epilog(self, epilog):
-        if epilog:
-            return '\n' + self._format_text(epilog) + '\n'
-        else:
-            return ''
-
-    def format_option(self, option):
-        result = []
-        opts = self.option_strings[option]
-        opt_width = self.help_position - self.current_indent - 2
-        if len(opts) > opt_width:
-            opts = '%*s%s\n' % (self.current_indent, '', opts)
-            indent_first = self.help_position
-        else:                       # start help on same line as opts
-            opts = '%*s%-*s  ' % (self.current_indent, '', opt_width, opts)
-            indent_first = 0
-        result.append(opts)
-        if option.help:
-            help_text = option.help
-            help_lines = textwrap.wrap(help_text, self.help_width)
-            result.append('%*s%s\n' % (indent_first, '', help_lines[0]))
-            result.extend(['%*s%s\n' % (self.help_position, '', line)
-                           for line in help_lines[1:]])
-        elif opts[-1] != '\n':
-            result.append('\n')
-        return ''.join(result)
-
-    def store_option_strings(self, parser):
-        self.indent()
-        max_len = 0
-        for opt in parser.option_list:
-            strings = self.format_option_strings(opt)
-            self.option_strings[opt] = strings
-            max_len = max(max_len, len(strings) + self.current_indent)
-        self.dedent()
-        self.help_position = min(max_len + 2, self.max_help_position)
-        self.help_width = max(self.width - self.help_position, 11)
-
-    def format_option_strings(self, option):
-        if option.takes_value:
-            metavar = option.metavar or option.dest.upper()
-            short_opts = [self._short_opt_fmt % (sopt, metavar)
-                          for sopt in option._short_opts]
-            long_opts = [self._long_opt_fmt % (lopt, metavar)
-                         for lopt in option._long_opts]
-        else:
-            short_opts = option._short_opts
-            long_opts = option._long_opts
-
-        if self.short_first:
-            opts = short_opts + long_opts
-        else:
-            opts = long_opts + short_opts
-
-        return ', '.join(opts)
-
-
-class IndentedHelpFormatter(HelpFormatter):
-    """Format help with indented section bodies.
-    """
-
-    def __init__(self, indent_increment=2, max_help_position=24,
-                 width=None, short_first=1):
-        HelpFormatter.__init__(
-            self, indent_increment, max_help_position, width, short_first)
-
-    def format_usage(self, usage):
-        return 'Usage: %s\n' % usage
-
-    def format_heading(self, heading):
-        return '%*s%s:\n' % (self.current_indent, '', heading)
 
 
 class Option(object):
@@ -221,12 +90,9 @@ class Option(object):
             raise ValueError('unknown action %r' % self.action)
 
 
-SUPPRESS_HELP = object()
-
-
 class OptionContainer(object):
 
-    def __init__(self, option_class, description):
+    def __init__(self, option_class):
         # Initialize the option list and related data structures.
         # This method must be provided by subclasses, and it must
         # initialize at least the following instance attributes:
@@ -234,7 +100,6 @@ class OptionContainer(object):
         self._create_option_list()
 
         self.option_class = option_class
-        self.description = description
 
     def _create_option_mappings(self):
         # For use by OptionParser constructor -- create the master
@@ -287,60 +152,19 @@ class OptionContainer(object):
             del self._long_opt[opt]
         option.container.option_list.remove(option)
 
-    def format_option_help(self, formatter):
-        if not self.option_list:
-            return ''
-        result = []
-        for option in self.option_list:
-            if not option.help is SUPPRESS_HELP:
-                result.append(formatter.format_option(option))
-        return ''.join(result)
-
-    def format_description(self, formatter):
-        return formatter.format_description(self.description)
-
-    def format_help(self, formatter):
-        result = []
-        if self.description:
-            result.append(self.format_description(formatter))
-        if self.option_list:
-            result.append(self.format_option_help(formatter))
-        return '\n'.join(result)
-
 
 class OptionParser(OptionContainer):
-    standard_option_list = []
 
-    def __init__(self,
-                 usage=None,
-                 option_list=None,
-                 option_class=Option,
-                 description=None,
-                 formatter=None,
-                 epilog=None):
-        OptionContainer.__init__(
-            self, option_class, description)
-        self.usage = usage
+    def __init__(self, option_list=None, option_class=Option):
+        OptionContainer.__init__(self, option_class)
         self.allow_interspersed_args = True
-        if formatter is None:
-            formatter = IndentedHelpFormatter()
-        self.formatter = formatter
-        self.formatter.set_parser(self)
-        self.epilog = epilog
-
-        self._populate_option_list(option_list)
-
+        if option_list:
+            self.add_options(option_list)
         self._init_parsing_state()
 
     def _create_option_list(self):
         self.option_list = []
         self._create_option_mappings()
-
-    def _populate_option_list(self, option_list):
-        if self.standard_option_list:
-            self.add_options(self.standard_option_list)
-        if option_list:
-            self.add_options(option_list)
 
     def _init_parsing_state(self):
         self.rargs = None
@@ -507,92 +331,12 @@ class OptionParser(OptionContainer):
     def error(self, msg):
         raise Exception(msg)
 
-    def get_usage(self):
-        if self.usage:
-            return self.formatter.format_usage(self.usage)
-        return ''
-
-    def format_option_help(self, formatter=None):
-        if formatter is None:
-            formatter = self.formatter
-        formatter.store_option_strings(self)
-        result = []
-        result.append(formatter.format_heading('Options'))
-        formatter.indent()
-        if self.option_list:
-            result.append(OptionContainer.format_option_help(self, formatter))
-            result.append('\n')
-        formatter.dedent()
-        # Drop the last '\n', or the header if no options or option groups:
-        return ''.join(result[:-1])
-
-    def format_epilog(self, formatter):
-        return formatter.format_epilog(self.epilog)
-
-    def format_help(self, formatter=None):
-        if formatter is None:
-            formatter = self.formatter
-        result = []
-        if self.usage:
-            result.append(self.get_usage() + '\n')
-        if self.description:
-            result.append(self.format_description(formatter) + '\n')
-        result.append(self.format_option_help(formatter))
-        result.append(self.format_epilog(formatter))
-        return ''.join(result)
-
-
-class _SimplifiedFormatter(IndentedHelpFormatter):
-
-    def format_usage(self, usage):
-        prefix = 'Usage: '
-        indent = len(prefix)
-        text_width = self.width - indent
-        return '%s%s\n' % (prefix, TextWrapper(
-            text_width, initial_indent='',
-            subsequent_indent=' ' * indent,
-            replace_whitespace=False).fill(usage))
-
-    def _format_text(self, text):
-        text_width = self.width - self.current_indent
-        indent = ' ' * self.current_indent
-
-        return TextWrapper(text_width,
-                           initial_indent=indent,
-                           subsequent_indent=indent,
-                           replace_whitespace=False).fill_paragraphs(text)
-
-    def format_description(self, description):
-        if not description:
-            return ''
-        self.indent()
-        rv = self._format_text(description) + '\n'
-        self.dedent()
-        return rv
-
-    def format_option_strings(self, option):
-        rv = IndentedHelpFormatter.format_option_strings(self, option)
-        if hasattr(option, '_negative_version'):
-            rv += ' / ' + IndentedHelpFormatter.format_option_strings(
-                self, option._negative_version)
-        return rv
-
 
 class _SimplifiedOptionParser(OptionParser):
 
     def __init__(self, ctx, **extra):
-        usage = ctx.command_path + ' ' + ctx.command.options_metavar
-        OptionParser.__init__(self, usage=usage,
-                              formatter=_SimplifiedFormatter(),
-                              **extra)
+        OptionParser.__init__(self, **extra)
         self.__ctx = ctx
-
-    def format_option_help(self, formatter):
-        rv = OptionParser.format_option_help(self, formatter)
-        extra_help = self.__ctx.command.format_extra_help(self.__ctx)
-        if extra_help:
-            rv = '%s\n%s' % (rv, extra_help)
-        return rv
 
     def error(self, msg):
         raise UsageError(msg, self.__ctx)

@@ -7,6 +7,7 @@ from .types import convert_type, BOOL
 from .utils import make_str
 from .exceptions import UsageError, Abort
 from .helpers import prompt, confirm, echo
+from .formatting import HelpFormatter
 
 from . import _optparse
 from ._compat import PY2
@@ -78,7 +79,6 @@ class Context(object):
             self.auto_envvar_prefix = auto_envvar_prefix.upper()
         self.auto_envvar_prefix = auto_envvar_prefix
 
-        self._parser = command._make_parser(self)
         self._close_callbacks = []
 
     def __enter__(self):
@@ -162,13 +162,13 @@ class Context(object):
         """Helper method to get formatted usage string for the current
         context and command.
         """
-        return self.command.format_usage(self)
+        return self.command.format_usage(self).rstrip('\n')
 
     def format_help(self):
         """Helper method to get formatted help page for the current
         context and command.
         """
-        return self.command.format_help(self)
+        return self.command.format_help(self).rstrip('\n')
 
     def invoke(*args, **kwargs):
         """Invokes a command callback in exactly the way it expects.
@@ -273,22 +273,55 @@ class Command(object):
             yield param.name
 
     def _make_parser(self, ctx):
-        parser = _optparse._SimplifiedOptionParser(
-            ctx, description=self.help, epilog=self.epilog)
+        parser = _optparse._SimplifiedOptionParser(ctx)
         for param in self.params:
             param._add_to_parser(parser, ctx)
         return parser
 
     def format_usage(self, ctx):
         """Formats the usage line."""
-        return ctx._parser.get_usage()
+        formatter = HelpFormatter()
+        formatter.write_usage(ctx.command_path,
+                              self.options_metavar)
+        return formatter.getvalue()
 
     def format_help(self, ctx):
         """Formats the help."""
-        return ctx._parser.format_help().rstrip()
+        formatter = HelpFormatter()
+        self._format(ctx, formatter)
+        return formatter.getvalue()
 
-    def format_extra_help(self, ctx):
-        pass
+    def _format(self, ctx, formatter):
+        self._format_usage(ctx, formatter)
+        self._format_help(ctx, formatter)
+        self._format_options(ctx, formatter)
+        self._format_epilog(ctx, formatter)
+
+    def _format_usage(self, ctx, formatter):
+        formatter.write_usage(ctx.command_path,
+                              self.options_metavar)
+        formatter.write_paragraph()
+
+    def _format_help(self, ctx, formatter):
+        if self.help:
+            with formatter.indentation():
+                formatter.write_text(self.help)
+
+    def _format_options(self, ctx, formatter):
+        opts = []
+        for param in self.params:
+            rv = param.get_help_record(ctx)
+            if rv is not None:
+                opts.append(rv)
+
+        if opts:
+            with formatter.section('Options'):
+                formatter.write_dl(opts)
+
+    def _format_epilog(self, ctx, formatter):
+        if self.epilog:
+            with formatter.indentation():
+                formatter.write_text(self.epilog)
 
     def make_context(self, info_name, args, parent=None, **extra):
         """This function when given an info name and arguments will kick
@@ -306,7 +339,8 @@ class Command(object):
                       constructor.
         """
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
-        opts, args = ctx._parser.parse_args(args=args)
+        parser = self._make_parser(ctx)
+        opts, args = parser.parse_args(args=args)
 
         for param in ctx.command.iter_params_for_processing():
             value, args = param.handle_parse_result(ctx, opts, args)
@@ -378,7 +412,7 @@ class Command(object):
                 raise Abort()
             except UsageError as e:
                 if e.ctx is not None:
-                    echo(e.ctx.format_usage(), file=sys.stderr)
+                    echo(e.ctx.format_usage() + '\n', file=sys.stderr)
                 echo('Error: %s' % e.message, file=sys.stderr)
                 sys.exit(2)
         except Abort:
@@ -421,27 +455,33 @@ class MultiCommand(Command):
 
     def _make_parser(self, ctx):
         parser = Command._make_parser(self, ctx)
-        parser.usage += ' ' + self.subcommand_metavar
         parser.allow_interspersed_args = False
         return parser
 
-    def format_extra_help(self, ctx):
-        commands = self.list_commands(ctx)
-        if not commands:
-            return
+    def _format_usage(self, ctx, formatter):
+        formatter.write_usage(ctx.command_path,
+                              self.options_metavar + ' ' +
+                              self.subcommand_metavar)
+        formatter.write_paragraph()
 
-        longest = len(sorted(commands, key=len)[-1])
+    def _format_options(self, ctx, formatter):
+        Command._format_options(self, ctx, formatter)
+        self._format_commands(ctx, formatter)
 
-        subcommand_info = []
+    def _format_commands(self, ctx, formatter):
+        rows = []
         for subcommand in self.list_commands(ctx):
             cmd = self.get_command(ctx, subcommand)
             # What is this, the tool lied about a command.  Ignore it
             if cmd is None:
                 continue
-            help = cmd.short_help or ''
-            subcommand_info.append('  %-*s  %s' % (longest, subcommand, help))
 
-        return 'Commands:\n%s' % '\n'.join(subcommand_info)
+            help = cmd.short_help or ''
+            rows.append((subcommand, help))
+
+        if rows:
+            with formatter.section('Commands'):
+                formatter.write_dl(rows)
 
     def invoke(self, ctx):
         if not ctx.args:
@@ -674,6 +714,9 @@ class Parameter(object):
             ctx.params[self.name] = value
         return value, args
 
+    def get_help_record(self, ctx):
+        pass
+
 
 class Option(Parameter):
     """Options are usually optionaly values on the command line and
@@ -796,22 +839,9 @@ class Option(Parameter):
         return name.replace('-', '_'), opts, secondary_opts
 
     def _add_to_parser(self, parser, ctx):
-        help = self.help
-        extra = []
-        if self.default is not None and self.show_default:
-            extra.append('default: %s' % self.default)
-        if self.required:
-            extra.append('required')
-        if self.nargs != 1:
-            extra.append('%d arguments' % self.nargs)
-        if extra:
-            help = '%s[%s]' % (help and help + '  ' or '', '; '.join(extra))
-
         kwargs = {
-            'help': help,
             'dest': self.name,
             'nargs': self.nargs,
-            'metavar': self.make_metavar(),
         }
 
         action = self.multiple and 'append' or 'store'
@@ -822,10 +852,9 @@ class Option(Parameter):
                 pos_opt = _optparse.Option(
                     *self.opts, action=action + '_const', const=True, **kwargs)
                 kwargs.pop('default', None)
-                kwargs.pop('help', None)
                 neg_opt = _optparse.Option(
                     *self.secondary_opts, action=action + '_const',
-                    const=False, help=_optparse.SUPPRESS_HELP, **kwargs)
+                    const=False, **kwargs)
                 pos_opt._negative_version = neg_opt
                 parser.add_option(pos_opt)
                 parser.add_option(neg_opt)
@@ -836,6 +865,31 @@ class Option(Parameter):
         else:
             kwargs['action'] = action
             parser.add_option(*self.opts, **kwargs)
+
+    def get_help_record(self, ctx):
+        def _write_opts(opts):
+            rv = []
+            for opt in opts:
+                if not self.is_flag:
+                    opt += ' ' + self.make_metavar()
+                rv.append(opt)
+            return ', '.join(rv)
+        rv = [_write_opts(self.opts)]
+        if self.secondary_opts:
+            rv.append(_write_opts(self.secondary_opts))
+
+        help = self.help or ''
+        extra = []
+        if self.default is not None and self.show_default:
+            extra.append('default: %s' % self.default)
+        if self.required:
+            extra.append('required')
+        if self.nargs != 1:
+            extra.append('%d arguments' % self.nargs)
+        if extra:
+            help = '%s[%s]' % (help and help + '  ' or '', '; '.join(extra))
+
+        return (' / '.join(rv), help)
 
     def get_default(self, ctx):
         # If we're a non boolean flag out default is more complex because
