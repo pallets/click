@@ -158,17 +158,17 @@ class Context(object):
         """Exits the application with a given exit code."""
         sys.exit(code)
 
-    def format_usage(self):
+    def get_usage(self):
         """Helper method to get formatted usage string for the current
         context and command.
         """
-        return self.command.format_usage(self).rstrip('\n')
+        return self.command.get_usage(self)
 
-    def format_help(self):
+    def get_help(self):
         """Helper method to get formatted help page for the current
         context and command.
         """
-        return self.command.format_help(self).rstrip('\n')
+        return self.command.get_help(self)
 
     def invoke(*args, **kwargs):
         """Invokes a command callback in exactly the way it expects.
@@ -269,46 +269,53 @@ class Command(object):
             yield param.name
 
     def make_parser(self, ctx):
+        """Creates the underlying option parser for this command."""
         parser = OptionParser(ctx)
         for param in self.params:
             param.add_to_parser(parser, ctx)
         return parser
 
-    def format_usage(self, ctx):
-        """Formats the usage line."""
+    def get_usage(self, ctx):
+        """Formats the usage line into a string and returns it.  This
+        creates a formatter and will call into the following formatting
+        methods:
+
+        -   :meth:`format_usage`
+        """
         formatter = HelpFormatter()
-        self._format_usage(ctx, formatter)
-        return formatter.getvalue()
+        self.format_usage(ctx, formatter)
+        return formatter.getvalue().rstrip('\n')
 
-    def format_help(self, ctx):
-        """Formats the help."""
+    def get_help(self, ctx):
+        """Formats the help into a string and returns it.  This creates a
+        formatter and will call into the following formatting methods:
+
+        -   :meth:`format_usage`
+        -   :meth:`format_help`
+        -   :meth:`format_options`
+        -   :meth:`format_epilog`
+        """
         formatter = HelpFormatter()
-        self._format(ctx, formatter)
-        return formatter.getvalue()
+        self.format_usage(ctx, formatter)
+        self.format_help(ctx, formatter)
+        self.format_options(ctx, formatter)
+        self.format_epilog(ctx, formatter)
+        return formatter.getvalue().rstrip('\n')
 
-    def _format(self, ctx, formatter):
-        self._format_usage(ctx, formatter)
-        self._format_help(ctx, formatter)
-        self._format_options(ctx, formatter)
-        self._format_epilog(ctx, formatter)
-
-    def _collect_usage_pieces(self, ctx):
-        rv = [self.options_metavar]
-        for param in self.params:
-            rv.extend(param.get_usage_pieces(ctx))
-        return rv
-
-    def _format_usage(self, ctx, formatter):
-        pieces = self._collect_usage_pieces(ctx)
+    def format_usage(self, ctx, formatter):
+        """Writes the usage line into the formatter."""
+        pieces = self.collect_usage_pieces(ctx)
         formatter.write_usage(ctx.command_path, ' '.join(pieces))
 
-    def _format_help(self, ctx, formatter):
+    def format_help(self, ctx, formatter):
+        """Writes the help into the formatter if it exists."""
         if self.help:
             formatter.write_paragraph()
             with formatter.indentation():
                 formatter.write_text(self.help)
 
-    def _format_options(self, ctx, formatter):
+    def format_options(self, ctx, formatter):
+        """Writes all the options into the formatter if they exist."""
         opts = []
         for param in self.params:
             rv = param.get_help_record(ctx)
@@ -319,11 +326,19 @@ class Command(object):
             with formatter.section('Options'):
                 formatter.write_dl(opts)
 
-    def _format_epilog(self, ctx, formatter):
+    def format_epilog(self, ctx, formatter):
+        """Writes the epilog into the formatter if it exists."""
         if self.epilog:
             formatter.write_paragraph()
             with formatter.indentation():
                 formatter.write_text(self.epilog)
+
+    def collect_usage_pieces(self, ctx):
+        """Returns all the pieces that go into the usage line."""
+        rv = [self.options_metavar]
+        for param in self.params:
+            rv.extend(param.get_usage_pieces(ctx))
+        return rv
 
     def make_context(self, info_name, args, parent=None, **extra):
         """This function when given an info name and arguments will kick
@@ -414,7 +429,7 @@ class Command(object):
                 raise Abort()
             except UsageError as e:
                 if e.ctx is not None:
-                    echo(e.ctx.format_usage() + '\n', file=sys.stderr)
+                    echo(e.ctx.get_usage() + '\n', file=sys.stderr)
                 echo('Error: %s' % e.message, file=sys.stderr)
                 sys.exit(2)
         except Abort:
@@ -460,16 +475,19 @@ class MultiCommand(Command):
         parser.allow_interspersed_args = False
         return parser
 
-    def _collect_usage_pieces(self, ctx):
-        rv = Command._collect_usage_pieces(self, ctx)
+    def collect_usage_pieces(self, ctx):
+        rv = Command.collect_usage_pieces(self, ctx)
         rv.append(self.subcommand_metavar)
         return rv
 
-    def _format_options(self, ctx, formatter):
-        Command._format_options(self, ctx, formatter)
-        self._format_commands(ctx, formatter)
+    def format_options(self, ctx, formatter):
+        Command.format_options(self, ctx, formatter)
+        self.format_commands(ctx, formatter)
 
-    def _format_commands(self, ctx, formatter):
+    def format_commands(self, ctx, formatter):
+        """Extra format methods for multi methods that adds all the commands
+        after the options.
+        """
         rows = []
         for subcommand in self.list_commands(ctx):
             cmd = self.get_command(ctx, subcommand)
@@ -489,7 +507,7 @@ class MultiCommand(Command):
             if self.invoke_without_command:
                 return Command.invoke(self, ctx)
             elif self.no_args_is_help:
-                echo(ctx.format_help())
+                echo(ctx.get_help())
                 ctx.exit()
             ctx.fail('Missing command')
 

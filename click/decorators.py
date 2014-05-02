@@ -250,7 +250,7 @@ def help_option(*param_decls, **attrs):
     def decorator(f):
         def callback(ctx, value):
             if value:
-                echo(ctx.format_help())
+                echo(ctx.get_help())
                 ctx.exit()
         attrs.setdefault('is_flag', True)
         attrs.setdefault('expose_value', False)

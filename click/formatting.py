@@ -112,8 +112,8 @@ class HelpFormatter(object):
     def dedent(self):
         self.current_indent -= self.indent_increment
 
-    def write_usage(self, prog, args=''):
-        prefix = '%*s%s' % (self.current_indent, 'Usage: ', prog)
+    def write_usage(self, prog, args='', prefix='Usage: '):
+        prefix = '%*s%s' % (self.current_indent, prefix, prog)
         self.buffer.append(prefix)
 
         text_width = max(self.width - self.current_indent - len(prefix), 10)
