@@ -220,7 +220,7 @@ class OptionParser(object):
         for ch in arg[1:]:
             opt = '-' + ch
             option = self._short_opt.get(opt)
-            i += 1                      # we have consumed a character
+            i += 1
 
             if not option:
                 self.error('no such option: %s' % opt)
