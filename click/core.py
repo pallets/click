@@ -222,8 +222,9 @@ class Command(object):
                    help page after everything else.
     :param short_help: the short help to use for this command.  This is
                        shown on the command listing of the parent command.
-    :param add_help_option: by default each command registers a ``--help``
-                            option.  This can be disabled by this parameter.
+    :param add_help_option: by default each command registers ``--h`` and
+                            ``--help`` options.  These can be disabled by this
+                            parameter.
     """
     allow_extra_args = False
 
@@ -442,8 +443,8 @@ class MultiCommand(Command):
                             provided.  This option is enabled by default if
                             `invoke_without_command` is disabled or disabled
                             if it's enabled.  If enabled this will add
-                            ``--help`` as argument if no arguments are
-                            passed.
+                            ``-h`` and ``--help`` as arguments if no arguments
+                            are passed.
     :param subcommand_metavar: the string that is used in the documentation
                                to indicate the subcommand place.
     """
