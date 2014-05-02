@@ -184,7 +184,7 @@ class HelpFormatter(object):
 
         for first, second in iter_rows(rows, len(widths)):
             self.write('%*s%s' % (self.current_indent, '', first))
-            if len(first) <= first_col:
+            if len(first) <= first_col - col_spacing:
                 self.write(' ' * (first_col - len(first)))
             else:
                 self.write('\n')
