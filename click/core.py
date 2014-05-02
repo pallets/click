@@ -261,7 +261,10 @@ class Command(object):
         first, followed by all non-eager parameters.
         """
         for param in self.params:
-            if param.is_eager:
+            if param.name == 'help':
+                yield param
+        for param in self.params:
+            if param.is_eager and param.name != 'help':
                 yield param
         for param in self.params:
             if not param.is_eager:
