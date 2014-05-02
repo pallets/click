@@ -24,7 +24,7 @@ from .decorators import pass_context, pass_obj, make_pass_decorator, \
      password_option, version_option, help_option
 
 # Types
-from .types import ParamType, File, Choice, STRING, INT, FLOAT, BOOL
+from .types import ParamType, File, Choice, STRING, INT, FLOAT, BOOL, UUID
 
 # Helper functions
 from .helpers import prompt, confirm, get_terminal_size, echo
@@ -47,7 +47,7 @@ __all__ = [
     'version_option', 'help_option',
 
     # Types
-    'ParamType', 'File', 'Choice', 'STRING', 'INT', 'FLOAT', 'BOOL',
+    'ParamType', 'File', 'Choice', 'STRING', 'INT', 'FLOAT', 'BOOL', 'UUID',
 
     # Helper functions
     'prompt', 'confirm', 'get_terminal_size', 'echo',

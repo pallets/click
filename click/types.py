@@ -1,4 +1,5 @@
 import sys
+import uuid
 
 from ._compat import open_stream, text_type
 from .exceptions import UsageError
@@ -148,6 +149,19 @@ class FloatParamType(ParamType):
         return 'FLOAT'
 
 
+class UUIDParameterType(ParamType):
+    name = 'uuid'
+
+    def convert(self, value, param, ctx):
+        try:
+            return uuid.UUID(value)
+        except ValueError:
+            self.fail('%s is not a valid UUID value' % value, param, ctx)
+
+    def __repr__(self):
+        return 'UUID'
+
+
 class File(ParamType):
     """Declares a parameter to be a file for reading or writing.  The file
     is automatically closed once the context tears down (after the command
@@ -239,3 +253,6 @@ FLOAT = FloatParamType()
 #: A boolean parameter.  This is the default for boolean flags.  This can
 #: also be selected by using ``bool`` as a type.
 BOOL = BoolParamType()
+
+#: A UUID parameter.
+UUID = UUIDParameterType()

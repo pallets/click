@@ -51,6 +51,10 @@ different behavior and some are supported out of the box:
     and ``true`` convert to `True` and ``0``, ``no``, ``n`` and ``false``
     convert to `False`.
 
+:data:`click.UUID`:
+    A parameter that accepts UUID values.  This is not automatically
+    guessed but represented as :class:`uuid.UUID`.
+
 :class:`click.File`:
     A parameter that is an opened file.  It can be opened for reading or
     writing.  See :ref:`file-args` for an example.

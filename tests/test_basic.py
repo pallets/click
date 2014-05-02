@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import uuid
 import click
 
 
@@ -90,6 +91,28 @@ def test_int_option(runner):
     result = runner.invoke(cli, ['--foo=bar'])
     assert result.exception
     assert 'Invalid value for "--foo": bar is not a valid integer' \
+        in result.output
+
+
+def test_uuid_option(runner):
+    @click.command()
+    @click.option('--u', default='ba122011-349f-423b-873b-9d6a79c688ab',
+                  type=click.UUID)
+    def cli(u):
+        assert type(u) is uuid.UUID
+        click.echo('U:[%s]' % u)
+
+    result = runner.invoke(cli, [])
+    assert not result.exception
+    assert 'U:[ba122011-349f-423b-873b-9d6a79c688ab]' in result.output
+
+    result = runner.invoke(cli, ['--u=821592c1-c50e-4971-9cd6-e89dc6832f86'])
+    assert not result.exception
+    assert 'U:[821592c1-c50e-4971-9cd6-e89dc6832f86]' in result.output
+
+    result = runner.invoke(cli, ['--u=bar'])
+    assert result.exception
+    assert 'Invalid value for "--u": bar is not a valid UUID value' \
         in result.output
 
 

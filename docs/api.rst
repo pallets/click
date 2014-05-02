@@ -84,6 +84,8 @@ Types
 
 .. autodata:: BOOL
 
+.. autodata:: UUID
+
 .. autoclass:: File
 
 .. autoclass:: Choice
