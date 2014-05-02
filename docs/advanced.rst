@@ -37,7 +37,7 @@ accepts a prefix for a command.  So if there is a command called
             rv = click.Group.get_command(self, ctx, cmd_name)
             if rv is not None:
                 return rv
-            matches = [x for x in self.list_commands()
+            matches = [x for x in self.list_commands(ctx)
                        if x.startswith(cmd_name)]
             if not matches:
                 return None
