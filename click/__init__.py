@@ -32,6 +32,9 @@ from .helpers import prompt, confirm, get_terminal_size, echo
 # Exceptions
 from .exceptions import UsageError, Abort
 
+# Formatting
+from .formatting import HelpFormatter, wrap_text
+
 
 __all__ = [
     # Core classes
@@ -51,4 +54,7 @@ __all__ = [
 
     # Exceptions
     'UsageError', 'Abort',
+
+    # Formatting
+    'HelpFormatter', 'wrap_text',
 ]

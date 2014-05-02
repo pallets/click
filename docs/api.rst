@@ -96,3 +96,11 @@ Exceptions
 .. autoexception:: Abort
 
 .. autoexception:: UsageError
+
+Formatting
+----------
+
+.. autoclass:: HelpFormatter
+   :members:
+
+.. autofunction:: wrap_text
