@@ -40,7 +40,7 @@ function comes in handy.  By default it returns the result of the prompt
 as boolean value::
 
     if click.confirm('Do you want to continue?'):
-        click.echo('Well done!')
+        click.utils.echo('Well done!')
 
 There is also the option to make it automatically abort the execution::
 

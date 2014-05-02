@@ -34,7 +34,7 @@ Contents of ``cli.py``:
     @click.command()
     def cli():
         """Example script."""
-        click.echo('Hello World!')
+        click.utils.echo('Hello World!')
 
 Contents of ``setup.py``::
 

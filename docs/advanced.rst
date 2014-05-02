@@ -84,7 +84,7 @@ Example:
     @cli.command()
     @click.option('--count', default=1)
     def test(count):
-        click.echo('Count: %d' % count)
+        click.utils.echo('Count: %d' % count)
 
     @cli.command()
     @click.option('--count', default=1)
