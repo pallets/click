@@ -305,10 +305,10 @@ class Command(object):
     def _format_usage(self, ctx, formatter):
         pieces = self._collect_usage_pieces(ctx)
         formatter.write_usage(ctx.command_path, ' '.join(pieces))
-        formatter.write_paragraph()
 
     def _format_help(self, ctx, formatter):
         if self.help:
+            formatter.write_paragraph()
             with formatter.indentation():
                 formatter.write_text(self.help)
 
@@ -325,6 +325,7 @@ class Command(object):
 
     def _format_epilog(self, ctx, formatter):
         if self.epilog:
+            formatter.write_paragraph()
             with formatter.indentation():
                 formatter.write_text(self.epilog)
 
