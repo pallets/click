@@ -164,3 +164,22 @@ def test_file_option(runner):
     assert result_in.output == ''
     assert not result_out.exception
     assert result_out.output == 'Hello World!\n\n'
+
+def test_eager_required_option_allows_help(runner):
+    def get_from_source(ctx,value):
+        return value or ctx.params['source']
+
+    @click.command()
+    @click.option('--source',
+        required=True,
+        is_eager=True,
+        help='source file')
+    @click.option('--dest',
+        callback=get_from_source,
+        help='destination file. If not supplied, operates in place.')
+    def cli(source,dest):
+        print 'source:',source
+        print 'dest:',dest
+
+    result = runner.invoke(cli,['--help'])
+    assert not result.exception
