@@ -19,8 +19,7 @@ from .exceptions import UsageError
 
 
 class Option(object):
-    ATTRS = ['action', 'type', 'dest', 'nargs', 'const', 'help',
-             'metavar']
+    ATTRS = ['action', 'type', 'dest', 'nargs', 'const']
     ACTIONS = ('store', 'store_const', 'append', 'append_const')
     STORE_ACTIONS = ('store', 'store_const', 'append', 'append_const')
     TYPED_ACTIONS = ('store', 'append')
@@ -32,22 +31,10 @@ class Option(object):
         self._long_opts = []
 
         for opt in opts:
-            if len(opt) < 2:
-                raise TypeError(
-                    'invalid option string %r: '
-                    'must be at least two characters long' % opt)
-            elif len(opt) == 2:
-                if not (opt[0] == '-' and opt[1] != '-'):
-                    raise TypeError(
-                        'invalid short option string %r: '
-                        'must be of the form -x, (x any non-dash char)' % opt)
-                self._short_opts.append(opt)
-            else:
-                if not (opt[:2] == '--' and opt[2] != '-'):
-                    raise TypeError(
-                        'invalid long option string %r: '
-                        'must start with --, followed by non-dash' % opt)
+            if opt[:2] == '--':
                 self._long_opts.append(opt)
+            elif opt[:1] == '-':
+                self._short_opts.append(opt)
 
         for attr in self.ATTRS:
             if attr in attrs:
@@ -57,8 +44,7 @@ class Option(object):
                 setattr(self, attr, None)
         if attrs:
             attrs = sorted(attrs.keys())
-            raise TypeError('invalid keyword arguments: %s' %
-                            ', '.join(attrs))
+            raise TypeError('invalid keyword arguments: %s' % ', '.join(attrs))
 
         if self.action is None:
             self.action = 'store'
@@ -69,11 +55,6 @@ class Option(object):
     @property
     def takes_value(self):
         return self.action in self.TAKES_VALUE_ACTIONS
-
-    def get_opt_string(self):
-        if self._long_opts:
-            return self._long_opts[0]
-        return self._short_opts[0]
 
     def process(self, opt, value, opts, parser):
         if self.action == 'store':
@@ -221,8 +202,8 @@ class OptionParser(object):
             elif nargs == 1:
                 value = rargs.pop(0)
             else:
-                value = tuple(rargs[0:nargs])
-                del rargs[0:nargs]
+                value = tuple(rargs[:nargs])
+                del rargs[:nargs]
 
         elif had_explicit_value:
             self.error('%s option does not take a value' % opt)
@@ -260,8 +241,8 @@ class OptionParser(object):
                 elif nargs == 1:
                     value = rargs.pop(0)
                 else:
-                    value = tuple(rargs[0:nargs])
-                    del rargs[0:nargs]
+                    value = tuple(rargs[:nargs])
+                    del rargs[:nargs]
 
             else:
                 value = None
