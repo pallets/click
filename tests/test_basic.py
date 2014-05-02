@@ -203,3 +203,6 @@ def test_choice_option(runner):
     assert result.exit_code == 2
     assert 'Invalid value for "--method": invalid choice: meh. ' \
         '(choose from foo, bar, baz)' in result.output
+
+    result = runner.invoke(cli, ['--help'])
+    assert '--method [foo|bar|baz]' in result.output
