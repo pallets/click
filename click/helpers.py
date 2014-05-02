@@ -174,10 +174,6 @@ def echo(message=None, file=None):
     file.flush()
 
 
-def _isatty(f):
-    return getattr(f, 'isatty', lambda x: False)()
-
-
 def echo_via_pager(text):
     """This function takes a text and shows it via an environment specific
     pager on stdout.
