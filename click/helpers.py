@@ -145,7 +145,7 @@ def get_terminal_size():
                 os.close(fd)
         except Exception:
             pass
-    if not cr:
+    if not cr or not cr[0] or not cr[1]:
         cr = (os.environ.get('LINES', 25),
               os.environ.get('COLUMNS', 80))
     return int(cr[1]), int(cr[0])
