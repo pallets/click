@@ -238,7 +238,7 @@ def version_option(version, *param_decls, **attrs):
 
 
 def help_option(*param_decls, **attrs):
-    """Adds a ``--help`` option which immediately ends the program
+    """Adds ``-h`` and ``--help`` options which immediately end the program
     printing out the help page.  This is usually unnecessary to add as
     this is added by default to all commands unless supressed.
 
@@ -257,7 +257,7 @@ def help_option(*param_decls, **attrs):
         attrs.setdefault('help', 'Show this message and exit.')
         attrs.setdefault('is_eager', True)
         attrs['callback'] = callback
-        return option(*(param_decls or ('--help',)), **attrs)(f)
+        return option(*(param_decls or ('-h', '--help')), **attrs)(f)
     return decorator
 
 
