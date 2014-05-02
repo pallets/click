@@ -206,3 +206,14 @@ def test_choice_option(runner):
 
     result = runner.invoke(cli, ['--help'])
     assert '--method [foo|bar|baz]' in result.output
+
+
+def test_required_option(runner):
+    @click.command()
+    @click.option('--foo', required=True)
+    def cli(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 2
+    assert 'Missing option "--foo"' in result.output
