@@ -470,7 +470,7 @@ class OptionParser(OptionContainer):
             i += 1                      # we have consumed a character
 
             if not option:
-                self.fail('no such option: %s' % opt)
+                self.error('no such option: %s' % opt)
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
                 # next arg, and stop consuming characters of arg.
