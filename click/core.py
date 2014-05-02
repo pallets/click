@@ -4,7 +4,7 @@ import codecs
 from itertools import chain
 
 from .types import convert_type, BOOL
-from .utils import make_str
+from .utils import make_str, make_default_short_help
 from .exceptions import UsageError, Abort
 from .helpers import prompt, confirm, echo
 from .formatting import HelpFormatter
@@ -246,11 +246,7 @@ class Command(object):
         self.epilog = epilog
         self.options_metavar = options_metavar
         if short_help is None and help:
-            short_help = help.split('.')[0].strip()
-            if len(short_help) > 45:
-                short_help = None
-            elif short_help:
-                short_help = short_help + '.'
+            short_help = make_default_short_help(help)
         self.short_help = short_help
         if add_help_option:
             help_option()(self)
