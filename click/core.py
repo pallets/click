@@ -281,8 +281,7 @@ class Command(object):
     def format_usage(self, ctx):
         """Formats the usage line."""
         formatter = HelpFormatter()
-        formatter.write_usage(ctx.command_path,
-                              self.options_metavar)
+        self._format_usage(ctx, formatter)
         return formatter.getvalue()
 
     def format_help(self, ctx):
@@ -297,9 +296,15 @@ class Command(object):
         self._format_options(ctx, formatter)
         self._format_epilog(ctx, formatter)
 
+    def _collect_usage_pieces(self, ctx):
+        rv = [self.options_metavar]
+        for param in self.params:
+            rv.extend(param.get_usage_pieces(ctx))
+        return rv
+
     def _format_usage(self, ctx, formatter):
-        formatter.write_usage(ctx.command_path,
-                              self.options_metavar)
+        pieces = self._collect_usage_pieces(ctx)
+        formatter.write_usage(ctx.command_path, ' '.join(pieces))
         formatter.write_paragraph()
 
     def _format_help(self, ctx, formatter):
@@ -458,11 +463,10 @@ class MultiCommand(Command):
         parser.allow_interspersed_args = False
         return parser
 
-    def _format_usage(self, ctx, formatter):
-        formatter.write_usage(ctx.command_path,
-                              self.options_metavar + ' ' +
-                              self.subcommand_metavar)
-        formatter.write_paragraph()
+    def _collect_usage_pieces(self, ctx):
+        rv = Command._collect_usage_pieces(self, ctx)
+        rv.append(self.subcommand_metavar)
+        return rv
 
     def _format_options(self, ctx, formatter):
         Command._format_options(self, ctx, formatter)
@@ -716,6 +720,9 @@ class Parameter(object):
 
     def get_help_record(self, ctx):
         pass
+
+    def get_usage_pieces(self, ctx):
+        return []
 
 
 class Option(Parameter):
@@ -977,7 +984,10 @@ class Argument(Parameter):
         return name.replace('-', '_'), [arg], []
 
     def _add_to_parser(self, parser, ctx):
-        parser.usage += ' ' + self.make_metavar()
+        pass
+
+    def get_usage_pieces(self, ctx):
+        return [self.make_metavar()]
 
     def consume_value(self, ctx, opts, args):
         found = True
