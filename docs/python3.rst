@@ -149,3 +149,6 @@ Python 3 bug tracker:
     <http://bugs.python.org/issue19977>`_
 *   `Python 3 raises Unicode errors in the C locale
     <http://bugs.python.org/issue19846>`_
+*   `LC_CTYPE=C:  pydoc leaves terminal in an unusable state
+    <http://bugs.python.org/issue21398>`_ (this is relevant to Click
+    because the pager support is provided by the stdlib pydoc module)

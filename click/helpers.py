@@ -172,3 +172,28 @@ def echo(message=None, file=None):
             file.write(message)
     file.write('\n')
     file.flush()
+
+
+def _isatty(f):
+    return getattr(f, 'isatty', lambda x: False)()
+
+
+def echo_via_pager(text):
+    """This function takes a text and shows it via an environment specific
+    pager on stdout.
+
+    :param text: the text to page.
+    """
+    if not isinstance(text, string_types):
+        text = text_type(text)
+
+    if PY2 and isinstance(text, text_type):
+        encoding = get_best_encoding(sys.stdout)
+        text = text.encode(encoding, 'replace')
+
+    # Pydoc's pager is badly broken with LANG=C on Python 3 to the point
+    # where it will corrupt the terminal.  http://bugs.python.org/issue21398
+    # I don't feel like reimplementing it given that it works on Python 2
+    # and seems reasonably stable otherwise.
+    import pydoc
+    pydoc.pager(text)

@@ -36,6 +36,8 @@ Helper Functions
 
 .. autofunction:: echo
 
+.. autofunction:: echo_via_pager
+
 .. autofunction:: prompt
 
 .. autofunction:: confirm
