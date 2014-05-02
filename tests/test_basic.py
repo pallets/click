@@ -187,3 +187,19 @@ def test_file_option(runner):
     assert result_in.output == ''
     assert not result_out.exception
     assert result_out.output == 'Hello World!\n\n'
+
+
+def test_choice_option(runner):
+    @click.command()
+    @click.option('--method', type=click.Choice(['foo', 'bar', 'baz']))
+    def cli(method):
+        click.echo(method)
+
+    result = runner.invoke(cli, ['--method=foo'])
+    assert not result.exception
+    assert result.output == 'foo\n'
+
+    result = runner.invoke(cli, ['--method=meh'])
+    assert result.exit_code == 2
+    assert 'Invalid value for "--method": invalid choice: meh. ' \
+        '(choose from foo, bar, baz)' in result.output
