@@ -216,9 +216,9 @@ approach can be useful in some circumstances for a nicer shell experience.
 
 A default implementation for such a merging system is the
 :class:`CommandCollection` class.  It accepts a list of other multi
-commands and makes the commands available on the same class class.  It
-accepts a list of other multi commands and makes the commands available on
-the same level.
+commands and makes the commands available on the same class.  It accepts a
+list of other multi commands and makes the commands available on the same
+level.
 
 Example usage:
 
