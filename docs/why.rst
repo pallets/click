@@ -65,14 +65,52 @@ Why not Docopt etc.?
 --------------------
 
 Docopt and many tools like it are cool in how they work but very few of
-these tools deal with nesting of commands.  To the best of the developer's
-knowledge, click is the first Python library that tries to aim for
-composability of applications that goes beyond what the system itself
-supports.
+these tools deal with nesting of commands and composability in a way like
+click.  To the best of the developer's knowledge, click is the first
+Python library that tries to aim for composability of applications that
+goes beyond what the system itself supports.
 
-For instance a click subcommand could accept all the arguments unparsed
-and then be parsed with docopt if that command would want to work that
-way.
+Docopt for instance acts by parsing your help pages and then parsing
+according do those rules.  The side effect of this is that docopt is quite
+rigid in how it handles the command line interface.  The upside of docopt
+is that it gives you strong control over your help page, the downside is
+that due to that it cannot rewrap your output for the current terminal
+width and it makes translations hard.  On top of that docopt is restricted
+to basic parsing.  It does not handle argument dispatching and callback
+invocation or types.  This means there is a lot of code that needs to be
+written in addition to the basic help page to handle the parsing results.
+
+Most of all however it makes composability hard.  While docopt does
+support dispatching to subcommands, it for instance does not directly
+support any kind of automatic subcommand enumeration based on what's
+available or it does not enforce subcommands to work in a consistent way.
+
+This is fine, but it's different from how Click wants to work.  Click aims
+to support fully composable command line user interfaces by doing this:
+
+-   click does not just parse, it also dispatches to the appropriate code
+-   click has a strong concept of an invocation context that allows
+    subcommands to respond to data from the parent command.
+-   click has strong information available for all parameters and commands
+    so that it can generate unified help pages for the full CLI and to
+    assist the user in converting the input data as necessary.
+-   click has strong understanding of what types are and can give the user
+    consistent error messages if something goes wrong.  A subcommand
+    written by a different developer will not suddenly die with a
+    different error messsage because it's manually handled.
+-   click has enough meta information available for it's whole program
+    that it can evolve over time to improve the user experience without
+    forcing developers to adjust their programs.  For instance if click
+    decides to change how help pages are formatted, all click programs
+    will automatically benefit from this.
+
+The aim of click is to make composable systems, whereas the aim of docopt
+is to build the most beautiful and hand-crafted command line interfaces.
+These two goals are conflicting with each other in subtle ways.  Click
+actively prevents people from implementing certain patterns in order to
+achieve unified command line interfaces.  You have very little input on
+reformatting your help pages for instance.
+
 
 Why Hardcoded Behaviors?
 ------------------------
