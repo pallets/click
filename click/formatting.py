@@ -203,7 +203,7 @@ class HelpFormatter(object):
         """Helpful context manager that writes a paragraph, a heading
         and the indents.
 
-        :param name: the section name taht is written as heading.
+        :param name: the section name that is written as heading.
         """
         self.write_paragraph()
         self.write_heading(name)
