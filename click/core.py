@@ -572,6 +572,18 @@ class Group(MultiCommand):
             return cmd
         return decorator
 
+    def group(self, *args, **kwargs):
+        """A shortcut decorator for declaring and attaching a group to
+        the group.  This takes the same arguments as :func:`group` but
+        immediately registers the created command with this instance by
+        calling into :meth:`add_command`.
+        """
+        def decorator(f):
+            cmd = group(*args, **kwargs)(f)
+            self.add_command(cmd)
+            return cmd
+        return decorator
+
     def get_command(self, ctx, cmd_name):
         return self.commands.get(cmd_name)
 
@@ -1021,4 +1033,4 @@ class Argument(Parameter):
 
 
 # Circular dependency between decorators and core
-from .decorators import command, help_option
+from .decorators import command, group, help_option
