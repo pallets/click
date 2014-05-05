@@ -20,11 +20,8 @@ from .utils import unpack_args
 
 
 class Option(object):
-    ATTRS = ('action', 'type', 'dest', 'nargs', 'const')
-    TYPED_ACTIONS = ('store', 'append')
-    TAKES_VALUE_ACTIONS = ('store', 'append')
 
-    def __init__(self, opts, **attrs):
+    def __init__(self, opts, dest, action=None, nargs=1, const=None):
         self._short_opts = []
         self._long_opts = []
 
@@ -34,25 +31,17 @@ class Option(object):
             elif opt[:1] == '-':
                 self._short_opts.append(opt)
 
-        for attr in self.ATTRS:
-            if attr in attrs:
-                setattr(self, attr, attrs.pop(attr))
-            else:
-                setattr(self, attr, None)
+        if action is None:
+            action = 'store'
 
-        if attrs:
-            attrs = sorted(attrs.keys())
-            raise TypeError('invalid keyword arguments: %s' % ', '.join(attrs))
-
-        if self.action is None:
-            self.action = 'store'
-        if self.action in self.TYPED_ACTIONS:
-            if self.nargs is None:
-                self.nargs = 1
+        self.dest = dest
+        self.action = action
+        self.nargs = nargs
+        self.const = const
 
     @property
     def takes_value(self):
-        return self.action in self.TAKES_VALUE_ACTIONS
+        return self.action in ('store', 'append')
 
     def process(self, opt, value, opts, parser):
         if self.action == 'store':
