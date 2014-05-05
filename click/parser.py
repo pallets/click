@@ -24,12 +24,19 @@ class Option(object):
     def __init__(self, opts, dest, action=None, nargs=1, const=None):
         self._short_opts = []
         self._long_opts = []
+        self.prefixes = set()
 
         for opt in opts:
-            if opt[:2] == '--':
-                self._long_opts.append(opt)
-            elif opt[:1] == '-':
+            first = opt[:1]
+            if first.isalnum():
+                raise ValueError('Invalid start character for option (%s)'
+                                 % first)
+            self.prefixes.add(first)
+            if opt[1:2] != first:
                 self._short_opts.append(opt)
+            else:
+                self._long_opts.append(opt)
+                self.prefixes.add(opt[:2])
 
         if action is None:
             action = 'store'
@@ -65,9 +72,11 @@ class OptionParser(object):
         self._long_opt = {}
         self._arg_dest = []
         self._nargs = []
+        self._opt_prefixes = set(['-', '--'])
 
     def add_option(self, opts, **kwargs):
         option = Option(opts, **kwargs)
+        self._opt_prefixes.update(option.prefixes)
         for opt in option._short_opts:
             self._short_opt[opt] = option
         for opt in option._long_opts:
@@ -96,16 +105,15 @@ class OptionParser(object):
     def _process_args_for_options(self, largs, rargs, opts):
         while rargs:
             arg = rargs[0]
-            # We handle bare '--' explicitly, and bare '-' is handled by the
-            # standard arg handler since the short arg case ensures that the
-            # len of the opt string is greater than 1.
+            # Double dash es always handled explicitly regardless of what
+            # prefixes are valid.
             if arg == '--':
                 del rargs[0]
                 return
-            elif arg[0:2] == '--':
+            elif arg[0:2] in self._opt_prefixes:
                 # process a single long option (possibly with value(s))
                 self._process_long_opt(rargs, opts)
-            elif arg[:1] == '-' and len(arg) > 1:
+            elif arg[:1] in self._opt_prefixes and len(arg) > 1:
                 # process a cluster of short options (possibly with
                 # value(s) for the last one only)
                 self._process_short_opts(rargs, opts)
@@ -197,8 +205,9 @@ class OptionParser(object):
         arg = rargs.pop(0)
         stop = False
         i = 1
+        prefix = arg[0]
         for ch in arg[1:]:
-            opt = '-' + ch
+            opt = prefix + ch
             option = self._short_opt.get(opt)
             i += 1
 

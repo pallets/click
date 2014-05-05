@@ -10,9 +10,16 @@ from .helpers import prompt, confirm, echo
 from .formatting import HelpFormatter
 from .parser import OptionParser
 
-from ._compat import PY2
+from ._compat import PY2, isidentifier
 
 _missing = object()
+
+
+def _cleanup_name(name):
+    prefix = name[:1]
+    if not prefix.isalnum():
+        return name.lstrip(prefix)
+    return name
 
 
 class Context(object):
@@ -852,28 +859,28 @@ class Option(Parameter):
         possible_names = []
 
         for decl in decls:
-            if not decl.startswith('-'):
+            if isidentifier(decl):
                 if name is not None:
                     raise TypeError('Name defined twice')
                 name = decl
             else:
                 if '/' in decl:
                     first, second = decl.split('/', 1)
-                    possible_names.append(first.lstrip('-'))
+                    possible_names.append(_cleanup_name(first))
                     opts.append(first)
                     secondary_opts.append(second)
                 else:
-                    possible_names.append(decl.lstrip('-'))
+                    possible_names.append(_cleanup_name(decl))
                     opts.append(decl)
 
         if name is None and possible_names:
             possible_names.sort(key=len)
-            name = possible_names[-1]
+            name = possible_names[-1].replace('-', '_')
 
         if name is None:
             raise TypeError('Could not determine name for option')
 
-        return name.replace('-', '_'), opts, secondary_opts
+        return name, opts, secondary_opts
 
     def add_to_parser(self, parser, ctx):
         kwargs = {
@@ -996,12 +1003,13 @@ class Argument(Parameter):
             raise TypeError('Could not determine name for argument')
         if len(decls) == 1:
             name = arg = decls[0]
+            name = name.replace('-', '_')
         elif len(decls) == 2:
             name, arg = decls
         else:
             raise TypeError('Arguments take exactly one or two '
                             'parameter declarations, got %d' % len(decls))
-        return name.replace('-', '_'), [arg], []
+        return name, [arg], []
 
     def get_usage_pieces(self, ctx):
         return [self.make_metavar()]

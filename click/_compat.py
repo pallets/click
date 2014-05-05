@@ -1,4 +1,5 @@
 import sys
+import re
 import codecs
 
 
@@ -19,6 +20,11 @@ if PY2:
     bytes = str
     raw_input = raw_input
     string_types = (str, unicode)
+
+    _identifier_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+
+    def isidentifier(x):
+        return _identifier_re.search(x) is not None
 
     def open_stream(filename, mode='r', encoding=None, errors='strict'):
         if filename != '-':
@@ -41,6 +47,7 @@ else:
     text_type = str
     raw_input = input
     string_types = (str,)
+    isidentifier = lambda x: x.isidentifier()
 
     def _make_binary_stream(f, stream_name):
         buf = getattr(f, 'buffer', None)
