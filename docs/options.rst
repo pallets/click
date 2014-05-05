@@ -418,3 +418,29 @@ And from the command line:
 
 In that case it can also be a list of different environment variables
 where the first one is picked.
+
+Other Prefix Characters
+-----------------------
+
+Click can deal with alternative prefix characters, other than ``-`` for
+options.  This is for instance useful if you want to handle slashes as
+parameters ``/`` or something similar.  Note that this is strongly
+discouraged in general because click wants developers to stay close to
+POSIX semantics.  However in certain situations this can be useful:
+
+.. click:example::
+
+    @click.command()
+    @click.option('+w/-w')
+    def chmod(w):
+        click.echo('writable=%s' % w)
+
+    if __name__ == '__main__':
+        chmod()
+
+And from the command line:
+
+.. click:run::
+
+    invoke(chmod, args=['+w'])
+    invoke(chmod, args=['-w'])
