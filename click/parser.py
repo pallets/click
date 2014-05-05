@@ -24,7 +24,7 @@ class Option(object):
     TYPED_ACTIONS = ('store', 'append')
     TAKES_VALUE_ACTIONS = ('store', 'append')
 
-    def __init__(self, *opts, **attrs):
+    def __init__(self, opts, **attrs):
         self._short_opts = []
         self._long_opts = []
 
@@ -77,8 +77,8 @@ class OptionParser(object):
         self._arg_dest = []
         self._nargs = []
 
-    def add_option(self, *args, **kwargs):
-        option = Option(*args, **kwargs)
+    def add_option(self, opts, **kwargs):
+        option = Option(opts, **kwargs)
         for opt in option._short_opts:
             self._short_opt[opt] = option
         for opt in option._long_opts:

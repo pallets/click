@@ -886,18 +886,18 @@ class Option(Parameter):
         if self.is_flag:
             kwargs.pop('nargs', None)
             if self.is_bool_flag and self.secondary_opts:
-                parser.add_option(*self.opts, action=action + '_const',
+                parser.add_option(self.opts, action=action + '_const',
                                   const=True, **kwargs)
                 kwargs.pop('default', None)
-                parser.add_option(*self.secondary_opts, action=action +
+                parser.add_option(self.secondary_opts, action=action +
                                   '_const', const=False, **kwargs)
             else:
-                parser.add_option(*self.opts, action=action + '_const',
+                parser.add_option(self.opts, action=action + '_const',
                                   const=self.flag_value,
                                   **kwargs)
         else:
             kwargs['action'] = action
-            parser.add_option(*self.opts, **kwargs)
+            parser.add_option(self.opts, **kwargs)
 
     def get_help_record(self, ctx):
         def _write_opts(opts):
