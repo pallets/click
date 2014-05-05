@@ -38,24 +38,25 @@ unlimited) number of arguments is accepted.  This can be controlled with
 the ``nargs`` parameter.  If it's set to ``-1`` then an unlimited number
 of arguments is accepted.
 
-The value is then passed as a tuple.  Note that only one argument really
-can be set to ``nargs=-1`` and right now only the last.
+The value is then passed as a tuple.  Note that only one argument can be
+set to ``nargs=-1`` as this will eat up all arguments.
 
 Example:
 
 .. click:example::
 
     @click.command()
-    @click.argument('files', nargs=-1)
-    def touch(files):
-        for file in files:
-            click.echo(file)
+    @click.argument('src', nargs=-1)
+    @click.argument('dst', nargs=1)
+    def copy(src, dst):
+        for fn in src:
+            click.echo('move %s to folder %s' % (fn, dst))
 
 And what it looks like:
 
 .. click:run::
 
-    invoke(touch, args=['foo.txt', 'bar.txt'])
+    invoke(touch, args=['foo.txt', 'bar.txt', 'my_folder'])
 
 .. _file-args:
 

@@ -694,6 +694,12 @@ class Parameter(object):
     def add_to_parser(self, parser, ctx):
         pass
 
+    def consume_value(self, ctx, opts):
+        value = opts.get(self.name)
+        if value is None:
+            value = self.value_from_envvar(ctx)
+        return value
+
     def process_value(self, ctx, value):
         """Given a value and context this runs the logic to convert the
         value as necessary.
@@ -733,11 +739,8 @@ class Parameter(object):
         else:
             return os.environ.get(self.envvar)
 
-    def consume_value(self, ctx, opts, args):
-        return None, args
-
     def handle_parse_result(self, ctx, opts, args):
-        value, args = self.consume_value(ctx, opts, args)
+        value = self.consume_value(ctx, opts)
         value = self.full_process_value(ctx, value)
         if self.callback is not None:
             value = self.callback(ctx, value)
@@ -965,12 +968,6 @@ class Option(Parameter):
             return self.prompt_for_value(ctx)
         return Parameter.full_process_value(self, ctx, value)
 
-    def consume_value(self, ctx, opts, args):
-        value = opts.get(self.name)
-        if value is None:
-            value = self.value_from_envvar(ctx)
-        return value, args
-
 
 class Argument(Parameter):
     """Arguments are positional parameters to a command.  They generally
@@ -1009,27 +1006,8 @@ class Argument(Parameter):
     def get_usage_pieces(self, ctx):
         return [self.make_metavar()]
 
-    def consume_value(self, ctx, opts, args):
-        found = True
-        if self.nargs == 1:
-            try:
-                value = args.pop(0)
-            except IndexError:
-                found = False
-        elif self.nargs < 0:
-            value = tuple(args)
-            found = value
-            args = []
-        else:
-            values = args[:self.nargs]
-            args = args[self.nargs:]
-            value = tuple(values)
-            found = value
-        if not found:
-            value = self.value_from_envvar(ctx)
-            if self.nargs != 1:
-                value = value and (value,) or ()
-        return value, args
+    def add_to_parser(self, parser, ctx):
+        parser.add_argument(dest=self.name, nargs=self.nargs)
 
 
 # Circular dependency between decorators and core

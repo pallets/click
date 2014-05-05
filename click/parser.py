@@ -16,6 +16,7 @@
     and might cause us issues.
 """
 from .exceptions import UsageError
+from .utils import unpack_args
 
 
 class Option(object):
@@ -73,42 +74,37 @@ class OptionParser(object):
         self.allow_interspersed_args = True
         self._short_opt = {}
         self._long_opt = {}
-        self.rargs = None
-        self.largs = None
-        self.opts = None
+        self._arg_dest = []
+        self._nargs = []
 
     def add_option(self, *args, **kwargs):
-        if isinstance(args[0], str):
-            option = Option(*args, **kwargs)
-        elif len(args) == 1 and not kwargs:
-            option = args[0]
-            if not isinstance(option, Option):
-                raise TypeError('not an Option instance: %r' % option)
-        else:
-            raise TypeError('invalid arguments')
-
-        option.container = self
+        option = Option(*args, **kwargs)
         for opt in option._short_opts:
             self._short_opt[opt] = option
         for opt in option._long_opts:
             self._long_opt[opt] = option
 
-        return option
+    def add_argument(self, dest, nargs=1):
+        self._arg_dest.append(dest)
+        self._nargs.append(nargs)
 
-    def parse_args(self, args, opts=None):
+    def parse_args(self, args):
         rargs = args
-        if opts is None:
-            opts = {}
-        self.rargs = rargs
-        self.largs = largs = []
-        self.opts = opts
+        opts = {}
+        largs = []
 
-        self._process_args(largs, rargs, opts)
+        self._process_args_for_options(largs, rargs, opts)
+        args = self._process_args_for_args(largs, rargs, opts)
 
-        args = largs + rargs
         return opts, args
 
-    def _process_args(self, largs, rargs, opts):
+    def _process_args_for_args(self, largs, rargs, opts):
+        pargs, args = unpack_args(largs + rargs, self._nargs)
+        for idx, arg_name in enumerate(self._arg_dest):
+            opts[arg_name] = pargs[idx]
+        return args
+
+    def _process_args_for_options(self, largs, rargs, opts):
         while rargs:
             arg = rargs[0]
             # We handle bare '--' explicitly, and bare '-' is handled by the
