@@ -20,7 +20,7 @@ from .utils import unpack_args
 
 
 class Option(object):
-    ATTRS = ['action', 'type', 'dest', 'nargs', 'const']
+    ATTRS = ('action', 'type', 'dest', 'nargs', 'const')
     TYPED_ACTIONS = ('store', 'append')
     TAKES_VALUE_ACTIONS = ('store', 'append')
 
