@@ -56,7 +56,7 @@ And what it looks like:
 
 .. click:run::
 
-    invoke(touch, args=['foo.txt', 'bar.txt', 'my_folder'])
+    invoke(copy, args=['foo.txt', 'bar.txt', 'my_folder'])
 
 .. _file-args:
 
