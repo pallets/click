@@ -71,7 +71,7 @@ Python library that tries to aim for composability of applications that
 goes beyond what the system itself supports.
 
 Docopt for instance acts by parsing your help pages and then parsing
-according do those rules.  The side effect of this is that docopt is quite
+according to those rules.  The side effect of this is that docopt is quite
 rigid in how it handles the command line interface.  The upside of docopt
 is that it gives you strong control over your help page, the downside is
 that due to that it cannot rewrap your output for the current terminal
@@ -85,10 +85,10 @@ support dispatching to subcommands, it for instance does not directly
 support any kind of automatic subcommand enumeration based on what's
 available or it does not enforce subcommands to work in a consistent way.
 
-This is fine, but it's different from how Click wants to work.  Click aims
+This is fine, but it's different from how click wants to work.  Click aims
 to support fully composable command line user interfaces by doing this:
 
--   click does not just parse, it also dispatches to the appropriate code
+-   click does not just parse, it also dispatches to the appropriate code.
 -   click has a strong concept of an invocation context that allows
     subcommands to respond to data from the parent command.
 -   click has strong information available for all parameters and commands
@@ -98,7 +98,7 @@ to support fully composable command line user interfaces by doing this:
     consistent error messages if something goes wrong.  A subcommand
     written by a different developer will not suddenly die with a
     different error messsage because it's manually handled.
--   click has enough meta information available for it's whole program
+-   click has enough meta information available for its whole program
     that it can evolve over time to improve the user experience without
     forcing developers to adjust their programs.  For instance if click
     decides to change how help pages are formatted, all click programs

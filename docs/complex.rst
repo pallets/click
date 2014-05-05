@@ -12,7 +12,7 @@ realized that it provides a command line utility.  But so does Celery for
 instance.  So when using Celery with Django there are two tools that need
 to interact with each other and be cross configured.
 
-In a theoretical world of two separate Click command line utilities they
+In a theoretical world of two separate click command line utilities they
 can solve this problem by nesting one inside the other.  For instance the
 web framework could also load the commands for the message queue
 framework.
@@ -26,7 +26,7 @@ and the calling convention.
 Contexts
 ````````
 
-Whenever a Click command is executed a :class:`Context` object is created
+Whenever a click command is executed a :class:`Context` object is created
 which holds state for this particular invocation.  For instance it
 remembers parsed parameters, what command created it, which resources need
 to be cleaned up at the end of the function and so forth.  It also holds
@@ -46,7 +46,7 @@ complex applications it comes in handy.  This brings us to the next point.
 Calling Convention
 ``````````````````
 
-When a Click command callback is executed it's passed all the non hidden
+When a click command callback is executed it's passed all the non hidden
 parameters as keyword arguments.  Notably absent is the context.  However
 a callback can opt-into being passed the context object by marking itself
 with :func:`pass_context`.
