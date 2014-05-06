@@ -114,6 +114,14 @@ Since files opened for writing will typically immediatley empty the file,
 the lazy mode should really only be disabled if the developer is 100% sure
 that this is intended behavior.
 
+Forcing on lazy mode is also very useful to avoid resource handling
+confusion.  If a file is opened in lazy mode it will get a
+``close_intelligently`` method that can help you figuring out if the file
+needs closing or not.  This is not needed for parameters, but it is
+necessary for manually prompting with the :func:`prompt` function as you
+do not know if a stream like stdout was openend (which was already open
+before) or a real file that needs closing.
+
 Environment Variables
 ---------------------
 
