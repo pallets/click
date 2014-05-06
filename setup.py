@@ -5,7 +5,7 @@ setup(
     name='click',
     author='Armin Ronacher',
     author_email='armin.ronacher@active-4.com',
-    version='0.2',
+    version='0.3',
     url='http://github.com/mitsuhiko/click',
     packages=['click'],
     description='A simple wrapper around optparse for '
