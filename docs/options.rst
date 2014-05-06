@@ -353,7 +353,7 @@ replaced with the :func:`confirmation_option` decorator:
 .. click:example::
 
     @click.command()
-    @click.confirmation_option('Are you sure you want to drop the db?')
+    @click.confirmation_option(help='Are you sure you want to drop the db?')
     def dropdb():
         click.echo('Dropped all tables!')
 
