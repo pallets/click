@@ -981,8 +981,6 @@ class Option(Parameter):
             extra.append('default: %s' % self.default)
         if self.required:
             extra.append('required')
-        if self.nargs != 1:
-            extra.append('%d arguments' % self.nargs)
         if extra:
             help = '%s[%s]' % (help and help + '  ' or '', '; '.join(extra))
 
