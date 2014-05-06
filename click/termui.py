@@ -18,9 +18,16 @@ def hidden_prompt_func(prompt):
     return getpass.getpass(prompt)
 
 
+def _build_prompt(text, suffix, show_default=False, default=None):
+    prompt = text
+    if default is not None and show_default:
+        prompt = '%s [%s]' % (prompt, default)
+    return prompt + suffix
+
+
 def prompt(text, default=None, hide_input=False,
            confirmation_prompt=False, type=None,
-           value_proc=None):
+           value_proc=None, prompt_suffix=': ', show_default=True):
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
@@ -37,6 +44,8 @@ def prompt(text, default=None, hide_input=False,
     :param value_proc: if this parameter is provided it's a function that
                        is invoked instead of the type conversion to
                        convert a value.
+    :param prompt_suffix: a suffix that should be added to the prompt.
+    :param show_default: shows or hides the default value in the prompt.
     """
     result = None
 
@@ -50,10 +59,7 @@ def prompt(text, default=None, hide_input=False,
     if value_proc is None:
         value_proc = convert_type(type, default)
 
-    prompt = text
-    if default is not None:
-        prompt = '%s [%s]' % (prompt, default)
-    prompt += ': '
+    prompt = _build_prompt(text, prompt_suffix, show_default, default)
 
     while 1:
         while 1:
@@ -81,7 +87,8 @@ def prompt(text, default=None, hide_input=False,
         echo('Error: the two entered values do not match')
 
 
-def confirm(text, default=False, abort=False):
+def confirm(text, default=False, abort=False, prompt_suffix=': ',
+            show_default=True):
     """Prompts for confirmation (yes/no question).
 
     If the user aborts the input by sending a interrupt signal this
@@ -91,8 +98,11 @@ def confirm(text, default=False, abort=False):
     :param default: the default for the prompt.
     :param abort: if this is set to `True` a negative answer aborts the
                   exception by raising :exc:`Abort`.
+    :param prompt_suffix: a suffix that should be added to the prompt.
+    :param show_default: shows or hides the default value in the prompt.
     """
-    prompt = '%s [%s]: ' % (text, default and 'Yn' or 'yN')
+    prompt = _build_prompt(text, prompt_suffix, show_default,
+                           default and 'Yn' or 'yN')
     while 1:
         try:
             value = visible_prompt_func(prompt).lower().strip()
