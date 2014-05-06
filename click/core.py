@@ -910,7 +910,7 @@ class Option(Parameter):
 
         if name is None and possible_names:
             possible_names.sort(key=lambda x: len(x[0]))
-            name = possible_names[0][1].replace('-', '_')
+            name = possible_names[-1][1].replace('-', '_')
             if not isidentifier(name):
                 name = None
 
