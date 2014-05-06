@@ -907,6 +907,8 @@ class Option(Parameter):
         if name is None and possible_names:
             possible_names.sort(key=len)
             name = possible_names[-1].replace('-', '_')
+            if not isidentifier(name):
+                name = None
 
         if name is None:
             raise TypeError('Could not determine name for option')
