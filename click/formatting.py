@@ -216,6 +216,7 @@ class HelpFormatter(object):
             else:
                 self.write('\n')
                 self.write(' ' * (first_col + self.current_indent))
+
             text_width = self.width - first_col - 2
             lines = iter(wrap_text(second, text_width).splitlines())
             if lines:
@@ -223,7 +224,8 @@ class HelpFormatter(object):
                 for line in lines:
                     self.write('%*s%s\n' % (
                         first_col + self.current_indent, '', line))
-            self.write('\n')
+            else:
+                self.write('\n')
 
     @contextmanager
     def section(self, name):
