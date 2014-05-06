@@ -15,13 +15,6 @@ from ._compat import PY2, isidentifier
 _missing = object()
 
 
-def _cleanup_name(name):
-    prefix = name[:1]
-    if not prefix.isalnum():
-        return name.lstrip(prefix)
-    return name
-
-
 class Context(object):
     """The context is a special internal object that holds state relevant
     for the script execution at every single level.  It's normally invisible
@@ -908,16 +901,16 @@ class Option(Parameter):
             else:
                 if '/' in decl:
                     first, second = decl.split('/', 1)
-                    possible_names.append(_cleanup_name(first))
+                    possible_names.append(split_opt(first))
                     opts.append(first)
                     secondary_opts.append(second)
                 else:
-                    possible_names.append(_cleanup_name(decl))
+                    possible_names.append(split_opt(decl))
                     opts.append(decl)
 
         if name is None and possible_names:
-            possible_names.sort(key=lambda x: split_opt(x)[0])
-            name = possible_names[-1].replace('-', '_')
+            possible_names.sort(key=lambda x: len(x[0]))
+            name = possible_names[0][1].replace('-', '_')
             if not isidentifier(name):
                 name = None
 
