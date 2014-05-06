@@ -49,10 +49,15 @@ class Context(object):
                                variables which are always read.
     :param default_map: a dictionary (like object) with default values
                         for parameters.
+    :param terminal_width: the width of the terminal.  The default is
+                           inherit from parent context.  If no context
+                           defines the terminal width then auto
+                           detection will be applied.
     """
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
-                 auto_envvar_prefix=None, default_map=None):
+                 auto_envvar_prefix=None, default_map=None,
+                 terminal_width=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -77,6 +82,11 @@ class Context(object):
         #: A dictionary (like object) with defaults for parameters.
         self.default_map = default_map
 
+        if terminal_width is None and parent is not None:
+            terminal_width = parent.terminal_width
+        #: The width of the terminal (None is autodetection).
+        self.terminal_width = terminal_width
+
         # If there is no envvar prefix yet, but the parent has one and
         # the command on this level has a name, we can expand the envvar
         # prefix automatically.
@@ -97,6 +107,10 @@ class Context(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         self.close()
+
+    def make_formatter(self):
+        """Creates the formatter for the help and usage output."""
+        return HelpFormatter(width=self.terminal_width)
 
     def call_on_close(self, f):
         """This decorator remembers a function as callback that should be
@@ -303,7 +317,7 @@ class Command(object):
 
         -   :meth:`format_usage`
         """
-        formatter = HelpFormatter()
+        formatter = ctx.make_formatter()
         self.format_usage(ctx, formatter)
         return formatter.getvalue().rstrip('\n')
 
@@ -316,7 +330,7 @@ class Command(object):
         -   :meth:`format_options`
         -   :meth:`format_epilog`
         """
-        formatter = HelpFormatter()
+        formatter = ctx.make_formatter()
         self.format_usage(ctx, formatter)
         self.format_help(ctx, formatter)
         self.format_options(ctx, formatter)
@@ -419,7 +433,7 @@ class Command(object):
                           the progam name is constructed by taking the file
                           name from ``sys.argv[0]``.
         :param extra: extra keyword arguments are forwarded to the context
-                      constructor.
+                      constructor.  See :class:`Context` for more information.
         """
         # If we are on python 3 we will verify that the environment is
         # sane at this point of reject further execution to avoid a

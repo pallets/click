@@ -34,6 +34,46 @@ convention of Unix tools to use arguments only for the most necessary
 things and to document them in the introduction text by referring to them
 by name.
 
+Preventing Rewrapping
+---------------------
+
+The default behavior of click is to rewrap text to work correctly for the
+width of the terminal.  In some circumstances this can become a problem.
+The main issue is showing code examples where newlines are significant.
+
+Rewrapping can be disabled on a per-paragraph case by adding a line with
+just the ``\b`` escape marker in.  This line will be removed in the help
+text but rewrapping will be disabled.
+
+Example:
+
+.. click:example::
+
+    @click.command()
+    def cli():
+        """First paragraph.
+
+        This is a very long second paragraph and as you
+        can see wrapped very early in the source text
+        but will be rewrapped to the terminal width in
+        the final output.
+
+        \b
+        This is
+        a paragraph
+        without rewrapping.
+
+        And this is a paragraph
+        that will be rewrapped again.
+        """
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(cli, args=['--help'])
+
+
 Meta Vars
 ---------
 

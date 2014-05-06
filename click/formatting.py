@@ -50,6 +50,15 @@ class TextWrapper(textwrap.TextWrapper):
             self.initial_indent = old_initial_indent
             self.subsequent_indent = old_subsequent_indent
 
+    def indent_only(self, text):
+        rv = []
+        for idx, line in enumerate(text.splitlines()):
+            indent = self.initial_indent
+            if idx > 0:
+                indent = self.subsequent_indent
+            rv.append(indent + line)
+        return '\n'.join(rv)
+
 
 def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
               preserve_paragraphs=False):
@@ -57,6 +66,10 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
     assumes that it operates on a single paragraph of text but if the
     `preserve_paragraphs` parameter is provided it will intelligently
     handle paragraphs (defined by two empty lines).
+
+    If paragraphs are handled a paragraph can be prefixed with an empty
+    line containing the ``\\b`` character (``\\x08``) to indicate that
+    no rewrapping should happen in that block.
 
     :param text: the text that should be rewrapped.
     :param width: the maximum width for the text.
@@ -77,20 +90,31 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
     p = []
     buf = []
     indent = 0
+
+    def _flush_par():
+        if not buf:
+            return
+        if buf[0].lstrip() == '\b':
+            p.append((indent, True, '\n'.join(buf[1:])))
+        else:
+            p.append((indent, False, ' '.join(buf)))
+        del buf[:]
+
     for line in text.splitlines():
         if not line:
-            p.append((indent, ' '.join(buf)))
-            buf = []
+            _flush_par()
         else:
             indent = len(line) - len(line.lstrip())
             buf.append(line.lstrip())
-    if buf:
-        p.append((indent, ' '.join(buf)))
+    _flush_par()
 
     rv = []
-    for indent, text in p:
+    for indent, raw, text in p:
         with wrapper.extra_indent(' ' * indent):
-            rv.append(wrapper.fill(text))
+            if raw:
+                rv.append(wrapper.indent_only(text))
+            else:
+                rv.append(wrapper.fill(text))
 
     return '\n\n'.join(rv)
 
