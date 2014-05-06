@@ -101,8 +101,10 @@ Boolean Flags
 
 Boolean flags are options that can be enabled or disabled.  This can be
 accomplished by defining two flags in one go separated by a slash (``/``)
-for enabling or disabling the option.  Click always wants you to provide
-an enable and disable flag so that you can change the default later.
+for enabling or disabling the option.  (If a slash is in an option string
+click automatically knows that it's a boolean flag and will pass
+``is_flag=True`` implicitly).  Click always wants you to provide an enable
+and disable flag so that you can change the default later.
 
 Example:
 
@@ -151,8 +153,11 @@ Feature Switches
 
 In addition to boolean flags there are also feature switches.  These are
 implemented by setting multiple options to the same parameter name and by
-defining a flag value.  To set a default flag assign a value of `True` to
-the flag that should be the default.
+defining a flag value.  Note that by providing the ``flag_value`` parameter
+click will implicitly set ``is_flag=True``.
+
+To set a default flag assign a value of `True` to the flag that should be
+the default.
 
 .. click:example::
 
