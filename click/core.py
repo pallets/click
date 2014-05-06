@@ -801,7 +801,7 @@ class Option(Parameter):
     All other parameters are passed onwards to the parameter constructor.
 
     :param show_default: controls if the default value should be shown on the
-                         help page.  The default is auto detection.
+                         help page.  Normally defaults are not shown.
     :param prompt: if set to `True` or a non empty string then the user will
                    be prompted for input if not set.  If set to `True` the
                    prompt will be the option name capitalized.
@@ -828,7 +828,7 @@ class Option(Parameter):
     """
     param_type_name = 'option'
 
-    def __init__(self, param_decls=None, show_default=None,
+    def __init__(self, param_decls=None, show_default=False,
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, count=False, allow_from_autoenv=True,
@@ -853,13 +853,10 @@ class Option(Parameter):
 
         if is_flag and default_is_missing:
             self.default = False
-            if show_default is None:
-                show_default = False
 
         if flag_value is None:
             flag_value = not self.default
 
-        self.show_default = show_default
         self.is_flag = is_flag
         self.flag_value = flag_value
         self.multiple = multiple
@@ -877,6 +874,7 @@ class Option(Parameter):
 
         self.allow_from_autoenv = allow_from_autoenv
         self.help = help
+        self.show_default = show_default
 
         # Sanity check for stuff we don't support
         if __debug__:
