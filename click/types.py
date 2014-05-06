@@ -1,9 +1,9 @@
 import sys
 import uuid
 
-from ._compat import open_stream, text_type
+from ._compat import open_stream, text_type, filename_to_ui, get_streerror
 from .exceptions import UsageError
-from .utils import safecall
+from .utils import safecall, LazyFile
 
 
 class ParamType(object):
@@ -219,39 +219,52 @@ class File(ParamType):
     """
     name = 'filename'
 
-    def __init__(self, mode='r', encoding=None, errors='strict'):
+    def __init__(self, mode='r', encoding=None, errors='strict', lazy=None):
         self.mode = mode
         self.encoding = encoding
         self.errors = errors
+        self.lazy = lazy
+
+    def resolve_lazy_flag(self, value):
+        if self.lazy is not None:
+            return self.lazy
+        if value == '-':
+            return False
+        elif 'w' in self.mode:
+            return True
+        return False
 
     def convert(self, value, param, ctx):
         try:
             if hasattr(value, 'read') or hasattr(value, 'write'):
                 return value
-            f, was_opened = open_stream(value, self.mode, self.encoding,
-                                        self.errors)
+
+            lazy = self.resolve_lazy_flag(value)
+
+            if lazy:
+                f = LazyFile(value, self.mode, self.encoding, self.errors)
+                if ctx is not None:
+                    ctx.call_on_close(f.close_intelligently)
+                return f
+
+            f, should_close = open_stream(value, self.mode,
+                                          self.encoding, self.errors)
             # If a context is provided we automatically close the file
             # at the end of the context execution (or flush out).  If a
             # context does not exist it's the caller's responsibility to
             # properly close the file.  This for instance happens when the
             # type is used with prompts.
             if ctx is not None:
-                if was_opened:
+                if should_close:
                     ctx.call_on_close(safecall(f.close))
                 else:
                     ctx.call_on_close(safecall(f.flush))
             return f
         except (IOError, OSError) as e:
-            if isinstance(value, bytes):
-                value = value.decode(sys.getfilesystemencoding(), 'replace')
-            if hasattr(e, 'strerror'):
-                msg = e.strerror
-            else:
-                msg = str(e)
-            if isinstance(msg, bytes):
-                msg = msg.decode('utf-8', 'replace')
-            self.fail('Could not open file %s: %s' % (value, msg),
-                      param, ctx)
+            self.fail('Could not open file: %s: %s' % (
+                filename_to_ui(value),
+                get_streerror(e),
+            ), param, ctx)
 
 
 def convert_type(ty, default=None):

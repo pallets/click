@@ -1,7 +1,7 @@
 import textwrap
 from contextlib import contextmanager
 
-from .helpers import get_terminal_size
+from .termui import get_terminal_size
 
 
 def measure_table(rows):

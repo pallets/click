@@ -72,10 +72,10 @@ def isolation(input=None, env=None):
 
     sys.stdout = output
     sys.stderr = output
-    old_visible_prompt_func = click.helpers.visible_prompt_func
-    old_hidden_prompt_func = click.helpers.hidden_prompt_func
-    click.helpers.visible_prompt_func = visible_input
-    click.helpers.hidden_prompt_func = hidden_input
+    old_visible_prompt_func = click.termui.visible_prompt_func
+    old_hidden_prompt_func = click.termui.hidden_prompt_func
+    click.termui.visible_prompt_func = visible_input
+    click.termui.hidden_prompt_func = hidden_input
 
     old_env = {}
     try:
@@ -95,8 +95,8 @@ def isolation(input=None, env=None):
                 os.environ[key] = value
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
-        click.helpers.visible_prompt_func = old_visible_prompt_func
-        click.helpers.hidden_prompt_func = old_hidden_prompt_func
+        click.termui.visible_prompt_func = old_visible_prompt_func
+        click.termui.hidden_prompt_func = old_hidden_prompt_func
 
 
 @contextlib.contextmanager

@@ -31,8 +31,8 @@ Decorators
 
 .. autofunction:: make_pass_decorator
 
-Helper Functions
-----------------
+Utilities
+---------
 
 .. autofunction:: echo
 
@@ -97,9 +97,13 @@ Types
 Exceptions
 ----------
 
+.. autoexception:: ClickException
+
 .. autoexception:: Abort
 
 .. autoexception:: UsageError
+
+.. autoexception:: FileError
 
 Formatting
 ----------

@@ -4,9 +4,9 @@ import codecs
 from itertools import chain
 
 from .types import convert_type, IntRange, BOOL
-from .utils import make_str, make_default_short_help
-from .exceptions import UsageError, Abort
-from .helpers import prompt, confirm, echo
+from .utils import make_str, make_default_short_help, echo
+from .exceptions import ClickException, UsageError, Abort
+from .termui import prompt, confirm
 from .formatting import HelpFormatter
 from .parser import OptionParser
 
@@ -434,11 +434,9 @@ class Command(object):
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
                 raise Abort()
-            except UsageError as e:
-                if e.ctx is not None:
-                    echo(e.ctx.get_usage() + '\n', file=sys.stderr)
-                echo('Error: %s' % e.message, file=sys.stderr)
-                sys.exit(2)
+            except ClickException as e:
+                e.show()
+                sys.exit(e.exit_code)
         except Abort:
             echo('Aborted!', file=sys.stderr)
             sys.exit(1)

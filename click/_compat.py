@@ -42,6 +42,11 @@ if PY2:
                     encoding = sys.stdin.encoding
                 f = _wrap_stream_for_codec(f, encoding, errors)
         return f, False
+
+    def filename_to_ui(value):
+        if isinstance(value, bytes):
+            value = value.decode(sys.getfilesystemencoding(), 'replace')
+        return value
 else:
     import io
     text_type = str
@@ -79,3 +84,24 @@ else:
                     f = _wrap_stream_for_codec(f, encoding, errors)
 
         return f, False
+
+    def filename_to_ui(value):
+        if isinstance(value, bytes):
+            value = value.decode(sys.getfilesystemencoding(), 'replace')
+        else:
+            value = value.encode('utf-8', 'surrogateescape') \
+                .decode('utf-8', 'replace')
+        return value
+
+
+def get_streerror(e, default=None):
+    if hasattr(e, 'strerror'):
+        msg = e.strerror
+    else:
+        if default is not None:
+            msg = default
+        else:
+            msg = str(e)
+    if isinstance(msg, bytes):
+        msg = msg.decode('utf-8', 'replace')
+    return msg

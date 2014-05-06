@@ -95,6 +95,25 @@ And what it does:
                terminate_input=True)
         invoke(inout, args=['hello.txt', '-'])
 
+File Opening Safety
+-------------------
+
+The :class:`FileType` type has one problem it needs to deal with and that
+is to decide when to open a file.  The default behavior is to be
+"intelligent" about it.  What this means is that it will open stdin/stdout
+and files opened for reading immediately.  This will directly give the
+user feedback when a file cannot be opened.  But it will only open files
+for writing the first time an IO operation is performed by wrapping the
+file automatically in a special wrapper.
+
+This behavior can be forced by passing ``lazy=True`` or ``lazy=False`` to
+the constructor.  If the file is openened lazily it will fail on first IO
+operation by raising an :exc:`FileError`.
+
+Since files opened for writing will typically immediatley empty the file,
+the lazy mode should really only be disabled if the developer is 100% sure
+that this is intended behavior.
+
 Environment Variables
 ---------------------
 

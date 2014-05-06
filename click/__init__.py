@@ -27,11 +27,14 @@ from .decorators import pass_context, pass_obj, make_pass_decorator, \
 from .types import ParamType, File, Choice, IntRange, STRING, INT, FLOAT, \
      BOOL, UUID
 
-# Helper functions
-from .helpers import prompt, confirm, get_terminal_size, echo, echo_via_pager
+# Utilities
+from .utils import echo
+
+# Terminal functions
+from .termui import prompt, confirm, get_terminal_size, echo_via_pager
 
 # Exceptions
-from .exceptions import UsageError, Abort
+from .exceptions import ClickException, UsageError, FileError, Abort
 
 # Formatting
 from .formatting import HelpFormatter, wrap_text
@@ -51,11 +54,14 @@ __all__ = [
     'ParamType', 'File', 'Choice', 'IntRange', 'STRING', 'INT', 'FLOAT',
     'BOOL', 'UUID',
 
-    # Helper functions
-    'prompt', 'confirm', 'get_terminal_size', 'echo', 'echo_via_pager',
+    # Utilities
+    'echo',
+
+    # Terminal functions
+    'prompt', 'confirm', 'get_terminal_size', 'echo_via_pager',
 
     # Exceptions
-    'UsageError', 'Abort',
+    'ClickException', 'UsageError', 'FileError', 'Abort',
 
     # Formatting
     'HelpFormatter', 'wrap_text',

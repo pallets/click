@@ -3,7 +3,7 @@ import sys
 import struct
 
 from ._compat import raw_input, PY2, text_type, string_types
-from .utils import get_best_encoding
+from .utils import get_best_encoding, echo
 from .exceptions import Abort, UsageError
 from .types import convert_type
 
@@ -149,29 +149,6 @@ def get_terminal_size():
         cr = (os.environ.get('LINES', 25),
               os.environ.get('COLUMNS', 80))
     return int(cr[1]), int(cr[0])
-
-
-def echo(message=None, file=None):
-    """Prints a message plus a newline to the given file or stdout.  On
-    first sight this looks like the print function but it has improved
-    support for handling unicode data that does not fail no matter how
-    badly configured the system is.
-
-    :param message: the message to print
-    :param file: the file to write to (defaults to ``stdout``)
-    """
-    if file is None:
-        file = sys.stdout
-    if message is not None:
-        if not isinstance(message, string_types):
-            message = text_type(message)
-        if message:
-            if PY2 and isinstance(message, text_type):
-                encoding = get_best_encoding(file)
-                message = message.encode(encoding, 'replace')
-            file.write(message)
-    file.write('\n')
-    file.flush()
 
 
 def echo_via_pager(text):
