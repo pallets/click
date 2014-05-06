@@ -946,7 +946,6 @@ class Option(Parameter):
             if self.is_bool_flag and self.secondary_opts:
                 parser.add_option(self.opts, action=action + '_const',
                                   const=True, **kwargs)
-                kwargs.pop('default', None)
                 parser.add_option(self.secondary_opts, action=action +
                                   '_const', const=False, **kwargs)
             else:
