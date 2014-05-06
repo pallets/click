@@ -19,6 +19,15 @@ from .exceptions import UsageError
 from .utils import unpack_args
 
 
+def split_opt(opt):
+    first = opt[:1]
+    if first.isalnum():
+        return '', opt
+    if opt[1:2] == first:
+        return opt[:2], opt[2:]
+    return first, opt[1:]
+
+
 class Option(object):
 
     def __init__(self, opts, dest, action=None, nargs=1, const=None):
@@ -27,16 +36,16 @@ class Option(object):
         self.prefixes = set()
 
         for opt in opts:
-            first = opt[:1]
-            if first.isalnum():
+            prefix = split_opt(opt)[0]
+            if not prefix:
                 raise ValueError('Invalid start character for option (%s)'
-                                 % first)
-            self.prefixes.add(first)
-            if opt[1:2] != first:
+                                 % opt)
+            self.prefixes.add(prefix[0])
+            if len(prefix) == 1:
                 self._short_opts.append(opt)
             else:
                 self._long_opts.append(opt)
-                self.prefixes.add(opt[:2])
+                self.prefixes.add(prefix)
 
         if action is None:
             action = 'store'

@@ -8,7 +8,7 @@ from .utils import make_str, make_default_short_help, echo
 from .exceptions import ClickException, UsageError, Abort
 from .termui import prompt, confirm
 from .formatting import HelpFormatter
-from .parser import OptionParser
+from .parser import OptionParser, split_opt
 
 from ._compat import PY2, isidentifier
 
@@ -713,9 +713,8 @@ class Parameter(object):
         if self.metavar is not None:
             return self.metavar
         metavar = self.type.get_metavar(self)
-        if metavar is not None:
-            return metavar
-        metavar = self.name.upper()
+        if metavar is None:
+            metavar = self.type.name.upper()
         if self.nargs != 1:
             metavar += '...'
         return metavar
@@ -962,10 +961,16 @@ class Option(Parameter):
         def _write_opts(opts):
             rv = []
             for opt in opts:
-                if not self.is_flag:
-                    opt += ' ' + self.make_metavar()
-                rv.append(opt)
-            return ', '.join(rv)
+                prefix = split_opt(opt)[0]
+                rv.append((len(prefix), opt))
+
+            rv.sort(key=lambda x: x[0])
+
+            rv = ', '.join(x[1] for x in rv)
+            if not self.is_flag:
+                rv += ' ' + self.make_metavar()
+            return rv
+
         rv = [_write_opts(self.opts)]
         if self.secondary_opts:
             rv.append(_write_opts(self.secondary_opts))

@@ -190,7 +190,7 @@ class HelpFormatter(object):
                              preserve_paragraphs=True))
         self.write('\n')
 
-    def write_dl(self, rows, col_max=20, col_spacing=2):
+    def write_dl(self, rows, col_max=30, col_spacing=2):
         """Writes a definition list into the buffer.  This is how options
         and commands are usually formatted.
 

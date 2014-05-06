@@ -64,7 +64,7 @@ class FuncParamType(ParamType):
 
 
 class StringParamType(ParamType):
-    name = 'string'
+    name = 'text'
 
     def convert(self, value, param, ctx):
         if isinstance(value, bytes):

@@ -177,6 +177,7 @@ def confirmation_option(*param_decls, **attrs):
         attrs.setdefault('callback', callback)
         attrs.setdefault('expose_value', False)
         attrs.setdefault('prompt', 'Do you want to continue?')
+        attrs.setdefault('help', 'Confirm the action without prompting.')
         return option(*(param_decls or ('--yes',)), **attrs)(f)
     return decorator
 
