@@ -58,6 +58,17 @@ And what it looks like:
 
     invoke(copy, args=['foo.txt', 'bar.txt', 'my_folder'])
 
+.. admonition:: Note on Non-Empty Variadic Arguments
+
+   If you come from ``argparse`` you might be missing support for setting
+   ``nargs`` to ``+`` to indicate that at least one argument is required.
+
+   Support for this is very intentionally not included as we believe
+   scripts should gracefully degrate into becomming noops if a variadic
+   argument is empty.  The reason for this is that very often scripts are
+   invoked with wildcard inputs from the command line and they should not
+   error out if the wildcard is empty.
+
 .. _file-args:
 
 File Arguments
