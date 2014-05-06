@@ -217,9 +217,12 @@ class HelpFormatter(object):
                 self.write('\n')
                 self.write(' ' * (first_col + self.current_indent))
             text_width = self.width - first_col - 2
-            self.write(wrap_text(
-                second, text_width, initial_indent='',
-                subsequent_indent=' ' * (first_col + self.current_indent)))
+            lines = iter(wrap_text(second, text_width).splitlines())
+            if lines:
+                self.write(next(lines) + '\n')
+                for line in lines:
+                    self.write('%*s%s\n' % (
+                        first_col + self.current_indent, '', line))
             self.write('\n')
 
     @contextmanager
