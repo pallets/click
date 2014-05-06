@@ -35,6 +35,10 @@ def test_counting(runner):
     assert 'Invalid value for "-v": 4 is not in the valid range of 0 to 3.' \
         in result.output
 
+    result = runner.invoke(cli, [])
+    assert not result.exception
+    assert result.output == 'verbosity=0\n'
+
 
 def test_multiple_required(runner):
     @click.command()

@@ -835,6 +835,7 @@ class Option(Parameter):
                  type=None, help=None, **attrs):
         default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
+
         if prompt is True:
             prompt_text = self.name.replace('_', ' ').capitalize()
         elif prompt is False:
@@ -845,26 +846,18 @@ class Option(Parameter):
         self.confirmation_prompt = confirmation_prompt
         self.hide_input = hide_input
 
+        # Flags
         if is_flag is None:
             if flag_value is not None:
                 is_flag = True
             else:
                 is_flag = bool(self.secondary_opts)
-
         if is_flag and default_is_missing:
             self.default = False
-
         if flag_value is None:
             flag_value = not self.default
-
         self.is_flag = is_flag
         self.flag_value = flag_value
-        self.multiple = multiple
-
-        self.count = count
-        if count and type is None:
-            self.type = IntRange(min=0)
-
         if self.is_flag and isinstance(self.flag_value, bool) \
            and type is None:
             self.type = BOOL
@@ -872,6 +865,15 @@ class Option(Parameter):
         else:
             self.is_bool_flag = False
 
+        # Counting
+        self.count = count
+        if count:
+            if type is None:
+                self.type = IntRange(min=0)
+            if default_is_missing:
+                self.default = 0
+
+        self.multiple = multiple
         self.allow_from_autoenv = allow_from_autoenv
         self.help = help
         self.show_default = show_default
