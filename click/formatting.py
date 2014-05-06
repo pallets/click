@@ -89,23 +89,27 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
 
     p = []
     buf = []
-    indent = 0
+    indent = None
 
     def _flush_par():
         if not buf:
             return
         if buf[0].lstrip() == '\b':
-            p.append((indent, True, '\n'.join(buf[1:])))
+            p.append((indent or 0, True, '\n'.join(buf[1:])))
         else:
-            p.append((indent, False, ' '.join(buf)))
+            p.append((indent or 0, False, ' '.join(buf)))
         del buf[:]
 
     for line in text.splitlines():
         if not line:
             _flush_par()
+            indent = None
         else:
-            indent = len(line) - len(line.lstrip())
-            buf.append(line.lstrip())
+            if indent is None:
+                orig_len = len(line)
+                line = line.lstrip()
+                indent = orig_len - len(line)
+            buf.append(line)
     _flush_par()
 
     rv = []

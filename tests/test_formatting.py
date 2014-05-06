@@ -16,6 +16,11 @@ def test_basic_functionality(runner):
         a paragraph
         without rewrapping.
 
+        \b
+        1
+         2
+          3
+
         And this is a paragraph
         that will be rewrapped again.
         """
@@ -33,6 +38,10 @@ def test_basic_functionality(runner):
         '  This is',
         '  a paragraph',
         '  without rewrapping.',
+        '',
+        '  1',
+        '   2',
+        '    3',
         '',
         '  And this is a paragraph that will be rewrapped again.',
         '',
