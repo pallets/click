@@ -742,13 +742,20 @@ class Parameter(object):
             return tuple(_convert(x, level - 1) for x in value or ())
         return _convert(value, (self.nargs != 1) + bool(self.multiple))
 
+    def value_is_missing(self, value):
+        if value is None:
+            return True
+        if (self.nargs != 1 or self.multiple) and value == ():
+            return True
+        return False
+
     def full_process_value(self, ctx, value):
         value = self.process_value(ctx, value)
 
         if value is None:
             value = self.get_default(ctx)
 
-        if value is None and self.required:
+        if self.required and self.value_is_missing(value):
             ctx.fail(self.get_missing_message(ctx))
 
         return value

@@ -34,3 +34,18 @@ def test_counting(runner):
     assert result.exception
     assert 'Invalid value for "-v": 4 is not in the valid range of 0 to 3.' \
         in result.output
+
+
+def test_multiple_required(runner):
+    @click.command()
+    @click.option('-m', '--message', multiple=True, required=True)
+    def cli(message):
+        click.echo('\n'.join(message))
+
+    result = runner.invoke(cli, ['-m', 'foo', '-mbar'])
+    assert not result.exception
+    assert result.output == 'foo\nbar\n'
+
+    result = runner.invoke(cli, [])
+    assert result.exception
+    assert 'Error: Missing option "-m" / "--message".' in result.output
