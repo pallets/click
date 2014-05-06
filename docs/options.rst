@@ -13,7 +13,8 @@ Basic Value Options
 The most basic option is a value option.  These options accept one
 argument which is a value.  If no type is provided the type of the default
 value is used.  If no default value is provided the type is assumed to be
-:data:`STRING`.  The name of the parameter is the longest option defined.
+:data:`STRING`.  The name of the parameter is by default the first long
+option defined, otherwise the first short one.
 
 .. click:example::
 

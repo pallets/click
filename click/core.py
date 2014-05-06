@@ -916,7 +916,7 @@ class Option(Parameter):
                     opts.append(decl)
 
         if name is None and possible_names:
-            possible_names.sort(key=len)
+            possible_names.sort(key=lambda x: split_opt(x)[0])
             name = possible_names[-1].replace('-', '_')
             if not isidentifier(name):
                 name = None
