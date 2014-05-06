@@ -47,10 +47,12 @@ class Context(object):
                                from environment variables is disabled.  This
                                does not affect manually set environment
                                variables which are always read.
+    :param default_map: a dictionary (like object) with default values
+                        for parameters.
     """
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
-                 auto_envvar_prefix=None):
+                 auto_envvar_prefix=None, default_map=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -72,6 +74,8 @@ class Context(object):
             obj = parent.obj
         #: the user object stored.
         self.obj = obj
+        #: A dictionary (like object) with defaults for parameters.
+        self.default_map = default_map
 
         # If there is no envvar prefix yet, but the parent has one and
         # the command on this level has a name, we can expand the envvar
@@ -148,6 +152,16 @@ class Context(object):
         if rv is None:
             self.obj = rv = object_type()
         return rv
+
+    def lookup_default(self, name):
+        """Looks up the default for a parameter name.  This by default
+        looks into the :attr:`default_map` if available.
+        """
+        if self.default_map is not None:
+            rv = self.default_map.get(name)
+            if callable(rv):
+                rv = rv()
+            return rv
 
     def fail(self, message):
         """Aborts the execution of the program with a specific error
@@ -362,6 +376,11 @@ class Command(object):
         :param extra: extra keyword arguments forwarded to the context
                       constructor.
         """
+        if 'default_map' not in extra:
+            default_map = None
+            if parent is not None and parent.default_map is not None:
+                default_map = parent.default_map.get(info_name)
+            extra['default_map'] = default_map
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
         parser = self.make_parser(ctx)
         opts, args = parser.parse_args(args=args)
@@ -701,6 +720,8 @@ class Parameter(object):
 
     def consume_value(self, ctx, opts):
         value = opts.get(self.name)
+        if value is None:
+            value = ctx.lookup_default(self.name)
         if value is None:
             value = self.value_from_envvar(ctx)
         return value

@@ -132,7 +132,7 @@ class ExampleRunner(object):
 
         def invoke(cmd, args=None, prog_name=None, prog_prefix='python ',
                    input=None, terminate_input=False, env=None,
-                   auto_envvar_prefix=None):
+                   **extra):
             if env:
                 for key, value in sorted(env.items()):
                     if ' ' in value:
@@ -152,8 +152,7 @@ class ExampleRunner(object):
                     input += '\xff'
             with isolation(input=input, env=env) as output:
                 try:
-                    cmd.main(args=args, prog_name=prog_name,
-                             auto_envvar_prefix=auto_envvar_prefix)
+                    cmd.main(args=args, prog_name=prog_name, **extra)
                 except SystemExit:
                     pass
                 buffer.extend(output.getvalue().splitlines())

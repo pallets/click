@@ -254,3 +254,50 @@ And what it looks like:
     invoke(cli, prog_name='cli', args=['--help'])
 
 In case a command exists on more than one source, the first source wins.
+
+Overriding Defaults
+-------------------
+
+By default the default value for a parameter is pulled from the
+``default`` flag that is provided when it's defined.  But that's not the
+only place defaults can be loaded from.  The other place is the
+:attr:`Context.default_map` (a dictionary) on the context.  This allows
+defaults to be loaded from a config file to override the regular defaults.
+
+This is useful if you plug in some commands from another package but
+you're not satisfied with the defaults.
+
+The default map can be nested arbitrarily for each subcommand and be
+provided when the script is invoked.  Alternatively it can also be
+overriden at any point by commands.  For instance a toplevel command could
+load the defaults from a config file.
+
+Example usage:
+
+.. click:example::
+
+    import click
+
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    @click.option('--port', default=8000)
+    def runserver(port):
+        click.echo('Serving on http://127.0.0.1:%d/' % port)
+
+    if __name__ == '__main__':
+        cli(default_map={
+            'runserver': {
+                'port': 5000
+            }
+        })
+
+.. click:run::
+
+    invoke(cli, prog_name='cli', args=['runserver'], default_map={
+        'runserver': {
+            'port': 5000
+        }
+    })

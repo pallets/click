@@ -118,13 +118,14 @@ class CliRunner(object):
             click.termui.visible_prompt_func = old_visible_prompt_func
             click.termui.hidden_prompt_func = old_hidden_prompt_func
 
-    def invoke(self, cli, args):
+    def invoke(self, cli, args, **extra):
         with self.isolation() as out:
             exception = None
             exit_code = 0
 
             try:
-                cli.main(args=args, prog_name=cli.name or 'root')
+                cli.main(args=args, prog_name=cli.name or 'root',
+                         **extra)
             except SystemExit as e:
                 if e.code != 0:
                     exception = e
