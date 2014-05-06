@@ -39,6 +39,9 @@ from .exceptions import ClickException, UsageError, FileError, Abort
 # Formatting
 from .formatting import HelpFormatter, wrap_text
 
+# Parsing
+from .parser import OptionParser
+
 
 __all__ = [
     # Core classes
@@ -65,4 +68,7 @@ __all__ = [
 
     # Formatting
     'HelpFormatter', 'wrap_text',
+
+    # Parsing
+    'OptionParser',
 ]

@@ -66,9 +66,27 @@ class Option(object):
 
 
 class OptionParser(object):
+    """The option parser is an internal class that is ultimately used to
+    parse options and arguments.  It's modelled after optparse and brings
+    a similar but vastly simplified API.  It should generally not be used
+    directly as the high level click classes wrap it for you.
 
-    def __init__(self, ctx):
+    It's not nearly as extensible as optparse or argparse as it does not
+    implement features that are implemented on a higher level (such as
+    types or defaults).
+
+    :param ctx: optionally the :class:`~click.Context` where this parser
+                should go with.
+    """
+
+    def __init__(self, ctx=None):
+        #: The :class:`~click.Context` for this parser.  This might be
+        #: `None` for some advanced use cases.
         self.ctx = ctx
+        #: This controls how the parser deals with interspersed arguments.
+        #: If this is set to `False`, the parser will stop on the first
+        #: non-option.  Click uses this to implement nested subcommands
+        #: safely.
         self.allow_interspersed_args = True
         self._short_opt = {}
         self._long_opt = {}
@@ -76,8 +94,13 @@ class OptionParser(object):
         self._nargs = []
         self._opt_prefixes = set(['-', '--'])
 
-    def add_option(self, opts, **kwargs):
-        option = Option(opts, **kwargs)
+    def add_option(self, opts, dest, action=None, nargs=1, const=None):
+        """Adds a new option named `dest` to the parser.  The destination
+        is not inferred unlike with optparse and needs to be explicitly
+        provided.  Action can be any of ``store``, ``store_const``,
+        ``append``, ``appnd_const`` or ``count``.
+        """
+        option = Option(opts, dest, action=action, nargs=nargs, const=const)
         self._opt_prefixes.update(option.prefixes)
         for opt in option._short_opts:
             self._short_opt[opt] = option
@@ -85,10 +108,15 @@ class OptionParser(object):
             self._long_opt[opt] = option
 
     def add_argument(self, dest, nargs=1):
+        """Adds a positional argument named `dest` to the parser."""
         self._arg_dest.append(dest)
         self._nargs.append(nargs)
 
     def parse_args(self, args):
+        """Parses positional arguments and returns ``(values, args)`` for
+        the parsed options and arguments as well as the leftover arguments
+        if there are any.
+        """
         rargs = args
         opts = {}
         largs = []
@@ -156,16 +184,16 @@ class OptionParser(object):
 
         # No exact match, so there had better be just one possibility.
         if not possibilities:
-            self.error('no such option: %s' % opt)
+            self._error('no such option: %s' % opt)
         elif len(possibilities) == 1:
-            self.error('no such option: %s.  Did you mean %s?' %
-                       (opt, possibilities[0]))
+            self._error('no such option: %s.  Did you mean %s?' %
+                        (opt, possibilities[0]))
             return possibilities[0]
         else:
             # More than one possible completion: ambiguous prefix.
             possibilities.sort()
-            self.error('no such option: %s.  (Possible options: %s)'
-                       % (opt, ', '.join(possibilities)))
+            self._error('no such option: %s.  (Possible options: %s)'
+                        % (opt, ', '.join(possibilities)))
 
     def _process_long_opt(self, rargs, opts):
         arg = rargs.pop(0)
@@ -186,9 +214,9 @@ class OptionParser(object):
             nargs = option.nargs
             if len(rargs) < nargs:
                 if nargs == 1:
-                    self.error('%s option requires an argument' % opt)
+                    self._error('%s option requires an argument' % opt)
                 else:
-                    self.error('%s option requires %d arguments' % (opt, nargs))
+                    self._error('%s option requires %d arguments' % (opt, nargs))
             elif nargs == 1:
                 value = rargs.pop(0)
             else:
@@ -196,7 +224,7 @@ class OptionParser(object):
                 del rargs[:nargs]
 
         elif had_explicit_value:
-            self.error('%s option does not take a value' % opt)
+            self._error('%s option does not take a value' % opt)
 
         else:
             value = None
@@ -214,7 +242,7 @@ class OptionParser(object):
             i += 1
 
             if not option:
-                self.error('no such option: %s' % opt)
+                self._error('no such option: %s' % opt)
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
                 # next arg, and stop consuming characters of arg.
@@ -225,10 +253,10 @@ class OptionParser(object):
                 nargs = option.nargs
                 if len(rargs) < nargs:
                     if nargs == 1:
-                        self.error('%s option requires an argument' % opt)
+                        self._error('%s option requires an argument' % opt)
                     else:
-                        self.error('%s option requires %d arguments' %
-                                   (opt, nargs))
+                        self._error('%s option requires %d arguments' %
+                                    (opt, nargs))
                 elif nargs == 1:
                     value = rargs.pop(0)
                 else:
@@ -243,5 +271,5 @@ class OptionParser(object):
             if stop:
                 break
 
-    def error(self, msg):
+    def _error(self, msg):
         raise UsageError(msg, self.ctx)

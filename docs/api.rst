@@ -114,3 +114,9 @@ Formatting
    :members:
 
 .. autofunction:: wrap_text
+
+Parsing
+-------
+
+.. autoclass:: OptionParser
+   :members:
