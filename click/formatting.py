@@ -94,7 +94,7 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
     def _flush_par():
         if not buf:
             return
-        if buf[0].lstrip() == '\b':
+        if buf[0].strip() == '\b':
             p.append((indent or 0, True, '\n'.join(buf[1:])))
         else:
             p.append((indent or 0, False, ' '.join(buf)))
