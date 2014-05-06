@@ -59,6 +59,8 @@ class Option(object):
             opts.setdefault(self.dest, []).append(value)
         elif self.action == 'append_const':
             opts.setdefault(self.dest, []).append(self.const)
+        elif self.action == 'count':
+            opts[self.dest] = opts.get(self.dest, 0) + 1
         else:
             raise ValueError('unknown action %r' % self.action)
 

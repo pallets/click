@@ -78,18 +78,16 @@ And on the command line:
 Counting
 --------
 
-If you have used ``optparse`` or ``argparse`` before you might be missing
-support for counting.  This is a very rarely useful feature, usually only
-useful for implementing verbosity flags.  It can however be emulated by
-using the multiple flag and taking the length of the end result:
+In some very rare circumstances it's interesting to use the repeating of
+options to count an integer up.  This for instance can be used for
+verbosity flags:
 
 .. click:example::
 
     @click.command()
-    @click.option('-v', '--verbose', is_flag=True, multiple=True)
+    @click.option('-v', '--verbose', count=True)
     def log(verbose):
-        verbosity = len(verbose)
-        click.echo('Verbosity: %s' % verbosity)
+        click.echo('Verbosity: %s' % verbose)
 
 And on the command line:
 
@@ -444,3 +442,42 @@ And from the command line:
 
     invoke(chmod, args=['+w'])
     invoke(chmod, args=['-w'])
+
+.. _ranges:
+
+Range Options
+-------------
+
+A special mention should go to the :class:`IntRange` type which works very
+similar to the :data:`INT` type but restricts the value to fall into a
+specific range (inclusive on both edges).  It has two modes:
+
+-   the default mode (non clamping mode) where a value that falls outside
+    of the range will cause an error.
+-   an optional clamping mode where a value that falls outside of the
+    range will be clamped.  This means that a range of ``0-5`` would
+    return ``5`` for the value ``10`` or ``0`` for the value ``-1`` (for
+    example).
+
+Example:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--count', type=click.IntRange(0, 20, clamp=True))
+    @click.option('--digit', type=click.IntRange(0, 10))
+    def repeat(count, digit):
+        click.echo(str(digit) * count)
+
+    if __name__ == '__main__':
+        repeat()
+
+And from the command line:
+
+.. click:run::
+
+    invoke(repeat, args=['--count=1000', '--digit=5'])
+    invoke(repeat, args=['--count=1000', '--digit=12'])
+
+If you pass ``None`` for any of the edges it means that the range is open
+at that side.

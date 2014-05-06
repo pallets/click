@@ -208,6 +208,39 @@ def test_choice_option(runner):
     assert '--method [foo|bar|baz]' in result.output
 
 
+def test_int_range_option(runner):
+    @click.command()
+    @click.option('--x', type=click.IntRange(0, 5))
+    def cli(x):
+        click.echo(x)
+
+    result = runner.invoke(cli, ['--x=5'])
+    assert not result.exception
+    assert result.output == '5\n'
+
+    result = runner.invoke(cli, ['--x=6'])
+    assert result.exit_code == 2
+    assert 'Invalid value for "--x": 6 is not in the valid range of 0 to 5.\n' \
+        in result.output
+
+    @click.command()
+    @click.option('--x', type=click.IntRange(0, 5, clamp=True))
+    def clamp(x):
+        click.echo(x)
+
+    result = runner.invoke(clamp, ['--x=5'])
+    assert not result.exception
+    assert result.output == '5\n'
+
+    result = runner.invoke(clamp, ['--x=6'])
+    assert not result.exception
+    assert result.output == '5\n'
+
+    result = runner.invoke(clamp, ['--x=-1'])
+    assert not result.exception
+    assert result.output == '0\n'
+
+
 def test_required_option(runner):
     @click.command()
     @click.option('--foo', required=True)

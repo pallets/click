@@ -3,7 +3,7 @@ import sys
 import codecs
 from itertools import chain
 
-from .types import convert_type, BOOL
+from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help
 from .exceptions import UsageError, Abort
 from .helpers import prompt, confirm, echo
@@ -787,6 +787,7 @@ class Option(Parameter):
                      multiple times and recorded.  This is similar to nargs
                      in how it works but supports arbitrary number of
                      arguments.
+    :param count: this flag makes an option increment an integer
     :param allow_from_autoenv: if this is enabled then the value of this
                                parameter will be pulled from an environment
                                variable in case a prefix is defined on the
@@ -798,8 +799,8 @@ class Option(Parameter):
     def __init__(self, param_decls=None, show_default=None,
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
-                 multiple=False, allow_from_autoenv=True, type=None,
-                 help=None, **attrs):
+                 multiple=False, count=False, allow_from_autoenv=True,
+                 type=None, help=None, **attrs):
         default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
         if prompt is True:
@@ -831,6 +832,10 @@ class Option(Parameter):
         self.flag_value = flag_value
         self.multiple = multiple
 
+        self.count = count
+        if count and type is None:
+            self.type = IntRange(min=0)
+
         if self.is_flag and isinstance(self.flag_value, bool) \
            and type is None:
             self.type = BOOL
@@ -851,6 +856,13 @@ class Option(Parameter):
                and self.prompt is not None:
                 raise TypeError('Hidden input does not work with boolean '
                                 'flag prompts.')
+            if self.count:
+                if self.multiple:
+                    raise TypeError('Options cannot be multiple and count '
+                                    'at the same time.')
+                elif self.is_flag:
+                    raise TypeError('Options cannot be count and flags at '
+                                    'the same time.')
 
     def _parse_decls(self, decls):
         opts = []
@@ -888,7 +900,12 @@ class Option(Parameter):
             'nargs': self.nargs,
         }
 
-        action = self.multiple and 'append' or 'store'
+        if self.multiple:
+            action = 'append'
+        elif self.count:
+            action = 'count'
+        else:
+            action = 'store'
 
         if self.is_flag:
             kwargs.pop('nargs', None)
