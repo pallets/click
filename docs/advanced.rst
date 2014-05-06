@@ -8,6 +8,8 @@ itself, there are countless of patterns that can be implemented by extending
 click.  This page should give some inspiration of what can be
 accomplished.
 
+.. _aliases:
+
 Command Aliases
 ---------------
 

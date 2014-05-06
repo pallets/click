@@ -130,3 +130,19 @@ click cannot even be implemented on top of it.
 In this particular case click attempts to stay with a handful of accepted
 paradigms for building command line interfaces that can be well documented
 and tested.
+
+
+Why No Auto Correction?
+-----------------------
+
+The question came up why click does not auto correct parameters given that
+even optparse and argparse support automatic expansion of long arguments.
+The reason for this is that it's a liability for backwards compatibility.
+If people start relying on automatically modified parameters and someone
+adds a new parameter in the future, the script might stop working.  These
+kind of problems are hard to find so click does not attempt to be magical
+about this.
+
+This sort of behavior however can be implemented on a higher level to
+support things such as explicit aliases.  For more information see
+:ref:`aliases`.
