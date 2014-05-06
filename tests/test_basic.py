@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import uuid
 import click
 
@@ -187,6 +188,47 @@ def test_file_option(runner):
     assert result_in.output == ''
     assert not result_out.exception
     assert result_out.output == 'Hello World!\n\n'
+
+
+def test_file_lazy_mode(runner):
+    do_io = False
+
+    @click.command()
+    @click.option('--file', type=click.File('w'))
+    def input(file):
+        if do_io:
+            file.write('Hello World!\n')
+
+    @click.command()
+    @click.option('--file', type=click.File('r'))
+    def output(file):
+        pass
+
+    with runner.isolated_filesystem():
+        os.mkdir('example.txt')
+
+        do_io = True
+        result_in = runner.invoke(input, ['--file=example.txt'])
+        assert result_in.exit_code == 1
+
+        do_io = False
+        result_in = runner.invoke(input, ['--file=example.txt'])
+        assert result_in.exit_code == 0
+
+        result_out = runner.invoke(output, ['--file=example.txt'])
+        assert result_out.exception
+
+    @click.command()
+    @click.option('--file', type=click.File('w', lazy=False))
+    def input_non_lazy(file):
+        file.write('Hello World!\n')
+
+    with runner.isolated_filesystem():
+        os.mkdir('example.txt')
+        result_in = runner.invoke(input_non_lazy, ['--file=example.txt'])
+        assert result_in.exit_code == 2
+        assert 'Invalid value for "--file": Could not open file: example.txt' \
+            in result_in.output
 
 
 def test_choice_option(runner):
