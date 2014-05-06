@@ -215,6 +215,10 @@ class File(ParamType):
     opened in binary mode or for writing.  The encoding parameter can be used
     to force a specific encoding.
 
+    The `lazy` flag controls if the file should be opened immediately or
+    upon first IO.  The default is to be non lazy for standard input and
+    output streams as well as files opened for reading, lazy otherwise.
+
     See :ref:`file-args` for more information.
     """
     name = 'filename'
