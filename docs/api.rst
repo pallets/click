@@ -92,6 +92,8 @@ Types
 
 .. autoclass:: Choice
 
+.. autoclass:: IntRange
+
 .. autoclass:: ParamType
 
 Exceptions
