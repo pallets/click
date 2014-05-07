@@ -292,3 +292,48 @@ def test_required_option(runner):
     result = runner.invoke(cli, [])
     assert result.exit_code == 2
     assert 'Missing option "--foo"' in result.output
+
+
+def test_evaluation_order(runner):
+    called = []
+
+    def memo(ctx, value):
+        called.append(value)
+        return value
+
+    @click.command()
+    @click.option('--missing', default='missing',
+                  is_eager=False, callback=memo)
+    @click.option('--eager-flag1', flag_value='eager1',
+                  is_eager=True, callback=memo)
+    @click.option('--eager-flag2', flag_value='eager2',
+                  is_eager=True, callback=memo)
+    @click.option('--eager-flag3', flag_value='eager3',
+                  is_eager=True, callback=memo)
+    @click.option('--normal-flag1', flag_value='normal1',
+                  is_eager=False, callback=memo)
+    @click.option('--normal-flag2', flag_value='normal2',
+                  is_eager=False, callback=memo)
+    @click.option('--normal-flag3', flag_value='normal3',
+                  is_eager=False, callback=memo)
+    def cli(**x):
+        pass
+
+    result = runner.invoke(cli, ['--eager-flag2',
+                                 '--eager-flag1',
+                                 '--normal-flag2',
+                                 '--eager-flag3',
+                                 '--normal-flag3',
+                                 '--normal-flag3',
+                                 '--normal-flag1',
+                                 '--normal-flag1'])
+    assert not result.exception
+    assert called == [
+        'eager2',
+        'eager1',
+        'eager3',
+        'normal2',
+        'normal3',
+        'normal1',
+        'missing',
+    ]

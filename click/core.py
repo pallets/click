@@ -15,6 +15,21 @@ from ._compat import PY2, isidentifier
 _missing = object()
 
 
+def iter_params_for_processing(invocation_order, declaration_order):
+    """Given a sequence of parameters in the order as should be considered
+    for processing and an iterable of parameters that exist, this returns
+    a list in the correct order as they should be processed.
+    """
+    def sort_key(item):
+        try:
+            idx = invocation_order.index(item)
+        except ValueError:
+            idx = float('inf')
+        return (not item.is_eager, idx)
+
+    return sorted(declaration_order, key=sort_key)
+
+
 class Context(object):
     """The context is a special internal object that holds state relevant
     for the script execution at every single level.  It's normally invisible
@@ -228,10 +243,10 @@ class Context(object):
         if not isinstance(cmd, Command):
             raise TypeError('Callback is not a command.')
 
-        for param_name in cmd.iter_param_names():
-            if param_name in self.params and \
-               param_name not in kwargs:
-                kwargs[param_name] = self.params[param_name]
+        for param in self.params:
+            if param.name in self.params and \
+               param.name not in kwargs:
+                kwargs[param.name] = self.params[param.name]
 
         return self.invoke(cmd, **kwargs)
 
@@ -282,23 +297,6 @@ class Command(object):
     def add_help_option(self):
         """Adds a help option to the command."""
         help_option()(self)
-
-    def iter_params_for_processing(self):
-        """This returns an iterator over all attached parameters in the
-        order of processing.  This iterator returns all eager parameters
-        first, followed by all non-eager parameters.
-        """
-        for param in self.params:
-            if param.is_eager:
-                yield param
-        for param in self.params:
-            if not param.is_eager:
-                yield param
-
-    def iter_param_names(self):
-        """Iterates over all parameter names."""
-        for param in self.iter_params_for_processing():
-            yield param.name
 
     def make_parser(self, ctx):
         """Creates the underlying option parser for this command."""
@@ -394,9 +392,9 @@ class Command(object):
             extra['default_map'] = default_map
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
         parser = self.make_parser(ctx)
-        opts, args = parser.parse_args(args=args)
+        opts, args, param_order = parser.parse_args(args=args)
 
-        for param in ctx.command.iter_params_for_processing():
+        for param in iter_params_for_processing(param_order, self.params):
             value, args = param.handle_parse_result(ctx, opts, args)
 
         if args and not self.allow_extra_args:
@@ -936,6 +934,7 @@ class Option(Parameter):
         kwargs = {
             'dest': self.name,
             'nargs': self.nargs,
+            'obj': self,
         }
 
         if self.multiple:
@@ -1073,7 +1072,8 @@ class Argument(Parameter):
         return [self.make_metavar()]
 
     def add_to_parser(self, parser, ctx):
-        parser.add_argument(dest=self.name, nargs=self.nargs)
+        parser.add_argument(dest=self.name, nargs=self.nargs,
+                            obj=self)
 
 
 # Circular dependency between decorators and core

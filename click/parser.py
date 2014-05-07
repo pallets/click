@@ -30,7 +30,7 @@ def split_opt(opt):
 
 class Option(object):
 
-    def __init__(self, opts, dest, action=None, nargs=1, const=None):
+    def __init__(self, opts, dest, action=None, nargs=1, const=None, obj=None):
         self._short_opts = []
         self._long_opts = []
         self.prefixes = set()
@@ -54,24 +54,47 @@ class Option(object):
         self.action = action
         self.nargs = nargs
         self.const = const
+        self.obj = obj
 
     @property
     def takes_value(self):
         return self.action in ('store', 'append')
 
-    def process(self, opt, value, opts, parser):
+    def process(self, value, state):
         if self.action == 'store':
-            opts[self.dest] = value
+            state.opts[self.dest] = value
         elif self.action == 'store_const':
-            opts[self.dest] = self.const
+            state.opts[self.dest] = self.const
         elif self.action == 'append':
-            opts.setdefault(self.dest, []).append(value)
+            state.opts.setdefault(self.dest, []).append(value)
         elif self.action == 'append_const':
-            opts.setdefault(self.dest, []).append(self.const)
+            state.opts.setdefault(self.dest, []).append(self.const)
         elif self.action == 'count':
-            opts[self.dest] = opts.get(self.dest, 0) + 1
+            state.opts[self.dest] = state.opts.get(self.dest, 0) + 1
         else:
             raise ValueError('unknown action %r' % self.action)
+        state.order.append(self.obj)
+
+
+class Argument(object):
+
+    def __init__(self, dest, nargs=1, obj=None):
+        self.dest = dest
+        self.nargs = nargs
+        self.obj = obj
+
+    def process(self, value, state):
+        state.opts[self.dest] = value
+        state.order.append(self.obj)
+
+
+class ParsingState(object):
+
+    def __init__(self, rargs):
+        self.opts = {}
+        self.largs = []
+        self.rargs = rargs
+        self.order = []
 
 
 class OptionParser(object):
@@ -99,66 +122,79 @@ class OptionParser(object):
         self.allow_interspersed_args = True
         self._short_opt = {}
         self._long_opt = {}
-        self._arg_dest = []
-        self._nargs = []
         self._opt_prefixes = set(['-', '--'])
+        self._args = []
 
-    def add_option(self, opts, dest, action=None, nargs=1, const=None):
+    def add_option(self, opts, dest, action=None, nargs=1, const=None,
+                   obj=None):
         """Adds a new option named `dest` to the parser.  The destination
         is not inferred unlike with optparse and needs to be explicitly
         provided.  Action can be any of ``store``, ``store_const``,
         ``append``, ``appnd_const`` or ``count``.
+
+        The `obj` can be used to identify the option in the order list
+        that is returned from the parser.
         """
-        option = Option(opts, dest, action=action, nargs=nargs, const=const)
+        if obj is None:
+            obj = dest
+        option = Option(opts, dest, action=action, nargs=nargs,
+                        const=const, obj=obj)
         self._opt_prefixes.update(option.prefixes)
         for opt in option._short_opts:
             self._short_opt[opt] = option
         for opt in option._long_opts:
             self._long_opt[opt] = option
 
-    def add_argument(self, dest, nargs=1):
-        """Adds a positional argument named `dest` to the parser."""
-        self._arg_dest.append(dest)
-        self._nargs.append(nargs)
+    def add_argument(self, dest, nargs=1, obj=None):
+        """Adds a positional argument named `dest` to the parser.
+
+        The `obj` can be used to identify the option in the order list
+        that is returned from the parser.
+        """
+        if obj is None:
+            obj = dest
+        self._args.append(Argument(dest=dest, nargs=nargs, obj=obj))
 
     def parse_args(self, args):
-        """Parses positional arguments and returns ``(values, args)`` for
-        the parsed options and arguments as well as the leftover arguments
-        if there are any.
+        """Parses positional arguments and returns ``(values, args, order)``
+        for the parsed options and arguments as well as the leftover
+        arguments if there are any.  The order is a list of objects as they
+        appear on the command line.  If arguments appear multiple times they
+        will be memorized multiple times as well.
         """
-        rargs = args
-        opts = {}
-        largs = []
+        state = ParsingState(args)
+        self._process_args_for_options(state)
+        self._process_args_for_args(state)
+        return state.opts, state.largs, state.order
 
-        self._process_args_for_options(largs, rargs, opts)
-        args = self._process_args_for_args(largs, rargs, opts)
+    def _process_args_for_args(self, state):
+        pargs, args = unpack_args(state.largs + state.rargs,
+                                  [x.nargs for x in self._args])
 
-        return opts, args
+        for idx, arg in enumerate(self._args):
+            arg.process(pargs[idx], state)
 
-    def _process_args_for_args(self, largs, rargs, opts):
-        pargs, args = unpack_args(largs + rargs, self._nargs)
-        for idx, arg_name in enumerate(self._arg_dest):
-            opts[arg_name] = pargs[idx]
-        return args
+        state.largs = args
+        state.rargs = []
 
-    def _process_args_for_options(self, largs, rargs, opts):
-        while rargs:
-            arg = rargs[0]
+    def _process_args_for_options(self, state):
+        while state.rargs:
+            arg = state.rargs[0]
             # Double dash es always handled explicitly regardless of what
             # prefixes are valid.
             if arg == '--':
-                del rargs[0]
+                del state.rargs[0]
                 return
             elif arg[0:2] in self._opt_prefixes:
                 # process a single long option (possibly with value(s))
-                self._process_long_opt(rargs, opts)
+                self._process_long_opt(state)
             elif arg[:1] in self._opt_prefixes and len(arg) > 1:
                 # process a cluster of short options (possibly with
                 # value(s) for the last one only)
-                self._process_short_opts(rargs, opts)
+                self._process_short_opts(state)
             elif self.allow_interspersed_args:
-                largs.append(arg)
-                del rargs[0]
+                state.largs.append(arg)
+                del state.rargs[0]
             else:
                 return
 
@@ -204,14 +240,14 @@ class OptionParser(object):
             self._error('no such option: %s.  (Possible options: %s)'
                         % (opt, ', '.join(possibilities)))
 
-    def _process_long_opt(self, rargs, opts):
-        arg = rargs.pop(0)
+    def _process_long_opt(self, state):
+        arg = state.rargs.pop(0)
 
         # Value explicitly attached to arg?  Pretend it's the next
         # argument.
         if '=' in arg:
             opt, next_arg = arg.split('=', 1)
-            rargs.insert(0, next_arg)
+            state.rargs.insert(0, next_arg)
             had_explicit_value = True
         else:
             opt = arg
@@ -221,16 +257,16 @@ class OptionParser(object):
         option = self._long_opt[opt]
         if option.takes_value:
             nargs = option.nargs
-            if len(rargs) < nargs:
+            if len(state.rargs) < nargs:
                 if nargs == 1:
                     self._error('%s option requires an argument' % opt)
                 else:
                     self._error('%s option requires %d arguments' % (opt, nargs))
             elif nargs == 1:
-                value = rargs.pop(0)
+                value = state.rargs.pop(0)
             else:
-                value = tuple(rargs[:nargs])
-                del rargs[:nargs]
+                value = tuple(state.rargs[:nargs])
+                del state.rargs[:nargs]
 
         elif had_explicit_value:
             self._error('%s option does not take a value' % opt)
@@ -238,10 +274,10 @@ class OptionParser(object):
         else:
             value = None
 
-        option.process(opt, value, opts, self)
+        option.process(value, state)
 
-    def _process_short_opts(self, rargs, opts):
-        arg = rargs.pop(0)
+    def _process_short_opts(self, state):
+        arg = state.rargs.pop(0)
         stop = False
         i = 1
         prefix = arg[0]
@@ -256,26 +292,26 @@ class OptionParser(object):
                 # Any characters left in arg?  Pretend they're the
                 # next arg, and stop consuming characters of arg.
                 if i < len(arg):
-                    rargs.insert(0, arg[i:])
+                    state.rargs.insert(0, arg[i:])
                     stop = True
 
                 nargs = option.nargs
-                if len(rargs) < nargs:
+                if len(state.rargs) < nargs:
                     if nargs == 1:
                         self._error('%s option requires an argument' % opt)
                     else:
                         self._error('%s option requires %d arguments' %
                                     (opt, nargs))
                 elif nargs == 1:
-                    value = rargs.pop(0)
+                    value = state.rargs.pop(0)
                 else:
-                    value = tuple(rargs[:nargs])
-                    del rargs[:nargs]
+                    value = tuple(state.rargs[:nargs])
+                    del state.rargs[:nargs]
 
             else:
                 value = None
 
-            option.process(opt, value, opts, self)
+            option.process(value, state)
 
             if stop:
                 break

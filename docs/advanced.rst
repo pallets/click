@@ -117,3 +117,63 @@ Example:
     def less():
         click.echo_via_pager('\n'.join('Line %d' % idx
                                        for idx in range(200)))
+
+
+.. _callback-evaluation-order:
+
+Callback Evaluation Order
+-------------------------
+
+Click works a bit different than some other command line parsers in that
+it attempts to reconsiliate the order of arguments as defined by the
+programmer with the order of arguments as defined by the user before
+invoking any callbacks.
+
+This is an important concept to understand when implementing complex
+patterns ported from optparse or other systems to click.  A parameter
+callback invocation in optparse happens as part of the parsing step
+whereas a callback invocation in click happens after the parsing.
+
+The main difference is that in optparse callbacks are invoked with the raw
+value as it happens whereas a callback in click is invoked after the value
+as fully converted.
+
+Generally the order of invocation is driven by the order in which the user
+provides the arguments to the script.  So if there is an option called
+``--foo`` and an option called ``--bar`` and the user calls it as ``--bar
+--foo`` then the callback for ``bar`` will fire before the one of ``foo``.
+
+There are two exceptions to this rule which are important to know:
+
+Eagerness:
+    An option can be set to be "eager".  All eager parameters are
+    evaluated before all non-eager parameters, but again in the order as
+    they were provided on the command line by the user.
+
+    This is important for parameters that execute and exit like ``--help``
+    and ``--version``.  Both are eager parameters but whatever paramter
+    comes first on the command line will win and exit the program.
+
+Repeated parameters:
+    If an option or argument is split up on the command line into multiple
+    places because it's repeated (for instance ``--exclude foo --include
+    baz --exclude bar``) the callback will fire based on the position of
+    the first option.  So in this case the callback will fire for
+    ``exclude`` and it will be passed both options (``foo`` and
+    ``bar``), then the callback for ``include`` will fire with ``baz``
+    only.
+
+    Note that even if an parameter does not allow multiple versions click
+    will still accept the position of the first, but it will ignore every
+    value with the exception of the first.  The reason for this is to
+    allow composability through shell aliases that set defaults.
+
+Missing parameters:
+    If an parameter is not defined on the command line the callback will
+    still fire.  This is different from how it works in optparse where
+    not defined values do not fire the callback.  Missing parameters fire
+    their callbacks at the very end which makes it possible for them to
+    default to values from a parameter that came before.
+
+Most of the time you don't need to be concerned about any of this stuff,
+but it's important to know how it works for some advanced cases.

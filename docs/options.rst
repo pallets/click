@@ -290,7 +290,8 @@ callback is what executes after the parameter is handled.  The eagerness
 is necessary so that an earlier required parameter does not produce an
 error message.  For instance if ``--version`` was not eager and a
 parameter ``--foo`` was required and defined before, you would need to
-specify it for ``--version`` to work.
+specify it for ``--version`` to work.  For more information see
+:ref:`callback-evaluation-order`.
 
 A callback is a function that is invoked with two parameters: the current
 :class:`Context` and the value.  The context provides some useful features
