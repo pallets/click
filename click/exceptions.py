@@ -30,7 +30,8 @@ class UsageError(ClickException):
         self.ctx = ctx
 
     def show(self, file=None):
-        echo(self.ctx.get_usage() + '\n', file=file)
+        if self.ctx is not None:
+            echo(self.ctx.get_usage() + '\n', file=file)
         echo('Error: %s' % self.message, file=file)
 
 
