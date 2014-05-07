@@ -114,7 +114,8 @@ def group(name=None, **attrs):
     works otherwise the same as :func:`command` just that the `cls`
     parameter is set to :class:`Group`.
     """
-    return command(name, cls=Group, **attrs)
+    attrs.setdefault('cls', Group)
+    return command(name, **attrs)
 
 
 def _param_memo(f, param):

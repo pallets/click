@@ -277,7 +277,11 @@ class Command(object):
             short_help = make_default_short_help(help)
         self.short_help = short_help
         if add_help_option:
-            help_option()(self)
+            self.add_help_option()
+
+    def add_help_option(self):
+        """Adds a help option to the command."""
+        help_option()(self)
 
     def iter_params_for_processing(self):
         """This returns an iterator over all attached parameters in the
