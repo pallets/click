@@ -19,7 +19,7 @@ def cli(input, output):
 
     \b
     Write stdin into the file foo.txt
-        intout - foo.txt
+        inout - foo.txt
     """
     for f in input:
         while True:
