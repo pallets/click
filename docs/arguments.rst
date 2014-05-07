@@ -64,7 +64,7 @@ And what it looks like:
    ``nargs`` to ``+`` to indicate that at least one argument is required.
 
    Support for this is very intentionally not included as we believe
-   scripts should gracefully degrate into becomming noops if a variadic
+   scripts should gracefully degrade into becoming noops if a variadic
    argument is empty.  The reason for this is that very often scripts are
    invoked with wildcard inputs from the command line and they should not
    error out if the wildcard is empty.

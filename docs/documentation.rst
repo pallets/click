@@ -42,8 +42,8 @@ width of the terminal.  In some circumstances this can become a problem.
 The main issue is showing code examples where newlines are significant.
 
 Rewrapping can be disabled on a per-paragraph case by adding a line with
-just the ``\b`` escape marker in.  This line will be removed in the help
-text but rewrapping will be disabled.
+just the ``\b`` escape marker in it.  This line will be removed from the
+help text and rewrapping will be disabled.
 
 Example:
 
