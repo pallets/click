@@ -125,7 +125,7 @@ Callback Evaluation Order
 -------------------------
 
 Click works a bit different than some other command line parsers in that
-it attempts to reconsiliate the order of arguments as defined by the
+it attempts to reconcile the order of arguments as defined by the
 programmer with the order of arguments as defined by the user before
 invoking any callbacks.
 
@@ -135,13 +135,13 @@ callback invocation in optparse happens as part of the parsing step
 whereas a callback invocation in click happens after the parsing.
 
 The main difference is that in optparse callbacks are invoked with the raw
-value as it happens whereas a callback in click is invoked after the value
-as fully converted.
+value as it happens, whereas a callback in click is invoked after the
+value has been fully converted.
 
 Generally the order of invocation is driven by the order in which the user
 provides the arguments to the script.  So if there is an option called
 ``--foo`` and an option called ``--bar`` and the user calls it as ``--bar
---foo`` then the callback for ``bar`` will fire before the one of ``foo``.
+--foo`` then the callback for ``bar`` will fire before the one for ``foo``.
 
 There are two exceptions to this rule which are important to know:
 
@@ -151,7 +151,7 @@ Eagerness:
     they were provided on the command line by the user.
 
     This is important for parameters that execute and exit like ``--help``
-    and ``--version``.  Both are eager parameters but whatever paramter
+    and ``--version``.  Both are eager parameters but whatever parameter
     comes first on the command line will win and exit the program.
 
 Repeated parameters:
@@ -163,15 +163,15 @@ Repeated parameters:
     ``bar``), then the callback for ``include`` will fire with ``baz``
     only.
 
-    Note that even if an parameter does not allow multiple versions click
+    Note that even if a parameter does not allow multiple versions, click
     will still accept the position of the first, but it will ignore every
-    value with the exception of the first.  The reason for this is to
-    allow composability through shell aliases that set defaults.
+    value except the first.  The reason for this is to allow composability
+    through shell aliases that set defaults.
 
 Missing parameters:
-    If an parameter is not defined on the command line the callback will
+    If a parameter is not defined on the command line the callback will
     still fire.  This is different from how it works in optparse where
-    not defined values do not fire the callback.  Missing parameters fire
+    undefined values do not fire the callback.  Missing parameters fire
     their callbacks at the very end which makes it possible for them to
     default to values from a parameter that came before.
 
