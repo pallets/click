@@ -218,21 +218,7 @@ def version_option(version=None, *param_decls, **attrs):
     :param others: everything else is forwarded to :func:`option`.
     """
     if version is None:
-        mod = sys._getframe(1).f_globals.get('__name__')
-        try:
-            import pkg_resources
-        except ImportError:
-            pass
-        else:
-            for dist in pkg_resources.working_set:
-                scripts = dist.get_entry_map().get('console_scripts') or {}
-                for script_name, entry_point in iteritems(scripts):
-                    if entry_point.module_name == mod:
-                        version = dist.version
-                        break
-        if version is None:
-            raise RuntimeError('Could not determine version')
-
+        module = sys._getframe(1).f_globals.get('__name__')
     def decorator(f):
         prog_name = attrs.pop('prog_name', None)
         message = attrs.pop('message', '%(prog)s, version %(version)s')
@@ -243,9 +229,24 @@ def version_option(version=None, *param_decls, **attrs):
             prog = prog_name
             if prog is None:
                 prog = ctx.find_root().info_name
+            ver = version
+            if ver is None:
+                try:
+                    import pkg_resources
+                except ImportError:
+                    pass
+                else:
+                    for dist in pkg_resources.working_set:
+                        scripts = dist.get_entry_map().get('console_scripts') or {}
+                        for script_name, entry_point in iteritems(scripts):
+                            if entry_point.module_name == module:
+                                ver = dist.version
+                                break
+                if ver is None:
+                    raise RuntimeError('Could not determine version')
             echo(message % {
                 'prog': prog,
-                'version': version,
+                'version': ver,
             })
             ctx.exit()
 
