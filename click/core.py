@@ -391,6 +391,14 @@ class Command(object):
                 default_map = parent.default_map.get(info_name)
             extra['default_map'] = default_map
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
+        self.parse_args(ctx, args)
+        return ctx
+
+    def parse_args(self, ctx, args):
+        """Given a context and a list of arguments this creates the parser
+        and parses the arguments, then modifies the context as necessary.
+        This is automatically invoked by :meth:`make_context`.
+        """
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
 
@@ -403,8 +411,6 @@ class Command(object):
                         ' '.join(map(make_str, args))))
 
         ctx.args = args
-
-        return ctx
 
     def invoke(self, ctx):
         """Given a context, this invokes the attached callback (if it exists)
@@ -535,19 +541,32 @@ class MultiCommand(Command):
             with formatter.section('Commands'):
                 formatter.write_dl(rows)
 
+    def parse_args(self, ctx, args):
+        if not args and self.no_args_is_help:
+            echo(ctx.get_help())
+            ctx.exit()
+        return Command.parse_args(self, ctx, args)
+
     def invoke(self, ctx):
         if not ctx.args:
             if self.invoke_without_command:
                 return Command.invoke(self, ctx)
-            elif self.no_args_is_help:
-                echo(ctx.get_help())
-                ctx.exit()
-            ctx.fail('Missing command')
+            ctx.fail('Missing command.')
 
         cmd_name = make_str(ctx.args[0])
         cmd = self.get_command(ctx, cmd_name)
+
+        # If we don't find the command we want to show an error message
+        # to the user that it was not provided.  However there is
+        # something else we should do: if the first argument looks like
+        # an option we want to kick off parsing again for arguments to
+        # resolve things like --help which now should go to the main
+        # place.
         if cmd is None:
-            ctx.fail('No such command "%s"' % cmd_name)
+            if split_opt(cmd_name)[0]:
+                self.parse_args(ctx, ctx.args)
+            ctx.fail('No such command "%s".' % cmd_name)
+
         return self.invoke_subcommand(ctx, cmd, cmd_name, ctx.args[1:])
 
     def invoke_subcommand(self, ctx, cmd, cmd_name, args):

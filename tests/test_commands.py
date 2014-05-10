@@ -76,3 +76,30 @@ def test_default_maps(runner):
 
     assert not result.exception
     assert result.output == 'changed\n'
+
+
+def test_group_with_args(runner):
+    @click.group()
+    @click.argument('obj')
+    def cli(obj):
+        click.echo('obj=%s' % obj)
+
+    @cli.command()
+    def move():
+        click.echo('move')
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0
+    assert 'Show this message and exit.' in result.output
+
+    result = runner.invoke(cli, ['obj1'])
+    assert result.exit_code == 2
+    assert 'Error: Missing command.' in result.output
+
+    result = runner.invoke(cli, ['obj1', '--help'])
+    assert result.exit_code == 0
+    assert 'Show this message and exit.' in result.output
+
+    result = runner.invoke(cli, ['obj1', 'move'])
+    assert result.exit_code == 0
+    assert result.output == 'obj=obj1\nmove\n'
