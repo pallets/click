@@ -125,12 +125,12 @@ def commit(repo, files, message):
 @cli.command(short_help='Copies files.')
 @click.option('--force', is_flag=True,
               help='forcibly copy over an existing managed file')
-@click.argument('src', nargs=-1)
-@click.argument('dst')
+@click.argument('src', nargs=-1, type=click.Path())
+@click.argument('dst', type=click.Path())
 @pass_repo
-def copy(repo, src, dst):
+def copy(repo, src, dst, force):
     """Copies one or multiple files to a new location.  This copies all
     files from SRC to DST.
     """
     for fn in src:
-        click.echo('Copy from %s -> %s' % (src, dst))
+        click.echo('Copy from %s -> %s' % (fn, dst))
