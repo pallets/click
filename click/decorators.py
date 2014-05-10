@@ -1,7 +1,9 @@
+import sys
 import inspect
 
 from functools import update_wrapper
 
+from ._compat import iteritems
 from .utils import echo
 
 
@@ -203,17 +205,34 @@ def password_option(*param_decls, **attrs):
     return decorator
 
 
-def version_option(version, *param_decls, **attrs):
+def version_option(version=None, *param_decls, **attrs):
     """Adds a ``--version`` option which immediately ends the program
     printing out the version number.  This is implemented as an eager
     option that prints the version and exits the program in the callback.
 
-    :param version: the version number to show
+    :param version: the version number to show.  If not provided click
+                    attempts an auto discovery via setuptools.
     :param prog_name: the name of the program (defaults to autodetection)
     :param message: custom message to show instead of the default
                     (``'%(prog)s, version %(version)s'``)
     :param others: everything else is forwarded to :func:`option`.
     """
+    if version is None:
+        mod = sys._getframe(1).f_globals.get('__name__')
+        try:
+            import pkg_resources
+        except ImportError:
+            pass
+        else:
+            for dist in pkg_resources.working_set:
+                scripts = dist.get_entry_map().get('console_scripts') or {}
+                for script_name, entry_point in iteritems(scripts):
+                    if entry_point.module_name == mod:
+                        version = dist.version
+                        break
+        if version is None:
+            raise RuntimeError('Could not determine version')
+
     def decorator(f):
         prog_name = attrs.pop('prog_name', None)
         message = attrs.pop('message', '%(prog)s, version %(version)s')

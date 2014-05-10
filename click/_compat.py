@@ -20,6 +20,7 @@ if PY2:
     bytes = str
     raw_input = raw_input
     string_types = (str, unicode)
+    iteritems = lambda x: x.iteritems()
 
     _identifier_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
@@ -53,6 +54,7 @@ else:
     raw_input = input
     string_types = (str,)
     isidentifier = lambda x: x.isidentifier()
+    iteritems = lambda x: iter(x.items())
 
     def _make_binary_stream(f, stream_name):
         buf = getattr(f, 'buffer', None)
