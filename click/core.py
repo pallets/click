@@ -244,9 +244,9 @@ class Context(object):
             raise TypeError('Callback is not a command.')
 
         for param in self.params:
-            if param.name in self.params and \
-               param.name not in kwargs:
-                kwargs[param.name] = self.params[param.name]
+            if param in self.params and \
+               param not in kwargs:
+                kwargs[param] = self.params[param]
 
         return self.invoke(cmd, **kwargs)
 

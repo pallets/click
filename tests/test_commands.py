@@ -19,6 +19,26 @@ def test_other_command_invoke(runner):
     assert result.output == '42\n'
 
 
+def test_other_command_forward(runner):
+    cli = click.Group()
+
+    @cli.command()
+    @click.option('--count', default=1)
+    def test(count):
+        click.echo('Count: %d' % count)
+
+    @cli.command()
+    @click.option('--count', default=1)
+    @click.pass_context
+    def dist(ctx, count):
+        ctx.forward(test)
+        ctx.invoke(test, count=42)
+
+    result = runner.invoke(cli, ['dist'])
+    assert not result.exception
+    assert result.output == 'Count: 1\nCount: 42\n'
+
+
 def test_auto_shorthelp(runner):
     @click.group()
     def cli():
