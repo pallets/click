@@ -122,3 +122,14 @@ Parsing
 
 .. autoclass:: OptionParser
    :members:
+
+Testing
+-------
+
+.. currentmodule:: click.testing
+
+.. autoclass:: CliRunner
+   :members:
+
+.. autoclass:: Result
+   :members:
