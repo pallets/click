@@ -43,13 +43,21 @@ class EchoingStdin(object):
 class Result(object):
     """Holds the captured result of an invoked CLI script."""
 
-    def __init__(self, output, exit_code, exception):
-        #: The output as unicode string.
-        self.output = output
+    def __init__(self, runner, output_bytes, exit_code, exception):
+        #: The runner that created the result
+        self.runner = runner
+        #: The output as bytes.
+        self.output_bytes = output_bytes
         #: The exit code as integer.
         self.exit_code = exit_code
         #: The exception that happend if one did.
         self.exception = exception
+
+    @property
+    def output(self):
+        """The output as unicode string."""
+        return self.output_bytes.decode(self.runner.charset, 'replace') \
+            .replace('\r\n', '\n')
 
     def __repr__(self):
         return '<Result %s>' % (
@@ -192,9 +200,10 @@ class CliRunner(object):
             except Exception as e:
                 exception = e
                 exit_code = -1
-            output = out.getvalue().decode(self.charset).replace('\r\n', '\n')
+            output = out.getvalue()
 
-        return Result(output=output,
+        return Result(runner=self,
+                      output_bytes=output,
                       exit_code=exit_code,
                       exception=exception)
 
@@ -207,7 +216,7 @@ class CliRunner(object):
         t = tempfile.mkdtemp()
         os.chdir(t)
         try:
-            yield
+            yield t
         finally:
             os.chdir(cwd)
             try:
