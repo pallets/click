@@ -58,6 +58,9 @@ different behavior and some are supported out of the box:
 .. autoclass:: File
    :noindex:
 
+.. autoclass:: Path
+   :noindex:
+
 .. autoclass:: Choice
    :noindex:
 

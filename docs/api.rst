@@ -90,6 +90,8 @@ Types
 
 .. autoclass:: File
 
+.. autoclass:: Path
+
 .. autoclass:: Choice
 
 .. autoclass:: IntRange

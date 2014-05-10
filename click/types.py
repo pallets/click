@@ -1,4 +1,6 @@
+import os
 import sys
+import stat
 import uuid
 
 from ._compat import open_stream, text_type, filename_to_ui, get_streerror
@@ -269,6 +271,83 @@ class File(ParamType):
                 filename_to_ui(value),
                 get_streerror(e),
             ), param, ctx)
+
+
+class Path(ParamType):
+    """The path type is similar to the :class:`File` type but it performs
+    different checks.  First of all, instead of returning a open file
+    handle it returns just the filename.  Secondly it can perform various
+    basic checks about what the file or directory should be.
+
+    :param exists: if set to true, the file or directory needs to exist for
+                   this value to be valid.  If this is not required and a
+                   file does indeed not exist, then all further checks are
+                   silently skipped.
+    :param file_okay: controls if a file is a possible value.
+    :param dir_okay: controls if a directory is a possible value.
+    :param writable: if true, the a writable check is performed.
+    :param readable: if true, the a readable check is performed.
+    :param resolve_path: if this is true, then the path is fully resolved
+                         before the value is passed onwards.  This means
+                         that it's absolute and symlinks are resolved.
+    """
+
+    def __init__(self, exists=False, file_okay=True, dir_okay=True,
+                 writable=False, readable=True, resolve_path=False):
+        self.exists = exists
+        self.file_okay = file_okay
+        self.dir_okay = dir_okay
+        self.writable = writable
+        self.readable = readable
+        self.resolve_path = resolve_path
+
+        if self.file_okay and not self.dir_okay:
+            self.name = 'file'
+            self.path_type = 'File'
+        if self.dir_okay and not self.file_okay:
+            self.name = 'directory'
+            self.path_type = 'Directory'
+        else:
+            self.name = 'path'
+            self.path_type = 'Path'
+
+    def convert(self, value, param, ctx):
+        rv = value
+        if self.resolve_path:
+            rv = os.path.realpath(rv)
+
+        try:
+            st = os.stat(rv)
+        except OSError:
+            if not self.exists:
+                return rv
+            self.fail('%s "%s" does not exist.' % (
+                self.path_type,
+                filename_to_ui(value)
+            ))
+
+        if not self.file_okay and stat.S_ISREG(st.st_mode):
+            self.fail('%s "%s" is a file.' % (
+                self.path_type,
+                filename_to_ui(value)
+            ))
+        if not self.dir_okay and stat.S_ISDIR(st.st_mode):
+            self.fail('%s "%s" is a directory.' % (
+                self.path_type,
+                filename_to_ui(value)
+            ))
+        if self.writable and not os.access(value, os.W_OK):
+            self.fail('%s "%s" is not writable.' % (
+                self.path_type,
+                filename_to_ui(value)
+            ))
+        if self.readable and not os.access(value, os.R_OK):
+            self.fail('%s "%s" is not readable.' % (
+                self.path_type,
+                filename_to_ui(value)
+            ))
+
+        return rv
 
 
 def convert_type(ty, default=None):

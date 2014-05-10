@@ -231,6 +231,55 @@ def test_file_lazy_mode(runner):
             in result_in.output
 
 
+def test_path_option(runner):
+    @click.command()
+    @click.option('-O', type=click.Path(file_okay=False, exists=True,
+                                        writable=True))
+    def write_to_dir(o):
+        with open(os.path.join(o, 'foo.txt'), 'wb') as f:
+            f.write(b'meh\n')
+
+    with runner.isolated_filesystem():
+        os.mkdir('test')
+
+        result = runner.invoke(write_to_dir, ['-O', 'test'])
+        assert not result.exception
+
+        with open('test/foo.txt', 'rb') as f:
+            assert f.read() == b'meh\n'
+
+        result = runner.invoke(write_to_dir, ['-O', 'test/foo.txt'])
+        assert 'Invalid value: Directory "test/foo.txt" is a file.' \
+            in result.output
+
+    @click.command()
+    @click.option('-f', type=click.Path(exists=True))
+    def showtype(f):
+        click.echo('is_file=%s' % os.path.isfile(f))
+        click.echo('is_dir=%s' % os.path.isdir(f))
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(showtype, ['-f', 'xxx'])
+        assert 'Error: Invalid value: Path "xxx" does not exist' \
+            in result.output
+
+        result = runner.invoke(showtype, ['-f', '.'])
+        assert 'is_file=False' in result.output
+        assert 'is_dir=True' in result.output
+
+    @click.command()
+    @click.option('-f', type=click.Path())
+    def exists(f):
+        click.echo('exists=%s' % os.path.exists(f))
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(exists, ['-f', 'xxx'])
+        assert 'exists=False' in result.output
+
+        result = runner.invoke(exists, ['-f', '.'])
+        assert 'exists=True' in result.output
+
+
 def test_choice_option(runner):
     @click.command()
     @click.option('--method', type=click.Choice(['foo', 'bar', 'baz']))
