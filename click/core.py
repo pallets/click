@@ -921,7 +921,7 @@ class Option(Parameter):
 
         if name is None and possible_names:
             possible_names.sort(key=lambda x: len(x[0]))
-            name = possible_names[-1][1].replace('-', '_')
+            name = possible_names[-1][1].replace('-', '_').lower()
             if not isidentifier(name):
                 name = None
 
@@ -1060,7 +1060,7 @@ class Argument(Parameter):
             raise TypeError('Could not determine name for argument')
         if len(decls) == 1:
             name = arg = decls[0]
-            name = name.replace('-', '_')
+            name = name.replace('-', '_').lower()
         elif len(decls) == 2:
             name, arg = decls
         else:
