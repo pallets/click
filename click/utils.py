@@ -4,6 +4,12 @@ from collections import deque
 from ._compat import text_type, open_stream, get_streerror, string_types, \
      PY2, get_best_encoding, binary_streams, text_streams
 
+if not PY2:
+    from ._compat import _find_binary_writer
+
+
+echo_native_types = string_types + (bytes, bytearray)
+
 
 def unpack_args(args, nargs_spec):
     """Given an iterable of arguments and an iterable of nargs specifications
@@ -177,26 +183,44 @@ class LazyFile(object):
         self.close_intelligently()
 
 
-def echo(message=None, file=None):
+def echo(message=None, file=None, nl=True):
     """Prints a message plus a newline to the given file or stdout.  On
     first sight this looks like the print function but it has improved
-    support for handling unicode data that does not fail no matter how
-    badly configured the system is.
+    support for handling unicode and binary data that does not fail no
+    matter how badly configured the system is.
+
+    Primarily it means that you can print binary data as well as unicode
+    data on both 2.x and 3.x to the given file in the most appropriate way
+    possible.  This is a very carefree function as in that it will try its
+    best to not fail.
 
     :param message: the message to print
     :param file: the file to write to (defaults to ``stdout``)
+    :param nl: if set to `True` (the default) a newline is printed afterwards.
     """
     if file is None:
         file = sys.stdout
-    if message is not None:
-        if not isinstance(message, string_types):
-            message = text_type(message)
-        if message:
-            if PY2 and isinstance(message, text_type):
+
+    if message is not None and not isinstance(message, echo_native_types):
+        message = text_type(message)
+
+    if message:
+        if PY2:
+            if isinstance(message, text_type):
                 encoding = get_best_encoding(file)
                 message = message.encode(encoding, 'replace')
-            file.write(message)
-    file.write('\n')
+        elif isinstance(message, (bytes, bytearray)):
+            binary_file = _find_binary_writer(file)
+            if binary_file is not None:
+                file.flush()
+                binary_file.write(message)
+                if nl:
+                    binary_file.write(b'\n')
+                binary_file.flush()
+                return
+        file.write(message)
+    if nl:
+        file.write('\n')
     file.flush()
 
 
