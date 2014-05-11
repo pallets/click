@@ -12,6 +12,7 @@ if PY2:
     from cStringIO import StringIO
 else:
     import io
+    from ._compat import _find_binary_reader
 
 
 class EchoingStdin(object):
@@ -38,6 +39,28 @@ class EchoingStdin(object):
 
     def __iter__(self):
         return iter(self._echo(x) for x in self._input)
+
+    def __repr__(self):
+        return repr(self._input)
+
+
+def make_input_stream(input, charset):
+    # Is already an input stream.
+    if hasattr(input, 'read'):
+        if PY2:
+            return input
+        rv = _find_binary_reader(input)
+        if rv is not None:
+            return rv
+        raise TypeError('Could not find binary reader for input stream.')
+
+    if input is None:
+        input = b''
+    elif not isinstance(input, bytes):
+        input = input.encode(charset)
+    if PY2:
+        return StringIO(input)
+    return io.BytesIO(input)
 
 
 class Result(object):
@@ -70,13 +93,23 @@ class CliRunner(object):
     script for unittesting purposes in a isolated environment.  This only
     works in single-threaded systems without any concurrency as it changes
     global interpreter state.
+
+    :param charset: the character set for the input and output data.  This is
+                    utf-8 by default and should not be changed currently as
+                    the reporting to click only works on Python 2 properly.
+    :param env: a dictionary with environment variables for overriding.
+    :param echo_stdin: if this is set to `True`, then reading from stdin writes
+                       to stdout.  This is useful for showing examples in
+                       some circumstances.  Note that regular prompts
+                       will automatically echo the input.
     """
 
-    def __init__(self, charset=None, env=None):
+    def __init__(self, charset=None, env=None, echo_stdin=False):
         if charset is None:
             charset = 'utf-8'
         self.charset = charset
         self.env = env or {}
+        self.echo_stdin = echo_stdin
 
     def get_default_prog_name(self, cli):
         """Given a command object it will return the default program name
@@ -105,29 +138,27 @@ class CliRunner(object):
         :param input: the input stream to put into sys.stdin.
         :param env: the environment overrides as dictionary.
         """
-        if hasattr(input, 'read'):
-            input = input.read()
-        if input is not None and not isinstance(input, bytes):
-            input = input.encode(self.charset)
+        input = make_input_stream(input, self.charset)
 
+        old_stdin = sys.stdin
         old_stdout = sys.stdout
         old_stderr = sys.stderr
 
         env = self.make_env(env)
 
         if PY2:
-            input = StringIO(input or '')
-            output = StringIO()
-            sys.stdin = EchoingStdin(input, output)
-            sys.stdin.encoding = self.charset
-            sys.stdout = sys.stderr = output
+            sys.stdout = sys.stderr = bytes_output = StringIO()
+            if self.echo_stdin:
+                input = EchoingStdin(input, bytes_output)
         else:
-            real_input = io.BytesIO(input)
-            output = io.BytesIO()
-            input = io.TextIOWrapper(real_input, encoding=self.charset)
-            sys.stdin = EchoingStdin(real_input, output)
-            sys.stdout = sys.stderr = io.TextIOWrapper(output,
-                                                       encoding=self.charset)
+            bytes_output = io.BytesIO()
+            if self.echo_stdin:
+                input = EchoingStdin(input, bytes_output)
+            input = io.TextIOWrapper(input, encoding=self.charset)
+            sys.stdout = sys.stderr = io.TextIOWrapper(
+                bytes_output, encoding=self.charset)
+
+        sys.stdin = input
 
         def visible_input(prompt=None):
             sys.stdout.write(prompt or '')
@@ -157,7 +188,7 @@ class CliRunner(object):
                         pass
                 else:
                     os.environ[key] = value
-            yield output
+            yield bytes_output
         finally:
             for key, value in iteritems(old_env):
                 if value is None:
@@ -169,10 +200,11 @@ class CliRunner(object):
                     os.environ[key] = value
             sys.stdout = old_stdout
             sys.stderr = old_stderr
+            sys.stdin = old_stdin
             click.termui.visible_prompt_func = old_visible_prompt_func
             click.termui.hidden_prompt_func = old_hidden_prompt_func
 
-    def invoke(self, cli, args, input=None, env=None, **extra):
+    def invoke(self, cli, args=None, input=None, env=None, **extra):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
         arguments are passed to the :meth:`~click.Command.main` function of
@@ -191,8 +223,8 @@ class CliRunner(object):
             exit_code = 0
 
             try:
-                cli.main(args=args, prog_name=self.get_default_prog_name(cli),
-                         **extra)
+                cli.main(args=args or (),
+                         prog_name=self.get_default_prog_name(cli), **extra)
             except SystemExit as e:
                 if e.code != 0:
                     exception = e
@@ -200,6 +232,7 @@ class CliRunner(object):
             except Exception as e:
                 exception = e
                 exit_code = -1
+            sys.stdout.flush()
             output = out.getvalue()
 
         return Result(runner=self,

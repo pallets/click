@@ -71,8 +71,9 @@ class StringParamType(ParamType):
     def convert(self, value, param, ctx):
         if isinstance(value, bytes):
             try:
-                if sys.stdin.encoding is not None:
-                    value = value.decode(sys.stdin.encoding)
+                enc = getattr(sys.stdin, 'encoding', None)
+                if enc is not None:
+                    value = value.decode(enc)
             except UnicodeError:
                 try:
                     value = value.decode(sys.getfilesystemencoding())
