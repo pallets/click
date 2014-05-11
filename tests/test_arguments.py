@@ -47,3 +47,26 @@ def test_nargs_err(runner):
     result = runner.invoke(copy, ['foo', 'bar'])
     assert result.exit_code == 2
     assert 'Got unexpected extra argument (bar)' in result.output
+
+
+def test_file_args(runner):
+    @click.command()
+    @click.argument('input', type=click.File('rb'))
+    @click.argument('output', type=click.File('wb'))
+    def inout(input, output):
+        while True:
+            chunk = input.read(1024)
+            if not chunk:
+                break
+            output.write(chunk)
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(inout, ['-', 'hello.txt'], input='Hey!')
+        assert result.output == ''
+        assert result.exit_code == 0
+        with open('hello.txt', 'rb') as f:
+            assert f.read() == b'Hey!'
+
+        result = runner.invoke(inout, ['hello.txt', '-'])
+        assert result.output == 'Hey!'
+        assert result.exit_code == 0

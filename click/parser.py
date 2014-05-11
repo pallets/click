@@ -180,15 +180,16 @@ class OptionParser(object):
     def _process_args_for_options(self, state):
         while state.rargs:
             arg = state.rargs[0]
+            arglen = len(arg)
             # Double dash es always handled explicitly regardless of what
             # prefixes are valid.
             if arg == '--':
                 del state.rargs[0]
                 return
-            elif arg[0:2] in self._opt_prefixes:
+            elif arg[:2] in self._opt_prefixes and arglen > 2:
                 # process a single long option (possibly with value(s))
                 self._process_long_opt(state)
-            elif arg[:1] in self._opt_prefixes and len(arg) > 1:
+            elif arg[:1] in self._opt_prefixes and arglen > 1:
                 # process a cluster of short options (possibly with
                 # value(s) for the last one only)
                 self._process_short_opts(state)
