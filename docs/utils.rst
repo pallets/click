@@ -23,6 +23,13 @@ Example::
 
     click.echo('Hello World!')
 
+Most importantly it can print both unicode and binary data, unlike the
+builtin ``print`` function on Python 3 which cannot output any bytes.  It
+will however emit a trailing newline by default which needs to be
+supressed by passing ``nl=False``::
+
+    click.echo(b'\xe2\x98\x83', nl=False)
+
 
 Standard Streams
 ----------------
