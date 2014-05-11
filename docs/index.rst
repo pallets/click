@@ -57,6 +57,7 @@ of the library.
    complex
    advanced
    testing
+   utils
    python3
 
 API Reference

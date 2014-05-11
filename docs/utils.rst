@@ -1,0 +1,49 @@
+Utilities
+=========
+
+.. currentmodule:: click
+
+Besides the functionality that Click provides to interface with argument
+parsing and handling, it also provides a bunch of addon functionality that
+is useful for writing command line utilities.
+
+
+Priting to Stdout
+-----------------
+
+The most obvious helper is the :func:`echo` function which in many ways
+works like the Python print statement or function.  The main difference is
+that it works the same on Python 2 and 3 and it intelligently detects
+misconfigured output streams and will never fail (except on Python 3, for
+more information see :ref:`python3-limitations`).
+
+Example::
+
+    import click
+
+    click.echo('Hello World!')
+
+
+Standard Streams
+----------------
+
+For command line utilities it's very important to get access to input and
+output streams reliably.  Python generally provides access to these
+streams through ``sys.stdout`` and friends, but unfortunately there are
+API differences between 2.x and 3.x.  Especially in regards to how these
+streams respond to unicode and binary data there are wide differences.
+
+Because of this click provides the :func:`get_binary_stream` and
+:func:`get_text_stream` which produce consistent results with different
+Python versions and for widely misconfigured terminals.
+
+The end result is that these functions will always reutrn a functional
+stream object (except in very odd cases on Python 3, see
+:ref:`python3-limitations`).
+
+Example::
+
+    import click
+
+    stdin_text = click.get_text_stream('stdin')
+    stdout_binary = click.get_binary_stream('stdout')
