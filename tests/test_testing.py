@@ -64,7 +64,7 @@ def test_prompts():
         click.echo('foo=%s' % foo)
 
     runner = CliRunner()
-    result = runner.invoke(test, input='wau wau')
+    result = runner.invoke(test, input='wau wau\n')
     assert not result.exception
     assert result.output == 'Foo: wau wau\nfoo=wau wau\n'
 
@@ -74,6 +74,6 @@ def test_prompts():
         click.echo('foo=%s' % foo)
 
     runner = CliRunner()
-    result = runner.invoke(test, input='wau wau')
+    result = runner.invoke(test, input='wau wau\n')
     assert not result.exception
     assert result.output == 'Foo: \nfoo=wau wau\n'

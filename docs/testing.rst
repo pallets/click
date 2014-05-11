@@ -50,7 +50,7 @@ Example::
     import click
     from click.testing import CliRunner
 
-    def test_hello_world():
+    def test_cat():
         @click.command()
         @click.argument('f', type=click.File())
         def cat(f):
@@ -64,3 +64,27 @@ Example::
             result = runner.invoke(cat, ['hello.txt'])
             assert result.exit_code == 0
             assert result.output == 'Hello World!\n'
+
+Input Streams
+-------------
+
+The test wrapper can also be used to provide input data for the input
+stream (stdin).  This is very useful for testing prompts for instance::
+
+    import click
+    from click.testing import CliRunner
+
+    def test_prompts():
+        @click.command()
+        @click.option('--foo', prompt=True)
+        def test(foo):
+            click.echo('foo=%s' % foo)
+
+        runner = CliRunner()
+        result = runner.invoke(test, input='wau wau\n')
+        assert not result.exception
+        assert result.output == 'Foo: wau wau\nfoo=wau wau\n'
+
+Note that prompts will be emulated so that they write the input data to
+the output stream as well.  If hidden input is expected then this
+obviously does not happen.
