@@ -44,6 +44,10 @@ Utilities
 
 .. autofunction:: get_terminal_size
 
+.. autofunction:: get_binary_stream
+
+.. autofunction:: get_text_stream
+
 Commands
 --------
 

@@ -2,8 +2,9 @@ import os
 import sys
 import struct
 
-from ._compat import raw_input, PY2, text_type, string_types
-from .utils import get_best_encoding, echo
+from ._compat import raw_input, PY2, text_type, string_types, \
+     get_best_encoding
+from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type
 

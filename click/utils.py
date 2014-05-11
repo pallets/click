@@ -1,8 +1,8 @@
 import sys
-import codecs
 from collections import deque
 
-from ._compat import text_type, open_stream, get_streerror, string_types, PY2
+from ._compat import text_type, open_stream, get_streerror, string_types, \
+     PY2, get_best_encoding, binary_streams, text_streams
 
 
 def unpack_args(args, nargs_spec):
@@ -71,22 +71,6 @@ def safecall(func):
         except Exception:
             pass
     return wrapper
-
-
-def is_ascii_encoding(encoding):
-    """Checks if a given encoding is ascii."""
-    try:
-        return codecs.lookup(encoding).name == 'ascii'
-    except LookupError:
-        return False
-
-
-def get_best_encoding(stream):
-    """Returns the best encoding that should be used for a stream."""
-    enc = getattr(stream, 'encoding', None)
-    if enc is None or is_ascii_encoding(enc):
-        return 'utf-8'
-    return enc
 
 
 def make_str(value):
@@ -214,3 +198,36 @@ def echo(message=None, file=None):
             file.write(message)
     file.write('\n')
     file.flush()
+
+
+def get_binary_stream(name):
+    """Returns a system stream for byte processing.  This essentially
+    returns the stream from the sys module with the given name but it
+    solves some compatibility issues between different Python versions.
+    Primarily this function is necessary for getting binary streams on
+    Python 3.
+
+    :param name: the name of the stream to open.  Valid names are ``'stdin'``,
+                 ``'stdout'`` and ``'stderr'``
+    """
+    opener = binary_streams.get(name)
+    if opener is None:
+        raise TypeError('Unknown standard stream %r' % name)
+    return opener()
+
+
+def get_text_stream(name, encoding=None, errors='strict'):
+    """Returns a system stream for text processing.  This usually returns
+    a wrapped stream around a binary stream returned from
+    :func:`get_binary_stream` but it also can take shortcuts on Python 3
+    for already correctly configured streams.
+
+    :param name: the name of the stream to open.  Valid names are ``'stdin'``,
+                 ``'stdout'`` and ``'stderr'``
+    :param encoding: overrides the detected default encoding.
+    :param errors: overrides the default error mode.
+    """
+    opener = text_streams.get(name)
+    if opener is None:
+        raise TypeError('Unknown standard stream %r' % name)
+    return opener(encoding, errors)

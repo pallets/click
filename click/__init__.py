@@ -28,7 +28,7 @@ from .types import ParamType, File, Path, Choice, IntRange, STRING, INT, \
      FLOAT, BOOL, UUID
 
 # Utilities
-from .utils import echo
+from .utils import echo, get_binary_stream, get_text_stream
 
 # Terminal functions
 from .termui import prompt, confirm, get_terminal_size, echo_via_pager
@@ -58,7 +58,7 @@ __all__ = [
     'FLOAT', 'BOOL', 'UUID',
 
     # Utilities
-    'echo',
+    'echo', 'get_binary_stream', 'get_text_stream',
 
     # Terminal functions
     'prompt', 'confirm', 'get_terminal_size', 'echo_via_pager',
