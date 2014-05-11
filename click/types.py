@@ -285,8 +285,8 @@ class Path(ParamType):
                    silently skipped.
     :param file_okay: controls if a file is a possible value.
     :param dir_okay: controls if a directory is a possible value.
-    :param writable: if true, the a writable check is performed.
-    :param readable: if true, the a readable check is performed.
+    :param writable: if true, a writable check is performed.
+    :param readable: if true, a readable check is performed.
     :param resolve_path: if this is true, then the path is fully resolved
                          before the value is passed onwards.  This means
                          that it's absolute and symlinks are resolved.

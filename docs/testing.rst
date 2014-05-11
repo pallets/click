@@ -3,7 +3,7 @@ Testing Click Applications
 
 .. currentmodule:: click.testing
 
-For basic testing Click provides the :mod:`click.testing` module which
+For basic testing click provides the :mod:`click.testing` module which
 provides test functionality that helps you invoke command line
 applications and check their behavior.
 
