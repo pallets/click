@@ -8,8 +8,8 @@ parsing and handling, it also provides a bunch of addon functionality that
 is useful for writing command line utilities.
 
 
-Priting to Stdout
------------------
+Printing to Stdout
+------------------
 
 The most obvious helper is the :func:`echo` function which in many ways
 works like the Python print statement or function.  The main difference is
