@@ -3,7 +3,7 @@ Utilities
 
 .. currentmodule:: click
 
-Besides the functionality that Click provides to interface with argument
+Besides the functionality that click provides to interface with argument
 parsing and handling, it also provides a bunch of addon functionality that
 is useful for writing command line utilities.
 
@@ -44,7 +44,7 @@ Because of this click provides the :func:`get_binary_stream` and
 :func:`get_text_stream` which produce consistent results with different
 Python versions and for widely misconfigured terminals.
 
-The end result is that these functions will always reutrn a functional
+The end result is that these functions will always return a functional
 stream object (except in very odd cases on Python 3, see
 :ref:`python3-limitations`).
 
