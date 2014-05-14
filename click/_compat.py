@@ -9,7 +9,8 @@ def _make_text_stream(stream, encoding, errors):
         encoding = get_best_encoding(stream)
     if errors is None:
         errors = 'replace'
-    return _NonClosingTextIOWrapper(stream, encoding, errors)
+    return _NonClosingTextIOWrapper(stream, encoding, errors,
+                                    line_buffering=True)
 
 
 def is_ascii_encoding(encoding):
@@ -57,7 +58,7 @@ class _FixupStream(object):
         f = getattr(self._stream, 'read1', None)
         if f is not None:
             return f(size)
-        return self._stream.readline(size)
+        return self._stream.read(size)
 
     def readable(self):
         x = getattr(self._stream, 'readable', None)
