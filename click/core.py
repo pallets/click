@@ -254,7 +254,7 @@ class Context(object):
 class Command(object):
     """Commands are the basic building block of command line interfaces in
     click.  A basic command handles command line parsing and might dispatch
-    more parsing to commands nested blow it.
+    more parsing to commands nested below it.
 
     :param name: the name of the command to use unless a group overrides it.
     :param callback: the callback to invoke.  This is optional.
@@ -273,7 +273,7 @@ class Command(object):
     def __init__(self, name, callback=None, params=None, help=None,
                  epilog=None, short_help=None,
                  options_metavar='[OPTIONS]', add_help_option=True):
-        #: the name the command things it has.  Upon registering a command
+        #: the name the command thinks it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
         #: with this information.  You should instead use the
         #: :class:`Context`\'s :attr:`~Context.info_name` attribute.
@@ -377,7 +377,7 @@ class Command(object):
 
         :param info_name: the info name for this invokation.  Generally this
                           is the most descriptive name for the script or
-                          command.  For the toplevel script is is usually
+                          command.  For the toplevel script it's usually
                           the name of the script, for commands below it it's
                           the name of the script.
         :param args: the arguments to parse as list of strings.
@@ -421,8 +421,8 @@ class Command(object):
 
     def main(self, args=None, prog_name=None, **extra):
         """This is the way to invoke a script with all the bells and
-        whistles as command line application.  This will always terminate
-        the application after calling.  If this is not wanted, ``SystemExit``
+        whistles as a command line application.  This will always terminate
+        the application after a call.  If this is not wanted, ``SystemExit``
         needs to be caught.
 
         This method is also available by directly calling the instance of
@@ -431,7 +431,7 @@ class Command(object):
         :param args: the arguments that should be used for parsing.  If not
                      provided, ``sys.argv[1:]`` is used.
         :param prog_name: the program name that should be used.  By default
-                          the progam name is constructed by taking the file
+                          the program name is constructed by taking the file
                           name from ``sys.argv[0]``.
         :param extra: extra keyword arguments are forwarded to the context
                       constructor.  See :class:`Context` for more information.
@@ -684,7 +684,7 @@ class Parameter(object):
                         argument.  This is a list of flags or argument
                         names.
     :param type: the type that should be used.  Either a :class:`ParamType`
-                 or a python type.  The latter is converted into the former
+                 or a python type.  The later is converted into the former
                  automatically if supported.
     :param required: controls if this is optional or not.
     :param default: the default value if omitted.  This can also be a callable
@@ -836,11 +836,11 @@ class Option(Parameter):
     :param flag_value: which value should be used for this flag if it's
                        enabled.  This is set to a boolean automatically if
                        the option string contains a slash to mark two options.
-    :param multiple: if this is set to True then the argument is accepted
-                     multiple times and recorded.  This is similar to nargs
+    :param multiple: if this is set to `True` then the argument is accepted
+                     multiple times and recorded.  This is similar to ``nargs``
                      in how it works but supports arbitrary number of
                      arguments.
-    :param count: this flag makes an option increment an integer
+    :param count: this flag makes an option increment an integer.
     :param allow_from_autoenv: if this is enabled then the value of this
                                parameter will be pulled from an environment
                                variable in case a prefix is defined on the
