@@ -1,0 +1,9 @@
+$ repo_
+
+  repo is a simple example of an application that looks
+  and works similar to hg or git.
+
+Usage:
+
+  $ pip install --editable .
+  $ repo --help

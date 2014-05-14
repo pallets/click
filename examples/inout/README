@@ -1,0 +1,10 @@
+$ inout_
+
+  inout is a simple example of an application that
+  can read from files and write to files but also
+  accept input from stdin or write to stdout.
+
+Usage:
+
+  $ pip install --editable .
+  $ inout input_file.txt output_file.txt

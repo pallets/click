@@ -1,0 +1,14 @@
+$ naval_
+
+  naval is a simple example of an application that
+  is ported from the docopt example of the same name.
+
+  Unlike the original this one also runs some code and
+  prints messages and it's command line interface was
+  changed slightly to make more sense with established
+  POSIX semantics.
+
+Usage:
+
+  $ pip install --editable .
+  $ naval --help
