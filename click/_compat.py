@@ -35,7 +35,10 @@ class _NonClosingTextIOWrapper(io.TextIOWrapper):
                                   encoding, errors)
 
     def __del__(self):
-        self.buffer._prevent_close = True
+        try:
+            self.detach()
+        except Exception:
+            pass
 
 
 class _FixupStream(object):
@@ -46,14 +49,9 @@ class _FixupStream(object):
 
     def __init__(self, stream):
         self._stream = stream
-        self._prevent_close = False
 
     def __getattr__(self, name):
         return getattr(self._stream, name)
-
-    def close(self):
-        if not self._prevent_close:
-            self._stream.close()
 
     def read1(self, size):
         f = getattr(self._stream, 'read1', None)
