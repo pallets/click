@@ -103,3 +103,68 @@ def test_group_with_args(runner):
     result = runner.invoke(cli, ['obj1', 'move'])
     assert result.exit_code == 0
     assert result.output == 'obj=obj1\nmove\n'
+
+
+def test_base_command(runner):
+    import optparse
+
+    @click.group()
+    def cli():
+        pass
+
+    class OptParseCommand(click.BaseCommand):
+
+        def __init__(self, name, parser, callback):
+            click.BaseCommand.__init__(self, name)
+            self.parser = parser
+            self.callback = callback
+
+        def parse_args(self, ctx, args):
+            try:
+                opts, args = parser.parse_args(args)
+            except Exception as e:
+                ctx.fail(str(e))
+            ctx.args = args
+            ctx.params = vars(opts)
+
+        def get_usage(self, ctx):
+            return self.parser.get_usage()
+
+        def get_help(self, ctx):
+            return self.parser.format_help()
+
+        def invoke(self, ctx):
+            ctx.invoke(self.callback, ctx.args, **ctx.params)
+
+    parser = optparse.OptionParser(usage='Usage: foo test [OPTIONS]')
+    parser.add_option("-f", "--file", dest="filename",
+                      help="write report to FILE", metavar="FILE")
+    parser.add_option("-q", "--quiet",
+                      action="store_false", dest="verbose", default=True,
+                      help="don't print status messages to stdout")
+
+    def test_callback(args, filename, verbose):
+        click.echo(' '.join(args))
+        click.echo(filename)
+        click.echo(verbose)
+    cli.add_command(OptParseCommand('test', parser, test_callback))
+
+    result = runner.invoke(cli, ['test', '-f', 'test.txt', '-q',
+                                 'whatever.txt', 'whateverelse.txt'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'whatever.txt whateverelse.txt',
+        'test.txt',
+        'False',
+    ]
+
+    result = runner.invoke(cli, ['test', '--help'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'Usage: foo test [OPTIONS]',
+        '',
+        'Options:',
+        '  -h, --help            show this help message and exit',
+        '  -f FILE, --file=FILE  write report to FILE',
+        '  -q, --quiet           don\'t print status messages to stdout',
+    ]

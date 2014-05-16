@@ -51,6 +51,9 @@ Utilities
 Commands
 --------
 
+.. autoclass:: BaseCommand
+   :members:
+
 .. autoclass:: Command
    :members:
 
