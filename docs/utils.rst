@@ -31,6 +31,24 @@ supressed by passing ``nl=False``::
     click.echo(b'\xe2\x98\x83', nl=False)
 
 
+Printing Filenames
+------------------
+
+Because filenames might not be unicode formatting them can be a bit
+tricky.  Generally this is easier on Python 2 than 3 as you can just write
+the bytes to stdout with the print function, but at least on Python 3 you
+will need to always operate in unicode.
+
+The way this works with click is through the :func:`format_filename`
+function.  It does a best effort conversion of the filename to Unicode and
+will never fail.  This makes it possible to use these filenames in the
+context of a full unicode string.
+
+Example::
+
+    click.echo('Path: %s' % click.format_filename(b'foo.txt'))
+
+
 Standard Streams
 ----------------
 

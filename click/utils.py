@@ -1,8 +1,9 @@
+import os
 import sys
 from collections import deque
 
 from ._compat import text_type, open_stream, get_streerror, string_types, \
-     PY2, get_best_encoding, binary_streams, text_streams
+     PY2, get_best_encoding, binary_streams, text_streams, filename_to_ui
 
 if not PY2:
     from ._compat import _find_binary_writer
@@ -255,3 +256,20 @@ def get_text_stream(name, encoding=None, errors='strict'):
     if opener is None:
         raise TypeError('Unknown standard stream %r' % name)
     return opener(encoding, errors)
+
+
+def format_filename(filename, shorten=False):
+    """Formats a filename for user display.  The main purpose of this
+    function is to ensure that the filename can be displayed at all.  This
+    will decode the filename to unicode if necessary in a way that it will
+    not fail.  Optionally it can shorten the filename to not include the
+    full path to the filename.
+
+    :param filename: formats a filename for UI display.  This will also convert
+                     the filename into unicode without failing.
+    :param shorten: this optionally shortens the filename to strip of the
+                    path that leads up to it.
+    """
+    if shorten:
+        filename = os.path.basename(filename)
+    return filename_to_ui(filename)

@@ -42,6 +42,8 @@ Utilities
 
 .. autofunction:: confirm
 
+.. autofunction:: format_filename
+
 .. autofunction:: get_terminal_size
 
 .. autofunction:: get_binary_stream
