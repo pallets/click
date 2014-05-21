@@ -184,7 +184,7 @@ A custom multi command just needs to implement a list and load method:
             rv.sort()
             return rv
 
-        def get_command(self, name):
+        def get_command(self, ctx, name):
             ns = {}
             fn = os.path.join(plugin_folder, name + '.py')
             with open(fn) as f:
