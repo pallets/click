@@ -104,6 +104,7 @@ Types
 .. autoclass:: IntRange
 
 .. autoclass:: ParamType
+   :members:
 
 Exceptions
 ----------
