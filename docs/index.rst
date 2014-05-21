@@ -22,15 +22,28 @@ What does it look like?  A simple example can be this:
     import click
 
     @click.command()
-    @click.option('--count', default=1, help='number of greetings')
+    @click.option('--count', default=1, help='Number of greetings.')
     @click.option('--name', prompt='Your name',
-                  help='the person to greet', required=True)
+                  help='The person to greet.')
     def hello(count, name):
+        """Simple program that greets NAME for a total of COUNT times."""
         for x in range(count):
             click.echo('Hello %s!' % name)
 
     if __name__ == '__main__':
         hello()
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(hello, ['--count=3'], input='John\n')
+
+And it gives you nicely formatted help pages:
+
+.. click:run::
+
+    invoke(hello, ['--help'])
 
 You can get the library directly from PyPI::
 
