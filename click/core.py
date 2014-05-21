@@ -1084,7 +1084,10 @@ class Option(Parameter):
             return rv
         if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
             envvar = '%s_%s' % (ctx.auto_envvar_prefix, self.name.upper())
-            return os.environ.get(envvar)
+            rv = os.environ.get(envvar)
+            if self.multiple:
+                rv = self.type.split_envvar_value(rv)
+            return rv
 
     def full_process_value(self, ctx, value):
         if value is None and self.prompt is not None:

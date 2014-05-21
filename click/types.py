@@ -25,6 +25,14 @@ class ParamType(object):
     #: the descriptive name of this type
     name = None
 
+    #: if a list of this type is expected and the value is pulled from a
+    #: string environment variable, this is what splits it up.  `None`
+    #: means any whitespace.  For all parameter the general rule is that
+    #: whitespace splits them up.  The exception are paths and files which
+    #: are split by ``os.path.pathsep`` by default (":" on unix and ";' on
+    #: windows).
+    envvar_list_splitter = None
+
     def __call__(self, value, param=None, ctx=None):
         if value is not None:
             return self.convert(value, param, ctx)
@@ -37,6 +45,16 @@ class ParamType(object):
         `None` (the missing value).
         """
         return value
+
+    def split_envvar_value(self, rv):
+        """Given a value from an environment variable this splits it up
+        into small chunks depending on the defined envvar list splitter.
+
+        If the splitter is set to `None` which means that whitespace splits,
+        then leading and trailing whitespace is ignored.  Otherwise leading
+        and trailing splitters usually lead to empty items being included.
+        """
+        return (rv or '').split(self.envvar_list_splitter)
 
     def fail(self, message, param=None, ctx=None):
         """Helper method to fail with an invalid value message."""
@@ -225,6 +243,7 @@ class File(ParamType):
     See :ref:`file-args` for more information.
     """
     name = 'filename'
+    envvar_list_splitter = os.path.pathsep
 
     def __init__(self, mode='r', encoding=None, errors='strict', lazy=None):
         self.mode = mode
@@ -292,6 +311,7 @@ class Path(ParamType):
                          before the value is passed onwards.  This means
                          that it's absolute and symlinks are resolved.
     """
+    envvar_list_splitter = os.path.pathsep
 
     def __init__(self, exists=False, file_okay=True, dir_okay=True,
                  writable=False, readable=True, resolve_path=False):

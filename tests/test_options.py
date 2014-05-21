@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import os
 import click
 
 
@@ -53,3 +54,25 @@ def test_multiple_required(runner):
     result = runner.invoke(cli, [])
     assert result.exception
     assert 'Error: Missing option "-m" / "--message".' in result.output
+
+
+def test_multiple_envvar(runner):
+    @click.command()
+    @click.option('--arg', multiple=True)
+    def cmd(arg):
+        click.echo('|'.join(arg))
+
+    result = runner.invoke(cmd, [], auto_envvar_prefix='TEST',
+                           env={'TEST_ARG': 'foo bar baz'})
+    assert not result.exception
+    assert result.output == 'foo|bar|baz\n'
+
+    @click.command()
+    @click.option('--arg', multiple=True, type=click.Path())
+    def cmd(arg):
+        click.echo('|'.join(arg))
+
+    result = runner.invoke(cmd, [], auto_envvar_prefix='TEST',
+                           env={'TEST_ARG': 'foo%sbar' % os.path.pathsep})
+    assert not result.exception
+    assert result.output == 'foo|bar\n'
