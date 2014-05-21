@@ -249,7 +249,7 @@ def test_path_option(runner):
             assert f.read() == b'meh\n'
 
         result = runner.invoke(write_to_dir, ['-O', 'test/foo.txt'])
-        assert 'Invalid value: Directory "test/foo.txt" is a file.' \
+        assert 'Invalid value for "-O": Directory "test/foo.txt" is a file.' \
             in result.output
 
     @click.command()
@@ -260,7 +260,7 @@ def test_path_option(runner):
 
     with runner.isolated_filesystem():
         result = runner.invoke(showtype, ['-f', 'xxx'])
-        assert 'Error: Invalid value: Path "xxx" does not exist' \
+        assert 'Error: Invalid value for "-f": Path "xxx" does not exist' \
             in result.output
 
         result = runner.invoke(showtype, ['-f', '.'])

@@ -345,28 +345,28 @@ class Path(ParamType):
             self.fail('%s "%s" does not exist.' % (
                 self.path_type,
                 filename_to_ui(value)
-            ))
+            ), param, ctx)
 
         if not self.file_okay and stat.S_ISREG(st.st_mode):
             self.fail('%s "%s" is a file.' % (
                 self.path_type,
                 filename_to_ui(value)
-            ))
+            ), param, ctx)
         if not self.dir_okay and stat.S_ISDIR(st.st_mode):
             self.fail('%s "%s" is a directory.' % (
                 self.path_type,
                 filename_to_ui(value)
-            ))
+            ), param, ctx)
         if self.writable and not os.access(value, os.W_OK):
             self.fail('%s "%s" is not writable.' % (
                 self.path_type,
                 filename_to_ui(value)
-            ))
+            ), param, ctx)
         if self.readable and not os.access(value, os.R_OK):
             self.fail('%s "%s" is not readable.' % (
                 self.path_type,
                 filename_to_ui(value)
-            ))
+            ), param, ctx)
 
         return rv
 
