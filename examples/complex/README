@@ -1,0 +1,10 @@
+$ complex_
+
+  complex is an example of building very complex cli
+  applications that load subcommands dynamically from
+  a plugin folder and other things.
+
+Usage:
+
+  $ pip install --editable .
+  $ complex --help
