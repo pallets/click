@@ -1080,14 +1080,14 @@ class Option(Parameter):
 
     def value_from_envvar(self, ctx):
         rv = Parameter.value_from_envvar(self, ctx)
-        if rv is not None:
-            return rv
-        if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
+        if rv is None and \
+           self.allow_from_autoenv and \
+           ctx.auto_envvar_prefix is not None:
             envvar = '%s_%s' % (ctx.auto_envvar_prefix, self.name.upper())
             rv = os.environ.get(envvar)
-            if self.multiple:
-                rv = self.type.split_envvar_value(rv)
-            return rv
+        if rv is not None and self.multiple:
+            rv = self.type.split_envvar_value(rv)
+        return rv
 
     def full_process_value(self, ctx, value):
         if value is None and self.prompt is not None:
