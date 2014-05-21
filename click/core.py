@@ -1,7 +1,7 @@
 import os
 import sys
 import codecs
-from itertools import chain
+from itertools import chain, repeat
 
 from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo
@@ -13,6 +13,10 @@ from .parser import OptionParser, split_opt
 from ._compat import PY2, isidentifier
 
 _missing = object()
+
+
+def batch(iterable, batch_size):
+    return list(zip(*repeat(iter(iterable), batch_size)))
 
 
 def iter_params_for_processing(invocation_order, declaration_order):
@@ -828,7 +832,7 @@ class Parameter(object):
                 self.opts, self.secondary_opts)),
         )
 
-    def value_from_envvar(self, ctx):
+    def resolve_envvar_value(self, ctx):
         if self.envvar is None:
             return
         if isinstance(self.envvar, (tuple, list)):
@@ -838,6 +842,12 @@ class Parameter(object):
                     return rv
         else:
             return os.environ.get(self.envvar)
+
+    def value_from_envvar(self, ctx):
+        rv = self.resolve_envvar_value(ctx)
+        if rv is not None and self.nargs != 1:
+            rv = self.type.split_envvar_value(rv)
+        return rv
 
     def handle_parse_result(self, ctx, opts, args):
         value = self.consume_value(ctx, opts)
@@ -1078,15 +1088,24 @@ class Option(Parameter):
                       confirmation_prompt=self.confirmation_prompt,
                       value_proc=lambda x: self.process_value(ctx, x))
 
-    def value_from_envvar(self, ctx):
-        rv = Parameter.value_from_envvar(self, ctx)
-        if rv is None and \
-           self.allow_from_autoenv and \
+    def resolve_envvar_value(self, ctx):
+        rv = Parameter.resolve_envvar_value(self, ctx)
+        if rv is not None:
+            return rv
+        if self.allow_from_autoenv and \
            ctx.auto_envvar_prefix is not None:
             envvar = '%s_%s' % (ctx.auto_envvar_prefix, self.name.upper())
-            rv = os.environ.get(envvar)
-        if rv is not None and self.multiple:
+            return os.environ.get(envvar)
+
+    def value_from_envvar(self, ctx):
+        rv = self.resolve_envvar_value(ctx)
+        if rv is None:
+            return None
+        value_depth = (self.nargs != 1) + bool(self.multiple)
+        if value_depth > 0 and rv is not None:
             rv = self.type.split_envvar_value(rv)
+            if self.multiple and self.nargs != 1:
+                rv = batch(rv, self.nargs)
         return rv
 
     def full_process_value(self, ctx, value):

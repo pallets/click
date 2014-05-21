@@ -70,3 +70,24 @@ def test_file_args(runner):
         result = runner.invoke(inout, ['hello.txt', '-'])
         assert result.output == 'Hey!'
         assert result.exit_code == 0
+
+
+def test_nargs_envvar(runner):
+    @click.command()
+    @click.option('--arg', nargs=-1)
+    def cmd(arg):
+        click.echo('|'.join(arg))
+
+    result = runner.invoke(cmd, [], auto_envvar_prefix='TEST',
+                           env={'TEST_ARG': 'foo bar'})
+    assert not result.exception
+    assert result.output == 'foo|bar\n'
+
+    @click.command()
+    @click.option('--arg', envvar='X', nargs=-1)
+    def cmd(arg):
+        click.echo('|'.join(arg))
+
+    result = runner.invoke(cmd, [], env={'X': 'foo bar'})
+    assert not result.exception
+    assert result.output == 'foo|bar\n'
