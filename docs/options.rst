@@ -427,15 +427,15 @@ where the first one is picked.
 Multiple Values from Environment Values
 ---------------------------------------
 
-As options can accept multiple values pulling in such values from
+As options can accept multiple values, pulling in such values from
 environment variables (which are strings) is a bit more complex.  The way
 click solves this is by leaving it up to the type to customize this
-behavior.  For both ``multiple`` and ``nargs`` with other values than
-``1`` click will invoke the :meth:`ParamType.split_envvar_value` method to
+behavior.  For both ``multiple`` and ``nargs`` with values other than
+``1``, click will invoke the :meth:`ParamType.split_envvar_value` method to
 perform the splitting.
 
 The default implementation for all types is to split on whitespace.  The
-exception to this rules are the :class:`File` and :class:`Path` types
+exceptions to this rule are the :class:`File` and :class:`Path` types
 which both split according to the operating system's path splitting rules.
 On UNIX systems like Linux and OS X the splitting happens for those on
 every colon (``:``) and for Windows on a semicolon (``;``).
