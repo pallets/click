@@ -34,10 +34,10 @@ supressed by passing ``nl=False``::
 Printing Filenames
 ------------------
 
-Because filenames might not be unicode formatting them can be a bit
-tricky.  Generally this is easier on Python 2 than 3 as you can just write
-the bytes to stdout with the print function, but at least on Python 3 you
-will need to always operate in unicode.
+Because filenames might not be unicode, formatting them can be a bit
+tricky.  Generally this is easier on Python 2 than on 3 as you can just
+write the bytes to stdout with the print function, but at least on Python
+3 you will need to always operate in unicode.
 
 The way this works with click is through the :func:`format_filename`
 function.  It does a best effort conversion of the filename to Unicode and
