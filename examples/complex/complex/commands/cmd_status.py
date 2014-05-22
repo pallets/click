@@ -2,7 +2,7 @@ import click
 from complex.cli import pass_context
 
 
-@click.command('init', short_help='Shows file changes.')
+@click.command('status', short_help='Shows file changes.')
 @pass_context
 def cli(ctx):
     """Shows file changes in the current working directory."""
