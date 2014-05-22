@@ -104,16 +104,25 @@ if PY2:
 
     _identifier_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
+    def set_binary_mode(f):
+        if sys.platform == 'win32':
+            import os
+            import msvcrt
+            msvcrt.setmode(f.fileno(), os.O_BINARY)
+
     def isidentifier(x):
         return _identifier_re.search(x) is not None
 
     def get_binary_stdin():
+        set_binary_mode(sys.stdin)
         return sys.stdin
 
     def get_binary_stdout():
+        set_binary_mode(sys.stdout)
         return sys.stdout
 
     def get_binary_stderr():
+        set_binary_mode(sys.stderr)
         return sys.stderr
 
     def get_text_stdin(encoding=None, errors=None):
