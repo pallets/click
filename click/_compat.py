@@ -1,5 +1,6 @@
 import re
 import io
+import os
 import sys
 import codecs
 
@@ -104,26 +105,40 @@ if PY2:
 
     _identifier_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
-    def set_binary_mode(f):
-        if sys.platform == 'win32':
-            import os
-            import msvcrt
-            msvcrt.setmode(f.fileno(), os.O_BINARY)
+    # For Windows we need to force stdout/stdin/stderr to binary if it's
+    # fetched for that.  This obviously is not the most correct way to do
+    # it as it changes global state.  Unfortunately there does not seem to
+    # be a clear better way to do it as just reopening the file in binary
+    # mode does not change anything.
+    #
+    # An option would be to do what python 3 does and to open the file as
+    # binary only, patch it back to the system and then use a wrapper
+    # stream that converts newlines.  It's not quite clear what's the
+    # correct option here.
+    if sys.platform == 'win32':
+        import msvcrt
+        def set_binary_mode(f):
+            try:
+                fileno = f.fileno()
+            except Exception:
+                pass
+            else:
+                msvcrt.setmode(fileno, os.O_BINARY)
+            return f
+    else:
+        set_binary_mode = lambda x: x
 
     def isidentifier(x):
         return _identifier_re.search(x) is not None
 
     def get_binary_stdin():
-        set_binary_mode(sys.stdin)
-        return sys.stdin
+        return set_binary_mode(sys.stdin)
 
     def get_binary_stdout():
-        set_binary_mode(sys.stdout)
-        return sys.stdout
+        return set_binary_mode(sys.stdout)
 
     def get_binary_stderr():
-        set_binary_mode(sys.stderr)
-        return sys.stderr
+        return set_binary_mode(sys.stderr)
 
     def get_text_stdin(encoding=None, errors=None):
         return _make_text_stream(sys.stdin, encoding, errors)
