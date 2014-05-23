@@ -6,6 +6,9 @@ import codecs
 import tempfile
 
 
+PY2 = sys.version_info[0] == 2
+
+
 def _make_text_stream(stream, encoding, errors):
     if encoding is None:
         encoding = get_best_encoding(stream)
@@ -33,9 +36,20 @@ def get_best_encoding(stream):
 
 class _NonClosingTextIOWrapper(io.TextIOWrapper):
 
-    def __init__(self, stream, encoding, errors):
+    def __init__(self, stream, encoding, errors, **extra):
         io.TextIOWrapper.__init__(self, _FixupStream(stream),
-                                  encoding, errors)
+                                  encoding, errors, **extra)
+
+    # The io module is already a place where Python 2 got the
+    # python 3 text behavior forced on, so we need to unbreak
+    # it to look like python 2 stuff.
+    if PY2:
+        def write(self, x):
+            return io.TextIOWrapper.write(self, unicode(x))
+
+        def writelines(self, lines):
+            lines = map(unicode, lines)
+            return io.TextIOWrapper.writelines(self, lines)
 
     def __del__(self):
         try:
@@ -96,7 +110,6 @@ class _FixupStream(object):
         return True
 
 
-PY2 = sys.version_info[0] == 2
 if PY2:
     text_type = unicode
     bytes = str
