@@ -91,3 +91,27 @@ def test_nargs_envvar(runner):
     result = runner.invoke(cmd, [], env={'X': 'foo bar'})
     assert not result.exception
     assert result.output == 'foo|bar\n'
+
+
+def test_eat_options(runner):
+    @click.command()
+    @click.option('-f')
+    @click.argument('files', nargs=-1)
+    def cmd(f, files):
+        for filename in files:
+            click.echo(filename)
+        click.echo(f)
+
+    result = runner.invoke(cmd, ['--', '-foo', 'bar'])
+    assert result.output.splitlines() == [
+        '-foo',
+        'bar',
+        '',
+    ]
+
+    result = runner.invoke(cmd, ['-f', '-x', '--', '-foo', 'bar'])
+    assert result.output.splitlines() == [
+        '-foo',
+        'bar',
+        '-x',
+    ]
