@@ -6,7 +6,7 @@ This contains all major version changes between click releases.
 Version 1.1
 -----------
 
-(bugfix release, release to be decided)
+(bugfix release, released on May 23rd 2014)
 
 - fixed a bug that caused text files on Python 2 to not accept
   native strings.
