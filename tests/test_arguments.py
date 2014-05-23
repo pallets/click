@@ -72,6 +72,18 @@ def test_file_args(runner):
         assert result.exit_code == 0
 
 
+def test_stdout_default(runner):
+    @click.command()
+    @click.argument('output', type=click.File('w'), default='-')
+    def inout(output):
+        output.write('Foo bar baz\n')
+        output.flush()
+
+    result = runner.invoke(inout, [])
+    assert not result.exception
+    assert result.output == 'Foo bar baz\n'
+
+
 def test_nargs_envvar(runner):
     @click.command()
     @click.option('--arg', nargs=-1)

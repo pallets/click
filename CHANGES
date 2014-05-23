@@ -8,6 +8,9 @@ Version 1.1
 
 (bugfix release, release to be decided)
 
+- fixed a bug that caused text files on Python 2 to not accept
+  native strings.
+
 Version 1.0
 -----------
 
