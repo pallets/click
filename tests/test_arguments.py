@@ -72,6 +72,26 @@ def test_file_args(runner):
         assert result.exit_code == 0
 
 
+def test_file_atomics(runner):
+    @click.command()
+    @click.argument('output', type=click.File('wb', atomic=True))
+    def inout(output):
+        output.write(b'Foo bar baz\n')
+        output.flush()
+        with open(output.name, 'rb') as f:
+            old_content = f.read()
+            assert old_content == b'OLD\n'
+
+    with runner.isolated_filesystem():
+        with open('foo.txt', 'wb') as f:
+            f.write(b'OLD\n')
+        result = runner.invoke(inout, ['foo.txt'], input='Hey!')
+        assert result.output == ''
+        assert result.exit_code == 0
+        with open('foo.txt', 'rb') as f:
+            assert f.read() == b'Foo bar baz\n'
+
+
 def test_nargs_envvar(runner):
     @click.command()
     @click.option('--arg', nargs=-1)

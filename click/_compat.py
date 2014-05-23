@@ -3,6 +3,7 @@ import io
 import os
 import sys
 import codecs
+import tempfile
 
 
 def _make_text_stream(stream, encoding, errors):
@@ -339,19 +340,76 @@ def get_streerror(e, default=None):
     return msg
 
 
-def open_stream(filename, mode='r', encoding=None, errors='strict'):
-    if filename != '-':
-        if encoding is not None:
-            return io.open(filename, mode, encoding=encoding,
-                           errors=errors), True
-        return open(filename, mode), True
-    if 'w' in mode:
+def open_stream(filename, mode='r', encoding=None, errors='strict',
+                atomic=False):
+    # standard streams first.  These are simple because they don't need
+    # special handling for the atomic flag.  It's entirely ignored.
+    if filename == '-':
+        if 'w' in mode:
+            if 'b' in mode:
+                return get_binary_stdout(), False
+            return get_text_stdout(encoding=encoding, errors=errors), False
         if 'b' in mode:
-            return get_binary_stdout(), False
-        return get_text_stdout(encoding=encoding, errors=errors), False
-    if 'b' in mode:
-        return get_binary_stdin(), False
-    return get_text_stdin(encoding=encoding, errors=errors), False
+            return get_binary_stdin(), False
+        return get_text_stdin(encoding=encoding, errors=errors), False
+
+    # Non-atomic writes directly go out through the regular open
+    # functions.
+    if not atomic:
+        if encoding is None:
+            return open(filename, mode), True
+        return io.open(filename, mode, encoding=encoding, errors=errors), True
+
+    # Atomic writes are more complicated.  They work by opening a file
+    # as a proxy in the same folder and then using the fdopen
+    # functionality to wrap it in a python file.  Then we wrap it in an
+    # atomic file that moves the file over on close.
+    fd, tmp_filename = tempfile.mkstemp(dir=os.path.dirname(filename),
+                                        prefix='.__atomic-write')
+
+    if encoding is not None:
+        f = io.open(fd, mode, encoding=encoding, errors=errors)
+    else:
+        f = os.fdopen(fd, mode)
+
+    return _AtomicFile(f, tmp_filename, filename), True
+
+
+# Used in a destructor call, needs extra protection from interpreter
+# cleanup.
+_rename = os.rename
+
+
+class _AtomicFile(object):
+
+    def __init__(self, f, tmp_filename, real_filename):
+        self._f = f
+        self._tmp_filename = tmp_filename
+        self._real_filename = real_filename
+        self.closed = False
+
+    @property
+    def name(self):
+        return self._real_filename
+
+    def close(self, delete=False):
+        if self.closed:
+            return
+        self._f.close()
+        _rename(self._tmp_filename, self._real_filename)
+        self.closed = True
+
+    def __getattr__(self, name):
+        return getattr(self._f, name)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        self.close(delete=exc_type is not None)
+
+    def __repr__(self):
+        return repr(self._f)
 
 
 binary_streams = {

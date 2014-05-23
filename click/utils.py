@@ -122,11 +122,13 @@ class LazyFile(object):
     files for writing.
     """
 
-    def __init__(self, filename, mode='r', encoding=None, errors='strict'):
+    def __init__(self, filename, mode='r', encoding=None, errors='strict',
+                 atomic=False):
         self.name = filename
         self.mode = mode
         self.encoding = encoding
         self.errors = errors
+        self.atomic = atomic
 
         if filename == '-':
             self._f, self.should_close = open_stream(filename, mode,
@@ -136,7 +138,7 @@ class LazyFile(object):
                 # Open and close the file in case we're opening it for
                 # reading so that we can catch at least some errors in
                 # some cases early.
-                open(filename, mode, encoding, errors).close()
+                open(filename, mode).close()
             self._f = None
             self.should_close = True
 
@@ -158,7 +160,8 @@ class LazyFile(object):
         try:
             rv, self.should_close = open_stream(self.name, self.mode,
                                                 self.encoding,
-                                                self.errors)
+                                                self.errors,
+                                                atomic=self.atomic)
         except (IOError, OSError) as e:
             from .exceptions import FileError
             raise FileError(self.name, hint=get_streerror(e))

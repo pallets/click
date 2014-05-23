@@ -240,16 +240,23 @@ class File(ParamType):
     upon first IO.  The default is to be non lazy for standard input and
     output streams as well as files opened for reading, lazy otherwise.
 
+    Starting with Click 2.0 files can also be opened atomically in which
+    case all writes go into a separate file in the same folder and upon
+    completion the file will be moved over to the original location.  This
+    is useful if a file is modified that is regularly read by other users.
+
     See :ref:`file-args` for more information.
     """
     name = 'filename'
     envvar_list_splitter = os.path.pathsep
 
-    def __init__(self, mode='r', encoding=None, errors='strict', lazy=None):
+    def __init__(self, mode='r', encoding=None, errors='strict', lazy=None,
+                 atomic=False):
         self.mode = mode
         self.encoding = encoding
         self.errors = errors
         self.lazy = lazy
+        self.atomic = atomic
 
     def resolve_lazy_flag(self, value):
         if self.lazy is not None:
@@ -268,13 +275,15 @@ class File(ParamType):
             lazy = self.resolve_lazy_flag(value)
 
             if lazy:
-                f = LazyFile(value, self.mode, self.encoding, self.errors)
+                f = LazyFile(value, self.mode, self.encoding, self.errors,
+                             atomic=self.atomic)
                 if ctx is not None:
                     ctx.call_on_close(f.close_intelligently)
                 return f
 
             f, should_close = open_stream(value, self.mode,
-                                          self.encoding, self.errors)
+                                          self.encoding, self.errors,
+                                          atomic=self.atomic)
             # If a context is provided we automatically close the file
             # at the end of the context execution (or flush out).  If a
             # context does not exist it's the caller's responsibility to
