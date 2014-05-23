@@ -1,0 +1,19 @@
+Click Changelog
+===============
+
+Version 2.0
+-----------
+
+(codename and release date to be decided)
+
+- added support for opening stdin/stdout on windows in
+  binary mode correctly.
+- added support for atomic writes to files by going through
+  a temporary file.
+
+Version 1.0
+-----------
+
+(no codename, released on May 21st 2014)
+
+- Initial release.
