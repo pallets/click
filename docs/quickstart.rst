@@ -7,6 +7,16 @@ You can get the library directly from PyPI::
 
     pip install click
 
+Screencast
+----------
+
+There is a screencast available which shows the basic API of click and
+how to build simple applications with it.  It also explores how to build
+commands with subcommands.
+
+*   `Building Command Line Applications with Click
+    <https://www.youtube.com/watch?v=kNke39OZ2k0>`_
+
 Basic Concepts
 --------------
 
