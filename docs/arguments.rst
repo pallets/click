@@ -169,3 +169,31 @@ where the first one is picked.
 
 Generally this feature is not recommended because it can cause a lot of
 confusion to the user.
+
+Arguments looking like Options
+------------------------------
+
+Sometimes you want to process arguments that look like options.  For
+instance imagine you have a file named ``-foo.txt``.  If you pass this as
+such as an argument click will treat it as an option.
+
+To solve this, click does what any POSIX style command line script does
+and that is to accept the string ``--`` as a separator for options and
+arguments.  After the ``--`` marker all further parameters are accepted as
+arguments.
+
+Example usage:
+
+.. click:example::
+
+    @click.command()
+    @click.argument('files', nargs=-1, type=click.Path())
+    def touch(files):
+        for filename in files:
+            click.echo(filename)
+
+And from the command line:
+
+.. click:run::
+
+    invoke(touch, ['--', '-foo.txt', 'bar.txt'])
