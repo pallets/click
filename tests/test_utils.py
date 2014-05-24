@@ -16,5 +16,5 @@ def test_filename_formatting():
     assert click.format_filename(b'/x/foo.txt') == '/x/foo.txt'
     assert click.format_filename(u'/x/foo.txt') == '/x/foo.txt'
     assert click.format_filename(u'/x/foo.txt', shorten=True) == 'foo.txt'
-    assert click.format_filename('/x/foo\xff.txt', shorten=True) \
+    assert click.format_filename(b'/x/foo\xff.txt', shorten=True) \
         == u'foo\ufffd.txt'
