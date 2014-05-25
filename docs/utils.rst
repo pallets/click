@@ -50,6 +50,15 @@ Primarily this means that:
     that colors will work on Windows the same way they do on other
     operating systems.
 
+Click will automatically detect when `colorama` is available and use it.
+You do not have to call ``colorama.init()``.  In fact, it's strongly
+recommended you not doing that as colorama will change the default output
+streams which is not a good idea.
+
+To install colorama run this command::
+
+    $ pip install colorama
+
 
 .. _colorama: https://pypi.python.org/pypi/colorama
 
