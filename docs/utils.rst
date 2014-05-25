@@ -72,3 +72,79 @@ Example::
 
     stdin_text = click.get_text_stream('stdin')
     stdout_binary = click.get_binary_stream('stdout')
+
+
+Finding Application Folders
+---------------------------
+
+.. versionadded:: 2.0
+
+Very often you want to open a config file that belongs to your
+application.  However different operationg systems store these config
+files by their policy in different places.  Click provides a
+:func:`get_app_dir` function which returns the most appropriate location
+for per user config files for your application depending on the OS.
+
+Example usage::
+
+    import os
+    import click
+    import ConfigParser
+
+    APP_NAME = 'My Application'
+
+    def read_config():
+        cfg = os.path.join(click.get_app_dir(APP_NAME), 'config.ini')
+        parser = ConfigParser.RawConfigParser()
+        parser.read([cfg])
+        rv = {}
+        for section in parser.sections():
+            for key, value in parser.items(section):
+                rv['%s.%s' % (section, key)] = value
+        return rv
+
+
+Showing Progress Bars
+---------------------
+
+.. versionadded:: 2.0
+
+Sometimes you have command line scripts that need to process a lot of data
+but you want to quickly show the user some progress about how long that
+will take.  Click supports simple progress bar rendering for that through
+the :func:`progressbar` function.
+
+The basic usage is very simple: the idea is that you have an iterable that
+you want to operate on.  For each item in the iterable it might take some
+time to do processing.  So say you have a loop like this::
+
+    for user in all_the_users_to_process:
+        modify_the_user(user)
+
+To hook this up with an automatically updating progress bar all you need
+to do is to change the code to this::
+
+    import click
+
+    with click.progressbar(all_the_users_to_process) as bar:
+        for user in bar:
+            modify_the_user(user)
+
+Click will then automatically print a progress bar to the terminal and
+calculate the remaining time for you.  The calculation of remaining time
+requires that the iterable has a length.  If it does not have a length,
+but you know the length, you can explicitly provide it::
+
+    with click.progressbar(all_the_users_to_process,
+                           length=number_of_users) as bar:
+        for user in bar:
+            modify_the_user(user)
+
+Another useful feature is to associate a label with the progress bar which
+will be shown before next to the progress bar::
+
+    with click.progressbar(all_the_users_to_process,
+                           label='Modifying user accounts',
+                           length=number_of_users) as bar:
+        for user in bar:
+            modify_the_user(user)
