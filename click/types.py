@@ -4,7 +4,7 @@ import stat
 import uuid
 
 from ._compat import open_stream, text_type, filename_to_ui, get_streerror
-from .exceptions import UsageError
+from .exceptions import BadParameter
 from .utils import safecall, LazyFile
 
 
@@ -58,12 +58,7 @@ class ParamType(object):
 
     def fail(self, message, param=None, ctx=None):
         """Helper method to fail with an invalid value message."""
-        if param is None:
-            message = 'Invalid value: %s' % message
-        else:
-            names = ' / '.join(param.opts) or param.name
-            message = 'Invalid value for "%s": %s' % (names, message)
-        raise UsageError(message, ctx=ctx)
+        raise BadParameter(message, ctx=ctx, param=param)
 
 
 class FuncParamType(ParamType):

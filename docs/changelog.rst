@@ -1,1 +1,3 @@
+.. currentmodule:: click
+
 .. include:: ../CHANGES

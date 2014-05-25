@@ -1,11 +1,12 @@
 import os
 import sys
 import codecs
+from contextlib import contextmanager
 from itertools import chain, repeat
 
 from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo
-from .exceptions import ClickException, UsageError, Abort
+from .exceptions import ClickException, UsageError, BadParameter, Abort
 from .termui import prompt, confirm
 from .formatting import HelpFormatter
 from .parser import OptionParser, split_opt
@@ -17,6 +18,25 @@ _missing = object()
 
 def batch(iterable, batch_size):
     return list(zip(*repeat(iter(iterable), batch_size)))
+
+
+@contextmanager
+def augment_usage_errors(ctx, param=None):
+    """Context manager that attaches extra information to exceptions that
+    fly.
+    """
+    try:
+        yield
+    except BadParameter as e:
+        if e.ctx is None:
+            e.ctx = ctx
+        if param is not None and e.param is None:
+            e.param = param
+        raise
+    except UsageError as e:
+        if e.ctx is None:
+            e.ctx = ctx
+        raise
 
 
 def iter_params_for_processing(invocation_order, declaration_order):
@@ -233,7 +253,8 @@ class Context(object):
         args = args[2:]
         if getattr(callback, '__click_pass_context__', False):
             args = (self,) + args
-        return callback(*args, **kwargs)
+        with augment_usage_errors(self):
+            return callback(*args, **kwargs)
 
     def forward(*args, **kwargs):
         """Similar to :meth:`forward` but fills in default keyword
@@ -850,10 +871,12 @@ class Parameter(object):
         return rv
 
     def handle_parse_result(self, ctx, opts, args):
-        value = self.consume_value(ctx, opts)
-        value = self.full_process_value(ctx, value)
-        if self.callback is not None:
-            value = self.callback(ctx, value)
+        with augment_usage_errors(ctx, param=self):
+            value = self.consume_value(ctx, opts)
+            value = self.full_process_value(ctx, value)
+            if self.callback is not None:
+                value = self.callback(ctx, value)
+
         if self.expose_value:
             ctx.params[self.name] = value
         return value, args

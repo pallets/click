@@ -35,7 +35,8 @@ from .utils import echo, get_binary_stream, get_text_stream, \
 from .termui import prompt, confirm, get_terminal_size, echo_via_pager
 
 # Exceptions
-from .exceptions import ClickException, UsageError, FileError, Abort
+from .exceptions import ClickException, UsageError, BadParameter, \
+     FileError, Abort
 
 # Formatting
 from .formatting import HelpFormatter, wrap_text
@@ -65,7 +66,8 @@ __all__ = [
     'prompt', 'confirm', 'get_terminal_size', 'echo_via_pager',
 
     # Exceptions
-    'ClickException', 'UsageError', 'FileError', 'Abort',
+    'ClickException', 'UsageError', 'BadParameter', 'FileError',
+    'Abort',
 
     # Formatting
     'HelpFormatter', 'wrap_text',

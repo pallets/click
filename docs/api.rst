@@ -117,6 +117,8 @@ Exceptions
 
 .. autoexception:: UsageError
 
+.. autoexception:: BadParameter
+
 .. autoexception:: FileError
 
 Formatting
