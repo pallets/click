@@ -14,6 +14,9 @@ Version 2.0
   a temporary file.
 - introduced :exc:`BadParameter` which can be used to easily perform
   custom validation with the same error messages as in the type system.
+- added :func:`progressbar`; a function to show progress bars.
+- added :func:`get_app_dir`; a function to calculate the home folder
+  for configs.
 
 Version 1.1
 -----------

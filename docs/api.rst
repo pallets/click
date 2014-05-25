@@ -42,6 +42,8 @@ Utilities
 
 .. autofunction:: confirm
 
+.. autofunction:: progressbar
+
 .. autofunction:: format_filename
 
 .. autofunction:: get_terminal_size
@@ -49,6 +51,8 @@ Utilities
 .. autofunction:: get_binary_stream
 
 .. autofunction:: get_text_stream
+
+.. autofunction:: get_app_dir
 
 Commands
 --------

@@ -210,6 +210,8 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
             for item in bar:
                 do_something_with(item)
 
+    .. versionadded:: 2.0
+
     :param iterable: an iterable to iterate over.  If not provided the length
                      is required.
     :param length: the number of items to iterate over.  By default the
