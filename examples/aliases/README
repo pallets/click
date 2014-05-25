@@ -1,16 +1,17 @@
-$ complex_
+$ aliases_
 
-  complex is an example of building very complex cli
-  applications that load subcommands dynamically from
-  a plugin folder and other things.
+  aliases is a fairly advanced example that shows how
+  to implement command aliases with click.  It uses a
+  subclass of the default group to customize how commands
+  are located.
 
-  All the commands are implemented as plugins in the
-  `complex.commands` package.  If a python module is
-  placed named "cmd_foo" it will show up as "foo"
-  command and the `cli` object within it will be
-  loaded as nested click command.
+  It supports both aliases read from a config file as well
+  as automatic abbreviations.
+
+  The aliases from the config are read from the aliases.ini
+  file.  Try `aliases st` and `aliases ci`!
 
 Usage:
 
   $ pip install --editable .
-  $ complex --help
+  $ aliases --help
