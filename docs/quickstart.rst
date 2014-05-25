@@ -7,8 +7,8 @@ You can get the library directly from PyPI::
 
     pip install click
 
-Screencast
-----------
+Screencast and Examples
+-----------------------
 
 There is a screencast available which shows the basic API of click and
 how to build simple applications with it.  It also explores how to build
@@ -16,6 +16,20 @@ commands with subcommands.
 
 *   `Building Command Line Applications with Click
     <https://www.youtube.com/watch?v=kNke39OZ2k0>`_
+
+Examples of Click applications can be found in the documentation as well
+as in the github repository together with readme files:
+
+*   ``inout``: `File input and output
+    <https://github.com/mitsuhiko/click/tree/master/examples/inout>`_
+*   ``naval``: `Port of docopt naval example
+    <https://github.com/mitsuhiko/click/tree/master/examples/naval>`_
+*   ``aliases``: `Command alias example
+    <https://github.com/mitsuhiko/click/tree/master/examples/aliases>`_
+*   ``repo``: `Git/hg like command line interface
+    <https://github.com/mitsuhiko/click/tree/master/examples/repo>`_
+*   ``complex``: `Complex example with plugin loading
+    <https://github.com/mitsuhiko/click/tree/master/examples/complex>`_
 
 Basic Concepts
 --------------
