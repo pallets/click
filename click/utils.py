@@ -283,7 +283,7 @@ def format_filename(filename, shorten=False):
 
 
 def get_app_dir(app_name, roaming=True, force_posix=False):
-    """Returns the config folder for the application.  The default behavior
+    r"""Returns the config folder for the application.  The default behavior
     is to return whatever is most appropriate for the operating system.
 
     To give you an idea, for an app called ``"Foo Bar"`` something like
