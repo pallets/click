@@ -32,6 +32,8 @@ as in the github repository together with readme files:
     <https://github.com/mitsuhiko/click/tree/master/examples/complex>`_
 *   ``validation``: `Custom parameter validation example
     <https://github.com/mitsuhiko/click/tree/master/examples/validation>`_
+*   ``colors``: `Colorama ANSI color support
+    <https://github.com/mitsuhiko/click/tree/master/examples/colors>`_
 
 Basic Concepts
 --------------

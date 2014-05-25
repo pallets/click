@@ -1,0 +1,9 @@
+$ colors_
+
+  colors is a simple example that shows how you can
+  colorize text with the built-in colorama integration.
+
+Usage:
+
+  $ pip install --editable .
+  $ colors
