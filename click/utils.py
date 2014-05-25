@@ -12,6 +12,10 @@ if not PY2:
 echo_native_types = string_types + (bytes, bytearray)
 
 
+def _posixify(name):
+    return '-'.join(name.split()).lower()
+
+
 def unpack_args(args, nargs_spec):
     """Given an iterable of arguments and an iterable of nargs specifications
     it returns a tuple with all the unpacked arguments at the first index
@@ -276,3 +280,54 @@ def format_filename(filename, shorten=False):
     if shorten:
         filename = os.path.basename(filename)
     return filename_to_ui(filename)
+
+
+def get_app_dir(app_name, roaming=True, force_posix=False):
+    """Returns the config folder for the application.  The default behavior
+    is to return whatever is most appropriate for the operating system.
+
+    To give you an idea, for an app called ``"Foo Bar"`` something like
+    the following folders could be returned:
+
+    Mac OS X:
+      ``~/Library/Application Support/Foo Bar``
+    Mac OS X (posix):
+      ``~/.foo-bar``
+    Unix:
+      ``~/.config/foo-bar``
+    Unix (posix):
+      ``~/.foo-bar``
+    Win XP (roaming):
+      ``C:\Documents and Settings\<user>\Local Settings\Application Data\Foo Bar``
+    Win XP (not roaming):
+      ``C:\Documents and Settings\<user>\Application Data\Foo Bar``
+    Win 7 (roaming):
+      ``C:\Users\<user>\AppData\Roaming\Foo Bar``
+    Win 7 (not roaming):
+      ``C:\Users\<user>\AppData\Local\Foo Bar``
+
+    .. versionadded:: 2.0
+
+    :param app_name: the application name.  This should be properly capitalized
+                     and can contain whitespace.
+    :param roaming: controls if the folder should be roaming or not on windows.
+                    Has no affect otherwise.
+    :param force_posix: if this is set to `True` then on any posix system the
+                        folder will be stored in the home folder with a leading
+                        dot instead of the XDG config home or darwin's
+                        application support folder.
+    """
+    if sys.platform.startswith('win'):
+        key = roaming and 'APPDATA' or 'LOCALAPPDATA'
+        folder = os.environ.get(key)
+        if folder is None:
+            folder = os.path.expanduser('~')
+        return os.path.join(folder, app_name)
+    if force_posix:
+        return os.path.join(os.path.expanduser('~/.' + _posixify(app_name)))
+    if sys.platform == 'darwin':
+        return os.path.join(os.path.expanduser(
+            '~/Library/Application Support'), app_name)
+    return os.path.join(
+        os.environ.get('XDG_CONFIG_HOME', os.path.expanduser('~/.config')),
+        _posixify(app_name))
