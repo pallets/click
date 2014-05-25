@@ -31,6 +31,8 @@ supressed by passing ``nl=False``::
     click.echo(b'\xe2\x98\x83', nl=False)
 
 
+.. _ansi-colors:
+
 ANSI Colors
 -----------
 

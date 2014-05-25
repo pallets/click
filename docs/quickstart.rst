@@ -86,6 +86,10 @@ What this means is that the :func:`echo` function applies some error
 correction in case the terminal is misconfigured instead of dying with an
 :exc:`UnicodeError`.
 
+As an added benefit, starting with click 2.0 the echo function also
+supports portable ANSI coloring if colorama is installed.  See
+:ref:`ansi-colors` for more information.
+
 If you don't need this, you can also use the `print()` construct /
 function.
 
