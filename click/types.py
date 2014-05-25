@@ -399,6 +399,15 @@ def convert_type(ty, default=None):
         return FLOAT
     if guessed_type:
         return STRING
+
+    # Catch a common mistake
+    if __debug__:
+        try:
+            if issubclass(ty, ParamType):
+                raise AssertionError('Attempted to use an uninstanciated '
+                                     'parameter type (%s).' % ty)
+        except TypeError:
+            pass
     return FuncParamType(ty)
 
 

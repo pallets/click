@@ -27,7 +27,7 @@ class URL(click.ParamType):
 @click.option('--count', default=2, callback=validate_count,
               help='A positive even number.')
 @click.option('--foo', help='A mysterious parameter.')
-@click.option('--url', help='A URL', type=URL())
+@click.option('--url', help='A URL', type=URL)
 @click.version_option()
 def cli(count, foo, url):
     """Validation.
