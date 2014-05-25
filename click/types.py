@@ -1,7 +1,6 @@
 import os
 import sys
 import stat
-import uuid
 
 from ._compat import open_stream, text_type, filename_to_ui, get_streerror
 from .exceptions import BadParameter
@@ -211,6 +210,7 @@ class UUIDParameterType(ParamType):
 
     def convert(self, value, param, ctx):
         try:
+            import uuid
             return uuid.UUID(value)
         except ValueError:
             self.fail('%s is not a valid UUID value' % value, param, ctx)
