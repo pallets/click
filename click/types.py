@@ -209,8 +209,8 @@ class UUIDParameterType(ParamType):
     name = 'uuid'
 
     def convert(self, value, param, ctx):
+        import uuid
         try:
-            import uuid
             return uuid.UUID(value)
         except ValueError:
             self.fail('%s is not a valid UUID value' % value, param, ctx)
