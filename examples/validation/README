@@ -1,0 +1,12 @@
+$ validation_
+
+  validation is a simple example of an application that
+  performs custom validation of parameters in different
+  ways.
+
+  This example requires Click 2.0 or higher.
+
+Usage:
+
+  $ pip install --editable .
+  $ validation --help
