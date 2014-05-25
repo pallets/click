@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='inout',
+    name='click-example-inout',
     version='0.1',
     py_modules=['inout'],
     include_package_data=True,

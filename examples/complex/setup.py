@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='complex',
+    name='click-example-complex',
     version='1.0',
     packages=['complex', 'complex.commands'],
     include_package_data=True,

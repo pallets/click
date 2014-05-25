@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='repo',
+    name='click-example-repo',
     version='0.1',
     py_modules=['repo'],
     include_package_data=True,

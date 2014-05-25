@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='naval',
+    name='click-example-naval',
     version='2.0',
     py_modules=['naval'],
     include_package_data=True,
