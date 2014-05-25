@@ -17,6 +17,8 @@ Version 2.0
 - added :func:`progressbar`; a function to show progress bars.
 - added :func:`get_app_dir`; a function to calculate the home folder
   for configs.
+- Added transparent handling for ANSI codes into the :func:`echo`
+  function through `colorama`.
 
 Version 1.1
 -----------

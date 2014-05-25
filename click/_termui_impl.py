@@ -185,7 +185,8 @@ class ProgressBar(object):
         line_len = len(line)
         if self.max_width is None or self.max_width < line_len:
             self.max_width = line_len
-        self.file.write(line)
+        # Use echo here so that we get colorama support.
+        echo(line, file=self.file, nl=False)
         self.file.write(' ' * (clear_width - line_len))
         self.file.flush()
 

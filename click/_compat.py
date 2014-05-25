@@ -427,6 +427,33 @@ class _AtomicFile(object):
         return repr(self._f)
 
 
+_auto_wrap_for_ansi = lambda x: x
+
+
+try:
+    import colorama
+except ImportError:
+    colorama = None
+else:
+    from weakref import WeakKeyDictionary
+    _ansi_stream_wrappers = WeakKeyDictionary()
+
+    def _auto_wrap_for_ansi(stream):
+        cached = _ansi_stream_wrappers.get(stream)
+        if cached is not None:
+            return cached
+        try:
+            strip = not stream.isatty()
+        except Exception:
+            strip = True
+        rv = colorama.AnsiToWin32(stream, strip=strip).stream
+        try:
+            _ansi_stream_wrappers[stream] = rv
+        except Exception:
+            pass
+        return rv
+
+
 binary_streams = {
     'stdin': get_binary_stdin,
     'stdout': get_binary_stdout,

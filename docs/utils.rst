@@ -31,6 +31,29 @@ supressed by passing ``nl=False``::
     click.echo(b'\xe2\x98\x83', nl=False)
 
 
+ANSI Colors
+-----------
+
+.. versionadded:: 2.0
+
+Starting with click 2.0 the :func:`echo` function gained a bit of extra
+functionality to deal with ANSI colors.  This functionality is only
+available if `colorama`_ is installed.  If it is installed then ANSI codes
+are intelligently handled.
+
+Primarily this means that:
+
+-   click's echo function will automatically strip ANSI color codes if the
+    stream is not connected to a terminal.
+-   the echo function will transparently connect to the terminal on
+    Windows and translate ANSI codes to terminal API calls.  This means
+    that colors will work on Windows the same way they do on other
+    operating systems.
+
+
+.. _colorama: https://pypi.python.org/pypi/colorama
+
+
 Printing Filenames
 ------------------
 

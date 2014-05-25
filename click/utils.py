@@ -3,7 +3,8 @@ import sys
 from collections import deque
 
 from ._compat import text_type, open_stream, get_streerror, string_types, \
-     PY2, get_best_encoding, binary_streams, text_streams, filename_to_ui
+     PY2, get_best_encoding, binary_streams, text_streams, filename_to_ui, \
+     _auto_wrap_for_ansi
 
 if not PY2:
     from ._compat import _find_binary_writer
@@ -202,12 +203,27 @@ def echo(message=None, file=None, nl=True):
     possible.  This is a very carefree function as in that it will try its
     best to not fail.
 
+    In addition to that if `colorama`_ is installed the echo function will
+    also support clever handling of ansi codes.  Essentially it will then
+    do the following:
+
+    -   add transparent handling of ANSI color codes on Windows
+    -   hide ANSI codes automatically if the destination file is not a
+        terminal.
+
+    .. _colorama: http://pypi.python.org/pypi/colorama
+
+    .. versionmodified:: 2.0
+       Starting with version 2.0 of Click, the echo function will work
+       with colorama if it's installed.
+
     :param message: the message to print
     :param file: the file to write to (defaults to ``stdout``)
     :param nl: if set to `True` (the default) a newline is printed afterwards.
     """
     if file is None:
         file = sys.stdout
+    file = _auto_wrap_for_ansi(file)
 
     if message is not None and not isinstance(message, echo_native_types):
         message = text_type(message)
