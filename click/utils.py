@@ -213,7 +213,7 @@ def echo(message=None, file=None, nl=True):
 
     .. _colorama: http://pypi.python.org/pypi/colorama
 
-    .. versionmodified:: 2.0
+    .. versionchanged:: 2.0
        Starting with version 2.0 of Click, the echo function will work
        with colorama if it's installed.
 
