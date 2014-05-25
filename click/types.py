@@ -235,10 +235,10 @@ class File(ParamType):
     upon first IO.  The default is to be non lazy for standard input and
     output streams as well as files opened for reading, lazy otherwise.
 
-    Starting with Click 2.0 files can also be opened atomically in which
+    Starting with click 2.0 files can also be opened atomically in which
     case all writes go into a separate file in the same folder and upon
     completion the file will be moved over to the original location.  This
-    is useful if a file is modified that is regularly read by other users.
+    is useful if a file regularly read by other users is modified.
 
     See :ref:`file-args` for more information.
     """
@@ -404,7 +404,7 @@ def convert_type(ty, default=None):
     if __debug__:
         try:
             if issubclass(ty, ParamType):
-                raise AssertionError('Attempted to use an uninstanciated '
+                raise AssertionError('Attempted to use an uninstantiated '
                                      'parameter type (%s).' % ty)
         except TypeError:
             pass

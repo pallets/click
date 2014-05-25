@@ -133,11 +133,11 @@ necessary for manually prompting with the :func:`prompt` function as you
 do not know if a stream like stdout was openend (which was already open
 before) or a real file that needs closing.
 
-Starting with Click 2.0 it's also possible to open files in atomic mode by
+Starting with click 2.0 it's also possible to open files in atomic mode by
 passing ``atomic=True``.  In atomic mode all writes go into a separate
 file in the same folder and upon completion the file will be moved over to
-the original location.  This is useful if a file is modified that is
-regularly read by other users.
+the original location.  This is useful if a file regularly read by other
+users is modified.
 
 Environment Variables
 ---------------------
