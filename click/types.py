@@ -404,7 +404,7 @@ def convert_type(ty, default=None):
     if __debug__:
         try:
             if issubclass(ty, ParamType):
-                raise AssertionError('Attempted to use an uninstanciated '
+                raise AssertionError('Attempted to use an uninstantiated '
                                      'parameter type (%s).' % ty)
         except TypeError:
             pass
