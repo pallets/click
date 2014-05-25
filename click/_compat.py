@@ -116,6 +116,7 @@ if PY2:
     raw_input = raw_input
     string_types = (str, unicode)
     iteritems = lambda x: x.iteritems()
+    range_type = xrange
 
     _identifier_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
@@ -172,6 +173,7 @@ else:
     text_type = str
     raw_input = input
     string_types = (str,)
+    range_type = range
     isidentifier = lambda x: x.isidentifier()
     iteritems = lambda x: iter(x.items())
 

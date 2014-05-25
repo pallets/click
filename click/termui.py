@@ -181,3 +181,69 @@ def echo_via_pager(text):
     # and seems reasonably stable otherwise.
     import pydoc
     pydoc.pager(text)
+
+
+def progressbar(iterable=None, length=None, label=None, show_eta=True,
+                show_percent=None, show_pos=None, fill_char='#',
+                empty_char='-', bar_template='%(label)s  [%(bar)s]  %(info)s',
+                info_sep='  ', width=36, file=None):
+    """This function creates an iterable context manager that can be used
+    to iterate over something while showing a progress bar.  It will
+    either iterate over the `iterable` or `length` items (that are counted
+    up).  While iteration happens this function will print a rendered
+    progress bar to the given `file` (defaults to stdout) and will attempt
+    to calculate remaining time and more.  By default this progress bar
+    will not be rendered if the file is not a terminal.
+
+    The context manager creates the progress bar.  When the context
+    manager is entered the progress bar is already displayed.  With every
+    iteration over the progress bar the iterable passed to the bar is
+    advanced and the bar is updated.  When the context manager is exited
+    a newline is printed and the progress bar is finalized on screen.
+
+    No printing must happen or the progress bar will be unintentionally
+    destroyed.
+
+    Example usage::
+
+        with progressbar(items) as bar:
+            for item in bar:
+                do_something_with(item)
+
+    :param iterable: an iterable to iterate over.  If not provided the length
+                     is required.
+    :param length: the number of items to iterate over.  By default the
+                   progressbar will attempt to ask the iterator about it's
+                   length with might or might not work.  If an iterable is
+                   also provided this parameter can be used to override the
+                   length.  If an iterable is not provided the progress bar
+                   will iterate over a range of that length.
+    :param label: the label to show next to the progress bar.
+    :param show_eta: enables or disables the estimated time display.  This is
+                     automatically disabled if the length cannot be
+                     determined.
+    :param show_percent: enables or disables the percentage display.  The
+                         default is `True` if the iterable has a length or
+                         `False` if not.
+    :param show_pos: enables or disables the absolute position display.  The
+                     deafult is `False` if the iterable has a length or
+                     `True` if not.
+    :param fill_char: the character to use to show the filled part of the
+                      progress bar.
+    :param empty_char: the character to use to show the non filled part of
+                       the progress bar.
+    :param bar_template: the format string to use as template for the bar.
+                         The parameters in it are ``label`` for the label,
+                         ``bar`` for the progress bar and ``info`` for the
+                         info section.
+    :param info_sep: the separator between multiple info items (eta etc.)
+    :param width: the width of the progress bar in characters.
+    :param file: the file to write to.  If this is not a terminal then
+                 only the label is printed.
+    """
+    from ._termui_impl import ProgressBar
+    return ProgressBar(iterable=iterable, length=length, show_eta=show_eta,
+                       show_percent=show_percent, show_pos=show_pos,
+                       fill_char=fill_char, empty_char=empty_char,
+                       bar_template=bar_template, info_sep=info_sep,
+                       file=file, label=label, width=width)
