@@ -1,0 +1,9 @@
+$ termui_
+
+  termui showcases the different terminal UI helpers that
+  click provides.
+
+Usage:
+
+  $ pip install --editable .
+  $ termui --help
