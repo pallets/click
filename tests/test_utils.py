@@ -33,7 +33,7 @@ def test_echo(runner):
     # Ensure we do not strip for bytes.
     with runner.isolation() as out:
         click.echo(bytearray(b'\x1b[31mx\x1b[39m'), nl=False)
-        assert out.getvalue() == '\x1b[31mx\x1b[39m'
+        assert out.getvalue() == b'\x1b[31mx\x1b[39m'
 
 
 def test_filename_formatting():
