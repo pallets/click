@@ -5,8 +5,13 @@ python:
   - "3.3"
   - "3.4"
 
+env:
+  - REQUIREMENTS=colorama
+  - REQUIREMENTS=default
+
 install:
-  - "python setup.py install"
+  - pip install -r .travis-$REQUIREMENTS-requirements.txt
+  - pip install --editable .
 
 script: make test
 
