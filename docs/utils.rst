@@ -175,7 +175,7 @@ but you know the length, you can explicitly provide it::
             modify_the_user(user)
 
 Another useful feature is to associate a label with the progress bar which
-will be shown before next to the progress bar::
+will be shown preceding the progress bar::
 
     with click.progressbar(all_the_users_to_process,
                            label='Modifying user accounts',
