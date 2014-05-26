@@ -34,6 +34,8 @@ as in the github repository together with readme files:
     <https://github.com/mitsuhiko/click/tree/master/examples/validation>`_
 *   ``colors``: `Colorama ANSI color support
     <https://github.com/mitsuhiko/click/tree/master/examples/colors>`_
+*   ``termui``: `Terminal UI functions demo
+    <https://github.com/mitsuhiko/click/tree/master/examples/termui>`_
 
 Basic Concepts
 --------------
