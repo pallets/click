@@ -114,10 +114,10 @@ Finding Application Folders
 .. versionadded:: 2.0
 
 Very often you want to open a config file that belongs to your
-application.  However different operationg systems store these config
+application.  However different operating systems store these config
 files by their policy in different places.  Click provides a
 :func:`get_app_dir` function which returns the most appropriate location
-for per user config files for your application depending on the OS.
+for per-user config files for your application depending on the OS.
 
 Example usage::
 
