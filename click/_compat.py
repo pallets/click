@@ -4,6 +4,7 @@ import os
 import sys
 import codecs
 import tempfile
+from weakref import WeakKeyDictionary
 
 
 PY2 = sys.version_info[0] == 2
@@ -48,11 +49,14 @@ class _NonClosingTextIOWrapper(io.TextIOWrapper):
     # it to look like python 2 stuff.
     if PY2:
         def write(self, x):
-            return io.TextIOWrapper.write(self, unicode(x))
+            if isinstance(x, str):
+                self.flush()
+                return self.buffer.write(x)
+            return io.TextIOWrapper.write(self, x)
 
         def writelines(self, lines):
-            lines = map(unicode, lines)
-            return io.TextIOWrapper.writelines(self, lines)
+            for line in lines:
+                self.write(line)
 
     def __del__(self):
         try:
@@ -438,11 +442,13 @@ try:
 except ImportError:
     colorama = None
 else:
-    from weakref import WeakKeyDictionary
     _ansi_stream_wrappers = WeakKeyDictionary()
 
     def auto_wrap_for_ansi(stream):
-        cached = _ansi_stream_wrappers.get(stream)
+        try:
+            cached = _ansi_stream_wrappers.get(stream)
+        except Exception:
+            cached = None
         if cached is not None:
             return cached
         strip = not isatty(stream)
@@ -463,6 +469,28 @@ def isatty(stream):
         return stream.isatty()
     except Exception:
         return False
+
+
+_default_text_cache = WeakKeyDictionary()
+
+
+def _default_text_stdout():
+    """Like :func:`get_text_stdout` but uses a cache if available to speed
+    it up.  This will not create streams over and over again.
+    """
+    stream = sys.stdout
+    try:
+        rv = _default_text_cache.get(stream)
+    except Exception:
+        rv = None
+    if rv is not None:
+        return rv
+    rv = get_text_stdout()
+    try:
+        _default_text_cache[stream] = rv
+    except Exception:
+        pass
+    return rv
 
 
 binary_streams = {

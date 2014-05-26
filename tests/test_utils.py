@@ -1,3 +1,4 @@
+import sys
 import click
 
 
@@ -10,6 +11,24 @@ def test_echo(runner):
         click.echo('\x1b[31mx\x1b[39m', nl=False)
         bytes = out.getvalue()
         assert bytes == b'\xe2\x98\x83\nDD\n42ax'
+
+    # If we are on python 2 we expect that writing bytes into a string io
+    # does not do anything crazy.  On Python 3
+    if sys.version_info[0] == 2:
+        import StringIO
+        sys.stdout = x = StringIO.StringIO()
+        try:
+            click.echo('\xf6')
+        finally:
+            sys.stdout = sys.__stdout__
+        assert x.getvalue() == '\xf6\n'
+
+    # And in any case, if wrapped, we expect bytes to survive.
+    @click.command()
+    def cli():
+        click.echo(b'\xf6')
+    result = runner.invoke(cli, [])
+    assert result.output_bytes == b'\xf6\n'
 
 
 def test_filename_formatting():

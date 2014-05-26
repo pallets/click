@@ -13,8 +13,8 @@ import os
 import sys
 import time
 import math
-from ._compat import get_text_stdout, range_type, PY2, isatty, open_stream, \
-     strip_ansi
+from ._compat import _default_text_stdout, range_type, PY2, isatty, \
+     open_stream, strip_ansi
 from .utils import echo
 
 
@@ -61,7 +61,7 @@ class ProgressBar(object):
         self.show_pos = show_pos
         self.label = label or ''
         if file is None:
-            file = get_text_stdout()
+            file = _default_text_stdout()
         self.file = file
         self.width = width
 
@@ -144,8 +144,9 @@ class ProgressBar(object):
 
         info_bits = []
         if self.length_known:
-            bar = self.fill_char * int(self.pct * self.width)
-            bar += self.empty_char * (self.width - len(bar))
+            bar_length = int(self.pct * self.width)
+            bar = self.fill_char * bar_length
+            bar += self.empty_char * (self.width - bar_length)
             if show_percent is None:
                 show_percent = not show_pos
         else:
@@ -155,7 +156,7 @@ class ProgressBar(object):
                 bar = list(self.empty_char * self.width)
                 if self.time_per_iteration != 0:
                     bar[int((math.cos(self.pos * self.time_per_iteration)
-                        / 2.0 + 0.5) * len(bar))] = self.fill_char
+                        / 2.0 + 0.5) * self.width)] = self.fill_char
                 bar = ''.join(bar)
             if show_pos is None:
                 show_pos = True
@@ -230,7 +231,7 @@ class ProgressBar(object):
 
 def pager(text):
     """Decide what method to use for paging through text."""
-    stdout = get_text_stdout()
+    stdout = _default_text_stdout()
     if not isatty(sys.stdin) or not isatty(stdout):
         return _nullpager(stdout, text)
     if 'PAGER' in os.environ:

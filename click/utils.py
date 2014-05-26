@@ -3,8 +3,8 @@ import sys
 from collections import deque
 
 from ._compat import text_type, open_stream, get_streerror, string_types, \
-     PY2, get_best_encoding, binary_streams, text_streams, filename_to_ui, \
-     auto_wrap_for_ansi, strip_ansi, isatty
+     PY2, binary_streams, text_streams, filename_to_ui, \
+     auto_wrap_for_ansi, strip_ansi, isatty, _default_text_stdout
 
 if not PY2:
     from ._compat import _find_binary_writer
@@ -222,17 +222,13 @@ def echo(message=None, file=None, nl=True):
     :param nl: if set to `True` (the default) a newline is printed afterwards.
     """
     if file is None:
-        file = sys.stdout
+        file = _default_text_stdout()
 
     if message is not None and not isinstance(message, echo_native_types):
         message = text_type(message)
 
     if message:
-        if PY2:
-            if isinstance(message, text_type):
-                encoding = get_best_encoding(file)
-                message = message.encode(encoding, 'replace')
-        elif isinstance(message, (bytes, bytearray)):
+        if not PY2 and isinstance(message, (bytes, bytearray)):
             binary_file = _find_binary_writer(file)
             if binary_file is not None:
                 file.flush()
