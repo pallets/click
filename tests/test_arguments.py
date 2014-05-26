@@ -125,6 +125,17 @@ def test_nargs_envvar(runner):
     assert result.output == 'foo|bar\n'
 
 
+def test_empty_nargs(runner):
+    @click.command()
+    @click.option('--arg', nargs=-1)
+    def cmd(arg):
+        click.echo('arg:' + '|'.join(arg))
+
+    result = runner.invoke(cmd, [])
+    assert result.exit_code == 0
+    assert result.output == 'arg:\n'
+
+
 def test_eat_options(runner):
     @click.command()
     @click.option('-f')
