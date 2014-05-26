@@ -65,6 +65,21 @@ To install colorama run this command::
 .. _colorama: https://pypi.python.org/pypi/colorama
 
 
+Screen Clearing
+---------------
+
+.. versionadded:: 2.0
+
+To clear the terminal screen you can use the :func:`clear` function that
+is provided starting with Click 2.0.  It does what the name suggests: it
+clears the entire visible screen in a platform agnostic way:
+
+::
+
+    import click
+    click.clear()
+
+
 Printing Filenames
 ------------------
 

@@ -3,7 +3,7 @@ import sys
 import struct
 
 from ._compat import raw_input, PY2, text_type, string_types, \
-     get_best_encoding
+     get_best_encoding, colorama
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type
@@ -250,3 +250,19 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                        empty_char=empty_char, bar_template=bar_template,
                        info_sep=info_sep, file=file, label=label,
                        width=width)
+
+
+def clear():
+    """Clears the terminal screen.  This will have the effect of clearing
+    the whole visible space of the terminal and moving the cursor to the
+    top left.
+
+    .. versionadded:: 2.0
+    """
+    # If we're on windows and we don't have colorama available, then we
+    # clear the screen by shelling out.  Otherwise we can use an escape
+    # sequence.
+    if sys.platform.startswith('win') and colorama is None:
+        os.system('cls')
+    else:
+        sys.stdout.write('\033[2J\033[1;1H')

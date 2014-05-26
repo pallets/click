@@ -19,6 +19,7 @@ Version 2.0
   for configs.
 - Added transparent handling for ANSI codes into the :func:`echo`
   function through `colorama`.
+- Added :func:`clear` function.
 
 Version 1.1
 -----------
