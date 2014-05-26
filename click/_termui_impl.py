@@ -50,8 +50,8 @@ class ProgressBar(object):
 
     def __init__(self, iterable, length=None, fill_char='#', empty_char=' ',
                  bar_template='%(bar)s', info_sep='  ', show_eta=True,
-                 show_percent=None, show_pos=None, label=None, file=None,
-                 width=30):
+                 show_percent=None, show_pos=False, item_show_func=None,
+                 label=None, file=None, width=30):
         self.fill_char = fill_char
         self.empty_char = empty_char
         self.bar_template = bar_template
@@ -59,6 +59,7 @@ class ProgressBar(object):
         self.show_eta = show_eta
         self.show_percent = show_percent
         self.show_pos = show_pos
+        self.item_show_func = item_show_func
         self.label = label or ''
         if file is None:
             file = _default_text_stdout()
@@ -81,6 +82,7 @@ class ProgressBar(object):
         self.finished = False
         self.max_width = None
         self.entered = False
+        self.current_item = None
 
         try:
             self.is_hidden = not self.file.isatty()
@@ -140,7 +142,6 @@ class ProgressBar(object):
 
     def format_progress_line(self):
         show_percent = self.show_percent
-        show_pos = self.show_pos
 
         info_bits = []
         if self.length_known:
@@ -148,7 +149,7 @@ class ProgressBar(object):
             bar = self.fill_char * bar_length
             bar += self.empty_char * (self.width - bar_length)
             if show_percent is None:
-                show_percent = not show_pos
+                show_percent = not self.show_pos
         else:
             if self.finished:
                 bar = self.fill_char * self.width
@@ -158,15 +159,17 @@ class ProgressBar(object):
                     bar[int((math.cos(self.pos * self.time_per_iteration)
                         / 2.0 + 0.5) * self.width)] = self.fill_char
                 bar = ''.join(bar)
-            if show_pos is None:
-                show_pos = True
 
-        if show_pos:
+        if self.show_pos:
             info_bits.append(self.format_pos())
         if show_percent:
             info_bits.append(self.format_pct())
         if self.show_eta and self.eta_known and not self.finished:
             info_bits.append(self.format_eta())
+        if self.item_show_func is not None:
+            item_info = self.item_show_func(self.current_item)
+            if item_info is not None:
+                info_bits.append(item_info)
 
         return (self.bar_template % {
             'label': self.label,
@@ -208,6 +211,7 @@ class ProgressBar(object):
 
     def finish(self):
         self.eta_known = 0
+        self.current_item = None
         self.finished = True
 
     def next(self):
@@ -215,6 +219,7 @@ class ProgressBar(object):
             return next(self.iter)
         try:
             rv = next(self.iter)
+            self.current_item = rv
         except StopIteration:
             self.finish()
             self.render_progress()

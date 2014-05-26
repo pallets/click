@@ -180,8 +180,9 @@ def echo_via_pager(text):
 
 
 def progressbar(iterable=None, length=None, label=None, show_eta=True,
-                show_percent=None, show_pos=None, fill_char='#',
-                empty_char='-', bar_template='%(label)s  [%(bar)s]  %(info)s',
+                show_percent=None, show_pos=False,
+                item_show_func=None, fill_char='#', empty_char='-',
+                bar_template='%(label)s  [%(bar)s]  %(info)s',
                 info_sep='  ', width=36, file=None):
     """This function creates an iterable context manager that can be used
     to iterate over something while showing a progress bar.  It will
@@ -224,8 +225,11 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                          default is `True` if the iterable has a length or
                          `False` if not.
     :param show_pos: enables or disables the absolute position display.  The
-                     deafult is `False` if the iterable has a length or
-                     `True` if not.
+                     deafult is `False`.
+    :param item_show_func: a function called with the current item which
+                           can return a string to show the current item
+                           next to the progress bar.  Note that the current
+                           item can be `None`!
     :param fill_char: the character to use to show the filled part of the
                       progress bar.
     :param empty_char: the character to use to show the non filled part of
@@ -242,6 +246,7 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
     from ._termui_impl import ProgressBar
     return ProgressBar(iterable=iterable, length=length, show_eta=show_eta,
                        show_percent=show_percent, show_pos=show_pos,
-                       fill_char=fill_char, empty_char=empty_char,
-                       bar_template=bar_template, info_sep=info_sep,
-                       file=file, label=label, width=width)
+                       item_show_func=item_show_func, fill_char=fill_char,
+                       empty_char=empty_char, bar_template=bar_template,
+                       info_sep=info_sep, file=file, label=label,
+                       width=width)

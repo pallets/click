@@ -55,8 +55,13 @@ def progress(count):
         for item in bar:
             process_slowly(item)
 
+    def show_item(item):
+        if item is not None:
+            return 'Item #%d' % item
+
     with click.progressbar(filter(items), label='Committing transaction',
-                           fill_char=Fore.YELLOW + '#' + Fore.RESET) as bar:
+                           fill_char=Fore.YELLOW + '#' + Fore.RESET,
+                           item_show_func=show_item) as bar:
         for item in bar:
             process_slowly(item)
 
