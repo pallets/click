@@ -49,9 +49,9 @@ class _NonClosingTextIOWrapper(io.TextIOWrapper):
     # it to look like python 2 stuff.
     if PY2:
         def write(self, x):
-            if isinstance(x, str):
+            if isinstance(x, str) or is_bytes(x):
                 self.flush()
-                return self.buffer.write(x)
+                return self.buffer.write(str(x))
             return io.TextIOWrapper.write(self, x)
 
         def writelines(self, lines):
@@ -125,6 +125,9 @@ if PY2:
     iteritems = lambda x: x.iteritems()
     range_type = xrange
 
+    def is_bytes(x):
+        return isinstance(x, (buffer, bytearray))
+
     _identifier_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
     # For Windows we need to force stdout/stdin/stderr to binary if it's
@@ -183,6 +186,9 @@ else:
     range_type = range
     isidentifier = lambda x: x.isidentifier()
     iteritems = lambda x: iter(x.items())
+
+    def is_bytes(x):
+        return isinstance(x, (bytes, memoryview, bytearray))
 
     def _is_binary_reader(stream, default=False):
         try:

@@ -30,6 +30,11 @@ def test_echo(runner):
     result = runner.invoke(cli, [])
     assert result.output_bytes == b'\xf6\n'
 
+    # Ensure we do not strip for bytes.
+    with runner.isolation() as out:
+        click.echo(bytearray(b'\x1b[31mx\x1b[39m'), nl=False)
+        assert out.getvalue() == '\x1b[31mx\x1b[39m'
+
 
 def test_filename_formatting():
     assert click.format_filename(b'foo.txt') == 'foo.txt'

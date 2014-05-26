@@ -4,7 +4,8 @@ from collections import deque
 
 from ._compat import text_type, open_stream, get_streerror, string_types, \
      PY2, binary_streams, text_streams, filename_to_ui, \
-     auto_wrap_for_ansi, strip_ansi, isatty, _default_text_stdout
+     auto_wrap_for_ansi, strip_ansi, isatty, _default_text_stdout, \
+     is_bytes
 
 if not PY2:
     from ._compat import _find_binary_writer
@@ -224,27 +225,36 @@ def echo(message=None, file=None, nl=True):
     if file is None:
         file = _default_text_stdout()
 
+    # Convert non bytes/text into the native string type.
     if message is not None and not isinstance(message, echo_native_types):
         message = text_type(message)
 
-    if message:
-        if not PY2 and isinstance(message, (bytes, bytearray)):
-            binary_file = _find_binary_writer(file)
-            if binary_file is not None:
-                file.flush()
-                binary_file.write(message)
-                if nl:
-                    binary_file.write(b'\n')
-                binary_file.flush()
-                return
+    # If there is a message, and we're on python 3, and the value looks
+    # like bytes we manually need to find the binary stream and write the
+    # message in there.  This is done separately so that most stream
+    # types will work as you would expect.  Eg: you can write to StringIO
+    # for other cases.
+    if message and not PY2 and is_bytes(message):
+        binary_file = _find_binary_writer(file)
+        if binary_file is not None:
+            file.flush()
+            binary_file.write(message)
+            if nl:
+                binary_file.write(b'\n')
+            binary_file.flush()
+            return
 
     # If we have colorama support we wrap the stream to handle colors
     # for us.  In case colorama is not supported and our output stream
-    # is not a terminal, we strip the ansi codes ourselves.
-    if auto_wrap_for_ansi is not None:
-        file = auto_wrap_for_ansi(file)
-    elif message and not isatty(file):
-        message = strip_ansi(message)
+    # is not a terminal, we strip the ansi codes ourselves.  We also
+    # do not do the stripping if we're dealing with true bytes (this will
+    # only ever be reached on python 2 where is_bytes is true for buffers
+    # and bytearrays but not for regular strings).
+    if message and not is_bytes(message):
+        if auto_wrap_for_ansi is not None:
+            file = auto_wrap_for_ansi(file)
+        elif not isatty(file):
+            message = strip_ansi(message)
 
     if message:
         file.write(message)
