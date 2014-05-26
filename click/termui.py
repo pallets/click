@@ -195,7 +195,7 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
     The context manager creates the progress bar.  When the context
     manager is entered the progress bar is already displayed.  With every
     iteration over the progress bar the iterable passed to the bar is
-    advanced and the bar is updated.  When the context manager is exited
+    advanced and the bar is updated.  When the context manager exits
     a newline is printed and the progress bar is finalized on screen.
 
     No printing must happen or the progress bar will be unintentionally
@@ -212,8 +212,8 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
     :param iterable: an iterable to iterate over.  If not provided the length
                      is required.
     :param length: the number of items to iterate over.  By default the
-                   progressbar will attempt to ask the iterator about it's
-                   length with might or might not work.  If an iterable is
+                   progressbar will attempt to ask the iterator about its
+                   length, which might or might not work.  If an iterable is
                    also provided this parameter can be used to override the
                    length.  If an iterable is not provided the progress bar
                    will iterate over a range of that length.
@@ -225,14 +225,14 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                          default is `True` if the iterable has a length or
                          `False` if not.
     :param show_pos: enables or disables the absolute position display.  The
-                     deafult is `False`.
+                     default is `False`.
     :param item_show_func: a function called with the current item which
                            can return a string to show the current item
                            next to the progress bar.  Note that the current
                            item can be `None`!
     :param fill_char: the character to use to show the filled part of the
                       progress bar.
-    :param empty_char: the character to use to show the non filled part of
+    :param empty_char: the character to use to show the non-filled part of
                        the progress bar.
     :param bar_template: the format string to use as template for the bar.
                          The parameters in it are ``label`` for the label,

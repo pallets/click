@@ -205,17 +205,17 @@ def echo(message=None, file=None, nl=True):
     best to not fail.
 
     In addition to that if `colorama`_ is installed the echo function will
-    also support clever handling of ansi codes.  Essentially it will then
+    also support clever handling of ANSI codes.  Essentially it will then
     do the following:
 
-    -   add transparent handling of ANSI color codes on Windows
+    -   add transparent handling of ANSI color codes on Windows.
     -   hide ANSI codes automatically if the destination file is not a
         terminal.
 
     .. _colorama: http://pypi.python.org/pypi/colorama
 
     .. versionchanged:: 2.0
-       Starting with version 2.0 of Click, the echo function will work
+       Starting with version 2.0 of click, the echo function will work
        with colorama if it's installed.
 
     :param message: the message to print

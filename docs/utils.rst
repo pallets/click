@@ -114,10 +114,10 @@ Finding Application Folders
 .. versionadded:: 2.0
 
 Very often you want to open a config file that belongs to your
-application.  However different operationg systems store these config
+application.  However different operating systems store these config
 files by their policy in different places.  Click provides a
 :func:`get_app_dir` function which returns the most appropriate location
-for per user config files for your application depending on the OS.
+for per-user config files for your application depending on the OS.
 
 Example usage::
 
@@ -175,7 +175,7 @@ but you know the length, you can explicitly provide it::
             modify_the_user(user)
 
 Another useful feature is to associate a label with the progress bar which
-will be shown before next to the progress bar::
+will be shown preceding the progress bar::
 
     with click.progressbar(all_the_users_to_process,
                            label='Modifying user accounts',
