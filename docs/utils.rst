@@ -61,6 +61,13 @@ To install colorama run this command::
 
     $ pip install colorama
 
+Example that prints green text::
+
+    import click
+    from colorama import Fore
+
+    print(Fore.GREEN + 'Hello World!' + Fore.RESET)
+
 
 .. _colorama: https://pypi.python.org/pypi/colorama
 
