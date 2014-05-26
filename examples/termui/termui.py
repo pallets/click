@@ -71,3 +71,9 @@ def progress(count):
                            empty_char=' ') as bar:
         for item in bar:
             process_slowly(item)
+
+
+@cli.command()
+def clear():
+    """Clears the entire screen."""
+    click.clear()
