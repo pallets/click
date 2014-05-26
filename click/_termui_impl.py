@@ -188,7 +188,7 @@ class ProgressBar(object):
             clear_width = self.max_width
         self.file.write(BEFORE_BAR)
         line = self.format_progress_line()
-        line_len = len(line)
+        line_len = len(strip_ansi(line))
         if self.max_width is None or self.max_width < line_len:
             self.max_width = line_len
         # Use echo here so that we get colorama support.
@@ -223,7 +223,7 @@ class ProgressBar(object):
         except StopIteration:
             self.finish()
             self.render_progress()
-            raise
+            raise StopIteration()
         else:
             self.make_step()
             self.render_progress()
