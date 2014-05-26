@@ -4,7 +4,7 @@ from collections import deque
 
 from ._compat import text_type, open_stream, get_streerror, string_types, \
      PY2, get_best_encoding, binary_streams, text_streams, filename_to_ui, \
-     _auto_wrap_for_ansi
+     auto_wrap_for_ansi, strip_ansi, isatty
 
 if not PY2:
     from ._compat import _find_binary_writer
@@ -223,7 +223,6 @@ def echo(message=None, file=None, nl=True):
     """
     if file is None:
         file = sys.stdout
-    file = _auto_wrap_for_ansi(file)
 
     if message is not None and not isinstance(message, echo_native_types):
         message = text_type(message)
@@ -242,6 +241,16 @@ def echo(message=None, file=None, nl=True):
                     binary_file.write(b'\n')
                 binary_file.flush()
                 return
+
+    # If we have colorama support we wrap the stream to handle colors
+    # for us.  In case colorama is not supported and our output stream
+    # is not a terminal, we strip the ansi codes ourselves.
+    if auto_wrap_for_ansi is not None:
+        file = auto_wrap_for_ansi(file)
+    elif message and not isatty(file):
+        message = strip_ansi(message)
+
+    if message:
         file.write(message)
     if nl:
         file.write('\n')

@@ -7,8 +7,9 @@ def test_echo(runner):
         click.echo(b'\x44\x44')
         click.echo(42, nl=False)
         click.echo(b'a', nl=False)
+        click.echo('\x1b[31mx\x1b[39m', nl=False)
         bytes = out.getvalue()
-        assert bytes == b'\xe2\x98\x83\nDD\n42a'
+        assert bytes == b'\xe2\x98\x83\nDD\n42ax'
 
 
 def test_filename_formatting():

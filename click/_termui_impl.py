@@ -10,9 +10,11 @@
     :license: BSD, see LICENSE for more details.
 """
 import os
+import sys
 import time
 import math
-from ._compat import get_text_stdout, range_type, PY2
+from ._compat import get_text_stdout, range_type, PY2, isatty, open_stream, \
+     strip_ansi
 from .utils import echo
 
 
@@ -224,3 +226,60 @@ class ProgressBar(object):
     if not PY2:
         __next__ = next
         del next
+
+
+def pager(text):
+    """Decide what method to use for paging through text."""
+    stdout = get_text_stdout()
+    if not isatty(sys.stdin) or not isatty(stdout):
+        return _nullpager(stdout, text)
+    if 'PAGER' in os.environ:
+        if sys.platform == 'win32':
+            return _tempfilepager(strip_ansi(text), os.environ['PAGER'])
+        elif os.environ.get('TERM') in ('dumb', 'emacs'):
+            return _pipepager(strip_ansi(text), os.environ['PAGER'])
+        else:
+            return _pipepager(text, os.environ['PAGER'])
+    if os.environ.get('TERM') in ('dumb', 'emacs'):
+        return _nullpager(stdout, text)
+    if sys.platform == 'win32' or sys.platform.startswith('os2'):
+        return _tempfilepager(strip_ansi(text), 'more <')
+    if hasattr(os, 'system') and os.system('(less) 2>/dev/null') == 0:
+        return _pipepager(text, 'less')
+
+    import tempfile
+    fd, filename = tempfile.mkstemp()
+    os.close(fd)
+    try:
+        if hasattr(os, 'system') and os.system('more "%s"' % filename) == 0:
+            return _pipepager(text, 'more')
+        return _nullpager(stdout, text)
+    finally:
+        os.unlink(filename)
+
+
+def _pipepager(text, cmd):
+    """Page through text by feeding it to another program."""
+    pipe = os.popen(cmd, 'w')
+    try:
+        pipe.write(text)
+        pipe.close()
+    except IOError:
+        pass
+
+
+def _tempfilepager(text, cmd):
+    """Page through text by invoking a program on a temporary file."""
+    import tempfile
+    filename = tempfile.mktemp()
+    with open_stream(filename, 'w')[1] as f:
+        f.write(text)
+    try:
+        os.system(cmd + ' "' + filename + '"')
+    finally:
+        os.unlink(filename)
+
+
+def _nullpager(stream, text):
+    """Simply print unformatted text.  This is the ultimate fallback."""
+    stream.write(strip_ansi(text))

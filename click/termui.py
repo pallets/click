@@ -175,12 +175,8 @@ def echo_via_pager(text):
         encoding = get_best_encoding(sys.stdout)
         text = text.encode(encoding, 'replace')
 
-    # Pydoc's pager is badly broken with LANG=C on Python 3 to the point
-    # where it will corrupt the terminal.  http://bugs.python.org/issue21398
-    # I don't feel like reimplementing it given that it works on Python 2
-    # and seems reasonably stable otherwise.
-    import pydoc
-    pydoc.pager(text)
+    from ._termui_impl import pager
+    return pager(text + '\n')
 
 
 def progressbar(iterable=None, length=None, label=None, show_eta=True,

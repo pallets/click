@@ -9,6 +9,9 @@ import tempfile
 PY2 = sys.version_info[0] == 2
 
 
+_ansi_re = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')
+
+
 def _make_text_stream(stream, encoding, errors):
     if encoding is None:
         encoding = get_best_encoding(stream)
@@ -427,7 +430,7 @@ class _AtomicFile(object):
         return repr(self._f)
 
 
-_auto_wrap_for_ansi = lambda x: x
+auto_wrap_for_ansi = None
 
 
 try:
@@ -438,20 +441,28 @@ else:
     from weakref import WeakKeyDictionary
     _ansi_stream_wrappers = WeakKeyDictionary()
 
-    def _auto_wrap_for_ansi(stream):
+    def auto_wrap_for_ansi(stream):
         cached = _ansi_stream_wrappers.get(stream)
         if cached is not None:
             return cached
-        try:
-            strip = not stream.isatty()
-        except Exception:
-            strip = True
+        strip = not isatty(stream)
         rv = colorama.AnsiToWin32(stream, strip=strip).stream
         try:
             _ansi_stream_wrappers[stream] = rv
         except Exception:
             pass
         return rv
+
+
+def strip_ansi(value):
+    return _ansi_re.sub('', value)
+
+
+def isatty(stream):
+    try:
+        return stream.isatty()
+    except Exception:
+        return False
 
 
 binary_streams = {
