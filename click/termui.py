@@ -3,7 +3,7 @@ import sys
 import struct
 
 from ._compat import raw_input, PY2, text_type, string_types, \
-     get_best_encoding, colorama
+     get_best_encoding, colorama, isatty
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type
@@ -255,10 +255,12 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
 def clear():
     """Clears the terminal screen.  This will have the effect of clearing
     the whole visible space of the terminal and moving the cursor to the
-    top left.
+    top left.  This does not do anything if not connected to a terminal.
 
     .. versionadded:: 2.0
     """
+    if not isatty(sys.stdout):
+        return
     # If we're on windows and we don't have colorama available, then we
     # clear the screen by shelling out.  Otherwise we can use an escape
     # sequence.
