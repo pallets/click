@@ -238,7 +238,7 @@ Example usage:
     def cli2():
         pass
 
-    @cli1.command()
+    @cli2.command()
     def cmd2():
         """Command on cli2"""
 
