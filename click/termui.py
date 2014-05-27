@@ -299,6 +299,8 @@ def style(text, fg=None, bg=None, bold=None, dim=None, underline=None,
     * ``white`` (might be light gray)
     * ``reset`` (reset the color code only)
 
+    .. versionadded:: 2.0
+
     :param text: the string to style with ansi codes.
     :param fg: if provided this will become the foreground color.
     :param bg: if provided this will become the background color.
@@ -344,6 +346,8 @@ def unstyle(text):
     """Removes ANSI styling information from a string.  Usually it's not
     necessary to use this function as click's echo function will
     automatically remove styling if necessary.
+
+    .. versionadded:: 2.0
 
     :param text: the text to remove style information from.
     """

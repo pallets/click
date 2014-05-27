@@ -46,6 +46,10 @@ Utilities
 
 .. autofunction:: clear
 
+.. autofunction:: style
+
+.. autofunction:: unstyle
+
 .. autofunction:: format_filename
 
 .. autofunction:: get_terminal_size
