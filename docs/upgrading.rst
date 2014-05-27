@@ -6,6 +6,8 @@ this is not entirely possible.  In case we need to break backwards
 compatibility this document gives you information about how to upgrade or
 handle backwards compatibility properly.
 
+.. _upgrade-to-2.0:
+
 Upgrading to 2.0
 ----------------
 

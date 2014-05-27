@@ -325,6 +325,11 @@ What it looks like:
     invoke(hello)
     invoke(hello, args=['--version'])
 
+.. admonition:: Callback Signature Changes
+
+    In Click 2.0 the signature for callbacks changed.  For more
+    information about these changes see :ref:`upgrade-to-2.0`.
+
 Yes Parameters
 --------------
 
@@ -362,6 +367,11 @@ replaced with the :func:`confirmation_option` decorator:
     @click.confirmation_option(help='Are you sure you want to drop the db?')
     def dropdb():
         click.echo('Dropped all tables!')
+
+.. admonition:: Callback Signature Changes
+
+    In Click 2.0 the signature for callbacks changed.  For more
+    information about these changes see :ref:`upgrade-to-2.0`.
 
 Values from Environment Variables
 ---------------------------------

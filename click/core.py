@@ -777,7 +777,8 @@ class Parameter(object):
                     without any arguments.
     :param callback: a callback that should be executed after the parameter
                      was matched.  This is called as ``fn(ctx, param,
-                     value)`` and needs to return the value.
+                     value)`` and needs to return the value.  Before Click
+                     2.0 the signature was ``(ctx, value)``.
     :param nargs: the number of arguments to match.  If not ``1`` the return
                   value is a tuple instead of single value.
     :param metavar: how the value is represented in the help page.
