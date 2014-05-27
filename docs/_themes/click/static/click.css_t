@@ -178,7 +178,8 @@ div.body h6 {
 
 div.indexwrapper h1 {
     text-indent: -999999px;
-    background: url(click.png) no-repeat center center;
+    background: url(click@2x.png) no-repeat center center;
+    background-size: 420px 175px;
     height: 200px;
 }
  
