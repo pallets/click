@@ -91,4 +91,5 @@ Other Documents
    :maxdepth: 2
 
    changelog
+   upgrading
    license
