@@ -78,3 +78,6 @@ __all__ = [
     # Parsing
     'OptionParser',
 ]
+
+
+__version__ = '2.0-dev'
