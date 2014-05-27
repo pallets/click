@@ -305,7 +305,8 @@ def style(text, fg=None, bg=None, bold=None, dim=None, underline=None,
     :param fg: if provided this will become the foreground color.
     :param bg: if provided this will become the background color.
     :param bold: if provided this will enable or disable bold mode.
-    :param dim: if provided this will enable or disable dim mode.
+    :param dim: if provided this will enable or disable dim mode.  This is
+                badly supported.
     :param underline: if provided this will enable or disable underline.
     :param blink: if provided this will enable or disable blinking.
     :param reverse: if provided this will enable or disable inverse
