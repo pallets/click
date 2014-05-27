@@ -302,7 +302,7 @@ Here an example for a ``--version`` flag:
 
 .. click:example::
 
-    def print_version(ctx, value):
+    def print_version(ctx, param, value):
         if not value:
             return
         click.echo('Version 1.0')
@@ -335,7 +335,7 @@ callback:
 
 .. click:example::
 
-    def abort_if_false(ctx, value):
+    def abort_if_false(ctx, param, value):
         if not value:
             ctx.abort()
 
@@ -544,7 +544,7 @@ Example:
 
 .. click:example::
 
-    def validate_rolls(ctx, value):
+    def validate_rolls(ctx, param, value):
         try:
             rolls, dice = map(int, value.split('d', 2))
             return (dice, rolls)

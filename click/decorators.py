@@ -162,7 +162,7 @@ def confirmation_option(*param_decls, **attrs):
     This is equivalent to decorating a function with :func:`option` with
     the following parameters::
 
-        def callback(ctx, value):
+        def callback(ctx, param, value):
             if not value:
                 ctx.abort()
 
@@ -173,7 +173,7 @@ def confirmation_option(*param_decls, **attrs):
             pass
     """
     def decorator(f):
-        def callback(ctx, value):
+        def callback(ctx, param, value):
             if not value:
                 ctx.abort()
         attrs.setdefault('is_flag', True)
@@ -223,7 +223,7 @@ def version_option(version=None, *param_decls, **attrs):
         prog_name = attrs.pop('prog_name', None)
         message = attrs.pop('message', '%(prog)s, version %(version)s')
 
-        def callback(ctx, value):
+        def callback(ctx, param, value):
             if not value:
                 return
             prog = prog_name
@@ -270,7 +270,7 @@ def help_option(*param_decls, **attrs):
     All arguments are forwarded to :func:`option`.
     """
     def decorator(f):
-        def callback(ctx, value):
+        def callback(ctx, param, value):
             if value:
                 echo(ctx.get_help())
                 ctx.exit()

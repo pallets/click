@@ -20,6 +20,20 @@ def batch(iterable, batch_size):
     return list(zip(*repeat(iter(iterable), batch_size)))
 
 
+def invoke_param_callback(callback, ctx, param, value):
+    code = getattr(callback, '__code__', None)
+    args = getattr(code, 'co_argcount', 3)
+
+    if args < 3:
+        from warnings import warn
+        warn(Warning('Invoked legacy parameter callback "%s".  The new '
+                     'signature for such callbacks starting with '
+                     'Click 2.0 is (ctx, param, value).'
+                     % callback), stacklevel=3)
+        return callback(ctx, value)
+    return callback(ctx, param, value)
+
+
 @contextmanager
 def augment_usage_errors(ctx, param=None):
     """Context manager that attaches extra information to exceptions that
@@ -745,6 +759,12 @@ class Parameter(object):
 
     Some settings are supported by both options and arguments.
 
+    .. versionchanged:: 2.0
+       Changed signature for parameter callback to also be passed the
+       parameter.  In Click 2.0 the old callback format will still work
+       but it will raise a warning to give you change to migrate the
+       code easier.
+
     :param param_decls: the parameter declarations for this option or
                         argument.  This is a list of flags or argument
                         names.
@@ -756,8 +776,8 @@ class Parameter(object):
                     in which case it's invoked when the default is needed
                     without any arguments.
     :param callback: a callback that should be executed after the parameter
-                     was matched.  This is called as ``fn(ctx, value)`` and
-                     needs to return the value.
+                     was matched.  This is called as ``fn(ctx, param,
+                     value)`` and needs to return the value.
     :param nargs: the number of arguments to match.  If not ``1`` the return
                   value is a tuple instead of single value.
     :param metavar: how the value is represented in the help page.
@@ -875,7 +895,8 @@ class Parameter(object):
             value = self.consume_value(ctx, opts)
             value = self.full_process_value(ctx, value)
             if self.callback is not None:
-                value = self.callback(ctx, value)
+                value = invoke_param_callback(
+                    self.callback, ctx, self, value)
 
         if self.expose_value:
             ctx.params[self.name] = value

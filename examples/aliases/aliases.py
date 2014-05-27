@@ -59,7 +59,7 @@ class AliasedGroup(click.Group):
         ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
 
 
-def read_config(ctx, value):
+def read_config(ctx, param, value):
     """Callback that is used whenever --config is passed.  We use this to
     always load the correct config.  This means that the config is loaded
     even if the group itself never executes so our aliases stay always

@@ -20,6 +20,9 @@ Version 2.0
 - Added transparent handling for ANSI codes into the :func:`echo`
   function through `colorama`.
 - Added :func:`clear` function.
+- Breaking change: parameter callbacks now get the parameter object
+  passed as second argument.  There is legacy support for old callbacks
+  which will warn but still execute the script.
 
 Version 1.1
 -----------

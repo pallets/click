@@ -5,7 +5,7 @@ except ImportError:
     import urlparse
 
 
-def validate_count(ctx, value):
+def validate_count(ctx, param, value):
     if value < 0 or value % 2 != 0:
         raise click.BadParameter('Should be a positive, even integer.')
     return value
