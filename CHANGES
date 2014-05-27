@@ -23,6 +23,8 @@ Version 2.0
 - Breaking change: parameter callbacks now get the parameter object
   passed as second argument.  There is legacy support for old callbacks
   which will warn but still execute the script.
+- Added :func:`style`, :func:`unstyle` and :func:`secho` for ANSI
+  styles.
 
 Version 1.1
 -----------
