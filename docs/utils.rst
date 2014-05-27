@@ -67,6 +67,13 @@ For styling a string the :func:`style` function can be used::
     click.echo(click.style('Some more text', bg='blue', fg='white'))
     click.echo(click.style('ATTENTION', blink=True))
 
+The combination of :func:`echo` and :func:`style` is also available in
+a single function called :func:`secho`::
+
+    click.secho('Hello World!', fg='green')
+    click.secho('Some more text', bg='blue', fg='white')
+    click.secho('ATTENTION', blink=True)
+
 
 .. _colorama: https://pypi.python.org/pypi/colorama
 

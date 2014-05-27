@@ -50,6 +50,8 @@ Utilities
 
 .. autofunction:: unstyle
 
+.. autofunction:: secho
+
 .. autofunction:: format_filename
 
 .. autofunction:: get_terminal_size
