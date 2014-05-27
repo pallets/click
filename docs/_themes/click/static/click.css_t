@@ -178,11 +178,17 @@ div.body h6 {
 
 div.indexwrapper h1 {
     text-indent: -999999px;
-    background: url(click@2x.png) no-repeat center center;
-    background-size: 420px 175px;
+    background: url(click.png) no-repeat center center;
     height: 200px;
 }
- 
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    div.indexwrapper h1 {
+        background: url(click@2x.png) no-repeat center center;
+        background-size: 420px 175px;
+    }
+}
+
 div.body h1 { margin-top: 0; padding-top: 0; font-size: 240%; }
 div.body h2 { font-size: 180%; }
 div.body h3 { font-size: 150%; }
