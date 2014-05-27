@@ -36,6 +36,34 @@ def test_echo(runner):
         assert out.getvalue() == b'\x1b[31mx\x1b[39m'
 
 
+def test_styling():
+    examples = [
+        ('x', dict(fg='black'), '\x1b[30mx\x1b[0m'),
+        ('x', dict(fg='red'), '\x1b[31mx\x1b[0m'),
+        ('x', dict(fg='green'), '\x1b[32mx\x1b[0m'),
+        ('x', dict(fg='yellow'), '\x1b[33mx\x1b[0m'),
+        ('x', dict(fg='blue'), '\x1b[34mx\x1b[0m'),
+        ('x', dict(fg='magenta'), '\x1b[35mx\x1b[0m'),
+        ('x', dict(fg='cyan'), '\x1b[36mx\x1b[0m'),
+        ('x', dict(fg='white'), '\x1b[37mx\x1b[0m'),
+        ('x', dict(bg='black'), '\x1b[40mx\x1b[0m'),
+        ('x', dict(bg='red'), '\x1b[41mx\x1b[0m'),
+        ('x', dict(bg='green'), '\x1b[42mx\x1b[0m'),
+        ('x', dict(bg='yellow'), '\x1b[43mx\x1b[0m'),
+        ('x', dict(bg='blue'), '\x1b[44mx\x1b[0m'),
+        ('x', dict(bg='magenta'), '\x1b[45mx\x1b[0m'),
+        ('x', dict(bg='cyan'), '\x1b[46mx\x1b[0m'),
+        ('x', dict(bg='white'), '\x1b[47mx\x1b[0m'),
+        ('foo bar', dict(blink=True), '\x1b[5mfoo bar\x1b[0m'),
+        ('foo bar', dict(underline=True), '\x1b[4mfoo bar\x1b[0m'),
+        ('foo bar', dict(bold=True), '\x1b[1mfoo bar\x1b[0m'),
+        ('foo bar', dict(dim=True), '\x1b[2mfoo bar\x1b[0m'),
+    ]
+    for text, styles, ref in examples:
+        assert click.style(text, **styles) == ref
+        assert click.unstyle(ref) == text
+
+
 def test_filename_formatting():
     assert click.format_filename(b'foo.txt') == 'foo.txt'
     assert click.format_filename(b'/x/foo.txt') == '/x/foo.txt'

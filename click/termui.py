@@ -329,7 +329,7 @@ def style(text, fg=None, bg=None, bold=None, dim=None, underline=None,
     if bold is not None:
         bits.append('\033[%dm' % (1 if bold else 22))
     if dim is not None:
-        bits.append('\033[%dm' % (2 if bold else 22))
+        bits.append('\033[%dm' % (2 if dim else 22))
     if underline is not None:
         bits.append('\033[%dm' % (4 if underline else 24))
     if blink is not None:
