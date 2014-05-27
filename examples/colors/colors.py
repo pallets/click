@@ -1,14 +1,26 @@
 import click
-from colorama import Fore
+
+
+all_colors = 'black', 'red', 'green', 'yellow', 'blue', 'magenta', \
+             'cyan', 'white'
 
 
 @click.command()
 def cli():
-    """This script prints some colors through colorama.  This will give
-    colors on OS X, Linux and Windows but it will automatically disable
-    those colors if stdout is redirected to a file.
+    """This script prints some colors.  If colorama is installed this will
+    also work on Windows.  It will also automatically remove all ANSI
+    styles if data is piped into a file.
 
     Give it a try!
     """
-    click.echo(Fore.YELLOW + 'Hello World!' + Fore.RESET)
-    click.echo(Fore.RED + 'Goodbye World!' + Fore.RESET)
+    for color in all_colors:
+        click.echo(click.style('I am colored %s' % color, fg=color))
+    for color in all_colors:
+        click.echo(click.style('I am colored %s and bold' % color,
+                               fg=color, bold=True))
+    for color in all_colors:
+        click.echo(click.style('I am reverse colored %s' % color, fg=color,
+                               reverse=True))
+
+    click.echo(click.style('I am blinking', blink=True))
+    click.echo(click.style('I am underlined', underline=True))

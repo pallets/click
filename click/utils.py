@@ -244,17 +244,15 @@ def echo(message=None, file=None, nl=True):
             binary_file.flush()
             return
 
-    # If we have colorama support we wrap the stream to handle colors
-    # for us.  In case colorama is not supported and our output stream
-    # is not a terminal, we strip the ansi codes ourselves.  We also
-    # do not do the stripping if we're dealing with true bytes (this will
-    # only ever be reached on python 2 where is_bytes is true for buffers
-    # and bytearrays but not for regular strings).
+    # ANSI style support.  If there is no message or we are dealing with
+    # bytes nothing is happening.  If we are connected to a file we want
+    # to strip colors.  If we have support for wrapping streams (windows
+    # through colorama) we want to do that.
     if message and not is_bytes(message):
-        if auto_wrap_for_ansi is not None:
-            file = auto_wrap_for_ansi(file)
-        elif not isatty(file):
+        if not isatty(file):
             message = strip_ansi(message)
+        elif auto_wrap_for_ansi is not None:
+            file = auto_wrap_for_ansi(file)
 
     if message:
         file.write(message)

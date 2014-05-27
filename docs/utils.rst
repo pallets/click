@@ -38,10 +38,10 @@ ANSI Colors
 
 .. versionadded:: 2.0
 
-Starting with click 2.0 the :func:`echo` function gained a bit of extra
-functionality to deal with ANSI colors.  This functionality is only
-available if `colorama`_ is installed.  If it is installed then ANSI codes
-are intelligently handled.
+Starting with click 2.0 the :func:`echo` function gained extra
+functionality to deal with ANSI colors and styles.  Note that on Windows
+this functionality is only available if `colorama`_ is installed.  If it
+is installed then ANSI codes are intelligently handled.
 
 Primarily this means that:
 
@@ -52,21 +52,20 @@ Primarily this means that:
     that colors will work on Windows the same way they do on other
     operating systems.
 
-Click will automatically detect when `colorama` is available and use it.
-You do not have to call ``colorama.init()``.  In fact, it's strongly
-recommended you not doing that as colorama will change the default output
-streams which is not a good idea.
+Note for colorama support: click will automatically detect when `colorama`
+is available and use it.  Do *not* call ``colorama.init()``!
 
 To install colorama run this command::
 
     $ pip install colorama
 
-Example that prints green text::
+For styling a string the :func:`style` function can be used::
 
     import click
-    from colorama import Fore
 
-    click.echo(Fore.GREEN + 'Hello World!' + Fore.RESET)
+    click.echo(click.style('Hello World!', fg='green'))
+    click.echo(click.style('Some more text', bg='blue', fg='white'))
+    click.echo(click.style('ATTENTION', blink=True))
 
 
 .. _colorama: https://pypi.python.org/pypi/colorama

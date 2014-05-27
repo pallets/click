@@ -2,13 +2,18 @@ import textwrap
 from contextlib import contextmanager
 
 from .termui import get_terminal_size
+from ._compat import strip_ansi
+
+
+def term_len(x):
+    return len(strip_ansi(x))
 
 
 def measure_table(rows):
     widths = {}
     for row in rows:
         for idx, col in enumerate(row):
-            widths[idx] = max(widths.get(idx, 0), len(col))
+            widths[idx] = max(widths.get(idx, 0), term_len(col))
     return tuple(y for x, y in sorted(widths.items()))
 
 
@@ -23,7 +28,7 @@ class TextWrapper(textwrap.TextWrapper):
     def _cutdown(self, ucstr, space_left):
         l = 0
         for i in xrange(len(ucstr)):
-            l += len(ucstr[i])
+            l += term_len(ucstr[i])
             if space_left < l:
                 return (ucstr[:i], ucstr[i:])
         return ucstr, ''
@@ -106,9 +111,9 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
             indent = None
         else:
             if indent is None:
-                orig_len = len(line)
+                orig_len = term_len(line)
                 line = line.lstrip()
-                indent = orig_len - len(line)
+                indent = orig_len - term_len(line)
             buf.append(line)
     _flush_par()
 
@@ -165,8 +170,8 @@ class HelpFormatter(object):
         prefix = '%*s%s' % (self.current_indent, prefix, prog)
         self.write(prefix)
 
-        text_width = max(self.width - self.current_indent - len(prefix), 10)
-        indent = ' ' * (len(prefix) + 1)
+        text_width = max(self.width - self.current_indent - term_len(prefix), 10)
+        indent = ' ' * (term_len(prefix) + 1)
         self.write(wrap_text(args, text_width,
                              initial_indent=' ',
                              subsequent_indent=indent))
@@ -215,8 +220,8 @@ class HelpFormatter(object):
             if not second:
                 self.write('\n')
                 continue
-            if len(first) <= first_col - col_spacing:
-                self.write(' ' * (first_col - len(first)))
+            if term_len(first) <= first_col - col_spacing:
+                self.write(' ' * (first_col - term_len(first)))
             else:
                 self.write('\n')
                 self.write(' ' * (first_col + self.current_indent))

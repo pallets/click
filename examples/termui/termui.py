@@ -2,7 +2,6 @@
 import click
 import time
 import random
-from colorama import Fore
 
 try:
     range_type = xrange
@@ -19,7 +18,9 @@ def cli():
 @cli.command()
 def colordemo():
     """Demonstrates ANSI color support."""
-    click.echo(Fore.YELLOW + 'Hello World!' + Fore.RESET)
+    for color in 'red', 'green', 'blue':
+        click.echo(click.style('I am colored %s' % color, fg=color))
+        click.echo(click.style('I am background colored %s' % color, bg=color))
 
 
 @cli.command()
@@ -27,11 +28,7 @@ def pager():
     """Demonstrates using the pager."""
     lines = []
     for x in xrange(200):
-        lines.append('%s%d%s. Hello World!' % (
-            Fore.GREEN,
-            x,
-            Fore.RESET
-        ))
+        lines.append('%s. Hello World!' % click.style(str(x), fg='green'))
     click.echo_via_pager('\n'.join(lines))
 
 
@@ -51,7 +48,7 @@ def progress(count):
                 yield item
 
     with click.progressbar(items, label='Processing user accounts',
-                           fill_char=Fore.GREEN + '#' + Fore.RESET) as bar:
+                           fill_char=click.style('#', fg='green')) as bar:
         for item in bar:
             process_slowly(item)
 
@@ -60,14 +57,14 @@ def progress(count):
             return 'Item #%d' % item
 
     with click.progressbar(filter(items), label='Committing transaction',
-                           fill_char=Fore.YELLOW + '#' + Fore.RESET,
+                           fill_char=click.style('#', fg='yellow'),
                            item_show_func=show_item) as bar:
         for item in bar:
             process_slowly(item)
 
     with click.progressbar(length=count, label='Counting',
                            bar_template='%(label)s  %(bar)s | %(info)s',
-                           fill_char=Fore.BLUE + u'█' + Fore.RESET,
+                           fill_char=click.style(u'█', fg='cyan'),
                            empty_char=' ') as bar:
         for item in bar:
             process_slowly(item)

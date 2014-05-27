@@ -441,29 +441,34 @@ class _AtomicFile(object):
 
 
 auto_wrap_for_ansi = None
+colorama = None
 
 
-try:
-    import colorama
-except ImportError:
-    colorama = None
-else:
-    _ansi_stream_wrappers = WeakKeyDictionary()
+# If we're on windows we provide transparent integration through
+# colorama.  This will make ansi colors through the echo function
+# work automatically.
+if sys.platform.startswith('win'):
+    try:
+        import colorama
+    except ImportError:
+        pass
+    else:
+        _ansi_stream_wrappers = WeakKeyDictionary()
 
-    def auto_wrap_for_ansi(stream):
-        try:
-            cached = _ansi_stream_wrappers.get(stream)
-        except Exception:
-            cached = None
-        if cached is not None:
-            return cached
-        strip = not isatty(stream)
-        rv = colorama.AnsiToWin32(stream, strip=strip).stream
-        try:
-            _ansi_stream_wrappers[stream] = rv
-        except Exception:
-            pass
-        return rv
+        def auto_wrap_for_ansi(stream):
+            try:
+                cached = _ansi_stream_wrappers.get(stream)
+            except Exception:
+                cached = None
+            if cached is not None:
+                return cached
+            strip = not isatty(stream)
+            rv = colorama.AnsiToWin32(stream, strip=strip).stream
+            try:
+                _ansi_stream_wrappers[stream] = rv
+            except Exception:
+                pass
+            return rv
 
 
 def strip_ansi(value):
