@@ -365,3 +365,46 @@ class Editor(object):
             return rv.decode('utf-8-sig').replace('\r\n', '\n')
         finally:
             os.unlink(name)
+
+
+def open_url(url, wait=False, locate=False):
+    import subprocess
+
+    def _unquote_file(url):
+        try:
+            import urllib
+        except ImportError:
+            import urllib
+        if url.startswith('file://'):
+            url = urllib.unquote(url[7:])
+        return url
+
+    if sys.platform == 'darwin':
+        args = ['open']
+        if wait:
+            args.append('-W')
+        if locate:
+            args.append('-R')
+        args.append(_unquote_file(url))
+        return subprocess.Popen(args).wait()
+    elif sys.platform.startswith('win'):
+        if locate:
+            url = _unquote_file(url)
+            args = ['explorer', '/select,"%s"' % _unquote_file(url)]
+        else:
+            args = ['start']
+            if wait:
+                args.append('/WAIT')
+        args.append(url)
+        return subprocess.Popen(args).wait()
+    try:
+        if locate:
+            url = os.path.dirname(_unquote_file(url)) or '.'
+        else:
+            url = _unquote_file(url)
+        c = subprocess.Popen(['xdg-open', url])
+        if wait:
+            return c.wait()
+        return 0
+    except OSError:
+        return 1

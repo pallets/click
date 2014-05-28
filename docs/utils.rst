@@ -123,6 +123,23 @@ Example usage::
     click.edit(filename='/etc/passwd')
 
 
+Launching Applications
+----------------------
+
+.. versionadded:: 2.0
+
+Click supports launching applications through :func:`launch`.  This can be
+used to open the default application assocated with a URL or file type.
+This for instance can be used to both launch web browsers as well as
+picture viewers etc.  In addition to that it can also launch the file
+manager and automatically select the provided file.
+
+Example usage::
+
+    click.open('http://click.pocoo.org/')
+    click.open('/my/downloaded/file.txt', locate=True)
+
+
 Printing Filenames
 ------------------
 

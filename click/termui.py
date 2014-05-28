@@ -383,14 +383,6 @@ def edit(text=None, editor=None, env=None, require_save=True,
 
     If the editor cannot be opened a :exc:`UsageError` is raised.
 
-    Example usage::
-
-        def get_commit_message():
-            MARKER = '# Everything below is ignored\n'
-            message = click.edit('\n\n' + MARKER)
-            if message is not None:
-                return message.split(MARKER, 1)[0].rstrip('\n')
-
     Note for Windows: to simplify cross platform usage the newlines are
     automatically converted from posix to windows and reverse.  As such the
     message here will have ``\n`` as newline markers.
@@ -414,3 +406,29 @@ def edit(text=None, editor=None, env=None, require_save=True,
     if filename is None:
         return editor.edit(text)
     editor.edit_file(filename)
+
+
+def launch(url, wait=False, locate=False):
+    """This function launches the given URL (or filename) in the default
+    viewer application for this file type.  If this is an executable it
+    might launch the executable in a new session.  The return value is
+    the exit code of the launched application.  Usually ``0`` indicates
+    success.
+
+    Examples::
+
+        click.open('http://click.pocoo.org/')
+        click.open('/my/downloaded/file', locate=True)
+
+    .. versionadded:: 2.0
+
+    :param url: url or filename of the thing to launch.
+    :param wait: waits for the program to stop.
+    :param locate: if this is set to `True` then instead of launching the
+                   application associated with the URL it will attempt to
+                   launch a file manager with the file located.  This
+                   might have weird effects if the url does not point to
+                   the filesystem.
+    """
+    from _termui_impl import open_url
+    return open_url(url, wait=wait, locate=locate)

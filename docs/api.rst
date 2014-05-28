@@ -54,6 +54,8 @@ Utilities
 
 .. autofunction:: edit
 
+.. autofunction:: launch
+
 .. autofunction:: format_filename
 
 .. autofunction:: get_terminal_size
