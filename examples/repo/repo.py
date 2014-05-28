@@ -107,7 +107,7 @@ def setuser(repo, username, email, password):
 @click.option('--message', '-m', multiple=True,
               help='The commit message.  If provided multiple times each '
               'argument gets converted into a new line.')
-@click.argument('files', nargs=-1)
+@click.argument('files', nargs=-1, type=click.Path())
 @pass_repo
 def commit(repo, files, message):
     """Commits outstanding changes.

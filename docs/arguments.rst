@@ -58,6 +58,12 @@ And what it looks like:
 
     invoke(copy, args=['foo.txt', 'bar.txt', 'my_folder'])
 
+Note that this is not how you would write this application.  The reason
+for this is that in this particular example the arguments are defined as
+strings.  File names however are not strings!  They might be (on certain
+operating systems) but not necessarily on others.  For better ways see the
+next sections.
+
 .. admonition:: Note on Non-Empty Variadic Arguments
 
    If you come from ``argparse`` you might be missing support for setting
@@ -106,6 +112,42 @@ And what it does:
         invoke(inout, args=['-', 'hello.txt'], input=['hello'],
                terminate_input=True)
         invoke(inout, args=['hello.txt', '-'])
+
+File Path Arguments
+-------------------
+
+In the previous example the files were opened immediately.  But what if
+we just want the filename?  The naive way is to use the default string
+argument type.  However remember that click is unicode based so the string
+will be a unicode value always.  Filenames unfortunately however can be
+unicode or bytes depending on which operating system you're on.  As such
+the type is insufficient.
+
+Instead you should be using the :class:`Path` type which handles this
+complexity for you.  Not only will it return either bytes or unicode
+depending on what makes more sense, but it will also be able to do some
+basic checks for you such as existence checks.
+
+Example:
+
+.. click:example::
+
+    @click.command()
+    @click.argument('f', type=click.Path(exists=True))
+    def touch(f):
+        click.echo(click.format_filename(f))
+
+And what it does:
+
+.. click:run::
+
+    with isolated_filesystem():
+        with open('hello.txt', 'w') as f:
+            f.write('Hello World!\n')
+        invoke(touch, args=['hello.txt'])
+        println()
+        invoke(touch, args=['missing.txt'])
+
 
 File Opening Safety
 -------------------
