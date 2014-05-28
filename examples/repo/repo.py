@@ -104,7 +104,7 @@ def setuser(repo, username, email, password):
 
 
 @cli.command()
-@click.option('--message', '-m', required=True, multiple=True,
+@click.option('--message', '-m', multiple=True,
               help='The commit message.  If provided multiple times each '
               'argument gets converted into a new line.')
 @click.argument('files', nargs=-1)
@@ -118,8 +118,23 @@ def commit(repo, files, message):
     If a list of files is omitted, all changes reported by "repo status"
     will be committed.
     """
+    if not message:
+        marker = '# Files to be committed:'
+        hint = ['', '', marker, '#']
+        for file in files:
+            hint.append('#   U %s' % file)
+        message = click.edit('\n'.join(hint))
+        if message is None:
+            click.echo('Aborted!')
+            return
+        msg = message.split(marker)[0].rstrip()
+        if not msg:
+            click.echo('Aborted! Empty commit message')
+            return
+    else:
+        msg = '\n'.join(message)
     click.echo('Files to be committed: %s' % (files,))
-    click.echo('Commit message:\n' + '\n'.join(message))
+    click.echo('Commit message:\n' + msg)
 
 
 @cli.command(short_help='Copies files.')

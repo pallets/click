@@ -127,13 +127,22 @@ def test_nargs_envvar(runner):
 
 def test_empty_nargs(runner):
     @click.command()
-    @click.option('--arg', nargs=-1)
+    @click.argument('arg', nargs=-1)
     def cmd(arg):
         click.echo('arg:' + '|'.join(arg))
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 0
     assert result.output == 'arg:\n'
+
+    @click.command()
+    @click.argument('arg', nargs=-1, required=True)
+    def cmd2(arg):
+        click.echo('arg:' + '|'.join(arg))
+
+    result = runner.invoke(cmd2, [])
+    assert result.exit_code == 2
+    assert 'Missing argument "arg"' in result.output
 
 
 def test_eat_options(runner):

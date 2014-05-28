@@ -1168,7 +1168,9 @@ class Argument(Parameter):
     """
     param_type_name = 'argument'
 
-    def __init__(self, param_decls, required=True, **attrs):
+    def __init__(self, param_decls, required=None, **attrs):
+        if required is None:
+            required = attrs.get('nargs', 0) > 0
         Parameter.__init__(self, param_decls, required=required, **attrs)
 
     def make_metavar(self):
