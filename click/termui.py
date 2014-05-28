@@ -57,7 +57,10 @@ def prompt(text, default=None, hide_input=False,
     def prompt_func(text):
         f = hide_input and hidden_prompt_func or visible_prompt_func
         try:
-            return f(text)
+            # Write the prompt separately so that we get nice
+            # coloring through colorama on windows
+            echo(text, nl=False)
+            return f('')
         except (KeyboardInterrupt, EOFError):
             raise Abort()
 
@@ -110,7 +113,10 @@ def confirm(text, default=False, abort=False, prompt_suffix=': ',
                            default and 'Y/n' or 'y/N')
     while 1:
         try:
-            value = visible_prompt_func(prompt).lower().strip()
+            # Write the prompt separately so that we get nice
+            # coloring through colorama on windows
+            echo(prompt, nl=False)
+            value = visible_prompt_func('').lower().strip()
         except (KeyboardInterrupt, EOFError):
             raise Abort()
         if value in ('y', 'yes'):
