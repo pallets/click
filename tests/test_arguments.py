@@ -145,6 +145,17 @@ def test_empty_nargs(runner):
     assert 'Missing argument "arg"' in result.output
 
 
+def test_implicit_non_required(runner):
+    @click.command()
+    @click.argument('f', default='test')
+    def cli(f):
+        click.echo(f)
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0
+    assert result.output == 'test\n'
+
+
 def test_eat_options(runner):
     @click.command()
     @click.option('-f')

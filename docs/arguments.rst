@@ -63,11 +63,12 @@ And what it looks like:
    If you come from ``argparse`` you might be missing support for setting
    ``nargs`` to ``+`` to indicate that at least one argument is required.
 
-   Support for this is very intentionally not included as we believe
-   scripts should gracefully degrade into becoming noops if a variadic
-   argument is empty.  The reason for this is that very often scripts are
-   invoked with wildcard inputs from the command line and they should not
-   error out if the wildcard is empty.
+   This is supported by setting ``required=True``.  However this should
+   not be used if you can avoid it as we believe scripts should gracefully
+   degrade into becoming noops if a variadic argument is empty.  The
+   reason for this is that very often scripts are invoked with wildcard
+   inputs from the command line and they should not error out if the
+   wildcard is empty.
 
 .. _file-args:
 

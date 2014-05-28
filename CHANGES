@@ -29,6 +29,7 @@ Version 2.0
 - Added an :func:`launch` function that launches browsers and applications.
 - nargs of -1 for arguments can now be forced to be a single item through
   the required flag.  It defaults to not required.
+- setting a default for arguments now implicitly makes it non required.
 
 Version 1.1
 -----------

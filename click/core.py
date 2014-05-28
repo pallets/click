@@ -1170,7 +1170,10 @@ class Argument(Parameter):
 
     def __init__(self, param_decls, required=None, **attrs):
         if required is None:
-            required = attrs.get('nargs', 0) > 0
+            if attrs.get('default') is not None:
+                required = False
+            else:
+                required = attrs.get('nargs', 0) > 0
         Parameter.__init__(self, param_decls, required=required, **attrs)
 
     def make_metavar(self):
