@@ -25,6 +25,7 @@ Version 2.0
   which will warn but still execute the script.
 - Added :func:`style`, :func:`unstyle` and :func:`secho` for ANSI
   styles.
+- Added an :func:`edit` function that invokes the default editor.
 
 Version 1.1
 -----------

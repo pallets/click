@@ -52,6 +52,8 @@ Utilities
 
 .. autofunction:: secho
 
+.. autofunction:: edit
+
 .. autofunction:: format_filename
 
 .. autofunction:: get_terminal_size

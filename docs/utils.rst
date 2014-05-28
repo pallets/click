@@ -93,6 +93,36 @@ clears the entire visible screen in a platform agnostic way:
     click.clear()
 
 
+Launching Editors
+-----------------
+
+.. versionadded:: 2.0
+
+Click supports launching editors automatically through :func:`edit`.  This
+is very useful for asking users for multi-line input.  It will
+automatically open the user's defined editor or fall back to a sensible
+default.  If the user closes the editor without saving the return value
+will be `None` otherwise the entered text.
+
+Example usage::
+
+    import click
+
+    def get_commit_message():
+        MARKER = '# Everything below is ignored\n'
+        message = click.edit('\n\n' + MARKER)
+        if message is not None:
+            return message.split(MARKER, 1)[0].rstrip('\n')
+
+Alternatively the function can also be used to launch editors for files by
+a specific filename.  In that case the return value is always `None`.
+
+Example usage::
+
+    import click
+    click.edit(filename='/etc/passwd')
+
+
 Printing Filenames
 ------------------
 
