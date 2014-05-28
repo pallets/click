@@ -107,7 +107,7 @@ def confirm(text, default=False, abort=False, prompt_suffix=': ',
     :param show_default: shows or hides the default value in the prompt.
     """
     prompt = _build_prompt(text, prompt_suffix, show_default,
-                           default and 'Yn' or 'yN')
+                           default and 'Y/n' or 'y/N')
     while 1:
         try:
             value = visible_prompt_func(prompt).lower().strip()

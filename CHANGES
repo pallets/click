@@ -30,6 +30,7 @@ Version 2.0
 - nargs of -1 for arguments can now be forced to be a single item through
   the required flag.  It defaults to not required.
 - setting a default for arguments now implicitly makes it non required.
+- changed "yN" / "Yn" to "y/N" and "Y/n" in confirmation prompts.
 
 Version 1.1
 -----------
