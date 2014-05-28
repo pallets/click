@@ -397,6 +397,7 @@ def open_url(url, wait=False, locate=False):
                 args.append('/WAIT')
         args.append(url)
         return subprocess.Popen(args).wait()
+
     try:
         if locate:
             url = os.path.dirname(_unquote_file(url)) or '.'
@@ -407,4 +408,8 @@ def open_url(url, wait=False, locate=False):
             return c.wait()
         return 0
     except OSError:
+        if url.startswith(('http://', 'https://')) and not locate and not wait:
+            import webbrowser
+            webbrowser.open(url)
+            return 0
         return 1

@@ -71,6 +71,35 @@ def progress(count):
 
 
 @cli.command()
+@click.argument('url')
+def open(url):
+    """Opens a file or URL In the default application."""
+    click.launch(url)
+
+
+@cli.command()
+@click.argument('url')
+def locate(url):
+    """Opens a file or URL In the default application."""
+    click.launch(url, locate=True)
+
+
+@cli.command()
+def edit():
+    """Opens an editor with some text in it."""
+    MARKER = '# Everything below is ignored\n'
+    message = click.edit('\n\n' + MARKER)
+    if message is not None:
+        msg = message.split(MARKER, 1)[0].rstrip('\n')
+        if not msg:
+            click.echo('Empty message!')
+        else:
+            click.echo('Message:\n' + msg)
+    else:
+        click.echo('You did not enter anything!')
+
+
+@cli.command()
 def clear():
     """Clears the entire screen."""
     click.clear()
