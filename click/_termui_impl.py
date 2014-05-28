@@ -334,7 +334,8 @@ class Editor(object):
     def edit(self, text):
         import tempfile
 
-        if not text.endswith('\n'):
+        text = text or ''
+        if text and not text.endswith('\n'):
             text += '\n'
 
         fd, name = tempfile.mkstemp(prefix='editor-', suffix=self.extension)
