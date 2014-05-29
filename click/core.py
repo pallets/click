@@ -318,7 +318,7 @@ class BaseCommand(object):
     functionality but it can act as the direct subclass of alternative
     parsing methods that do not depend on the click parser.
 
-    For instance this can be used to bridge Click and other systems like
+    For instance this can be used to bridge click and other systems like
     argparse or docopt.
 
     Because base commands do not implement a lot of the API that other
@@ -793,7 +793,7 @@ class Parameter(object):
 
     .. versionchanged:: 2.0
        Changed signature for parameter callback to also be passed the
-       parameter.  In Click 2.0 the old callback format will still work
+       parameter.  In click 2.0 the old callback format will still work
        but it will raise a warning to give you change to migrate the
        code easier.
 
@@ -809,7 +809,7 @@ class Parameter(object):
                     without any arguments.
     :param callback: a callback that should be executed after the parameter
                      was matched.  This is called as ``fn(ctx, param,
-                     value)`` and needs to return the value.  Before Click
+                     value)`` and needs to return the value.  Before click
                      2.0 the signature was ``(ctx, value)``.
     :param nargs: the number of arguments to match.  If not ``1`` the return
                   value is a tuple instead of single value.

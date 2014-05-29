@@ -400,7 +400,7 @@ def edit(text=None, editor=None, env=None, require_save=True,
     :param require_save: if this is true, then not saving in the editor
                          will make the return value become `None`.
     :param extension: the extension to tell the editor about.  This defaults
-                      to utf-8 but changing this might change syntax
+                      to `.txt` but changing this might change syntax
                       highlighting.
     :param filename: if provided it will edit this file instead of the
                      provided text contents.  It will not use a temporary

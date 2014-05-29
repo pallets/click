@@ -327,7 +327,7 @@ What it looks like:
 
 .. admonition:: Callback Signature Changes
 
-    In Click 2.0 the signature for callbacks changed.  For more
+    In click 2.0 the signature for callbacks changed.  For more
     information about these changes see :ref:`upgrade-to-2.0`.
 
 Yes Parameters
@@ -370,7 +370,7 @@ replaced with the :func:`confirmation_option` decorator:
 
 .. admonition:: Callback Signature Changes
 
-    In Click 2.0 the signature for callbacks changed.  For more
+    In click 2.0 the signature for callbacks changed.  For more
     information about these changes see :ref:`upgrade-to-2.0`.
 
 Values from Environment Variables
@@ -545,8 +545,8 @@ If you want to apply custom validation logic you can do this in the
 parameter callbacks.  These callbacks can both modify values as well as
 raise errors if the validation does not work.
 
-In Click 1.0 you can only raise the :exc:`UsageError` but starting with
-Click 2.0 you can also raie the :exc:`BadParameter` error which has the
+In click 1.0 you can only raise the :exc:`UsageError` but starting with
+click 2.0 you can also raie the :exc:`BadParameter` error which has the
 added advantage that it will automatically format the error message to
 also contain the parameter name.
 
