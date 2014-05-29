@@ -71,6 +71,7 @@ of the library.
    advanced
    testing
    utils
+   bashcomplete
    python3
 
 API Reference

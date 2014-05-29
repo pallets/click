@@ -1,3 +1,5 @@
+.. _setuptools-integration:
+
 Usage with Setuptools
 =====================
 

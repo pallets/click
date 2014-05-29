@@ -15,6 +15,7 @@
     generated and optparse in the stdlib uses gettext for no good reason
     and might cause us issues.
 """
+import re
 from .exceptions import UsageError
 from .utils import unpack_args
 
@@ -26,6 +27,24 @@ def split_opt(opt):
     if opt[1:2] == first:
         return opt[:2], opt[2:]
     return first, opt[1:]
+
+
+def split_arg_string(string):
+    """Given an argument string this attempts to split it into small parts."""
+    rv = []
+    for match in re.finditer(r"('([^'\\]*(?:\\.[^'\\]*)*)'"
+                             r'|"([^"\\]*(?:\\.[^"\\]*)*)"'
+                             r'|\S+)\s*', string, re.S):
+        arg = match.group().strip()
+        if arg[:1] == arg[-1:] and arg[:1] in '"\'':
+            arg = arg[1:-1].encode('ascii', 'backslashreplace') \
+                .decode('unicode-escape')
+        try:
+            arg = type(string)(arg)
+        except UnicodeError:
+            pass
+        rv.append(arg)
+    return rv
 
 
 class Option(object):
@@ -163,8 +182,12 @@ class OptionParser(object):
         will be memorized multiple times as well.
         """
         state = ParsingState(args)
-        self._process_args_for_options(state)
-        self._process_args_for_args(state)
+        try:
+            self._process_args_for_options(state)
+            self._process_args_for_args(state)
+        except UsageError:
+            if not self.ctx.resilient_parsing:
+                raise
         return state.opts, state.largs, state.order
 
     def _process_args_for_args(self, state):

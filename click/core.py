@@ -16,6 +16,19 @@ from ._compat import PY2, isidentifier
 _missing = object()
 
 
+def _bashcomplete(cmd, prog_name, complete_var=None):
+    """Internal handler for the bash completion support."""
+    if complete_var is None:
+        complete_var = '_%s_COMPLETE' % (prog_name.replace('-', '_')).upper()
+    complete_instr = os.environ.get(complete_var)
+    if not complete_instr:
+        return
+
+    from click.bashcomplete import bashcomplete
+    if bashcomplete(cmd, prog_name, complete_var, complete_instr):
+        sys.exit(1)
+
+
 def batch(iterable, batch_size):
     return list(zip(*repeat(iter(iterable), batch_size)))
 
@@ -99,11 +112,15 @@ class Context(object):
                            inherit from parent context.  If no context
                            defines the terminal width then auto
                            detection will be applied.
+    :param resilient_parsing: if this flag is enabled then the click will
+                              parse without any interactivity or callback
+                              invocation.  This is useful for implementing
+                              things such as completion support.
     """
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
                  auto_envvar_prefix=None, default_map=None,
-                 terminal_width=None):
+                 terminal_width=None, resilient_parsing=False):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -132,6 +149,10 @@ class Context(object):
             terminal_width = parent.terminal_width
         #: The width of the terminal (None is autodetection).
         self.terminal_width = terminal_width
+
+        #: Indicates if resilient parsing is enabled.  In that case click
+        #: will do it's best to not cause any failures.
+        self.resilient_parsing = resilient_parsing
 
         # If there is no envvar prefix yet, but the parent has one and
         # the command on this level has a name, we can expand the envvar
@@ -358,7 +379,7 @@ class BaseCommand(object):
         """
         raise NotImplementedError('Base commands are not invokable by default')
 
-    def main(self, args=None, prog_name=None, **extra):
+    def main(self, args=None, prog_name=None, complete_var=None, **extra):
         """This is the way to invoke a script with all the bells and
         whistles as a command line application.  This will always terminate
         the application after a call.  If this is not wanted, ``SystemExit``
@@ -372,6 +393,10 @@ class BaseCommand(object):
         :param prog_name: the program name that should be used.  By default
                           the program name is constructed by taking the file
                           name from ``sys.argv[0]``.
+        :param complete_var: the environment variable that controls the
+                             bash completion support.  The default is
+                             ``"_<prog_name>_COMPLETE"`` with prog name in
+                             uppercase.
         :param extra: extra keyword arguments are forwarded to the context
                       constructor.  See :class:`Context` for more information.
         """
@@ -399,6 +424,12 @@ class BaseCommand(object):
         if prog_name is None:
             prog_name = make_str(os.path.basename(
                 sys.argv and sys.argv[0] or __file__))
+
+        # Hook for the bash completion.  This only activates if the bash
+        # completion is actually enabled, otherwise this is quite a fast
+        # noop.
+        _bashcomplete(self, prog_name, complete_var)
+
         try:
             try:
                 with self.make_context(prog_name, args, **extra) as ctx:
@@ -544,7 +575,7 @@ class Command(BaseCommand):
         for param in iter_params_for_processing(param_order, self.params):
             value, args = param.handle_parse_result(ctx, opts, args)
 
-        if args and not self.allow_extra_args:
+        if args and not self.allow_extra_args and not ctx.resilient_parsing:
             ctx.fail('Got unexpected extra argument%s (%s)'
                      % (len(args) != 1 and 's' or '',
                         ' '.join(map(make_str, args))))
@@ -621,7 +652,7 @@ class MultiCommand(Command):
                 formatter.write_dl(rows)
 
     def parse_args(self, ctx, args):
-        if not args and self.no_args_is_help:
+        if not args and self.no_args_is_help and not ctx.resilient_parsing:
             echo(ctx.get_help())
             ctx.exit()
         return Command.parse_args(self, ctx, args)
@@ -894,8 +925,14 @@ class Parameter(object):
     def handle_parse_result(self, ctx, opts, args):
         with augment_usage_errors(ctx, param=self):
             value = self.consume_value(ctx, opts)
-            value = self.full_process_value(ctx, value)
-            if self.callback is not None:
+            try:
+                value = self.full_process_value(ctx, value)
+            except Exception:
+                if not ctx.resilient_parsing:
+                    raise
+                value = None
+            if self.callback is not None \
+               and not ctx.resilient_parsing:
                 value = invoke_param_callback(
                     self.callback, ctx, self, value)
 
@@ -1154,7 +1191,8 @@ class Option(Parameter):
         return rv
 
     def full_process_value(self, ctx, value):
-        if value is None and self.prompt is not None:
+        if value is None and self.prompt is not None \
+           and not ctx.resilient_parsing:
             return self.prompt_for_value(ctx)
         return Parameter.full_process_value(self, ctx, value)
 

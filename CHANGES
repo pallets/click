@@ -31,6 +31,7 @@ Version 2.0
   the required flag.  It defaults to not required.
 - setting a default for arguments now implicitly makes it non required.
 - changed "yN" / "Yn" to "y/N" and "Y/n" in confirmation prompts.
+- added basic support for bash completion.
 
 Version 1.1
 -----------
