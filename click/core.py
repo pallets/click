@@ -113,7 +113,7 @@ class Context(object):
                            inherit from parent context.  If no context
                            defines the terminal width then auto
                            detection will be applied.
-    :param resilient_parsing: if this flag is enabled then the click will
+    :param resilient_parsing: if this flag is enabled then click will
                               parse without any interactivity or callback
                               invocation.  This is useful for implementing
                               things such as completion support.
@@ -152,7 +152,7 @@ class Context(object):
         self.terminal_width = terminal_width
 
         #: Indicates if resilient parsing is enabled.  In that case click
-        #: will do it's best to not cause any failures.
+        #: will do its best to not cause any failures.
         self.resilient_parsing = resilient_parsing
 
         # If there is no envvar prefix yet, but the parent has one and

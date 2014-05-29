@@ -4,7 +4,7 @@ Bash Complete
 .. versionadded:: 2.0
 
 Starting with click 2.0 there is built-in support for bash completion for
-any Click script.  There are certain restrictions on when this completion
+any click script.  There are certain restrictions on when this completion
 is available but for the most part it should just work.
 
 Limitations
@@ -42,7 +42,7 @@ with dashes replaced by underscores.
 
 So if your tool is called ``foo-bar`` then the magic variable is called
 ``_FOO_BAR_COMPLETE``.  By exporting it with the ``source`` value it will
-spit out the activation script which can be trivally be activated.
+spit out the activation script which can be trivally activated.
 
 For instance to enable bash completion for your ``foo-bar`` script, this
 is what you would need to put into your ``.bashrc``::
