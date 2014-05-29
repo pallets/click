@@ -45,7 +45,7 @@ def ship_shoot(ship, x, y):
 
 
 @cli.group('mine')
-def mine(ship):
+def mine():
     """Manages mines."""
 
 
