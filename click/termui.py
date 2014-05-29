@@ -2,8 +2,8 @@ import os
 import sys
 import struct
 
-from ._compat import raw_input, PY2, text_type, string_types, \
-     get_best_encoding, colorama, isatty, strip_ansi
+from ._compat import raw_input, text_type, string_types, \
+     colorama, isatty, strip_ansi
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type
@@ -180,11 +180,6 @@ def echo_via_pager(text):
     """
     if not isinstance(text, string_types):
         text = text_type(text)
-
-    if PY2 and isinstance(text, text_type):
-        encoding = get_best_encoding(sys.stdout)
-        text = text.encode(encoding, 'replace')
-
     from ._termui_impl import pager
     return pager(text + '\n')
 
