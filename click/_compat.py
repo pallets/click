@@ -50,7 +50,10 @@ class _NonClosingTextIOWrapper(io.TextIOWrapper):
     if PY2:
         def write(self, x):
             if isinstance(x, str) or is_bytes(x):
-                self.flush()
+                try:
+                    self.flush()
+                except Exception:
+                    pass
                 return self.buffer.write(str(x))
             return io.TextIOWrapper.write(self, x)
 
