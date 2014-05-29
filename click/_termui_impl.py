@@ -387,7 +387,11 @@ def open_url(url, wait=False, locate=False):
         if locate:
             args.append('-R')
         args.append(_unquote_file(url))
-        return subprocess.Popen(args).wait()
+        null = open('/dev/null', 'w')
+        try:
+            return subprocess.Popen(args, stderr=null).wait()
+        finally:
+            null.close()
     elif sys.platform.startswith('win'):
         if locate:
             url = _unquote_file(url)
