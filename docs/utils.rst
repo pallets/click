@@ -124,6 +124,13 @@ Example::
     else:
         click.echo('Invalid input :(')
 
+Note that this reads raw input which means that things like arrow keys
+will show up in the platform's native escape format.  The only characters
+translated are ``^C`` and ``^D`` which are converted into keyboard
+interrupt and end of file exceptions.  This is done because otherwise it's
+too easy to forget about that and to create scripts that cannot be
+properly exited.
+
 
 Launching Editors
 -----------------
