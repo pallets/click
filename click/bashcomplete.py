@@ -60,7 +60,7 @@ def do_complete(cli, prog_name):
 
     for item in choices:
         if item.startswith(incomplete):
-            print item
+            echo(item)
 
     return True
 
