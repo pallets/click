@@ -931,10 +931,13 @@ class Parameter(object):
                 if not ctx.resilient_parsing:
                     raise
                 value = None
-            if self.callback is not None \
-               and not ctx.resilient_parsing:
-                value = invoke_param_callback(
-                    self.callback, ctx, self, value)
+            if self.callback is not None:
+                try:
+                    value = invoke_param_callback(
+                        self.callback, ctx, self, value)
+                except Exception:
+                    if not ctx.resilient_parsing:
+                        raise
 
         if self.expose_value:
             ctx.params[self.name] = value
