@@ -84,6 +84,11 @@ class _FixupStream(object):
         f = getattr(self._stream, 'read1', None)
         if f is not None:
             return f(size)
+        # Only python 2 we dispatch to readline instead of read as we
+        # do not want cause problems with the different implementation
+        # of line buffering.
+        if PY2:
+            return self._stream.readline(size)
         return self._stream.read(size)
 
     def readable(self):
