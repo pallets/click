@@ -38,11 +38,12 @@ def invoke_param_callback(callback, ctx, param, value):
     args = getattr(code, 'co_argcount', 3)
 
     if args < 3:
-        from warnings import warn
-        warn(Warning('Invoked legacy parameter callback "%s".  The new '
-                     'signature for such callbacks starting with '
-                     'Click 2.0 is (ctx, param, value).'
-                     % callback), stacklevel=3)
+        # This will become a warning in Click 3.0
+        ##from warnings import warn
+        ##warn(Warning('Invoked legacy parameter callback "%s".  The new '
+        ##             'signature for such callbacks starting with '
+        ##             'Click 2.0 is (ctx, param, value).'
+        ##             % callback), stacklevel=3)
         return callback(ctx, value)
     return callback(ctx, param, value)
 
