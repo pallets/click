@@ -172,10 +172,19 @@ class CliRunner(object):
             sys.stdout.flush()
             return input.readline().rstrip('\r\n')
 
+        def _getchar(echo):
+            char = sys.stdin.read(1)
+            if echo:
+                sys.stdout.write(char)
+                sys.stdout.flush()
+            return char
+
         old_visible_prompt_func = click.termui.visible_prompt_func
         old_hidden_prompt_func = click.termui.hidden_prompt_func
+        old__getchar_func = click.termui._getchar
         click.termui.visible_prompt_func = visible_input
         click.termui.hidden_prompt_func = hidden_input
+        click.termui._getchar = _getchar
 
         old_env = {}
         try:
@@ -203,6 +212,7 @@ class CliRunner(object):
             sys.stdin = old_stdin
             click.termui.visible_prompt_func = old_visible_prompt_func
             click.termui.hidden_prompt_func = old_hidden_prompt_func
+            click.termui._getchar = old__getchar_func
 
     def invoke(self, cli, args=None, input=None, env=None, **extra):
         """Invokes a command in an isolated environment.  The arguments are

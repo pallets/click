@@ -14,7 +14,7 @@ import sys
 import time
 import math
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
-     open_stream, strip_ansi
+     open_stream, strip_ansi, get_best_encoding
 from .utils import echo
 from .exceptions import ClickException
 
@@ -418,3 +418,54 @@ def open_url(url, wait=False, locate=False):
             webbrowser.open(url)
             return 0
         return 1
+
+
+def _translate_ch_to_exc(ch):
+    if ch == '\x03':
+        raise KeyboardInterrupt()
+    if ch == '\x04':
+        raise EOFError()
+
+
+if sys.platform.startswith('win'):
+    import msvcrt
+
+    def getchar(echo):
+        rv = msvcrt.getch()
+        if echo:
+            msvcrt.putchar(rv)
+        _translate_ch_to_exc(rv)
+        if PY2:
+            enc = getattr(sys.stdin, 'encoding', None)
+            if enc is not None:
+                rv = rv.decode(enc, 'replace')
+            else:
+                rv = rv.decode('cp1252', 'replace')
+        return rv
+else:
+    import tty
+    import termios
+
+    def getchar(echo):
+        if not isatty(sys.stdin):
+            f = open('/dev/tty')
+            fd = f.fileno()
+        else:
+            fd = sys.stdin.fileno()
+            f = None
+        try:
+            old_settings = termios.tcgetattr(fd)
+            try:
+                tty.setraw(fd)
+                ch = os.read(fd, 32)
+                if echo and isatty(sys.stdout):
+                    sys.stdout.write(ch)
+            finally:
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+                sys.stdout.flush()
+                if f is not None:
+                    f.close()
+        except termios.error:
+            pass
+        _translate_ch_to_exc(ch)
+        return ch.decode(get_best_encoding(sys.stdin), 'replace')

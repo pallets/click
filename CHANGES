@@ -32,6 +32,7 @@ Version 2.0
 - setting a default for arguments now implicitly makes it non required.
 - changed "yN" / "Yn" to "y/N" and "Y/n" in confirmation prompts.
 - added basic support for bash completion.
+- added :func:`getchar` to fetch a single character from the terminal.
 
 Version 1.1
 -----------

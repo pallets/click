@@ -433,3 +433,30 @@ def launch(url, wait=False, locate=False):
     """
     from _termui_impl import open_url
     return open_url(url, wait=wait, locate=locate)
+
+
+# If this is provided, getchar() calls into this instead.  This is used
+# for unittesting purposes.
+_getchar = None
+
+
+def getchar(echo=False):
+    """Fetches a single character from the terminal and returns it.  This
+    will always return a unicode character and under certain rare
+    circumstances this might return more than one character.  The
+    situations which more than one character is returned is when for
+    whatever reason multiple characters end up in the terminal buffer or
+    standard in was not actually a terminal.
+
+    Note that this will always read from the terminal, even if something
+    is piped into the standard input.
+
+    .. versionadded:: 2.0
+
+    :param echo: if set to True the character read will also show up on
+                 the terminal.  The default is not not show it.
+    """
+    f = _getchar
+    if f is None:
+        from _termui_impl import getchar as f
+    return f(echo)

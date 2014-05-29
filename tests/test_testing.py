@@ -77,3 +77,14 @@ def test_prompts():
     result = runner.invoke(test, input='wau wau\n')
     assert not result.exception
     assert result.output == 'Foo: \nfoo=wau wau\n'
+
+
+def test_getchar():
+    @click.command()
+    def continue_it():
+        click.echo(click.getchar())
+
+    runner = CliRunner()
+    result = runner.invoke(continue_it, input='y')
+    assert not result.exception
+    assert result.output == 'y\n'

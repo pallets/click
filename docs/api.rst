@@ -56,7 +56,7 @@ Utilities
 
 .. autofunction:: launch
 
-.. autofunction:: format_filename
+.. autofunction:: getchar
 
 .. autofunction:: get_terminal_size
 
@@ -65,6 +65,8 @@ Utilities
 .. autofunction:: get_text_stream
 
 .. autofunction:: get_app_dir
+
+.. autofunction:: format_filename
 
 Commands
 --------

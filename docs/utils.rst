@@ -93,6 +93,38 @@ clears the entire visible screen in a platform agnostic way:
     click.clear()
 
 
+Getting Characters from Terminal
+--------------------------------
+
+.. versionadded:: 2.0
+
+Normally when reading input from the terminal you would use reading from
+standard input.  However this is buffered input and will not show up until
+the line has been terminated.  In certain circumstances you might not want
+to do that and instead read individual characters as they are being
+written.
+
+For this click provides the :func:`getchar` function which reads a single
+character from the terminal buffer and returns it as unicode character.
+
+Note that this function will always read from the terminal, even if stdin
+is instead a pipe.
+
+Example::
+
+    import click
+
+    click.echo('Continue? [yn] ', nl=False)
+    c = click.getchar()
+    click.echo()
+    if c == 'y':
+        click.echo('We will go on')
+    elif c == 'n':
+        click.echo('Abort!')
+    else:
+        click.echo('Invalid input :(')
+
+
 Launching Editors
 -----------------
 
