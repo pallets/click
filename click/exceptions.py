@@ -1,4 +1,5 @@
-from ._compat import PY2, filename_to_ui
+import sys
+from ._compat import PY2, filename_to_ui, get_text_stderr
 from .utils import echo
 
 
@@ -19,6 +20,8 @@ class ClickException(Exception):
         return self.message
 
     def show(self, file=None):
+        if file is None:
+            file = get_text_stderr()
         echo('Error: %s' % self.format_message())
 
 
@@ -37,6 +40,8 @@ class UsageError(ClickException):
         self.ctx = ctx
 
     def show(self, file=None):
+        if file is None:
+            file = get_text_stderr()
         if self.ctx is not None:
             echo(self.ctx.get_usage() + '\n', file=file)
         echo('Error: %s' % self.format_message(), file=file)

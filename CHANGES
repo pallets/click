@@ -33,6 +33,7 @@ Version 2.0
 - changed "yN" / "Yn" to "y/N" and "Y/n" in confirmation prompts.
 - added basic support for bash completion.
 - added :func:`getchar` to fetch a single character from the terminal.
+- errors now go to stderr as intended.
 
 Version 1.1
 -----------
