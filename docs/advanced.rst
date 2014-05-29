@@ -101,23 +101,6 @@ And what it looks like:
 
     invoke(cli, prog_name='cli', args=['dist'])
 
-Showing Long Texts
-------------------
-
-In some situations you might want to show long texts on the terminal and
-let a user scroll through it.  This can be achieved by using the
-:func:`echo_via_pager` function which works similar to the :func:`echo`
-function but always writes to stdout and, if possible, through a pager.
-
-Example:
-
-.. click:example::
-
-    @click.command()
-    def less():
-        click.echo_via_pager('\n'.join('Line %d' % idx
-                                       for idx in range(200)))
-
 
 .. _callback-evaluation-order:
 
