@@ -303,7 +303,7 @@ Here an example for a ``--version`` flag:
 .. click:example::
 
     def print_version(ctx, param, value):
-        if not value:
+        if not value or ctx.resilient_parsing:
             return
         click.echo('Version 1.0')
         ctx.exit()
@@ -316,7 +316,11 @@ Here an example for a ``--version`` flag:
 
 The `expose_value` parameter prevents the now pretty pointless ``version``
 parameter to be passed to the callback.  If that was not specified a
-boolean would be passed to the `hello` script.
+boolean would be passed to the `hello` script.  The `resilient_parsing`
+flag is set on the context if click wants to parse the command line
+without and destructive behavior that would change the execution flow.  In
+this case because we would exit the program, we instead do nothing in that
+case.
 
 What it looks like:
 
