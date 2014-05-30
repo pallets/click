@@ -192,7 +192,7 @@ class ProgressBar(object):
             old_width = self.width
             self.width = 0
             clutter_length = len(strip_ansi(self.format_progress_line()))
-            new_width = get_terminal_size()[0] - clutter_length
+            new_width = max(0, get_terminal_size()[0] - clutter_length)
             if new_width < old_width:
                 self.file.write(BEFORE_BAR)
                 self.file.write(' ' * self.max_width)
@@ -485,4 +485,3 @@ else:
             pass
         _translate_ch_to_exc(ch)
         return ch.decode(get_best_encoding(sys.stdin), 'replace')
-
