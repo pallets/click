@@ -66,6 +66,7 @@ class ProgressBar(object):
             file = _default_text_stdout()
         self.file = file
         self.width = width
+        self.autowidth = width == 0
 
         if length is None:
             length = _length_hint(iterable)
@@ -179,14 +180,29 @@ class ProgressBar(object):
         }).strip()
 
     def render_progress(self):
+        from .termui import get_terminal_size
+
         if self.is_hidden:
             echo(self.label, file=self.file)
             self.file.flush()
             return
 
+        # Update width in case the terminal has been resized
+        if self.autowidth:
+            old_width = self.width
+            self.width = 0
+            clutter_length = len(strip_ansi(self.format_progress_line()))
+            new_width = max(0, get_terminal_size()[0] - clutter_length)
+            if new_width < old_width:
+                self.file.write(BEFORE_BAR)
+                self.file.write(' ' * self.max_width)
+                self.max_width = new_width
+            self.width = new_width
+
         clear_width = self.width
         if self.max_width is not None:
             clear_width = self.max_width
+
         self.file.write(BEFORE_BAR)
         line = self.format_progress_line()
         line_len = len(strip_ansi(line))

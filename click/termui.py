@@ -244,7 +244,8 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                          ``bar`` for the progress bar and ``info`` for the
                          info section.
     :param info_sep: the separator between multiple info items (eta etc.)
-    :param width: the width of the progress bar in characters.
+    :param width: the width of the progress bar in characters, 0 means full
+                  terminal width
     :param file: the file to write to.  If this is not a terminal then
                  only the label is printed.
     """
