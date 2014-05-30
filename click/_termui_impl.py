@@ -187,9 +187,13 @@ class ProgressBar(object):
 
         # Update width in case the terminal has been resized
         if self.autowidth:
-            new_width = get_terminal_size()[0] - 20
-            if new_width < self.width:
-                self.file.write("\n")
+            old_width = self.width
+            self.width = 0
+            clutter_length = len(self.format_progress_line())
+            new_width = get_terminal_size()[0] - clutter_length
+            if new_width < old_width:
+                self.file.write('\r')
+                self.file.write(' ' * self.max_width)
                 self.max_width = new_width
             self.width = new_width
 
