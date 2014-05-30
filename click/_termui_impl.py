@@ -279,7 +279,7 @@ def _tempfilepager(text, cmd):
     """Page through text by invoking a program on a temporary file."""
     import tempfile
     filename = tempfile.mktemp()
-    with open_stream(filename, 'w')[1] as f:
+    with open_stream(filename, 'w')[0] as f:
         f.write(text)
     try:
         os.system(cmd + ' "' + filename + '"')
