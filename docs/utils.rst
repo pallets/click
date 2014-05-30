@@ -122,7 +122,7 @@ to do that and instead read individual characters as they are being
 written.
 
 For this click provides the :func:`getchar` function which reads a single
-character from the terminal buffer and returns it as unicode character.
+character from the terminal buffer and returns it as a unicode character.
 
 Note that this function will always read from the terminal, even if stdin
 is instead a pipe.

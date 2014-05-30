@@ -446,14 +446,14 @@ def getchar(echo=False):
     circumstances this might return more than one character.  The
     situations which more than one character is returned is when for
     whatever reason multiple characters end up in the terminal buffer or
-    standard in was not actually a terminal.
+    standard input was not actually a terminal.
 
     Note that this will always read from the terminal, even if something
     is piped into the standard input.
 
     .. versionadded:: 2.0
 
-    :param echo: if set to True the character read will also show up on
+    :param echo: if set to `True` the character read will also show up on
                  the terminal.  The default is not not show it.
     """
     f = _getchar
