@@ -138,38 +138,8 @@ def get_terminal_size():
     """Returns the current size of the terminal as tuple in the form
     ``(width, height)`` in columns and rows.
     """
-    # If shutil has get_terminal_size() (Python 3.3 and later) use that
-    if sys.version_info >= (3, 3):
-        import shutil
-        shutil_get_terminal_size = getattr(shutil, 'get_terminal_size', None)
-        if shutil_get_terminal_size:
-            sz = shutil_get_terminal_size()
-            return sz.columns, sz.lines
-
-    def ioctl_gwinsz(fd):
-        try:
-            import fcntl
-            import termios
-            cr = struct.unpack(
-                'hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
-        except Exception:
-            return
-        return cr
-
-    cr = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
-    if not cr:
-        try:
-            fd = os.open(os.ctermid(), os.O_RDONLY)
-            try:
-                cr = ioctl_gwinsz(fd)
-            finally:
-                os.close(fd)
-        except Exception:
-            pass
-    if not cr or not cr[0] or not cr[1]:
-        cr = (os.environ.get('LINES', 25),
-              os.environ.get('COLUMNS', 80))
-    return int(cr[1]), int(cr[0])
+    from ._termui_impl import get_terminal_size
+    return get_terminal_size()
 
 
 def echo_via_pager(text):
@@ -188,7 +158,7 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                 show_percent=None, show_pos=False,
                 item_show_func=None, fill_char='#', empty_char='-',
                 bar_template='%(label)s  [%(bar)s]  %(info)s',
-                info_sep='  ', width=36, file=None):
+                info_sep='  ', width=0, file=None):
     """This function creates an iterable context manager that can be used
     to iterate over something while showing a progress bar.  It will
     either iterate over the `iterable` or `length` items (that are counted
@@ -244,7 +214,8 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                          ``bar`` for the progress bar and ``info`` for the
                          info section.
     :param info_sep: the separator between multiple info items (eta etc.)
-    :param width: the width of the progress bar in characters.
+    :param width: the width of the progress bar in characters, 0 means full
+                  terminal width
     :param file: the file to write to.  If this is not a terminal then
                  only the label is printed.
     """

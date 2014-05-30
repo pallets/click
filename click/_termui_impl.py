@@ -66,6 +66,7 @@ class ProgressBar(object):
             file = _default_text_stdout()
         self.file = file
         self.width = width
+        self.autowidth = width == 0
 
         if length is None:
             length = _length_hint(iterable)
@@ -184,9 +185,18 @@ class ProgressBar(object):
             self.file.flush()
             return
 
+        # Update width in case the terminal has been resized
+        if self.autowidth:
+            new_width = get_terminal_size()[0] - 20
+            if new_width < self.width:
+                self.file.write("\n")
+                self.max_width = new_width
+            self.width = new_width
+
         clear_width = self.width
         if self.max_width is not None:
             clear_width = self.max_width
+
         self.file.write(BEFORE_BAR)
         line = self.format_progress_line()
         line_len = len(strip_ansi(line))
@@ -469,3 +479,37 @@ else:
             pass
         _translate_ch_to_exc(ch)
         return ch.decode(get_best_encoding(sys.stdin), 'replace')
+
+def get_terminal_size():
+    # If shutil has get_terminal_size() (Python 3.3 and later) use that
+    if sys.version_info >= (3, 3):
+        import shutil
+        shutil_get_terminal_size = getattr(shutil, 'get_terminal_size', None)
+        if shutil_get_terminal_size:
+            sz = shutil_get_terminal_size()
+            return sz.columns, sz.lines
+
+    def ioctl_gwinsz(fd):
+        try:
+            import fcntl
+            import termios
+            cr = struct.unpack(
+                'hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+        except Exception:
+            return
+        return cr
+
+    cr = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
+    if not cr:
+        try:
+            fd = os.open(os.ctermid(), os.O_RDONLY)
+            try:
+                cr = ioctl_gwinsz(fd)
+            finally:
+                os.close(fd)
+        except Exception:
+            pass
+    if not cr or not cr[0] or not cr[1]:
+        cr = (os.environ.get('LINES', 25),
+              os.environ.get('COLUMNS', 80))
+    return int(cr[1]), int(cr[0])
