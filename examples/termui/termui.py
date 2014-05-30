@@ -69,6 +69,12 @@ def progress(count):
         for item in bar:
             process_slowly(item)
 
+    with click.progressbar(length=count, width=0, show_percent=False,
+                           show_eta=False,
+                           fill_char=click.style('#', fg='magenta')) as bar:
+        for item in bar:
+            process_slowly(item)
+
 
 @cli.command()
 @click.argument('url')

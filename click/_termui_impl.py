@@ -156,7 +156,7 @@ class ProgressBar(object):
             if self.finished:
                 bar = self.fill_char * self.width
             else:
-                bar = list(self.empty_char * self.width)
+                bar = list(self.empty_char * (self.width or 1))
                 if self.time_per_iteration != 0:
                     bar[int((math.cos(self.pos * self.time_per_iteration)
                         / 2.0 + 0.5) * self.width)] = self.fill_char
