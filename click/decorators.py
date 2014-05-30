@@ -224,7 +224,7 @@ def version_option(version=None, *param_decls, **attrs):
         message = attrs.pop('message', '%(prog)s, version %(version)s')
 
         def callback(ctx, param, value):
-            if value or ctx.resilient_parsing:
+            if not value or ctx.resilient_parsing:
                 return
             prog = prog_name
             if prog is None:
