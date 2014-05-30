@@ -3,7 +3,6 @@ import io
 import os
 import sys
 import codecs
-import tempfile
 from weakref import WeakKeyDictionary
 
 
@@ -400,6 +399,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     # as a proxy in the same folder and then using the fdopen
     # functionality to wrap it in a python file.  Then we wrap it in an
     # atomic file that moves the file over on close.
+    import tempfile
     fd, tmp_filename = tempfile.mkstemp(dir=os.path.dirname(filename),
                                         prefix='.__atomic-write')
 
