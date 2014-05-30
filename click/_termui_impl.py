@@ -191,7 +191,7 @@ class ProgressBar(object):
         if self.autowidth:
             old_width = self.width
             self.width = 0
-            clutter_length = len(self.format_progress_line())
+            clutter_length = len(strip_ansi(self.format_progress_line()))
             new_width = get_terminal_size()[0] - clutter_length
             if new_width < old_width:
                 self.file.write(BEFORE_BAR)
