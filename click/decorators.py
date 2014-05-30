@@ -224,7 +224,7 @@ def version_option(version=None, *param_decls, **attrs):
         message = attrs.pop('message', '%(prog)s, version %(version)s')
 
         def callback(ctx, param, value):
-            if not value:
+            if value or ctx.resilient_parsing:
                 return
             prog = prog_name
             if prog is None:
@@ -271,7 +271,7 @@ def help_option(*param_decls, **attrs):
     """
     def decorator(f):
         def callback(ctx, param, value):
-            if value:
+            if value and not ctx.resilient_parsing:
                 echo(ctx.get_help())
                 ctx.exit()
         attrs.setdefault('is_flag', True)
