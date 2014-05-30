@@ -358,7 +358,7 @@ class Editor(object):
                and os.path.getmtime(name) == timestamp:
                 return None
 
-            f = open(name)
+            f = open(name, 'rb')
             try:
                 rv = f.read()
             finally:
