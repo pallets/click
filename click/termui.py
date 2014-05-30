@@ -418,8 +418,8 @@ def launch(url, wait=False, locate=False):
 
     Examples::
 
-        click.open('http://click.pocoo.org/')
-        click.open('/my/downloaded/file', locate=True)
+        click.launch('http://click.pocoo.org/')
+        click.launch('/my/downloaded/file', locate=True)
 
     .. versionadded:: 2.0
 

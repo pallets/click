@@ -192,8 +192,8 @@ manager and automatically select the provided file.
 
 Example usage::
 
-    click.open('http://click.pocoo.org/')
-    click.open('/my/downloaded/file.txt', locate=True)
+    click.launch('http://click.pocoo.org/')
+    click.launch('/my/downloaded/file.txt', locate=True)
 
 
 Printing Filenames
