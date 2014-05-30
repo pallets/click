@@ -431,7 +431,7 @@ def launch(url, wait=False, locate=False):
                    might have weird effects if the url does not point to
                    the filesystem.
     """
-    from _termui_impl import open_url
+    from ._termui_impl import open_url
     return open_url(url, wait=wait, locate=locate)
 
 
@@ -458,5 +458,5 @@ def getchar(echo=False):
     """
     f = _getchar
     if f is None:
-        from _termui_impl import getchar as f
+        from ._termui_impl import getchar as f
     return f(echo)

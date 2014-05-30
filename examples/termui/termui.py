@@ -27,7 +27,7 @@ def colordemo():
 def pager():
     """Demonstrates using the pager."""
     lines = []
-    for x in xrange(200):
+    for x in range_type(200):
         lines.append('%s. Hello World!' % click.style(str(x), fg='green'))
     click.echo_via_pager('\n'.join(lines))
 
