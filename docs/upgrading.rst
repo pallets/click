@@ -12,15 +12,15 @@ Upgrading to 2.0
 ----------------
 
 Click 2.0 has one breaking change which is the signature for parameter
-callbacks.  Before 2.0 the callback was invoked with ``(ctx, value)``
+callbacks.  Before 2.0, the callback was invoked with ``(ctx, value)``
 whereas now it's ``(ctx, param, value)``.  This change was necessary as it
 otherwise made reusing callbacks too complicated.
 
-To ease the transition click will still accept old callbacks.  Starting
-with Click 3.0 it will start to issue a warning to stderr to encourage you
+To ease the transition, click will still accept old callbacks.  Starting
+with Click 3.0, it will start to issue a warning to stderr to encourage you
 to upgrade.
 
-In case you want to support both click 1.0 and click 2.0 you can make a
+In case you want to support both click 1.0 and click 2.0, you can make a
 simple decorator that adjusts the signatures::
 
     import click
@@ -39,6 +39,6 @@ With that helper you can then write something like this::
     def callback(ctx, param, value):
         return value.upper()
 
-Note that because click 1.0 did not pass a parameter the `param` argument
-here would be `None` so a compatibility callback could not use that
+Note that because click 1.0 did not pass a parameter, the `param` argument
+here would be `None`, so a compatibility callback could not use that
 argument.

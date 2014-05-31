@@ -3,9 +3,9 @@
 Usage with Setuptools
 =====================
 
-When writing command line utilities it's recommended to write them as
+When writing command line utilities, it's recommended to write them as
 modules that are distributed with setuptools instead of using UNIX
-shebangs.  There are a bunch of reasons for this.
+shebangs.  There are many reasons for this.
 
 The first one is that setuptools automatically generates executable
 wrappers for Windows so your command line utilities work on Windows too.
@@ -18,8 +18,8 @@ a virtualenv.
 Introduction
 ------------
 
-All you need to do to bundle your scripts with setuptools is your script
-in a Python package and a ``setup.py`` file.
+To bundle your script with setuptools, all you need is the script in a Python
+package and a ``setup.py`` file.
 
 Imagine this directory structure::
 

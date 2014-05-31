@@ -10,18 +10,18 @@ is available, but for the most part it should just work.
 Limitations
 -----------
 
-Bash completion is only available if a script has been installed properly
+Bash completion is only available if a script has been installed properly,
 and not executed through the ``python`` command.  For information about
-how to do that see :ref:`setuptools-integration`.  Also, click currently
-only supports completion for bash.
+how to do that, see :ref:`setuptools-integration`.  Also, click currently
+only supports completion for Bash.
 
-Currently, bash completion is an internal feature that is not customizable.
+Currently, Bash completion is an internal feature that is not customizable.
 This might be relaxed in future versions.
 
 What it Completes
 -----------------
 
-Generally, the bash completion support will complete subcommands and
+Generally, the Bash completion support will complete subcommands and
 parameters.  Subcommands are always listed whereas parameters only if at
 least a dash has been provided.  Example::
 
@@ -33,8 +33,8 @@ least a dash has been provided.  Example::
 Activation
 ----------
 
-In order to activate Bash completion you need to inform Bash that
-completion is available for your script and how.  Any click application
+In order to activate Bash completion, you need to inform Bash that
+completion is available for your script, and how.  Any click application
 automatically provides support for that.  The general way this works is
 through a magic environment variable called ``_<PROG_NAME>_COMPLETE``,
 where ``<PROG_NAME>`` is your application executable name in uppercase
@@ -49,15 +49,15 @@ is what you would need to put into your ``.bashrc``::
 
     eval "$(_FOO_BAR_COMPLETE=source foo-bar)"
 
-From this point onwards your script will have Bash completion enabled.
+From this point onwards, your script will have Bash completion enabled.
 
 Activation Script
 -----------------
 
 The above activation example will always invoke your application on
 startup.  This might be slowing down the shell activation time
-significantly if you have many applications.  Alternatively you could also
-ship a file with the contents of that which is what Git and other systems
+significantly if you have many applications.  Alternatively, you could also
+ship a file with the contents of that, which is what Git and other systems
 are doing.
 
 This can be easily accomplished::

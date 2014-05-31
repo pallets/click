@@ -7,20 +7,19 @@ Complex Applications
 
 Click is designed to assist with the creation of complex and simple CLI tools
 alike.  However, the power of its design is the ability to arbitrarily nest
-systems together.  For instance, in case you have ever used Django, you will
-have realized that it provides a command line utility, but so does Celery (for
-instance).  When using Celery with Django there are two tools that need
-to interact with each other and be cross configured.
+systems together.  For instance, if you have ever used Django, you will
+have realized that it provides a command line utility, but so does Celery.
+When using Celery with Django, there are two tools that need to interact with
+each other and be cross-configured.
 
-In a theoretical world of two separate click command line utilities they
-can solve this problem by nesting one inside the other.  For instance, the
-web framework could also load the commands for the message queue
-framework.
+In a theoretical world of two separate click command line utilities, they
+could solve this problem by nesting one inside the other.  For instance, the
+web framework could also load the commands for the message queue framework.
 
 Basic Concepts
 --------------
 
-To understand how this works you need to understand two concepts: contexts
+To understand how this works, you need to understand two concepts: contexts
 and the calling convention.
 
 Contexts
@@ -32,15 +31,15 @@ parameters, what command created it, which resources need to be cleaned up
 at the end of the function, and so forth.  It can also optionally hold an
 application-defined object.
 
-Context objects build a linked list until they hit top one.  Each context
+Context objects build a linked list until they hit the top one.  Each context
 is linked to the parent context.  This allows a command to work below
 another command and store its own information there without having to be
-afraid of messing up the state of the parent command.
+afraid of altering up the state of the parent command.
 
 Because the parent data is available, however, it is possible to navigate to
 it if needed.
 
-Most of the time you don't see the context object, but when writing more
+Most of the time, you do not see the context object, but when writing more
 complex applications it comes in handy.  This brings us to the next point.
 
 Calling Convention
@@ -60,7 +59,7 @@ function correctly.
 Building a Git Clone
 --------------------
 
-In this example we want to build a command line tool that resembles a
+In this example, we want to build a command line tool that resembles a
 version control system.  Systems like Git usually provide one
 over-arching command that already accepts some parameters and
 configuration, and then have extra subcommands that do other things.
@@ -72,7 +71,7 @@ At the top level, we need a group that can hold all our commands.  In this
 case, we use the basic :func:`click.group` which allows us to register
 other click commands below it.
 
-For this command we also want to accept some parameters that configure the
+For this command, we also want to accept some parameters that configure the
 state of our tool:
 
 .. click:example::
@@ -97,9 +96,9 @@ state of our tool:
 
 
 So let's understand what this does.  We create a group command which can
-have subcommands.  When it is invoked it will create an instance of a
+have subcommands.  When it is invoked, it will create an instance of a
 ``Repo`` class.  This holds the state for our command line tool.  In this
-case it just remembers some parameters, but at this point it could also
+case, it just remembers some parameters, but at this point it could also
 start loading configuration files and so on.
 
 This state object is then remembered as :attr:`~Context.obj` on the
@@ -144,8 +143,8 @@ Interleaved Commands
 
 While not relevant for the particular program we want to build, there is
 also quite good support for interleaving systems.  Imagine for instance that
-there would be this super cool plugin for our version control system that
-needs a lot of configuration and wants to store its own configuration as
+there was a super cool plugin for our version control system that needed a
+lot of configuration and wanted to store its own configuration as
 :attr:`~Context.obj`.  If we would then attach another command below that,
 we would all of a sudden get the plugin configuration instead of our repo
 object.

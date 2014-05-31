@@ -89,7 +89,8 @@ support any kind of automatic subcommand enumeration based on what's
 available or it does not enforce subcommands to work in a consistent way.
 
 This is fine, but it's different from how click wants to work.  Click aims
-to support fully composable command line user interfaces by doing this:
+to support fully composable command line user interfaces by doing the
+following:
 
 -   Click does not just parse, it also dispatches to the appropriate code.
 -   Click has a strong concept of an invocation context that allows
@@ -109,7 +110,7 @@ to support fully composable command line user interfaces by doing this:
 
 The aim of click is to make composable systems, whereas the aim of docopt
 is to build the most beautiful and hand-crafted command line interfaces.
-These two goals are conflicting with each other in subtle ways.  Click
+These two goals conflict with one another in subtle ways.  Click
 actively prevents people from implementing certain patterns in order to
 achieve unified command line interfaces.  You have very little input on
 reformatting your help pages for instance.
@@ -130,7 +131,7 @@ There are always tradeoffs that need to be made and in case of
 ``argparse`` these tradeoffs have been critical enough, that a system like
 click cannot even be implemented on top of it.
 
-In this particular case click attempts to stay with a handful of accepted
+In this particular case, click attempts to stay with a handful of accepted
 paradigms for building command line interfaces that can be well documented
 and tested.
 
