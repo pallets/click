@@ -16,9 +16,9 @@ utilities unless Python 3 is a hard requirement.
 Python 3 Limitations
 --------------------
 
-At the moment click suffers from a few problems on Python 3:
+At the moment, click suffers from a few problems with Python 3:
 
-*   The command line in Unix traditionally is in bytes and not unicode.
+*   The command line in Unix traditionally is in bytes, and not Unicode.
     While there are encoding hints for all of this, there are generally
     some situations where this can break.  The most common one is SSH
     connections to machines with different locales.
@@ -29,7 +29,7 @@ At the moment click suffers from a few problems on Python 3:
 
     For more information see :ref:`python3-surrogates`.
 
-*   Standard input and output on Python 3 is opened in unicode mode by
+*   Standard input and output on Python 3 is opened in Unicode mode by
     default.  Click has to reopen the stream in binary mode in certain
     situations.  Because there is no standardized way to do this, this
     might not always work.  Primarily this can become a problem when
@@ -64,7 +64,7 @@ On Python 2, the following is true:
     mode, but under some circumstances they support Unicode output.  Click
     attempts to not subvert this but provides support for forcing streams
     to be Unicode-based.
-*   ``sys.argv`` is always bytes-based.  Click will pass bytes to all
+*   ``sys.argv`` is always byte-based.  Click will pass bytes to all
     input types and convert as necessary.  The :class:`STRING` type
     automatically will decode properly the input value into a string by
     trying the most appropriate encodings.
@@ -79,7 +79,7 @@ On Python 3, the following is true:
     the underlying binary stream.  See :ref:`python3-limitations` for how
     this works.
 *   ``sys.argv`` is always Unicode-based.  This also means that the native
-    type for input values to the types in click is Unicode and not bytes.
+    type for input values to the types in click is Unicode, and not bytes.
 
     This causes problems when the terminal is incorrectly set and Python
     does not figure out the encoding.  In that case, the Unicode string
@@ -96,17 +96,17 @@ Python 3 Surrogate Handling
 ---------------------------
 
 Click on Python 3 does all the Unicode handling in the standard library
-and is subject to its behavior.  On Python 2 click does all the Unicode
-handling itself which means there are differences in error behavior.
+and is subject to its behavior.  On Python 2, click does all the Unicode
+handling itself, which means there are differences in error behavior.
 
 The most glaring difference is that on Python 2, Unicode will "just work",
-but requires extra care on Python 3.  The reason for this is that on
+while on Python 3, it requires extra care.  The reason for this is that on
 Python 3, the encoding detection is done in the interpreter and on Linux
 and certain other operating systems its encoding handling is problematic.
 
 The biggest source of frustration is that click scripts invoked by
 init systems (sysvinit, upstart, systemd, etc.), deployment tools (salt,
-puppet) or cron jobs (cron) will refuse to work unless a Unicode locale is
+puppet), or cron jobs (cron) will refuse to work unless a Unicode locale is
 exported.
 
 If click encounters such an environment it will prevent further execution

@@ -12,7 +12,7 @@ Basic Value Options
 
 The most basic option is a value option.  These options accept one
 argument which is a value.  If no type is provided, the type of the default
-value is used.  If no default value is provided the type is assumed to be
+value is used.  If no default value is provided, the type is assumed to be
 :data:`STRING`.  By default, the name of the parameter is the first long
 option defined; otherwise the first short one is used.
 
@@ -55,11 +55,11 @@ And on the command line:
 Multiple Options
 ----------------
 
-Similar to ``nargs`` there is also the case where you sometimes want to
-support a parameter to be provided multiple times to and have all values
-recorded and not just the last one.  For instance ``git commit -m foo -m
-bar`` would record two lines for the commit message.  ``foo`` and ``bar``.
-This can be accomplished with the ``multiple`` flag:
+Similarly to ``nargs``, there is also the case of wanting to support a
+parameter being provided multiple times to and have all values recorded --
+not just the last one.  For instance, ``git commit -m foo -m bar`` would
+record two lines for the commit message: ``foo`` and ``bar``. This can be
+accomplished with the ``multiple`` flag:
 
 Example:
 
@@ -79,7 +79,7 @@ And on the command line:
 Counting
 --------
 
-In some very rare circumstances, it's interesting to use the repetition
+In some very rare circumstances, it is interesting to use the repetition
 of options to count an integer up.  This can be used for verbosity flags,
 for instance:
 
@@ -148,9 +148,9 @@ And on the command line:
 
     invoke(info, args=['--shout'])
 
-Note that if a slash is contained in your option already (for instance if
-you use Windows-style parameters where ``/`` is the prefix character you
-can alternatively split the parameters through ``;`` instead):
+Note that if a slash is contained in your option already (for instance, if
+you use Windows-style parameters where ``/`` is the prefix character), you
+can alternatively split the parameters through ``;`` instead:
 
 .. click:example::
 
@@ -197,7 +197,7 @@ And on the command line:
 Choice Options
 --------------
 
-Sometimes you want to have a parameter be a choice of a list of values.
+Sometimes, you want to have a parameter be a choice of a list of values.
 In that case you can use :class:`Choice` type.  It can be instantiated
 with a list of valid values.
 
@@ -225,9 +225,9 @@ What it looks like:
 Prompting
 ---------
 
-Sometimes, you want parameters that can be provided from the command line,
-but if not, ask for user input.  This can be implemented with click by
-defining a prompt string.
+In some cases, you want parameters that can be provided from the command line,
+but if not provided, ask for user input instead.  This can be implemented with
+click by defining a prompt string.
 
 Example:
 
@@ -294,17 +294,17 @@ replaced with the :func:`password_option` decorator:
 Callbacks and Eager Options
 ---------------------------
 
-Sometimes you want a parameter to completely change the execution flow.
+Sometimes, you want a parameter to completely change the execution flow.
 For instance, this is the case when you want to have a ``--version``
 parameter that prints out the version and then exits the application.
 
-In such cases you need two concepts: eager parameters and a callback.  An
-eager parameter is a parameter that is handled before others and a
+In such cases, you need two concepts: eager parameters and a callback.  An
+eager parameter is a parameter that is handled before others, and a
 callback is what executes after the parameter is handled.  The eagerness
 is necessary so that an earlier required parameter does not produce an
-error message.  For instance if ``--version`` was not eager and a
+error message.  For instance, if ``--version`` was not eager and a
 parameter ``--foo`` was required and defined before, you would need to
-specify it for ``--version`` to work.  For more information see
+specify it for ``--version`` to work.  For more information, see
 :ref:`callback-evaluation-order`.
 
 A callback is a function that is invoked with two parameters: the current
@@ -328,8 +328,8 @@ Here an example for a ``--version`` flag:
     def hello():
         click.echo('Hello World!')
 
-The `expose_value` parameter prevents the now pretty pointless ``version``
-parameter to be passed to the callback.  If that was not specified, a
+The `expose_value` parameter prevents the pretty pointless ``version``
+parameter from being passed to the callback.  If that was not specified, a
 boolean would be passed to the `hello` script.  The `resilient_parsing`
 flag is set on the context if click wants to parse the command line
 without and destructive behavior that would change the execution flow.  In
@@ -491,7 +491,7 @@ And from the command line:
 Other Prefix Characters
 -----------------------
 
-Click can deal with alternative prefix characters, other than ``-`` for
+Click can deal with alternative prefix characters other than ``-`` for
 options.  This is for instance useful if you want to handle slashes as
 parameters ``/`` or something similar.  Note that this is strongly
 discouraged in general because click wants developers to stay close to
@@ -532,8 +532,8 @@ boolean flag you need to separate it with ``;`` instead of ``/``:
 Range Options
 -------------
 
-A special mention should go to the :class:`IntRange` type which works very
-similar to the :data:`INT` type but restricts the value to fall into a
+A special mention should go to the :class:`IntRange` type, which works very
+similarly to the :data:`INT` type, but restricts the value to fall into a
 specific range (inclusive on both edges).  It has two modes:
 
 -   the default mode (non-clamping mode) where a value that falls outside
@@ -571,12 +571,12 @@ Callbacks for Validation
 
 .. versionchanged:: 2.0
 
-If you want to apply custom validation logic you can do this in the
+If you want to apply custom validation logic, you can do this in the
 parameter callbacks.  These callbacks can both modify values as well as
 raise errors if the validation does not work.
 
-In click 1.0 you can only raise the :exc:`UsageError` but starting with
-click 2.0 you can also raise the :exc:`BadParameter` error which has the
+In click 1.0, you can only raise the :exc:`UsageError` but starting with
+click 2.0, you can also raise the :exc:`BadParameter` error, which has the
 added advantage that it will automatically format the error message to
 also contain the parameter name.
 

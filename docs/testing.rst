@@ -7,9 +7,9 @@ For basic testing, click provides the :mod:`click.testing` module which
 provides test functionality that helps you invoke command line
 applications and check their behavior.
 
-These tools really only should be used for testing as they are changing
-the whole interpreter state for simplicity and they are not in any way
-thread safe!
+These tools should really only be used for testing as they change
+the entire interpreter state for simplicity and are not in any way
+thread-safe!
 
 Basic Testing
 -------------
@@ -19,8 +19,8 @@ The basic functionality for testing click applications is the
 :meth:`CliRunner.invoke` method runs the command line script in isolation
 and captures the output as both bytes and binary data.
 
-The return value is a :class:`Result` object which has the captured output
-data, exit code and optional exception attached.
+The return value is a :class:`Result` object, which has the captured output
+data, exit code, and optional exception attached.
 
 Example::
 

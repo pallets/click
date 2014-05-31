@@ -4,14 +4,14 @@ Parameters
 .. currentmodule:: click
 
 Click supports two types of parameters for scripts: options and arguments.
-There is generally some confusion among authors of command line scripts
-when to use which so here is a quick overview of the differences.  As the
-name indicates an option is optional.  While arguments can be optional
-within reason they are much more restricted in how they can be optional.
+There is generally some confusion among authors of command line scripts of
+when to use which, so here is a quick overview of the differences.  As its
+name indicates, an option is optional.  While arguments can be optional
+within reason, they are much more restricted in how optional they can be.
 
 To help you decide between options and arguments, the recommendation is
 to use arguments exclusively for things like going to subcommands or input
-filenames / URLs and have everything else be an option instead.
+filenames / URLs, and have everything else be an option instead.
 
 Differences
 -----------
@@ -76,26 +76,26 @@ Parameter Names
 
 Parameters (both options and arguments) accept a number of positional
 arguments which are the parameter declarations.  Each string with a
-single dash is added as short argument, each string starting with a double
-dash as long one.  If a string is added without any dashes it's the
+single dash is added as short argument; each string starting with a double
+dash as long one.  If a string is added without any dashes, it becomes the
 internal parameter name which is also used as variable name.
 
-If a parameter is not given a name without dashes a name is generated
+If a parameter is not given a name without dashes, a name is generated
 automatically by taking the longest argument and converting all dashes to
-underscores.  So for an option with ``('-f', '--foo-bar')`` the parameter
-name is `foo_bar`.  For an option with ``('-x',)`` the parameter is `x`.
-For an option with ``('-f', '--filename', 'dest')`` the parameter is
+underscores.  For an option with ``('-f', '--foo-bar')``, the parameter
+name is `foo_bar`.  For an option with ``('-x',)``, the parameter is `x`.
+For an option with ``('-f', '--filename', 'dest')``, the parameter is
 called `dest`.
 
 Implementing Custom Types
 -------------------------
 
 To implement a custom type, you need to subclass the :class:`ParamType`
-class.  Types can be invoked with or without context and parameter object
+class.  Types can be invoked with or without context and parameter object,
 which is why they need to be able to deal with this.
 
 The following code implements an integer type that accepts hex and octal
-numbers in addition to normal integers and converts them into regular
+numbers in addition to normal integers, and converts them into regular
 integers::
 
     import click

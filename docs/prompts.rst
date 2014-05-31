@@ -3,12 +3,12 @@ User Input Prompts
 
 .. currentmodule:: click
 
-Click supports prompts in two different places.  One is automated prompts
-when the parameter handling happens.  The second option is to ask for
+Click supports prompts in two different places.  The first is automated
+prompts when the parameter handling happens, and the second is to ask for
 prompts at a later point independently.
 
-This can be accomplished with the :func:`prompt` function which asks for
-valid input according to a type or the :func:`confirm` function which asks
+This can be accomplished with the :func:`prompt` function, which asks for
+valid input according to a type, or the :func:`confirm` function, which asks
 for confirmation (yes/no).
 
 Option Prompts

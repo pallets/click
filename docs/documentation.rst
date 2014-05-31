@@ -29,8 +29,8 @@ And what it looks like:
 
     invoke(hello, args=['--help'])
 
-Arguments cannot be documented this way.  This is to follow general
-convention of Unix tools using arguments for only the most necessary
+Arguments cannot be documented this way.  This is to follow the general
+convention of Unix tools of using arguments for only the most necessary
 things and to document them in the introduction text by referring to them
 by name.
 

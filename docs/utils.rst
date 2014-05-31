@@ -11,10 +11,10 @@ is useful for writing command line utilities.
 Printing to Stdout
 ------------------
 
-The most obvious helper is the :func:`echo` function which in many ways
+The most obvious helper is the :func:`echo` function, which in many ways
 works like the Python print statement or function.  The main difference is
-that it works the same on Python 2 and 3 and it intelligently detects
-misconfigured output streams and will never fail (except on Python 3, for
+that it works the same on Python 2 and 3, it intelligently detects
+misconfigured output streams, and will never fail (except on Python 3; for
 more information see :ref:`python3-limitations`).
 
 Example::
@@ -24,7 +24,7 @@ Example::
     click.echo('Hello World!')
 
 Most importantly, it can print both Unicode and binary data, unlike the
-builtin ``print`` function on Python 3 which cannot output any bytes.  It
+builtin ``print`` function on Python 3, which cannot output any bytes.  It
 will, however, emit a trailing newline by default which needs to be
 supressed by passing ``nl=False``::
 
@@ -38,10 +38,10 @@ ANSI Colors
 
 .. versionadded:: 2.0
 
-Starting with click 2.0 the :func:`echo` function gained extra
-functionality to deal with ANSI colors and styles.  Note that on Windows
+Starting with click 2.0, the :func:`echo` function gained extra
+functionality to deal with ANSI colors and styles.  Note that on Windows,
 this functionality is only available if `colorama`_ is installed.  If it
-is installed then ANSI codes are intelligently handled.
+is installed, then ANSI codes are intelligently handled.
 
 Primarily this means that:
 
@@ -52,10 +52,10 @@ Primarily this means that:
     that colors will work on Windows the same way they do on other
     operating systems.
 
-Note for colorama support: click will automatically detect when `colorama`
+Note for `colorama` support: click will automatically detect when `colorama`
 is available and use it.  Do *not* call ``colorama.init()``!
 
-To install colorama run this command::
+To install `colorama`, run this command::
 
     $ pip install colorama
 
@@ -82,8 +82,8 @@ Pager Support
 
 In some situations, you might want to show long texts on the terminal and
 let a user scroll through it.  This can be achieved by using the
-:func:`echo_via_pager` function which works similar to the :func:`echo`
-function but always writes to stdout and, if possible, through a pager.
+:func:`echo_via_pager` function which works similarly to the :func:`echo`
+function, but always writes to stdout and, if possible, through a pager.
 
 Example:
 
@@ -100,8 +100,8 @@ Screen Clearing
 
 .. versionadded:: 2.0
 
-To clear the terminal screen you can use the :func:`clear` function that
-is provided starting with Click 2.0.  It does what the name suggests: it
+To clear the terminal screen, you can use the :func:`clear` function that
+is provided starting with click 2.0.  It does what the name suggests: it
 clears the entire visible screen in a platform-agnostic way:
 
 ::
@@ -115,13 +115,12 @@ Getting Characters from Terminal
 
 .. versionadded:: 2.0
 
-Normally when reading input from the terminal you would use reading from
+Normally, when reading input from the terminal, you would read from
 standard input.  However, this is buffered input and will not show up until
 the line has been terminated.  In certain circumstances, you might not want
-to do that and instead read individual characters as they are being
-written.
+to do that and instead read individual characters as they are being written.
 
-For this click provides the :func:`getchar` function which reads a single
+For thi,s click provides the :func:`getchar` function which reads a single
 character from the terminal buffer and returns it as a Unicode character.
 
 Note that this function will always read from the terminal, even if stdin
@@ -141,7 +140,7 @@ Example::
     else:
         click.echo('Invalid input :(')
 
-Note that this reads raw input which means that things like arrow keys
+Note that this reads raw input, which means that things like arrow keys
 will show up in the platform's native escape format.  The only characters
 translated are ``^C`` and ``^D`` which are converted into keyboard
 interrupt and end of file exceptions.  This is done because otherwise it's
@@ -154,15 +153,16 @@ Waiting for Key Press
 
 .. versionadded:: 2.0
 
-Sometimes it's useful to pause until the user presses any key on the
-keyboard.  This is especially useful on Windows where ``cmd.exe`` by
-default will close the window at the end of the command execution instead
+Sometimes, it's useful to pause until the user presses any key on the
+keyboard.  This is especially useful on Windows where ``cmd.exe`` will
+close the window at the end of the command execution by default, instead
 of waiting.
 
-In click this can be accomplished by the :func:`pause` function.  This
+In click, this can be accomplished with the :func:`pause` function.  This
 function will print a quick message to the terminal (which can be
-customized) and wait for the user to press a key.  In addition to that
-it will also become a noop if the script is not run interactively.
+customized) and wait for the user to press a key.  In addition to that,
+it will also become a NOP (no operation instruction) if the script is not
+run interactively.
 
 Example::
 
@@ -178,7 +178,7 @@ Launching Editors
 Click supports launching editors automatically through :func:`edit`.  This
 is very useful for asking users for multi-line input.  It will
 automatically open the user's defined editor or fall back to a sensible
-default.  If the user closes the editor without saving the return value
+default.  If the user closes the editor without saving, the return value
 will be `None` otherwise the entered text.
 
 Example usage::
@@ -207,8 +207,8 @@ Launching Applications
 
 Click supports launching applications through :func:`launch`.  This can be
 used to open the default application assocated with a URL or filetype.
-This for instance can be used to launch web browsers, picture viewers, etc.
-In addition to that, it can also launch the file manager and automatically
+This can be used to launch web browsers or picture viewers, for instance.
+In addition to this, it can also launch the file manager and automatically
 select the provided file.
 
 Example usage::
@@ -221,12 +221,12 @@ Printing Filenames
 ------------------
 
 Because filenames might not be Unicode, formatting them can be a bit
-tricky.  Generally this is easier on Python 2 than on 3 as you can just
-write the bytes to stdout with the print function, but at least on Python
-3 you will need to always operate in Unicode.
+tricky.  Generally, this is easier on Python 2 than on 3, as you can just
+write the bytes to stdout with the print function, but on Python 3, you will
+always need to operate in Unicode.
 
 The way this works with click is through the :func:`format_filename`
-function.  It does a best effort conversion of the filename to Unicode and
+function.  It does a best-effort conversion of the filename to Unicode and
 will never fail.  This makes it possible to use these filenames in the
 context of a full Unicode string.
 
@@ -240,16 +240,16 @@ Standard Streams
 
 For command line utilities, it's very important to get access to input and
 output streams reliably.  Python generally provides access to these
-streams through ``sys.stdout`` and friends, but unfortunately there are
-API differences between 2.x and 3.x.  Especially in regards to how these
-streams respond to Unicode and binary data there are wide differences.
+streams through ``sys.stdout`` and friends, but unfortunately, there are
+API differences between 2.x and 3.x, especially with regards to how these
+streams respond to Unicode and binary data.
 
 Because of this, click provides the :func:`get_binary_stream` and
-:func:`get_text_stream` which produce consistent results with different
-Python versions and for widely misconfigured terminals.
+:func:`get_text_stream` functions, which produce consistent results with
+different Python versions and for a wide variety pf terminal configurations.
 
 The end result is that these functions will always return a functional
-stream object (except in very odd cases on Python 3, see
+stream object (except in very odd cases on Python 3; see
 :ref:`python3-limitations`).
 
 Example::
@@ -265,7 +265,7 @@ Finding Application Folders
 
 .. versionadded:: 2.0
 
-Very often you want to open a configuration file that belongs to your
+Very often, you want to open a configuration file that belongs to your
 application.  However, different operating systems store these configuration
 files in different locations depending on their standards.  Click provides
 a :func:`get_app_dir` function which returns the most appropriate location
@@ -295,7 +295,7 @@ Showing Progress Bars
 
 .. versionadded:: 2.0
 
-Sometimes you have command line scripts that need to process a lot of data
+Sometimes, you have command line scripts that need to process a lot of data,
 but you want to quickly show the user some progress about how long that
 will take.  Click supports simple progress bar rendering for that through
 the :func:`progressbar` function.
@@ -307,7 +307,7 @@ time to do processing.  So say you have a loop like this::
     for user in all_the_users_to_process:
         modify_the_user(user)
 
-To hook this up with an automatically updating progress bar all you need
+To hook this up with an automatically updating progress bar, all you need
 to do is to change the code to this::
 
     import click
@@ -318,7 +318,7 @@ to do is to change the code to this::
 
 Click will then automatically print a progress bar to the terminal and
 calculate the remaining time for you.  The calculation of remaining time
-requires that the iterable has a length.  If it does not have a length,
+requires that the iterable has a length.  If it does not have a length
 but you know the length, you can explicitly provide it::
 
     with click.progressbar(all_the_users_to_process,
