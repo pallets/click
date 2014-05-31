@@ -109,3 +109,37 @@ def edit():
 def clear():
     """Clears the entire screen."""
     click.clear()
+
+
+@cli.command()
+def pause():
+    """Waits for the user to press a button."""
+    click.pause()
+
+
+@cli.command()
+def menu():
+    """Shows a simple menu."""
+    menu = 'main'
+    while 1:
+        if menu == 'main':
+            click.echo('Main menu:')
+            click.echo('  d: debug menu')
+            click.echo('  q: quit')
+            char = click.getchar()
+            if char == 'd':
+                menu = 'debug'
+            elif char == 'q':
+                menu = 'quit'
+            else:
+                click.echo('Invalid input')
+        elif menu == 'debug':
+            click.echo('Debug menu')
+            click.echo('  b: back')
+            char = click.getchar()
+            if char == 'b':
+                menu = 'main'
+            else:
+                click.echo('Invalid input')
+        elif menu == 'quit':
+            return
