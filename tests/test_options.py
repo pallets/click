@@ -127,3 +127,32 @@ def test_custom_validation(runner):
 
     result = runner.invoke(cmd, ['--foo', '42'])
     assert result.output == '42\n'
+
+
+def test_winstyle_options(runner):
+    @click.command(add_help_option=False)
+    @click.option('/debug;/no-debug', help='Enables or disables debug mode.')
+    @click.help_option('/?')
+    def cmd(debug):
+        click.echo(debug)
+
+    result = runner.invoke(cmd, ['/debug'])
+    assert result.output == 'True\n'
+    result = runner.invoke(cmd, ['/no-debug'])
+    assert result.output == 'False\n'
+    result = runner.invoke(cmd, [])
+    assert result.output == 'False\n'
+    result = runner.invoke(cmd, ['/?'])
+    assert '/debug; /no-debug  Enables or disables debug mode.' in result.output
+
+
+def test_legacy_options(runner):
+    @click.command()
+    @click.option('-whatever')
+    def cmd(whatever):
+        click.echo(whatever)
+
+    result = runner.invoke(cmd, ['-whatever', '42'])
+    assert result.output == '42\n'
+    result = runner.invoke(cmd, ['-whatever=23'])
+    assert result.output == '23\n'

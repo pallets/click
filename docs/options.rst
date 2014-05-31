@@ -148,6 +148,20 @@ And on the command line:
 
     invoke(info, args=['--shout'])
 
+Note that if a slash is contained in your option already (for instance if
+you use windows style parameters where ``/`` is the prefix character you
+can alternatively split the parameters through ``;`` instead):
+
+.. click:example::
+
+    @click.command()
+    @click.option('/debug;/no-debug')
+    def log(debug):
+        click.echo('debug=%s' % debug)
+
+    if __name__ == '__main__':
+        log()
+
 Feature Switches
 ----------------
 
@@ -499,6 +513,19 @@ And from the command line:
 
     invoke(chmod, args=['+w'])
     invoke(chmod, args=['-w'])
+
+Note that if you are using ``/`` as prefix character and you want to use a
+boolean flag you need to separate it with ``;`` instead of ``/``:
+
+.. click:example::
+
+    @click.command()
+    @click.option('/debug;/no-debug')
+    def log(debug):
+        click.echo('debug=%s' % debug)
+
+    if __name__ == '__main__':
+        log()
 
 .. _ranges:
 

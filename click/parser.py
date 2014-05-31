@@ -55,12 +55,12 @@ class Option(object):
         self.prefixes = set()
 
         for opt in opts:
-            prefix = split_opt(opt)[0]
+            prefix, value = split_opt(opt)
             if not prefix:
                 raise ValueError('Invalid start character for option (%s)'
                                  % opt)
             self.prefixes.add(prefix[0])
-            if len(prefix) == 1:
+            if len(prefix) == 1 and len(value) == 1:
                 self._short_opts.append(opt)
             else:
                 self._long_opts.append(opt)
@@ -202,24 +202,18 @@ class OptionParser(object):
 
     def _process_args_for_options(self, state):
         while state.rargs:
-            arg = state.rargs[0]
+            arg = state.rargs.pop(0)
             arglen = len(arg)
             # Double dash es always handled explicitly regardless of what
             # prefixes are valid.
             if arg == '--':
-                del state.rargs[0]
                 return
-            elif arg[:2] in self._opt_prefixes and arglen > 2:
-                # process a single long option (possibly with value(s))
-                self._process_long_opt(state)
             elif arg[:1] in self._opt_prefixes and arglen > 1:
-                # process a cluster of short options (possibly with
-                # value(s) for the last one only)
-                self._process_short_opts(state)
+                self._process_opts(arg, state)
             elif self.allow_interspersed_args:
                 state.largs.append(arg)
-                del state.rargs[0]
             else:
+                state.rargs.insert(0, arg)
                 return
 
         # Say this is the original argument list:
@@ -264,9 +258,7 @@ class OptionParser(object):
             self._error('no such option: %s.  (Possible options: %s)'
                         % (opt, ', '.join(possibilities)))
 
-    def _process_long_opt(self, state):
-        arg = state.rargs.pop(0)
-
+    def _process_long_opt(self, arg, state):
         # Value explicitly attached to arg?  Pretend it's the next
         # argument.
         if '=' in arg:
@@ -300,8 +292,10 @@ class OptionParser(object):
 
         option.process(value, state)
 
-    def _process_short_opts(self, state):
-        arg = state.rargs.pop(0)
+    def _process_opts(self, arg, state):
+        if '=' in arg or arg in self._long_opt:
+            return self._process_long_opt(arg, state)
+
         stop = False
         i = 1
         prefix = arg[0]

@@ -829,7 +829,7 @@ class Parameter(object):
                  default=None, callback=None, nargs=1, metavar=None,
                  expose_value=True, is_eager=False, envvar=None):
         self.name, self.opts, self.secondary_opts = \
-            self._parse_decls(param_decls or ())
+            self._parse_decls(param_decls or (), expose_value)
         self.type = convert_type(type, default)
         self.required = required
         self.callback = callback
@@ -1053,7 +1053,7 @@ class Option(Parameter):
                     raise TypeError('Options cannot be count and flags at '
                                     'the same time.')
 
-    def _parse_decls(self, decls):
+    def _parse_decls(self, decls, expose_value):
         opts = []
         secondary_opts = []
         name = None
@@ -1065,11 +1065,13 @@ class Option(Parameter):
                     raise TypeError('Name defined twice')
                 name = decl
             else:
-                if '/' in decl:
-                    first, second = decl.split('/', 1)
+                split_char = decl[:1] == '/' and ';' or '/'
+                if split_char in decl:
+                    first, second = decl.split(split_char, 1)
+                    first = first.rstrip()
                     possible_names.append(split_opt(first))
                     opts.append(first)
-                    secondary_opts.append(second)
+                    secondary_opts.append(second.lstrip())
                 else:
                     possible_names.append(split_opt(decl))
                     opts.append(decl)
@@ -1081,6 +1083,8 @@ class Option(Parameter):
                 name = None
 
         if name is None:
+            if not expose_value:
+                return None, opts, secondary_opts
             raise TypeError('Could not determine name for option')
 
         return name, opts, secondary_opts
@@ -1115,10 +1119,14 @@ class Option(Parameter):
             parser.add_option(self.opts, **kwargs)
 
     def get_help_record(self, ctx):
+        any_prefix_is_slash = []
+
         def _write_opts(opts):
             rv = []
             for opt in opts:
                 prefix = split_opt(opt)[0]
+                if prefix == '/':
+                    any_prefix_is_slash[:] = [True]
                 rv.append((len(prefix), opt))
 
             rv.sort(key=lambda x: x[0])
@@ -1141,7 +1149,7 @@ class Option(Parameter):
         if extra:
             help = '%s[%s]' % (help and help + '  ' or '', '; '.join(extra))
 
-        return (' / '.join(rv), help)
+        return ((any_prefix_is_slash and '; ' or ' / ').join(rv), help)
 
     def get_default(self, ctx):
         # If we're a non boolean flag out default is more complex because
@@ -1228,8 +1236,10 @@ class Argument(Parameter):
             var += '...'
         return var
 
-    def _parse_decls(self, decls):
+    def _parse_decls(self, decls, expose_value):
         if not decls:
+            if not expose_value:
+                return None, [], []
             raise TypeError('Could not determine name for argument')
         if len(decls) == 1:
             name = arg = decls[0]

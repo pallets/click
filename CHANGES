@@ -34,6 +34,8 @@ Version 2.0
 - added basic support for bash completion.
 - added :func:`getchar` to fetch a single character from the terminal.
 - errors now go to stderr as intended.
+- fixed various issues with more exotic parameter formats like DOS/Windows
+  style arguments.
 
 Version 1.1
 -----------
