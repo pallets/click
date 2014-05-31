@@ -3,7 +3,7 @@ Testing Click Applications
 
 .. currentmodule:: click.testing
 
-For basic testing click provides the :mod:`click.testing` module which
+For basic testing, click provides the :mod:`click.testing` module which
 provides test functionality that helps you invoke command line
 applications and check their behavior.
 
@@ -41,7 +41,7 @@ Example::
 File System Isolation
 ---------------------
 
-For basic command line tools that want to operate with the file system the
+For basic command line tools that want to operate with the file system, the
 :meth:`CliRunner.isolated_filesystem` method comes in useful which sets up
 an empty folder and changes the current working directory to.
 
@@ -69,7 +69,7 @@ Input Streams
 -------------
 
 The test wrapper can also be used to provide input data for the input
-stream (stdin).  This is very useful for testing prompts for instance::
+stream (stdin).  This is very useful for testing prompts, for instance::
 
     import click
     from click.testing import CliRunner

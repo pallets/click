@@ -10,7 +10,7 @@ name indicates an option is optional.  While arguments can be optional
 within reason they are much more restricted in how they can be optional.
 
 To help you decide between options and arguments, the recommendation is
-to use arguments exclusively for things like going to subcommands or input 
+to use arguments exclusively for things like going to subcommands or input
 filenames / URLs and have everything else be an option instead.
 
 Differences
@@ -68,8 +68,8 @@ different behavior and some are supported out of the box:
    :noindex:
 
 Custom parameter types can be implemented by subclassing
-:class:`click.ParamType`.  For simple cases passing a python function that
-fails with a `ValueError` is also supported though discouraged.
+:class:`click.ParamType`.  For simple cases, passing a Python function that
+fails with a `ValueError` is also supported, though discouraged.
 
 Parameter Names
 ---------------
@@ -90,11 +90,11 @@ called `dest`.
 Implementing Custom Types
 -------------------------
 
-To implement a custom type you need to subclass the :class:`ParamType`
+To implement a custom type, you need to subclass the :class:`ParamType`
 class.  Types can be invoked with or without context and parameter object
 which is why they need to be able to deal with this.
 
-The following code implements an integer type that accepts hex, octal
+The following code implements an integer type that accepts hex and octal
 numbers in addition to normal integers and converts them into regular
 integers::
 
@@ -115,6 +115,6 @@ integers::
 
     BASED_INT = BasedIntParamType()
 
-As you can see a subclass needs to implement the :meth:`ParamType.convert`
+As you can see, a subclass needs to implement the :meth:`ParamType.convert`
 method and optionally provide the :attr:`ParamType.name` attribute.  The
 latter can be used for documentation purposes.

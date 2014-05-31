@@ -40,13 +40,13 @@ as in the github repository together with readme files:
 Basic Concepts
 --------------
 
-Click is based on declaring commands through decorators.  Internally there
-is a non-decorator interface for advanced use cases but it's discouraged
+Click is based on declaring commands through decorators.  Internally, there
+is a non-decorator interface for advanced use cases, but it's discouraged
 for high-level usage.
 
 A function becomes a click command line tool by decorating it through
-:func:`click.command`.  In the most simple version just decorating a
-function with this decorator will make it into a callable script:
+:func:`click.command`.  At its simplest, just decorating a function
+with this decorator will make it into a callable script:
 
 .. click:example::
 
@@ -88,7 +88,7 @@ What this means is that the :func:`echo` function applies some error
 correction in case the terminal is misconfigured instead of dying with an
 :exc:`UnicodeError`.
 
-As an added benefit, starting with click 2.0 the echo function also
+As an added benefit, starting with click 2.0, the echo function also
 has good support for ANSI colors.  It will automatically strip ANSI codes
 if the output stream is a file and if colorama is supported, ANSI colors
 will also work on Windows.  See :ref:`ansi-colors` for more information.
@@ -120,12 +120,11 @@ implements two commands for managing databases:
     cli.add_command(initdb)
     cli.add_command(dropdb)
 
-As you can see the :func:`group` decorator works like the :func:`command`
-decorator but creates a :class:`Group` object instead which can be given
-multiple subcommands that can be attached with
-:meth:`Group.add_command`.
+As you can see, the :func:`group` decorator works like the :func:`command`
+decorator, but creates a :class:`Group` object instead which can be given
+multiple subcommands that can be attached with :meth:`Group.add_command`.
 
-For simple scripts it's also possible to automatically attach and create a
+For simple scripts, it's also possible to automatically attach and create a
 command by using the :meth:`Group.command` decorator instead.  The above
 script can be written like this then:
 
@@ -146,7 +145,7 @@ script can be written like this then:
 Adding Parameters
 -----------------
 
-To add parameters the :func:`option` and :func:`argument` decorators:
+To add parameters, use the :func:`option` and :func:`argument` decorators:
 
 .. click:example::
 
