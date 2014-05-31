@@ -155,7 +155,7 @@ Waiting for Key Press
 .. versionadded:: 2.0
 
 Sometimes it's useful to pause until the user presses any key on the
-keyboard.  This is especially useful on windows where ``cmd.exe`` by
+keyboard.  This is especially useful on Windows where ``cmd.exe`` by
 default will close the window at the end of the command execution instead
 of waiting.
 

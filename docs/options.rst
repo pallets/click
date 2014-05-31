@@ -149,7 +149,7 @@ And on the command line:
     invoke(info, args=['--shout'])
 
 Note that if a slash is contained in your option already (for instance if
-you use windows style parameters where ``/`` is the prefix character you
+you use Windows-style parameters where ``/`` is the prefix character you
 can alternatively split the parameters through ``;`` instead):
 
 .. click:example::
