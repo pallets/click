@@ -14,6 +14,9 @@ line utility for Python out there which ticks the following boxes:
 *   is fully nestable and composable
 *   works the same on Python 2 and 3
 *   supports file handling out of the box
+*   comes with useful common helpers (getting terminal dimensions,
+    ANSI colors, fetching direct keyboard input, screen clearing,
+    finding config paths, launching apps and editors, etc.)
 
 There are many alternatives to click and you can have a look at them if
 you enjoy them better.  The obvious ones are ``optparse`` and ``argparse``
