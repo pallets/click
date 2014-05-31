@@ -36,6 +36,9 @@ Version 2.0
 - errors now go to stderr as intended.
 - fixed various issues with more exotic parameter formats like DOS/Windows
   style arguments.
+- added :func:`pause` which works similar to the windows ``pause`` cmd
+  built in but becomes an automatic noop if the application is not run
+  through a terminal.
 
 Version 1.1
 -----------

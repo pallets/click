@@ -33,7 +33,8 @@ from .utils import echo, get_binary_stream, get_text_stream, \
 
 # Terminal functions
 from .termui import prompt, confirm, get_terminal_size, echo_via_pager, \
-     progressbar, clear, style, unstyle, secho, edit, launch, getchar
+     progressbar, clear, style, unstyle, secho, edit, launch, getchar, \
+     pause
 
 # Exceptions
 from .exceptions import ClickException, UsageError, BadParameter, \
@@ -67,7 +68,7 @@ __all__ = [
     # Terminal functions
     'prompt', 'confirm', 'get_terminal_size', 'echo_via_pager',
     'progressbar', 'clear', 'style', 'unstyle', 'secho', 'edit', 'launch',
-    'getchar',
+    'getchar', 'pause',
 
     # Exceptions
     'ClickException', 'UsageError', 'BadParameter', 'FileError',

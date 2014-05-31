@@ -461,3 +461,27 @@ def getchar(echo=False):
     if f is None:
         from ._termui_impl import getchar as f
     return f(echo)
+
+
+def pause(info='Press any key to continue ...'):
+    """This command stops execution and waits for the user to press any
+    key to continue.  This is similar to the Windows batch "pause"
+    command.  If the program is not run through a terminal this command
+    will do nothing instead.
+
+    .. versionadded:: 2.0
+
+    :param info: the info string to print before pausing.
+    """
+    if not isatty(sys.stdin) or not isatty(sys.stdout):
+        return
+    try:
+        if info:
+            echo(info, nl=False)
+        try:
+            getchar()
+        except (KeyboardInterrupt, EOFError):
+            pass
+    finally:
+        if info:
+            echo()

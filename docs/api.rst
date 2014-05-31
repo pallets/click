@@ -58,6 +58,8 @@ Utilities
 
 .. autofunction:: getchar
 
+.. autofunction:: pause
+
 .. autofunction:: get_terminal_size
 
 .. autofunction:: get_binary_stream

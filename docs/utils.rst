@@ -149,6 +149,27 @@ too easy to forget about that and to create scripts that cannot be
 properly exited.
 
 
+Waiting for Key Press
+---------------------
+
+.. versionadded:: 2.0
+
+Sometimes it's useful to pause until the user presses any key on the
+keyboard.  This is especially useful on windows where ``cmd.exe`` by
+default will close the window at the end of the command execution instead
+of waiting.
+
+In click this can be accomplished by the :func:`pause` function.  This
+function will print a quick message to the terminal (which can be
+customized) and wait for the user to press a key.  In addition to that
+it will also become a noop if the script is not run interactively.
+
+Example::
+
+    import click
+    click.pause()
+
+
 Launching Editors
 -----------------
 
