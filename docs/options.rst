@@ -4,17 +4,17 @@ Options
 .. currentmodule:: click
 
 Adding options to commands can be accomplished by the :func:`option`
-decorator.  Since options can come in various different versions there
+decorator.  Since options can come in various different versions, there
 are a ton of parameters to configure their behavior.
 
 Basic Value Options
 -------------------
 
 The most basic option is a value option.  These options accept one
-argument which is a value.  If no type is provided the type of the default
+argument which is a value.  If no type is provided, the type of the default
 value is used.  If no default value is provided the type is assumed to be
-:data:`STRING`.  The name of the parameter is by default the first long
-option defined, otherwise the first short one.
+:data:`STRING`.  By default, the name of the parameter is the first long
+option defined; otherwise the first short one is used.
 
 .. click:example::
 
@@ -35,7 +35,7 @@ is an integer.
 Multi Value Options
 -------------------
 
-Sometimes you have options that take more than one argument.  For options
+Sometimes, you have options that take more than one argument.  For options,
 only a fixed number of arguments is supported.  This can be configured by
 the ``nargs`` parameter.  The values are then stored as a tuple.
 
@@ -55,7 +55,7 @@ And on the command line:
 Multiple Options
 ----------------
 
-Similar to ``nargs`` there is also the case where sometimes you want to
+Similar to ``nargs`` there is also the case where you sometimes want to
 support a parameter to be provided multiple times to and have all values
 recorded and not just the last one.  For instance ``git commit -m foo -m
 bar`` would record two lines for the commit message.  ``foo`` and ``bar``.
@@ -79,9 +79,9 @@ And on the command line:
 Counting
 --------
 
-In some very rare circumstances it's interesting to use the repeating of
-options to count an integer up.  This for instance can be used for
-verbosity flags:
+In some very rare circumstances, it's interesting to use the repetition
+of options to count an integer up.  This can be used for verbosity flags,
+for instance:
 
 .. click:example::
 
@@ -101,9 +101,9 @@ Boolean Flags
 
 Boolean flags are options that can be enabled or disabled.  This can be
 accomplished by defining two flags in one go separated by a slash (``/``)
-for enabling or disabling the option.  (If a slash is in an option string
+for enabling or disabling the option.  (If a slash is in an option string,
 click automatically knows that it's a boolean flag and will pass
-``is_flag=True`` implicitly).  Click always wants you to provide an enable
+``is_flag=True`` implicitly.)  Click always wants you to provide an enable
 and disable flag so that you can change the default later.
 
 Example:
@@ -127,7 +127,7 @@ And on the command line:
     invoke(info, args=['--shout'])
     invoke(info, args=['--no-shout'])
 
-If you really don't want an off-switch you can just define one and
+If you really don't want an off-switch, you can just define one and
 manually inform click that something is a flag:
 
 .. click:example::
@@ -151,12 +151,12 @@ And on the command line:
 Feature Switches
 ----------------
 
-In addition to boolean flags there are also feature switches.  These are
-implemented by setting multiple options to the same parameter name and by
-defining a flag value.  Note that by providing the ``flag_value`` parameter
+In addition to boolean flags, there are also feature switches.  These are
+implemented by setting multiple options to the same parameter name and
+defining a flag value.  Note that by providing the ``flag_value`` parameter,
 click will implicitly set ``is_flag=True``.
 
-To set a default flag assign a value of `True` to the flag that should be
+To set a default flag, assign a value of `True` to the flag that should be
 the default.
 
 .. click:example::
@@ -211,9 +211,9 @@ What it looks like:
 Prompting
 ---------
 
-Sometimes you want parameters that can either be provided from the command
-line or if not, you want to ask for user input.  This can be implemented
-with click by defining a prompt string.
+Sometimes, you want parameters that can be provided from the command line,
+but if not, ask for user input.  This can be implemented with click by
+defining a prompt string.
 
 Example:
 
@@ -231,7 +231,7 @@ And what it looks like:
     invoke(hello, args=['--name=John'])
     invoke(hello, input=['John'])
 
-If you are not happy with the default prompt string you can ask for
+If you are not happy with the default prompt string, you can ask for
 a different one:
 
 .. click:example::
@@ -267,7 +267,7 @@ What it looks like:
 
     invoke(encrypt, input=['secret', 'secret'])
 
-Because this combination of parameters is quite common this can also be
+Because this combination of parameters is quite common, this can also be
 replaced with the :func:`password_option` decorator:
 
 .. click:example::
@@ -281,7 +281,7 @@ Callbacks and Eager Options
 ---------------------------
 
 Sometimes you want a parameter to completely change the execution flow.
-This for instance is the case when you want to have a ``--version``
+For instance, this is the case when you want to have a ``--version``
 parameter that prints out the version and then exits the application.
 
 In such cases you need two concepts: eager parameters and a callback.  An
@@ -315,12 +315,11 @@ Here an example for a ``--version`` flag:
         click.echo('Hello World!')
 
 The `expose_value` parameter prevents the now pretty pointless ``version``
-parameter to be passed to the callback.  If that was not specified a
+parameter to be passed to the callback.  If that was not specified, a
 boolean would be passed to the `hello` script.  The `resilient_parsing`
 flag is set on the context if click wants to parse the command line
 without and destructive behavior that would change the execution flow.  In
-this case because we would exit the program, we instead do nothing in that
-case.
+this case, because we would exit the program, we instead do nothing.
 
 What it looks like:
 
@@ -337,7 +336,7 @@ What it looks like:
 Yes Parameters
 --------------
 
-For dangerous operations it's very useful to be able to ask a user for
+For dangerous operations, it's very useful to be able to ask a user for
 confirmation.  This can be done by adding a boolean ``--yes`` flag and
 asking for confirmation if the user did not provide it and to fail in a
 callback:
@@ -362,7 +361,7 @@ And what it looks like on the command line:
     invoke(dropdb, input=['n'])
     invoke(dropdb, args=['--yes'])
 
-Because this combination of parameters is quite common this can also be
+Because this combination of parameters is quite common, this can also be
 replaced with the :func:`confirmation_option` decorator:
 
 .. click:example::
@@ -382,18 +381,18 @@ Values from Environment Variables
 
 A very useful feature of click is the ability to accept parameters from
 environment variables in addition to regular parameters.  This allows
-tools to be automated much easier.  For instance you might want to pass
-the config file as ``--config`` parameter but also support exporting a
-``TOOL_CONFIG=hello.cfg`` key / value pair for a nicer development
+tools to be automated much easier.  For instance, you might want to pass
+a configuration file with a ``--config`` parameter but also support exporting
+a ``TOOL_CONFIG=hello.cfg`` key-value pair for a nicer development
 experience.
 
 This is supported by click in two ways.  One is to automatically build
 environment variables which is supported for options only.  To enable this
-feature the ``auto_envvar_prefix`` parameter needs to be passed to the
-script that is invoked.  Each command and parameter is then added as
-underscore-separated variable in uppercase.  So if you have a subcommand
+feature, the ``auto_envvar_prefix`` parameter needs to be passed to the
+script that is invoked.  Each command and parameter is then added as an
+uppercase underscore-separated variable.  If you have a subcommand
 called ``foo`` taking an option called ``bar`` and the prefix is
-``MY_TOOL`` then the variable is ``MY_TOOL_FOO_BAR``.
+``MY_TOOL``, then the variable is ``MY_TOOL_FOO_BAR``.
 
 Example usage:
 
@@ -451,8 +450,8 @@ perform the splitting.
 The default implementation for all types is to split on whitespace.  The
 exceptions to this rule are the :class:`File` and :class:`Path` types
 which both split according to the operating system's path splitting rules.
-On UNIX systems like Linux and OS X the splitting happens for those on
-every colon (``:``) and for Windows on a semicolon (``;``).
+On UNIX systems like Linux and OS X, the splitting happens for those on
+every colon (``:``), and for Windows, on every semicolon (``;``).
 
 Example usage:
 
@@ -510,7 +509,7 @@ A special mention should go to the :class:`IntRange` type which works very
 similar to the :data:`INT` type but restricts the value to fall into a
 specific range (inclusive on both edges).  It has two modes:
 
--   the default mode (non clamping mode) where a value that falls outside
+-   the default mode (non-clamping mode) where a value that falls outside
     of the range will cause an error.
 -   an optional clamping mode where a value that falls outside of the
     range will be clamped.  This means that a range of ``0-5`` would
@@ -537,7 +536,7 @@ And from the command line:
     invoke(repeat, args=['--count=1000', '--digit=5'])
     invoke(repeat, args=['--count=1000', '--digit=12'])
 
-If you pass ``None`` for any of the edges it means that the range is open
+If you pass ``None`` for any of the edges, it means that the range is open
 at that side.
 
 Callbacks for Validation
@@ -550,7 +549,7 @@ parameter callbacks.  These callbacks can both modify values as well as
 raise errors if the validation does not work.
 
 In click 1.0 you can only raise the :exc:`UsageError` but starting with
-click 2.0 you can also raie the :exc:`BadParameter` error which has the
+click 2.0 you can also raise the :exc:`BadParameter` error which has the
 added advantage that it will automatically format the error message to
 also contain the parameter name.
 

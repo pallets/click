@@ -1,7 +1,7 @@
 Why Click?
 ==========
 
-There are so many libraries out there for writing command line utilities,
+There are so many libraries out there for writing command line utilities;
 why does click exist?
 
 This question is easy to answer: because there is not a single command
@@ -19,7 +19,7 @@ There are many alternatives to click and you can have a look at them if
 you enjoy them better.  The obvious ones are ``optparse`` and ``argparse``
 from the standard library.
 
-click is actually implemented as a wrapper around a mild fork of
+Click is actually implemented as a wrapper around a mild fork of
 ``optparse`` and does not implement any parsing itself.  The reason it's
 not based on ``argparse`` is that ``argparse`` does not allow proper
 nesting of commands by design and has some deficiencies when it comes to
@@ -51,7 +51,7 @@ with.  The reason however click is not using argparse is that it has some
 problematic behaviors that make handling arbitrary command line interfaces
 hard:
 
-*   argparse has builtin magic behavior to guess if something is an
+*   argparse has built-in magic behavior to guess if something is an
     argument or an option.  This becomes a problem when dealing with
     incomplete command lines as it's not possible to know without having a
     full understanding of the command line how the parser is going to
@@ -73,14 +73,14 @@ goes beyond what the system itself supports.
 Docopt for instance acts by parsing your help pages and then parsing
 according to those rules.  The side effect of this is that docopt is quite
 rigid in how it handles the command line interface.  The upside of docopt
-is that it gives you strong control over your help page, the downside is
-that due to that it cannot rewrap your output for the current terminal
+is that it gives you strong control over your help page; the downside is
+that due to this it cannot rewrap your output for the current terminal
 width and it makes translations hard.  On top of that docopt is restricted
 to basic parsing.  It does not handle argument dispatching and callback
 invocation or types.  This means there is a lot of code that needs to be
 written in addition to the basic help page to handle the parsing results.
 
-Most of all however it makes composability hard.  While docopt does
+Most of all, however, it makes composability hard.  While docopt does
 support dispatching to subcommands, it for instance does not directly
 support any kind of automatic subcommand enumeration based on what's
 available or it does not enforce subcommands to work in a consistent way.
@@ -88,19 +88,19 @@ available or it does not enforce subcommands to work in a consistent way.
 This is fine, but it's different from how click wants to work.  Click aims
 to support fully composable command line user interfaces by doing this:
 
--   click does not just parse, it also dispatches to the appropriate code.
--   click has a strong concept of an invocation context that allows
+-   Click does not just parse, it also dispatches to the appropriate code.
+-   Click has a strong concept of an invocation context that allows
     subcommands to respond to data from the parent command.
--   click has strong information available for all parameters and commands
+-   Click has strong information available for all parameters and commands
     so that it can generate unified help pages for the full CLI and to
     assist the user in converting the input data as necessary.
--   click has strong understanding of what types are and can give the user
+-   Click has a strong understanding of what types are and can give the user
     consistent error messages if something goes wrong.  A subcommand
     written by a different developer will not suddenly die with a
     different error messsage because it's manually handled.
--   click has enough meta information available for its whole program
+-   Click has enough meta information available for its whole program
     that it can evolve over time to improve the user experience without
-    forcing developers to adjust their programs.  For instance if click
+    forcing developers to adjust their programs.  For instance, if click
     decides to change how help pages are formatted, all click programs
     will automatically benefit from this.
 
@@ -122,7 +122,7 @@ it hard to achieve a consistent command line experience.
 
 The best example for this is optparse's ``callback`` functionality for
 accepting arbitrary number of arguments.  Due to syntactical ambiguities
-on the command line there is no way to implement fully variadic arguments.
+on the command line, there is no way to implement fully variadic arguments.
 There are always tradeoffs that need to be made and in case of
 ``argparse`` these tradeoffs have been critical enough, that a system like
 click cannot even be implemented on top of it.
@@ -140,7 +140,7 @@ even optparse and argparse support automatic expansion of long arguments.
 The reason for this is that it's a liability for backwards compatibility.
 If people start relying on automatically modified parameters and someone
 adds a new parameter in the future, the script might stop working.  These
-kind of problems are hard to find so click does not attempt to be magical
+kinds of problems are hard to find so click does not attempt to be magical
 about this.
 
 This sort of behavior however can be implemented on a higher level to

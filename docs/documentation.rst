@@ -2,13 +2,13 @@ Documenting Scripts
 ===================
 
 Click makes it very easy to document your command line tools.  First of
-all it automatically generates help pages for you.  While these are
-currently not customizable in layout, all the texts can be changed.
+all, it automatically generates help pages for you.  While these are
+currently not customizable in layout, all of the text can be changed.
 
 Help Texts
 ----------
 
-Commands and options accept help arguments.  In case of commands the doc
+Commands and options accept help arguments.  In the case of commands, the doc
 string of the function is automatically used if provided.
 
 Simple example:
@@ -30,7 +30,7 @@ And what it looks like:
     invoke(hello, args=['--help'])
 
 Arguments cannot be documented this way.  This is to follow general
-convention of Unix tools to use arguments only for the most necessary
+convention of Unix tools using arguments for only the most necessary
 things and to document them in the introduction text by referring to them
 by name.
 
@@ -38,11 +38,11 @@ Preventing Rewrapping
 ---------------------
 
 The default behavior of click is to rewrap text to work correctly for the
-width of the terminal.  In some circumstances this can become a problem.
+width of the terminal.  In some circumstances, this can become a problem.
 The main issue is showing code examples where newlines are significant.
 
-Rewrapping can be disabled on a per-paragraph case by adding a line with
-just the ``\b`` escape marker in it.  This line will be removed from the
+Rewrapping can be disabled on a per-paragraph basis by adding a line with
+solely the ``\b`` escape marker in it.  This line will be removed from the
 help text and rewrapping will be disabled.
 
 Example:
@@ -74,13 +74,13 @@ And what it looks like:
     invoke(cli, args=['--help'])
 
 
-Meta Vars
----------
+Meta Variables
+--------------
 
 Options and parameters accept a ``metavar`` argument that can change the
 meta variable in the help page.  The default version is the parameter name
-in uppercase with underscores and sometimes annotated differently if
-optional.  This can be customized at all levels:
+in uppercase with underscores, but can be annotated differently if
+desired.  This can be customized at all levels:
 
 .. click:example::
 
@@ -98,14 +98,14 @@ Example:
 .. click:run::
 
     invoke(hello, args=['--help'])
-                
+
 
 Command Short Help
 ------------------
 
-For commands a short help is generated.  By default it's the first part
-(until the first dot) of the help message of the command unless it's too
-long.  This can also be overridden:
+For commands, a short help snippet is generated.  By default, it's the first
+sentence of the help message of the command, unless it's too long.  This can
+also be overridden:
 
 .. click:example::
 

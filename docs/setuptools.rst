@@ -19,9 +19,9 @@ Introduction
 ------------
 
 All you need to do to bundle your scripts with setuptools is your script
-in a python package and a ``setup.py`` file.
+in a Python package and a ``setup.py`` file.
 
-Imagine this layout::
+Imagine this directory structure::
 
     yourpackage/
         cli.py
@@ -56,7 +56,7 @@ Contents of ``setup.py``::
         ''',
     )
 
-The magic is in the ``entry_points`` parameter.  Below ``console_scripts``
+The magic is in the ``entry_points`` parameter.  Below ``console_scripts``,
 each line identifies one console script.  The first part before the equals
 sign (``=``) is the name of the script that should be generated, the second
 part is the import path followed by a colon (``:``) with the click

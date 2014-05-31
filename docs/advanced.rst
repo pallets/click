@@ -13,7 +13,7 @@ accomplished.
 Command Aliases
 ---------------
 
-Many tools support aliases for commands.  For instance you can configure
+Many tools support aliases for commands.  For instance, you can configure
 ``git`` to accept ``git ci`` as alias for ``git commit``.  Other tools
 also support auto discovery for aliases by automatically shortening them.
 
@@ -21,15 +21,15 @@ Click does not support this out of the box but it's very easy to customize
 the :class:`Group` or any other :class:`MultiCommand` to provide this
 functionality.
 
-As explained in :ref:`custom-multi-commands` a multi command can provide
+As explained in :ref:`custom-multi-commands`, a multi command can provide
 two methods: :meth:`~MultiCommand.list_commands` and
 :meth:`~MultiCommand.get_command`.  In this particular case you only need
 to override the latter as you generally don't want to enumerate the
 aliases on the help page to avoid confusion.
 
 This following example implements a subclass of :class:`Group` that
-accepts a prefix for a command.  So if there is a command called
-``push`` it would accept ``pus`` as alias if it's unique:
+accepts a prefix for a command.  If there is a command called
+``push`` it would accept ``pus`` as an alias if it's unique:
 
 .. click:example::
 
@@ -47,7 +47,7 @@ accepts a prefix for a command.  So if there is a command called
                 return click.Group.get_command(self, ctx, matches[0])
             ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
 
-And it can be used like this then:
+And it can then be used like this:
 
 .. click:example::
 
@@ -66,16 +66,16 @@ And it can be used like this then:
 Invoking Other Commands
 -----------------------
 
-Sometimes it might be interesting to invoke one command from another
-command.  This is generally a pattern that is discouraged with click but
+Sometimes, it might be interesting to invoke one command from another
+command.  This is a pattern that is generally discouraged with click but
 possible nonetheless.  For this you can use the :func:`Context.invoke`
 or :func:`Context.forward` methods.
 
-They work similar but the difference is that :func:`Context.invoke` merely
+They work similarly, but the difference is that :func:`Context.invoke` merely
 invokes another command with the arguments you provide as a caller,
 whereas :func:`Context.forward` fills in the arguments from the current
-command.  Both accept the command as first argument and everything else is
-passed onwards as you would expect.
+command.  Both accept the command as the first argument and everything else
+is passed onwards as you would expect.
 
 Example:
 
@@ -121,10 +121,10 @@ The main difference is that in optparse callbacks are invoked with the raw
 value as it happens, whereas a callback in click is invoked after the
 value has been fully converted.
 
-Generally the order of invocation is driven by the order in which the user
-provides the arguments to the script.  So if there is an option called
-``--foo`` and an option called ``--bar`` and the user calls it as ``--bar
---foo`` then the callback for ``bar`` will fire before the one for ``foo``.
+Generally, the order of invocation is driven by the order in which the user
+provides the arguments to the script; if there is an option called ``--foo``
+and an option called ``--bar`` and the user calls it as ``--bar
+--foo``, then the callback for ``bar`` will fire before the one for ``foo``.
 
 There are two exceptions to this rule which are important to know:
 
@@ -134,14 +134,14 @@ Eagerness:
     they were provided on the command line by the user.
 
     This is important for parameters that execute and exit like ``--help``
-    and ``--version``.  Both are eager parameters but whatever parameter
+    and ``--version``.  Both are eager parameters, but whatever parameter
     comes first on the command line will win and exit the program.
 
 Repeated parameters:
     If an option or argument is split up on the command line into multiple
     places because it's repeated (for instance ``--exclude foo --include
-    baz --exclude bar``) the callback will fire based on the position of
-    the first option.  So in this case the callback will fire for
+    baz --exclude bar``), the callback will fire based on the position of
+    the first option.  In this case, the callback will fire for
     ``exclude`` and it will be passed both options (``foo`` and
     ``bar``), then the callback for ``include`` will fire with ``baz``
     only.
@@ -152,7 +152,7 @@ Repeated parameters:
     through shell aliases that set defaults.
 
 Missing parameters:
-    If a parameter is not defined on the command line the callback will
+    If a parameter is not defined on the command line, the callback will
     still fire.  This is different from how it works in optparse where
     undefined values do not fire the callback.  Missing parameters fire
     their callbacks at the very end which makes it possible for them to

@@ -23,9 +23,9 @@ Example::
 
     click.echo('Hello World!')
 
-Most importantly it can print both unicode and binary data, unlike the
+Most importantly, it can print both Unicode and binary data, unlike the
 builtin ``print`` function on Python 3 which cannot output any bytes.  It
-will however emit a trailing newline by default which needs to be
+will, however, emit a trailing newline by default which needs to be
 supressed by passing ``nl=False``::
 
     click.echo(b'\xe2\x98\x83', nl=False)
@@ -80,7 +80,7 @@ a single function called :func:`secho`::
 Pager Support
 -------------
 
-In some situations you might want to show long texts on the terminal and
+In some situations, you might want to show long texts on the terminal and
 let a user scroll through it.  This can be achieved by using the
 :func:`echo_via_pager` function which works similar to the :func:`echo`
 function but always writes to stdout and, if possible, through a pager.
@@ -102,7 +102,7 @@ Screen Clearing
 
 To clear the terminal screen you can use the :func:`clear` function that
 is provided starting with Click 2.0.  It does what the name suggests: it
-clears the entire visible screen in a platform agnostic way:
+clears the entire visible screen in a platform-agnostic way:
 
 ::
 
@@ -116,13 +116,13 @@ Getting Characters from Terminal
 .. versionadded:: 2.0
 
 Normally when reading input from the terminal you would use reading from
-standard input.  However this is buffered input and will not show up until
-the line has been terminated.  In certain circumstances you might not want
+standard input.  However, this is buffered input and will not show up until
+the line has been terminated.  In certain circumstances, you might not want
 to do that and instead read individual characters as they are being
 written.
 
 For this click provides the :func:`getchar` function which reads a single
-character from the terminal buffer and returns it as a unicode character.
+character from the terminal buffer and returns it as a Unicode character.
 
 Note that this function will always read from the terminal, even if stdin
 is instead a pipe.
@@ -170,8 +170,8 @@ Example usage::
         if message is not None:
             return message.split(MARKER, 1)[0].rstrip('\n')
 
-Alternatively the function can also be used to launch editors for files by
-a specific filename.  In that case the return value is always `None`.
+Alternatively, the function can also be used to launch editors for files by
+a specific filename.  In this case, the return value is always `None`.
 
 Example usage::
 
@@ -185,10 +185,10 @@ Launching Applications
 .. versionadded:: 2.0
 
 Click supports launching applications through :func:`launch`.  This can be
-used to open the default application assocated with a URL or file type.
-This for instance can be used to both launch web browsers as well as
-picture viewers etc.  In addition to that it can also launch the file
-manager and automatically select the provided file.
+used to open the default application assocated with a URL or filetype.
+This for instance can be used to launch web browsers, picture viewers, etc.
+In addition to that, it can also launch the file manager and automatically
+select the provided file.
 
 Example usage::
 
@@ -199,15 +199,15 @@ Example usage::
 Printing Filenames
 ------------------
 
-Because filenames might not be unicode, formatting them can be a bit
+Because filenames might not be Unicode, formatting them can be a bit
 tricky.  Generally this is easier on Python 2 than on 3 as you can just
 write the bytes to stdout with the print function, but at least on Python
-3 you will need to always operate in unicode.
+3 you will need to always operate in Unicode.
 
 The way this works with click is through the :func:`format_filename`
 function.  It does a best effort conversion of the filename to Unicode and
 will never fail.  This makes it possible to use these filenames in the
-context of a full unicode string.
+context of a full Unicode string.
 
 Example::
 
@@ -217,13 +217,13 @@ Example::
 Standard Streams
 ----------------
 
-For command line utilities it's very important to get access to input and
+For command line utilities, it's very important to get access to input and
 output streams reliably.  Python generally provides access to these
 streams through ``sys.stdout`` and friends, but unfortunately there are
 API differences between 2.x and 3.x.  Especially in regards to how these
-streams respond to unicode and binary data there are wide differences.
+streams respond to Unicode and binary data there are wide differences.
 
-Because of this click provides the :func:`get_binary_stream` and
+Because of this, click provides the :func:`get_binary_stream` and
 :func:`get_text_stream` which produce consistent results with different
 Python versions and for widely misconfigured terminals.
 
@@ -244,10 +244,10 @@ Finding Application Folders
 
 .. versionadded:: 2.0
 
-Very often you want to open a config file that belongs to your
-application.  However different operating systems store these config
-files by their policy in different places.  Click provides a
-:func:`get_app_dir` function which returns the most appropriate location
+Very often you want to open a configuration file that belongs to your
+application.  However, different operating systems store these configuration
+files in different locations depending on their standards.  Click provides
+a :func:`get_app_dir` function which returns the most appropriate location
 for per-user config files for your application depending on the OS.
 
 Example usage::
