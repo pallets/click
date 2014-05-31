@@ -69,10 +69,10 @@ next sections.
    If you come from ``argparse`` you might be missing support for setting
    ``nargs`` to ``+`` to indicate that at least one argument is required.
 
-   This is supported by setting ``required=True``.  However this should
+   This is supported by setting ``required=True``.  However, this should
    not be used if you can avoid it as we believe scripts should gracefully
    degrade into becoming noops if a variadic argument is empty.  The
-   reason for this is that very often scripts are invoked with wildcard
+   reason for this is that very often, scripts are invoked with wildcard
    inputs from the command line and they should not error out if the
    wildcard is empty.
 
@@ -81,13 +81,13 @@ next sections.
 File Arguments
 --------------
 
-Since all the examples have already worked with file names it makes sense
+Since all the examples have already worked with filenames, it makes sense
 to explain how to deal with files properly.  Command line tools are more
-fun if they work with files the unix way which is to accept ``-`` as a
+fun if they work with files the Unix way which is to accept ``-`` as a
 special file that refers to stdin/stdout.
 
 Click supports this through the :class:`click.File` type which
-intelligently handles files for you.  It also deals with unicode and bytes
+intelligently handles files for you.  It also deals with Unicode and bytes
 correctly for all versions of Python so your script stays very portable.
 
 Example:
@@ -123,8 +123,8 @@ will be a unicode value always.  Filenames unfortunately however can be
 unicode or bytes depending on which operating system you're on.  As such
 the type is insufficient.
 
-Instead you should be using the :class:`Path` type which handles this
-complexity for you.  Not only will it return either bytes or unicode
+Instead, you should be using the :class:`Path` type which handles this
+complexity for you.  Not only will it return either bytes or Unicode
 depending on what makes more sense, but it will also be able to do some
 basic checks for you such as existence checks.
 
@@ -156,28 +156,28 @@ The :class:`FileType` type has one problem it needs to deal with and that
 is to decide when to open a file.  The default behavior is to be
 "intelligent" about it.  What this means is that it will open stdin/stdout
 and files opened for reading immediately.  This will directly give the
-user feedback when a file cannot be opened.  But it will only open files
+user feedback when a file cannot be opened, but it will only open files
 for writing the first time an IO operation is performed by wrapping the
 file automatically in a special wrapper.
 
 This behavior can be forced by passing ``lazy=True`` or ``lazy=False`` to
-the constructor.  If the file is openened lazily it will fail on first IO
+the constructor.  If the file is opened lazily, it will fail on first IO
 operation by raising an :exc:`FileError`.
 
-Since files opened for writing will typically immediatley empty the file,
-the lazy mode should really only be disabled if the developer is 100% sure
+Since files opened for writing will typically immediately empty the file,
+the lazy mode should only be disabled if the developer is absolutely sure
 that this is intended behavior.
 
-Forcing on lazy mode is also very useful to avoid resource handling
-confusion.  If a file is opened in lazy mode it will get a
-``close_intelligently`` method that can help you figuring out if the file
-needs closing or not.  This is not needed for parameters, but it is
+Forcing lazy mode is also very useful to avoid resource handling
+confusion.  If a file is opened in lazy mode, it will receive a
+``close_intelligently`` method that can help figure out if the file
+needs closing or not.  This is not needed for parameters, but is
 necessary for manually prompting with the :func:`prompt` function as you
-do not know if a stream like stdout was openend (which was already open
+do not know if a stream like stdout was opened (which was already open
 before) or a real file that needs closing.
 
 Starting with click 2.0 it's also possible to open files in atomic mode by
-passing ``atomic=True``.  In atomic mode all writes go into a separate
+passing ``atomic=True``.  In atomic mode, all writes go into a separate
 file in the same folder and upon completion the file will be moved over to
 the original location.  This is useful if a file regularly read by other
 users is modified.
@@ -186,7 +186,7 @@ Environment Variables
 ---------------------
 
 Like options, arguments can also get values from an environment variable.
-Unlike options however this is only supported for explicitly named
+Unlike options, however, this is only supported for explicitly named
 environment variables.
 
 Example usage:
@@ -207,22 +207,22 @@ And from the command line:
             f.write('Hello World!')
         invoke(echo, env={'SRC': 'hello.txt'})
 
-In that case it can also be a list of different environment variables
+In that case, it can also be a list of different environment variables
 where the first one is picked.
 
 Generally this feature is not recommended because it can cause a lot of
 confusion to the user.
 
-Arguments looking like Options
+Arguments-Like Options
 ------------------------------
 
 Sometimes you want to process arguments that look like options.  For
-instance imagine you have a file named ``-foo.txt``.  If you pass this as
-such as an argument click will treat it as an option.
+instance, imagine you have a file named ``-foo.txt``.  If you pass this as
+an argument in this manner, click will treat it as an option.
 
-To solve this, click does what any POSIX style command line script does
+To solve this, click does what any POSIX style command line script does,
 and that is to accept the string ``--`` as a separator for options and
-arguments.  After the ``--`` marker all further parameters are accepted as
+arguments.  After the ``--`` marker, all further parameters are accepted as
 arguments.
 
 Example usage:

@@ -10,12 +10,12 @@ and :class:`Group` (actually :class:`MultiCommand`).
 Callback Invocation
 -------------------
 
-For a regular command the callback is executed whenever the command runs.
-So if the script is the only command it will always fire (unless a
-parameter callback prevents it.  This for instance happens if someone
+For a regular command, the callback is executed whenever the command runs.
+If the script is the only command it will always fire (unless a
+parameter callback prevents it).  This for instance happens if someone
 passes ``--help`` to the script).
 
-For groups and multi commands the situation looks different.  In that case
+For groups and multi commands, the situation looks different.  In this case,
 the callback fires whenever a subcommand fires (unless this behavior is
 changed).  What this means in practice is that an outer command runs
 when an inner command runs:
@@ -42,20 +42,20 @@ Here is what this looks like:
 Nested Handling and Contexts
 ----------------------------
 
-As you can see from the earlier example the basic command group accepts a
+As you can see from the earlier example, the basic command group accepts a
 debug argument which is passed to its callback, but not to the sync
 command itself.  The sync command only accepts its own arguments.
 
-This allows tools to act completely independent of each other.  But how
+This allows tools to act completely independent of each other, but how
 does one command talk to a nested one?  The answer to this is the
 :class:`Context`.
 
-Each time a command is invoked a new context is created and linked with the
-parent context.  Normally you can't see these contexts, but they are
+Each time a command is invoked, a new context is created and linked with the
+parent context.  Normally, you can't see these contexts, but they are
 there.  Contexts are passed to parameter callbacks together with the
 value automatically.  Commands can also ask for the context to be passed
 by marking themselves with the :func:`pass_context` decorator.  In that
-case the context is passed as first argument.
+case, the context is passed as first argument.
 
 The context can also carry a program specified object that can be
 used for the program's purposes.  What this means is that you can build a
@@ -77,30 +77,30 @@ script like this:
     if __name__ == '__main__':
         cli(obj={})
 
-If the object is provided each context will pass the object onwards to
+If the object is provided, each context will pass the object onwards to
 its children, but at any level a context's object can be overridden.  To
-reach to a parent ``context.parent`` can be used.
+reach to a parent, ``context.parent`` can be used.
 
-In addition to that instead of passing an object down nothing stops the
-application from modifying global state.  For instance you could just flip
+In addition to that, instead of passing an object down, nothing stops the
+application from modifying global state.  For instance, you could just flip
 a global ``DEBUG`` variable and be done with it.
 
 Decorating Commands
 -------------------
 
-As you have seen in the earlier example a decorator can change how a
+As you have seen in the earlier example, a decorator can change how a
 command is invoked.  What actually happens behind the scenes is that
 callbacks are always invoked through the :meth:`Context.invoke` method
 which automatically invokes a command correctly (by either passing the
 context or not).
 
 This is very useful when you want to write custom decorators.  For
-instance a common pattern would be to configure an object representing
+instance, a common pattern would be to configure an object representing
 state and then storing it on the context and then to use a custom
 decorator to find the most recent object of this sort and pass it as first
 argument.
 
-For instance the :func:`pass_obj` decorator can be implemented like this:
+For instance, the :func:`pass_obj` decorator can be implemented like this:
 
 .. click:example::
 
@@ -113,7 +113,7 @@ For instance the :func:`pass_obj` decorator can be implemented like this:
         return update_wrapper(new_func, f)
 
 The :meth:`Context.invoke` command will automatically invoke the function
-in the correct way.  So the function will either be called with ``f(ctx,
+in the correct way, so the function will either be called with ``f(ctx,
 obj)`` or ``f(obj)`` depending on if it itself is decorated with
 :func:`with_context`.
 
@@ -124,13 +124,13 @@ nested applications.  See :ref:`complex-guide` for more information.
 Group Invocation Without Command
 --------------------------------
 
-By default a group or multi command is not invoked unless a subcommand is
+By default, a group or multi command is not invoked unless a subcommand is
 passed.  In fact, not providing a command automatically passes ``--help``
 by default.  This behavior can be changed by passing
-``invoke_without_command=True`` to a group.  In that case the callback is
+``invoke_without_command=True`` to a group.  In that case, the callback is
 always invoked instead of showing the help page.  The context object also
-includes information about if the invocation would go to a subcommand or
-not.
+includes information about whether or not the invocation would go to a
+subcommand.
 
 Example:
 
@@ -150,7 +150,7 @@ Example:
 
 And how it works in practice::
 
-    $ python tool.py 
+    $ python tool.py
     I was invoked without subcommand
     $ python tool.py sync
     I am about to invoke sync
@@ -161,7 +161,7 @@ And how it works in practice::
 Custom Multi Commands
 ---------------------
 
-In addition to using :func:`click.group` you can also build your own
+In addition to using :func:`click.group`, you can also build your own
 custom multi commands.  This is useful when you want to support commands
 being loaded lazily from plugins.
 
@@ -209,16 +209,14 @@ These custom classes can also be used with decorators:
 Merging Multi Commands
 ----------------------
 
-In addition to implementing custom multi commands it can also be
+In addition to implementing custom multi commands, it can also be
 interesting to merge multiple together into one script.  While this is
-generally not as recommended as nesting one below the other the merging
+generally not as recommended as nesting one below the other, the merging
 approach can be useful in some circumstances for a nicer shell experience.
 
 A default implementation for such a merging system is the
 :class:`CommandCollection` class.  It accepts a list of other multi
-commands and makes the commands available on the same class.  It accepts a
-list of other multi commands and makes the commands available on the same
-level.
+commands and makes the commands available on the same level.
 
 Example usage:
 
@@ -253,24 +251,25 @@ And what it looks like:
 
     invoke(cli, prog_name='cli', args=['--help'])
 
-In case a command exists on more than one source, the first source wins.
+In case a command exists in more than one source, the first source wins.
 
 Overriding Defaults
 -------------------
 
-By default the default value for a parameter is pulled from the
-``default`` flag that is provided when it's defined.  But that's not the
+By default, the default value for a parameter is pulled from the
+``default`` flag that is provided when it's defined, but that's not the
 only place defaults can be loaded from.  The other place is the
 :attr:`Context.default_map` (a dictionary) on the context.  This allows
-defaults to be loaded from a config file to override the regular defaults.
+defaults to be loaded from a configuration file to override the regular
+defaults.
 
 This is useful if you plug in some commands from another package but
 you're not satisfied with the defaults.
 
 The default map can be nested arbitrarily for each subcommand and be
-provided when the script is invoked.  Alternatively it can also be
-overriden at any point by commands.  For instance a toplevel command could
-load the defaults from a config file.
+provided when the script is invoked.  Alternatively, it can also be
+overriden at any point by commands.  For instance a top-level command could
+load the defaults from a configuration file.
 
 Example usage:
 
