@@ -483,6 +483,10 @@ def strip_ansi(value):
     return _ansi_re.sub('', value)
 
 
+def term_len(x):
+    return len(strip_ansi(x))
+
+
 def isatty(stream):
     try:
         return stream.isatty()

@@ -14,7 +14,7 @@ import sys
 import time
 import math
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
-     open_stream, strip_ansi, get_best_encoding
+     open_stream, strip_ansi, term_len, get_best_encoding
 from .utils import echo
 from .exceptions import ClickException
 
@@ -191,7 +191,7 @@ class ProgressBar(object):
         if self.autowidth:
             old_width = self.width
             self.width = 0
-            clutter_length = len(strip_ansi(self.format_progress_line()))
+            clutter_length = term_len(self.format_progress_line())
             new_width = max(0, get_terminal_size()[0] - clutter_length)
             if new_width < old_width:
                 self.file.write(BEFORE_BAR)
@@ -205,7 +205,7 @@ class ProgressBar(object):
 
         self.file.write(BEFORE_BAR)
         line = self.format_progress_line()
-        line_len = len(strip_ansi(line))
+        line_len = term_len(line)
         if self.max_width is None or self.max_width < line_len:
             self.max_width = line_len
         # Use echo here so that we get colorama support.

@@ -1,12 +1,6 @@
-import textwrap
 from contextlib import contextmanager
-
 from .termui import get_terminal_size
-from ._compat import strip_ansi
-
-
-def term_len(x):
-    return len(strip_ansi(x))
+from ._compat import term_len
 
 
 def measure_table(rows):
@@ -21,48 +15,6 @@ def iter_rows(rows, col_count):
     for row in rows:
         row = tuple(row)
         yield row + ('',) * (col_count - len(row))
-
-
-class TextWrapper(textwrap.TextWrapper):
-
-    def _cutdown(self, ucstr, space_left):
-        l = 0
-        for i in xrange(len(ucstr)):
-            l += term_len(ucstr[i])
-            if space_left < l:
-                return (ucstr[:i], ucstr[i:])
-        return ucstr, ''
-
-    def _handle_long_word(self, reversed_chunks, cur_line, cur_len, width):
-        space_left = max(width - cur_len, 1)
-
-        if self.break_long_words:
-            cut, res = self._cutdown(reversed_chunks[-1], space_left)
-            cur_line.append(cut)
-            reversed_chunks[-1] = res
-        elif not cur_line:
-            cur_line.append(reversed_chunks.pop())
-
-    @contextmanager
-    def extra_indent(self, indent):
-        old_initial_indent = self.initial_indent
-        old_subsequent_indent = self.subsequent_indent
-        self.initial_indent += indent
-        self.subsequent_indent += indent
-        try:
-            yield
-        finally:
-            self.initial_indent = old_initial_indent
-            self.subsequent_indent = old_subsequent_indent
-
-    def indent_only(self, text):
-        rv = []
-        for idx, line in enumerate(text.splitlines()):
-            indent = self.initial_indent
-            if idx > 0:
-                indent = self.subsequent_indent
-            rv.append(indent + line)
-        return '\n'.join(rv)
 
 
 def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
@@ -85,6 +37,7 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
     :param preserve_paragraphs: if this flag is set then the wrapping will
                                 intelligently handle paragraphs.
     """
+    from ._textwrap import TextWrapper
     text = text.expandtabs()
     wrapper = TextWrapper(width, initial_indent=initial_indent,
                           subsequent_indent=subsequent_indent,
