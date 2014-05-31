@@ -16,8 +16,9 @@ callbacks.  Before 2.0 the callback was invoked with ``(ctx, value)``
 whereas now it's ``(ctx, param, value)``.  This change was necessary as it
 otherwise made reusing callbacks too complicated.
 
-To ease the transition click will still accept old callbacks but it will
-issue a warning to stderr to encourage you to upgrade.
+To ease the transition click will still accept old callbacks.  Starting
+with Click 3.0 it will start to issue a warning to stderr to encourage you
+to upgrade.
 
 In case you want to support both click 1.0 and click 2.0 you can make a
 simple decorator that adjusts the signatures::
