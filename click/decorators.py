@@ -131,7 +131,7 @@ def _param_memo(f, param):
 
 def argument(*param_decls, **attrs):
     """Attaches an option to the command.  All positional arguments are
-    passed as parameter declarations to :class:`Argment`, all keyword
+    passed as parameter declarations to :class:`Argument`, all keyword
     arguments are forwarded unchanged.  This is equivalent to creating an
     :class:`Option` instance manually and attaching it to the
     :attr:`Command.params` list.
