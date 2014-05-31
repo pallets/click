@@ -53,7 +53,7 @@ At the moment click suffers from a few problems on Python 3:
     contents as the wrapper will not forward that method.
 
 Python 2 and 3 Differences
-------------------------
+--------------------------
 
 Click attempts to minimize the differences between Python 2 and Python 3
 by following the best practices for both languages.
