@@ -43,9 +43,9 @@ class _NonClosingTextIOWrapper(io.TextIOWrapper):
         io.TextIOWrapper.__init__(self, _FixupStream(stream),
                                   encoding, errors, **extra)
 
-    # The io module is already a place where Python 2 got the
-    # python 3 text behavior forced on, so we need to unbreak
-    # it to look like python 2 stuff.
+    # The io module is a place where the Python 3 text behavior
+    # was forced upon Python 2, so we need to unbreak
+    # it to look like Python 2.
     if PY2:
         def write(self, x):
             if isinstance(x, str) or is_bytes(x):
@@ -69,7 +69,7 @@ class _NonClosingTextIOWrapper(io.TextIOWrapper):
 
 class _FixupStream(object):
     """The new io interface needs more from streams than streams
-    traditionally implement.  As such this fixup stuff is necessary in
+    traditionally implement.  As such, this fix-up code is necessary in
     some circumstances.
     """
 
@@ -83,7 +83,7 @@ class _FixupStream(object):
         f = getattr(self._stream, 'read1', None)
         if f is not None:
             return f(size)
-        # Only python 2 we dispatch to readline instead of read as we
+        # We only dispatch to readline instead of read in Python 2 as we
         # do not want cause problems with the different implementation
         # of line buffering.
         if PY2:
@@ -137,14 +137,14 @@ if PY2:
 
     _identifier_re = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
 
-    # For Windows we need to force stdout/stdin/stderr to binary if it's
+    # For Windows, we need to force stdout/stdin/stderr to binary if it's
     # fetched for that.  This obviously is not the most correct way to do
-    # it as it changes global state.  Unfortunately there does not seem to
+    # it as it changes global state.  Unfortunately, there does not seem to
     # be a clear better way to do it as just reopening the file in binary
     # mode does not change anything.
     #
-    # An option would be to do what python 3 does and to open the file as
-    # binary only, patch it back to the system and then use a wrapper
+    # An option would be to do what Python 3 does and to open the file as
+    # binary only, patch it back to the system, and then use a wrapper
     # stream that converts newlines.  It's not quite clear what's the
     # correct option here.
     if sys.platform == 'win32':
@@ -203,7 +203,7 @@ else:
         except Exception:
             return default
             # This happens in some cases where the stream was already
-            # closed.  In this case we assume the defalt.
+            # closed.  In this case, we assume the default.
 
     def _is_binary_writer(stream, default=False):
         try:
@@ -219,16 +219,15 @@ else:
 
     def _find_binary_reader(stream):
         # We need to figure out if the given stream is already binary.
-        # This can happen because the official docs recommend detatching
+        # This can happen because the official docs recommend detaching
         # the streams to get binary streams.  Some code might do this, so
         # we need to deal with this case explicitly.
-        is_binary = _is_binary_reader(stream, False)
-
-        if is_binary:
+        if _is_binary_reader(stream, False):
             return stream
 
         buf = getattr(stream, 'buffer', None)
-        # Same situation here, this time we assume that the buffer is
+
+        # Same situation here; this time we assume that the buffer is
         # actually binary in case it's closed.
         if buf is not None and _is_binary_reader(buf, True):
             return buf
@@ -243,13 +242,13 @@ else:
 
         buf = getattr(stream, 'buffer', None)
 
-        # Same situation here, this time we assume that the buffer is
+        # Same situation here; this time we assume that the buffer is
         # actually binary in case it's closed.
         if buf is not None and _is_binary_writer(buf, True):
             return buf
 
     def _stream_is_misconfigured(stream):
-        """A stream is misconfigured if it's encoding is ASCII."""
+        """A stream is misconfigured if its encoding is ASCII."""
         return is_ascii_encoding(getattr(stream, 'encoding', None))
 
     def _is_compatible_text_stream(stream, encoding, errors):
@@ -260,7 +259,7 @@ else:
         if stream_encoding == encoding and stream_errors == errors:
             return True
 
-        # Otherwise it's only a compatible stream if we did not ask for
+        # Otherwise, it's only a compatible stream if we did not ask for
         # an encoding.
         if encoding is None:
             return stream_encoding is not None
@@ -271,24 +270,24 @@ else:
         if _is_binary_reader(text_reader, False):
             binary_reader = text_reader
         else:
-            # If there is no target encoding set we need to verify that the
-            # reader is actually not misconfigured.
+            # If there is no target encoding set, we need to verify that the
+            # reader is not actually misconfigured.
             if encoding is None and not _stream_is_misconfigured(text_reader):
                 return text_reader
 
             if _is_compatible_text_stream(text_reader, encoding, errors):
                 return text_reader
 
-            # If the reader has no encoding we try to find the underlying
+            # If the reader has no encoding, we try to find the underlying
             # binary reader for it.  If that fails because the environment is
             # misconfigured, we silently go with the same reader because this
-            # is too common to happen.  In that case mojibake is better than
+            # is too common to happen.  In that case, mojibake is better than
             # exceptions.
             binary_reader = _find_binary_reader(text_reader)
             if binary_reader is None:
                 return text_reader
 
-        # At this point we default the errors to replace instead of strict
+        # At this point, we default the errors to replace instead of strict
         # because nobody handles those errors anyways and at this point
         # we're so fundamentally fucked that nothing can repair it.
         if errors is None:
@@ -299,24 +298,24 @@ else:
         if _is_binary_writer(text_writer, False):
             binary_writer = text_writer
         else:
-            # If there is no target encoding set we need to verify that the
-            # writer is actually not misconfigured.
+            # If there is no target encoding set, we need to verify that the
+            # writer is not actually misconfigured.
             if encoding is None and not _stream_is_misconfigured(text_writer):
                 return text_writer
 
             if _is_compatible_text_stream(text_writer, encoding, errors):
                 return text_writer
 
-            # If the writer has no encoding we try to find the underlying
+            # If the writer has no encoding, we try to find the underlying
             # binary writer for it.  If that fails because the environment is
             # misconfigured, we silently go with the same writer because this
-            # is too common to happen.  In that case mojibake is better than
+            # is too common to happen.  In that case, mojibake is better than
             # exceptions.
             binary_writer = _find_binary_writer(text_writer)
             if binary_writer is None:
                 return text_writer
 
-        # At this point we default the errors to replace instead of strict
+        # At this point, we default the errors to replace instead of strict
         # because nobody handles those errors anyways and at this point
         # we're so fundamentally fucked that nothing can repair it.
         if errors is None:
@@ -377,7 +376,7 @@ def get_streerror(e, default=None):
 
 def open_stream(filename, mode='r', encoding=None, errors='strict',
                 atomic=False):
-    # standard streams first.  These are simple because they don't need
+    # Standard streams first.  These are simple because they don't need
     # special handling for the atomic flag.  It's entirely ignored.
     if filename == '-':
         if 'w' in mode:
@@ -388,8 +387,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
             return get_binary_stdin(), False
         return get_text_stdin(encoding=encoding, errors=errors), False
 
-    # Non-atomic writes directly go out through the regular open
-    # functions.
+    # Non-atomic writes directly go out through the regular open functions.
     if not atomic:
         if encoding is None:
             return open(filename, mode), True
@@ -397,7 +395,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
 
     # Atomic writes are more complicated.  They work by opening a file
     # as a proxy in the same folder and then using the fdopen
-    # functionality to wrap it in a python file.  Then we wrap it in an
+    # functionality to wrap it in a Python file.  Then we wrap it in an
     # atomic file that moves the file over on close.
     import tempfile
     fd, tmp_filename = tempfile.mkstemp(dir=os.path.dirname(filename),
@@ -411,8 +409,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     return _AtomicFile(f, tmp_filename, filename), True
 
 
-# Used in a destructor call, needs extra protection from interpreter
-# cleanup.
+# Used in a destructor call, needs extra protection from interpreter cleanup.
 _rename = os.rename
 
 
@@ -452,8 +449,8 @@ auto_wrap_for_ansi = None
 colorama = None
 
 
-# If we're on windows we provide transparent integration through
-# colorama.  This will make ansi colors through the echo function
+# If we're on Windows, we provide transparent integration through
+# colorama.  This will make ANSI colors through the echo function
 # work automatically.
 if sys.platform.startswith('win'):
     try:

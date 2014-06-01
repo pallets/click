@@ -38,12 +38,12 @@ def invoke_param_callback(callback, ctx, param, value):
     args = getattr(code, 'co_argcount', 3)
 
     if args < 3:
-        # This will become a warning in Click 3.0
-        ##from warnings import warn
-        ##warn(Warning('Invoked legacy parameter callback "%s".  The new '
-        ##             'signature for such callbacks starting with '
-        ##             'Click 2.0 is (ctx, param, value).'
-        ##             % callback), stacklevel=3)
+        # This will become a warning in click 3.0:
+        ## from warnings import warn
+        ## warn(Warning('Invoked legacy parameter callback "%s".  The new '
+        ##              'signature for such callbacks starting with '
+        ##              'click 2.0 is (ctx, param, value).'
+        ##              % callback), stacklevel=3)
         return callback(ctx, value)
     return callback(ctx, param, value)
 
@@ -136,14 +136,14 @@ class Context(object):
         #: this flag indicates if a subcommand is going to be executed.
         #: a group callback can use this information to figure out if it's
         #: being executed directly or because the execution flow passes
-        #: onwards to a subcommand.  By default it's `None` but it can be
+        #: onwards to a subcommand.  By default it's `None`, but it can be
         #: the name of the subcommand to execute.
         self.invoked_subcommand = None
         if obj is None and parent is not None:
             obj = parent.obj
         #: the user object stored.
         self.obj = obj
-        #: A dictionary (like object) with defaults for parameters.
+        #: A dictionary (-like object) with defaults for parameters.
         self.default_map = default_map
 
         if terminal_width is None and parent is not None:
@@ -183,7 +183,7 @@ class Context(object):
     def call_on_close(self, f):
         """This decorator remembers a function as callback that should be
         executed when the context tears down.  This is most useful to bind
-        resource handling to the script execution.  For instance file objects
+        resource handling to the script execution.  For instance, file objects
         opened by the :class:`File` type will register their close callbacks
         here.
 
@@ -318,12 +318,12 @@ class BaseCommand(object):
     functionality but it can act as the direct subclass of alternative
     parsing methods that do not depend on the click parser.
 
-    For instance this can be used to bridge click and other systems like
+    For instance, this can be used to bridge click and other systems like
     argparse or docopt.
 
     Because base commands do not implement a lot of the API that other
-    parts of click take for granted they are not supported for all
-    operations.  For instance they cannot be used with the decorators
+    parts of click take for granted, they are not supported for all
+    operations.  For instance, they cannot be used with the decorators
     usually and they have no built-in callback system.
 
     :param name: the name of the command to use unless a group overrides it.
@@ -426,7 +426,7 @@ class BaseCommand(object):
             prog_name = make_str(os.path.basename(
                 sys.argv and sys.argv[0] or __file__))
 
-        # Hook for the bash completion.  This only activates if the bash
+        # Hook for the Bash completion.  This only activates if the Bash
         # completion is actually enabled, otherwise this is quite a fast
         # noop.
         _bashcomplete(self, prog_name, complete_var)
@@ -668,7 +668,7 @@ class MultiCommand(Command):
         cmd = self.get_command(ctx, cmd_name)
 
         # If we don't find the command we want to show an error message
-        # to the user that it was not provided.  However there is
+        # to the user that it was not provided.  However, there is
         # something else we should do: if the first argument looks like
         # an option we want to kick off parsing again for arguments to
         # resolve things like --help which now should go to the main
@@ -793,7 +793,7 @@ class Parameter(object):
 
     .. versionchanged:: 2.0
        Changed signature for parameter callback to also be passed the
-       parameter.  In click 2.0 the old callback format will still work
+       parameter.  In click 2.0, the old callback format will still work,
        but it will raise a warning to give you change to migrate the
        code easier.
 
@@ -801,16 +801,16 @@ class Parameter(object):
                         argument.  This is a list of flags or argument
                         names.
     :param type: the type that should be used.  Either a :class:`ParamType`
-                 or a python type.  The later is converted into the former
+                 or a Python type.  The later is converted into the former
                  automatically if supported.
     :param required: controls if this is optional or not.
-    :param default: the default value if omitted.  This can also be a callable
+    :param default: the default value if omitted.  This can also be a callable,
                     in which case it's invoked when the default is needed
                     without any arguments.
     :param callback: a callback that should be executed after the parameter
                      was matched.  This is called as ``fn(ctx, param,
                      value)`` and needs to return the value.  Before click
-                     2.0 the signature was ``(ctx, value)``.
+                     2.0, the signature was ``(ctx, value)``.
     :param nargs: the number of arguments to match.  If not ``1`` the return
                   value is a tuple instead of single value.
     :param metavar: how the value is represented in the help page.
@@ -952,13 +952,13 @@ class Parameter(object):
 
 
 class Option(Parameter):
-    """Options are usually optionaly values on the command line and
+    """Options are usually optional values on the command line and
     have some extra features that arguments don't have.
 
     All other parameters are passed onwards to the parameter constructor.
 
     :param show_default: controls if the default value should be shown on the
-                         help page.  Normally defaults are not shown.
+                         help page.  Normally, defaults are not shown.
     :param prompt: if set to `True` or a non empty string then the user will
                    be prompted for input if not set.  If set to `True` the
                    prompt will be the option name capitalized.

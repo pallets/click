@@ -147,7 +147,7 @@ class OptionParser(object):
     def add_option(self, opts, dest, action=None, nargs=1, const=None,
                    obj=None):
         """Adds a new option named `dest` to the parser.  The destination
-        is not inferred unlike with optparse and needs to be explicitly
+        is not inferred (unlike with optparse) and needs to be explicitly
         provided.  Action can be any of ``store``, ``store_const``,
         ``append``, ``appnd_const`` or ``count``.
 
@@ -204,7 +204,7 @@ class OptionParser(object):
         while state.rargs:
             arg = state.rargs.pop(0)
             arglen = len(arg)
-            # Double dash es always handled explicitly regardless of what
+            # Double dashes always handled explicitly regardless of what
             # prefixes are valid.
             if arg == '--':
                 return
@@ -259,8 +259,7 @@ class OptionParser(object):
                         % (opt, ', '.join(possibilities)))
 
     def _process_long_opt(self, arg, state):
-        # Value explicitly attached to arg?  Pretend it's the next
-        # argument.
+        # Value explicitly attached to arg?  Pretend it's the next argument.
         if '=' in arg:
             opt, next_arg = arg.split('=', 1)
             state.rargs.insert(0, next_arg)

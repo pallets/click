@@ -95,7 +95,7 @@ state of our tool:
         ctx.obj = Repo(repo_home, debug)
 
 
-So let's understand what this does.  We create a group command which can
+Let's understand what this does.  We create a group command which can
 have subcommands.  When it is invoked, it will create an instance of a
 ``Repo`` class.  This holds the state for our command line tool.  In this
 case, it just remembers some parameters, but at this point it could also

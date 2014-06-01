@@ -3,11 +3,11 @@
     click
     ~~~~~
 
-    click is a simple Python module that wraps the stdlib's optparse to make
-    writing command line scripts fun.  Unlike other modules it's based around
+    Click is a simple Python module that wraps the stdlib's optparse to make
+    writing command line scripts fun.  Unlike other modules, it's based around
     a simple API that does not come with too much magic and is composable.
 
-    In case optparse ever goes away from the stdlib it will be shipped by
+    In case optparse ever gets removed from the stdlib, it will be shipped by
     this module.
 
     :copyright: (c) 2014 by Armin Ronacher.

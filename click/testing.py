@@ -89,13 +89,13 @@ class Result(object):
 
 
 class CliRunner(object):
-    """The CLI runner provides functionality to invoke a Click command line
+    """The CLI runner provides functionality to invoke a click command line
     script for unittesting purposes in a isolated environment.  This only
-    works in single-threaded systems without any concurrency as it changes
+    works in single-threaded systems without any concurrency as it changes the
     global interpreter state.
 
     :param charset: the character set for the input and output data.  This is
-                    utf-8 by default and should not be changed currently as
+                    UTF-8 by default and should not be changed currently as
                     the reporting to click only works in Python 2 properly.
     :param env: a dictionary with environment variables for overriding.
     :param echo_stdin: if this is set to `True`, then reading from stdin writes
@@ -127,10 +127,10 @@ class CliRunner(object):
 
     @contextlib.contextmanager
     def isolation(self, input=None, env=None):
-        """A context manager that set up the isolation for invoking of a
-        command line tool.  This sets up stdin with the given input data,
+        """A context manager that sets up the isolation for invoking of a
+        command line tool.  This sets up stdin with the given input data
         and `os.environ` with the overrides from the given dictionary.
-        This also rebinds some internals in Click to be mocked (like the
+        This also rebinds some internals in click to be mocked (like the
         prompt functionality).
 
         This is automatically done in the :meth:`invoke` method.
