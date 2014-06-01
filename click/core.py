@@ -401,7 +401,7 @@ class BaseCommand(object):
         :param extra: extra keyword arguments are forwarded to the context
                       constructor.  See :class:`Context` for more information.
         """
-        # If we are on python 3 we will verify that the environment is
+        # If we are in Python 3, we will verify that the environment is
         # sane at this point of reject further execution to avoid a
         # broken script.
         if not PY2:

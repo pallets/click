@@ -229,8 +229,8 @@ def echo(message=None, file=None, nl=True):
     if message is not None and not isinstance(message, echo_native_types):
         message = text_type(message)
 
-    # If there is a message, and we're on python 3, and the value looks
-    # like bytes we manually need to find the binary stream and write the
+    # If there is a message, and we're in Python 3, and the value looks
+    # like bytes, we manually need to find the binary stream and write the
     # message in there.  This is done separately so that most stream
     # types will work as you would expect.  Eg: you can write to StringIO
     # for other cases.

@@ -12,8 +12,8 @@ def test_echo(runner):
         bytes = out.getvalue()
         assert bytes == b'\xe2\x98\x83\nDD\n42ax'
 
-    # If we are on python 2 we expect that writing bytes into a string io
-    # does not do anything crazy.  On Python 3
+    # If we are in Python 2, we expect that writing bytes into a string io
+    # does not do anything crazy.  In Python 3
     if sys.version_info[0] == 2:
         import StringIO
         sys.stdout = x = StringIO.StringIO()

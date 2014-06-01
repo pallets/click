@@ -45,7 +45,7 @@ Version 1.1
 
 (bugfix release, released on May 23rd 2014)
 
-- fixed a bug that caused text files on Python 2 to not accept
+- fixed a bug that caused text files in Python 2 to not accept
   native strings.
 
 Version 1.0

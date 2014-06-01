@@ -96,7 +96,7 @@ class CliRunner(object):
 
     :param charset: the character set for the input and output data.  This is
                     utf-8 by default and should not be changed currently as
-                    the reporting to click only works on Python 2 properly.
+                    the reporting to click only works in Python 2 properly.
     :param env: a dictionary with environment variables for overriding.
     :param echo_stdin: if this is set to `True`, then reading from stdin writes
                        to stdout.  This is useful for showing examples in
