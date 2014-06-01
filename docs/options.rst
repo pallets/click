@@ -331,7 +331,7 @@ Here an example for a ``--version`` flag:
 The `expose_value` parameter prevents the pretty pointless ``version``
 parameter from being passed to the callback.  If that was not specified, a
 boolean would be passed to the `hello` script.  The `resilient_parsing`
-flag is set on the context if click wants to parse the command line
+flag is applied to the context if click wants to parse the command line
 without and destructive behavior that would change the execution flow.  In
 this case, because we would exit the program, we instead do nothing.
 
