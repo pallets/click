@@ -59,20 +59,20 @@ To install `colorama`, run this command::
 
     $ pip install colorama
 
-For styling a string the :func:`style` function can be used::
+For styling a string, the :func:`style` function can be used::
 
     import click
 
     click.echo(click.style('Hello World!', fg='green'))
     click.echo(click.style('Some more text', bg='blue', fg='white'))
-    click.echo(click.style('ATTENTION', blink=True))
+    click.echo(click.style('ATTENTION', blink=True, bold=True))
 
 The combination of :func:`echo` and :func:`style` is also available in
 a single function called :func:`secho`::
 
     click.secho('Hello World!', fg='green')
     click.secho('Some more text', bg='blue', fg='white')
-    click.secho('ATTENTION', blink=True)
+    click.secho('ATTENTION', blink=True, bold=True)
 
 
 .. _colorama: https://pypi.python.org/pypi/colorama
