@@ -120,7 +120,7 @@ standard input.  However, this is buffered input and will not show up until
 the line has been terminated.  In certain circumstances, you might not want
 to do that and instead read individual characters as they are being written.
 
-For thi,s click provides the :func:`getchar` function which reads a single
+For this, click provides the :func:`getchar` function which reads a single
 character from the terminal buffer and returns it as a Unicode character.
 
 Note that this function will always read from the terminal, even if stdin
@@ -143,9 +143,9 @@ Example::
 Note that this reads raw input, which means that things like arrow keys
 will show up in the platform's native escape format.  The only characters
 translated are ``^C`` and ``^D`` which are converted into keyboard
-interrupt and end of file exceptions.  This is done because otherwise it's
-too easy to forget about that and to create scripts that cannot be
-properly exited.
+interrupts and end of file exceptions respectively.  This is done because
+otherwise, it's too easy to forget about that and to create scripts that
+cannot be properly exited.
 
 
 Waiting for Key Press
