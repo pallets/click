@@ -7,7 +7,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'Click',
-        # Colorama is only required for windows.
+        # Colorama is only required for Windows.
         'colorama',
     ],
     entry_points='''

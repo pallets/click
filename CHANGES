@@ -8,7 +8,7 @@ Version 2.0
 
 (codename and release date to be decided)
 
-- added support for opening stdin/stdout on windows in
+- added support for opening stdin/stdout on Windows in
   binary mode correctly.
 - added support for atomic writes to files by going through
   a temporary file.
