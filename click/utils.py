@@ -320,11 +320,11 @@ def get_app_dir(app_name, roaming=True, force_posix=False):
 
     Mac OS X:
       ``~/Library/Application Support/Foo Bar``
-    Mac OS X (posix):
+    Mac OS X (POSIX):
       ``~/.foo-bar``
     Unix:
       ``~/.config/foo-bar``
-    Unix (posix):
+    Unix (POSIX):
       ``~/.foo-bar``
     Win XP (roaming):
       ``C:\Documents and Settings\<user>\Local Settings\Application Data\Foo Bar``

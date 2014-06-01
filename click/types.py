@@ -29,7 +29,7 @@ class ParamType(object):
     #: means any whitespace.  For all parameters the general rule is that
     #: whitespace splits them up.  The exception are paths and files which
     #: are split by ``os.path.pathsep`` by default (":" on unix and ";" on
-    #: windows).
+    #: Windows).
     envvar_list_splitter = None
 
     def __call__(self, value, param=None, ctx=None):
