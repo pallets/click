@@ -28,7 +28,7 @@ class ParamType(object):
     #: string environment variable, this is what splits it up.  `None`
     #: means any whitespace.  For all parameters the general rule is that
     #: whitespace splits them up.  The exception are paths and files which
-    #: are split by ``os.path.pathsep`` by default (":" on unix and ";" on
+    #: are split by ``os.path.pathsep`` by default (":" on Unix and ";" on
     #: Windows).
     envvar_list_splitter = None
 

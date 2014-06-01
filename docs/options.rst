@@ -464,7 +464,7 @@ perform the splitting.
 The default implementation for all types is to split on whitespace.  The
 exceptions to this rule are the :class:`File` and :class:`Path` types
 which both split according to the operating system's path splitting rules.
-On UNIX systems like Linux and OS X, the splitting happens for those on
+On Unix systems like Linux and OS X, the splitting happens for those on
 every colon (``:``), and for Windows, on every semicolon (``;``).
 
 Example usage:

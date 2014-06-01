@@ -4,13 +4,13 @@ Usage with Setuptools
 =====================
 
 When writing command line utilities, it's recommended to write them as
-modules that are distributed with setuptools instead of using UNIX
+modules that are distributed with setuptools instead of using Unix
 shebangs.  There are many reasons for this.
 
 The first one is that setuptools automatically generates executable
 wrappers for Windows so your command line utilities work on Windows too.
 
-The second reason is that setuptools scripts work with virtualenv on UNIX
+The second reason is that setuptools scripts work with virtualenv on Unix
 without the virtualenv having to be activated.  This is a very useful
 concept which allows you to bundle your scripts with all requirements into
 a virtualenv.
