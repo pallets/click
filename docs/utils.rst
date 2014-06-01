@@ -12,9 +12,9 @@ Printing to Stdout
 ------------------
 
 The most obvious helper is the :func:`echo` function, which in many ways
-works like the Python print statement or function.  The main difference is
+works like the Python ``print`` statement or function.  The main difference is
 that it works the same in Python 2 and 3, it intelligently detects
-misconfigured output streams, and will never fail (except in Python 3; for
+misconfigured output streams, and it will never fail (except in Python 3; for
 more information see :ref:`python3-limitations`).
 
 Example::
@@ -24,9 +24,9 @@ Example::
     click.echo('Hello World!')
 
 Most importantly, it can print both Unicode and binary data, unlike the
-builtin ``print`` function in Python 3, which cannot output any bytes.  It
-will, however, emit a trailing newline by default which needs to be
-supressed by passing ``nl=False``::
+built-in ``print`` function in Python 3, which cannot output any bytes.  It
+will, however, emit a trailing newline by default, which needs to be
+suppressed by passing ``nl=False``::
 
     click.echo(b'\xe2\x98\x83', nl=False)
 
@@ -45,9 +45,9 @@ is installed, then ANSI codes are intelligently handled.
 
 Primarily this means that:
 
--   click's echo function will automatically strip ANSI color codes if the
-    stream is not connected to a terminal.
--   the echo function will transparently connect to the terminal on
+-   click's :func:`echo` function will automatically strip ANSI color codes
+    if the stream is not connected to a terminal.
+-   the :func:`echo` function will transparently connect to the terminal on
     Windows and translate ANSI codes to terminal API calls.  This means
     that colors will work on Windows the same way they do on other
     operating systems.
@@ -222,8 +222,8 @@ Printing Filenames
 
 Because filenames might not be Unicode, formatting them can be a bit
 tricky.  Generally, this is easier in Python 2 than on 3, as you can just
-write the bytes to stdout with the print function, but in Python 3, you will
-always need to operate in Unicode.
+write the bytes to stdout with the ``print`` function, but in Python 3, you
+will always need to operate in Unicode.
 
 The way this works with click is through the :func:`format_filename`
 function.  It does a best-effort conversion of the filename to Unicode and
