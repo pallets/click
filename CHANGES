@@ -8,7 +8,7 @@ Version 2.0
 
 (codename and release date to be decided)
 
-- added support for opening stdin/stdout on windows in
+- added support for opening stdin/stdout on Windows in
   binary mode correctly.
 - added support for atomic writes to files by going through
   a temporary file.
@@ -36,7 +36,7 @@ Version 2.0
 - errors now go to stderr as intended.
 - fixed various issues with more exotic parameter formats like DOS/Windows
   style arguments.
-- added :func:`pause` which works similar to the windows ``pause`` cmd
+- added :func:`pause` which works similar to the Windows ``pause`` cmd
   built in but becomes an automatic noop if the application is not run
   through a terminal.
 

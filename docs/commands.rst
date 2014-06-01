@@ -11,7 +11,7 @@ Callback Invocation
 -------------------
 
 For a regular command, the callback is executed whenever the command runs.
-If the script is the only command it will always fire (unless a
+If the script is the only command, it will always fire (unless a
 parameter callback prevents it).  This for instance happens if someone
 passes ``--help`` to the script).
 
@@ -114,11 +114,11 @@ For instance, the :func:`pass_obj` decorator can be implemented like this:
 
 The :meth:`Context.invoke` command will automatically invoke the function
 in the correct way, so the function will either be called with ``f(ctx,
-obj)`` or ``f(obj)`` depending on if it itself is decorated with
+obj)`` or ``f(obj)`` depending on whether or not it itself is decorated with
 :func:`with_context`.
 
 This is a very powerful context that can be used to build very complex
-nested applications.  See :ref:`complex-guide` for more information.
+nested applications; see :ref:`complex-guide` for more information.
 
 
 Group Invocation Without Command
@@ -211,10 +211,10 @@ Merging Multi Commands
 
 In addition to implementing custom multi commands, it can also be
 interesting to merge multiple together into one script.  While this is
-generally not as recommended as nesting one below the other, the merging
+generally not as recommended as it nests one below the other, the merging
 approach can be useful in some circumstances for a nicer shell experience.
 
-A default implementation for such a merging system is the
+The default implementation for such a merging system is the
 :class:`CommandCollection` class.  It accepts a list of other multi
 commands and makes the commands available on the same level.
 
@@ -266,9 +266,9 @@ defaults.
 This is useful if you plug in some commands from another package but
 you're not satisfied with the defaults.
 
-The default map can be nested arbitrarily for each subcommand and be
+The default map can be nested arbitrarily for each subcommand and
 provided when the script is invoked.  Alternatively, it can also be
-overriden at any point by commands.  For instance a top-level command could
+overriden at any point by commands.  For instance, a top-level command could
 load the defaults from a configuration file.
 
 Example usage:

@@ -23,13 +23,13 @@ functionality.
 
 As explained in :ref:`custom-multi-commands`, a multi command can provide
 two methods: :meth:`~MultiCommand.list_commands` and
-:meth:`~MultiCommand.get_command`.  In this particular case you only need
+:meth:`~MultiCommand.get_command`.  In this particular case, you only need
 to override the latter as you generally don't want to enumerate the
-aliases on the help page to avoid confusion.
+aliases on the help page in order to avoid confusion.
 
 This following example implements a subclass of :class:`Group` that
-accepts a prefix for a command.  If there is a command called
-``push`` it would accept ``pus`` as an alias if it's unique:
+accepts a prefix for a command.  If there were a command called
+``push``, it would accept ``pus`` as an alias if it was unique:
 
 .. click:example::
 
@@ -67,8 +67,8 @@ Invoking Other Commands
 -----------------------
 
 Sometimes, it might be interesting to invoke one command from another
-command.  This is a pattern that is generally discouraged with click but
-possible nonetheless.  For this you can use the :func:`Context.invoke`
+command.  This is a pattern that is generally discouraged with click, but
+possible nonetheless.  For this, you can use the :func:`Context.invoke`
 or :func:`Context.forward` methods.
 
 They work similarly, but the difference is that :func:`Context.invoke` merely
@@ -107,17 +107,17 @@ And what it looks like:
 Callback Evaluation Order
 -------------------------
 
-Click works a bit different than some other command line parsers in that
+Click works a bit differently than some other command line parsers in that
 it attempts to reconcile the order of arguments as defined by the
 programmer with the order of arguments as defined by the user before
 invoking any callbacks.
 
-This is an important concept to understand when implementing complex
-patterns ported from optparse or other systems to click.  A parameter
-callback invocation in optparse happens as part of the parsing step
+This is an important concept to understand when porting complex
+patterns to click from optparse or other systems.  A parameter
+callback invocation in optparse happens as part of the parsing step,
 whereas a callback invocation in click happens after the parsing.
 
-The main difference is that in optparse callbacks are invoked with the raw
+The main difference is that in optparse, callbacks are invoked with the raw
 value as it happens, whereas a callback in click is invoked after the
 value has been fully converted.
 
@@ -139,8 +139,8 @@ Eagerness:
 
 Repeated parameters:
     If an option or argument is split up on the command line into multiple
-    places because it's repeated (for instance ``--exclude foo --include
-    baz --exclude bar``), the callback will fire based on the position of
+    places because it is repeated -- for instance, ``--exclude foo --include
+    baz --exclude bar`` -- the callback will fire based on the position of
     the first option.  In this case, the callback will fire for
     ``exclude`` and it will be passed both options (``foo`` and
     ``bar``), then the callback for ``include`` will fire with ``baz``
@@ -158,5 +158,5 @@ Missing parameters:
     their callbacks at the very end which makes it possible for them to
     default to values from a parameter that came before.
 
-Most of the time you don't need to be concerned about any of this stuff,
-but it's important to know how it works for some advanced cases.
+Most of the time you do not need to be concerned about any of this,
+but it is important to know how it works for some advanced cases.

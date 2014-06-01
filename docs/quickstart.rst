@@ -126,7 +126,7 @@ multiple subcommands that can be attached with :meth:`Group.add_command`.
 
 For simple scripts, it's also possible to automatically attach and create a
 command by using the :meth:`Group.command` decorator instead.  The above
-script can be written like this then:
+script can instead be written like this:
 
 .. click:example::
 

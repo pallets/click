@@ -58,7 +58,7 @@ def prompt(text, default=None, hide_input=False,
         f = hide_input and hidden_prompt_func or visible_prompt_func
         try:
             # Write the prompt separately so that we get nice
-            # coloring through colorama on windows
+            # coloring through colorama on Windows
             echo(text, nl=False)
             return f('')
         except (KeyboardInterrupt, EOFError):
@@ -114,7 +114,7 @@ def confirm(text, default=False, abort=False, prompt_suffix=': ',
     while 1:
         try:
             # Write the prompt separately so that we get nice
-            # coloring through colorama on windows
+            # coloring through colorama on Windows
             echo(prompt, nl=False)
             value = visible_prompt_func('').lower().strip()
         except (KeyboardInterrupt, EOFError):
@@ -267,7 +267,7 @@ def clear():
     """
     if not isatty(sys.stdout):
         return
-    # If we're on windows and we don't have colorama available, then we
+    # If we're on Windows and we don't have colorama available, then we
     # clear the screen by shelling out.  Otherwise we can use an escape
     # sequence.
     if sys.platform.startswith('win') and colorama is None:
@@ -386,7 +386,7 @@ def edit(text=None, editor=None, env=None, require_save=True,
     If the editor cannot be opened a :exc:`UsageError` is raised.
 
     Note for Windows: to simplify cross platform usage the newlines are
-    automatically converted from posix to windows and reverse.  As such the
+    automatically converted from POSIX to Windows and reverse.  As such the
     message here will have ``\n`` as newline markers.
 
     :param text: the text to edit.
