@@ -4,7 +4,7 @@ from .utils import echo
 
 
 class ClickException(Exception):
-    """An exception that click can handle and show to the user.."""
+    """An exception that click can handle and show to the user."""
 
     #: The exit code for this exception
     exit_code = 1
@@ -50,14 +50,14 @@ class UsageError(ClickException):
 class BadParameter(UsageError):
     """An exception that formats out a standardized error message for a
     bad parameter.  This is useful when thrown from a callback or type as
-    click will attach contextual information to it (for instance like
-    which parameter it is).
+    click will attach contextual information to it (for instance, which
+    parameter it is).
 
     .. versionadded:: 2.0
 
     :param param: the parameter object that caused this error.  This can
-                  be left and click if possible will attach this info
-                  itself.
+                  be left out, and click will attach this info itself
+                  if possible.
     :param param_hint: a string that shows up as parameter name.  This
                        can be used as alternative to `param` in cases
                        where custom validation should happen.  If it is

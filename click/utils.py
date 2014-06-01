@@ -19,7 +19,7 @@ def _posixify(name):
 
 
 def unpack_args(args, nargs_spec):
-    """Given an iterable of arguments and an iterable of nargs specifications
+    """Given an iterable of arguments and an iterable of nargs specifications,
     it returns a tuple with all the unpacked arguments at the first index
     and all remaining arguments as the second.
 
@@ -56,7 +56,7 @@ def unpack_args(args, nargs_spec):
             rv.append(_fetch(args))
         elif nargs > 1:
             x = [_fetch(args) for _ in range(nargs)]
-            # If we're reversed we're pulling in the arguments in reverse
+            # If we're reversed, we're pulling in the arguments in reverse,
             # so we need to turn them around.
             if spos is not None:
                 x.reverse()
@@ -67,7 +67,7 @@ def unpack_args(args, nargs_spec):
             spos = len(rv)
             rv.append(None)
 
-    # spos is the position of the wildcard (star).  If it's not None
+    # spos is the position of the wildcard (star).  If it's not `None`,
     # we fill it with the remainder.
     if spos is not None:
         rv[spos] = tuple(args)
@@ -195,16 +195,16 @@ class LazyFile(object):
 
 def echo(message=None, file=None, nl=True):
     """Prints a message plus a newline to the given file or stdout.  On
-    first sight this looks like the print function but it has improved
-    support for handling unicode and binary data that does not fail no
+    first sight, this looks like the print function, but it has improved
+    support for handling Unicode and binary data that does not fail no
     matter how badly configured the system is.
 
-    Primarily it means that you can print binary data as well as unicode
+    Primarily it means that you can print binary data as well as Unicode
     data on both 2.x and 3.x to the given file in the most appropriate way
     possible.  This is a very carefree function as in that it will try its
     best to not fail.
 
-    In addition to that if `colorama`_ is installed the echo function will
+    In addition to that, if `colorama`_ is installed, the echo function will
     also support clever handling of ANSI codes.  Essentially it will then
     do the following:
 
@@ -229,8 +229,8 @@ def echo(message=None, file=None, nl=True):
     if message is not None and not isinstance(message, echo_native_types):
         message = text_type(message)
 
-    # If there is a message, and we're on python 3, and the value looks
-    # like bytes we manually need to find the binary stream and write the
+    # If there is a message, and we're in Python 3, and the value looks
+    # like bytes, we manually need to find the binary stream and write the
     # message in there.  This is done separately so that most stream
     # types will work as you would expect.  Eg: you can write to StringIO
     # for other cases.
@@ -244,7 +244,7 @@ def echo(message=None, file=None, nl=True):
             binary_file.flush()
             return
 
-    # ANSI style support.  If there is no message or we are dealing with
+    # ANSI-style support.  If there is no message or we are dealing with
     # bytes nothing is happening.  If we are connected to a file we want
     # to strip colors.  If we have support for wrapping streams (windows
     # through colorama) we want to do that.
@@ -298,7 +298,7 @@ def format_filename(filename, shorten=False):
     """Formats a filename for user display.  The main purpose of this
     function is to ensure that the filename can be displayed at all.  This
     will decode the filename to unicode if necessary in a way that it will
-    not fail.  Optionally it can shorten the filename to not include the
+    not fail.  Optionally, it can shorten the filename to not include the
     full path to the filename.
 
     :param filename: formats a filename for UI display.  This will also convert
@@ -315,7 +315,7 @@ def get_app_dir(app_name, roaming=True, force_posix=False):
     r"""Returns the config folder for the application.  The default behavior
     is to return whatever is most appropriate for the operating system.
 
-    To give you an idea, for an app called ``"Foo Bar"`` something like
+    To give you an idea, for an app called ``"Foo Bar"``, something like
     the following folders could be returned:
 
     Mac OS X:
@@ -339,9 +339,9 @@ def get_app_dir(app_name, roaming=True, force_posix=False):
 
     :param app_name: the application name.  This should be properly capitalized
                      and can contain whitespace.
-    :param roaming: controls if the folder should be roaming or not on windows.
+    :param roaming: controls if the folder should be roaming or not on Windows.
                     Has no affect otherwise.
-    :param force_posix: if this is set to `True` then on any posix system the
+    :param force_posix: if this is set to `True` then on any POSIX system the
                         folder will be stored in the home folder with a leading
                         dot instead of the XDG config home or darwin's
                         application support folder.

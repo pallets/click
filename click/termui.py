@@ -36,7 +36,7 @@ def prompt(text, default=None, hide_input=False,
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
-    If the user aborts the input by sending a interrupt signal this
+    If the user aborts the input by sending a interrupt signal, this
     function will catch it and raise a :exc:`Abort` exception.
 
     :param text: the text to show for the prompt.
@@ -192,15 +192,15 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
     """This function creates an iterable context manager that can be used
     to iterate over something while showing a progress bar.  It will
     either iterate over the `iterable` or `length` items (that are counted
-    up).  While iteration happens this function will print a rendered
+    up).  While iteration happens, this function will print a rendered
     progress bar to the given `file` (defaults to stdout) and will attempt
-    to calculate remaining time and more.  By default this progress bar
+    to calculate remaining time and more.  By default, this progress bar
     will not be rendered if the file is not a terminal.
 
     The context manager creates the progress bar.  When the context
     manager is entered the progress bar is already displayed.  With every
-    iteration over the progress bar the iterable passed to the bar is
-    advanced and the bar is updated.  When the context manager exits
+    iteration over the progress bar, the iterable passed to the bar is
+    advanced and the bar is updated.  When the context manager exits,
     a newline is printed and the progress bar is finalized on screen.
 
     No printing must happen or the progress bar will be unintentionally
@@ -378,16 +378,16 @@ def edit(text=None, editor=None, env=None, require_save=True,
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
     system search path is used for finding the executable) it overrides
-    the detected editor.  Optionally some environment variables can be
-    used.  If the editor is closed without changes `None` is returned.  In
+    the detected editor.  Optionally, some environment variables can be
+    used.  If the editor is closed without changes, `None` is returned.  In
     case a file is edited directly the return value is always `None` and
     `require_save` and `extension` are ignored.
 
     If the editor cannot be opened a :exc:`UsageError` is raised.
 
-    Note for Windows: to simplify cross platform usage the newlines are
-    automatically converted from POSIX to Windows and reverse.  As such the
-    message here will have ``\n`` as newline markers.
+    Note for Windows: to simplify cross-platform usage, the newlines are
+    automatically converted from POSIX to Windows and vice versa.  As such,
+    the message here will have ``\n`` as newline markers.
 
     :param text: the text to edit.
     :param editor: optionally the editor to use.  Defaults to automatic
@@ -412,9 +412,9 @@ def edit(text=None, editor=None, env=None, require_save=True,
 
 def launch(url, wait=False, locate=False):
     """This function launches the given URL (or filename) in the default
-    viewer application for this file type.  If this is an executable it
+    viewer application for this file type.  If this is an executable, it
     might launch the executable in a new session.  The return value is
-    the exit code of the launched application.  Usually ``0`` indicates
+    the exit code of the launched application.  Usually, ``0`` indicates
     success.
 
     Examples::
@@ -424,12 +424,12 @@ def launch(url, wait=False, locate=False):
 
     .. versionadded:: 2.0
 
-    :param url: url or filename of the thing to launch.
+    :param url: URL or filename of the thing to launch.
     :param wait: waits for the program to stop.
     :param locate: if this is set to `True` then instead of launching the
                    application associated with the URL it will attempt to
                    launch a file manager with the file located.  This
-                   might have weird effects if the url does not point to
+                   might have weird effects if the URL does not point to
                    the filesystem.
     """
     from ._termui_impl import open_url
@@ -454,8 +454,8 @@ def getchar(echo=False):
 
     .. versionadded:: 2.0
 
-    :param echo: if set to `True` the character read will also show up on
-                 the terminal.  The default is not not show it.
+    :param echo: if set to `True`, the character read will also show up on
+                 the terminal.  The default is to not show it.
     """
     f = _getchar
     if f is None:
@@ -466,8 +466,8 @@ def getchar(echo=False):
 def pause(info='Press any key to continue ...'):
     """This command stops execution and waits for the user to press any
     key to continue.  This is similar to the Windows batch "pause"
-    command.  If the program is not run through a terminal this command
-    will do nothing instead.
+    command.  If the program is not run through a terminal, this command
+    will instead do nothing.
 
     .. versionadded:: 2.0
 

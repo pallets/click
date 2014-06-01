@@ -8,7 +8,7 @@ from .utils import echo
 
 
 def pass_context(f):
-    """Marks a callback that it wants to receive the current context
+    """Marks a callback as wanting to receive the current context
     object as first argument.
     """
     f.__click_pass_context__ = True
@@ -16,7 +16,7 @@ def pass_context(f):
 
 
 def pass_obj(f):
-    """Similar to :func:`pass_context` but only pass the object on the
+    """Similar to :func:`pass_context`, but only pass the object on the
     context onwards (:attr:`Context.obj`).  This is useful if that object
     represents the state of a nested system.
     """
@@ -131,7 +131,7 @@ def _param_memo(f, param):
 
 def argument(*param_decls, **attrs):
     """Attaches an option to the command.  All positional arguments are
-    passed as parameter declarations to :class:`Argument`, all keyword
+    passed as parameter declarations to :class:`Argument`; all keyword
     arguments are forwarded unchanged.  This is equivalent to creating an
     :class:`Option` instance manually and attaching it to the
     :attr:`Command.params` list.
@@ -144,7 +144,7 @@ def argument(*param_decls, **attrs):
 
 def option(*param_decls, **attrs):
     """Attaches an option to the command.  All positional arguments are
-    passed as parameter declarations to :class:`Option`, all keyword
+    passed as parameter declarations to :class:`Option`; all keyword
     arguments are forwarded unchanged.  This is equivalent to creating an
     :class:`Option` instance manually and attaching it to the
     :attr:`Command.params` list.
@@ -156,7 +156,7 @@ def option(*param_decls, **attrs):
 
 
 def confirmation_option(*param_decls, **attrs):
-    """Shortcut for confirmation prompts that can be ignored by bypassed
+    """Shortcut for confirmation prompts that can be ignored by passing
     ``--yes`` as parameter.
 
     This is equivalent to decorating a function with :func:`option` with
@@ -262,9 +262,9 @@ def version_option(version=None, *param_decls, **attrs):
 def help_option(*param_decls, **attrs):
     """Adds a ``--help`` option which immediately ends the program
     printing out the help page.  This is usually unnecessary to add as
-    this is added by default to all commands unless supressed.
+    this is added by default to all commands unless suppressed.
 
-    Like :func:`version_option` this is implemented as eager option that
+    Like :func:`version_option`, this is implemented as eager option that
     prints in the callback and exits.
 
     All arguments are forwarded to :func:`option`.

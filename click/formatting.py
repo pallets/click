@@ -19,12 +19,12 @@ def iter_rows(rows, col_count):
 
 def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
               preserve_paragraphs=False):
-    """A helper function that intelligently wraps text.  By default it
+    """A helper function that intelligently wraps text.  By default, it
     assumes that it operates on a single paragraph of text but if the
     `preserve_paragraphs` parameter is provided it will intelligently
     handle paragraphs (defined by two empty lines).
 
-    If paragraphs are handled a paragraph can be prefixed with an empty
+    If paragraphs are handled, a paragraph can be prefixed with an empty
     line containing the ``\\b`` character (``\\x08``) to indicate that
     no rewrapping should happen in that block.
 
@@ -82,11 +82,11 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
 
 
 class HelpFormatter(object):
-    """This class helps with formatting text based help pages.  It's
-    usually just needed for very special internal cases but it's also
+    """This class helps with formatting text-based help pages.  It's
+    usually just needed for very special internal cases, but it's also
     exposed so that developers can write their own fancy outputs.
 
-    At present it always writes into memory.
+    At present, it always writes into memory.
 
     :param indent_increment: the additional increment for each level.
     :param width: the width for the text.  This defaults to the terminal
@@ -191,7 +191,7 @@ class HelpFormatter(object):
 
     @contextmanager
     def section(self, name):
-        """Helpful context manager that writes a paragraph, a heading
+        """Helpful context manager that writes a paragraph, a heading,
         and the indents.
 
         :param name: the section name that is written as heading.

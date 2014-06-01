@@ -16,7 +16,7 @@ class ParamType(object):
     *   it needs to convert from a string
     *   it needs to convert its result type through unchanged
         (eg: needs to be idempotent)
-    *   it needs to be able to deal with param and context being none.
+    *   it needs to be able to deal with param and context being `None`.
         This can be the case when the object is used with prompt
         inputs.
     """
@@ -28,7 +28,7 @@ class ParamType(object):
     #: string environment variable, this is what splits it up.  `None`
     #: means any whitespace.  For all parameters the general rule is that
     #: whitespace splits them up.  The exception are paths and files which
-    #: are split by ``os.path.pathsep`` by default (":" on unix and ";" on
+    #: are split by ``os.path.pathsep`` by default (":" on Unix and ";" on
     #: Windows).
     envvar_list_splitter = None
 
@@ -49,8 +49,8 @@ class ParamType(object):
         """Given a value from an environment variable this splits it up
         into small chunks depending on the defined envvar list splitter.
 
-        If the splitter is set to `None` which means that whitespace splits,
-        then leading and trailing whitespace is ignored.  Otherwise leading
+        If the splitter is set to `None`, which means that whitespace splits,
+        then leading and trailing whitespace is ignored.  Otherwise, leading
         and trailing splitters usually lead to empty items being included.
         """
         return (rv or '').split(self.envvar_list_splitter)
@@ -227,7 +227,7 @@ class File(ParamType):
     Files can be opened for reading or writing.  The special value ``-``
     indicates stdin or stdout depending on the mode.
 
-    By default the file is opened for reading text data but it can also be
+    By default, the file is opened for reading text data, but it can also be
     opened in binary mode or for writing.  The encoding parameter can be used
     to force a specific encoding.
 
@@ -235,7 +235,7 @@ class File(ParamType):
     upon first IO.  The default is to be non lazy for standard input and
     output streams as well as files opened for reading, lazy otherwise.
 
-    Starting with click 2.0 files can also be opened atomically in which
+    Starting with click 2.0, files can also be opened atomically in which
     case all writes go into a separate file in the same folder and upon
     completion the file will be moved over to the original location.  This
     is useful if a file regularly read by other users is modified.
@@ -279,9 +279,9 @@ class File(ParamType):
             f, should_close = open_stream(value, self.mode,
                                           self.encoding, self.errors,
                                           atomic=self.atomic)
-            # If a context is provided we automatically close the file
+            # If a context is provided, we automatically close the file
             # at the end of the context execution (or flush out).  If a
-            # context does not exist it's the caller's responsibility to
+            # context does not exist, it's the caller's responsibility to
             # properly close the file.  This for instance happens when the
             # type is used with prompts.
             if ctx is not None:
@@ -300,7 +300,7 @@ class File(ParamType):
 class Path(ParamType):
     """The path type is similar to the :class:`File` type but it performs
     different checks.  First of all, instead of returning a open file
-    handle it returns just the filename.  Secondly it can perform various
+    handle it returns just the filename.  Secondly, it can perform various
     basic checks about what the file or directory should be.
 
     :param exists: if set to true, the file or directory needs to exist for

@@ -3,7 +3,7 @@
     ~~~~~~~~~~~~~~~~~~
 
     This module contains implementations for the termui module.  To keep the
-    import time of click down some infrequently used functionality is placed
+    import time of click down, some infrequently used functionality is placed
     in this module and only imported as needed.
 
     :copyright: (c) 2014 by Armin Ronacher.

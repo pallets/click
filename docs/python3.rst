@@ -24,12 +24,12 @@ At the moment, click suffers from a few problems with Python 3:
     connections to machines with different locales.
 
     Misconfigured environments can currently cause a wide range of Unicode
-    problems on Python 3 due to the lack of support for roundtripping
+    problems in Python 3 due to the lack of support for roundtripping
     surrogate escapes.  This will not be fixed in click itself!
 
     For more information see :ref:`python3-surrogates`.
 
-*   Standard input and output on Python 3 is opened in Unicode mode by
+*   Standard input and output in Python 3 is opened in Unicode mode by
     default.  Click has to reopen the stream in binary mode in certain
     situations.  Because there is no standardized way to do this, this
     might not always work.  Primarily this can become a problem when
@@ -58,7 +58,7 @@ Python 2 and 3 Differences
 Click attempts to minimize the differences between Python 2 and Python 3
 by following the best practices for both languages.
 
-On Python 2, the following is true:
+in Python 2, the following is true:
 
 *   ``sys.stdin``, ``sys.stdout``, and ``sys.stderr`` are opened in binary
     mode, but under some circumstances they support Unicode output.  Click
@@ -72,7 +72,7 @@ On Python 2, the following is true:
     and will instead use the operating system's byte APIs to open the
     files.
 
-On Python 3, the following is true:
+in Python 3, the following is true:
 
 *   ``sys.stdin``, ``sys.stdout`` and ``sys.stderr`` are by default
     text-based.  When click needs a binary stream, it attempts to discover
@@ -95,12 +95,12 @@ On Python 3, the following is true:
 Python 3 Surrogate Handling
 ---------------------------
 
-Click on Python 3 does all the Unicode handling in the standard library
-and is subject to its behavior.  On Python 2, click does all the Unicode
+Click in Python 3 does all the Unicode handling in the standard library
+and is subject to its behavior.  In Python 2, click does all the Unicode
 handling itself, which means there are differences in error behavior.
 
-The most glaring difference is that on Python 2, Unicode will "just work",
-while on Python 3, it requires extra care.  The reason for this is that on
+The most glaring difference is that in Python 2, Unicode will "just work",
+while in Python 3, it requires extra care.  The reason for this is that on
 Python 3, the encoding detection is done in the interpreter and on Linux
 and certain other operating systems its encoding handling is problematic.
 
@@ -114,7 +114,7 @@ to force you to set a locale.  This is done because click cannot know
 about the state of the system once it's invoked and restore the values
 before Python's Unicode handling kicked in.
 
-If you see something like this error on Python 3::
+If you see something like this error in Python 3::
 
     Traceback (most recent call last):
       ...

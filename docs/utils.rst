@@ -13,8 +13,8 @@ Printing to Stdout
 
 The most obvious helper is the :func:`echo` function, which in many ways
 works like the Python print statement or function.  The main difference is
-that it works the same on Python 2 and 3, it intelligently detects
-misconfigured output streams, and will never fail (except on Python 3; for
+that it works the same in Python 2 and 3, it intelligently detects
+misconfigured output streams, and will never fail (except in Python 3; for
 more information see :ref:`python3-limitations`).
 
 Example::
@@ -24,7 +24,7 @@ Example::
     click.echo('Hello World!')
 
 Most importantly, it can print both Unicode and binary data, unlike the
-builtin ``print`` function on Python 3, which cannot output any bytes.  It
+builtin ``print`` function in Python 3, which cannot output any bytes.  It
 will, however, emit a trailing newline by default which needs to be
 supressed by passing ``nl=False``::
 
@@ -221,8 +221,8 @@ Printing Filenames
 ------------------
 
 Because filenames might not be Unicode, formatting them can be a bit
-tricky.  Generally, this is easier on Python 2 than on 3, as you can just
-write the bytes to stdout with the print function, but on Python 3, you will
+tricky.  Generally, this is easier in Python 2 than on 3, as you can just
+write the bytes to stdout with the print function, but in Python 3, you will
 always need to operate in Unicode.
 
 The way this works with click is through the :func:`format_filename`
@@ -249,7 +249,7 @@ Because of this, click provides the :func:`get_binary_stream` and
 different Python versions and for a wide variety pf terminal configurations.
 
 The end result is that these functions will always return a functional
-stream object (except in very odd cases on Python 3; see
+stream object (except in very odd cases in Python 3; see
 :ref:`python3-limitations`).
 
 Example::

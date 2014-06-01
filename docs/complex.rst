@@ -32,7 +32,7 @@ at the end of the function, and so forth.  It can also optionally hold an
 application-defined object.
 
 Context objects build a linked list until they hit the top one.  Each context
-is linked to the parent context.  This allows a command to work below
+is linked to a parent context.  This allows a command to work below
 another command and store its own information there without having to be
 afraid of altering up the state of the parent command.
 
@@ -47,7 +47,7 @@ Calling Convention
 
 When a click command callback is executed, it's passed all the non-hidden
 parameters as keyword arguments.  Notably absent is the context.  However,
-a callback can opt into being passed the context object by marking itself
+a callback can opt into being passed to the context object by marking itself
 with :func:`pass_context`.
 
 So how do you invoke a command callback if you don't know if it should
@@ -95,18 +95,18 @@ state of our tool:
         ctx.obj = Repo(repo_home, debug)
 
 
-So let's understand what this does.  We create a group command which can
+Let's understand what this does.  We create a group command which can
 have subcommands.  When it is invoked, it will create an instance of a
 ``Repo`` class.  This holds the state for our command line tool.  In this
 case, it just remembers some parameters, but at this point it could also
 start loading configuration files and so on.
 
-This state object is then remembered as :attr:`~Context.obj` on the
-context.  This is a special attribute where commands are supposed to
-remember what they need to pass on to their children.
+This state object is then remembered by the context as :attr:`~Context.obj`.
+This is a special attribute where commands are supposed to remember what
+they need to pass on to their children.
 
 In order for this to work, we need to mark our function with
-:func:`pass_context`, because otherwise the context object would be
+:func:`pass_context`, because otherwise, the context object would be
 entirely hidden from us.
 
 The First Child Command
@@ -156,7 +156,7 @@ plugin.
 There is a much better system that can built by taking advantage of the linked
 nature of contexts.  We know that the plugin context is linked to the context
 that created our repo.  Because of that, we can start a search for the last
-level where the object stored on the context was a repo.
+level where the object stored by the context was a repo.
 
 Built-in support for this is provided by the :func:`make_pass_decorator`
 factory, which will create decorators for us that find objects (it
@@ -184,13 +184,13 @@ Ensuring Object Creation
 ````````````````````````
 
 The above example only works if there was an outer command that created a
-``Repo`` object and stored it on the context.  For some more advanced use
+``Repo`` object and stored it in the context.  For some more advanced use
 cases, this might become a problem.  The default behavior of
 :func:`make_pass_decorator` is to call :meth:`Context.find_object`
 which will find the object.  If it can't find the object, it will raise an
 error.  The alternative behavior is to use :meth:`Context.ensure_object`
 which will find the object, and if it cannot find it, will create one and
-store it on the innermost context.  This behavior can also be enabled for
+store it in the innermost context.  This behavior can also be enabled for
 :func:`make_pass_decorator` by passing ``ensure=True``:
 
 .. click:example::

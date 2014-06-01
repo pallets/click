@@ -8,11 +8,11 @@ This question is easy to answer: because there is not a single command
 line utility for Python out there which ticks the following boxes:
 
 *   is lazily composable without restrictions
-*   fully follows the UNIX command line conventions
+*   fully follows the Unix command line conventions
 *   supports loading values from environment variables out of the box
 *   supports for prompting of custom values
 *   is fully nestable and composable
-*   works the same on Python 2 and 3
+*   works the same in Python 2 and 3
 *   supports file handling out of the box
 *   comes with useful common helpers (getting terminal dimensions,
     ANSI colors, fetching direct keyboard input, screen clearing,
