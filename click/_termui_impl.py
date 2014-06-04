@@ -340,7 +340,8 @@ class Editor(object):
         else:
             environ = None
         try:
-            c = subprocess.Popen([editor, filename], env=environ)
+            c = subprocess.Popen('%s "%s"' % (editor, filename),
+                                 env=environ, shell=True)
             exit_code = c.wait()
             if exit_code != 0:
                 raise ClickException('%s: Editing failed!' % editor)
