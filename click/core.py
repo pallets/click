@@ -900,11 +900,15 @@ class Parameter(object):
         return value
 
     def get_missing_message(self, ctx):
-        return 'Missing %s %s.' % (
+        rv = 'Missing %s %s.' % (
             self.param_type_name,
             ' / '.join('"%s"' % x for x in chain(
                 self.opts, self.secondary_opts)),
         )
+        extra = self.type.get_missing_message(self)
+        if extra:
+            rv += '  ' + extra
+        return rv
 
     def resolve_envvar_value(self, ctx):
         if self.envvar is None:

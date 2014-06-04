@@ -39,6 +39,7 @@ Version 2.0
 - added :func:`pause` which works similar to the Windows ``pause`` cmd
   built-in but becomes an automatic noop if the application is not run
   through a terminal.
+- added a bit of extra information about missing choice parameters.
 
 Version 1.1
 -----------

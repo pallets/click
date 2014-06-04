@@ -39,6 +39,13 @@ class ParamType(object):
     def get_metavar(self, param):
         """Returns the metavar default for this param if it provides one."""
 
+    def get_missing_message(self, param):
+        """Optionally might return extra information about a missing
+        parameter.
+
+        .. versionadded:: 2.0
+        """
+
     def convert(self, param, ctx, value):
         """Converts the value.  This is not invoked for values that are
         `None` (the missing value).
@@ -111,6 +118,9 @@ class Choice(ParamType):
 
     def get_metavar(self, param):
         return '[%s]' % '|'.join(self.choices)
+
+    def get_missing_message(self, param):
+        return 'Choose from %s.' % ', '.join(self.choices)
 
     def convert(self, value, param, ctx):
         if value in self.choices:

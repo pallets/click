@@ -156,3 +156,16 @@ def test_legacy_options(runner):
     assert result.output == '42\n'
     result = runner.invoke(cmd, ['-whatever=23'])
     assert result.output == '23\n'
+
+
+def test_missing_choice(runner):
+    @click.command()
+    @click.option('--foo', type=click.Choice(['foo', 'bar']),
+                  required=True)
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd)
+    assert result.exit_code == 2
+    assert 'Error: Missing option "--foo".  Choose from foo, bar.' \
+        in result.output
