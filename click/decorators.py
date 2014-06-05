@@ -150,6 +150,8 @@ def option(*param_decls, **attrs):
     :attr:`Command.params` list.
     """
     def decorator(f):
+        if 'help' in attrs:
+            attrs['help'] = inspect.cleandoc(attrs['help'])
         _param_memo(f, Option(param_decls, **attrs))
         return f
     return decorator
