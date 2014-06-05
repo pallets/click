@@ -3,6 +3,9 @@ import sys
 import click
 
 
+CONTEXT_DEFAULTS = dict(auto_envvar_prefix='COMPLEX')
+
+
 class Context(object):
 
     def __init__(self):
@@ -47,7 +50,7 @@ class ComplexCLI(click.MultiCommand):
         return mod.cli
 
 
-@click.command(cls=ComplexCLI)
+@click.command(cls=ComplexCLI, context_defaults=CONTEXT_DEFAULTS)
 @click.option('--home', type=click.Path(exists=True, file_okay=False,
                                         resolve_path=True),
               help='Changes the folder to operate on.')
@@ -59,7 +62,3 @@ def cli(ctx, verbose, home):
     ctx.verbose = verbose
     if home is not None:
         ctx.home = home
-
-
-def main():
-    cli(auto_envvar_prefix='COMPLEX')

@@ -10,6 +10,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        complex=complex.cli:main
+        complex=complex.cli:cli
     ''',
 )
