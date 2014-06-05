@@ -156,6 +156,10 @@ class Context(object):
         #: the user object stored.
         self.obj = obj
         #: A dictionary (-like object) with defaults for parameters.
+        if default_map is None \
+           and parent is not None \
+           and parent.default_map is not None:
+            default_map = parent.default_map.get(info_name)
         self.default_map = default_map
 
         if terminal_width is None and parent is not None:
@@ -392,16 +396,9 @@ class BaseCommand(object):
         :param extra: extra keyword arguments forwarded to the context
                       constructor.
         """
-        if 'default_map' not in extra:
-            default_map = None
-            if parent is not None and parent.default_map is not None:
-                default_map = parent.default_map.get(info_name)
-            extra['default_map'] = default_map
-
         for key, value in iteritems(self.context_defaults or {}):
             if key not in extra:
                 extra[key] = value
-
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
         self.parse_args(ctx, args)
         return ctx

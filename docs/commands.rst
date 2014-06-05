@@ -293,6 +293,8 @@ Example usage:
             }
         })
 
+And in action:
+
 .. click:run::
 
     invoke(cli, prog_name='cli', args=['runserver'], default_map={
@@ -300,3 +302,41 @@ Example usage:
             'port': 5000
         }
     })
+
+Context Defaults
+----------------
+
+.. versionadded:: 2.0
+
+Starting with click 2.0 you can override defaults for contexts not just
+when calling your script, but also in the decorator that declares a
+command.  For instance given the previous example which defines a custom
+``default_map`` this can also be accomplished in the decorator now.
+
+This example does the same as the previous example:
+
+.. click:example::
+
+    import click
+
+    CONTEXT_DEFAULTS = dict(
+        default_map={'runserver': {'port': 5000}}
+    )
+
+    @click.group(context_defaults=CONTEXT_DEFAULTS)
+    def cli():
+        pass
+
+    @cli.command()
+    @click.option('--port', default=8000)
+    def runserver(port):
+        click.echo('Serving on http://127.0.0.1:%d/' % port)
+
+    if __name__ == '__main__':
+        cli()
+
+And again the example in action:
+
+.. click:run::
+
+    invoke(cli, prog_name='cli', args=['runserver'])
