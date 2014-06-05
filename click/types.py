@@ -123,8 +123,18 @@ class Choice(ParamType):
         return 'Choose from %s.' % ', '.join(self.choices)
 
     def convert(self, value, param, ctx):
+        # Exact match
         if value in self.choices:
             return value
+
+        # Match through normalization
+        if ctx is not None and \
+           ctx.token_normalize_func is not None:
+            value = ctx.token_normalize_func(value)
+            for choice in self.choices:
+                if ctx.token_normalize_func(choice) == value:
+                    return choice
+
         self.fail('invalid choice: %s. (choose from %s)' %
                   (value, ', '.join(self.choices)), param, ctx)
 

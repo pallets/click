@@ -130,20 +130,20 @@ def test_custom_validation(runner):
 
 
 def test_winstyle_options(runner):
-    @click.command(add_help_option=False)
+    @click.command()
     @click.option('/debug;/no-debug', help='Enables or disables debug mode.')
-    @click.help_option('/?')
     def cmd(debug):
         click.echo(debug)
 
-    result = runner.invoke(cmd, ['/debug'])
+    result = runner.invoke(cmd, ['/debug'], help_option_names=['/?'])
     assert result.output == 'True\n'
-    result = runner.invoke(cmd, ['/no-debug'])
+    result = runner.invoke(cmd, ['/no-debug'], help_option_names=['/?'])
     assert result.output == 'False\n'
-    result = runner.invoke(cmd, [])
+    result = runner.invoke(cmd, [], help_option_names=['/?'])
     assert result.output == 'False\n'
-    result = runner.invoke(cmd, ['/?'])
+    result = runner.invoke(cmd, ['/?'], help_option_names=['/?'])
     assert '/debug; /no-debug  Enables or disables debug mode.' in result.output
+    assert '/?                 Show this message and exit.' in result.output
 
 
 def test_legacy_options(runner):

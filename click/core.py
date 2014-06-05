@@ -8,10 +8,10 @@ from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo
 from .exceptions import ClickException, UsageError, BadParameter, Abort
 from .termui import prompt, confirm
-from .formatting import HelpFormatter
+from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
 
-from ._compat import PY2, isidentifier
+from ._compat import PY2, isidentifier, iteritems
 
 _missing = object()
 
@@ -94,6 +94,10 @@ class Context(object):
     A context can be used as context manager in which case it will call
     :meth:`close` on teardown.
 
+    .. versionadded:: 2.0
+       Added the `resilient_parsing`, `help_option_names`,
+       `token_normalize_func` parameters.
+
     :param command: the command class for this context.
     :param parent: the parent context.
     :param info_name: the info name for this invokation.  Generally this
@@ -117,11 +121,19 @@ class Context(object):
                               parse without any interactivity or callback
                               invocation.  This is useful for implementing
                               things such as completion support.
+    :param help_option_names: optionally a list of strings that define how
+                              the default help parameter is named.  The
+                              default is ``['--help']``.
+    :param token_normalize_func: an optional function that is used to
+                                 normalize tokens (options, choices,
+                                 etc.).  This for instance can be used to
+                                 implement case insensitive behavior.
     """
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
                  auto_envvar_prefix=None, default_map=None,
-                 terminal_width=None, resilient_parsing=False):
+                 terminal_width=None, resilient_parsing=False,
+                 help_option_names=None, token_normalize_func=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -150,6 +162,22 @@ class Context(object):
             terminal_width = parent.terminal_width
         #: The width of the terminal (None is autodetection).
         self.terminal_width = terminal_width
+
+        if help_option_names is None:
+            if parent is not None:
+                help_option_names = parent.help_option_names
+            else:
+                help_option_names = ['--help']
+
+        #: The name for the help options.
+        self.help_option_names = help_option_names
+
+        if token_normalize_func is None and parent is not None:
+            token_normalize_func = parent.token_normalize_func
+
+        #: An optional normalization function for tokens.  This is
+        #: options, choices, commands etc.
+        self.token_normalize_func = token_normalize_func
 
         #: Indicates if resilient parsing is enabled.  In that case click
         #: will do its best to not cause any failures.
@@ -326,15 +354,22 @@ class BaseCommand(object):
     operations.  For instance, they cannot be used with the decorators
     usually and they have no built-in callback system.
 
+    .. versionchanged:: 2.0
+       Added the `context_defaults` parameter.
+
     :param name: the name of the command to use unless a group overrides it.
+    :param context_defaults: an optional dictionary with defaults that are
+                             passed to the context object.
     """
 
-    def __init__(self, name):
+    def __init__(self, name, context_defaults=None):
         #: the name the command thinks it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
         #: with this information.  You should instead use the
         #: :class:`Context`\'s :attr:`~Context.info_name` attribute.
         self.name = name
+        #: an optional dictionary with defaults passed to the context.
+        self.context_defaults = context_defaults
 
     def get_usage(self, ctx):
         raise NotImplementedError('Base commands cannot get usage')
@@ -362,6 +397,11 @@ class BaseCommand(object):
             if parent is not None and parent.default_map is not None:
                 default_map = parent.default_map.get(info_name)
             extra['default_map'] = default_map
+
+        for key, value in iteritems(self.context_defaults or {}):
+            if key not in extra:
+                extra[key] = value
+
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
         self.parse_args(ctx, args)
         return ctx
@@ -456,7 +496,12 @@ class Command(BaseCommand):
     click.  A basic command handles command line parsing and might dispatch
     more parsing to commands nested below it.
 
+    .. versionchanged:: 2.0
+       Added the `context_defaults` parameter.
+
     :param name: the name of the command to use unless a group overrides it.
+    :param context_defaults: an optional dictionary with defaults that are
+                             passed to the context object.
     :param callback: the callback to invoke.  This is optional.
     :param params: the parameters to register with this command.  This can
                    be either :class:`Option` or :class:`Argument` objects.
@@ -470,10 +515,10 @@ class Command(BaseCommand):
     """
     allow_extra_args = False
 
-    def __init__(self, name, callback=None, params=None, help=None,
-                 epilog=None, short_help=None,
+    def __init__(self, name, context_defaults=None, callback=None,
+                 params=None, help=None, epilog=None, short_help=None,
                  options_metavar='[OPTIONS]', add_help_option=True):
-        BaseCommand.__init__(self, name)
+        BaseCommand.__init__(self, name, context_defaults)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
         self.callback = callback
@@ -487,12 +532,7 @@ class Command(BaseCommand):
         if short_help is None and help:
             short_help = make_default_short_help(help)
         self.short_help = short_help
-        if add_help_option:
-            self.add_help_option()
-
-    def add_help_option(self):
-        """Adds a help option to the command."""
-        help_option()(self)
+        self.add_help_option = add_help_option
 
     def get_usage(self, ctx):
         formatter = ctx.make_formatter()
@@ -513,11 +553,26 @@ class Command(BaseCommand):
             rv.extend(param.get_usage_pieces(ctx))
         return rv
 
+    def get_help_option_names(self, ctx):
+        """Returns the names for the help option."""
+        all_names = set(ctx.help_option_names)
+        for param in self.params:
+            all_names.difference_update(param.opts)
+            all_names.difference_update(param.secondary_opts)
+        return all_names
+
     def make_parser(self, ctx):
         """Creates the underlying option parser for this command."""
         parser = OptionParser(ctx)
         for param in self.params:
             param.add_to_parser(parser, ctx)
+
+        if self.add_help_option:
+            help_options = self.get_help_option_names(ctx)
+            if help_options:
+                parser.add_option(help_options, action='store_const',
+                                  const=True, dest='$help')
+
         return parser
 
     def get_help(self, ctx):
@@ -558,6 +613,12 @@ class Command(BaseCommand):
             if rv is not None:
                 opts.append(rv)
 
+        if self.add_help_option:
+            help_options = self.get_help_option_names(ctx)
+            if help_options:
+                opts.append([join_options(help_options)[0],
+                             'Show this message and exit.'])
+
         if opts:
             with formatter.section('Options'):
                 formatter.write_dl(opts)
@@ -572,6 +633,10 @@ class Command(BaseCommand):
     def parse_args(self, ctx, args):
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
+
+        if opts.get('$help') and not ctx.resilient_parsing:
+            echo(ctx.get_help())
+            ctx.exit()
 
         for param in iter_params_for_processing(param_order, self.params):
             value, args = param.handle_parse_result(ctx, opts, args)
@@ -665,7 +730,16 @@ class MultiCommand(Command):
             ctx.fail('Missing command.')
 
         cmd_name = make_str(ctx.args[0])
+        original_cmd_name = cmd_name
+
+        # Get the command
         cmd = self.get_command(ctx, cmd_name)
+
+        # If we can't find the command but there is a normalization
+        # function available, we try with that one.
+        if cmd is None and ctx.token_normalize_func is not None:
+            cmd_name = ctx.token_normalize_func(cmd_name)
+            cmd = self.get_command(ctx, cmd_name)
 
         # If we don't find the command we want to show an error message
         # to the user that it was not provided.  However, there is
@@ -676,7 +750,7 @@ class MultiCommand(Command):
         if cmd is None:
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
-            ctx.fail('No such command "%s".' % cmd_name)
+            ctx.fail('No such command "%s".' % original_cmd_name)
 
         return self.invoke_subcommand(ctx, cmd, cmd_name, ctx.args[1:])
 
@@ -1126,16 +1200,9 @@ class Option(Parameter):
         any_prefix_is_slash = []
 
         def _write_opts(opts):
-            rv = []
-            for opt in opts:
-                prefix = split_opt(opt)[0]
-                if prefix == '/':
-                    any_prefix_is_slash[:] = [True]
-                rv.append((len(prefix), opt))
-
-            rv.sort(key=lambda x: x[0])
-
-            rv = ', '.join(x[1] for x in rv)
+            rv, any_slashes = join_options(opts)
+            if any_slashes:
+                any_prefix_is_slash[:] = [True]
             if not self.is_flag:
                 rv += ' ' + self.make_metavar()
             return rv
@@ -1264,4 +1331,4 @@ class Argument(Parameter):
 
 
 # Circular dependency between decorators and core
-from .decorators import command, group, help_option
+from .decorators import command, group
