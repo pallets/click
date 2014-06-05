@@ -169,7 +169,7 @@ class Context(object):
             else:
                 help_option_names = ['--help']
 
-        #: The name for the help options.
+        #: The names for the help options.
         self.help_option_names = help_option_names
 
         if token_normalize_func is None and parent is not None:

@@ -1,6 +1,8 @@
 Documenting Scripts
 ===================
 
+.. currentmodule:: click
+
 Click makes it very easy to document your command line tools.  First of
 all, it automatically generates help pages for you.  While these are
 currently not customizable in layout, all of the text can be changed.
@@ -126,3 +128,34 @@ And what it looks like:
 .. click:run::
 
     invoke(cli, prog_name='repo.py')
+
+
+Help Parameter Customization
+----------------------------
+
+.. versionadded:: 2.0
+
+The help parameter is very special in how it's implemented in click.
+Unlike regular parameters it's automatically added by click for any
+command and it performs automatic conflict resolution.  By default it's
+called ``--help`` but this can be changed.  If a command itself implements
+a parameter with the same name the default help parameter stops accepting
+it.  There is a context setting that can be used to override the names of
+the help parameters called :attr:`~Context.help_option_names`.
+
+This example changes the default parameters to ``-h`` and ``--help``
+instad of just ``--help``:
+
+.. click:example::
+
+    CONTEXT_DEFAULTS = dict(help_option_names=['-h', '--help'])
+
+    @click.command(context_defaults=CONTEXT_DEFAULTS)
+    def cli():
+        pass
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(cli, ['-h'])
