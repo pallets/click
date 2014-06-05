@@ -63,6 +63,35 @@ And it can then be used like this:
     def pop():
         pass
 
+Token Normalization
+-------------------
+
+.. versionadded:: 2.0
+
+Starting with click 2.0 it's possible to provide a function that is used
+for normalizing tokens.  Tokens are option names, choice values or command
+values.  This can be used to implement case insensitive options for
+instance.
+
+In order to use this feature you need to implement a function that
+performs the normalization of the token.  For instance you could have a
+function that converts the token to lowercase.  Example:
+
+.. click:example::
+
+    CONTEXT_DEFAULTS = dict(token_normalize_func=lambda x: x.lower())
+
+    @click.command(context_defaults=CONTEXT_DEFAULTS)
+    @click.option('--name', default='Pete')
+    def cli(name):
+        click.echo('Name: %s' % name)
+
+And how it works on the UI:
+
+.. click:run::
+
+    invoke(cli, prog_name='cli', args=['--NAME=Pete'])
+
 Invoking Other Commands
 -----------------------
 
