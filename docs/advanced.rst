@@ -79,9 +79,9 @@ function that converts the token to lowercase.  Example:
 
 .. click:example::
 
-    CONTEXT_DEFAULTS = dict(token_normalize_func=lambda x: x.lower())
+    CONTEXT_SETTINGS = dict(token_normalize_func=lambda x: x.lower())
 
-    @click.command(context_defaults=CONTEXT_DEFAULTS)
+    @click.command(context_settings=CONTEXT_SETTINGS)
     @click.option('--name', default='Pete')
     def cli(name):
         click.echo('Name: %s' % name)

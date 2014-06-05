@@ -148,9 +148,9 @@ instad of just ``--help``:
 
 .. click:example::
 
-    CONTEXT_DEFAULTS = dict(help_option_names=['-h', '--help'])
+    CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
-    @click.command(context_defaults=CONTEXT_DEFAULTS)
+    @click.command(context_settings=CONTEXT_SETTINGS)
     def cli():
         pass
 

@@ -3,7 +3,7 @@ import sys
 import click
 
 
-CONTEXT_DEFAULTS = dict(auto_envvar_prefix='COMPLEX')
+CONTEXT_SETTINGS = dict(auto_envvar_prefix='COMPLEX')
 
 
 class Context(object):
@@ -50,7 +50,7 @@ class ComplexCLI(click.MultiCommand):
         return mod.cli
 
 
-@click.command(cls=ComplexCLI, context_defaults=CONTEXT_DEFAULTS)
+@click.command(cls=ComplexCLI, context_settings=CONTEXT_SETTINGS)
 @click.option('--home', type=click.Path(exists=True, file_okay=False,
                                         resolve_path=True),
               help='Changes the folder to operate on.')

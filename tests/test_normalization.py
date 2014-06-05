@@ -1,11 +1,11 @@
 import click
 
 
-CONTEXT_DEFAULTS = dict(token_normalize_func=lambda x: x.lower())
+CONTEXT_SETTINGS = dict(token_normalize_func=lambda x: x.lower())
 
 
 def test_option_normalization(runner):
-    @click.command(context_defaults=CONTEXT_DEFAULTS)
+    @click.command(context_settings=CONTEXT_SETTINGS)
     @click.option('--foo')
     @click.option('-x')
     def cli(foo, x):
@@ -17,7 +17,7 @@ def test_option_normalization(runner):
 
 
 def test_choice_normalization(runner):
-    @click.command(context_defaults=CONTEXT_DEFAULTS)
+    @click.command(context_settings=CONTEXT_SETTINGS)
     @click.option('--choice', type=click.Choice(['Foo', 'Bar']))
     def cli(choice):
         click.echo('Foo')
@@ -27,7 +27,7 @@ def test_choice_normalization(runner):
 
 
 def test_command_normalization(runner):
-    @click.group(context_defaults=CONTEXT_DEFAULTS)
+    @click.group(context_settings=CONTEXT_SETTINGS)
     def cli():
         pass
 

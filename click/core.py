@@ -359,21 +359,21 @@ class BaseCommand(object):
     usually and they have no built-in callback system.
 
     .. versionchanged:: 2.0
-       Added the `context_defaults` parameter.
+       Added the `context_settings` parameter.
 
     :param name: the name of the command to use unless a group overrides it.
-    :param context_defaults: an optional dictionary with defaults that are
+    :param context_settings: an optional dictionary with defaults that are
                              passed to the context object.
     """
 
-    def __init__(self, name, context_defaults=None):
+    def __init__(self, name, context_settings=None):
         #: the name the command thinks it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
         #: with this information.  You should instead use the
         #: :class:`Context`\'s :attr:`~Context.info_name` attribute.
         self.name = name
         #: an optional dictionary with defaults passed to the context.
-        self.context_defaults = context_defaults
+        self.context_settings = context_settings
 
     def get_usage(self, ctx):
         raise NotImplementedError('Base commands cannot get usage')
@@ -396,7 +396,7 @@ class BaseCommand(object):
         :param extra: extra keyword arguments forwarded to the context
                       constructor.
         """
-        for key, value in iteritems(self.context_defaults or {}):
+        for key, value in iteritems(self.context_settings or {}):
             if key not in extra:
                 extra[key] = value
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
@@ -494,10 +494,10 @@ class Command(BaseCommand):
     more parsing to commands nested below it.
 
     .. versionchanged:: 2.0
-       Added the `context_defaults` parameter.
+       Added the `context_settings` parameter.
 
     :param name: the name of the command to use unless a group overrides it.
-    :param context_defaults: an optional dictionary with defaults that are
+    :param context_settings: an optional dictionary with defaults that are
                              passed to the context object.
     :param callback: the callback to invoke.  This is optional.
     :param params: the parameters to register with this command.  This can
@@ -512,10 +512,10 @@ class Command(BaseCommand):
     """
     allow_extra_args = False
 
-    def __init__(self, name, context_defaults=None, callback=None,
+    def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
                  options_metavar='[OPTIONS]', add_help_option=True):
-        BaseCommand.__init__(self, name, context_defaults)
+        BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
         self.callback = callback

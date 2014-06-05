@@ -319,11 +319,11 @@ This example does the same as the previous example:
 
     import click
 
-    CONTEXT_DEFAULTS = dict(
+    CONTEXT_SETTINGS = dict(
         default_map={'runserver': {'port': 5000}}
     )
 
-    @click.group(context_defaults=CONTEXT_DEFAULTS)
+    @click.group(context_settings=CONTEXT_SETTINGS)
     def cli():
         pass
 
