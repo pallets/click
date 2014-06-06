@@ -38,11 +38,11 @@ def invoke_param_callback(callback, ctx, param, value):
     args = getattr(code, 'co_argcount', 3)
 
     if args < 3:
-        # This will become a warning in click 3.0:
+        # This will become a warning in Click 3.0:
         ## from warnings import warn
         ## warn(Warning('Invoked legacy parameter callback "%s".  The new '
         ##              'signature for such callbacks starting with '
-        ##              'click 2.0 is (ctx, param, value).'
+        ##              'Click 2.0 is (ctx, param, value).'
         ##              % callback), stacklevel=3)
         return callback(ctx, value)
     return callback(ctx, param, value)
@@ -117,7 +117,7 @@ class Context(object):
                            inherit from parent context.  If no context
                            defines the terminal width then auto
                            detection will be applied.
-    :param resilient_parsing: if this flag is enabled then click will
+    :param resilient_parsing: if this flag is enabled then Click will
                               parse without any interactivity or callback
                               invocation.  This is useful for implementing
                               things such as completion support.
@@ -183,7 +183,7 @@ class Context(object):
         #: options, choices, commands etc.
         self.token_normalize_func = token_normalize_func
 
-        #: Indicates if resilient parsing is enabled.  In that case click
+        #: Indicates if resilient parsing is enabled.  In that case Click
         #: will do its best to not cause any failures.
         self.resilient_parsing = resilient_parsing
 
@@ -348,13 +348,13 @@ class BaseCommand(object):
     """The base command implements the minimal API contract of commands.
     Most code will never use this as it does not implement a lot of useful
     functionality but it can act as the direct subclass of alternative
-    parsing methods that do not depend on the click parser.
+    parsing methods that do not depend on the Click parser.
 
-    For instance, this can be used to bridge click and other systems like
+    For instance, this can be used to bridge Click and other systems like
     argparse or docopt.
 
     Because base commands do not implement a lot of the API that other
-    parts of click take for granted, they are not supported for all
+    parts of Click take for granted, they are not supported for all
     operations.  For instance, they cannot be used with the decorators
     usually and they have no built-in callback system.
 
@@ -490,7 +490,7 @@ class BaseCommand(object):
 
 class Command(BaseCommand):
     """Commands are the basic building block of command line interfaces in
-    click.  A basic command handles command line parsing and might dispatch
+    Click.  A basic command handles command line parsing and might dispatch
     more parsing to commands nested below it.
 
     .. versionchanged:: 2.0
@@ -775,7 +775,7 @@ class MultiCommand(Command):
 
 class Group(MultiCommand):
     """A group allows a command to have subcommands attached.  This is the
-    most common way to implement nesting in click.
+    most common way to implement nesting in Click.
 
     :param commands: a dictionary of commands.
     """
@@ -864,7 +864,7 @@ class Parameter(object):
 
     .. versionchanged:: 2.0
        Changed signature for parameter callback to also be passed the
-       parameter.  In click 2.0, the old callback format will still work,
+       parameter.  In Click 2.0, the old callback format will still work,
        but it will raise a warning to give you change to migrate the
        code easier.
 
@@ -880,7 +880,7 @@ class Parameter(object):
                     without any arguments.
     :param callback: a callback that should be executed after the parameter
                      was matched.  This is called as ``fn(ctx, param,
-                     value)`` and needs to return the value.  Before click
+                     value)`` and needs to return the value.  Before Click
                      2.0, the signature was ``(ctx, value)``.
     :param nargs: the number of arguments to match.  If not ``1`` the return
                   value is a tuple instead of single value.
