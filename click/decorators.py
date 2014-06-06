@@ -76,10 +76,14 @@ def _make_command(f, name, attrs, cls):
         del f.__click_params__
     except AttributeError:
         params = []
-    help = inspect.getdoc(f)
-    if isinstance(help, bytes):
-        help = help.decode('utf-8')
-    attrs.setdefault('help', help)
+    help = attrs.get('help')
+    if help is None:
+        help = inspect.getdoc(f)
+        if isinstance(help, bytes):
+            help = help.decode('utf-8')
+    else:
+        help = inspect.cleandoc(help)
+    attrs['help'] = help
     return cls(name=name or f.__name__.lower(),
                callback=f, params=params, **attrs)
 
