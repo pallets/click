@@ -29,12 +29,12 @@ nesting of commands by design and has some deficiencies when it comes to
 POSIX compliant argument handling.
 
 Click is designed to be fun to work with and at the same time not stand in
-your way.  It's not overly flexible at the same time either.  Currently
-for instance it does not allow you to customize the help pages too much.
-This is intentional because click is designed to allow you to nest command
-line utilities.  The idea is that you can have a system that works
-together with another system by tacking two click instances together and
-they will continue working as they should.
+your way.  It's not overly flexible either.  Currently, for instance, it
+does not allow you to customize the help pages too much. This is intentional
+because click is designed to allow you to nest command line utilities.  The
+idea is that you can have a system that works together with another system by
+tacking two click instances together and they will continue working as they
+should.
 
 Too much customizability would break this promise.
 
@@ -42,7 +42,7 @@ Click was written to support the `Flask <http://flask.pocoo.org/>`_
 microframework ecosystem because no tool could provide it with the
 functionality it needed.
 
-To get an understanding of what click is all about I strongly recommend
+To get an understanding of what click is all about, I strongly recommend
 looking at the :ref:`complex-guide` chapter to see what it's useful for.
 
 Why not Argparse?
@@ -67,13 +67,13 @@ hard:
 Why not Docopt etc.?
 --------------------
 
-Docopt and many tools like it are cool in how they work but very few of
+Docopt and many tools like it are cool in how they work, but very few of
 these tools deal with nesting of commands and composability in a way like
 click.  To the best of the developer's knowledge, click is the first
-Python library that tries to aim for composability of applications that
-goes beyond what the system itself supports.
+Python library that aims to create a level of composability of applications
+that goes beyond what the system itself supports.
 
-Docopt for instance acts by parsing your help pages and then parsing
+Docopt, for instance, acts by parsing your help pages and then parsing
 according to those rules.  The side effect of this is that docopt is quite
 rigid in how it handles the command line interface.  The upside of docopt
 is that it gives you strong control over your help page; the downside is

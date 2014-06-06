@@ -67,14 +67,14 @@ That's it.
 Testing The Script
 ------------------
 
-To test the script you can make a new virtualenv and then install your
+To test the script, you can make a new virtualenv and then install your
 package::
 
     $ virtualenv venv
     $ . venv/bin/activate
     $ pip install --editable .
 
-Afterwards your command should be available:
+Afterwards, your command should be available:
 
 .. click:run::
 

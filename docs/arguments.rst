@@ -3,7 +3,7 @@ Arguments
 
 .. currentmodule:: click
 
-Arguments work similarly to options, but are positional.  They also only
+Arguments work similarly to options but are positional.  They also only
 support a subset of the features of options due to their syntactical nature.
 Click will also not attempt to document arguments for you and wants you to
 document them manually in order to avoid ugly help pages.
@@ -66,7 +66,7 @@ this, see the next sections.
 
 .. admonition:: Note on Non-Empty Variadic Arguments
 
-   If you come from ``argparse`` you might be missing support for setting
+   If you come from ``argparse``, you might be missing support for setting
    ``nargs`` to ``+`` to indicate that at least one argument is required.
 
    This is supported by setting ``required=True``.  However, this should
@@ -116,15 +116,15 @@ And what it does:
 File Path Arguments
 -------------------
 
-In the previous example the files were opened immediately.  But what if
-we just want the filename?  The naive way is to use the default string
+In the previous example, the files were opened immediately.  But what if
+we just want the filename?  The naïve way is to use the default string
 argument type.  However, remember that click is Unicode-based, so the string
 will always be a Unicode value.  Unfortunately, filenames can be Unicode or
 bytes depending on which operating system is being used.  As such, the type
 is insufficient.
 
-Instead, you should be using the :class:`Path` type, which handles this
-complexity for you.  Not only will it return either bytes or Unicode
+Instead, you should be using the :class:`Path` type, which automatically
+handles this ambiguity.  Not only will it return either bytes or Unicode
 depending on what makes more sense, but it will also be able to do some
 basic checks for you such as existence checks.
 
@@ -214,7 +214,7 @@ Generally, this feature is not recommended because it can cause the user
 a lot of confusion.
 
 Argument-Like Options
-------------------------------
+---------------------
 
 Sometimes, you want to process arguments that look like options.  For
 instance, imagine you have a file named ``-foo.txt``.  If you pass this as

@@ -1,12 +1,13 @@
 $ click_
 
   Click is a Python package for creating beautiful command line interfaces
-  in a composable way with as little amount of code as necessary.  It's the
-  "Command Line Interface Creation Kit".  It's highly configurable but comes
-  with good defaults out of the box.
+  in a composable way with as little code as necessary.  It's the "Command
+  Line Interface Creation Kit".  It's highly configurable but comes with
+  sensible defaults out of the box.
 
-  It aims to make writing command line tools quick and fun without causing
-  user frustration from the inability to implement a desired CLI API.
+  It aims to make the process of writing command line tools quick and fun
+  while also preventing any frustration caused by the inability to implement
+  an intended CLI API.
 
   Click in three points:
 
@@ -16,4 +17,4 @@ $ click_
 
   Read the docs at http://click.pocoo.org/
 
-  This library is work in progress.  Please give feedback!
+  This library is a work in progress.  Please give feedback!

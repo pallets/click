@@ -16,19 +16,19 @@ Option Prompts
 
 Option prompts are integrated into the option interface.  See
 :ref:`option-prompting` for more information.  Internally, it
-automatically calls into :func:`prompt` or :func:`confirm` as necessary.
+automatically calls either :func:`prompt` or :func:`confirm` as necessary.
 
 Input Prompts
 -------------
 
 To manually ask for user input, you can use the :func:`prompt` function.
 By default, it accepts any Unicode string, but you can ask for any other
-type.  For instance you can ask for a valid integer::
+type.  For instance, you can ask for a valid integer::
 
     value = click.prompt('Please enter a valid integer', type=int)
 
-The type is also automatically detected if a default is provided.  For
-instance, the following will only accept floats::
+Additionally, the type will be determined automatically if a default value is
+provided.  For instance, the following will only accept floats::
 
     value = click.prompt('Please enter a number', default=42.0)
 
@@ -42,6 +42,7 @@ as a boolean value::
     if click.confirm('Do you want to continue?'):
         click.echo('Well done!')
 
-There is also the option to make it automatically abort the execution::
+There is also the option to make the function automatically abort the
+execution of the program if it does not return ``True``::
 
     click.confirm('Do you want to continue?', abort=True)
