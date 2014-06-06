@@ -169,3 +169,23 @@ def test_missing_choice(runner):
     assert result.exit_code == 2
     assert 'Error: Missing option "--foo".  Choose from foo, bar.' \
         in result.output
+
+
+def test_multiline_help(runner):
+    @click.command()
+    @click.option('--foo', help="""
+        hello
+
+        i am
+
+        multiline
+    """)
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd, ['--help'])
+    assert result.exit_code == 0
+    out = result.output.splitlines()
+    assert '  --foo TEXT  hello' in out
+    assert '              i am' in out
+    assert '              multiline' in out
