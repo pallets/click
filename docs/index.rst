@@ -7,8 +7,8 @@ Line Interface Creation Kit".  It's highly configurable but comes with
 sensible defaults out of the box.
 
 It aims to make the process of writing command line tools quick and fun
-while also preventing frustration caused by the inability to implement an
-intended CLI API.
+while also preventing any frustration caused by the inability to implement
+an intended CLI API.
 
 Click in three points:
 
