@@ -216,7 +216,7 @@ def version_option(version=None, *param_decls, **attrs):
     printing out the version number.  This is implemented as an eager
     option that prints the version and exits the program in the callback.
 
-    :param version: the version number to show.  If not provided click
+    :param version: the version number to show.  If not provided Click
                     attempts an auto discovery via setuptools.
     :param prog_name: the name of the program (defaults to autodetection)
     :param message: custom message to show instead of the default

@@ -10,14 +10,14 @@ You can get the library directly from PyPI::
 Screencast and Examples
 -----------------------
 
-There is a screencast available which shows the basic API of click and
+There is a screencast available which shows the basic API of Click and
 how to build simple applications with it.  It also explores how to build
 commands with subcommands.
 
 *   `Building Command Line Applications with Click
     <https://www.youtube.com/watch?v=kNke39OZ2k0>`_
 
-Examples of click applications can be found in the documentation as well
+Examples of Click applications can be found in the documentation as well
 as in the GitHub repository together with readme files:
 
 *   ``inout``: `File input and output
@@ -44,7 +44,7 @@ Click is based on declaring commands through decorators.  Internally, there
 is a non-decorator interface for advanced use cases, but it's discouraged
 for high-level usage.
 
-A function becomes a click command line tool by decorating it through
+A function becomes a Click command line tool by decorating it through
 :func:`click.command`.  At its simplest, just decorating a function
 with this decorator will make it into a callable script:
 
@@ -78,7 +78,7 @@ Echoing
 -------
 
 Why does this example use :func:`echo` instead of the regular
-:func:`print` function?  The answer to this question is that click
+:func:`print` function?  The answer to this question is that Click
 attempts to support both Python 2 and Python 3 the same way and to be very
 robust even when the environment is misconfigured.  Click wants to be
 functional at least on a basic level even if everything is completely
@@ -88,7 +88,7 @@ What this means is that the :func:`echo` function applies some error
 correction in case the terminal is misconfigured instead of dying with an
 :exc:`UnicodeError`.
 
-As an added benefit, starting with click 2.0, the echo function also
+As an added benefit, starting with Click 2.0, the echo function also
 has good support for ANSI colors.  It will automatically strip ANSI codes
 if the output stream is a file and if colorama is supported, ANSI colors
 will also work on Windows.  See :ref:`ansi-colors` for more information.

@@ -3,7 +3,7 @@ Testing Click Applications
 
 .. currentmodule:: click.testing
 
-For basic testing, click provides the :mod:`click.testing` module which
+For basic testing, Click provides the :mod:`click.testing` module which
 provides test functionality that helps you invoke command line
 applications and check their behavior.
 
@@ -14,7 +14,7 @@ thread-safe!
 Basic Testing
 -------------
 
-The basic functionality for testing click applications is the
+The basic functionality for testing Click applications is the
 :class:`CliRunner` which can invoke commands as command line scripts.  The
 :meth:`CliRunner.invoke` method runs the command line script in isolation
 and captures the output as both bytes and binary data.

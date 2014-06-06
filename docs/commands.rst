@@ -3,7 +3,7 @@ Commands and Groups
 
 .. currentmodule:: click
 
-The most important feature of click is the concept of arbitrarily nesting
+The most important feature of Click is the concept of arbitrarily nesting
 command line utilities.  This is implemented through the :class:`Command`
 and :class:`Group` (actually :class:`MultiCommand`).
 
@@ -308,7 +308,7 @@ Context Defaults
 
 .. versionadded:: 2.0
 
-Starting with click 2.0 you can override defaults for contexts not just
+Starting with Click 2.0 you can override defaults for contexts not just
 when calling your script, but also in the decorator that declares a
 command.  For instance given the previous example which defines a custom
 ``default_map`` this can also be accomplished in the decorator now.

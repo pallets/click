@@ -8,7 +8,7 @@ it suffers from the Unicode text model in Python 3.  All examples in the
 documentation were written so that they could run on both Python 2.x and
 Python 3.3 or higher.
 
-At the moment, it is strongly recommended is to use Python 2 for click
+At the moment, it is strongly recommended is to use Python 2 for Click
 utilities unless Python 3 is a hard requirement.
 
 .. _python3-limitations:
@@ -16,7 +16,7 @@ utilities unless Python 3 is a hard requirement.
 Python 3 Limitations
 --------------------
 
-At the moment, click suffers from a few problems with Python 3:
+At the moment, Click suffers from a few problems with Python 3:
 
 *   The command line in Unix traditionally is in bytes, and not Unicode.
     While there are encoding hints for all of this, there are generally
@@ -25,7 +25,7 @@ At the moment, click suffers from a few problems with Python 3:
 
     Misconfigured environments can currently cause a wide range of Unicode
     problems in Python 3 due to the lack of support for roundtripping
-    surrogate escapes.  This will not be fixed in click itself!
+    surrogate escapes.  This will not be fixed in Click itself!
 
     For more information see :ref:`python3-surrogates`.
 
@@ -68,23 +68,23 @@ In Python 2, the following is true:
     input types and convert as necessary.  The :class:`STRING` type
     automatically will decode properly the input value into a string by
     trying the most appropriate encodings.
-*   When dealing with files, click will never go through the Unicode APIs
+*   When dealing with files, Click will never go through the Unicode APIs
     and will instead use the operating system's byte APIs to open the
     files.
 
 In Python 3, the following is true:
 
 *   ``sys.stdin``, ``sys.stdout`` and ``sys.stderr`` are by default
-    text-based.  When click needs a binary stream, it attempts to discover
+    text-based.  When Click needs a binary stream, it attempts to discover
     the underlying binary stream.  See :ref:`python3-limitations` for how
     this works.
 *   ``sys.argv`` is always Unicode-based.  This also means that the native
-    type for input values to the types in click is Unicode, and not bytes.
+    type for input values to the types in Click is Unicode, and not bytes.
 
     This causes problems when the terminal is incorrectly set and Python
     does not figure out the encoding.  In that case, the Unicode string
     will contain error bytes encoded as surrogate escapes.
-*   When dealing with files, click will always use the Unicode file system
+*   When dealing with files, Click will always use the Unicode file system
     API calls by using the operating system's reported or guessed
     filesystem encoding.  Surrogates are supported for filenames, so it
     should be possible to open files through the :class:`File` type even
@@ -96,7 +96,7 @@ Python 3 Surrogate Handling
 ---------------------------
 
 Click in Python 3 does all the Unicode handling in the standard library
-and is subject to its behavior.  In Python 2, click does all the Unicode
+and is subject to its behavior.  In Python 2, Click does all the Unicode
 handling itself, which means there are differences in error behavior.
 
 The most glaring difference is that in Python 2, Unicode will "just work",
@@ -104,13 +104,13 @@ while in Python 3, it requires extra care.  The reason for this is that on
 Python 3, the encoding detection is done in the interpreter and on Linux
 and certain other operating systems its encoding handling is problematic.
 
-The biggest source of frustration is that click scripts invoked by
+The biggest source of frustration is that Click scripts invoked by
 init systems (sysvinit, upstart, systemd, etc.), deployment tools (salt,
 puppet), or cron jobs (cron) will refuse to work unless a Unicode locale is
 exported.
 
-If click encounters such an environment it will prevent further execution
-to force you to set a locale.  This is done because click cannot know
+If Click encounters such an environment it will prevent further execution
+to force you to set a locale.  This is done because Click cannot know
 about the state of the system once it's invoked and restore the values
 before Python's Unicode handling kicked in.
 
@@ -150,5 +150,5 @@ Python 3 bug tracker:
 *   `Python 3 raises Unicode errors in the C locale
     <http://bugs.python.org/issue19846>`_
 *   `LC_CTYPE=C:  pydoc leaves terminal in an unusable state
-    <http://bugs.python.org/issue21398>`_ (this is relevant to click
+    <http://bugs.python.org/issue21398>`_ (this is relevant to Click
     because the pager support is provided by the stdlib pydoc module)
