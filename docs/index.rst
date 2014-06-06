@@ -16,7 +16,7 @@ Click in three points:
 -   automatic help page generation
 -   supports lazy loading of subcommands at runtime
 
-What does it look like?  Here is an example of a simple click program:
+What does it look like?  Here is an example of a simple Click program:
 
 .. click:example::
 

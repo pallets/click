@@ -40,7 +40,7 @@ by name.
 Preventing Rewrapping
 ---------------------
 
-The default behavior of click is to rewrap text based on the width of the
+The default behavior of Click is to rewrap text based on the width of the
 terminal.  In some circumstances, this can become a problem. The main issue
 is when showing code examples, where newlines are significant.
 
@@ -136,8 +136,8 @@ Help Parameter Customization
 
 .. versionadded:: 2.0
 
-The help parameter is implemented in click in a very special manner.
-Unlike regular parameters it's automatically added by click for any
+The help parameter is implemented in Click in a very special manner.
+Unlike regular parameters it's automatically added by Click for any
 command and it performs automatic conflict resolution.  By default it's
 called ``--help``, but this can be changed.  If a command itself implements
 a parameter with the same name, the default help parameter stops accepting

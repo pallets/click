@@ -3,7 +3,7 @@ Utilities
 
 .. currentmodule:: click
 
-Besides the functionality that click provides to interface with argument
+Besides the functionality that Click provides to interface with argument
 parsing and handling, it also provides a bunch of addon functionality that
 is useful for writing command line utilities.
 
@@ -38,21 +38,21 @@ ANSI Colors
 
 .. versionadded:: 2.0
 
-Starting with click 2.0, the :func:`echo` function gained extra
+Starting with Click 2.0, the :func:`echo` function gained extra
 functionality to deal with ANSI colors and styles.  Note that on Windows,
 this functionality is only available if `colorama`_ is installed.  If it
 is installed, then ANSI codes are intelligently handled.
 
 Primarily this means that:
 
--   click's :func:`echo` function will automatically strip ANSI color codes
+-   Click's :func:`echo` function will automatically strip ANSI color codes
     if the stream is not connected to a terminal.
 -   the :func:`echo` function will transparently connect to the terminal on
     Windows and translate ANSI codes to terminal API calls.  This means
     that colors will work on Windows the same way they do on other
     operating systems.
 
-Note for `colorama` support: click will automatically detect when `colorama`
+Note for `colorama` support: Click will automatically detect when `colorama`
 is available and use it.  Do *not* call ``colorama.init()``!
 
 To install `colorama`, run this command::
@@ -101,7 +101,7 @@ Screen Clearing
 .. versionadded:: 2.0
 
 To clear the terminal screen, you can use the :func:`clear` function that
-is provided starting with click 2.0.  It does what the name suggests: it
+is provided starting with Click 2.0.  It does what the name suggests: it
 clears the entire visible screen in a platform-agnostic way:
 
 ::
@@ -120,7 +120,7 @@ standard input.  However, this is buffered input and will not show up until
 the line has been terminated.  In certain circumstances, you might not want
 to do that and instead read individual characters as they are being written.
 
-For this, click provides the :func:`getchar` function which reads a single
+For this, Click provides the :func:`getchar` function which reads a single
 character from the terminal buffer and returns it as a Unicode character.
 
 Note that this function will always read from the terminal, even if stdin
