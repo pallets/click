@@ -17,8 +17,8 @@ commands with subcommands.
 *   `Building Command Line Applications with Click
     <https://www.youtube.com/watch?v=kNke39OZ2k0>`_
 
-Examples of Click applications can be found in the documentation as well
-as in the github repository together with readme files:
+Examples of click applications can be found in the documentation as well
+as in the GitHub repository together with readme files:
 
 *   ``inout``: `File input and output
     <https://github.com/mitsuhiko/click/tree/master/examples/inout>`_
@@ -26,7 +26,7 @@ as in the github repository together with readme files:
     <https://github.com/mitsuhiko/click/tree/master/examples/naval>`_
 *   ``aliases``: `Command alias example
     <https://github.com/mitsuhiko/click/tree/master/examples/aliases>`_
-*   ``repo``: `Git/hg like command line interface
+*   ``repo``: `Git-/Mercurial-like command line interface
     <https://github.com/mitsuhiko/click/tree/master/examples/repo>`_
 *   ``complex``: `Complex example with plugin loading
     <https://github.com/mitsuhiko/click/tree/master/examples/complex>`_

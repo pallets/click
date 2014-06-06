@@ -3,12 +3,12 @@ Python 3 Support
 
 .. currentmodule:: click
 
-Click supports Python 3 but like all other command line utility libraries,
+Click supports Python 3, but like all other command line utility libraries,
 it suffers from the Unicode text model in Python 3.  All examples in the
-documentation were written so that they run on both Python 2.x and
+documentation were written so that they could run on both Python 2.x and
 Python 3.3 or higher.
 
-At the moment the strong recommendation is to use Python 2 for these
+At the moment, it is strongly recommended is to use Python 2 for click
 utilities unless Python 3 is a hard requirement.
 
 .. _python3-limitations:
@@ -58,7 +58,7 @@ Python 2 and 3 Differences
 Click attempts to minimize the differences between Python 2 and Python 3
 by following the best practices for both languages.
 
-in Python 2, the following is true:
+In Python 2, the following is true:
 
 *   ``sys.stdin``, ``sys.stdout``, and ``sys.stderr`` are opened in binary
     mode, but under some circumstances they support Unicode output.  Click
@@ -72,7 +72,7 @@ in Python 2, the following is true:
     and will instead use the operating system's byte APIs to open the
     files.
 
-in Python 3, the following is true:
+In Python 3, the following is true:
 
 *   ``sys.stdin``, ``sys.stdout`` and ``sys.stderr`` are by default
     text-based.  When click needs a binary stream, it attempts to discover
@@ -127,20 +127,20 @@ You are dealing with an environment where Python 3 thinks you are
 restricted to ASCII data.  The solution to these problems is different
 depending on which locale your computer is running in.
 
-For instance if you have a German Linux machine you can fix the problem
+For instance, if you have a German Linux machine, you can fix the problem
 by exporting the locale to ``de_DE.utf-8``::
 
     export LC_ALL=de_DE.utf-8
     export LANG=de_DE.utf-8
 
 If you are on a US machine, ``en_EN.utf-8`` is the encoding of choice.  On
-some newer Linux systems you can also try ``C.UTF-8`` as locale::
+some newer Linux systems, you could also try ``C.UTF-8`` as the locale::
 
     export LC_ALL=C.UTF-8
     export LANG=C.UTF-8
 
 You need to do this before you invoke your Python script.  If you are
-curious about the reasons for this you can join the discussions in the
+curious about the reasons for this, you can join the discussions in the
 Python 3 bug tracker:
 
 *   `ASCII is a bad filesystem default encoding

@@ -2,12 +2,13 @@ Welcome to the Click Documentation
 ==================================
 
 Click is a Python package for creating beautiful command line interfaces
-in a composable way with as little amount of code as necessary.  It's the
-"Command Line Interface Creation Kit".  It's highly configurable but comes
-with good defaults out of the box.
+in a composable way with as little code as necessary.  It's the "Command
+Line Interface Creation Kit".  It's highly configurable but comes with
+sensible defaults out of the box.
 
-It aims at making writing command line tools fun and quick without causing
-user frustration at not being able to implement an intended CLI API.
+It aims to make the process of writing command line tools quick and fun
+while also preventing frustration caused by the inability to implement an
+intended CLI API.
 
 Click in three points:
 
@@ -15,7 +16,7 @@ Click in three points:
 -   automatic help page generation
 -   supports lazy loading of subcommands at runtime
 
-What does it look like?  A simple example can be this:
+What does it look like?  Here is an example of a simple click program:
 
 .. click:example::
 
@@ -33,13 +34,13 @@ What does it look like?  A simple example can be this:
     if __name__ == '__main__':
         hello()
 
-And what it looks like:
+And what it looks like when run:
 
 .. click:run::
 
     invoke(hello, ['--count=3'], input='John\n')
 
-And it gives you nicely formatted help pages:
+It automatically generates nicely formatted help pages:
 
 .. click:run::
 
@@ -52,8 +53,8 @@ You can get the library directly from PyPI::
 Documentation Contents
 ----------------------
 
-This part of the documentation guides you through all the usage patterns
-of the library.
+This part of the documentation guides you through all of the library's
+usage patterns.
 
 .. toctree::
    :maxdepth: 2
@@ -77,7 +78,7 @@ of the library.
 API Reference
 -------------
 
-If you are looking for information on a specific function, class or
+If you are looking for information on a specific function, class, or
 method, this part of the documentation is for you.
 
 .. toctree::
@@ -85,8 +86,8 @@ method, this part of the documentation is for you.
 
    api
 
-Other Documents
----------------
+Miscellaneous Pages
+-------------------
 
 .. toctree::
    :maxdepth: 2
