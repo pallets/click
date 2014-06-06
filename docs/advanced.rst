@@ -4,9 +4,8 @@ Advanced Patterns
 .. currentmodule:: click
 
 In addition to common functionality that is implemented in the library
-itself, there are countless of patterns that can be implemented by extending
-click.  This page should give some inspiration of what can be
-accomplished.
+itself, there are countless patterns that can be implemented by extending
+click.  This page should give some insight into what can be accomplished.
 
 .. _aliases:
 
@@ -15,9 +14,9 @@ Command Aliases
 
 Many tools support aliases for commands.  For instance, you can configure
 ``git`` to accept ``git ci`` as alias for ``git commit``.  Other tools
-also support auto discovery for aliases by automatically shortening them.
+also support auto-discovery for aliases by automatically shortening them.
 
-Click does not support this out of the box but it's very easy to customize
+Click does not support this out of the box, but it's very easy to customize
 the :class:`Group` or any other :class:`MultiCommand` to provide this
 functionality.
 
@@ -28,8 +27,8 @@ to override the latter as you generally don't want to enumerate the
 aliases on the help page in order to avoid confusion.
 
 This following example implements a subclass of :class:`Group` that
-accepts a prefix for a command.  If there were a command called
-``push``, it would accept ``pus`` as an alias if it was unique:
+accepts a prefix for a command.  If there were a command called ``push``,
+it would accept ``pus`` as an alias (so long as it was unique):
 
 .. click:example::
 
@@ -68,14 +67,14 @@ Token Normalization
 
 .. versionadded:: 2.0
 
-Starting with click 2.0 it's possible to provide a function that is used
-for normalizing tokens.  Tokens are option names, choice values or command
-values.  This can be used to implement case insensitive options for
+Starting with click 2.0, it's possible to provide a function that is used
+for normalizing tokens.  Tokens are option names, choice values, or command
+values.  This can be used to implement case insensitive options, for
 instance.
 
-In order to use this feature you need to implement a function that
-performs the normalization of the token.  For instance you could have a
-function that converts the token to lowercase.  Example:
+In order to use this feature, the context needs to be passed a function that
+performs the normalization of the token.  For instance, you could have a
+function that converts the token to lowercase:
 
 .. click:example::
 
@@ -86,7 +85,7 @@ function that converts the token to lowercase.  Example:
     def cli(name):
         click.echo('Name: %s' % name)
 
-And how it works on the UI:
+And how it works on the command line:
 
 .. click:run::
 
