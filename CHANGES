@@ -6,7 +6,7 @@ This contains all major version changes between click releases.
 Version 2.0
 -----------
 
-(codename and release date to be decided)
+(codename "tap tap tap", released on June 6th 2014)
 
 - added support for opening stdin/stdout on Windows in
   binary mode correctly.
