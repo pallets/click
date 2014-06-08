@@ -8,6 +8,8 @@ Version 2.1
 
 (bugfix release, release date to be decided)
 
+- fixed the :func:`launch` function on windows.
+
 Version 2.0
 -----------
 
