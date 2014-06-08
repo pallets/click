@@ -1,4 +1,3 @@
-import sys
 from ._compat import PY2, filename_to_ui, get_text_stderr
 from .utils import echo
 
@@ -22,7 +21,7 @@ class ClickException(Exception):
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
-        echo('Error: %s' % self.format_message())
+        echo('Error: %s' % self.format_message(), file=file)
 
 
 class UsageError(ClickException):
