@@ -412,13 +412,12 @@ def open_url(url, wait=False, locate=False):
     elif sys.platform.startswith('win'):
         if locate:
             url = _unquote_file(url)
-            args = ['explorer', '/select,"%s"' % _unquote_file(url)]
+            args = 'explorer /select,"%s"' % _unquote_file(
+                url.replace('"', ''))
         else:
-            args = ['start']
-            if wait:
-                args.append('/WAIT')
-        args.append(url)
-        return subprocess.Popen(args).wait()
+            args = 'start %s "" "%s"' % (
+                wait and '/WAIT' or '', url.replace('"', ''))
+        return os.system(args)
 
     try:
         if locate:
