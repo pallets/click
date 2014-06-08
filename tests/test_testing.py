@@ -1,6 +1,6 @@
 import click
 
-from click.testing import CliRunner
+from click.testing import CLIRunner
 
 from click._compat import PY2
 
@@ -23,12 +23,12 @@ def test_runner():
             o.write(chunk)
             o.flush()
 
-    runner = CliRunner()
+    runner = CLIRunner()
     result = runner.invoke(test, input='Hello World!\n')
     assert not result.exception
     assert result.output == 'Hello World!\n'
 
-    runner = CliRunner(echo_stdin=True)
+    runner = CLIRunner(echo_stdin=True)
     result = runner.invoke(test, input='Hello World!\n')
     assert not result.exception
     assert result.output == 'Hello World!\nHello World!\n'
@@ -46,12 +46,12 @@ def test_runner_with_stream():
             o.write(chunk)
             o.flush()
 
-    runner = CliRunner()
+    runner = CLIRunner()
     result = runner.invoke(test, input=ReasonableBytesIO(b'Hello World!\n'))
     assert not result.exception
     assert result.output == 'Hello World!\n'
 
-    runner = CliRunner(echo_stdin=True)
+    runner = CLIRunner(echo_stdin=True)
     result = runner.invoke(test, input=ReasonableBytesIO(b'Hello World!\n'))
     assert not result.exception
     assert result.output == 'Hello World!\nHello World!\n'
@@ -63,7 +63,7 @@ def test_prompts():
     def test(foo):
         click.echo('foo=%s' % foo)
 
-    runner = CliRunner()
+    runner = CLIRunner()
     result = runner.invoke(test, input='wau wau\n')
     assert not result.exception
     assert result.output == 'Foo: wau wau\nfoo=wau wau\n'
@@ -73,7 +73,7 @@ def test_prompts():
     def test(foo):
         click.echo('foo=%s' % foo)
 
-    runner = CliRunner()
+    runner = CLIRunner()
     result = runner.invoke(test, input='wau wau\n')
     assert not result.exception
     assert result.output == 'Foo: \nfoo=wau wau\n'
@@ -84,7 +84,7 @@ def test_getchar():
     def continue_it():
         click.echo(click.getchar())
 
-    runner = CliRunner()
+    runner = CLIRunner()
     result = runner.invoke(continue_it, input='y')
     assert not result.exception
     assert result.output == 'y\n'

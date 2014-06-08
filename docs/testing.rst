@@ -15,8 +15,8 @@ Basic Testing
 -------------
 
 The basic functionality for testing click applications is the
-:class:`CliRunner` which can invoke commands as command line scripts.  The
-:meth:`CliRunner.invoke` method runs the command line script in isolation
+:class:`CLIRunner` which can invoke commands as command line scripts.  The
+:meth:`CLIRunner.invoke` method runs the command line script in isolation
 and captures the output as both bytes and binary data.
 
 The return value is a :class:`Result` object, which has the captured output
@@ -25,7 +25,7 @@ data, exit code, and optional exception attached.
 Example::
 
     import click
-    from click.testing import CliRunner
+    from click.testing import CLIRunner
 
     def test_hello_world():
         @click.command()
@@ -33,7 +33,7 @@ Example::
         def hello(name):
             click.echo('Hello %s!' % name)
 
-        runner = CliRunner()
+        runner = CLIRunner()
         result = runner.invoke(hello, ['Peter'])
         assert result.exit_code == 0
         assert result.output == 'Hello Peter!\n'
@@ -42,13 +42,13 @@ File System Isolation
 ---------------------
 
 For basic command line tools that want to operate with the file system, the
-:meth:`CliRunner.isolated_filesystem` method comes in useful which sets up
+:meth:`CLIRunner.isolated_filesystem` method comes in useful which sets up
 an empty folder and changes the current working directory to.
 
 Example::
 
     import click
-    from click.testing import CliRunner
+    from click.testing import CLIRunner
 
     def test_cat():
         @click.command()
@@ -56,7 +56,7 @@ Example::
         def cat(f):
             click.echo(f.read())
 
-        runner = CliRunner()
+        runner = CLIRunner()
         with runner.isolated_filesystem():
             with open('hello.txt') as f:
                 f.write('Hello World!')
@@ -72,7 +72,7 @@ The test wrapper can also be used to provide input data for the input
 stream (stdin).  This is very useful for testing prompts, for instance::
 
     import click
-    from click.testing import CliRunner
+    from click.testing import CLIRunner
 
     def test_prompts():
         @click.command()
@@ -80,7 +80,7 @@ stream (stdin).  This is very useful for testing prompts, for instance::
         def test(foo):
             click.echo('foo=%s' % foo)
 
-        runner = CliRunner()
+        runner = CLIRunner()
         result = runner.invoke(test, input='wau wau\n')
         assert not result.exception
         assert result.output == 'Foo: wau wau\nfoo=wau wau\n'

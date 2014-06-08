@@ -88,7 +88,7 @@ class Result(object):
         )
 
 
-class CliRunner(object):
+class CLIRunner(object):
     """The CLI runner provides functionality to invoke a click command line
     script for unittesting purposes in a isolated environment.  This only
     works in single-threaded systems without any concurrency as it changes the
@@ -266,3 +266,6 @@ class CliRunner(object):
                 shutil.rmtree(t)
             except (OSError, IOError):
                 pass
+
+# For backwards compatibility
+CLIRunner = CLIRunner
