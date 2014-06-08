@@ -160,7 +160,7 @@ Testing
 
 .. currentmodule:: click.testing
 
-.. autoclass:: CliRunner
+.. autoclass:: CLIRunner
    :members:
 
 .. autoclass:: Result
