@@ -22,7 +22,7 @@ class ClickException(Exception):
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
-        echo('Error: %s' % self.format_message())
+        echo('Error: %s' % self.format_message(), file=file)
 
 
 class UsageError(ClickException):
