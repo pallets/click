@@ -9,6 +9,8 @@ Version 2.1
 (bugfix release, release date to be decided)
 
 - fixed the :func:`launch` function on windows.
+- improved the colorama support on windows to try hard to not
+  screw up the console if the application is interrupted.
 
 Version 2.0
 -----------

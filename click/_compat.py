@@ -461,6 +461,11 @@ if sys.platform.startswith('win'):
         _ansi_stream_wrappers = WeakKeyDictionary()
 
         def auto_wrap_for_ansi(stream):
+            """This function wraps a stream so that calls through colorama
+            are issued to the win32 console API to recolor on demand.  It
+            also ensures to reset the colors if a write call is interrupted
+            to not destroy the console afterwards.
+            """
             try:
                 cached = _ansi_stream_wrappers.get(stream)
             except Exception:
@@ -468,7 +473,18 @@ if sys.platform.startswith('win'):
             if cached is not None:
                 return cached
             strip = not isatty(stream)
-            rv = colorama.AnsiToWin32(stream, strip=strip).stream
+            ansi_wrapper = colorama.AnsiToWin32(stream, strip=strip)
+            rv = ansi_wrapper.stream
+            _write = rv.write
+
+            def _safe_write(s):
+                try:
+                    return _write(s)
+                except:
+                    ansi_wrapper.reset_all()
+                    raise
+
+            rv.write = _safe_write
             try:
                 _ansi_stream_wrappers[stream] = rv
             except Exception:
