@@ -47,7 +47,7 @@ def progress(count):
             if random.random() > 0.3:
                 yield item
 
-    with click.progressbar(items, label='Processing user accounts',
+    with click.progressbar(items, label='Processing accounts',
                            fill_char=click.style('#', fg='green')) as bar:
         for item in bar:
             process_slowly(item)
