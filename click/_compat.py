@@ -7,6 +7,7 @@ from weakref import WeakKeyDictionary
 
 
 PY2 = sys.version_info[0] == 2
+DEFAULT_COLUMNS = 80
 
 
 _ansi_re = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')
@@ -447,12 +448,16 @@ class _AtomicFile(object):
 
 auto_wrap_for_ansi = None
 colorama = None
+get_winterm_size = None
 
 
 # If we're on Windows, we provide transparent integration through
 # colorama.  This will make ANSI colors through the echo function
 # work automatically.
 if sys.platform.startswith('win'):
+    # Windows has a smaller terminal
+    DEFAULT_COLUMNS = 79
+
     try:
         import colorama
     except ImportError:
@@ -490,6 +495,12 @@ if sys.platform.startswith('win'):
             except Exception:
                 pass
             return rv
+
+        def get_winterm_size():
+            win = colorama.win32.GetConsoleScreenBufferInfo(
+                colorama.win32.STDOUT).srWindow
+            return win.Right - win.Left, win.Bottom - win.Top
+
 
 
 def strip_ansi(value):

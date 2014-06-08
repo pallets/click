@@ -11,6 +11,10 @@ Version 2.1
 - fixed the :func:`launch` function on windows.
 - improved the colorama support on windows to try hard to not
   screw up the console if the application is interrupted.
+- fixed windows terminals incorrectly being reported to be 80
+  characters wide instead of 79
+- use colorama win32 bindings if available to get the correct
+  dimensions of a windows terminal.
 
 Version 2.0
 -----------

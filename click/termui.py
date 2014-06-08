@@ -3,7 +3,8 @@ import sys
 import struct
 
 from ._compat import raw_input, text_type, string_types, \
-     colorama, isatty, strip_ansi
+     colorama, isatty, strip_ansi, get_winterm_size, \
+     DEFAULT_COLUMNS
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type
@@ -146,6 +147,9 @@ def get_terminal_size():
             sz = shutil_get_terminal_size()
             return sz.columns, sz.lines
 
+    if get_winterm_size is not None:
+        return get_winterm_size()
+
     def ioctl_gwinsz(fd):
         try:
             import fcntl
@@ -168,7 +172,7 @@ def get_terminal_size():
             pass
     if not cr or not cr[0] or not cr[1]:
         cr = (os.environ.get('LINES', 25),
-              os.environ.get('COLUMNS', 80))
+              os.environ.get('COLUMNS', DEFAULT_COLUMNS))
     return int(cr[1]), int(cr[0])
 
 
