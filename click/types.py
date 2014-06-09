@@ -107,7 +107,7 @@ class StringParamType(ParamType):
 
 class Choice(ParamType):
     """The choice type allows a value to checked against a fixed set of
-    supported values.  All of these values have to be integers.
+    supported values.  All of these values have to be strings.
 
     See :ref:`choice-opts` for an example.
     """
