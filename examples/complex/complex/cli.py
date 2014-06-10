@@ -42,8 +42,9 @@ class ComplexCLI(click.MultiCommand):
 
     def get_command(self, ctx, name):
         try:
-            mod = __import__('complex.commands.cmd_' +
-                             name.encode('ascii', 'replace'),
+            if sys.version_info[0] == 2:
+                name = name.encode('ascii', 'replace')
+            mod = __import__('complex.commands.cmd_' + name,
                              None, None, ['cli'])
         except ImportError:
             return
