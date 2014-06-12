@@ -1039,6 +1039,8 @@ class Option(Parameter):
                    prompt will be the option name capitalized.
     :param confirmation_prompt: if set then the value will need to be confirmed
                                 if it was prompted for.
+    :param prompt_text: provides a different text for the prompt. If not set
+                        the name of the Option will be used.
     :param hide_input: if this is `True` then the input on the prompt will be
                        hidden from the user.  This is useful for password
                        input.
