@@ -39,11 +39,11 @@ def invoke_param_callback(callback, ctx, param, value):
 
     if args < 3:
         # This will become a warning in click 3.0:
-        ## from warnings import warn
-        ## warn(Warning('Invoked legacy parameter callback "%s".  The new '
-        ##              'signature for such callbacks starting with '
-        ##              'click 2.0 is (ctx, param, value).'
-        ##              % callback), stacklevel=3)
+        # from warnings import warn
+        # warn(Warning('Invoked legacy parameter callback "%s".  The new '
+        #              'signature for such callbacks starting with '
+        #              'click 2.0 is (ctx, param, value).'
+        #              % callback), stacklevel=3)
         return callback(ctx, value)
     return callback(ctx, param, value)
 
@@ -195,7 +195,7 @@ class Context(object):
                and parent.auto_envvar_prefix is not None and \
                self.info_name is not None:
                 auto_envvar_prefix = '%s_%s' % (parent.auto_envvar_prefix,
-                                           self.info_name.upper())
+                                                self.info_name.upper())
         else:
             self.auto_envvar_prefix = auto_envvar_prefix.upper()
         self.auto_envvar_prefix = auto_envvar_prefix
@@ -1061,7 +1061,7 @@ class Option(Parameter):
     param_type_name = 'option'
 
     def __init__(self, param_decls=None, show_default=False,
-                 prompt=False, confirmation_prompt=False,
+                 prompt=False, confirmation_prompt=False, prompt_text=None,
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, count=False, allow_from_autoenv=True,
                  type=None, help=None, **attrs):
@@ -1069,12 +1069,13 @@ class Option(Parameter):
         Parameter.__init__(self, param_decls, type=type, **attrs)
 
         if prompt is True:
-            prompt_text = self.name.replace('_', ' ').capitalize()
+            _prompt_text = (prompt_text or
+                            self.name.replace('_', ' ').capitalize())
         elif prompt is False:
-            prompt_text = None
+            _prompt_text = None
         else:
-            prompt_text = prompt
-        self.prompt = prompt_text
+            _prompt_text = prompt
+        self.prompt = _prompt_text
         self.confirmation_prompt = confirmation_prompt
         self.hide_input = hide_input
 
