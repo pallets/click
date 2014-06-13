@@ -78,7 +78,7 @@ class FuncParamType(ParamType):
             return self.func(value)
         except ValueError:
             try:
-                value = unicode(value)
+                value = text_type(value)
             except UnicodeError:
                 value = str(value).decode('utf-8', 'replace')
             self.fail(value, param, ctx)
