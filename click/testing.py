@@ -214,7 +214,8 @@ class CliRunner(object):
             click.termui.hidden_prompt_func = old_hidden_prompt_func
             click.termui._getchar = old__getchar_func
 
-    def invoke(self, cli, args=None, input=None, env=None, **extra):
+    def invoke(self, cli, args=None, input=None, env=None,
+               catch_exceptions=True, **extra):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
         arguments are passed to the :meth:`~click.Command.main` function of
@@ -222,10 +223,15 @@ class CliRunner(object):
 
         This returns a :class:`Result` object.
 
+        .. versionadded:: 3.0
+        The ``catch_exceptions`` parameter was added.
+
         :param cli: the command to invoke
         :param args: the arguments to invoke
         :param input: the input data for `sys.stdin`.
         :param env: the environment overrides.
+        :param catch_exceptions: Whether to catch any other exceptions than
+                                 ``SystemExit``.
         :param extra: the keyword arguments to pass to :meth:`main`.
         """
         with self.isolation(input=input, env=env) as out:
@@ -240,10 +246,13 @@ class CliRunner(object):
                     exception = e
                 exit_code = e.code
             except Exception as e:
+                if not catch_exceptions:
+                    raise
                 exception = e
                 exit_code = -1
-            sys.stdout.flush()
-            output = out.getvalue()
+            finally:
+                sys.stdout.flush()
+                output = out.getvalue()
 
         return Result(runner=self,
                       output_bytes=output,
