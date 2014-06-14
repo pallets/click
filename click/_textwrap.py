@@ -7,8 +7,8 @@ class TextWrapper(textwrap.TextWrapper):
 
     def _cutdown(self, ucstr, space_left):
         l = 0
-        for i in xrange(len(ucstr)):
-            l += term_len(ucstr[i])
+        for i, char in enumerate(ucstr):
+            l += term_len(char)
             if space_left < l:
                 return (ucstr[:i], ucstr[i:])
         return ucstr, ''

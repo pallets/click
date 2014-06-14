@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from .exceptions import TooSmallTerminal
 from .termui import get_terminal_size
 from .parser import split_opt
 from ._compat import term_len
@@ -181,6 +182,13 @@ class HelpFormatter(object):
                 self.write(' ' * (first_col + self.current_indent))
 
             text_width = self.width - first_col - 2
+            if text_width <= 0:
+                raise TooSmallTerminal(
+                    'Your terminal is too small. Expand your terminal by at '
+                    'least {0} columns for proper help output.'
+                    .format(-text_width + 1)
+                )
+
             lines = iter(wrap_text(second, text_width).splitlines())
             if lines:
                 self.write(next(lines) + '\n')
