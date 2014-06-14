@@ -6,7 +6,7 @@ This contains all major version changes between click releases.
 Version 2.1
 -----------
 
-(bugfix release, release date to be decided)
+(bugfix release, released on June 14th 2014)
 
 - fixed the :func:`launch` function on windows.
 - improved the colorama support on windows to try hard to not
