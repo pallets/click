@@ -2,6 +2,7 @@
 import re
 import os
 import click
+import pytest
 
 
 def test_prefixes(runner):
@@ -39,6 +40,17 @@ def test_counting(runner):
     result = runner.invoke(cli, [])
     assert not result.exception
     assert result.output == 'verbosity=0\n'
+
+
+@pytest.mark.parametrize('unknown_flag', ['--foo', '-f'])
+def test_unknown_options(runner, unknown_flag):
+    @click.command()
+    def cli():
+        pass
+
+    result = runner.invoke(cli, [unknown_flag])
+    assert result.exception
+    assert 'no such option: {0}'.format(unknown_flag) in result.output
 
 
 def test_multiple_required(runner):
