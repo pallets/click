@@ -137,6 +137,8 @@ Exceptions
 
 .. autoexception:: UsageError
 
+.. autoexception:: TooSmallTerminal
+
 .. autoexception:: BadParameter
 
 .. autoexception:: FileError

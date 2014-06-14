@@ -82,6 +82,13 @@ class BadParameter(UsageError):
         return 'Invalid value for %s: %s' % (param_hint, self.message)
 
 
+class TooSmallTerminal(UsageError):
+    """The terminal is too small for the output to be displayed correctly.
+
+    .. versionadded:: 3.0
+    """
+
+
 class FileError(ClickException):
     """Raised if a file cannot be opened."""
 
