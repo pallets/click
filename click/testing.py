@@ -66,7 +66,8 @@ def make_input_stream(input, charset):
 class Result(object):
     """Holds the captured result of an invoked CLI script."""
 
-    def __init__(self, runner, output_bytes, exit_code, exception):
+    def __init__(self, runner, output_bytes, exit_code, exception,
+                 exc_info=None):
         #: The runner that created the result
         self.runner = runner
         #: The output as bytes.
@@ -75,6 +76,8 @@ class Result(object):
         self.exit_code = exit_code
         #: The exception that happend if one did.
         self.exception = exception
+        #: The traceback
+        self.exc_info = exc_info
 
     @property
     def output(self):
@@ -224,7 +227,11 @@ class CliRunner(object):
         This returns a :class:`Result` object.
 
         .. versionadded:: 3.0
-        The ``catch_exceptions`` parameter was added.
+           The ``catch_exceptions`` parameter was added.
+
+        .. versionchanged:: 3.0
+           The result object now has an `exc_info` attribute with the
+           traceback if available.
 
         :param cli: the command to invoke
         :param args: the arguments to invoke
@@ -234,6 +241,7 @@ class CliRunner(object):
                                  ``SystemExit``.
         :param extra: the keyword arguments to pass to :meth:`main`.
         """
+        exc_info = None
         with self.isolation(input=input, env=env) as out:
             exception = None
             exit_code = 0
@@ -245,11 +253,13 @@ class CliRunner(object):
                 if e.code != 0:
                     exception = e
                 exit_code = e.code
+                exc_info = sys.exc_info()
             except Exception as e:
                 if not catch_exceptions:
                     raise
                 exception = e
                 exit_code = -1
+                exc_info = sys.exc_info()
             finally:
                 sys.stdout.flush()
                 output = out.getvalue()
@@ -257,7 +267,8 @@ class CliRunner(object):
         return Result(runner=self,
                       output_bytes=output,
                       exit_code=exit_code,
-                      exception=exception)
+                      exception=exception,
+                      exc_info=exc_info)
 
     @contextlib.contextmanager
     def isolated_filesystem(self):

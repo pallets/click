@@ -14,6 +14,7 @@ Version 3.0
 - added a way to not swallow exceptions in the test system.
 - added better support for colors with pagers and ways to
   override the autodetection.
+- the CLI runner's result object now has a traceback attached.
 
 Version 2.1
 -----------

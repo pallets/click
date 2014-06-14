@@ -103,6 +103,8 @@ def test_catch_exceptions():
 
     result = runner.invoke(cli)
     assert isinstance(result.exception, CustomError)
+    assert type(result.exc_info) is tuple
+    assert len(result.exc_info) == 3
 
     with pytest.raises(CustomError):
         runner.invoke(cli, catch_exceptions=False)
