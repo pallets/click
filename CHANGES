@@ -16,6 +16,8 @@ Version 2.1
 - use colorama win32 bindings if available to get the correct
   dimensions of a windows terminal.
 - fixed an issue with custom function types on Python 3.
+- fixed an issue with unknown options being incorrectly reported
+  in error messages.
 
 Version 2.0
 -----------
