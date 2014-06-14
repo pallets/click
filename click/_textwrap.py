@@ -1,23 +1,16 @@
 import textwrap
 from contextlib import contextmanager
-from ._compat import term_len
 
 
 class TextWrapper(textwrap.TextWrapper):
-
-    def _cutdown(self, ucstr, space_left):
-        l = 0
-        for i in xrange(len(ucstr)):
-            l += term_len(ucstr[i])
-            if space_left < l:
-                return (ucstr[:i], ucstr[i:])
-        return ucstr, ''
 
     def _handle_long_word(self, reversed_chunks, cur_line, cur_len, width):
         space_left = max(width - cur_len, 1)
 
         if self.break_long_words:
-            cut, res = self._cutdown(reversed_chunks[-1], space_left)
+            last = reversed_chunks[-1]
+            cut = last[:space_left]
+            res = last[space_left:]
             cur_line.append(cut)
             reversed_chunks[-1] = res
         elif not cur_line:
