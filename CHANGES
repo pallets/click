@@ -8,6 +8,10 @@ Version 3.0
 
 (codename and release date to be decided)
 
+- formatter now no longer attempts to accomodate for terminals
+  smaller than 50 characters.  If that happens it just assumes
+  a minimal width.
+
 Version 2.1
 -----------
 

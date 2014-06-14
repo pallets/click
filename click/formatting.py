@@ -97,7 +97,7 @@ class HelpFormatter(object):
     def __init__(self, indent_increment=2, width=None):
         self.indent_increment = indent_increment
         if width is None:
-            width = min(get_terminal_size()[0], 80) - 2
+            width = max(min(get_terminal_size()[0], 80) - 2, 50)
         self.width = width
         self.current_indent = 0
         self.buffer = []
@@ -180,7 +180,7 @@ class HelpFormatter(object):
                 self.write('\n')
                 self.write(' ' * (first_col + self.current_indent))
 
-            text_width = self.width - first_col - 2
+            text_width = max(self.width - first_col - 2, 10)
             lines = iter(wrap_text(second, text_width).splitlines())
             if lines:
                 self.write(next(lines) + '\n')
