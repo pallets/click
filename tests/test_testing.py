@@ -1,3 +1,4 @@
+import pytest
 import click
 
 from click.testing import CliRunner
@@ -88,3 +89,25 @@ def test_getchar():
     result = runner.invoke(continue_it, input='y')
     assert not result.exception
     assert result.output == 'y\n'
+
+
+def test_catch_exceptions():
+    class CustomError(Exception):
+        pass
+
+    @click.command()
+    def cli():
+        raise CustomError(1)
+
+    runner = CliRunner()
+
+    result = runner.invoke(cli)
+    assert isinstance(result.exception, CustomError)
+
+    with pytest.raises(CustomError):
+        runner.invoke(cli, catch_exceptions=False)
+
+    CustomError = SystemExit
+
+    result = runner.invoke(cli)
+    assert result.exit_code == 1
