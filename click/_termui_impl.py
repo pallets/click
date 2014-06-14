@@ -251,50 +251,70 @@ class ProgressBar(object):
         del next
 
 
-def pager(text):
+def pager(text, color=None):
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
     if not isatty(sys.stdin) or not isatty(stdout):
-        return _nullpager(stdout, text)
+        return _nullpager(stdout, text, color)
     if 'PAGER' in os.environ:
         if sys.platform == 'win32':
-            return _tempfilepager(strip_ansi(text), os.environ['PAGER'])
-        elif os.environ.get('TERM') in ('dumb', 'emacs'):
-            return _pipepager(strip_ansi(text), os.environ['PAGER'])
-        else:
-            return _pipepager(text, os.environ['PAGER'])
+            return _tempfilepager(text, os.environ['PAGER'], color)
+        return _pipepager(text, os.environ['PAGER'], color)
     if os.environ.get('TERM') in ('dumb', 'emacs'):
-        return _nullpager(stdout, text)
+        return _nullpager(stdout, text, color)
     if sys.platform == 'win32' or sys.platform.startswith('os2'):
-        return _tempfilepager(strip_ansi(text), 'more <')
+        return _tempfilepager(text, 'more <', color)
     if hasattr(os, 'system') and os.system('(less) 2>/dev/null') == 0:
-        return _pipepager(text, 'less')
+        return _pipepager(text, 'less', color)
 
     import tempfile
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
         if hasattr(os, 'system') and os.system('more "%s"' % filename) == 0:
-            return _pipepager(text, 'more')
-        return _nullpager(stdout, text)
+            return _pipepager(text, 'more', color)
+        return _nullpager(stdout, text, color)
     finally:
         os.unlink(filename)
 
 
-def _pipepager(text, cmd):
-    """Page through text by feeding it to another program."""
-    pipe = os.popen(cmd, 'w')
+def _pipepager(text, cmd, color):
+    """Page through text by feeding it to another program.  Invoking a
+    pager through this might support colors.
+    """
+    import subprocess
+    env = dict(os.environ)
+
+    # If we're piping to less we might support colors under the
+    # condition that
+    cmd_detail = cmd.rsplit('/', 1)[-1].split()
+    if color is None and cmd_detail[0] == 'less':
+        less_flags = os.environ.get('LESS', '') + ' '.join(cmd_detail[1:])
+        if not less_flags:
+            env['LESS'] = '-R'
+            color = True
+        elif 'r' in less_flags or 'R' in less_flags:
+            color = True
+
+    if not color:
+        text = strip_ansi(text)
+
+    c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
+                         env=env)
     try:
-        pipe.write(text)
-        pipe.close()
+        c.stdin.write(text)
+        c.stdin.close()
     except IOError:
         pass
+    c.wait()
 
 
-def _tempfilepager(text, cmd):
+def _tempfilepager(text, cmd, color):
     """Page through text by invoking a program on a temporary file."""
     import tempfile
     filename = tempfile.mktemp()
+    if not color:
+        text = strip_ansi(text)
     with open_stream(filename, 'w')[0] as f:
         f.write(text)
     try:
@@ -303,9 +323,11 @@ def _tempfilepager(text, cmd):
         os.unlink(filename)
 
 
-def _nullpager(stream, text):
+def _nullpager(stream, text, color):
     """Simply print unformatted text.  This is the ultimate fallback."""
-    stream.write(strip_ansi(text))
+    if not color:
+        text = strip_ansi(text)
+    stream.write(text)
 
 
 class Editor(object):

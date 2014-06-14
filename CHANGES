@@ -12,6 +12,8 @@ Version 3.0
   smaller than 50 characters.  If that happens it just assumes
   a minimal width.
 - added a way to not swallow exceptions in the test system.
+- added better support for colors with pagers and ways to
+  override the autodetection.
 
 Version 2.1
 -----------
