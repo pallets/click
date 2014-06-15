@@ -5,7 +5,7 @@
 
     This module started out as largely a copy paste from the stdlib's
     optparse module with the features removed that we do not need from
-    optparse because we implement them in click on a higher level (for
+    optparse because we implement them in Click on a higher level (for
     instance type handling, help formatting and a lot more).
 
     The plan is to remove more and more from here over time.
@@ -127,7 +127,7 @@ class OptionParser(object):
     """The option parser is an internal class that is ultimately used to
     parse options and arguments.  It's modelled after optparse and brings
     a similar but vastly simplified API.  It should generally not be used
-    directly as the high level click classes wrap it for you.
+    directly as the high level Click classes wrap it for you.
 
     It's not nearly as extensible as optparse or argparse as it does not
     implement features that are implemented on a higher level (such as
