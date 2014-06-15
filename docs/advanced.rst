@@ -5,7 +5,7 @@ Advanced Patterns
 
 In addition to common functionality that is implemented in the library
 itself, there are countless patterns that can be implemented by extending
-click.  This page should give some insight into what can be accomplished.
+Click.  This page should give some insight into what can be accomplished.
 
 .. _aliases:
 
@@ -67,7 +67,7 @@ Token Normalization
 
 .. versionadded:: 2.0
 
-Starting with click 2.0, it's possible to provide a function that is used
+Starting with Click 2.0, it's possible to provide a function that is used
 for normalizing tokens.  Tokens are option names, choice values, or command
 values.  This can be used to implement case insensitive options, for
 instance.
@@ -95,7 +95,7 @@ Invoking Other Commands
 -----------------------
 
 Sometimes, it might be interesting to invoke one command from another
-command.  This is a pattern that is generally discouraged with click, but
+command.  This is a pattern that is generally discouraged with Click, but
 possible nonetheless.  For this, you can use the :func:`Context.invoke`
 or :func:`Context.forward` methods.
 
@@ -141,12 +141,12 @@ programmer with the order of arguments as defined by the user before
 invoking any callbacks.
 
 This is an important concept to understand when porting complex
-patterns to click from optparse or other systems.  A parameter
+patterns to Click from optparse or other systems.  A parameter
 callback invocation in optparse happens as part of the parsing step,
-whereas a callback invocation in click happens after the parsing.
+whereas a callback invocation in Click happens after the parsing.
 
 The main difference is that in optparse, callbacks are invoked with the raw
-value as it happens, whereas a callback in click is invoked after the
+value as it happens, whereas a callback in Click is invoked after the
 value has been fully converted.
 
 Generally, the order of invocation is driven by the order in which the user
@@ -174,7 +174,7 @@ Repeated parameters:
     ``bar``), then the callback for ``include`` will fire with ``baz``
     only.
 
-    Note that even if a parameter does not allow multiple versions, click
+    Note that even if a parameter does not allow multiple versions, Click
     will still accept the position of the first, but it will ignore every
     value except the first.  The reason for this is to allow composability
     through shell aliases that set defaults.

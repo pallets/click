@@ -12,7 +12,7 @@ have realized that it provides a command line utility, but so does Celery.
 When using Celery with Django, there are two tools that need to interact with
 each other and be cross-configured.
 
-In a theoretical world of two separate click command line utilities, they
+In a theoretical world of two separate Click command line utilities, they
 could solve this problem by nesting one inside the other.  For instance, the
 web framework could also load the commands for the message queue framework.
 
@@ -25,7 +25,7 @@ and the calling convention.
 Contexts
 ````````
 
-Whenever a click command is executed, a :class:`Context` object is created
+Whenever a Click command is executed, a :class:`Context` object is created
 which holds state for this particular invocation.  It remembers parsed
 parameters, what command created it, which resources need to be cleaned up
 at the end of the function, and so forth.  It can also optionally hold an
@@ -45,7 +45,7 @@ complex applications it comes in handy.  This brings us to the next point.
 Calling Convention
 ``````````````````
 
-When a click command callback is executed, it's passed all the non-hidden
+When a Click command callback is executed, it's passed all the non-hidden
 parameters as keyword arguments.  Notably absent is the context.  However,
 a callback can opt into being passed to the context object by marking itself
 with :func:`pass_context`.
@@ -69,7 +69,7 @@ The Root Command
 
 At the top level, we need a group that can hold all our commands.  In this
 case, we use the basic :func:`click.group` which allows us to register
-other click commands below it.
+other Click commands below it.
 
 For this command, we also want to accept some parameters that configure the
 state of our tool:

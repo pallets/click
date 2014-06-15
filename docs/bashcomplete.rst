@@ -3,8 +3,8 @@ Bash Complete
 
 .. versionadded:: 2.0
 
-As of click 2.0, there is built-in support for Bash completion for
-any click script.  There are certain restrictions on when this completion
+As of Click 2.0, there is built-in support for Bash completion for
+any Click script.  There are certain restrictions on when this completion
 is available, but for the most part it should just work.
 
 Limitations
@@ -12,7 +12,7 @@ Limitations
 
 Bash completion is only available if a script has been installed properly,
 and not executed through the ``python`` command.  For information about
-how to do that, see :ref:`setuptools-integration`.  Also, click currently
+how to do that, see :ref:`setuptools-integration`.  Also, Click currently
 only supports completion for Bash.
 
 Currently, Bash completion is an internal feature that is not customizable.
@@ -34,7 +34,7 @@ Activation
 ----------
 
 In order to activate Bash completion, you need to inform Bash that
-completion is available for your script, and how.  Any click application
+completion is available for your script, and how.  Any Click application
 automatically provides support for that.  The general way this works is
 through a magic environment variable called ``_<PROG_NAME>_COMPLETE``,
 where ``<PROG_NAME>`` is your application executable name in uppercase

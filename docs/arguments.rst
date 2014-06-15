@@ -118,7 +118,7 @@ File Path Arguments
 
 In the previous example, the files were opened immediately.  But what if
 we just want the filename?  The naïve way is to use the default string
-argument type.  However, remember that click is Unicode-based, so the string
+argument type.  However, remember that Click is Unicode-based, so the string
 will always be a Unicode value.  Unfortunately, filenames can be Unicode or
 bytes depending on which operating system is being used.  As such, the type
 is insufficient.
@@ -176,7 +176,7 @@ necessary for manually prompting with the :func:`prompt` function as you
 do not know if a stream like stdout was opened (which was already open
 before) or a real file that needs closing.
 
-Starting with click 2.0, it is also possible to open files in atomic mode by
+Starting with Click 2.0, it is also possible to open files in atomic mode by
 passing ``atomic=True``.  In atomic mode, all writes go into a separate
 file in the same folder, and upon completion, the file will be moved over to
 the original location.  This is useful if a file regularly read by other
@@ -218,9 +218,9 @@ Argument-Like Options
 
 Sometimes, you want to process arguments that look like options.  For
 instance, imagine you have a file named ``-foo.txt``.  If you pass this as
-an argument in this manner, click will treat it as an option.
+an argument in this manner, Click will treat it as an option.
 
-To solve this, click does what any POSIX style command line script does,
+To solve this, Click does what any POSIX style command line script does,
 and that is to accept the string ``--`` as a separator for options and
 arguments.  After the ``--`` marker, all further parameters are accepted as
 arguments.

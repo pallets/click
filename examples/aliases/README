@@ -1,7 +1,7 @@
 $ aliases_
 
   aliases is a fairly advanced example that shows how
-  to implement command aliases with click.  It uses a
+  to implement command aliases with Click.  It uses a
   subclass of the default group to customize how commands
   are located.
 
