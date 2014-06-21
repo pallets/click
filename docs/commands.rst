@@ -39,6 +39,26 @@ Here is what this looks like:
     println()
     invoke(cli, prog_name='tool.py', args=['--debug', 'sync'])
 
+Passing Parameters
+------------------
+
+Click strictly separates parameters between commands and subcommands. What this
+means is that options and arguments for a specific command have to be specified
+*after* the command name itself, but *before* any other command names.
+
+This behavior is already observable with the predefined ``--help`` option.
+Suppose we have a program called ``tool.py``, containing a subcommand called
+``sub``.
+
+- ``tool.py --help`` will return the help for the whole program (listing
+  subcommands).
+
+- ``tool.py sub --help`` will return the help for the ``sub`` subcommand.
+
+- But ``tool.py --help sub`` will treat ``--help`` as an argument for the main
+  program. Click then invokes the callback for ``--help``, which prints the
+  help and aborts the program before click can process the subcommand.
+
 Nested Handling and Contexts
 ----------------------------
 
