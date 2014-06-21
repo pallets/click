@@ -11,9 +11,9 @@ Callback Invocation
 -------------------
 
 For a regular command, the callback is executed whenever the command runs.
-If the script is the only command, it will always fire (unless a
-parameter callback prevents it).  This for instance happens if someone
-passes ``--help`` to the script).
+If the script is the only command, it will always fire (unless a parameter
+callback prevents it.  This for instance happens if someone passes
+``--help`` to the script).
 
 For groups and multi commands, the situation looks different.  In this case,
 the callback fires whenever a subcommand fires (unless this behavior is
