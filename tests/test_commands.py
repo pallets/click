@@ -53,11 +53,17 @@ def test_auto_shorthelp(runner):
         """This is a long text that is too long to show as short help
         and will be truncated instead."""
 
+    @cli.command()
+    def special_chars():
+        """Login and store the token in ~/.netrc"""
+
     result = runner.invoke(cli, ['--help'])
     assert re.search(
         r'Commands:\n\s+'
         r'long\s+This is a long text that is too long to show\.\.\.\n\s+'
-        r'short\s+This is a short text\.', result.output) is not None
+        r'short\s+This is a short text\.\s+'
+        r'special_chars\s+Login and store the token in ~/.netrc\n',
+        result.output) is not None
 
 
 def test_default_maps(runner):
