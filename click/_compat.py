@@ -41,8 +41,8 @@ def get_best_encoding(stream):
 class _NonClosingTextIOWrapper(io.TextIOWrapper):
 
     def __init__(self, stream, encoding, errors, **extra):
-        io.TextIOWrapper.__init__(self, _FixupStream(stream),
-                                  encoding, errors, **extra)
+        self._stream = stream = _FixupStream(stream)
+        io.TextIOWrapper.__init__(self, stream, encoding, errors, **extra)
 
     # The io module is a place where the Python 3 text behavior
     # was forced upon Python 2, so we need to unbreak
@@ -66,6 +66,10 @@ class _NonClosingTextIOWrapper(io.TextIOWrapper):
             self.detach()
         except Exception:
             pass
+
+    def isatty(self):
+        # https://bitbucket.org/pypy/pypy/issue/1803
+        return self._stream.isatty()
 
 
 class _FixupStream(object):
