@@ -85,11 +85,7 @@ class ProgressBar(object):
         self.max_width = None
         self.entered = False
         self.current_item = None
-
-        try:
-            self.is_hidden = not self.file.isatty()
-        except Exception:
-            self.is_hidden = True
+        self.is_hidden = not isatty(self.file)
 
     def __enter__(self):
         self.entered = True
