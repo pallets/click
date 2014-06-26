@@ -6,7 +6,7 @@ This contains all major version changes between click releases.
 Version 2.2
 -----------
 
-(bugfix release, release date to be decided)
+(bugfix release, released on June 26th 2014)
 
 - fixed tty detection on PyPy.
 - fixed an issue that progress bars were not rendered when the
