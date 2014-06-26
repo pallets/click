@@ -356,7 +356,7 @@ def style(text, fg=None, bg=None, bold=None, dim=None, underline=None,
 
 def unstyle(text):
     """Removes ANSI styling information from a string.  Usually it's not
-    necessary to use this function as click's echo function will
+    necessary to use this function as Click's echo function will
     automatically remove styling if necessary.
 
     .. versionadded:: 2.0

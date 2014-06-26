@@ -158,7 +158,7 @@ class LazyFile(object):
     def open(self):
         """Opens the file if it's not yet open.  This call might fail with
         a :exc:`FileError`.  Not handling this error will produce an error
-        that click shows.
+        that Click shows.
         """
         if self._f is not None:
             return self._f
@@ -214,7 +214,7 @@ def echo(message=None, file=None, nl=True):
     .. _colorama: http://pypi.python.org/pypi/colorama
 
     .. versionchanged:: 2.0
-       Starting with version 2.0 of click, the echo function will work
+       Starting with version 2.0 of Click, the echo function will work
        with colorama if it's installed.
 
     :param message: the message to print

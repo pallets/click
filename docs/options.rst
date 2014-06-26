@@ -102,7 +102,7 @@ Boolean Flags
 Boolean flags are options that can be enabled or disabled.  This can be
 accomplished by defining two flags in one go separated by a slash (``/``)
 for enabling or disabling the option.  (If a slash is in an option string,
-click automatically knows that it's a boolean flag and will pass
+Click automatically knows that it's a boolean flag and will pass
 ``is_flag=True`` implicitly.)  Click always wants you to provide an enable
 and disable flag so that you can change the default later.
 
@@ -128,7 +128,7 @@ And on the command line:
     invoke(info, args=['--no-shout'])
 
 If you really don't want an off-switch, you can just define one and
-manually inform click that something is a flag:
+manually inform Click that something is a flag:
 
 .. click:example::
 
@@ -168,7 +168,7 @@ Feature Switches
 In addition to boolean flags, there are also feature switches.  These are
 implemented by setting multiple options to the same parameter name and
 defining a flag value.  Note that by providing the ``flag_value`` parameter,
-click will implicitly set ``is_flag=True``.
+Click will implicitly set ``is_flag=True``.
 
 To set a default flag, assign a value of `True` to the flag that should be
 the default.
@@ -227,7 +227,7 @@ Prompting
 
 In some cases, you want parameters that can be provided from the command line,
 but if not provided, ask for user input instead.  This can be implemented with
-click by defining a prompt string.
+Click by defining a prompt string.
 
 Example:
 
@@ -331,7 +331,7 @@ Here an example for a ``--version`` flag:
 The `expose_value` parameter prevents the pretty pointless ``version``
 parameter from being passed to the callback.  If that was not specified, a
 boolean would be passed to the `hello` script.  The `resilient_parsing`
-flag is applied to the context if click wants to parse the command line
+flag is applied to the context if Click wants to parse the command line
 without any destructive behavior that would change the execution flow.  In
 this case, because we would exit the program, we instead do nothing.
 
@@ -344,7 +344,7 @@ What it looks like:
 
 .. admonition:: Callback Signature Changes
 
-    In click 2.0 the signature for callbacks changed.  For more
+    In Click 2.0 the signature for callbacks changed.  For more
     information about these changes see :ref:`upgrade-to-2.0`.
 
 Yes Parameters
@@ -387,20 +387,20 @@ replaced with the :func:`confirmation_option` decorator:
 
 .. admonition:: Callback Signature Changes
 
-    In click 2.0 the signature for callbacks changed.  For more
+    In Click 2.0 the signature for callbacks changed.  For more
     information about these changes see :ref:`upgrade-to-2.0`.
 
 Values from Environment Variables
 ---------------------------------
 
-A very useful feature of click is the ability to accept parameters from
+A very useful feature of Click is the ability to accept parameters from
 environment variables in addition to regular parameters.  This allows
 tools to be automated much easier.  For instance, you might want to pass
 a configuration file with a ``--config`` parameter but also support exporting
 a ``TOOL_CONFIG=hello.cfg`` key-value pair for a nicer development
 experience.
 
-This is supported by click in two ways.  One is to automatically build
+This is supported by Click in two ways.  One is to automatically build
 environment variables which is supported for options only.  To enable this
 feature, the ``auto_envvar_prefix`` parameter needs to be passed to the
 script that is invoked.  Each command and parameter is then added as an
@@ -456,9 +456,9 @@ Multiple Values from Environment Values
 
 As options can accept multiple values, pulling in such values from
 environment variables (which are strings) is a bit more complex.  The way
-click solves this is by leaving it up to the type to customize this
+Click solves this is by leaving it up to the type to customize this
 behavior.  For both ``multiple`` and ``nargs`` with values other than
-``1``, click will invoke the :meth:`ParamType.split_envvar_value` method to
+``1``, Click will invoke the :meth:`ParamType.split_envvar_value` method to
 perform the splitting.
 
 The default implementation for all types is to split on whitespace.  The
@@ -494,7 +494,7 @@ Other Prefix Characters
 Click can deal with alternative prefix characters other than ``-`` for
 options.  This is for instance useful if you want to handle slashes as
 parameters ``/`` or something similar.  Note that this is strongly
-discouraged in general because click wants developers to stay close to
+discouraged in general because Click wants developers to stay close to
 POSIX semantics.  However in certain situations this can be useful:
 
 .. click:example::
@@ -575,8 +575,8 @@ If you want to apply custom validation logic, you can do this in the
 parameter callbacks.  These callbacks can both modify values as well as
 raise errors if the validation does not work.
 
-In click 1.0, you can only raise the :exc:`UsageError` but starting with
-click 2.0, you can also raise the :exc:`BadParameter` error, which has the
+In Click 1.0, you can only raise the :exc:`UsageError` but starting with
+Click 2.0, you can also raise the :exc:`BadParameter` error, which has the
 added advantage that it will automatically format the error message to
 also contain the parameter name.
 
