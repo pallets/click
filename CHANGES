@@ -15,6 +15,8 @@ Version 3.0
 - added better support for colors with pagers and ways to
   override the autodetection.
 - the CLI runner's result object now has a traceback attached.
+- improved automatic short help detection to work better with
+  dots that do not terminate sentences.
 
 Version 2.1
 -----------

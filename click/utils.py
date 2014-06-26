@@ -103,8 +103,7 @@ def make_default_short_help(help, max_length=45):
     done = False
 
     for word in words:
-        if '.' in word:
-            word = word.split('.', 1)[0] + '.'
+        if word[-1:] == '.':
             done = True
         new_length = result and 1 + len(word) or len(word)
         if total_length + new_length > max_length:
