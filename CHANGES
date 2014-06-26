@@ -18,6 +18,15 @@ Version 3.0
 - improved automatic short help detection to work better with
   dots that do not terminate sentences.
 
+Version 2.2
+-----------
+
+(bugfix release, release date to be decided)
+
+- fixed tty detection on PyPy.
+- fixed an issue that progress bars were not rendered when the
+  context manager was entered.
+
 Version 2.1
 -----------
 
@@ -33,9 +42,6 @@ Version 2.1
 - fixed an issue with custom function types on Python 3.
 - fixed an issue with unknown options being incorrectly reported
   in error messages.
-- fixed tty detection on PyPy.
-- fixed an issue that progress bars were not rendered when the
-  context manager was entered.
 
 Version 2.0
 -----------
