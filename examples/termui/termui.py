@@ -1,5 +1,6 @@
 # coding: utf-8
 import click
+import math
 import time
 import random
 
@@ -74,6 +75,16 @@ def progress(count):
                            fill_char=click.style('#', fg='magenta')) as bar:
         for item in bar:
             process_slowly(item)
+
+    # 'Non-linear progress bar'
+    steps = [math.exp( x * 1. / 20) - 1 for x in range(20)]
+    count = int(sum(steps))
+    with click.progressbar(length=count, show_percent=False,
+                           label='Slowing progress bar',
+                           fill_char=click.style(u'█', fg='green')) as bar:
+        for item in steps:
+            time.sleep(item)
+            bar.update(item)
 
 
 @cli.command()
