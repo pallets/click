@@ -227,8 +227,8 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
 
     .. versionadded:: 2.0
 
-    .. versionadded:: 2.1
-        the update ProgressBar object `update` method.
+    .. versionadded:: 3.0
+        the ProgressBar `update` method.
 
     :param iterable: an iterable to iterate over.  If not provided the length
                      is required.
