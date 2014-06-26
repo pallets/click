@@ -34,6 +34,8 @@ Version 2.1
 - fixed an issue with unknown options being incorrectly reported
   in error messages.
 - fixed tty detection on PyPy.
+- fixed an issue that progress bars were not rendered when the
+  context manager was entered.
 
 Version 2.0
 -----------

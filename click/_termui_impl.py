@@ -89,6 +89,7 @@ class ProgressBar(object):
 
     def __enter__(self):
         self.entered = True
+        self.render_progress()
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
