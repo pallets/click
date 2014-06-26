@@ -226,9 +226,7 @@ class ProgressBar(object):
 
         self.eta_known = self.length_known
 
-    def update(self, n_steps, label=None):
-        if label is not None:
-            self.label = label
+    def update(self, n_steps):
         self.make_step(n_steps)
         self.render_progress()
 
