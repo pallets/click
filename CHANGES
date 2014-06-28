@@ -17,6 +17,10 @@ Version 3.0
 - the CLI runner's result object now has a traceback attached.
 - improved automatic short help detection to work better with
   dots that do not terminate sentences.
+- when definining options without actual valid option strings
+  now, Click will give an error message instead of silently
+  passing.  This should catch situations where users wanted to
+  created arguments instead of options.
 
 Version 2.2
 -----------

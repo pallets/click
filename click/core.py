@@ -1162,6 +1162,11 @@ class Option(Parameter):
                 return None, opts, secondary_opts
             raise TypeError('Could not determine name for option')
 
+        if not opts and not secondary_opts:
+            raise TypeError('No options defined but a name was passed (%s). '
+                            'Did you mean to declare an argument instead '
+                            'of an option?' % name)
+
         return name, opts, secondary_opts
 
     def add_to_parser(self, parser, ctx):

@@ -21,6 +21,19 @@ def test_prefixes(runner):
     assert re.search(r'--bar\s+das bar', result.output) is not None
 
 
+def test_invalid_option(runner):
+    try:
+        @click.command()
+        @click.option('foo')
+        def cli(foo):
+            pass
+    except TypeError as e:
+        assert 'No options defined but a name was passed (foo).' \
+            in str(e)
+    else:
+        assert False, 'Expected a type error because of an invalid option.'
+
+
 def test_counting(runner):
     @click.command()
     @click.option('-v', count=True, help='Verbosity',
