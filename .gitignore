@@ -2,6 +2,7 @@
 *.pyc
 *.pyo
 *.egg-ignore
+*.egg-info
 dist
 build
 docs/_build
