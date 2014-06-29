@@ -1205,7 +1205,7 @@ class Option(Parameter):
             rv, any_slashes = join_options(opts)
             if any_slashes:
                 any_prefix_is_slash[:] = [True]
-            if not self.is_flag:
+            if not self.is_flag and not self.count:
                 rv += ' ' + self.make_metavar()
             return rv
 

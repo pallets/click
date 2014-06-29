@@ -22,6 +22,13 @@ Version 3.0
   passing.  This should catch situations where users wanted to
   created arguments instead of options.
 
+Version 2.3
+-----------
+
+(bugfix release, release date to be decided)
+
+- Fixed an incorrectly formatted help record for count options.'
+
 Version 2.2
 -----------
 
