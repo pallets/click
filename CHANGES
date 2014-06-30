@@ -9,6 +9,8 @@ Version 2.3
 (bugfix release, release date to be decided)
 
 - Fixed an incorrectly formatted help record for count options.'
+- Add support for ansi code stripping on Windows if colorama
+  is not available.
 
 Version 2.2
 -----------

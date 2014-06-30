@@ -4,7 +4,7 @@ import struct
 
 from ._compat import raw_input, text_type, string_types, \
      colorama, isatty, strip_ansi, get_winterm_size, \
-     DEFAULT_COLUMNS
+     DEFAULT_COLUMNS, WIN
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type
@@ -274,7 +274,7 @@ def clear():
     # If we're on Windows and we don't have colorama available, then we
     # clear the screen by shelling out.  Otherwise we can use an escape
     # sequence.
-    if sys.platform.startswith('win') and colorama is None:
+    if WIN and colorama is None:
         os.system('cls')
     else:
         sys.stdout.write('\033[2J\033[1;1H')

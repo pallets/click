@@ -5,7 +5,7 @@ from collections import deque
 from ._compat import text_type, open_stream, get_streerror, string_types, \
      PY2, binary_streams, text_streams, filename_to_ui, \
      auto_wrap_for_ansi, strip_ansi, isatty, _default_text_stdout, \
-     is_bytes
+     is_bytes, WIN
 
 if not PY2:
     from ._compat import _find_binary_writer
@@ -246,13 +246,17 @@ def echo(message=None, file=None, nl=True):
 
     # ANSI-style support.  If there is no message or we are dealing with
     # bytes nothing is happening.  If we are connected to a file we want
-    # to strip colors.  If we have support for wrapping streams (windows
-    # through colorama) we want to do that.
+    # to strip colors.  If we are on windows we either wrap the stream
+    # to strip the color or we use the colorama support to translate the
+    # ansi codes to API calls.
     if message and not is_bytes(message):
         if not isatty(file):
             message = strip_ansi(message)
-        elif auto_wrap_for_ansi is not None:
-            file = auto_wrap_for_ansi(file)
+        elif WIN:
+            if auto_wrap_for_ansi is not None:
+                file = auto_wrap_for_ansi(file)
+            else:
+                message = strip_ansi(message)
 
     if message:
         file.write(message)
@@ -346,7 +350,7 @@ def get_app_dir(app_name, roaming=True, force_posix=False):
                         dot instead of the XDG config home or darwin's
                         application support folder.
     """
-    if sys.platform.startswith('win'):
+    if WIN:
         key = roaming and 'APPDATA' or 'LOCALAPPDATA'
         folder = os.environ.get(key)
         if folder is None:

@@ -14,7 +14,7 @@ import sys
 import time
 import math
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
-     open_stream, strip_ansi, term_len, get_best_encoding
+     open_stream, strip_ansi, term_len, get_best_encoding, WIN
 from .utils import echo
 from .exceptions import ClickException
 
@@ -254,7 +254,7 @@ def pager(text):
     if not isatty(sys.stdin) or not isatty(stdout):
         return _nullpager(stdout, text)
     if 'PAGER' in os.environ:
-        if sys.platform == 'win32':
+        if WIN:
             return _tempfilepager(strip_ansi(text), os.environ['PAGER'])
         elif os.environ.get('TERM') in ('dumb', 'emacs'):
             return _pipepager(strip_ansi(text), os.environ['PAGER'])
@@ -262,7 +262,7 @@ def pager(text):
             return _pipepager(text, os.environ['PAGER'])
     if os.environ.get('TERM') in ('dumb', 'emacs'):
         return _nullpager(stdout, text)
-    if sys.platform == 'win32' or sys.platform.startswith('os2'):
+    if WIN or sys.platform.startswith('os2'):
         return _tempfilepager(strip_ansi(text), 'more <')
     if hasattr(os, 'system') and os.system('(less) 2>/dev/null') == 0:
         return _pipepager(text, 'less')
@@ -321,7 +321,7 @@ class Editor(object):
             rv = os.environ.get(key)
             if rv:
                 return rv
-        if sys.platform.startswith('win'):
+        if WIN:
             return 'notepad'
         for editor in 'vim', 'nano':
             if os.system('which %s &> /dev/null' % editor) == 0:
@@ -354,7 +354,7 @@ class Editor(object):
 
         fd, name = tempfile.mkstemp(prefix='editor-', suffix=self.extension)
         try:
-            if sys.platform.startswith('win'):
+            if WIN:
                 encoding = 'utf-8-sig'
                 text = text.replace('\n', '\r\n')
             else:
@@ -406,7 +406,7 @@ def open_url(url, wait=False, locate=False):
             return subprocess.Popen(args, stderr=null).wait()
         finally:
             null.close()
-    elif sys.platform.startswith('win'):
+    elif WIN:
         if locate:
             url = _unquote_file(url)
             args = 'explorer /select,"%s"' % _unquote_file(
@@ -440,7 +440,7 @@ def _translate_ch_to_exc(ch):
         raise EOFError()
 
 
-if sys.platform.startswith('win'):
+if WIN:
     import msvcrt
 
     def getchar(echo):
