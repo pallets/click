@@ -7,6 +7,7 @@ from weakref import WeakKeyDictionary
 
 
 PY2 = sys.version_info[0] == 2
+WIN = sys.platform.startswith('win')
 DEFAULT_COLUMNS = 80
 
 
@@ -152,7 +153,7 @@ if PY2:
     # binary only, patch it back to the system, and then use a wrapper
     # stream that converts newlines.  It's not quite clear what's the
     # correct option here.
-    if sys.platform == 'win32':
+    if WIN:
         import msvcrt
         def set_binary_mode(f):
             try:
@@ -458,7 +459,7 @@ get_winterm_size = None
 # If we're on Windows, we provide transparent integration through
 # colorama.  This will make ANSI colors through the echo function
 # work automatically.
-if sys.platform.startswith('win'):
+if WIN:
     # Windows has a smaller terminal
     DEFAULT_COLUMNS = 79
 
@@ -504,7 +505,6 @@ if sys.platform.startswith('win'):
             win = colorama.win32.GetConsoleScreenBufferInfo(
                 colorama.win32.STDOUT).srWindow
             return win.Right - win.Left, win.Bottom - win.Top
-
 
 
 def strip_ansi(value):
