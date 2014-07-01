@@ -1,12 +1,15 @@
+.. _arguments:
+
 Arguments
 =========
 
 .. currentmodule:: click
 
-Arguments work similarly to options but are positional.  They also only
-support a subset of the features of options due to their syntactical nature.
-Click will also not attempt to document arguments for you and wants you to
-document them manually in order to avoid ugly help pages.
+Arguments work similarly to :ref:`options <options>` but are positional.
+They also only support a subset of the features of options due to their
+syntactical nature. Click will also not attempt to document arguments for
+you and wants you to document them manually in order to avoid ugly help
+pages.
 
 Basic Arguments
 ---------------
