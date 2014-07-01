@@ -24,6 +24,52 @@ def hidden_prompt_func(prompt):
     return getpass.getpass(prompt)
 
 
+def file_completer(text):
+    '''Completes file- and directory paths.
+
+    .. versionadded:: 3.0
+
+    Shortforms like ``~`` always get expanded to their full path.
+    '''
+    directory, file_start = os.path.split(text)
+    directory = os.path.realpath(os.path.expanduser(directory))
+
+    options = []
+    for fname in os.listdir(directory):
+        if not fname.startswith(file_start):
+            continue
+        path = os.path.join(directory, fname)
+        if os.path.isdir(path):
+            path += os.path.sep
+        options.append(path)
+
+    return options
+
+
+def completing_prompt_func(prompt, completer):
+    _input_cache = {}
+
+    def completer_wrapper(text, state):
+        if text not in _input_cache:
+            _input_cache[text] = completer(text)
+        return _input_cache[text][state]
+
+    import readline
+    readline.parse_and_bind('tab: complete')
+
+    old_completer = readline.get_completer()
+    readline.set_completer(completer_wrapper)
+
+    old_delims = readline.get_completer_delims()
+    readline.set_completer_delims('')
+
+    try:
+        return visible_prompt_func(prompt)
+    finally:
+        readline.set_completer(old_completer)
+        readline.set_completer_delims(old_delims)
+
+
 def _build_prompt(text, suffix, show_default=False, default=None):
     prompt = text
     if default is not None and show_default:
@@ -31,9 +77,9 @@ def _build_prompt(text, suffix, show_default=False, default=None):
     return prompt + suffix
 
 
-def prompt(text, default=None, hide_input=False,
-           confirmation_prompt=False, type=None,
-           value_proc=None, prompt_suffix=': ', show_default=True):
+def prompt(text, default=None, hide_input=False, completer=None,
+           confirmation_prompt=False, type=None, value_proc=None,
+           prompt_suffix=': ', show_default=True):
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
@@ -45,6 +91,7 @@ def prompt(text, default=None, hide_input=False,
                     is not given it will prompt until it's aborted.
     :param hide_input: if this is set to true then the input value will
                        be hidden.
+    :param completer: Tab-completion. Either ``None`` or a completer function.
     :param confirmation_prompt: asks for confirmation for the value.
     :param type: the type to use to check the value against.
     :param value_proc: if this parameter is provided it's a function that
@@ -52,16 +99,25 @@ def prompt(text, default=None, hide_input=False,
                        convert a value.
     :param prompt_suffix: a suffix that should be added to the prompt.
     :param show_default: shows or hides the default value in the prompt.
+
+    .. versionadded:: 3.0
+       ``completer`` parameter
     """
     result = None
 
     def prompt_func(text):
-        f = hide_input and hidden_prompt_func or visible_prompt_func
+        if hide_input and completer is not None:
+            raise ValueError('Click doesn\'t support both hiding input and '
+                             'tab-completion at the same time.')
+        elif hide_input:
+            f = hidden_prompt_func
+        elif completer is not None:
+            f = lambda prompt: completing_prompt_func(prompt, completer)
+        else:
+            f = visible_prompt_func
+
         try:
-            # Write the prompt separately so that we get nice
-            # coloring through colorama on Windows
-            echo(text, nl=False)
-            return f('')
+            return f(text)
         except (KeyboardInterrupt, EOFError):
             raise Abort()
 

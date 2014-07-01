@@ -76,7 +76,7 @@ def test_filename_formatting():
         == u'foo\ufffd.txt'
 
 
-def test_prompts(runner):
+def test_confirmation_prompts(runner):
     @click.command()
     def test():
         if click.confirm('Foo'):

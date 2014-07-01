@@ -1375,10 +1375,10 @@ class Option(Parameter):
         if self.is_bool_flag:
             return confirm(self.prompt, default)
 
-        return prompt(self.prompt, default=default,
-                      hide_input=self.hide_input,
+        return prompt(self.prompt, default=default, hide_input=self.hide_input,
                       confirmation_prompt=self.confirmation_prompt,
-                      value_proc=lambda x: self.process_value(ctx, x))
+                      value_proc=lambda x: self.process_value(ctx, x),
+                      completer=self.type.completer)
 
     def resolve_envvar_value(self, ctx):
         rv = Parameter.resolve_envvar_value(self, ctx)

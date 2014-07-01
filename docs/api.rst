@@ -70,6 +70,11 @@ Utilities
 
 .. autofunction:: format_filename
 
+Completers
+----------
+
+.. autofunction:: file_completer
+
 Commands
 --------
 
