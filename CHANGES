@@ -11,6 +11,8 @@ Version 2.3
 - Fixed an incorrectly formatted help record for count options.'
 - Add support for ansi code stripping on Windows if colorama
   is not available.
+- restored the Click 1.0 handling of the help parameter for certain
+  edge cases.
 
 Version 2.2
 -----------

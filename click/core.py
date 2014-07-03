@@ -631,12 +631,35 @@ class Command(BaseCommand):
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
 
-        if opts.get('$help') and not ctx.resilient_parsing:
-            echo(ctx.get_help())
-            ctx.exit()
+        # XXX: this logic requires a bit of explanation.  As a change in
+        # 2.x we accidentally broke a pattern used in 1.x which was
+        # to customize the commands by passing more arguments.  Because
+        # the help option however was moved away from regular handling
+        # to the front it meant that other arguments can no longer be
+        # handled at all.  The workaround for 2.x is that we try this:
+        #
+        # 1. start with regular handling.  If a click exception happens
+        #    we show the help instead if wanted.
+        # 2. if every callback went through we try to show the help now.
+        #
+        # This restores the old behavior in practical terms while still
+        # special casing the help.
+        #
+        # Maybe this should be done differently?
 
-        for param in iter_params_for_processing(param_order, self.params):
-            value, args = param.handle_parse_result(ctx, opts, args)
+        def _try_show_help():
+            if opts.get('$help') and not ctx.resilient_parsing:
+                echo(ctx.get_help())
+                ctx.exit()
+
+        try:
+            for param in iter_params_for_processing(param_order, self.params):
+                value, args = param.handle_parse_result(ctx, opts, args)
+        except ClickException:
+            _try_show_help()
+            raise
+        else:
+            _try_show_help()
 
         if args and not self.allow_extra_args and not ctx.resilient_parsing:
             ctx.fail('Got unexpected extra argument%s (%s)'
