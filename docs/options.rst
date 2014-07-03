@@ -1,3 +1,5 @@
+.. _options:
+
 Options
 =======
 
@@ -5,7 +7,8 @@ Options
 
 Adding options to commands can be accomplished by the :func:`option`
 decorator.  Since options can come in various different versions, there
-are a ton of parameters to configure their behavior.
+are a ton of parameters to configure their behavior. Options in click are
+distinct from :ref:`positional arguments <arguments>`.
 
 Basic Value Options
 -------------------
