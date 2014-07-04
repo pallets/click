@@ -536,6 +536,13 @@ class Command(BaseCommand):
         self.format_usage(ctx, formatter)
         return formatter.getvalue().rstrip('\n')
 
+    def get_params(self, ctx):
+        rv = self.params
+        help_option = self.get_help_option(ctx)
+        if help_option is not None:
+            rv = rv + [help_option]
+        return rv
+
     def format_usage(self, ctx, formatter):
         """Writes the usage line into the formatter."""
         pieces = self.collect_usage_pieces(ctx)
@@ -546,7 +553,7 @@ class Command(BaseCommand):
         it as a list of strings.
         """
         rv = [self.options_metavar]
-        for param in self.params:
+        for param in self.get_params(ctx):
             rv.extend(param.get_usage_pieces(ctx))
         return rv
 
@@ -558,18 +565,26 @@ class Command(BaseCommand):
             all_names.difference_update(param.secondary_opts)
         return all_names
 
+    def get_help_option(self, ctx):
+        """Returns the help option object."""
+        help_options = self.get_help_option_names(ctx)
+        if not help_options:
+            return
+
+        def show_help(ctx, param, value):
+            if value and not ctx.resilient_parsing:
+                echo(ctx.get_help())
+                ctx.exit()
+        return Option(help_options, is_flag=True,
+                      is_eager=True, expose_value=False,
+                      callback=show_help,
+                      help='Show this message and exit.')
+
     def make_parser(self, ctx):
         """Creates the underlying option parser for this command."""
         parser = OptionParser(ctx)
-        for param in self.params:
+        for param in self.get_params(ctx):
             param.add_to_parser(parser, ctx)
-
-        if self.add_help_option:
-            help_options = self.get_help_option_names(ctx)
-            if help_options:
-                parser.add_option(help_options, action='store_const',
-                                  const=True, dest='$help')
-
         return parser
 
     def get_help(self, ctx):
@@ -605,16 +620,10 @@ class Command(BaseCommand):
     def format_options(self, ctx, formatter):
         """Writes all the options into the formatter if they exist."""
         opts = []
-        for param in self.params:
+        for param in self.get_params(ctx):
             rv = param.get_help_record(ctx)
             if rv is not None:
                 opts.append(rv)
-
-        if self.add_help_option:
-            help_options = self.get_help_option_names(ctx)
-            if help_options:
-                opts.append([join_options(help_options)[0],
-                             'Show this message and exit.'])
 
         if opts:
             with formatter.section('Options'):
@@ -631,35 +640,9 @@ class Command(BaseCommand):
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
 
-        # XXX: this logic requires a bit of explanation.  As a change in
-        # 2.x we accidentally broke a pattern used in 1.x which was
-        # to customize the commands by passing more arguments.  Because
-        # the help option however was moved away from regular handling
-        # to the front it meant that other arguments can no longer be
-        # handled at all.  The workaround for 2.x is that we try this:
-        #
-        # 1. start with regular handling.  If a click exception happens
-        #    we show the help instead if wanted.
-        # 2. if every callback went through we try to show the help now.
-        #
-        # This restores the old behavior in practical terms while still
-        # special casing the help.
-        #
-        # Maybe this should be done differently?
-
-        def _try_show_help():
-            if opts.get('$help') and not ctx.resilient_parsing:
-                echo(ctx.get_help())
-                ctx.exit()
-
-        try:
-            for param in iter_params_for_processing(param_order, self.params):
-                value, args = param.handle_parse_result(ctx, opts, args)
-        except ClickException:
-            _try_show_help()
-            raise
-        else:
-            _try_show_help()
+        for param in iter_params_for_processing(
+                param_order, self.get_params(ctx)):
+            value, args = param.handle_parse_result(ctx, opts, args)
 
         if args and not self.allow_extra_args and not ctx.resilient_parsing:
             ctx.fail('Got unexpected extra argument%s (%s)'
