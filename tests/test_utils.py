@@ -1,5 +1,7 @@
+import os
 import sys
 import click
+import click._termui_impl
 
 
 def test_echo(runner):
@@ -62,6 +64,14 @@ def test_styling():
     for text, styles, ref in examples:
         assert click.style(text, **styles) == ref
         assert click.unstyle(ref) == text
+
+
+def test_echo_via_pager(monkeypatch, capfd):
+    monkeypatch.setitem(os.environ, 'PAGER', 'cat')
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda x: True)
+    click.echo_via_pager('haha')
+    out, err = capfd.readouterr()
+    assert out == 'haha\n'
 
 
 def test_filename_formatting():
