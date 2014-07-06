@@ -21,6 +21,7 @@ Version 3.0
   now, Click will give an error message instead of silently
   passing.  This should catch situations where users wanted to
   created arguments instead of options.
+- fix crash of :func:`echo_via_pager` under Python 3
 
 Version 2.4
 -----------

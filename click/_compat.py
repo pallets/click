@@ -25,6 +25,8 @@ def _make_text_stream(stream, encoding, errors):
 
 def is_ascii_encoding(encoding):
     """Checks if a given encoding is ascii."""
+    if encoding is None:
+        return True
     try:
         return codecs.lookup(encoding).name == 'ascii'
     except LookupError:

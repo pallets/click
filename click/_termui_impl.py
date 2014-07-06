@@ -298,6 +298,9 @@ def _pipepager(text, cmd, color):
 
     c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                          env=env)
+    if not isinstance(text, bytes):
+        text = text.encode(get_best_encoding(c.stdin))
+
     try:
         c.stdin.write(text)
         c.stdin.close()
