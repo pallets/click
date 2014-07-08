@@ -298,8 +298,9 @@ def _pipepager(text, cmd, color):
 
     c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                          env=env)
+    encoding = get_best_encoding(c.stdin)
     try:
-        c.stdin.write(text)
+        c.stdin.write(text.encode(encoding, 'replace'))
         c.stdin.close()
     except IOError:
         pass
@@ -312,8 +313,9 @@ def _tempfilepager(text, cmd, color):
     filename = tempfile.mktemp()
     if not color:
         text = strip_ansi(text)
-    with open_stream(filename, 'w')[0] as f:
-        f.write(text)
+    encoding = get_best_encoding(sys.stdout)
+    with open_stream(filename, 'wb')[0] as f:
+        f.write(text.encode(encoding))
     try:
         os.system(cmd + ' "' + filename + '"')
     finally:
