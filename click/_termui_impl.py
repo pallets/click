@@ -174,7 +174,7 @@ class ProgressBar(object):
             'label': self.label,
             'bar': bar,
             'info': self.info_sep.join(info_bits)
-        }).strip()
+        })
 
     def render_progress(self):
         from .termui import get_terminal_size
