@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import click
-from mock import patch
 
 
-def test_progressbar_strip_regression(runner):
+def test_progressbar_strip_regression(runner, monkeypatch):
     label = '    padded line'
 
     @click.command()
@@ -12,6 +11,5 @@ def test_progressbar_strip_regression(runner):
             for thing in progress:
                 pass
 
-    with patch('click._compat.isatty') as isatty:
-        isatty.return_value = True
-        assert label in runner.invoke(cli, []).output
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+    assert label in runner.invoke(cli, []).output
