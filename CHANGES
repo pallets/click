@@ -21,6 +21,8 @@ Version 3.0
   now, Click will give an error message instead of silently
   passing.  This should catch situations where users wanted to
   created arguments instead of options.
+- label passed to `progressbar` is no longer rendered with
+  whitespace stripped
 
 Version 2.4
 -----------
