@@ -1,13 +1,13 @@
 import textwrap
 from contextlib import contextmanager
-from ._compat import term_len
+from ._compat import term_len, range_type
 
 
 class TextWrapper(textwrap.TextWrapper):
 
     def _cutdown(self, ucstr, space_left):
         l = 0
-        for i in xrange(len(ucstr)):
+        for i in range_type(len(ucstr)):
             l += term_len(ucstr[i])
             if space_left < l:
                 return (ucstr[:i], ucstr[i:])
