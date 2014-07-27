@@ -24,7 +24,7 @@ def _bashcomplete(cmd, prog_name, complete_var=None):
     if not complete_instr:
         return
 
-    from click._bashcomplete import bashcomplete
+    from ._bashcomplete import bashcomplete
     if bashcomplete(cmd, prog_name, complete_var, complete_instr):
         sys.exit(1)
 

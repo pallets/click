@@ -21,6 +21,7 @@ Version 3.0
   now, Click will give an error message instead of silently
   passing.  This should catch situations where users wanted to
   created arguments instead of options.
+- Restructured Click internally to support vendoring.
 
 Version 2.4
 -----------

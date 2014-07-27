@@ -1,11 +1,17 @@
 import os
 import sys
-import click
 import shutil
 import tempfile
 import contextlib
 
 from ._compat import iteritems, PY2
+
+
+# If someone wants to vendor click, we want to ensure the
+# correct package is discovered.  Ideally we could use a
+# relative import here but unfortunately Python does not
+# support that.
+clickpkg = sys.modules[__name__.rsplit('.', 1)[0]]
 
 
 if PY2:
@@ -182,12 +188,12 @@ class CliRunner(object):
                 sys.stdout.flush()
             return char
 
-        old_visible_prompt_func = click.termui.visible_prompt_func
-        old_hidden_prompt_func = click.termui.hidden_prompt_func
-        old__getchar_func = click.termui._getchar
-        click.termui.visible_prompt_func = visible_input
-        click.termui.hidden_prompt_func = hidden_input
-        click.termui._getchar = _getchar
+        old_visible_prompt_func = clickpkg.termui.visible_prompt_func
+        old_hidden_prompt_func = clickpkg.termui.hidden_prompt_func
+        old__getchar_func = clickpkg.termui._getchar
+        clickpkg.termui.visible_prompt_func = visible_input
+        clickpkg.termui.hidden_prompt_func = hidden_input
+        clickpkg.termui._getchar = _getchar
 
         old_env = {}
         try:
@@ -213,15 +219,15 @@ class CliRunner(object):
             sys.stdout = old_stdout
             sys.stderr = old_stderr
             sys.stdin = old_stdin
-            click.termui.visible_prompt_func = old_visible_prompt_func
-            click.termui.hidden_prompt_func = old_hidden_prompt_func
-            click.termui._getchar = old__getchar_func
+            clickpkg.termui.visible_prompt_func = old_visible_prompt_func
+            clickpkg.termui.hidden_prompt_func = old_hidden_prompt_func
+            clickpkg.termui._getchar = old__getchar_func
 
     def invoke(self, cli, args=None, input=None, env=None,
                catch_exceptions=True, **extra):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
-        arguments are passed to the :meth:`~click.Command.main` function of
+        arguments are passed to the :meth:`~clickpkg.Command.main` function of
         the command.
 
         This returns a :class:`Result` object.

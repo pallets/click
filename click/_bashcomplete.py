@@ -1,7 +1,7 @@
 import os
-from click.utils import echo
-from click.parser import split_arg_string
-from click.core import MultiCommand, Option
+from .utils import echo
+from .parser import split_arg_string
+from .core import MultiCommand, Option
 
 
 COMPLETION_SCRIPT = '''
