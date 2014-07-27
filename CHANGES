@@ -23,6 +23,14 @@ Version 3.0
   created arguments instead of options.
 - Restructured Click internally to support vendoring.
 
+Version 2.6
+-----------
+
+(bugfix release, release date to be decided)
+
+- Fixed an issue where the wrapped streams on Python 3 would be reporting
+  incorrect values for seekable.
+
 Version 2.5
 -----------
 

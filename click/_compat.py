@@ -99,7 +99,7 @@ class _FixupStream(object):
     def readable(self):
         x = getattr(self._stream, 'readable', None)
         if x is not None:
-            return x
+            return x()
         try:
             self._stream.read(0)
         except Exception:
@@ -109,7 +109,7 @@ class _FixupStream(object):
     def writable(self):
         x = getattr(self._stream, 'writable', None)
         if x is not None:
-            return x
+            return x()
         try:
             self._stream.write('')
         except Exception:
@@ -122,7 +122,7 @@ class _FixupStream(object):
     def seekable(self):
         x = getattr(self._stream, 'seekable', None)
         if x is not None:
-            return x
+            return x()
         try:
             self._stream.seek(self._stream.tell())
         except Exception:
