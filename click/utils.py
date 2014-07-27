@@ -73,7 +73,7 @@ def unpack_args(args, nargs_spec):
         rv[spos] = tuple(args)
         args = []
 
-    return rv, list(args)
+    return tuple(rv), list(args)
 
 
 def safecall(func):
