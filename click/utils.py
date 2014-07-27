@@ -2,10 +2,10 @@ import os
 import sys
 from collections import deque
 
-from ._compat import text_type, open_stream, get_streerror, string_types, \
-     PY2, binary_streams, text_streams, filename_to_ui, \
-     auto_wrap_for_ansi, strip_ansi, isatty, _default_text_stdout, \
-     is_bytes, WIN
+from ._compat import (text_type, open_stream, get_streerror, string_types,
+                      PY2, binary_streams, text_streams, filename_to_ui,
+                      auto_wrap_for_ansi, strip_ansi, isatty,
+                      _default_text_stdout, is_bytes, WIN)
 
 if not PY2:
     from ._compat import _find_binary_writer
@@ -31,13 +31,13 @@ def unpack_args(args, nargs_spec):
     Examples:
 
     >>> unpack_args(range(6), [1, 2, 1, -1])
-    ((0, (1, 2), 3, (4, 5)), [])
+    ([0, (1, 2), 3, (4, 5)], [])
     >>> unpack_args(range(6), [1, 2, 1])
-    ((0, (1, 2), 3), [4, 5])
+    ([0, (1, 2), 3], [4, 5])
     >>> unpack_args(range(6), [-1])
-    (((0, 1, 2, 3, 4, 5),), [])
+    ([(0, 1, 2, 3, 4, 5)], [])
     >>> unpack_args(range(6), [1, 1])
-    ((0, 1), [2, 3, 4, 5])
+    ([0, 1], [2, 3, 4, 5])
     """
     args = deque(args)
     nargs_spec = deque(nargs_spec)
