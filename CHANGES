@@ -28,6 +28,7 @@ Version 2.4
 (bugfix release, released on July 4th 2014)
 
 - Corrected a bug in the change of the help option in 2.3.
+- Fixed a bug with text wrapping on Python 3.
 
 Version 2.3
 -----------
