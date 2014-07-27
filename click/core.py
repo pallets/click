@@ -933,9 +933,11 @@ class Parameter(object):
         # Otherwise go with the regular default.
         if callable(self.default):
             rv = self.default()
+        elif isinstance(self.default, tuple):
+            rv = tuple(self.type(i, self, ctx) for i in self.default)
         else:
-            rv = self.default
-        return self.type(rv, self, ctx)
+            rv = self.type(self.default, self, ctx)
+        return rv
 
     def add_to_parser(self, parser, ctx):
         pass
@@ -968,7 +970,7 @@ class Parameter(object):
     def full_process_value(self, ctx, value):
         value = self.process_value(ctx, value)
 
-        if value is None:
+        if value is None or value == ():
             value = self.get_default(ctx)
 
         if self.required and self.value_is_missing(value):
@@ -1222,7 +1224,7 @@ class Option(Parameter):
         help = self.help or ''
         extra = []
         if self.default is not None and self.show_default:
-            extra.append('default: %s' % self.default)
+            extra.append('default: %s' % str(self.default))
         if self.required:
             extra.append('required')
         if extra:
