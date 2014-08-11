@@ -73,6 +73,7 @@ usage patterns.
    testing
    utils
    bashcomplete
+   exceptions
    python3
 
 API Reference

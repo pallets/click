@@ -477,7 +477,8 @@ class BaseCommand(object):
         """
         raise NotImplementedError('Base commands are not invokable by default')
 
-    def main(self, args=None, prog_name=None, complete_var=None, **extra):
+    def main(self, args=None, prog_name=None, complete_var=None,
+             standalone_mode=True, **extra):
         """This is the way to invoke a script with all the bells and
         whistles as a command line application.  This will always terminate
         the application after a call.  If this is not wanted, ``SystemExit``
@@ -485,6 +486,9 @@ class BaseCommand(object):
 
         This method is also available by directly calling the instance of
         a :class:`Command`.
+
+        .. versionadded:: 3.0
+           Added the `standalone_mode` flag to control the standalone mode.
 
         :param args: the arguments that should be used for parsing.  If not
                      provided, ``sys.argv[1:]`` is used.
@@ -495,6 +499,15 @@ class BaseCommand(object):
                              bash completion support.  The default is
                              ``"_<prog_name>_COMPLETE"`` with prog name in
                              uppercase.
+        :param standalone_mode: the default behavior is to invoke the script
+                                in standalone mode.  Click will then
+                                handle exceptions and convert them into
+                                error messages and the function will never
+                                return but shut down the interpreter.  If
+                                this is set to `False` they will be
+                                propagated to the caller and the return
+                                value of this function is the return value
+                                of :meth:`invoke`.
         :param extra: extra keyword arguments are forwarded to the context
                       constructor.  See :class:`Context` for more information.
         """
@@ -531,15 +544,21 @@ class BaseCommand(object):
         try:
             try:
                 with self.make_context(prog_name, args, **extra) as ctx:
-                    self.invoke(ctx)
+                    rv = self.invoke(ctx)
+                    if not standalone_mode:
+                        return rv
                     ctx.exit()
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
                 raise Abort()
             except ClickException as e:
+                if not standalone_mode:
+                    raise
                 e.show()
                 sys.exit(e.exit_code)
         except Abort:
+            if not standalone_mode:
+                raise
             echo('Aborted!', file=sys.stderr)
             sys.exit(1)
 
