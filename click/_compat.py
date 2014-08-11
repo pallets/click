@@ -522,26 +522,29 @@ def isatty(stream):
         return False
 
 
-_default_text_cache = WeakKeyDictionary()
-
-
-def _default_text_stdout():
-    """Like :func:`get_text_stdout` but uses a cache if available to speed
-    it up.  This will not create streams over and over again.
-    """
-    stream = sys.stdout
-    try:
-        rv = _default_text_cache.get(stream)
-    except Exception:
-        rv = None
-    if rv is not None:
+def _make_cached_stream_func(src_func, wrapper_func):
+    cache = WeakKeyDictionary()
+    def func():
+        stream = src_func()
+        try:
+            rv = cache.get(stream)
+        except Exception:
+            rv = None
+        if rv is not None:
+            return rv
+        rv = wrapper_func()
+        try:
+            cache[stream] = rv
+        except Exception:
+            pass
         return rv
-    rv = get_text_stdout()
-    try:
-        _default_text_cache[stream] = rv
-    except Exception:
-        pass
-    return rv
+    return func
+
+
+_default_text_stdout = _make_cached_stream_func(
+    lambda: sys.stdout, get_text_stdout)
+_default_text_stderr = _make_cached_stream_func(
+    lambda: sys.stderr, get_text_stderr)
 
 
 binary_streams = {

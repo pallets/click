@@ -5,7 +5,7 @@ from collections import deque
 from ._compat import text_type, open_stream, get_streerror, string_types, \
      PY2, binary_streams, text_streams, filename_to_ui, \
      auto_wrap_for_ansi, strip_ansi, isatty, _default_text_stdout, \
-     is_bytes, WIN
+     _default_text_stderr, is_bytes, WIN
 
 if not PY2:
     from ._compat import _find_binary_writer
@@ -192,7 +192,7 @@ class LazyFile(object):
         self.close_intelligently()
 
 
-def echo(message=None, file=None, nl=True):
+def echo(message=None, file=None, nl=True, err=False):
     """Prints a message plus a newline to the given file or stdout.  On
     first sight, this looks like the print function, but it has improved
     support for handling Unicode and binary data that does not fail no
@@ -217,12 +217,21 @@ def echo(message=None, file=None, nl=True):
        Starting with version 2.0 of Click, the echo function will work
        with colorama if it's installed.
 
+    .. versionadded:: 3.0
+       The `err` parameter was added.
+
     :param message: the message to print
     :param file: the file to write to (defaults to ``stdout``)
+    :param err: if set to true the file defaults to ``stderr`` instead of
+                ``stdout``.  This is faster and easier than calling
+                :func:`get_text_stderr` yourself.
     :param nl: if set to `True` (the default) a newline is printed afterwards.
     """
     if file is None:
-        file = _default_text_stdout()
+        if err:
+            file = _default_text_stderr()
+        else:
+            file = _default_text_stdout()
 
     # Convert non bytes/text into the native string type.
     if message is not None and not isinstance(message, echo_native_types):

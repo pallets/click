@@ -30,6 +30,7 @@ Version 3.0
 - added a way to disable the standalone mode of the `main`
   method on a Click command to be able to handle errors better.
 - added support for returning values from command callbacks.
+- added simplifications for printing to stderr from `echo`.
 
 Version 2.6
 -----------
