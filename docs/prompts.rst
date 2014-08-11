@@ -32,6 +32,20 @@ provided.  For instance, the following will only accept floats::
 
     value = click.prompt('Please enter a number', default=42.0)
 
+Input completion
+----------------
+
+.. versionadded:: 3.0
+
+To offer completion of user input, the ``completer`` parameter can be used.  It
+takes a function which is called with the current input value when the user
+first presses tab. The function should return a list (or another indexable
+object) with the possible completion values.
+
+Click provides one completer for your convenience:
+
+.. autoclass:: file_completer
+
 Confirmation Prompts
 --------------------
 

@@ -32,6 +32,9 @@ class ParamType(object):
     #: Windows).
     envvar_list_splitter = None
 
+    #: A completer function for :py:func:`click.prompt`.
+    completer = None
+
     def __call__(self, value, param=None, ctx=None):
         if value is not None:
             return self.convert(value, param, ctx)
@@ -272,6 +275,9 @@ class File(ParamType):
         self.errors = errors
         self.lazy = lazy
         self.atomic = atomic
+
+        from click import file_completer  # avoid circular imports
+        self.completer = file_completer
 
     def resolve_lazy_flag(self, value):
         if self.lazy is not None:
