@@ -1024,7 +1024,7 @@ class Parameter(object):
             rv = self.default()
         else:
             rv = self.default
-        return self.type(rv, self, ctx)
+        return self.type_cast_value(ctx, rv)
 
     def add_to_parser(self, parser, ctx):
         pass
@@ -1037,15 +1037,26 @@ class Parameter(object):
             value = self.value_from_envvar(ctx)
         return value
 
-    def process_value(self, ctx, value):
-        """Given a value and context this runs the logic to convert the
-        value as necessary.
+    def type_cast_value(self, ctx, value):
+        """Given a value this runs it properly through the type system.
+        This automatically handles things like `nargs` and `multiple`.
         """
         def _convert(value, level):
             if level == 0:
                 return self.type(value, self, ctx)
             return tuple(_convert(x, level - 1) for x in value or ())
         return _convert(value, (self.nargs != 1) + bool(self.multiple))
+
+    def process_value(self, ctx, value):
+        """Given a value and context this runs the logic to convert the
+        value as necessary.
+        """
+        # If the value we were given is None we do nothing.  This way
+        # code that calls this can easily figure out if something was
+        # not provided.  Otherwise it would be converted into an empty
+        # tuple for multiple invocations which is inconvenient.
+        if value is not None:
+            return self.type_cast_value(ctx, value)
 
     def value_is_missing(self, value):
         if value is None:
