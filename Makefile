@@ -1,5 +1,5 @@
 test:
-	@cd tests; PYTHONPATH=.. py.test
+	@cd tests; PYTHONPATH=.. py.test --tb=short
 
 upload-docs:
 	$(MAKE) -C docs dirhtml

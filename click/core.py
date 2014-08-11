@@ -16,6 +16,10 @@ from ._compat import PY2, isidentifier, iteritems
 _missing = object()
 
 
+SUBCOMMAND_METAVAR = 'COMMAND [ARGS]...'
+SUBCOMMANDS_METAVAR = 'COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...'
+
+
 def _bashcomplete(cmd, prog_name, complete_var=None):
     """Internal handler for the bash completion support."""
     if complete_var is None:
@@ -98,6 +102,10 @@ class Context(object):
        Added the `resilient_parsing`, `help_option_names`,
        `token_normalize_func` parameters.
 
+    .. versionadded:: 3.0
+       Added the `allow_extra_args` and `allow_interspersed_args`
+       parameters.
+
     :param command: the command class for this context.
     :param parent: the parent context.
     :param info_name: the info name for this invokation.  Generally this
@@ -121,6 +129,13 @@ class Context(object):
                               parse without any interactivity or callback
                               invocation.  This is useful for implementing
                               things such as completion support.
+    :param allow_extra_args: if this is set to `True` then extra arguments
+                             at the end will not raise an error and will be
+                             kept on the context.  The default is to inherit
+                             from the command.
+    :param allow_interspersed_args: if this is set to `False` then options
+                                    and arguments cannot be mixed.  The
+                                    default is to inherit from the command.
     :param help_option_names: optionally a list of strings that define how
                               the default help parameter is named.  The
                               default is ``['--help']``.
@@ -133,6 +148,7 @@ class Context(object):
     def __init__(self, command, parent=None, info_name=None, obj=None,
                  auto_envvar_prefix=None, default_map=None,
                  terminal_width=None, resilient_parsing=False,
+                 allow_extra_args=None, allow_interspersed_args=None,
                  help_option_names=None, token_normalize_func=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
@@ -145,12 +161,6 @@ class Context(object):
         self.params = {}
         #: the leftover arguments.
         self.args = []
-        #: this flag indicates if a subcommand is going to be executed.
-        #: a group callback can use this information to figure out if it's
-        #: being executed directly or because the execution flow passes
-        #: onwards to a subcommand.  By default it's `None`, but it can be
-        #: the name of the subcommand to execute.
-        self.invoked_subcommand = None
         if obj is None and parent is not None:
             obj = parent.obj
         #: the user object stored.
@@ -162,10 +172,35 @@ class Context(object):
             default_map = parent.default_map.get(info_name)
         self.default_map = default_map
 
+        #: This is similar to :attr:`invoked_subcommand` but it holds a
+        #: list of multiple subcommand names.  This is useful if multi command
+        #: chaining is enabled.
+        #:
+        #: This property and :attr:`invoked_subcommand` are synchronized.
+        #:
+        #: .. versionadded:: 3.0
+        self.invoked_subcommands = []
+
         if terminal_width is None and parent is not None:
             terminal_width = parent.terminal_width
         #: The width of the terminal (None is autodetection).
         self.terminal_width = terminal_width
+
+        if allow_extra_args is None:
+            allow_extra_args = command.allow_extra_args
+        #: Indicates if the context allows extra args or if it should
+        #: fail on parsing.
+        #:
+        #: .. versionadded:: 3.0
+        self.allow_extra_args = allow_extra_args
+
+        if allow_interspersed_args is None:
+            allow_interspersed_args = command.allow_interspersed_args
+        #: Indicates if the context allows mixing of arguments and
+        #: options or not.
+        #:
+        #: .. versionadded:: 3.0
+        self.allow_interspersed_args = allow_interspersed_args
 
         if help_option_names is None:
             if parent is not None:
@@ -207,6 +242,29 @@ class Context(object):
 
     def __exit__(self, exc_type, exc_value, tb):
         self.close()
+
+    def _get_invoked_subcommand(self):
+        """This flag indicates if a subcommand is going to be executed.  A
+        group callback can use this information to figure out if it's
+        being executed directly or because the execution flow passes
+        onwards to a subcommand.  By default it's `None`, but it can be
+        the name of the subcommand to execute.
+
+        If chaining is enabled and more than one subcommand is invoked
+        then the value will be the string ``'*'``.  For chaining you
+        should be using :attr:`invoked_subcommands` instead.
+        """
+        if len(self.invoked_subcommands) == 1:
+            return self.invoked_subcommands[0]
+        if len(self.invoked_subcommands) > 1:
+            return '*'
+    def _set_invoked_subcommand(self, value):
+        if value is not None:
+            value = [value]
+        self.invoked_subcommands = value
+    invoked_subcommand = property(_get_invoked_subcommand,
+                                  _set_invoked_subcommand)
+    del _get_invoked_subcommand, _set_invoked_subcommand
 
     def make_formatter(self):
         """Creates the formatter for the help and usage output."""
@@ -365,6 +423,8 @@ class BaseCommand(object):
     :param context_settings: an optional dictionary with defaults that are
                              passed to the context object.
     """
+    allow_extra_args = False
+    allow_interspersed_args = True
 
     def __init__(self, name, context_settings=None):
         #: the name the command thinks it has.  Upon registering a command
@@ -510,7 +570,6 @@ class Command(BaseCommand):
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
     """
-    allow_extra_args = False
 
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
@@ -583,6 +642,7 @@ class Command(BaseCommand):
     def make_parser(self, ctx):
         """Creates the underlying option parser for this command."""
         parser = OptionParser(ctx)
+        parser.allow_interspersed_args = ctx.allow_interspersed_args
         for param in self.get_params(ctx):
             param.add_to_parser(parser, ctx)
         return parser
@@ -644,12 +704,13 @@ class Command(BaseCommand):
                 param_order, self.get_params(ctx)):
             value, args = param.handle_parse_result(ctx, opts, args)
 
-        if args and not self.allow_extra_args and not ctx.resilient_parsing:
+        if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
             ctx.fail('Got unexpected extra argument%s (%s)'
                      % (len(args) != 1 and 's' or '',
                         ' '.join(map(make_str, args))))
 
         ctx.args = args
+        return args
 
     def invoke(self, ctx):
         """Given a context, this invokes the attached callback (if it exists)
@@ -675,23 +736,29 @@ class MultiCommand(Command):
                             passed.
     :param subcommand_metavar: the string that is used in the documentation
                                to indicate the subcommand place.
+    :param chain: if this is set to `True` chaining of multiple subcommands
+                  is enabled.  This restricts the form of commands in that
+                  they cannot have optional arguments but it allows
+                  multiple commands to be chained together.
     """
     allow_extra_args = True
+    allow_interspersed_args = False
 
     def __init__(self, name=None, invoke_without_command=False,
-                 no_args_is_help=None, subcommand_metavar='COMMAND [ARGS]...',
-                 **attrs):
+                 no_args_is_help=None, subcommand_metavar=None,
+                 chain=False, **attrs):
         Command.__init__(self, name, **attrs)
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
         self.no_args_is_help = no_args_is_help
         self.invoke_without_command = invoke_without_command
+        if subcommand_metavar is None:
+            if chain:
+                subcommand_metavar = SUBCOMMANDS_METAVAR
+            else:
+                subcommand_metavar = SUBCOMMAND_METAVAR
         self.subcommand_metavar = subcommand_metavar
-
-    def make_parser(self, ctx):
-        parser = Command.make_parser(self, ctx)
-        parser.allow_interspersed_args = False
-        return parser
+        self.chain = chain
 
     def collect_usage_pieces(self, ctx):
         rv = Command.collect_usage_pieces(self, ctx)
@@ -732,7 +799,38 @@ class MultiCommand(Command):
                 return Command.invoke(self, ctx)
             ctx.fail('Missing command.')
 
-        cmd_name = make_str(ctx.args[0])
+        args = ctx.args
+
+        # If we're not in chain mode, we only allow the invocation of a
+        # single command but we also inform the current context about the
+        # name of the command to invoke.
+        if not self.chain:
+            sub_ctx = self.handle_subcommand(ctx, args)
+            ctx.invoked_subcommands = [sub_ctx.info_name]
+            Command.invoke(self, ctx)
+            with sub_ctx:
+                return sub_ctx.command.invoke(sub_ctx)
+
+        # Otherwise we make every single context and invoke them in a
+        # chain.
+        contexts = []
+        while args:
+            sub_ctx = self.handle_subcommand(ctx, args, allow_extra_args=True,
+                                             allow_interspersed_args=False)
+            contexts.append(sub_ctx)
+            args = sub_ctx.args
+
+        # Now that we have all contexts, we can invoke them.
+        ctx.invoked_subcommands = [x.info_name for x in contexts]
+        Command.invoke(self, ctx)
+        rv = []
+        for sub_ctx in contexts:
+            with sub_ctx:
+                rv.append(sub_ctx.command.invoke(sub_ctx))
+        return rv
+
+    def handle_subcommand(self, ctx, args, **extra):
+        cmd_name = make_str(args[0])
         original_cmd_name = cmd_name
 
         # Get the command
@@ -755,16 +853,7 @@ class MultiCommand(Command):
                 self.parse_args(ctx, ctx.args)
             ctx.fail('No such command "%s".' % original_cmd_name)
 
-        return self.invoke_subcommand(ctx, cmd, cmd_name, ctx.args[1:])
-
-    def invoke_subcommand(self, ctx, cmd, cmd_name, args):
-        # Whenever we dispatch to a subcommand we also invoke the regular
-        # callback.  This is done so that parameters can be handled.
-        ctx.invoked_subcommand = cmd_name
-        Command.invoke(self, ctx)
-
-        with cmd.make_context(cmd_name, args, parent=ctx) as cmd_ctx:
-            return cmd.invoke(cmd_ctx)
+        return cmd.make_context(cmd_name, args[1:], parent=ctx, **extra)
 
     def get_command(self, ctx, cmd_name):
         """Given a context and a command name, this returns a

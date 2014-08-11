@@ -22,6 +22,7 @@ Version 3.0
   passing.  This should catch situations where users wanted to
   created arguments instead of options.
 - Restructured Click internally to support vendoring.
+- Added support for multi command chaining.
 
 Version 2.6
 -----------

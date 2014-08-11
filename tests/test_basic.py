@@ -36,6 +36,7 @@ def test_basic_group(runner):
 
     result = runner.invoke(cli, ['--help'])
     assert not result.exception
+    assert 'COMMAND [ARGS]...' in result.output
     assert 'This is the root' in result.output
     assert 'This is a subcommand.' in result.output
     assert result.exit_code == 0

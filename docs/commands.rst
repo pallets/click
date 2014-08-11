@@ -273,6 +273,52 @@ And what it looks like:
 
 In case a command exists in more than one source, the first source wins.
 
+Multi Command Chaining
+----------------------
+
+.. versionadded:: 3.0
+
+Sometimes it is useful to be allowed to invoke more than one subcommand in
+one go.  For instance if you have installed a setuptools package before
+ouy might be familiar with the ``setup.py sdist bdist_wheel upload``
+command chain which invokes ``dist`` before ``bdist_wheel`` before
+``upload``.  Starting with Click 3.0 this is very simple to implement.
+All you have to do is to pass ``chain=True`` to your multicommand:
+
+.. click:example::
+
+    @click.group(chain=True)
+    def cli():
+        pass
+
+
+    @cli.command('sdist')
+    def sdist():
+        click.echo('sdist called')
+
+
+    @cli.command('bdist_wheel')
+    def bdist_wheel():
+        click.echo('bdist_wheel called')
+
+Now you can invoke it like this:
+
+.. click:run::
+
+    invoke(cli, prog_name='setup.py', args=['sdist', 'bdist_wheel'])
+
+When using multi command chaining you can only have one command (the last)
+use ``nargs=-1`` on an argument.  Other than that there are no
+restrictions on how they work.  They can accept options and arguments as
+normal.
+
+Another note: the :attr:`Context.invoked_subcommand` attribute is a bit
+useless for multi commands as it will give ``'*'`` as value if more than
+one command is invoked.  Instead you should be using the
+:attr:`Context.invoked_subcommands` attribute instead which is a list
+(note the trailing "s").
+
+
 Overriding Defaults
 -------------------
 
