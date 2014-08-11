@@ -23,6 +23,16 @@ def test_basic_functionality(runner):
     assert result.exit_code == 0
 
 
+def test_return_values():
+    @click.command()
+    def cli():
+        return 42
+
+    with cli.make_context('foo', []) as ctx:
+        rv = cli.invoke(ctx)
+        assert rv is 42
+
+
 def test_basic_group(runner):
     @click.group()
     def cli():

@@ -736,7 +736,7 @@ class Command(BaseCommand):
         in the right way.
         """
         if self.callback is not None:
-            ctx.invoke(self.callback, **ctx.params)
+            return ctx.invoke(self.callback, **ctx.params)
 
 
 class MultiCommand(Command):
