@@ -29,7 +29,7 @@ Version 3.0
 Version 2.6
 -----------
 
-(bugfix release, release date to be decided)
+(bugfix release, released on August 11th 2014)
 
 - Fixed an issue where the wrapped streams on Python 3 would be reporting
   incorrect values for seekable.
