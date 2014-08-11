@@ -25,6 +25,8 @@ Version 3.0
 - Added support for multi command chaining.
 - Added support for defaults on options with `multiple` and
   options and arguments with `nargs != 1`.
+- label passed to `progressbar` is no longer rendered with
+  whitespace stripped.
 
 Version 2.6
 -----------
