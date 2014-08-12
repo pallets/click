@@ -273,6 +273,7 @@ And what it looks like:
 
 In case a command exists in more than one source, the first source wins.
 
+
 Multi Command Chaining
 ----------------------
 
@@ -317,6 +318,101 @@ useless for multi commands as it will give ``'*'`` as value if more than
 one command is invoked.  Instead you should be using the
 :attr:`Context.invoked_subcommands` attribute instead which is a list
 (note the trailing "s").
+
+
+Multi Command Pipelines
+-----------------------
+
+.. versionadded:: 3.0
+
+A very common usecase of multi command chaining is to have one command
+process the result of the previous command.  There are various ways in
+which this can be facilitated.  The most obvious way is to store a value
+on the context object and process it from function to function.  This
+works by decorating a function with :func:`pass_context` after which the
+context object is provided and a subcommand can store it's data there.
+
+Another way to accomplish this is to setup pipelines by returning
+processing functions.  Think of it like this: when a subcommand gets
+invoked it processes all of it's parameters and comes up with a plan of
+how to do it's processing.  At that point it then returns a processing
+function and returns.
+
+Where do the returned functions go?  The chained multicommand can register
+a callback with :meth:`MultiCommand.resultcallback` that goes over all
+these functions and then invoke them.
+
+To make this a bit more concrete consider this example:
+
+.. click:example::
+
+    @click.group(chain=True, invoke_without_command=True)
+    @click.option('-i', '--input', type=click.File('r'))
+    def cli(input):
+        pass
+
+    @cli.resultcallback()
+    def process_pipeline(processors, input):
+        iterator = (x.rstrip('\r\n') for x in input)
+        for processor in processors:
+            iterator = processor(iterator)
+        for item in iterator:
+            click.echo(item)
+
+    @cli.command('uppercase')
+    def make_uppercase():
+        def processor(iterator):
+            for line in iterator:
+                yield line.upper()
+        return processor
+
+    @cli.command('lowercase')
+    def make_lowercase():
+        def processor(iterator):
+            for line in iterator:
+                yield line.lower()
+        return processor
+
+    @cli.command('strip')
+    def make_strip():
+        def processor(iterator):
+            for line in iterator:
+                yield line.strip()
+        return processor
+
+That's a lot in one go, so let's go through it step by step.
+
+1.  The first thing is to make a :func:`group` that is chainable.  In
+    addition to that we also instruct Click to invoke even if no
+    subcommand is defined.  If this would not be done, then invoking an
+    empty pipeline would produce the help page instead of running the
+    result callbacks.
+2.  The next thing we do is to register a result callback on our group.
+    This callback will be invoked with an argument which is the list of
+    all return values of all subcommands and then the same keyword
+    parameters as our group itself.  This means we can access the input
+    file easily there without having to use the context object.
+3.  In this result callback we create an iterator of all the lines in the
+    input file and then pass this iterator through all the returned
+    callbacks from all subcommands and finally we print all lines to
+    stdout.
+
+After that point we can register as many subcommands as we want and each
+subcommand can return a processor function to modify the stream of lines.
+
+One important thing of note is that Click shuts down the context after
+each callback has been run.  This means that for instance file types
+cannot be accessed in the `processor` functions as the files will already
+be closed there.  This limitation is unlikely to change because it would
+make resource handling much more complicated.  For such it's recommended
+to not use the file type and manually open the file through
+:func:`open_file`.
+
+For a more complex example that also improves upon handling of the
+pipelines have a look at the `imagepipe multi command chaining demo
+<https://github.com/mitsuhiko/click/tree/master/examples/imagepipe>`__ in
+the Click repository.  It implements a pipeline based image editing tool
+that has a nice internal structure for the pipelines.
 
 
 Overriding Defaults
