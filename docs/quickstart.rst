@@ -36,6 +36,8 @@ as in the GitHub repository together with readme files:
     <https://github.com/mitsuhiko/click/tree/master/examples/colors>`_
 *   ``termui``: `Terminal UI functions demo
     <https://github.com/mitsuhiko/click/tree/master/examples/termui>`_
+*   ``imagepipe``: `Multi command chaining demo
+    <https://github.com/mitsuhiko/click/tree/master/examples/imagepipe>`_
 
 Basic Concepts
 --------------
