@@ -797,7 +797,22 @@ class MultiCommand(Command):
     def resultcallback(self, replace=False):
         """Adds a result callback to the chain command.  By default if a
         result callback is already registered this will chain them but
-        this can be disabled with the `replace` parameter.
+        this can be disabled with the `replace` parameter.  The result
+        callback is invoked with the return value of the subcommand
+        (or the list of return values from all subcommands if chaining
+        is enabled) as well as the parameters as they would be passed
+        to the main callback.
+
+        Example::
+
+            @click.group()
+            @click.option('-i', '--input', default=23)
+            def cli(input):
+                return 42
+
+            @cli.resultcallback()
+            def process_result(result, input):
+                return result + input
 
         .. versionadded:: 3.0
 
@@ -809,8 +824,9 @@ class MultiCommand(Command):
             if old_callback is None or replace:
                 self.result_callback = f
                 return f
-            def function(value):
-                return f(old_callback(value))
+            def function(__value, *args, **kwargs):
+                return f(old_callback(__value, *args, **kwargs),
+                         *args, **kwargs)
             self.result_callback = rv = update_wrapper(function, f)
             return rv
         return decorator
