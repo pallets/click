@@ -91,3 +91,22 @@ def test_get_context_objects_missing(runner):
     assert isinstance(result.exception, RuntimeError)
     assert "Managed to invoke callback without a context object " \
         "of type 'Foo' existing" in str(result.exception)
+
+
+def test_multi_enter(runner):
+    called = []
+
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        def callback():
+            called.append(True)
+        ctx.call_on_close(callback)
+
+        with ctx:
+            pass
+        assert not called
+
+    result = runner.invoke(cli, [])
+    assert result.exception is None
+    assert called == [True]
