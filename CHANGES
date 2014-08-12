@@ -6,7 +6,7 @@ This contains all major version changes between Click releases.
 Version 3.0
 -----------
 
-(codename and release date to be decided)
+(codename "clonk clonk", released on August 12th 2014)
 
 - formatter now no longer attempts to accomodate for terminals
   smaller than 50 characters.  If that happens it just assumes
