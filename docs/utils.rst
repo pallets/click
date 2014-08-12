@@ -30,6 +30,13 @@ suppressed by passing ``nl=False``::
 
     click.echo(b'\xe2\x98\x83', nl=False)
 
+.. versionadded:: 3.0
+
+Starting with Click 3.0 you can also easily print to standard error by
+passing ``err=True``::
+
+    click.echo('Hello World!', err=True)
+
 
 .. _ansi-colors:
 
