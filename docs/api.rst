@@ -66,6 +66,8 @@ Utilities
 
 .. autofunction:: get_text_stream
 
+.. autofunction:: open_file
+
 .. autofunction:: get_app_dir
 
 .. autofunction:: format_filename
