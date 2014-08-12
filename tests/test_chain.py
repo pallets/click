@@ -127,3 +127,54 @@ def test_context_subcommand_info_sync():
     ctx.invoked_subcommands = ['foo', 'bar']
     assert ctx.invoked_subcommand == '*'
     assert ctx.invoked_subcommands == ['foo', 'bar']
+
+
+def test_pipeline(runner):
+    @click.group(chain=True, invoke_without_command=True)
+    @click.option('-i', '--input', type=click.File('r'))
+    def cli(input):
+        pass
+
+    @cli.resultcallback()
+    def process_pipeline(processors, input):
+        iterator = (x.rstrip('\r\n') for x in input)
+        for processor in processors:
+            iterator = processor(iterator)
+        for item in iterator:
+            click.echo(item)
+
+    @cli.command('uppercase')
+    def make_uppercase():
+        def processor(iterator):
+            for line in iterator:
+                yield line.upper()
+        return processor
+
+    @cli.command('strip')
+    def make_strip():
+        def processor(iterator):
+            for line in iterator:
+                yield line.strip()
+        return processor
+
+    result = runner.invoke(cli, ['-i', '-'], input='foo\nbar')
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'foo',
+        'bar',
+    ]
+
+    result = runner.invoke(cli, ['-i', '-', 'strip'], input='foo \n bar')
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'foo',
+        'bar',
+    ]
+
+    result = runner.invoke(cli, ['-i', '-', 'strip', 'uppercase'],
+                           input='foo \n bar')
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'FOO',
+        'BAR',
+    ]
