@@ -333,7 +333,7 @@ def open_file(filename, mode='r', encoding=None, errors='strict',
     If stdin/stdout is returned the stream is wrapped so that the context
     manager will not close the stream accidentally.  This makes it possible
     to always use the function like this without having to worry to
-    accidentally close a standard stream:
+    accidentally close a standard stream::
 
         with open_file(filename) as f:
             ...
