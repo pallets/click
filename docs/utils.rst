@@ -260,6 +260,31 @@ Example::
     stdout_binary = click.get_binary_stream('stdout')
 
 
+Intelligent File Opening
+------------------------
+
+.. versionadded:: 3.0
+
+Starting with Click 3.0 the logic for opening files from the :class:`File`
+type is exposed through the :func:`open_file` function.  It can
+intelligently open stdin/stdout as well as any other file.
+
+Example::
+
+    import click
+
+    stdout = click.open_file('-', 'w')
+    test_file = click.open_file('test.txt', 'w')
+
+If stdin or stdout are returned, the return value is wrapped in a special
+file where the context manager will prevent the closing of the file.  This
+makes the handling of standard streams transparent and you can always use
+it like this::
+
+    with click.open_file(filename, 'w') as f:
+        f.write('Hello World!\n')
+
+
 Finding Application Folders
 ---------------------------
 

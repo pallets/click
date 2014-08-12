@@ -192,6 +192,24 @@ class LazyFile(object):
         self.close_intelligently()
 
 
+class KeepOpenFile(object):
+
+    def __init__(self, file):
+        self._file = file
+
+    def __getattr__(self, name):
+        return getattr(self._file, name)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        pass
+
+    def __repr__(self):
+        return repr(self._file)
+
+
 def echo(message=None, file=None, nl=True, err=False):
     """Prints a message plus a newline to the given file or stdout.  On
     first sight, this looks like the print function, but it has improved
@@ -304,6 +322,39 @@ def get_text_stream(name, encoding=None, errors='strict'):
     if opener is None:
         raise TypeError('Unknown standard stream %r' % name)
     return opener(encoding, errors)
+
+
+def open_file(filename, mode='r', encoding=None, errors='strict',
+              lazy=False, atomic=False):
+    """This is similar to how the :class:`File` works but for manual
+    usage.  Files are opened non lazy by default.  This can open regular
+    files as well as stdin/stdout if ``'-'`` is passed.
+
+    If stdin/stdout is returned the stream is wrapped so that the context
+    manager will not close the stream accidentally.  This makes it possible
+    to always use the function like this without having to worry to
+    accidentally close a standard stream:
+
+        with open_file(filename) as f:
+            ...
+
+    .. versionadded:: 3.0
+
+    :param filename: the name of the file to open (or ``'-'`` for stdin/stdout).
+    :param mode: the mode in which to open the file.
+    :param encoding: the encoding to use.
+    :param errors: the error handling for this file.
+    :param lazy: can be flipped to true to open the file lazily.
+    :param atomic: in atomic mode writes go into a temporary file and it's
+                   moved on close.
+    """
+    if lazy:
+        return LazyFile(filename, mode, encoding, errors, atomic=atomic)
+    f, should_close = open_stream(filename, mode, encoding, errors,
+                                  atomic=atomic)
+    if not should_close:
+        f = KeepOpenFile(f)
+    return f
 
 
 def format_filename(filename, shorten=False):
