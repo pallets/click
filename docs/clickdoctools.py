@@ -130,7 +130,7 @@ class ExampleRunner(object):
         code = compile(source, '<docs>', 'exec')
         buffer = []
 
-        def invoke(cmd, args=None, prog_name=None, prog_prefix='python ',
+        def invoke(cmd, args=None, prog_name=None,
                    input=None, terminate_input=False, env=None,
                    **extra):
             if env:
@@ -140,9 +140,8 @@ class ExampleRunner(object):
                     buffer.append('$ export %s=%s' % (key, value))
             args = args or []
             if prog_name is None:
-                prog_name = cmd.name.replace('_', '-') + '.py'
-            buffer.append(('$ %s%s %s' % (
-                prog_prefix,
+                prog_name = cmd.name.replace('_', '-')
+            buffer.append(('$ %s %s' % (
                 prog_name,
                 ' '.join(('"%s"' % x) if ' ' in x else x for x in args)
             )).rstrip())
@@ -152,7 +151,8 @@ class ExampleRunner(object):
                     input += '\xff'
             with isolation(input=input, env=env) as output:
                 try:
-                    cmd.main(args=args, prog_name=prog_name, **extra)
+                    cmd.main(args=args, prog_name=prog_name.split()[-1],
+                             **extra)
                 except SystemExit:
                     pass
                 buffer.extend(output.getvalue().splitlines())

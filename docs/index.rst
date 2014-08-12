@@ -38,13 +38,13 @@ And what it looks like when run:
 
 .. click:run::
 
-    invoke(hello, ['--count=3'], input='John\n')
+    invoke(hello, ['--count=3'], prog_name='python hello.py', input='John\n')
 
 It automatically generates nicely formatted help pages:
 
 .. click:run::
 
-    invoke(hello, ['--help'])
+    invoke(hello, ['--help'], prog_name='python hello.py')
 
 You can get the library directly from PyPI::
 
@@ -61,13 +61,13 @@ usage patterns.
 
    why
    quickstart
+   setuptools
    parameters
    options
    arguments
    commands
    prompts
    documentation
-   setuptools
    complex
    advanced
    testing
