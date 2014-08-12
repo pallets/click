@@ -1,0 +1,13 @@
+$ imagepipe_
+
+  imagepipe is an example application that implements some
+  multi commands that chain image processing instructions
+  together.
+
+  This requires pillow.
+
+Usage:
+
+  $ pip install --editable .
+  $ imagepipe open -i example01.jpg resize -w 128 display
+  $ imagepipe open -i example02.jpg blur save
