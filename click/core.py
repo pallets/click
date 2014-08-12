@@ -237,12 +237,16 @@ class Context(object):
         self.auto_envvar_prefix = auto_envvar_prefix
 
         self._close_callbacks = []
+        self._depth = 0
 
     def __enter__(self):
+        self._depth += 1
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
-        self.close()
+        self._depth -= 1
+        if self._depth == 0:
+            self.close()
 
     def _get_invoked_subcommand(self):
         """This flag indicates if a subcommand is going to be executed.  A

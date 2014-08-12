@@ -32,6 +32,8 @@ Version 3.0
 - added support for returning values from command callbacks.
 - added simplifications for printing to stderr from `echo`.
 - added result callbacks for groups.
+- entering a context multiple times defers the cleanup until
+  the last exit occurs.
 
 Version 2.6
 -----------
