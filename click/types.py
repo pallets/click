@@ -46,7 +46,7 @@ class ParamType(object):
         .. versionadded:: 2.0
         """
 
-    def convert(self, param, ctx, value):
+    def convert(self, value, param, ctx):
         """Converts the value.  This is not invoked for values that are
         `None` (the missing value).
         """
