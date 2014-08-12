@@ -3,6 +3,7 @@ import sys
 import codecs
 from contextlib import contextmanager
 from itertools import chain, repeat
+from functools import update_wrapper
 
 from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo
@@ -765,7 +766,7 @@ class MultiCommand(Command):
 
     def __init__(self, name=None, invoke_without_command=False,
                  no_args_is_help=None, subcommand_metavar=None,
-                 chain=False, **attrs):
+                 chain=False, result_callback=None, **attrs):
         Command.__init__(self, name, **attrs)
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
@@ -778,6 +779,7 @@ class MultiCommand(Command):
                 subcommand_metavar = SUBCOMMAND_METAVAR
         self.subcommand_metavar = subcommand_metavar
         self.chain = chain
+        self.result_callback = result_callback
 
     def collect_usage_pieces(self, ctx):
         rv = Command.collect_usage_pieces(self, ctx)
@@ -787,6 +789,27 @@ class MultiCommand(Command):
     def format_options(self, ctx, formatter):
         Command.format_options(self, ctx, formatter)
         self.format_commands(ctx, formatter)
+
+    def resultcallback(self, replace=False):
+        """Adds a result callback to the chain command.  By default if a
+        result callback is already registered this will chain them but
+        this can be disabled with the `replace` parameter.
+
+        .. versionadded:: 3.0
+
+        :param replace: if set to `True` an already existing result
+                        callback will be removed.
+        """
+        def decorator(f):
+            old_callback = self.result_callback
+            if old_callback is None or replace:
+                self.result_callback = f
+                return f
+            def function(value):
+                return f(old_callback(value))
+            self.result_callback = rv = update_wrapper(function, f)
+            return rv
+        return decorator
 
     def format_commands(self, ctx, formatter):
         """Extra format methods for multi methods that adds all the commands
@@ -820,6 +843,11 @@ class MultiCommand(Command):
 
         args = ctx.args
 
+        def _process_result(value):
+            if self.result_callback is not None:
+                value = ctx.invoke(self.result_callback, value)
+            return value
+
         # If we're not in chain mode, we only allow the invocation of a
         # single command but we also inform the current context about the
         # name of the command to invoke.
@@ -828,7 +856,7 @@ class MultiCommand(Command):
             ctx.invoked_subcommands = [sub_ctx.info_name]
             Command.invoke(self, ctx)
             with sub_ctx:
-                return sub_ctx.command.invoke(sub_ctx)
+                return _process_result(sub_ctx.command.invoke(sub_ctx))
 
         # Otherwise we make every single context and invoke them in a
         # chain.
@@ -846,7 +874,7 @@ class MultiCommand(Command):
         for sub_ctx in contexts:
             with sub_ctx:
                 rv.append(sub_ctx.command.invoke(sub_ctx))
-        return rv
+        return _process_result(rv)
 
     def handle_subcommand(self, ctx, args, **extra):
         cmd_name = make_str(args[0])

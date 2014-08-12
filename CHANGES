@@ -31,6 +31,7 @@ Version 3.0
   method on a Click command to be able to handle errors better.
 - added support for returning values from command callbacks.
 - added simplifications for printing to stderr from `echo`.
+- added result callbacks for groups.
 
 Version 2.6
 -----------
