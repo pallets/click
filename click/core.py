@@ -856,17 +856,28 @@ class MultiCommand(Command):
         return Command.parse_args(self, ctx, args)
 
     def invoke(self, ctx):
+        def _process_result(value):
+            if self.result_callback is not None:
+                value = ctx.invoke(self.result_callback, value,
+                                   **ctx.params)
+            return value
+
         if not ctx.args:
+            # If we are invoked without command the chain flag controls
+            # how this happens.  If we are not in chain mode, the return
+            # value here is the return value of the command.
+            # If however we are in chain mode, the return value is the
+            # return value of the result processor invoked with an empty
+            # list (which means that no subcommand actually was executed).
             if self.invoke_without_command:
-                return Command.invoke(self, ctx)
+                if not self.chain:
+                    return Command.invoke(self, ctx)
+                with ctx:
+                    Command.invoke(self, ctx)
+                    return _process_result([])
             ctx.fail('Missing command.')
 
         args = ctx.args
-
-        def _process_result(value):
-            if self.result_callback is not None:
-                value = ctx.invoke(self.result_callback, value)
-            return value
 
         # If we're not in chain mode, we only allow the invocation of a
         # single command but we also inform the current context about the
@@ -874,12 +885,17 @@ class MultiCommand(Command):
         if not self.chain:
             sub_ctx = self.handle_subcommand(ctx, args)
             ctx.invoked_subcommands = [sub_ctx.info_name]
-            Command.invoke(self, ctx)
-            with sub_ctx:
-                return _process_result(sub_ctx.command.invoke(sub_ctx))
+
+            # Make sure the context is entered so we do not clean up
+            # resources until the result processor has worked.
+            with ctx:
+                Command.invoke(self, ctx)
+                with sub_ctx:
+                    return _process_result(sub_ctx.command.invoke(sub_ctx))
 
         # Otherwise we make every single context and invoke them in a
-        # chain.
+        # chain.  In that case the return value to the result processor
+        # is the list of all invoked subcommand's results.
         contexts = []
         while args:
             sub_ctx = self.handle_subcommand(ctx, args, allow_extra_args=True,
@@ -889,12 +905,16 @@ class MultiCommand(Command):
 
         # Now that we have all contexts, we can invoke them.
         ctx.invoked_subcommands = [x.info_name for x in contexts]
-        Command.invoke(self, ctx)
-        rv = []
-        for sub_ctx in contexts:
-            with sub_ctx:
-                rv.append(sub_ctx.command.invoke(sub_ctx))
-        return _process_result(rv)
+
+        # Make sure the context is entered so we do not clean up
+        # resources until the result processor has worked.
+        with ctx:
+            Command.invoke(self, ctx)
+            rv = []
+            for sub_ctx in contexts:
+                with sub_ctx:
+                    rv.append(sub_ctx.command.invoke(sub_ctx))
+            return _process_result(rv)
 
     def handle_subcommand(self, ctx, args, **extra):
         cmd_name = make_str(args[0])
