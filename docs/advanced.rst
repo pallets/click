@@ -231,7 +231,7 @@ Repeated parameters:
 
     Note that even if a parameter does not allow multiple versions, Click
     will still accept the position of the first, but it will ignore every
-    value except the first.  The reason for this is to allow composability
+    value except the last.  The reason for this is to allow composability
     through shell aliases that set defaults.
 
 Missing parameters:
