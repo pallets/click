@@ -6,7 +6,7 @@ This contains all major version changes between Click releases.
 Version 3.1
 -----------
 
-(bugfix release, release date to be decided)
+(bugfix release, released on August 13th 2014)
 
 - Fixed a regression that caused contexts of subcommands to be
   created before the parent command was invoked which was a
