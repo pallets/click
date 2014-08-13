@@ -8,6 +8,13 @@ Version 4.0
 
 (codename to be selected, release date to be decided)
 
+Version 3.2
+-----------
+
+(bugfix release, release date to be decided)
+
+- Added missing `err` parameter forwarding to the `secho` function.
+
 Version 3.1
 -----------
 
