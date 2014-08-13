@@ -366,7 +366,7 @@ def unstyle(text):
     return strip_ansi(text)
 
 
-def secho(text, file=None, nl=True, **styles):
+def secho(text, file=None, nl=True, err=False, **styles):
     """This function combines :func:`echo` and :func:`style` into one
     call.  As such the following two calls are the same::
 
@@ -379,7 +379,7 @@ def secho(text, file=None, nl=True, **styles):
     .. versionadded:: 2.0
     """
     text = style(text, **styles)
-    return echo(text, file=file, nl=nl)
+    return echo(text, file=file, nl=nl, err=err)
 
 
 def edit(text=None, editor=None, env=None, require_save=True,
