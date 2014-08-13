@@ -8,6 +8,10 @@ Version 3.1
 
 (bugfix release, release date to be decided)
 
+- Fixed a regression that caused contexts of subcommands to be
+  created before the parent command was invoked which was a
+  regression from earlier Click versions.
+
 Version 3.0
 -----------
 

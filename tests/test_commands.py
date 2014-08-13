@@ -174,3 +174,23 @@ def test_base_command(runner):
         '  -f FILE, --file=FILE  write report to FILE',
         '  -q, --quiet           don\'t print status messages to stdout',
     ]
+
+
+def test_object_propagation(runner):
+    for chain in False, True:
+        @click.group(chain=chain)
+        @click.option('--debug/--no-debug', default=False)
+        @click.pass_context
+        def cli(ctx, debug):
+            if ctx.obj is None:
+                ctx.obj = {}
+            ctx.obj['DEBUG'] = debug
+
+        @cli.command()
+        @click.pass_context
+        def sync(ctx):
+            click.echo('Debug is %s' % (ctx.obj['DEBUG'] and 'on' or 'off'))
+
+        result = runner.invoke(cli, ['sync'])
+        assert result.exception is None
+        assert result.output == 'Debug is off\n'
