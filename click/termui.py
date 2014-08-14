@@ -215,6 +215,10 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
     No printing must happen or the progress bar will be unintentionally
     destroyed.
 
+    Alternatively, if no iterable is specified, one can manually update the
+    progress bar through the update method instead of directly iterating over
+    the progress bar.
+
     Example usage::
 
         with progressbar(items) as bar:
@@ -222,6 +226,9 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                 do_something_with(item)
 
     .. versionadded:: 2.0
+
+    .. versionadded:: 3.0
+        the ProgressBar `update` method.
 
     :param iterable: an iterable to iterate over.  If not provided the length
                      is required.
