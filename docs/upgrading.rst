@@ -6,6 +6,34 @@ this is not entirely possible.  In case we need to break backwards
 compatibility this document gives you information about how to upgrade or
 handle backwards compatibility properly.
 
+.. _upgrade-to-3.2:
+
+Upgrading to 3.2
+----------------
+
+Click 3.2 contains a fix for the :meth:`Context.invoke` function when used
+with other commands.  The original intention of this function was to
+invoke the other command as as if it came from the command line when it
+was passed a context object instead of a function.  This use was only
+documented in a single place in the documentation before and there was no
+proper explanation for the method in the API documentation.
+
+The core issue is that before 3.2 this call worked against intentions::
+
+    ctx.invoke(other_command, 'arg1', 'arg2')
+
+This was never intended to work as it does not allow Click to operate on
+the parameters.  Given that this pattern was never documented and ill
+intended the decision was made to change this behavior in a bugfix release
+before it spreads by accident and developers depend on it.
+
+The correct invocation for the above command is the following::
+
+    ctx.invoke(other_command, name_of_arg1='arg1', name_of_arg2='arg2')
+
+This also allowed us to fix the issue that defaults were not handled
+properly by this function.
+
 .. _upgrade-to-2.0:
 
 Upgrading to 2.0
