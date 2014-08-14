@@ -274,6 +274,8 @@ And what it looks like:
 In case a command exists in more than one source, the first source wins.
 
 
+.. _multi-command-chaining:
+
 Multi Command Chaining
 ----------------------
 
@@ -502,3 +504,50 @@ And again the example in action:
 .. click:run::
 
     invoke(cli, prog_name='cli', args=['runserver'])
+
+
+Command Return Values
+---------------------
+
+.. versionadded:: 3.0
+
+One of the new introductions in Click 3.0 is the full support for return
+values from command callbacks.  This enables a whole range of features
+that were previously hard to implement.
+
+In essence any command callback can now return a value.  This return value
+is bubbled to certain receivers.  One usecase for this has already been
+show in the example of :ref:`multi-command-chaining` where it has been
+demonstrated that chained multi commands can have callbacks that process
+all return values.
+
+When working with command return values in Click, this is what you need to
+know:
+
+-   The return value of a command callback is generally returned from the
+    :meth:`BaseCommand.invoke` method.  The exception to this rule has to
+    do with :class:`Group`\s:
+
+    *   In a group the return value is generally the return value of the
+        subcommand invoked.  The only exception to this rule is that the
+        return value is the return value of the group callback if it's
+        invoked without arguments and `invoke_without_command` is enabled.
+    *   If a group is set up for chaining then the return value is a list
+        of all subcommands' results.
+    *   Return values of groups can be processed through a
+        :attr:`MultiCommand.result_callback`.  This is invoked with the
+        list of all return values in chain mode, or the single return
+        value in case of non chained commands.
+
+-   The return value is bubbled through from the :meth:`Context.invoke`
+    and :meth:`Context.forward` methods.  This is useful in situations
+    where you internally want to call into another command.
+
+-   Click does not have any hard requirements for the return values and
+    does not use them itself.  This allows return values to be used for
+    custom decorators or workflows (like in the multi command chaining
+    example).
+
+-   When a Click script is invoked as command line application (through
+    :meth:`BaseCommand.main`) the return value is ignored unless the
+    `standalone_mode` is disabled in which case it's bubbled through.
