@@ -802,6 +802,8 @@ class MultiCommand(Command):
                   is enabled.  This restricts the form of commands in that
                   they cannot have optional arguments but it allows
                   multiple commands to be chained together.
+    :param result_callback: the result callback to attach to this multi
+                            command.
     """
     allow_extra_args = True
     allow_interspersed_args = False
@@ -821,6 +823,8 @@ class MultiCommand(Command):
                 subcommand_metavar = SUBCOMMAND_METAVAR
         self.subcommand_metavar = subcommand_metavar
         self.chain = chain
+        #: The result callback that is stored.  This can be set or
+        #: overridden with the :func:`resultcallback` decorator.
         self.result_callback = result_callback
 
     def collect_usage_pieces(self, ctx):
