@@ -14,6 +14,9 @@ Version 3.2
 (bugfix release, release date to be decided)
 
 - Added missing `err` parameter forwarding to the `secho` function.
+- Fixed default parameters not being handled properly by the context
+  invoke method.  This is a backwards incompatible change if the function
+  was used improperly.  See :ref:`upgrade-to-3.2` for more information.
 
 Version 3.1
 -----------
