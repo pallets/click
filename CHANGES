@@ -8,6 +8,11 @@ Version 4.0
 
 (codename to be selected, release date to be decided)
 
+- Added `color` parameters to lots of interfaces that directly or indirectly
+  call into echoing.  This previously was always autodetection (which the
+  exception of the `echo_via_pager` function).  Now you can forcefully
+  enable or disable it, overriding the auto detection of Click.
+
 Version 3.2
 -----------
 

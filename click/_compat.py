@@ -456,6 +456,18 @@ colorama = None
 get_winterm_size = None
 
 
+def strip_ansi(value):
+    return _ansi_re.sub('', value)
+
+
+def should_strip_ansi(stream=None, color=None):
+    if color is None:
+        if stream is None:
+            stream = sys.stdin
+        return not isatty(stream)
+    return not color
+
+
 # If we're on Windows, we provide transparent integration through
 # colorama.  This will make ANSI colors through the echo function
 # work automatically.
@@ -470,7 +482,7 @@ if WIN:
     else:
         _ansi_stream_wrappers = WeakKeyDictionary()
 
-        def auto_wrap_for_ansi(stream):
+        def auto_wrap_for_ansi(stream, color=None):
             """This function wraps a stream so that calls through colorama
             are issued to the win32 console API to recolor on demand.  It
             also ensures to reset the colors if a write call is interrupted
@@ -482,7 +494,7 @@ if WIN:
                 cached = None
             if cached is not None:
                 return cached
-            strip = not isatty(stream)
+            strip = should_strip_ansi(stream, color)
             ansi_wrapper = colorama.AnsiToWin32(stream, strip=strip)
             rv = ansi_wrapper.stream
             _write = rv.write
@@ -505,10 +517,6 @@ if WIN:
             win = colorama.win32.GetConsoleScreenBufferInfo(
                 colorama.win32.STDOUT).srWindow
             return win.Right - win.Left, win.Bottom - win.Top
-
-
-def strip_ansi(value):
-    return _ansi_re.sub('', value)
 
 
 def term_len(x):

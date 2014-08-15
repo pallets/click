@@ -107,6 +107,9 @@ class Context(object):
        Added the `allow_extra_args` and `allow_interspersed_args`
        parameters.
 
+    .. versionadded:: 4.0
+       Added the `color` parameter.
+
     :param command: the command class for this context.
     :param parent: the parent context.
     :param info_name: the info name for this invokation.  Generally this
@@ -144,13 +147,19 @@ class Context(object):
                                  normalize tokens (options, choices,
                                  etc.).  This for instance can be used to
                                  implement case insensitive behavior.
+    :param color: controls if the terminal supports ANSI colors or not.  The
+                  default is autodetection.  This is only needed if ANSI
+                  codes are used in texts that Click prints which is by
+                  default not the case.  This for instance would affect
+                  help output.
     """
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
                  auto_envvar_prefix=None, default_map=None,
                  terminal_width=None, resilient_parsing=False,
                  allow_extra_args=None, allow_interspersed_args=None,
-                 help_option_names=None, token_normalize_func=None):
+                 help_option_names=None, token_normalize_func=None,
+                 color=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -235,6 +244,12 @@ class Context(object):
         else:
             self.auto_envvar_prefix = auto_envvar_prefix.upper()
         self.auto_envvar_prefix = auto_envvar_prefix
+
+        if color is None and parent is not None:
+            color = parent.color
+
+        #: Controls if styling output is wanted or not.
+        self.color = color
 
         self._close_callbacks = []
         self._depth = 0
@@ -694,7 +709,7 @@ class Command(BaseCommand):
 
         def show_help(ctx, param, value):
             if value and not ctx.resilient_parsing:
-                echo(ctx.get_help())
+                echo(ctx.get_help(), color=ctx.color)
                 ctx.exit()
         return Option(help_options, is_flag=True,
                       is_eager=True, expose_value=False,
@@ -893,7 +908,7 @@ class MultiCommand(Command):
 
     def parse_args(self, ctx, args):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
-            echo(ctx.get_help())
+            echo(ctx.get_help(), color=ctx.color)
             ctx.exit()
         return Command.parse_args(self, ctx, args)
 

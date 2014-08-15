@@ -253,7 +253,7 @@ def version_option(version=None, *param_decls, **attrs):
             echo(message % {
                 'prog': prog,
                 'version': ver,
-            })
+            }, color=ctx.color)
             ctx.exit()
 
         attrs.setdefault('is_flag', True)
@@ -278,7 +278,7 @@ def help_option(*param_decls, **attrs):
     def decorator(f):
         def callback(ctx, param, value):
             if value and not ctx.resilient_parsing:
-                echo(ctx.get_help())
+                echo(ctx.get_help(), color=ctx.color)
                 ctx.exit()
         attrs.setdefault('is_flag', True)
         attrs.setdefault('expose_value', False)

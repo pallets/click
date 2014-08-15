@@ -197,7 +197,7 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                 show_percent=None, show_pos=False,
                 item_show_func=None, fill_char='#', empty_char='-',
                 bar_template='%(label)s  [%(bar)s]  %(info)s',
-                info_sep='  ', width=36, file=None):
+                info_sep='  ', width=36, file=None, color=None):
     """This function creates an iterable context manager that can be used
     to iterate over something while showing a progress bar.  It will
     either iterate over the `iterable` or `length` items (that are counted
@@ -222,6 +222,9 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                 do_something_with(item)
 
     .. versionadded:: 2.0
+
+    .. versionadded:: 4.0
+       Added the `color` parameter.
 
     :param iterable: an iterable to iterate over.  If not provided the length
                      is required.
@@ -257,6 +260,10 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                   terminal width
     :param file: the file to write to.  If this is not a terminal then
                  only the label is printed.
+    :param color: controls if the terminal supports ANSI colors or not.  The
+                  default is autodetection.  This is only needed if ANSI
+                  codes are included anywhere in the progress bar output
+                  which is not the case by default.
     """
     from ._termui_impl import ProgressBar
     return ProgressBar(iterable=iterable, length=length, show_eta=show_eta,
@@ -264,7 +271,7 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                        item_show_func=item_show_func, fill_char=fill_char,
                        empty_char=empty_char, bar_template=bar_template,
                        info_sep=info_sep, file=file, label=label,
-                       width=width)
+                       width=width, color=color)
 
 
 def clear():
@@ -366,7 +373,7 @@ def unstyle(text):
     return strip_ansi(text)
 
 
-def secho(text, file=None, nl=True, err=False, **styles):
+def secho(text, file=None, nl=True, err=False, color=None, **styles):
     """This function combines :func:`echo` and :func:`style` into one
     call.  As such the following two calls are the same::
 
@@ -378,8 +385,7 @@ def secho(text, file=None, nl=True, err=False, **styles):
 
     .. versionadded:: 2.0
     """
-    text = style(text, **styles)
-    return echo(text, file=file, nl=nl, err=err)
+    return echo(style(text, **styles), file=file, nl=nl, err=err, color=color)
 
 
 def edit(text=None, editor=None, env=None, require_save=True,

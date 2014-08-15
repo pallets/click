@@ -52,7 +52,7 @@ class ProgressBar(object):
     def __init__(self, iterable, length=None, fill_char='#', empty_char=' ',
                  bar_template='%(bar)s', info_sep='  ', show_eta=True,
                  show_percent=None, show_pos=False, item_show_func=None,
-                 label=None, file=None, width=30):
+                 label=None, file=None, color=None, width=30):
         self.fill_char = fill_char
         self.empty_char = empty_char
         self.bar_template = bar_template
@@ -65,6 +65,7 @@ class ProgressBar(object):
         if file is None:
             file = _default_text_stdout()
         self.file = file
+        self.color = color
         self.width = width
         self.autowidth = width == 0
 
@@ -180,7 +181,7 @@ class ProgressBar(object):
         from .termui import get_terminal_size
 
         if self.is_hidden:
-            echo(self.label, file=self.file)
+            echo(self.label, file=self.file, color=self.color)
             self.file.flush()
             return
 
@@ -206,7 +207,7 @@ class ProgressBar(object):
         if self.max_width is None or self.max_width < line_len:
             self.max_width = line_len
         # Use echo here so that we get colorama support.
-        echo(line, file=self.file, nl=False)
+        echo(line, file=self.file, nl=False, color=self.color)
         self.file.write(' ' * (clear_width - line_len))
         self.file.flush()
 

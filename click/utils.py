@@ -4,8 +4,8 @@ from collections import deque
 
 from ._compat import text_type, open_stream, get_streerror, string_types, \
      PY2, binary_streams, text_streams, filename_to_ui, \
-     auto_wrap_for_ansi, strip_ansi, isatty, _default_text_stdout, \
-     _default_text_stderr, is_bytes, WIN
+     auto_wrap_for_ansi, strip_ansi, should_strip_ansi, \
+     _default_text_stdout, _default_text_stderr, is_bytes, WIN
 
 if not PY2:
     from ._compat import _find_binary_writer
@@ -210,7 +210,7 @@ class KeepOpenFile(object):
         return repr(self._file)
 
 
-def echo(message=None, file=None, nl=True, err=False):
+def echo(message=None, file=None, nl=True, err=False, color=None):
     """Prints a message plus a newline to the given file or stdout.  On
     first sight, this looks like the print function, but it has improved
     support for handling Unicode and binary data that does not fail no
@@ -238,12 +238,17 @@ def echo(message=None, file=None, nl=True, err=False):
     .. versionadded:: 3.0
        The `err` parameter was added.
 
+    .. versionchanged:: 4.0
+       Added the `color` flag.
+
     :param message: the message to print
     :param file: the file to write to (defaults to ``stdout``)
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``.  This is faster and easier than calling
                 :func:`get_text_stderr` yourself.
     :param nl: if set to `True` (the default) a newline is printed afterwards.
+    :param color: controls if the terminal supports ANSI colors or not.  The
+                  default is autodetection.
     """
     if file is None:
         if err:
@@ -276,12 +281,12 @@ def echo(message=None, file=None, nl=True, err=False):
     # to strip the color or we use the colorama support to translate the
     # ansi codes to API calls.
     if message and not is_bytes(message):
-        if not isatty(file):
+        if should_strip_ansi(file, color):
             message = strip_ansi(message)
         elif WIN:
             if auto_wrap_for_ansi is not None:
                 file = auto_wrap_for_ansi(file)
-            else:
+            elif not color:
                 message = strip_ansi(message)
 
     if message:

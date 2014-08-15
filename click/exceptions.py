@@ -41,9 +41,11 @@ class UsageError(ClickException):
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
+        color = None
         if self.ctx is not None:
-            echo(self.ctx.get_usage() + '\n', file=file)
-        echo('Error: %s' % self.format_message(), file=file)
+            color = self.ctx.color
+            echo(self.ctx.get_usage() + '\n', file=file, color=color)
+        echo('Error: %s' % self.format_message(), file=file, color=color)
 
 
 class BadParameter(UsageError):
