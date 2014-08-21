@@ -162,8 +162,10 @@ class Context(object):
         self.params = {}
         #: the leftover arguments.
         self.args = []
+        #: subcontexts whose objects need to be updated.
+        self.subcontexts = []
         if obj is None and parent is not None:
-            obj = parent.obj
+            parent.subcontexts.append(self)
         #: the user object stored.
         self.obj = obj
         #: A dictionary (-like object) with defaults for parameters.
@@ -238,6 +240,18 @@ class Context(object):
 
         self._close_callbacks = []
         self._depth = 0
+
+    _obj = None
+
+    def _get_obj(self):
+        return self._obj
+    def _set_obj(self, obj):
+        self._obj = obj
+        for ctx in self.subcontexts:
+            if ctx.obj is None:
+                ctx.obj = obj
+    obj = property(_get_obj, _set_obj)
+    del _get_obj, _set_obj
 
     def __enter__(self):
         self._depth += 1
@@ -925,33 +939,33 @@ class MultiCommand(Command):
         # single command but we also inform the current context about the
         # name of the command to invoke.
         if not self.chain:
+            sub_ctx = self.handle_subcommand(ctx, args)
+            ctx.invoked_subcommands = [sub_ctx.info_name]
+
             # Make sure the context is entered so we do not clean up
             # resources until the result processor has worked.
             with ctx:
                 Command.invoke(self, ctx)
-                sub_ctx = self.handle_subcommand(ctx, args)
-                ctx.invoked_subcommands = [sub_ctx.info_name]
                 with sub_ctx:
                     return _process_result(sub_ctx.command.invoke(sub_ctx))
+
+        # Otherwise we make every single context and invoke them in a
+        # chain.  In that case the return value to the result processor
+        # is the list of all invoked subcommand's results.
+        contexts = []
+        while args:
+            sub_ctx = self.handle_subcommand(ctx, args, allow_extra_args=True,
+                                             allow_interspersed_args=False)
+            contexts.append(sub_ctx)
+            args = sub_ctx.args
+
+        # Now that we have all contexts, we can invoke them.
+        ctx.invoked_subcommands = [x.info_name for x in contexts]
 
         # Make sure the context is entered so we do not clean up
         # resources until the result processor has worked.
         with ctx:
             Command.invoke(self, ctx)
-
-            # Otherwise we make every single context and invoke them in a
-            # chain.  In that case the return value to the result processor
-            # is the list of all invoked subcommand's results.
-            contexts = []
-            while args:
-                sub_ctx = self.handle_subcommand(ctx, args, allow_extra_args=True,
-                                                 allow_interspersed_args=False)
-                contexts.append(sub_ctx)
-                args = sub_ctx.args
-
-            # Now that we have all contexts, we can invoke them.
-            ctx.invoked_subcommands = [x.info_name for x in contexts]
-
             rv = []
             for sub_ctx in contexts:
                 with sub_ctx:
