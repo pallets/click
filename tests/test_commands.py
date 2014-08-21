@@ -229,3 +229,26 @@ def test_other_command_invoke_with_defaults(runner):
     result = runner.invoke(cli, [])
     assert not result.exception
     assert result.output == '42\n'
+
+
+def test_invoked_subcommand(runner):
+    @click.group(invoke_without_command=True)
+    @click.pass_context
+    def cli(ctx):
+        if ctx.invoked_subcommand is None:
+            click.echo('no subcommand, use default')
+            ctx.invoke(sync)
+        else:
+            click.echo('invoke subcommand')
+
+    @cli.command()
+    def sync():
+        click.echo('in subcommand')
+
+    result = runner.invoke(cli, ['sync'])
+    assert not result.exception
+    assert result.output == 'invoke subcommand\nin subcommand\n'
+
+    result = runner.invoke(cli)
+    assert not result.exception
+    assert result.output == 'no subcommand, use default\nin subcommand\n'
