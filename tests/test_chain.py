@@ -103,10 +103,13 @@ def test_chaining_with_arguments(runner):
     ]
 
 
-def test_context_subcommand_info_sync():
+def test_context_subcommand_info_sync(recwarn):
     @click.command()
     def cli():
         pass
+
+    def _assert_warning():
+        assert 'removed in Click 3.2' in str(recwarn.pop(Warning).message)
 
     ctx = click.Context(cli, info_name='cli')
 
@@ -126,7 +129,9 @@ def test_context_subcommand_info_sync():
 
     ctx.invoked_subcommands = ['foo', 'bar']
     assert ctx.invoked_subcommand == '*'
-    assert ctx.invoked_subcommands == ['foo', 'bar']
+    assert ctx.invoked_subcommands == ['*']
+
+    assert 'removed in Click 3.2' in str(recwarn.pop(Warning).message)
 
 
 def test_pipeline(runner):

@@ -168,13 +168,12 @@ Example:
     def sync():
         click.echo('The subcommand')
 
-And how it works in practice::
+And how it works in practice:
 
-    $ python tool.py
-    I was invoked without subcommand
-    $ python tool.py sync
-    I am about to invoke sync
-    The subcommand
+.. click:run::
+
+    invoke(cli, prog_name='tool', args=[])
+    invoke(cli, prog_name='tool', args=['sync'])
 
 .. _custom-multi-commands:
 
@@ -317,9 +316,9 @@ normal.
 
 Another note: the :attr:`Context.invoked_subcommand` attribute is a bit
 useless for multi commands as it will give ``'*'`` as value if more than
-one command is invoked.  Instead you should be using the
-:attr:`Context.invoked_subcommands` attribute instead which is a list
-(note the trailing "s").
+one command is invoked.  This is necessary because the handling of
+subcommands happens one after another so the exact subcommands that will
+be handled are not yet available when the callback fires.
 
 
 Multi Command Pipelines

@@ -11,6 +11,13 @@ handle backwards compatibility properly.
 Upgrading to 3.2
 ----------------
 
+Click 3.2 had to perform two changes to multi commands which were
+triggered by a change between Click 2 and Click 3 that had bigger
+consequences than anticipated.
+
+Context Invokes
+```````````````
+
 Click 3.2 contains a fix for the :meth:`Context.invoke` function when used
 with other commands.  The original intention of this function was to
 invoke the other command as as if it came from the command line when it
@@ -33,6 +40,27 @@ The correct invocation for the above command is the following::
 
 This also allowed us to fix the issue that defaults were not handled
 properly by this function.
+
+Multicommand Chaining API
+`````````````````````````
+
+Click 3 introduced multicommand chaning.  This required a change in how
+Click internally dispatches.  Unfortunately this change was not correctly
+implemented and it appeared that it was possible to provide an API that
+can inform the super command about all the subcommands that will be
+invoked.
+
+This assumption however does not work with one of the API guarantees that
+have been given in the past.  As such this functionality has been removed
+in 3.2 as it was already broken.  Instead the accidentally broken
+functionality of the :attr:`Context.invoked_subcommand` attribute was
+restored.
+
+If you do require the know which exact commands will be invoked there are
+different ways to cope with this.  The first one is to let the subcommands
+all return functions and then to invoke the functions in a
+:meth:`Context.resultcallback`.
+
 
 .. _upgrade-to-2.0:
 
