@@ -168,13 +168,12 @@ Example:
     def sync():
         click.echo('The subcommand')
 
-And how it works in practice::
+And how it works in practice:
 
-    $ python tool.py
-    I was invoked without subcommand
-    $ python tool.py sync
-    I am about to invoke sync
-    The subcommand
+.. click:run::
+
+    invoke(cli, prog_name='tool', args=[])
+    invoke(cli, prog_name='tool', args=['sync'])
 
 .. _custom-multi-commands:
 
