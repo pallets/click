@@ -173,14 +173,17 @@ class Context(object):
             default_map = parent.default_map.get(info_name)
         self.default_map = default_map
 
-        #: This is similar to :attr:`invoked_subcommand` but it holds a
-        #: list of multiple subcommand names.  This is useful if multi command
-        #: chaining is enabled.
+        #: This flag indicates if a subcommand is going to be executed. A
+        #: group callback can use this information to figure out if it's
+        #: being executed directly or because the execution flow passes
+        #: onwards to a subcommand. By default it's None, but it can be
+        #: the name of the subcommand to execute.
         #:
-        #: This property and :attr:`invoked_subcommand` are synchronized.
-        #:
-        #: .. versionadded:: 3.0
-        self.invoked_subcommands = []
+        #: If chaining is enabled this will be set to ``'*'`` in case
+        #: any commands are executed.  It is however not possible to
+        #: figure out which ones.  If you require this knowledge you
+        #: should use a :func:`resultcallback`.
+        self.invoked_subcommand = None
 
         if terminal_width is None and parent is not None:
             terminal_width = parent.terminal_width
@@ -248,28 +251,24 @@ class Context(object):
         if self._depth == 0:
             self.close()
 
-    def _get_invoked_subcommand(self):
-        """This flag indicates if a subcommand is going to be executed.  A
-        group callback can use this information to figure out if it's
-        being executed directly or because the execution flow passes
-        onwards to a subcommand.  By default it's `None`, but it can be
-        the name of the subcommand to execute.
-
-        If chaining is enabled and more than one subcommand is invoked
-        then the value will be the string ``'*'``.  For chaining you
-        should be using :attr:`invoked_subcommands` instead.
-        """
-        if len(self.invoked_subcommands) == 1:
-            return self.invoked_subcommands[0]
-        if len(self.invoked_subcommands) > 1:
-            return '*'
-    def _set_invoked_subcommand(self, value):
-        if value is not None:
-            value = [value]
-        self.invoked_subcommands = value
-    invoked_subcommand = property(_get_invoked_subcommand,
-                                  _set_invoked_subcommand)
-    del _get_invoked_subcommand, _set_invoked_subcommand
+    def _get_invoked_subcommands(self):
+        from warnings import warn
+        warn(Warning('This API does not work properly and has been largely '
+                     'removed in Click 3.2 to fix a regression the '
+                     'introduction of this API caused.  Consult the '
+                     'upgrade documentation for more information.  For '
+                     'more information about this see '
+                     'http://click.pocoo.org/upgrading/#upgrading-to-3.2'),
+             stacklevel=2)
+        if self.invoked_subcommand is None:
+            return []
+        return [self.invoked_subcommand]
+    def _set_invoked_subcommands(self, value):
+        self.invoked_subcommand = \
+            len(value) > 1 and '*' or value and value[0] or None
+    invoked_subcommands = property(_get_invoked_subcommands,
+                                   _set_invoked_subcommands)
+    del _get_invoked_subcommands, _set_invoked_subcommands
 
     def make_formatter(self):
         """Creates the formatter for the help and usage output."""
@@ -928,15 +927,20 @@ class MultiCommand(Command):
             # Make sure the context is entered so we do not clean up
             # resources until the result processor has worked.
             with ctx:
+                cmd_name, cmd, args = self.resolve_command(ctx, args)
+                ctx.invoked_subcommand = cmd_name
                 Command.invoke(self, ctx)
-                sub_ctx = self.handle_subcommand(ctx, args)
-                ctx.invoked_subcommands = [sub_ctx.info_name]
+                sub_ctx = cmd.make_context(cmd_name, args, parent=ctx)
                 with sub_ctx:
                     return _process_result(sub_ctx.command.invoke(sub_ctx))
 
-        # Make sure the context is entered so we do not clean up
-        # resources until the result processor has worked.
+        # In chain mode we create the contexts step by step, but after the
+        # base command has been invoked.  Because at that point we do not
+        # know the subcommands yet, the invoked subcommand attribute is
+        # set to ``*`` to inform the command that subcommands are executed
+        # but nothing else.
         with ctx:
+            ctx.invoked_subcommand = args and '*' or None
             Command.invoke(self, ctx)
 
             # Otherwise we make every single context and invoke them in a
@@ -944,13 +948,12 @@ class MultiCommand(Command):
             # is the list of all invoked subcommand's results.
             contexts = []
             while args:
-                sub_ctx = self.handle_subcommand(ctx, args, allow_extra_args=True,
-                                                 allow_interspersed_args=False)
+                cmd_name, cmd, args = self.resolve_command(ctx, args)
+                sub_ctx = cmd.make_context(cmd_name, args, parent=ctx,
+                                           allow_extra_args=True,
+                                           allow_interspersed_args=False)
                 contexts.append(sub_ctx)
                 args = sub_ctx.args
-
-            # Now that we have all contexts, we can invoke them.
-            ctx.invoked_subcommands = [x.info_name for x in contexts]
 
             rv = []
             for sub_ctx in contexts:
@@ -958,7 +961,7 @@ class MultiCommand(Command):
                     rv.append(sub_ctx.command.invoke(sub_ctx))
             return _process_result(rv)
 
-    def handle_subcommand(self, ctx, args, **extra):
+    def resolve_command(self, ctx, args):
         cmd_name = make_str(args[0])
         original_cmd_name = cmd_name
 
@@ -982,7 +985,7 @@ class MultiCommand(Command):
                 self.parse_args(ctx, ctx.args)
             ctx.fail('No such command "%s".' % original_cmd_name)
 
-        return cmd.make_context(cmd_name, args[1:], parent=ctx, **extra)
+        return cmd_name, cmd, args[1:]
 
     def get_command(self, ctx, cmd_name):
         """Given a context and a command name, this returns a
