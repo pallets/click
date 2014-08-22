@@ -82,4 +82,4 @@ __all__ = [
 ]
 
 
-__version__ = '3.2-dev'
+__version__ = '3.2'

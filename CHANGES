@@ -6,7 +6,7 @@ This contains all major version changes between Click releases.
 Version 3.2
 -----------
 
-(bugfix release, release date to be decided)
+(bugfix release, released on August 22nd 2014)
 
 - Added missing `err` parameter forwarding to the `secho` function.
 - Fixed default parameters not being handled properly by the context
