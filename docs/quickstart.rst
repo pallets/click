@@ -81,7 +81,7 @@ And if you want to go back to the real world, use the following command::
 
 After doing this, the prompt of your shell should be as familar as before.
 
-Now, let's move on. Enter the following command to get Flask activated in your
+Now, let's move on. Enter the following command to get Click activated in your
 virtualenv::
 
     $ pip install Click
