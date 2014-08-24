@@ -432,7 +432,7 @@ class Context(object):
             except TypeError as e:
                 if not injected_arguments:
                     raise
-                if 'got multiple values for keyword argument' in str(e):
+                if 'got multiple values for' in str(e):
                     raise RuntimeError(
                         'You called .invoke() on the context with a command '
                         'but provided parameters as positional arguments.  '
