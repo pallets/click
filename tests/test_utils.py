@@ -151,6 +151,64 @@ def test_echo_color_flag(monkeypatch, capfd):
     assert out == text + '\n'
 
 
+def test_echo_writing_to_standard_error(capfd, monkeypatch):
+    def emulate_input(text):
+        """Emulate keyboard input."""
+        if sys.version_info[0] == 2:
+            from StringIO import StringIO
+        else:
+            from io import StringIO
+        monkeypatch.setattr(sys, 'stdin', StringIO(text))
+
+    click.echo('Echo to standard output')
+    out, err = capfd.readouterr()
+    assert out == 'Echo to standard output\n'
+    assert err == ''
+
+    click.echo('Echo to standard error', err=True)
+    out, err = capfd.readouterr()
+    assert out == ''
+    assert err == 'Echo to standard error\n'
+
+    emulate_input('asdlkj\n')
+    click.prompt('Prompt to stdin')
+    out, err = capfd.readouterr()
+    assert out == 'Prompt to stdin: '
+    assert err == ''
+
+    emulate_input('asdlkj\n')
+    click.prompt('Prompt to stderr', err=True)
+    out, err = capfd.readouterr()
+    assert out == ''
+    assert err == 'Prompt to stderr: '
+
+    emulate_input('y\n')
+    click.confirm('Prompt to stdin')
+    out, err = capfd.readouterr()
+    assert out == 'Prompt to stdin [y/N]: '
+    assert err == ''
+
+    emulate_input('y\n')
+    click.confirm('Prompt to stderr', err=True)
+    out, err = capfd.readouterr()
+    assert out == ''
+    assert err == 'Prompt to stderr [y/N]: '
+
+    monkeypatch.setattr(click._compat, 'isatty', lambda x: True)
+
+    emulate_input(' ')
+    click.pause('Pause to stdin')
+    out, err = capfd.readouterr()
+    assert out == 'Pause to stdin'
+    assert err == ''
+
+    emulate_input(' ')
+    click.pause('Pause to stderr', err=True)
+    out, err = capfd.readouterr()
+    assert out == ''
+    assert err == 'Pause to stderr'
+
+
 def test_open_file(runner):
     with runner.isolated_filesystem():
         with open('hello.txt', 'w') as f:
