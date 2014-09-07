@@ -432,13 +432,14 @@ class Context(object):
             except TypeError as e:
                 if not injected_arguments:
                     raise
-                if 'got multiple values for keyword argument' in str(e):
+                if 'got multiple values for' in str(e):
                     raise RuntimeError(
                         'You called .invoke() on the context with a command '
                         'but provided parameters as positional arguments.  '
                         'This is not supported but sometimes worked by chance '
                         'in older versions of Click.  To fix this see '
                         'http://click.pocoo.org/upgrading/#upgrading-to-3.2')
+                raise
 
     def forward(*args, **kwargs):
         """Similar to :meth:`invoke` but fills in default keyword

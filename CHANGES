@@ -13,6 +13,14 @@ Version 4.0
   exception of the `echo_via_pager` function).  Now you can forcefully
   enable or disable it, overriding the auto detection of Click.
 
+Version 3.3
+-----------
+
+(bugfix release, released on September 8th 2014)
+
+- Fixed an issue with error reporting on Python 3 for invalid forwarding
+  of commands.
+
 Version 3.2
 -----------
 
