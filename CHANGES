@@ -6,7 +6,7 @@ This contains all major version changes between Click releases.
 Version 3.3
 -----------
 
-(bugfix release, release date to be decided)
+(bugfix release, released on September 8th 2014)
 
 - Fixed an issue with error reporting on Python 3 for invalid forwarding
   of commands.
