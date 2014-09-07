@@ -8,6 +8,9 @@ Version 3.3
 
 (bugfix release, release date to be decided)
 
+- Fixed an issue with error reporting on Python 3 for invalid forwarding
+  of commands.
+
 Version 3.2
 -----------
 
