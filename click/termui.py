@@ -33,7 +33,8 @@ def _build_prompt(text, suffix, show_default=False, default=None):
 
 def prompt(text, default=None, hide_input=False,
            confirmation_prompt=False, type=None,
-           value_proc=None, prompt_suffix=': ', show_default=True):
+           value_proc=None, prompt_suffix=': ',
+           show_default=True, err=False):
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
@@ -52,6 +53,8 @@ def prompt(text, default=None, hide_input=False,
                        convert a value.
     :param prompt_suffix: a suffix that should be added to the prompt.
     :param show_default: shows or hides the default value in the prompt.
+    :param err: if set to true the file defaults to ``stderr`` instead of
+                ``stdout``, the same as with echo.
     """
     result = None
 
@@ -60,7 +63,7 @@ def prompt(text, default=None, hide_input=False,
         try:
             # Write the prompt separately so that we get nice
             # coloring through colorama on Windows
-            echo(text, nl=False)
+            echo(text, nl=False, err=err)
             return f('')
         except (KeyboardInterrupt, EOFError):
             raise Abort()
@@ -83,7 +86,7 @@ def prompt(text, default=None, hide_input=False,
         try:
             result = value_proc(value)
         except UsageError as e:
-            echo('Error: %s' % e.message)
+            echo('Error: %s' % e.message, err=err)
             continue
         if not confirmation_prompt:
             return result
@@ -93,11 +96,11 @@ def prompt(text, default=None, hide_input=False,
                 break
         if value == value2:
             return result
-        echo('Error: the two entered values do not match')
+        echo('Error: the two entered values do not match', err=err)
 
 
 def confirm(text, default=False, abort=False, prompt_suffix=': ',
-            show_default=True):
+            show_default=True, err=False):
     """Prompts for confirmation (yes/no question).
 
     If the user aborts the input by sending a interrupt signal this
@@ -109,6 +112,8 @@ def confirm(text, default=False, abort=False, prompt_suffix=': ',
                   exception by raising :exc:`Abort`.
     :param prompt_suffix: a suffix that should be added to the prompt.
     :param show_default: shows or hides the default value in the prompt.
+    :param err: if set to true the file defaults to ``stderr`` instead of
+                ``stdout``, the same as with echo.
     """
     prompt = _build_prompt(text, prompt_suffix, show_default,
                            default and 'Y/n' or 'y/N')
@@ -116,7 +121,7 @@ def confirm(text, default=False, abort=False, prompt_suffix=': ',
         try:
             # Write the prompt separately so that we get nice
             # coloring through colorama on Windows
-            echo(prompt, nl=False)
+            echo(prompt, nl=False, err=err)
             value = visible_prompt_func('').lower().strip()
         except (KeyboardInterrupt, EOFError):
             raise Abort()
@@ -127,7 +132,7 @@ def confirm(text, default=False, abort=False, prompt_suffix=': ',
         elif value == '':
             rv = default
         else:
-            echo('Error: invalid input')
+            echo('Error: invalid input', err=err)
             continue
         break
     if abort and not rv:
@@ -478,7 +483,7 @@ def getchar(echo=False):
     return f(echo)
 
 
-def pause(info='Press any key to continue ...'):
+def pause(info='Press any key to continue ...', err=False):
     """This command stops execution and waits for the user to press any
     key to continue.  This is similar to the Windows batch "pause"
     command.  If the program is not run through a terminal, this command
@@ -492,11 +497,11 @@ def pause(info='Press any key to continue ...'):
         return
     try:
         if info:
-            echo(info, nl=False)
+            echo(info, nl=False, err=err)
         try:
             getchar()
         except (KeyboardInterrupt, EOFError):
             pass
     finally:
         if info:
-            echo()
+            echo(err=err)
