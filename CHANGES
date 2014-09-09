@@ -14,6 +14,10 @@ Version 4.0
   enable or disable it, overriding the auto detection of Click.
 - Added an `UNPROCESSED` type which does not perform any type changes which
   simplifies text handling on 2.x / 3.x in some special advanced usecases.
+- Added `NoSuchOption` and `BadOptionUsage` exceptions for more generic
+  handling of errors.
+- Added support for handling of unprocessed options which can be useful in
+  situations where arguments are forwarded to underlying tools.
 
 Version 3.3
 -----------
