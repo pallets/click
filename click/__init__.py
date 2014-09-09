@@ -38,7 +38,7 @@ from .termui import prompt, confirm, get_terminal_size, echo_via_pager, \
 
 # Exceptions
 from .exceptions import ClickException, UsageError, BadParameter, \
-     FileError, Abort
+     FileError, Abort, NoSuchOption, BadOptionUsage
 
 # Formatting
 from .formatting import HelpFormatter, wrap_text
@@ -72,7 +72,7 @@ __all__ = [
 
     # Exceptions
     'ClickException', 'UsageError', 'BadParameter', 'FileError',
-    'Abort',
+    'Abort', 'NoSuchOption', 'BadOptionUsage',
 
     # Formatting
     'HelpFormatter', 'wrap_text',
