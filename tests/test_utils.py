@@ -194,19 +194,18 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     assert out == ''
     assert err == 'Prompt to stderr [y/N]: '
 
-    monkeypatch.setattr(click._compat, 'isatty', lambda x: True)
+    monkeypatch.setattr(click.termui, 'isatty', lambda x: True)
+    monkeypatch.setattr(click.termui, 'getchar', lambda: ' ')
 
-    emulate_input(' ')
-    click.pause('Pause to stdin')
+    click.pause('Pause to stdout')
     out, err = capfd.readouterr()
-    assert out == 'Pause to stdin'
+    assert out == 'Pause to stdout\n'
     assert err == ''
 
-    emulate_input(' ')
     click.pause('Pause to stderr', err=True)
     out, err = capfd.readouterr()
     assert out == ''
-    assert err == 'Pause to stderr'
+    assert err == 'Pause to stderr\n'
 
 
 def test_open_file(runner):

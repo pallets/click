@@ -41,6 +41,9 @@ def prompt(text, default=None, hide_input=False,
     If the user aborts the input by sending a interrupt signal, this
     function will catch it and raise a :exc:`Abort` exception.
 
+    .. versionadded:: 4.0
+       Added the `err` parameter.
+
     :param text: the text to show for the prompt.
     :param default: the default value to use if no input happens.  If this
                     is not given it will prompt until it's aborted.
@@ -105,6 +108,9 @@ def confirm(text, default=False, abort=False, prompt_suffix=': ',
 
     If the user aborts the input by sending a interrupt signal this
     function will catch it and raise a :exc:`Abort` exception.
+
+    .. versionadded:: 4.0
+       Added the `err` parameter.
 
     :param text: the question to ask.
     :param default: the default for the prompt.
@@ -491,7 +497,12 @@ def pause(info='Press any key to continue ...', err=False):
 
     .. versionadded:: 2.0
 
+    .. versionadded:: 4.0
+       Added the `err` parameter.
+
     :param info: the info string to print before pausing.
+    :param err: if set to message goes to ``stderr`` instead of
+                ``stdout``, the same as with echo.
     """
     if not isatty(sys.stdin) or not isatty(sys.stdout):
         return
