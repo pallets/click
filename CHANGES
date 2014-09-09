@@ -18,6 +18,9 @@ Version 4.0
   handling of errors.
 - Added support for handling of unprocessed options which can be useful in
   situations where arguments are forwarded to underlying tools.
+- Added `max_content_width` parameter to the context which can be used to
+  change the maximum width of help output.  By default Click will not format
+  content for more than 80 characters width.
 
 Version 3.3
 -----------

@@ -94,10 +94,12 @@ class HelpFormatter(object):
                   width clamped to a maximum of 78.
     """
 
-    def __init__(self, indent_increment=2, width=None):
+    def __init__(self, indent_increment=2, width=None, max_width=None):
         self.indent_increment = indent_increment
+        if max_width is None:
+            max_width = 80
         if width is None:
-            width = max(min(get_terminal_size()[0], 80) - 2, 50)
+            width = max(min(get_terminal_size()[0], max_width) - 2, 50)
         self.width = width
         self.current_indent = 0
         self.buffer = []

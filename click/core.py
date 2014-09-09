@@ -108,7 +108,8 @@ class Context(object):
        parameters.
 
     .. versionadded:: 4.0
-       Added the `color` and `ignore_unknown_options` parameter.
+       Added the `color`, `ignore_unknown_options`, and
+       `max_content_width` parameters.
 
     :param command: the command class for this context.
     :param parent: the parent context.
@@ -129,6 +130,14 @@ class Context(object):
                            inherit from parent context.  If no context
                            defines the terminal width then auto
                            detection will be applied.
+    :param max_content_width: the maximum width for content rendered by
+                              Click (this currently only affects help
+                              pages).  This defaults to 80 characters if
+                              not overridden.  In other words: even if the
+                              terminal is larger than that, Click will not
+                              format things wider than 80 characters by
+                              default.  In addition to that, formatteres might
+                              add some safety mapping on the right.
     :param resilient_parsing: if this flag is enabled then Click will
                               parse without any interactivity or callback
                               invocation.  This is useful for implementing
@@ -159,8 +168,9 @@ class Context(object):
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
                  auto_envvar_prefix=None, default_map=None,
-                 terminal_width=None, resilient_parsing=False,
-                 allow_extra_args=None, allow_interspersed_args=None,
+                 terminal_width=None, max_content_width=None,
+                 resilient_parsing=False, allow_extra_args=None,
+                 allow_interspersed_args=None,
                  ignore_unknown_options=None, help_option_names=None,
                  token_normalize_func=None, color=None):
         #: the parent context or `None` if none exists.
@@ -201,6 +211,12 @@ class Context(object):
             terminal_width = parent.terminal_width
         #: The width of the terminal (None is autodetection).
         self.terminal_width = terminal_width
+
+        if max_content_width is None and parent is not None:
+            max_content_width = parent.max_content_width
+        #: The maximum width of formatted content (None implies a sensible
+        #: default which is 80 for most things).
+        self.max_content_width = max_content_width
 
         if allow_extra_args is None:
             allow_extra_args = command.allow_extra_args
@@ -302,7 +318,8 @@ class Context(object):
 
     def make_formatter(self):
         """Creates the formatter for the help and usage output."""
-        return HelpFormatter(width=self.terminal_width)
+        return HelpFormatter(width=self.terminal_width,
+                             max_width=self.max_content_width)
 
     def call_on_close(self, f):
         """This decorator remembers a function as callback that should be
