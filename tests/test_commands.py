@@ -252,3 +252,21 @@ def test_invoked_subcommand(runner):
     result = runner.invoke(cli)
     assert not result.exception
     assert result.output == 'no subcommand, use default\nin subcommand\n'
+
+
+def test_unprocessed_options(runner):
+    @click.command(context_settings=dict(
+        ignore_unknown_options=True
+    ))
+    @click.argument('args', nargs=-1, type=click.UNPROCESSED)
+    @click.option('--verbose', '-v', count=True)
+    def cli(verbose, args):
+        click.echo('Verbosity: %s' % verbose)
+        click.echo('Args: %s' % '|'.join(args))
+
+    result = runner.invoke(cli, ['-foo', '-vvvvx', '--muhaha', 'x', 'y', '-x'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'Verbosity: 4',
+        'Args: -foo|-x|--muhaha|x|y|-x',
+    ]
