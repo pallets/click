@@ -119,6 +119,8 @@ Types
 
 .. autodata:: UUID
 
+.. autodata:: UNPROCESSED
+
 .. autoclass:: File
 
 .. autoclass:: Path
@@ -142,6 +144,10 @@ Exceptions
 .. autoexception:: BadParameter
 
 .. autoexception:: FileError
+
+.. autoexception:: NoSuchOption
+
+.. autoexception:: BadOptionUsage
 
 Formatting
 ----------
