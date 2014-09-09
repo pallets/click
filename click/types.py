@@ -84,6 +84,16 @@ class FuncParamType(ParamType):
             self.fail(value, param, ctx)
 
 
+class UnprocessedParamType(ParamType):
+    name = 'text'
+
+    def convert(self, value, param, ctx):
+        return value
+
+    def __repr__(self):
+        return 'UNPROCESSED'
+
+
 class StringParamType(ParamType):
     name = 'text'
 
@@ -430,6 +440,20 @@ def convert_type(ty, default=None):
             pass
     return FuncParamType(ty)
 
+
+#: A dummy parameter type that just does nothing.  From a user's
+#: perspective this appears to just be the same as `STRING` but internally
+#: no string conversion takes place.  This is necessary to achieve the
+#: same bytes/unicode behavior on Python 2/3 in situations where you want
+#: to not convert argument types.  This is usually useful when working
+#: with file paths as they can appear in bytes and unicode.
+#:
+#: For path related uses the :class:`Path` type is a better choice but
+#: there are situations where an unprocessed type is useful which is why
+#: it is is provided.
+#:
+#: .. versionadded:: 4.0
+UNPROCESSED = UnprocessedParamType()
 
 #: A unicode string parameter type which is the implicit default.  This
 #: can also be selected by using ``str`` as type.

@@ -12,6 +12,8 @@ Version 4.0
   call into echoing.  This previously was always autodetection (with the
   exception of the `echo_via_pager` function).  Now you can forcefully
   enable or disable it, overriding the auto detection of Click.
+- Added an `UNPROCESSED` type which does not perform any type changes which
+  simplifies text handling on 2.x / 3.x in some special advanced usecases.
 
 Version 3.3
 -----------
