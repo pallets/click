@@ -21,6 +21,7 @@ Version 4.0
 - Added `max_content_width` parameter to the context which can be used to
   change the maximum width of help output.  By default Click will not format
   content for more than 80 characters width.
+- Added support for writing prompts to stderr.
 
 Version 3.3
 -----------
