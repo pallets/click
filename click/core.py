@@ -108,7 +108,7 @@ class Context(object):
        parameters.
 
     .. versionadded:: 4.0
-       Added the `color` parameter.
+       Added the `color` and `ignore_unknown_options` parameter.
 
     :param command: the command class for this context.
     :param parent: the parent context.
@@ -496,8 +496,11 @@ class BaseCommand(object):
     :param context_settings: an optional dictionary with defaults that are
                              passed to the context object.
     """
+    #: the default for the :attr:`Context.allow_extra_args` flag.
     allow_extra_args = False
+    #: the default for the :attr:`Context.allow_interspersed_args` flag.
     allow_interspersed_args = True
+    #: the default for the :attr:`Context.ignore_unknown_options` flag.
     ignore_unknown_options = False
 
     def __init__(self, name, context_settings=None):
@@ -506,6 +509,8 @@ class BaseCommand(object):
         #: with this information.  You should instead use the
         #: :class:`Context`\'s :attr:`~Context.info_name` attribute.
         self.name = name
+        if context_settings is None:
+            context_settings = {}
         #: an optional dictionary with defaults passed to the context.
         self.context_settings = context_settings
 
@@ -530,7 +535,7 @@ class BaseCommand(object):
         :param extra: extra keyword arguments forwarded to the context
                       constructor.
         """
-        for key, value in iteritems(self.context_settings or {}):
+        for key, value in iteritems(self.context_settings):
             if key not in extra:
                 extra[key] = value
         ctx = Context(self, info_name=info_name, parent=parent, **extra)

@@ -4,6 +4,7 @@ import click
 import shutil
 import tempfile
 import contextlib
+import subprocess
 
 try:
     from StringIO import StringIO
@@ -47,6 +48,24 @@ class EchoingStdin(object):
 
     def __iter__(self):
         return iter(self._echo(x) for x in self._input)
+
+
+@contextlib.contextmanager
+def fake_modules():
+    old_call = subprocess.call
+    def dummy_call(*args, **kwargs):
+        with tempfile.TemporaryFile('wb+') as f:
+            kwargs['stdout'] = f
+            kwargs['stderr'] = f
+            rv = subprocess.Popen(*args, **kwargs).wait()
+            f.seek(0)
+            click.echo(f.read().decode('utf-8', 'replace').rstrip())
+        return rv
+    subprocess.call = dummy_call
+    try:
+        yield
+    finally:
+        subprocess.call = old_call
 
 
 @contextlib.contextmanager
@@ -123,8 +142,9 @@ class ExampleRunner(object):
         }
 
     def declare(self, source):
-        code = compile(source, '<docs>', 'exec')
-        eval(code, self.namespace)
+        with fake_modules():
+            code = compile(source, '<docs>', 'exec')
+            eval(code, self.namespace)
 
     def run(self, source):
         code = compile(source, '<docs>', 'exec')

@@ -243,3 +243,98 @@ Missing parameters:
 
 Most of the time you do not need to be concerned about any of this,
 but it is important to know how it works for some advanced cases.
+
+.. _forwarding-unknown-options:
+
+Forwarding Unknown Options
+--------------------------
+
+In some situations it is interesting to be able to accept all unknown
+options for further manual processing.  Click can generally do that as of
+Click 4.0, but it has some limitations that lie in the nature of the
+problem.  The support for this is provided through a parser flag called
+``ignore_unknown_options`` which will instruct the parser to collect all
+unknown options and to put them to the leftover argument instead of
+triggering a parsing error.
+
+This can generally be activated in two different ways:
+
+1.  It can be enabled on custom :class:`Command` subclasses by changing
+    the :attr:`~BaseCommand.ignore_unknown_options` attribute.
+2.  It can be enabled by changing the attribute of the same name on the
+    context class (:attr:`Context.ignore_unknown_options`).  This is best
+    changed through the ``context_settings`` dictionary on the command.
+
+For most situations the easiest solution is the second.  Once the behavior
+is changed something needs to pick up those leftover options (which at
+this point are considered arguments).  For this again you have two
+options:
+
+1.  You can use :func:`pass_context` to get the context passed.  This will
+    only work if in addition to :attr:`~Context.ignore_unknown_options`
+    you also set :attr:`~Context.allow_extra_args` as otherwise the
+    command will abort with an error that there are leftover arguments.
+    If you go with this solution, the extra arguments will be collected in
+    :attr:`Context.args`.
+2.  You can attach a :func:`argument` with ``nargs`` set to `-1` which
+    will eat up all leftover arguments.  In this case it's recommeded to
+    set the `type` to :data:`UNPROCESSED` to avoid any string processing
+    on those arguments as otherwise they are forced into unicode strings
+    automatically which is often not what you want.
+
+In the end you end up with something like this:
+
+.. click:example::
+
+    import sys
+    from subprocess import call
+
+    @click.command(context_settings=dict(
+        ignore_unknown_options=True,
+    ))
+    @click.option('-v', '--verbose', is_flag=True, help='Enables verbose mode')
+    @click.argument('timeit_args', nargs=-1, type=click.UNPROCESSED)
+    def cli(verbose, timeit_args):
+        """A wrapper around Python's timeit."""
+        cmdline = ['python', '-mtimeit'] + list(timeit_args)
+        if verbose:
+            click.echo('Invoking: %s' % ' '.join(cmdline))
+        call(cmdline)
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(cli, prog_name='cli', args=['--help'])
+    println()
+    invoke(cli, prog_name='cli', args=['-n', '100', 'a = 1; b = 2; a * b'])
+    println()
+    invoke(cli, prog_name='cli', args=['-v', 'a = 1; b = 2; a * b'])
+
+As you can see the verbosity flag is handled by Click, everything else
+ends up in the `timeit_args` variable for further processing which then
+for instance, allows invoking a subprocess.  There are a few things that
+are important to know about how this ignoring of unhandled flag happens:
+
+*   Unknown long options are generally ignored and not processed at all.
+    So for instance if ``--foo=bar`` or ``--foo bar`` are passed they
+    generally end up like that.  Note that because the parser cannot know
+    if an option will accept an argument or not, the ``bar`` part might be
+    handled as an argument.
+*   Unknown short options might be partially handled and reassmebled if
+    necessary.  For instance in the above example there is an option
+    called ``-v`` which enables verbose mode.  If the command would be
+    ignored with ``-va`` then the ``-v`` part would be handled by Click
+    (as it is known) and ``-a`` would end up in the leftover parameters
+    for further processing.
+*   Depending on what you plan on doing you might have some success by
+    disabling interspersed arguments
+    (:attr:`~Context.allow_interspersed_args`) which instructs the parser
+    to not allow arguments and options to be mixed.  Depending on your
+    situation this might improve your results.
+
+Generally though the combinated handling of options and arguments from
+your own commands and commands from another application are discouraged
+and if you can avoid it, you should.  It's a much better idea to have
+everything below a subcommand be forwarded to another application than to
+handle some arguments yourself.
