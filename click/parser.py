@@ -16,8 +16,14 @@
     and might cause us issues.
 """
 import re
-from .exceptions import UsageError
+from .exceptions import UsageError, NoSuchOption, BadOptionUsage
 from .utils import unpack_args
+
+
+def _error_args(nargs, opt):
+    if nargs == 1:
+        raise BadOptionUsage(opt, '%s option requires an argument' % opt)
+    raise BadOptionUsage(opt, '%s option requires %d arguments' % (opt, nargs))
 
 
 def split_opt(opt):
@@ -146,6 +152,14 @@ class OptionParser(object):
         #: non-option.  Click uses this to implement nested subcommands
         #: safely.
         self.allow_interspersed_args = True
+        #: This tells the parser how to deal with unknown options.  By
+        #: default it will error out (which is sensible), but there is a
+        #: second mode where it will ignore it and continue processing
+        #: after shifting all the unknown options into the resulting args.
+        self.ignore_unknown_options = False
+        if ctx is not None:
+            self.allow_interspersed_args = ctx.allow_interspersed_args
+            self.ignore_unknown_options = ctx.ignore_unknown_options
         self._short_opt = {}
         self._long_opt = {}
         self._opt_prefixes = set(['-', '--'])
@@ -194,7 +208,7 @@ class OptionParser(object):
             self._process_args_for_options(state)
             self._process_args_for_args(state)
         except UsageError:
-            if not self.ctx.resilient_parsing:
+            if self.ctx is None or not self.ctx.resilient_parsing:
                 raise
         return state.opts, state.largs, state.order
 
@@ -244,77 +258,54 @@ class OptionParser(object):
         # *empty* -- still a subset of [arg0, ..., arg(i-1)], but
         # not a very interesting subset!
 
-    def _match_long_opt(self, opt):
-        # Is there an exact match?
-        if opt in self._long_opt:
-            return opt
+    def _match_long_opt(self, opt, explicit_value, state):
+        if opt not in self._long_opt:
+            possibilities = [word for word in self._long_opt
+                             if word.startswith(opt)]
+            raise NoSuchOption(opt, possibilities=possibilities)
 
-        # Isolate all words with s as a prefix.
-        possibilities = [word for word in self._long_opt
-                         if word.startswith(opt)]
-
-        # No exact match, so there had better be just one possibility.
-        if not possibilities:
-            self._error('no such option: %s' % opt)
-        elif len(possibilities) == 1:
-            self._error('no such option: %s.  Did you mean %s?' %
-                        (opt, possibilities[0]))
-            return possibilities[0]
-        else:
-            # More than one possible completion: ambiguous prefix.
-            possibilities.sort()
-            self._error('no such option: %s.  (Possible options: %s)'
-                        % (opt, ', '.join(possibilities)))
-
-    def _process_long_opt(self, arg, state):
-        # Value explicitly attached to arg?  Pretend it's the next argument.
-        if '=' in arg:
-            opt, next_arg = arg.split('=', 1)
-            state.rargs.insert(0, next_arg)
-            had_explicit_value = True
-        else:
-            opt = arg
-            had_explicit_value = False
-
-        opt = normalize_opt(opt, self.ctx)
-
-        opt = self._match_long_opt(opt)
         option = self._long_opt[opt]
         if option.takes_value:
+            # At this point it's safe to modify rargs by injecting the
+            # explicit value, because no exception is raised in this
+            # branch.  This means that the inserted value will be fully
+            # consumed.
+            if explicit_value is not None:
+                state.rargs.insert(0, explicit_value)
+
             nargs = option.nargs
             if len(state.rargs) < nargs:
-                if nargs == 1:
-                    self._error('%s option requires an argument' % opt)
-                else:
-                    self._error('%s option requires %d arguments' % (opt, nargs))
+                _error_args(nargs, opt)
             elif nargs == 1:
                 value = state.rargs.pop(0)
             else:
                 value = tuple(state.rargs[:nargs])
                 del state.rargs[:nargs]
 
-        elif had_explicit_value:
-            self._error('%s option does not take a value' % opt)
+        elif explicit_value is not None:
+            raise BadOptionUsage(opt, '%s option does not take a value' % opt)
 
         else:
             value = None
 
         option.process(value, state)
 
-    def _process_opts(self, arg, state):
-        if '=' in arg or normalize_opt(arg, self.ctx) in self._long_opt:
-            return self._process_long_opt(arg, state)
-
+    def _match_short_opt(self, arg, state):
         stop = False
         i = 1
         prefix = arg[0]
+        unknown_options = []
+
         for ch in arg[1:]:
             opt = normalize_opt(prefix + ch, self.ctx)
             option = self._short_opt.get(opt)
             i += 1
 
             if not option:
-                self._error('no such option: %s' % (arg if arg.startswith('--') else opt))
+                if self.ignore_unknown_options:
+                    unknown_options.append(ch)
+                    continue
+                raise NoSuchOption(opt)
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
                 # next arg, and stop consuming characters of arg.
@@ -324,11 +315,7 @@ class OptionParser(object):
 
                 nargs = option.nargs
                 if len(state.rargs) < nargs:
-                    if nargs == 1:
-                        self._error('%s option requires an argument' % opt)
-                    else:
-                        self._error('%s option requires %d arguments' %
-                                    (opt, nargs))
+                    _error_args(nargs, opt)
                 elif nargs == 1:
                     value = state.rargs.pop(0)
                 else:
@@ -343,5 +330,38 @@ class OptionParser(object):
             if stop:
                 break
 
-    def _error(self, msg):
-        raise UsageError(msg, self.ctx)
+        # If we got any unknown options we re-combinate the string of the
+        # remaining options and re-attach the prefix, then report that
+        # to the state as new larg.  This way there is basic combinatorics
+        # that can be achieved while still ignoring unknown arguments.
+        if self.ignore_unknown_options and unknown_options:
+            state.largs.append(prefix + ''.join(unknown_options))
+
+    def _process_opts(self, arg, state):
+        explicit_value = None
+        # Long option handling happens in two parts.  The first part is
+        # supporting explicitly attached values.  In any case, we will try
+        # to long match the option first.
+        if '=' in arg:
+            long_opt, explicit_value = arg.split('=', 1)
+        else:
+            long_opt = arg
+        norm_long_opt = normalize_opt(long_opt, self.ctx)
+
+        # At this point we will match the (assumed) long option through
+        # the long option matching code.  Note that this allows options
+        # like "-foo" to be matched as long options.
+        try:
+            self._match_long_opt(norm_long_opt, explicit_value, state)
+        except NoSuchOption:
+            # At this point the long option matching failed, and we need
+            # to try with short options.  However there is a special rule
+            # which says, that if we have a two character options prefix
+            # (applies to "--foo" for instance), we do not dispatch to the
+            # short option code and will instead raise the no option
+            # error.
+            if arg[:2] not in self._opt_prefixes:
+                return self._match_short_opt(arg, state)
+            if not self.ignore_unknown_options:
+                raise
+            state.largs.append(arg)

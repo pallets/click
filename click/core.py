@@ -140,6 +140,9 @@ class Context(object):
     :param allow_interspersed_args: if this is set to `False` then options
                                     and arguments cannot be mixed.  The
                                     default is to inherit from the command.
+    :param ignore_unknown_options: instructs click to ignore options it does
+                                   not know and keeps them for later
+                                   processing.
     :param help_option_names: optionally a list of strings that define how
                               the default help parameter is named.  The
                               default is ``['--help']``.
@@ -158,8 +161,8 @@ class Context(object):
                  auto_envvar_prefix=None, default_map=None,
                  terminal_width=None, resilient_parsing=False,
                  allow_extra_args=None, allow_interspersed_args=None,
-                 help_option_names=None, token_normalize_func=None,
-                 color=None):
+                 ignore_unknown_options=None, help_option_names=None,
+                 token_normalize_func=None, color=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -214,6 +217,18 @@ class Context(object):
         #:
         #: .. versionadded:: 3.0
         self.allow_interspersed_args = allow_interspersed_args
+
+        if ignore_unknown_options is None:
+            ignore_unknown_options = command.ignore_unknown_options
+        #: Instructs click to ignore options that a command does not
+        #: understand and will store it on the context for later
+        #: processing.  This is primarily useful for situations where you
+        #: want to call into external programs.  Generally this pattern is
+        #: strongly discouraged because it's not possibly to losslessly
+        #: forward all arguments.
+        #:
+        #: .. versionadded:: 4.0
+        self.ignore_unknown_options = ignore_unknown_options
 
         if help_option_names is None:
             if parent is not None:
@@ -483,6 +498,7 @@ class BaseCommand(object):
     """
     allow_extra_args = False
     allow_interspersed_args = True
+    ignore_unknown_options = False
 
     def __init__(self, name, context_settings=None):
         #: the name the command thinks it has.  Upon registering a command
@@ -720,6 +736,7 @@ class Command(BaseCommand):
         """Creates the underlying option parser for this command."""
         parser = OptionParser(ctx)
         parser.allow_interspersed_args = ctx.allow_interspersed_args
+        parser.ignore_unknown_options = ctx.ignore_unknown_options
         for param in self.get_params(ctx):
             param.add_to_parser(parser, ctx)
         return parser
