@@ -1,4 +1,5 @@
 import os
+from string import letters, digits
 from .utils import echo
 from .parser import split_arg_string
 from .core import MultiCommand, Option
@@ -17,8 +18,15 @@ complete -F %(complete_func)s -o default %(script_names)s
 
 
 def get_completion_script(prog_name, complete_var):
+    def valid_posix(c):
+        if c in letters:
+            return c
+        if c in digits:
+            return c
+        return '_'
+    cf_name = ''.join([valid_posix(c) for c in prog_name])
     return (COMPLETION_SCRIPT % {
-        'complete_func': '_%s_completion' % prog_name,
+        'complete_func': '_%s_completion' % cf_name,
         'script_names': prog_name,
         'autocomplete_var': complete_var,
     }).strip() + ';'
