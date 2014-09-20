@@ -135,7 +135,7 @@ class CliRunner(object):
         return rv
 
     @contextlib.contextmanager
-    def isolation(self, input=None, env=None):
+    def isolation(self, input=None, env=None, color=False):
         """A context manager that sets up the isolation for invoking of a
         command line tool.  This sets up stdin with the given input data
         and `os.environ` with the overrides from the given dictionary.
@@ -144,8 +144,13 @@ class CliRunner(object):
 
         This is automatically done in the :meth:`invoke` method.
 
+        .. versionadded:: 4.0
+           The ``color`` parameter was added.
+
         :param input: the input stream to put into sys.stdin.
         :param env: the environment overrides as dictionary.
+        :param color: whether the output should contain color codes. The
+                      application can still override this explicitly.
         """
         input = make_input_stream(input, self.charset)
 
@@ -188,12 +193,20 @@ class CliRunner(object):
                 sys.stdout.flush()
             return char
 
+        default_color = color
+        def should_strip_ansi(stream=None, color=None):
+            if color is None:
+                return not default_color
+            return not color
+
         old_visible_prompt_func = clickpkg.termui.visible_prompt_func
         old_hidden_prompt_func = clickpkg.termui.hidden_prompt_func
         old__getchar_func = clickpkg.termui._getchar
+        old_should_strip_ansi = clickpkg.utils.should_strip_ansi
         clickpkg.termui.visible_prompt_func = visible_input
         clickpkg.termui.hidden_prompt_func = hidden_input
         clickpkg.termui._getchar = _getchar
+        clickpkg.utils.should_strip_ansi = should_strip_ansi
 
         old_env = {}
         try:
@@ -222,9 +235,10 @@ class CliRunner(object):
             clickpkg.termui.visible_prompt_func = old_visible_prompt_func
             clickpkg.termui.hidden_prompt_func = old_hidden_prompt_func
             clickpkg.termui._getchar = old__getchar_func
+            clickpkg.utils.should_strip_ansi = old_should_strip_ansi
 
     def invoke(self, cli, args=None, input=None, env=None,
-               catch_exceptions=True, **extra):
+               catch_exceptions=True, color=False, **extra):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
         arguments are passed to the :meth:`~clickpkg.Command.main` function of
@@ -239,6 +253,9 @@ class CliRunner(object):
            The result object now has an `exc_info` attribute with the
            traceback if available.
 
+        .. versionadded:: 4.0
+           The ``color`` parameter was added.
+
         :param cli: the command to invoke
         :param args: the arguments to invoke
         :param input: the input data for `sys.stdin`.
@@ -246,9 +263,11 @@ class CliRunner(object):
         :param catch_exceptions: Whether to catch any other exceptions than
                                  ``SystemExit``.
         :param extra: the keyword arguments to pass to :meth:`main`.
+        :param color: whether the output should contain color codes. The
+                      application can still override this explicitly.
         """
         exc_info = None
-        with self.isolation(input=input, env=env) as out:
+        with self.isolation(input=input, env=env, color=color) as out:
             exception = None
             exit_code = 0
 

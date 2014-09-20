@@ -113,3 +113,30 @@ def test_catch_exceptions():
 
     result = runner.invoke(cli)
     assert result.exit_code == 1
+
+
+def test_with_color():
+    @click.command()
+    def cli():
+        click.secho('hello world', fg='blue')
+
+    runner = CliRunner()
+
+    result = runner.invoke(cli)
+    assert result.output == 'hello world\n'
+    assert not result.exception
+
+    result = runner.invoke(cli, color=True)
+    assert result.output == click.style('hello world', fg='blue') + '\n'
+    assert not result.exception
+
+
+def test_with_color_but_pause_not_blocking():
+    @click.command()
+    def cli():
+        click.pause()
+
+    runner = CliRunner()
+    result = runner.invoke(cli, color=True)
+    assert not result.exception
+    assert result.output == ''
