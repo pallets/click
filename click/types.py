@@ -344,17 +344,20 @@ class Path(ParamType):
     :param resolve_path: if this is true, then the path is fully resolved
                          before the value is passed onwards.  This means
                          that it's absolute and symlinks are resolved.
+    :param expand: if true, expand tilde notation in the path.
     """
     envvar_list_splitter = os.path.pathsep
 
     def __init__(self, exists=False, file_okay=True, dir_okay=True,
-                 writable=False, readable=True, resolve_path=False):
+                 writable=False, readable=True, resolve_path=False,
+                 expand=False):
         self.exists = exists
         self.file_okay = file_okay
         self.dir_okay = dir_okay
         self.writable = writable
         self.readable = readable
         self.resolve_path = resolve_path
+        self.expand = expand
 
         if self.file_okay and not self.dir_okay:
             self.name = 'file'
@@ -367,7 +370,10 @@ class Path(ParamType):
             self.path_type = 'Path'
 
     def convert(self, value, param, ctx):
-        rv = value
+        if self.expand:
+            rv = os.path.expanduser(value)
+        else:
+            rv = value
         if self.resolve_path:
             rv = os.path.realpath(rv)
 
@@ -391,15 +397,15 @@ class Path(ParamType):
                 self.path_type,
                 filename_to_ui(value)
             ), param, ctx)
-        if self.writable and not os.access(value, os.W_OK):
+        if self.writable and not os.access(rv, os.W_OK):
             self.fail('%s "%s" is not writable.' % (
                 self.path_type,
-                filename_to_ui(value)
+                filename_to_ui(rv)
             ), param, ctx)
-        if self.readable and not os.access(value, os.R_OK):
+        if self.readable and not os.access(rv, os.R_OK):
             self.fail('%s "%s" is not readable.' % (
                 self.path_type,
-                filename_to_ui(value)
+                filename_to_ui(rv)
             ), param, ctx)
 
         return rv
