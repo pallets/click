@@ -290,6 +290,17 @@ def test_path_option(runner):
         result = runner.invoke(exists, ['-f', '.'])
         assert 'exists=True' in result.output
 
+    @click.command()
+    @click.option('-f', type=click.Path())
+    def expand_user(f):
+        click.echo('path=%s' % os.path.expanduser(f))
+
+    with runner.isolation():
+        import getpass
+        current_user = getpass.getuser()
+        result = runner.invoke(expand_user, ['-f', '~%s' % current_user])
+        assert "path=%s" % os.path.expanduser("~%s" % current_user) in result.output
+
 
 def test_choice_option(runner):
     @click.command()
