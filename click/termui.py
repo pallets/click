@@ -77,15 +77,17 @@ def prompt(text, default=None, hide_input=False,
     prompt = _build_prompt(text, prompt_suffix, show_default, default)
 
     while 1:
-        while 1:
-            value = prompt_func(prompt)
-            if value:
-                break
-            # If a default is set and used, then the confirmation
-            # prompt is always skipped because that's the only thing
-            # that really makes sense.
-            elif default is not None:
-                return default
+        value = prompt_func(prompt)
+        if value:
+            break
+        # If a default is set and used, then the confirmation
+        # prompt is always skipped because that's the only thing
+        # that really makes sense.
+        elif default is not None:
+            return default
+        else:
+            return ''
+
         try:
             result = value_proc(value)
         except UsageError as e:
