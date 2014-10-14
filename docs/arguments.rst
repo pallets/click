@@ -216,7 +216,7 @@ where the first one is picked.
 Generally, this feature is not recommended because it can cause the user
 a lot of confusion.
 
-Argument-Like Options
+Option-Like Arguments
 ---------------------
 
 Sometimes, you want to process arguments that look like options.  For
