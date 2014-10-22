@@ -48,3 +48,37 @@ def test_basic_functionality(runner):
         'Options:',
         '  --help  Show this message and exit.',
     ]
+
+
+def test_wrapping_long_options_strings(runner):
+    @click.group()
+    def cli():
+        """Top level command
+        """
+
+    @cli.group()
+    def a_very_long():
+        """Second level
+        """
+
+    @a_very_long.command()
+    @click.argument('first')
+    @click.argument('second')
+    @click.argument('third')
+    @click.argument('fourth')
+    def command():
+        """A command.
+        """
+
+    result = runner.invoke(cli, ['a_very_long', 'command', '--help'],
+                           terminal_width=54)
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'Usage: cli a_very_long command [OPTIONS] FIRST SECOND',
+        '                               THIRD FOURTH',
+        '',
+        '  A command.',
+        '',
+        'Options:',
+        '  --help  Show this message and exit.',
+    ]
