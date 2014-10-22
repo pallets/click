@@ -66,16 +66,21 @@ def test_wrapping_long_options_strings(runner):
     @click.argument('second')
     @click.argument('third')
     @click.argument('fourth')
+    @click.argument('fifth')
+    @click.argument('sixth')
     def command():
         """A command.
         """
 
+    # 54 is chosen as a lenthg where the second line is one character
+    # longer than the maximum length.
     result = runner.invoke(cli, ['a_very_long', 'command', '--help'],
                            terminal_width=54)
     assert not result.exception
     assert result.output.splitlines() == [
         'Usage: cli a_very_long command [OPTIONS] FIRST SECOND',
-        '                               THIRD FOURTH',
+        '                               THIRD FOURTH FIFTH',
+        '                               SIXTH',
         '',
         '  A command.',
         '',

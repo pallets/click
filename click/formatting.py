@@ -46,11 +46,13 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
     """
     from ._textwrap import TextWrapper
     text = text.expandtabs()
+    post_wrap_indent = subsequent_indent[:-1]
+    subsequent_indent = subsequent_indent[-1:]
     wrapper = TextWrapper(width, initial_indent=initial_indent,
-                          subsequent_indent='',
+                          subsequent_indent=subsequent_indent,
                           replace_whitespace=False)
     if not preserve_paragraphs:
-        return add_subsequent_indent(wrapper.fill(text), subsequent_indent)
+        return add_subsequent_indent(wrapper.fill(text), post_wrap_indent)
 
     p = []
     buf = []
@@ -82,10 +84,10 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
         with wrapper.extra_indent(' ' * indent):
             if raw:
                 rv.append(add_subsequent_indent(wrapper.indent_only(text),
-                                                subsequent_indent))
+                                                post_wrap_indent))
             else:
                 rv.append(add_subsequent_indent(wrapper.fill(text),
-                                                subsequent_indent))
+                                                post_wrap_indent))
 
     return '\n\n'.join(rv)
 
