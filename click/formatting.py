@@ -18,6 +18,12 @@ def iter_rows(rows, col_count):
         yield row + ('',) * (col_count - len(row))
 
 
+def add_subsequent_indent(text, subsequent_indent):
+    lines = text.splitlines()
+    lines = [lines[0]] + [subsequent_indent + line for line in lines[1:]]
+    return '\n'.join(lines)
+
+
 def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
               preserve_paragraphs=False):
     """A helper function that intelligently wraps text.  By default, it
@@ -41,10 +47,10 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
     from ._textwrap import TextWrapper
     text = text.expandtabs()
     wrapper = TextWrapper(width, initial_indent=initial_indent,
-                          subsequent_indent=subsequent_indent,
+                          subsequent_indent='',
                           replace_whitespace=False)
     if not preserve_paragraphs:
-        return wrapper.fill(text)
+        return add_subsequent_indent(wrapper.fill(text), subsequent_indent)
 
     p = []
     buf = []
@@ -75,9 +81,11 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
     for indent, raw, text in p:
         with wrapper.extra_indent(' ' * indent):
             if raw:
-                rv.append(wrapper.indent_only(text))
+                rv.append(add_subsequent_indent(wrapper.indent_only(text),
+                                                subsequent_indent))
             else:
-                rv.append(wrapper.fill(text))
+                rv.append(add_subsequent_indent(wrapper.fill(text),
+                                                subsequent_indent))
 
     return '\n\n'.join(rv)
 
