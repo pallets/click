@@ -18,9 +18,9 @@ Python 3 Limitations
 
 At the moment, Click suffers from a few problems with Python 3:
 
-*   The command line in Unix traditionally is in bytes, and not Unicode.
-    While there are encoding hints for all of this, there are generally
-    some situations where this can break.  The most common one is SSH
+*   The command line in Unix traditionally is in bytes, not Unicode.  While
+    there are encoding hints for all of this, there are generally some
+    situations where this can break.  The most common one is SSH
     connections to machines with different locales.
 
     Misconfigured environments can currently cause a wide range of Unicode
@@ -56,7 +56,7 @@ Python 2 and 3 Differences
 --------------------------
 
 Click attempts to minimize the differences between Python 2 and Python 3
-by following the best practices for both languages.
+by following best practices for both languages.
 
 In Python 2, the following is true:
 
@@ -81,7 +81,7 @@ In Python 3, the following is true:
 *   ``sys.argv`` is always Unicode-based.  This also means that the native
     type for input values to the types in Click is Unicode, and not bytes.
 
-    This causes problems when the terminal is incorrectly set and Python
+    This causes problems if the terminal is incorrectly set and Python
     does not figure out the encoding.  In that case, the Unicode string
     will contain error bytes encoded as surrogate escapes.
 *   When dealing with files, Click will always use the Unicode file system
@@ -100,9 +100,9 @@ and is subject to its behavior.  In Python 2, Click does all the Unicode
 handling itself, which means there are differences in error behavior.
 
 The most glaring difference is that in Python 2, Unicode will "just work",
-while in Python 3, it requires extra care.  The reason for this is that on
-Python 3, the encoding detection is done in the interpreter and on Linux
-and certain other operating systems its encoding handling is problematic.
+while in Python 3, it requires extra care.  The reason for this is that in
+Python 3, the encoding detection is done in the interpreter, and on Linux
+and certain other operating systems, its encoding handling is problematic.
 
 The biggest source of frustration is that Click scripts invoked by
 init systems (sysvinit, upstart, systemd, etc.), deployment tools (salt,
@@ -120,7 +120,7 @@ If you see something like this error in Python 3::
       ...
     RuntimeError: Click will abort further execution because Python 3 was
       configured to use ASCII as encoding for the environment. Either switch
-      to Python 2 or consult for http://click.pocoo.org/python3/
+      to Python 2 or consult http://click.pocoo.org/python3/ for
       mitigation steps.
 
 You are dealing with an environment where Python 3 thinks you are
