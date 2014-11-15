@@ -116,7 +116,7 @@ class StringParamType(ParamType):
 
 
 class Choice(ParamType):
-    """The choice type allows a value to checked against a fixed set of
+    """The choice type allows a value to be checked against a fixed set of
     supported values.  All of these values have to be strings.
 
     See :ref:`choice-opts` for an example.
@@ -329,7 +329,7 @@ class File(ParamType):
 
 class Path(ParamType):
     """The path type is similar to the :class:`File` type but it performs
-    different checks.  First of all, instead of returning a open file
+    different checks.  First of all, instead of returning an open file
     handle it returns just the filename.  Secondly, it can perform various
     basic checks about what the file or directory should be.
 
