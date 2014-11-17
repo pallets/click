@@ -115,6 +115,21 @@ def test_multiple_envvar(runner):
     assert result.output == 'foo|bar\n'
 
 
+def test_multiple_default_help(runner):
+    @click.command()
+    @click.option("--arg1", multiple=True, default=('foo', 'bar'),
+                  show_default=True)
+    @click.option("--arg2", multiple=True, default=(1, 2), type=int,
+                  show_default=True)
+    def cmd(arg, arg2):
+        pass
+
+    result = runner.invoke(cmd, ['--help'])
+    assert not result.exception
+    assert "foo, bar" in result.output
+    assert "1, 2" in result.output
+
+
 def test_nargs_envvar(runner):
     @click.command()
     @click.option('--arg', nargs=2)
