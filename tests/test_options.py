@@ -114,6 +114,15 @@ def test_nargs_star(runner):
         '9|10'
     ]
 
+    result = runner.invoke(vary, ['--foo', '1', '2', '3', '--bar', '4', '5', '--option', '-file', '10', '--', '6', '7'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        '6|7',
+        '1|2|3',
+        '4|5',
+        '-file|10'
+    ]
+
 
 def test_multiple_envvar(runner):
     @click.command()

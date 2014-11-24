@@ -277,7 +277,8 @@ class OptionParser(object):
             if nargs == -1:
                 dash_locs = filter(lambda pair: pair[1].startswith('-'), enumerate(state.rargs))
                 if len(dash_locs) > 0:
-                    nvar = min([x[0] for x in filter(lambda pair: pair[1].startswith('-'), enumerate(state.rargs))])
+                    func = lambda p: (p[1].startswith('-') and len(p[1]) == 2) or p[1].startswith('--')
+                    nvar = min([x[0] for x in filter(func, enumerate(state.rargs))])
                     value = tuple(state.rargs[:nvar])
                     del state.rargs[:nvar]
                 elif len(state.rargs) == 1:
