@@ -84,6 +84,37 @@ def test_multiple_required(runner):
     assert 'Error: Missing option "-m" / "--message".' in result.output
 
 
+def test_nargs_star(runner):
+    @click.command()
+    @click.option('--option', nargs=-1)
+    @click.option('--foo', nargs=-1)
+    @click.option('--bar', nargs=-1)
+    @click.argument('args', nargs=-1)
+    def vary(args, foo, bar, option):
+        click.echo('|'.join(args))
+        click.echo('|'.join(foo))
+        click.echo('|'.join(bar))
+        click.echo('|'.join(option))
+
+    result = runner.invoke(vary, ['6', '7', '--foo', '1', '2', '3', '--bar', '4', '5', '--option', '9', '10'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        '6|7',
+        '1|2|3',
+        '4|5',
+        '9|10'
+    ]
+
+    result = runner.invoke(vary, ['--foo', '1', '2', '3', '--bar', '4', '5', '--option', '9', '10', '--', '6', '7'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        '6|7',
+        '1|2|3',
+        '4|5',
+        '9|10'
+    ]
+
+
 def test_multiple_envvar(runner):
     @click.command()
     @click.option('--arg', multiple=True)
