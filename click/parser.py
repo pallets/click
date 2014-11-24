@@ -275,14 +275,10 @@ class OptionParser(object):
 
             nargs = option.nargs
             if nargs == -1:
-                is_dash = lambda v: (v.startswith('-') and len(v) == 2) or v.startswith('--')
-                dash_locs = [idx for (idx, v) in enumerate(state.rargs) if is_dash(v)]
-                if len(dash_locs) > 0:
-                    nvar = min(dash_locs)
-                    value = tuple(state.rargs[:nvar])
-                    del state.rargs[:nvar]
-                elif len(state.rargs) == 1:
-                    value = state.rargs.pop(0)
+                end = self._next_flag(state)
+                if end >= 0:
+                    value = tuple(state.rargs[:end])
+                    del state.rargs[:end]
                 else:
                     value = tuple(state.rargs)
                     state.rargs = []
@@ -301,6 +297,13 @@ class OptionParser(object):
             value = None
 
         option.process(value, state)
+
+    def _next_flag(self, state):
+        is_flag = lambda v: (v.startswith('-') and len(v) == 2) or v.startswith('--')
+        flags = [idx for (idx, v) in enumerate(state.rargs) if is_flag(v)]
+        if len(flags) == 0:
+            return -1
+        return min(flags)
 
     def _match_short_opt(self, arg, state):
         stop = False
