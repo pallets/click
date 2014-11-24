@@ -274,7 +274,19 @@ class OptionParser(object):
                 state.rargs.insert(0, explicit_value)
 
             nargs = option.nargs
-            if len(state.rargs) < nargs:
+            if nargs == -1:
+                dash_locs = filter(lambda pair: pair[1].startswith('-'), enumerate(state.rargs))
+                if len(dash_locs) > 0:
+                    func = lambda p: (p[1].startswith('-') and len(p[1]) == 2) or p[1].startswith('--')
+                    nvar = min([x[0] for x in filter(func, enumerate(state.rargs))])
+                    value = tuple(state.rargs[:nvar])
+                    del state.rargs[:nvar]
+                elif len(state.rargs) == 1:
+                    value = state.rargs.pop(0)
+                else:
+                    value = tuple(state.rargs)
+                    state.rargs = []
+            elif len(state.rargs) < nargs:
                 _error_args(nargs, opt)
             elif nargs == 1:
                 value = state.rargs.pop(0)
