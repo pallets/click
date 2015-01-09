@@ -46,6 +46,9 @@ from .formatting import HelpFormatter, wrap_text
 # Parsing
 from .parser import OptionParser
 
+# Simple-Log-Feature
+from .simplelog import simplelog
+
 
 __all__ = [
     # Core classes
