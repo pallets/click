@@ -16,7 +16,7 @@ def test_simplelog_defaults_option(runner):
     @click.option("--test")
     def cli(verbose, quiet, debug, test):
 
-        print test
+        print(test)
 
         logging.critical("CRITICAL")
         logging.error("ERROR")
@@ -38,7 +38,7 @@ def test_simplelog_defaults_option_remove_args(runner):
     @click.option("--test")
     def cli(test):
 
-        print test
+        print(test)
 
         logging.critical("CRITICAL")
         logging.error("ERROR")
