@@ -29,7 +29,7 @@ def tool_resetlog():
         import io
         log_stream = io.StringIO()
 
-    handler = logging.StreamHandler(stream=log_stream)
+    handler = logging.StreamHandler(log_stream)
 
     root.addHandler(handler)
 
