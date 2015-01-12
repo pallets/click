@@ -1,8 +1,16 @@
-import StringIO
+import sys
+
+if sys.version < '3':
+
+    import StringIO
+
+else:
+
+    from io import StringIO
+
 import re
 import click
 import logging
-from click import simplelog
 
 
 log_stream = StringIO.StringIO()
