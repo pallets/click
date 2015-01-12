@@ -1,4 +1,4 @@
-from core import Option
+from .core import Option
 import logging
 
 
