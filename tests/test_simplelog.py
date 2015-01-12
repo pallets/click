@@ -1,20 +1,37 @@
 import sys
 
-if sys.version < '3':
-
-    import StringIO
-
-else:
-
-    from io import StringIO
-
 import re
 import click
 import logging
 
+log_stream = None
 
-log_stream = StringIO.StringIO()
-logging.basicConfig(stream=log_stream)
+
+def tool_resetlog():
+
+    global log_stream
+
+    logging.basicConfig()
+
+    root = logging.getLogger()
+
+    for handler in root.handlers:
+
+        root.removeHandler(handler)
+
+    if sys.version < '3':
+
+        import StringIO
+        log_stream = StringIO.StringIO()
+
+    else:
+
+        import io
+        log_stream = io.StringIO()
+
+    handler = logging.StreamHandler(stream=log_stream)
+
+    root.addHandler(handler)
 
 
 def test_simplelog_defaults_option(runner):
@@ -31,12 +48,12 @@ def test_simplelog_defaults_option(runner):
         logging.info("INFO")
         logging.debug("DEBUG")
 
-    log_stream.truncate(0)
+    tool_resetlog()
 
     result = runner.invoke(cli, ["--test=test"])
 
     assert result.output == "test\n"
-    assert log_stream.getvalue() == "CRITICAL:root:CRITICAL\nERROR:root:ERROR\n"
+    assert log_stream.getvalue() == "CRITICAL\nERROR\n"
 
 
 def test_simplelog_defaults_option_remove_args(runner):
@@ -53,12 +70,12 @@ def test_simplelog_defaults_option_remove_args(runner):
         logging.info("INFO")
         logging.debug("DEBUG")
 
-    log_stream.truncate(0)
+    tool_resetlog()
 
     result = runner.invoke(cli, ["--test=test"])
 
     assert result.output == "test\n"
-    assert log_stream.getvalue() == "CRITICAL:root:CRITICAL\nERROR:root:ERROR\n"
+    assert log_stream.getvalue() == "CRITICAL\nERROR\n"
 
 
 def tool_run_cli(runner, simplelog_opts={}, cli_args=None):
@@ -72,7 +89,7 @@ def tool_run_cli(runner, simplelog_opts={}, cli_args=None):
         logging.info("INFO")
         logging.debug("DEBUG")
 
-    log_stream.truncate(0)
+    tool_resetlog()
 
     return runner.invoke(cli, cli_args)
 
@@ -81,7 +98,7 @@ def test_simplelog_defaults(runner):
 
     tool_run_cli(runner)
 
-    assert log_stream.getvalue() == "CRITICAL:root:CRITICAL\nERROR:root:ERROR\n"
+    assert log_stream.getvalue() == "CRITICAL\nERROR\n"
 
 
 def test_simplelog_defaults_help(runner):
@@ -101,31 +118,28 @@ def test_simplelog_quiet(runner):
 
     tool_run_cli(runner, cli_args=["--quiet"])
 
-    assert log_stream.getvalue() == "CRITICAL:root:CRITICAL\n"
+    assert log_stream.getvalue() == "CRITICAL\n"
 
 
 def test_simplelog_verbose(runner):
 
     tool_run_cli(runner, cli_args=["--verbose"])
 
-    assert log_stream.getvalue() == \
-        "CRITICAL:root:CRITICAL\nERROR:root:ERROR\nINFO:root:INFO\n"
+    assert log_stream.getvalue() == "CRITICAL\nERROR\nINFO\n"
 
 
 def test_simplelog_debug(runner):
 
     tool_run_cli(runner, cli_args=["--debug"])
 
-    assert log_stream.getvalue() == \
-        "CRITICAL:root:CRITICAL\nERROR:root:ERROR\n" \
-        "INFO:root:INFO\nDEBUG:root:DEBUG\n"
+    assert log_stream.getvalue() == "CRITICAL\nERROR\nINFO\nDEBUG\n"
 
 
 def test_simplelog_vvvflavor_quiet(runner):
 
     tool_run_cli(runner, simplelog_opts={"flavor": "vvv"})
 
-    assert log_stream.getvalue() == "CRITICAL:root:CRITICAL\n"
+    assert log_stream.getvalue() == "CRITICAL\n"
 
 
 def test_simplelog_vvvflavor_defaults(runner):
@@ -136,7 +150,7 @@ def test_simplelog_vvvflavor_defaults(runner):
         cli_args=["-v"]
     )
 
-    assert log_stream.getvalue() == "CRITICAL:root:CRITICAL\nERROR:root:ERROR\n"
+    assert log_stream.getvalue() == "CRITICAL\nERROR\n"
 
 
 def test_simplelog_vvvflavor_verbose(runner):
@@ -147,8 +161,7 @@ def test_simplelog_vvvflavor_verbose(runner):
         cli_args=["-vv"]
     )
 
-    assert log_stream.getvalue() == \
-        "CRITICAL:root:CRITICAL\nERROR:root:ERROR\nINFO:root:INFO\n"
+    assert log_stream.getvalue() == "CRITICAL\nERROR\nINFO\n"
 
 
 def test_simplelog_vvvflavor_debug(runner):
@@ -159,9 +172,7 @@ def test_simplelog_vvvflavor_debug(runner):
         cli_args=["-vvv"]
     )
 
-    assert log_stream.getvalue() == \
-        "CRITICAL:root:CRITICAL\nERROR:root:ERROR\n" \
-        "INFO:root:INFO\nDEBUG:root:DEBUG\n"
+    assert log_stream.getvalue() == "CRITICAL\nERROR\nINFO\nDEBUG\n"
 
 
 def test_simplelog_invalidflavor(runner):
