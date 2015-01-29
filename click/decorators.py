@@ -136,12 +136,16 @@ def _param_memo(f, param):
 def argument(*param_decls, **attrs):
     """Attaches an argument to the command.  All positional arguments are
     passed as parameter declarations to :class:`Argument`; all keyword
-    arguments are forwarded unchanged.  This is equivalent to creating an
-    :class:`Argument` instance manually and attaching it to the
-    :attr:`Command.params` list.
+    arguments are forwarded unchanged (except ``cls``).
+    This is equivalent to creating an :class:`Argument` instance manually
+    and attaching it to the :attr:`Command.params` list.
+
+    :param cls: a custom :class:`Argument` subclass that can be instatiated
+                instead of a default one.
     """
     def decorator(f):
-        _param_memo(f, Argument(param_decls, **attrs))
+        ArgumentClass = attrs.pop('cls', Argument)
+        _param_memo(f, ArgumentClass(param_decls, **attrs))
         return f
     return decorator
 
@@ -149,14 +153,18 @@ def argument(*param_decls, **attrs):
 def option(*param_decls, **attrs):
     """Attaches an option to the command.  All positional arguments are
     passed as parameter declarations to :class:`Option`; all keyword
-    arguments are forwarded unchanged.  This is equivalent to creating an
-    :class:`Option` instance manually and attaching it to the
-    :attr:`Command.params` list.
+    arguments are forwarded unchanged (except ``cls``).
+    This is equivalent to creating an :class:`Option` instance manually
+    and attaching it to the :attr:`Command.params` list.
+
+    :param cls: a custom :class:`Option` subclass that can be instatiated
+                instead of a default one.
     """
     def decorator(f):
         if 'help' in attrs:
             attrs['help'] = inspect.cleandoc(attrs['help'])
-        _param_memo(f, Option(param_decls, **attrs))
+        OptionClass = attrs.pop('cls', Option)
+        _param_memo(f, OptionClass(param_decls, **attrs))
         return f
     return decorator
 
