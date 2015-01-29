@@ -222,7 +222,7 @@ def test_multiline_help(runner):
 def test_argument_custom_class(runner):
     class CustomArgument(click.Argument):
         def get_default(self, ctx):
-            '''a dumb ovverride of a default value for testing'''
+            '''a dumb override of a default value for testing'''
             return 'I am a default'
 
     @click.command()
@@ -238,7 +238,7 @@ def test_argument_custom_class(runner):
 def test_option_custom_class(runner):
     class CustomOption(click.Option):
         def get_help_record(self, ctx):
-            '''a dumb ovverride of a help text for testing'''
+            '''a dumb override of a help text for testing'''
             return ('--help', 'I am a help text')
 
     @click.command()
