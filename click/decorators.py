@@ -140,8 +140,8 @@ def argument(*param_decls, **attrs):
     This is equivalent to creating an :class:`Argument` instance manually
     and attaching it to the :attr:`Command.params` list.
 
-    :param cls: a custom :class:`Argument` subclass that can be instatiated
-                instead of a default one.
+    :param cls: the argument class to instantiate.  This defaults to
+                :class:`Argument`.
     """
     def decorator(f):
         ArgumentClass = attrs.pop('cls', Argument)
@@ -157,8 +157,8 @@ def option(*param_decls, **attrs):
     This is equivalent to creating an :class:`Option` instance manually
     and attaching it to the :attr:`Command.params` list.
 
-    :param cls: a custom :class:`Option` subclass that can be instatiated
-                instead of a default one.
+    :param cls: the option class to instantiate.  This defaults to
+                :class:`Option`.
     """
     def decorator(f):
         if 'help' in attrs:
