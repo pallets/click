@@ -133,7 +133,7 @@ by exporting the locale to ``de_DE.utf-8``::
     export LC_ALL=de_DE.utf-8
     export LANG=de_DE.utf-8
 
-If you are on a US machine, ``en_EN.utf-8`` is the encoding of choice.  On
+If you are on a US machine, ``en_US.utf-8`` is the encoding of choice.  On
 some newer Linux systems, you could also try ``C.UTF-8`` as the locale::
 
     export LC_ALL=C.UTF-8
