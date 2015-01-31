@@ -24,6 +24,7 @@ Version 4.0
 - Added support for writing prompts to stderr.
 - Fix a bug when showing the default for multiple arguments.
 - Added support for custom subclasses to `option` and `argument`.
+- Fix bug in ``clear()`` on Windows when colorama is installed.
 
 Version 3.3
 -----------
