@@ -137,7 +137,7 @@ in the correct way, so the function will either be called with ``f(ctx,
 obj)`` or ``f(obj)`` depending on whether or not it itself is decorated with
 :func:`with_context`.
 
-This is a very powerful context that can be used to build very complex
+This is a very powerful concept that can be used to build very complex
 nested applications; see :ref:`complex-guide` for more information.
 
 
