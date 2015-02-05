@@ -6,7 +6,7 @@ setup(
     py_modules=['imagepipe'],
     include_package_data=True,
     install_requires=[
-        'Click',
+        'click',
         'pillow',
     ],
     entry_points='''

@@ -6,7 +6,7 @@ setup(
     py_modules=['colors'],
     include_package_data=True,
     install_requires=[
-        'Click',
+        'click',
         # Colorama is only required for Windows.
         'colorama',
     ],

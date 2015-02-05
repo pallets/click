@@ -6,7 +6,7 @@ setup(
     py_modules=['inout'],
     include_package_data=True,
     install_requires=[
-        'Click',
+        'click',
     ],
     entry_points='''
         [console_scripts]
