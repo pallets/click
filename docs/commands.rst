@@ -135,7 +135,7 @@ For instance, the :func:`pass_obj` decorator can be implemented like this:
 The :meth:`Context.invoke` command will automatically invoke the function
 in the correct way, so the function will either be called with ``f(ctx,
 obj)`` or ``f(obj)`` depending on whether or not it itself is decorated with
-:func:`with_context`.
+:func:`pass_context`.
 
 This is a very powerful context that can be used to build very complex
 nested applications; see :ref:`complex-guide` for more information.
