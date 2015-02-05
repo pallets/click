@@ -22,6 +22,9 @@ Version 4.0
   change the maximum width of help output.  By default Click will not format
   content for more than 80 characters width.
 - Added support for writing prompts to stderr.
+- Fix a bug when showing the default for multiple arguments.
+- Added support for custom subclasses to `option` and `argument`.
+- Fix bug in ``clear()`` on Windows when colorama is installed.
 
 Version 3.3
 -----------
