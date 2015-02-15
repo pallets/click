@@ -301,6 +301,10 @@ Sometimes, you want a parameter to completely change the execution flow.
 For instance, this is the case when you want to have a ``--version``
 parameter that prints out the version and then exits the application.
 
+Note: an actual implementation of a ``--version`` parameter that is
+reusable is available in Click as :func:`click.version_option`.  The code
+here is merely an example of how to implement such a flag.
+
 In such cases, you need two concepts: eager parameters and a callback.  An
 eager parameter is a parameter that is handled before others, and a
 callback is what executes after the parameter is handled.  The eagerness
