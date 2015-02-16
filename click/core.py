@@ -113,9 +113,9 @@ class Context(object):
 
     :param command: the command class for this context.
     :param parent: the parent context.
-    :param info_name: the info name for this invokation.  Generally this
+    :param info_name: the info name for this invocation.  Generally this
                       is the most descriptive name for the script or
-                      command.  For the toplevel script is is usually
+                      command.  For the toplevel script it is usually
                       the name of the script, for commands below it it's
                       the name of the script.
     :param obj: an arbitrary object of user data.
@@ -136,7 +136,7 @@ class Context(object):
                               not overridden.  In other words: even if the
                               terminal is larger than that, Click will not
                               format things wider than 80 characters by
-                              default.  In addition to that, formatteres might
+                              default.  In addition to that, formatters might
                               add some safety mapping on the right.
     :param resilient_parsing: if this flag is enabled then Click will
                               parse without any interactivity or callback
