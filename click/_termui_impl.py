@@ -349,7 +349,7 @@ class Editor(object):
         if WIN:
             return 'notepad'
         for editor in 'vim', 'nano':
-            if os.system('which %s &> /dev/null' % editor) == 0:
+            if os.system('which %s >/dev/null 2>&1' % editor) == 0:
                 return editor
         return 'vi'
 
