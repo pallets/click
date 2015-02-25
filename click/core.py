@@ -742,7 +742,7 @@ class Command(BaseCommand):
     def get_help_option(self, ctx):
         """Returns the help option object."""
         help_options = self.get_help_option_names(ctx)
-        if not help_options:
+        if not help_options or not self.add_help_option:
             return
 
         def show_help(ctx, param, value):
