@@ -6,7 +6,7 @@ from .core import MultiCommand, Option
 
 COMPLETION_SCRIPT = '''
 %(complete_func)s() {
-    COMPREPLY=( $( COMP_WORDS="${COMP_WORDS[*]}" \\
+    COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \\
                    COMP_CWORD=$COMP_CWORD \\
                    %(autocomplete_var)s=complete $1 ) )
     return 0
