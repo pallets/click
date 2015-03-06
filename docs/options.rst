@@ -479,7 +479,7 @@ Example usage:
 .. click:example::
 
     @click.command()
-    @click.option('paths', '--path', envvar='PATHS', multiple=True,
+    @click.option('paths', '--path', envvar='PATH', multiple=True,
                   type=click.Path())
     def perform(paths):
         for path in paths:
