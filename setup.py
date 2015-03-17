@@ -25,4 +25,7 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
     ],
+    extras_require={
+        ':sys_platform == "win32"': ['colorama'],
+    },
 )
