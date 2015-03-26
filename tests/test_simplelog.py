@@ -4,6 +4,24 @@ import click
 import logging
 
 
+# Set up logger for tests
+
+
+class ClickStream(object):
+
+    """ Logger Stream handler, which uses click.echo - Thanks to @unittaker
+    """
+
+    def write(self, string):
+        click.echo(string, file=sys.stdout, nl=False)
+
+stdout_handler = logging.StreamHandler(ClickStream())
+formatter = logging.Formatter()
+stdout_handler.setFormatter(formatter)
+root_logger = logging.getLogger()
+root_logger.handlers = [stdout_handler]
+
+
 def test_simplelog_defaults_option(runner):
 
     @click.command()
@@ -17,8 +35,6 @@ def test_simplelog_defaults_option(runner):
         logging.error("ERROR")
         logging.info("INFO")
         logging.debug("DEBUG")
-
-    logging.basicConfig(format="%(message)s", stream=sys.stdout)
 
     result = runner.invoke(cli, ["--test=test"])
 
@@ -39,8 +55,6 @@ def test_simplelog_defaults_option_remove_args(runner):
         logging.info("INFO")
         logging.debug("DEBUG")
 
-    logging.basicConfig(format="%(message)s", stream=sys.stdout)
-
     result = runner.invoke(cli, ["--test=test"])
 
     assert result.output == "test\nCRITICAL\nERROR\n"
@@ -56,8 +70,6 @@ def tool_run_cli(runner, simplelog_opts={}, cli_args=None):
         logging.error("ERROR")
         logging.info("INFO")
         logging.debug("DEBUG")
-
-    logging.basicConfig(format="%(message)s", stream=sys.stdout)
 
     return runner.invoke(cli, cli_args)
 

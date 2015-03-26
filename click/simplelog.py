@@ -16,7 +16,7 @@ def simplelog(*args, **kwargs):
     return make_simplelog
 
 
-class SimpleLog:
+class SimpleLog(object):
 
     __name__ = "SimpleLog"
 
