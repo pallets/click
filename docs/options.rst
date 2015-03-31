@@ -118,7 +118,7 @@ Example:
     @click.command()
     @click.option('--shout/--no-shout', default=False)
     def info(shout):
-        rv = os.uname()[0]
+        rv = sys.platform
         if shout:
             rv = rv.upper() + '!!!!111'
         click.echo(rv)
@@ -140,7 +140,7 @@ manually inform Click that something is a flag:
     @click.command()
     @click.option('--shout', is_flag=True)
     def info(shout):
-        rv = os.uname()[0]
+        rv = sys.platform
         if shout:
             rv = rv.upper() + '!!!!111'
         click.echo(rv)
@@ -185,7 +185,7 @@ the default.
                   default=True)
     @click.option('--lower', 'transformation', flag_value='lower')
     def info(transformation):
-        click.echo(getattr(os.uname()[0], transformation)())
+        click.echo(getattr(sys.platform, transformation)())
 
 And on the command line:
 
