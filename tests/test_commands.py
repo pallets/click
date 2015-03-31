@@ -19,23 +19,6 @@ def test_other_command_invoke(runner):
     assert result.output == '42\n'
 
 
-def test_other_command_invoke_invalid_custom_error(runner):
-    @click.command()
-    @click.pass_context
-    def cli(ctx):
-        return ctx.invoke(other_cmd, 42)
-
-    @click.command()
-    @click.argument('arg', type=click.INT)
-    def other_cmd(arg):
-        click.echo(arg)
-
-    result = runner.invoke(cli, [])
-    assert isinstance(result.exception, RuntimeError)
-    assert 'upgrading-to-3.2' in str(result.exception)
-    assert click.__version__ < '5.0'
-
-
 def test_other_command_forward(runner):
     cli = click.Group()
 

@@ -103,37 +103,6 @@ def test_chaining_with_arguments(runner):
     ]
 
 
-def test_context_subcommand_info_sync(recwarn):
-    @click.command()
-    def cli():
-        pass
-
-    def _assert_warning():
-        assert 'removed in Click 3.2' in str(recwarn.pop(Warning).message)
-
-    ctx = click.Context(cli, info_name='cli')
-
-    assert ctx.invoked_subcommand is None
-
-    ctx.invoked_subcommand = 'foo'
-    assert ctx.invoked_subcommand == 'foo'
-    assert ctx.invoked_subcommands == ['foo']
-
-    ctx.invoked_subcommands = ['foo']
-    assert ctx.invoked_subcommand == 'foo'
-    assert ctx.invoked_subcommands == ['foo']
-
-    ctx.invoked_subcommands = []
-    assert ctx.invoked_subcommand is None
-    assert ctx.invoked_subcommands == []
-
-    ctx.invoked_subcommands = ['foo', 'bar']
-    assert ctx.invoked_subcommand == '*'
-    assert ctx.invoked_subcommands == ['*']
-
-    assert 'removed in Click 3.2' in str(recwarn.pop(Warning).message)
-
-
 def test_pipeline(runner):
     @click.group(chain=True, invoke_without_command=True)
     @click.option('-i', '--input', type=click.File('r'))

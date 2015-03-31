@@ -298,25 +298,6 @@ class Context(object):
         if self._depth == 0:
             self.close()
 
-    def _get_invoked_subcommands(self):
-        from warnings import warn
-        warn(Warning('This API does not work properly and has been largely '
-                     'removed in Click 3.2 to fix a regression the '
-                     'introduction of this API caused.  Consult the '
-                     'upgrade documentation for more information.  For '
-                     'more information about this see '
-                     'http://click.pocoo.org/upgrading/#upgrading-to-3.2'),
-             stacklevel=2)
-        if self.invoked_subcommand is None:
-            return []
-        return [self.invoked_subcommand]
-    def _set_invoked_subcommands(self, value):
-        self.invoked_subcommand = \
-            len(value) > 1 and '*' or value and value[0] or None
-    invoked_subcommands = property(_get_invoked_subcommands,
-                                   _set_invoked_subcommands)
-    del _get_invoked_subcommands, _set_invoked_subcommands
-
     def make_formatter(self):
         """Creates the formatter for the help and usage output."""
         return HelpFormatter(width=self.terminal_width,
@@ -434,11 +415,6 @@ class Context(object):
         self, callback = args[:2]
         ctx = self
 
-        # This is just to improve the error message in cases where old
-        # code incorrectly invoked this method.  This will eventually be
-        # removed.
-        injected_arguments = False
-
         # It's also possible to invoke another command which might or
         # might not have a callback.  In that case we also fill
         # in defaults and make a new context for this command.
@@ -453,26 +429,13 @@ class Context(object):
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
                     kwargs[param.name] = param.get_default(ctx)
-                    injected_arguments = True
 
         args = args[2:]
         if getattr(callback, '__click_pass_context__', False):
             args = (ctx,) + args
         with augment_usage_errors(self):
-            try:
-                with ctx:
-                    return callback(*args, **kwargs)
-            except TypeError as e:
-                if not injected_arguments:
-                    raise
-                if 'got multiple values for' in str(e):
-                    raise RuntimeError(
-                        'You called .invoke() on the context with a command '
-                        'but provided parameters as positional arguments.  '
-                        'This is not supported but sometimes worked by chance '
-                        'in older versions of Click.  To fix this see '
-                        'http://click.pocoo.org/upgrading/#upgrading-to-3.2')
-                raise
+            with ctx:
+                return callback(*args, **kwargs)
 
     def forward(*args, **kwargs):
         """Similar to :meth:`invoke` but fills in default keyword
