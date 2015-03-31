@@ -34,6 +34,18 @@ def test_invalid_option(runner):
         assert False, 'Expected a type error because of an invalid option.'
 
 
+def test_invalid_nargs(runner):
+    try:
+        @click.command()
+        @click.option('--foo', nargs=-1)
+        def cli(foo):
+            pass
+    except TypeError as e:
+        assert 'Options cannot have nargs < 0' in str(e)
+    else:
+        assert False, 'Expected a type error because of an invalid option.'
+
+
 def test_counting(runner):
     @click.command()
     @click.option('-v', count=True, help='Verbosity',

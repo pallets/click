@@ -1405,6 +1405,8 @@ class Option(Parameter):
 
         # Sanity check for stuff we don't support
         if __debug__:
+            if self.nargs < 0:
+                raise TypeError('Options cannot have nargs < 0')
             if self.prompt and self.is_flag and not self.is_bool_flag:
                 raise TypeError('Cannot prompt for flags that are not bools.')
             if not self.is_bool_flag and self.secondary_opts:

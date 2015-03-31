@@ -25,6 +25,7 @@ Version 4.0
 - Fix a bug when showing the default for multiple arguments.
 - Added support for custom subclasses to `option` and `argument`.
 - Fix bug in ``clear()`` on Windows when colorama is installed.
+- Reject ``nargs=-1`` for options properly.  Options cannot be variadic.
 
 Version 3.3
 -----------

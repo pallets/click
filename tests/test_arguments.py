@@ -106,7 +106,7 @@ def test_stdout_default(runner):
 
 def test_nargs_envvar(runner):
     @click.command()
-    @click.option('--arg', nargs=-1)
+    @click.option('--arg', nargs=2)
     def cmd(arg):
         click.echo('|'.join(arg))
 
@@ -116,7 +116,7 @@ def test_nargs_envvar(runner):
     assert result.output == 'foo|bar\n'
 
     @click.command()
-    @click.option('--arg', envvar='X', nargs=-1)
+    @click.option('--arg', envvar='X', nargs=2)
     def cmd(arg):
         click.echo('|'.join(arg))
 
