@@ -3,8 +3,7 @@ import sys
 import struct
 
 from ._compat import raw_input, text_type, string_types, \
-     colorama, isatty, strip_ansi, get_winterm_size, \
-     DEFAULT_COLUMNS, WIN
+     isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type
@@ -232,10 +231,21 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
             for item in bar:
                 do_something_with(item)
 
+    Alternatively, if no iterable is specified, one can manually update the
+    progress bar through the `update()` method instead of directly
+    iterating over the progress bar.  The update method accepts the number
+    of steps to increment the bar with::
+
+        with progressbar(length=chunks.total_bytes) as bar:
+            for chunk in chunks:
+                process_chunk(chunk)
+                bar.update(chunks.bytes)
+
     .. versionadded:: 2.0
 
     .. versionadded:: 4.0
-       Added the `color` parameter.
+       Added the `color` parameter.  Added a `update` method to the
+       progressbar object.
 
     :param iterable: an iterable to iterate over.  If not provided the length
                      is required.

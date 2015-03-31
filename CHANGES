@@ -28,6 +28,7 @@ Version 4.0
 - Reject ``nargs=-1`` for options properly.  Options cannot be variadic.
 - Fixed an issue with bash completion not working properly for commands with
   non ASCII characters or dashes.
+- Added a way to manually update the progressbar.
 
 Version 3.3
 -----------

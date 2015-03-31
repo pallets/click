@@ -211,8 +211,8 @@ class ProgressBar(object):
         self.file.write(' ' * (clear_width - line_len))
         self.file.flush()
 
-    def make_step(self):
-        self.pos += 1
+    def make_step(self, n_steps):
+        self.pos += n_steps
         if self.length_known and self.pos >= self.length:
             self.finished = True
 
@@ -223,6 +223,10 @@ class ProgressBar(object):
         self.avg = self.avg[-6:] + [-(self.start - time.time()) / (self.pos)]
 
         self.eta_known = self.length_known
+
+    def update(self, n_steps):
+        self.make_step(n_steps)
+        self.render_progress()
 
     def finish(self):
         self.eta_known = 0
@@ -240,8 +244,7 @@ class ProgressBar(object):
             self.render_progress()
             raise StopIteration()
         else:
-            self.make_step()
-            self.render_progress()
+            self.update(1)
             return rv
 
     if not PY2:
