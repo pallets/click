@@ -108,9 +108,11 @@ contained in a Python package the changes necessary are minimal.  Let's
 assume your directory structure changed to this::
 
     yourpackage/
+        __init__.py
         main.py
         utils.py
         scripts/
+            __init__.py
             yourscript.py
 
 In this case instead of using ``py_modules`` in your ``setup.py`` file you
