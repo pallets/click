@@ -149,7 +149,7 @@ Example:
 
 .. click:example::
 
-    import os
+    import sys
 
     @click.command()
     @click.option('--shout/--no-shout', default=False)
@@ -171,7 +171,7 @@ manually inform Click that something is a flag:
 
 .. click:example::
 
-    import os
+    import sys
 
     @click.command()
     @click.option('--shout', is_flag=True)
@@ -214,7 +214,7 @@ the default.
 
 .. click:example::
 
-    import os
+    import sys
 
     @click.command()
     @click.option('--upper', 'transformation', flag_value='upper',
