@@ -36,10 +36,10 @@ def test_nargs_tup(runner):
 
 def test_nargs_tup_composite(runner):
     variations = [
-        dict(type=(unicode, int)),
-        dict(type=click.Tuple([unicode, int])),
-        dict(nargs=2, type=click.Tuple([unicode, int])),
-        dict(nargs=2, type=(unicode, int)),
+        dict(type=(str, int)),
+        dict(type=click.Tuple([str, int])),
+        dict(nargs=2, type=click.Tuple([str, int])),
+        dict(nargs=2, type=(str, int)),
     ]
 
     for opts in variations:

@@ -48,7 +48,7 @@ def test_invalid_nargs(runner):
 
 def test_nargs_tup_composite_mult(runner):
     @click.command()
-    @click.option('--item', type=(unicode, int), multiple=True)
+    @click.option('--item', type=(str, int), multiple=True)
     def copy(item):
         for item in item:
             click.echo('name=%s id=%d' % item)
