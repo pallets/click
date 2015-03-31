@@ -368,7 +368,7 @@ will be shown preceding the progress bar::
             modify_the_user(user)
 
 Sometimes, one may need to iterate over an external iterator, and advance the
-progress bar iregularly. To do so, you need to speficy the length (and no
+progress bar irregularly. To do so, you need to specify the length (and no
 iterable), and use the update method on the context return value instead of
 iterating directly over it::
 
