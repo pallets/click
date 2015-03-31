@@ -1,4 +1,5 @@
 import os
+import re
 from .utils import echo
 from .parser import split_arg_string
 from .core import MultiCommand, Option
@@ -15,10 +16,13 @@ COMPLETION_SCRIPT = '''
 complete -F %(complete_func)s -o default %(script_names)s
 '''
 
+_invalid_ident_char_re = re.compile(r'[^a-zA-Z0-9_]')
+
 
 def get_completion_script(prog_name, complete_var):
+    cf_name = _invalid_ident_char_re.sub('', prog_name.replace('-', '_'))
     return (COMPLETION_SCRIPT % {
-        'complete_func': '_%s_completion' % prog_name,
+        'complete_func': '_%s_completion' % cf_name,
         'script_names': prog_name,
         'autocomplete_var': complete_var,
     }).strip() + ';'
