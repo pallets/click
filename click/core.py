@@ -1166,7 +1166,9 @@ class Parameter(object):
                      value)`` and needs to return the value.  Before Click
                      2.0, the signature was ``(ctx, value)``.
     :param nargs: the number of arguments to match.  If not ``1`` the return
-                  value is a tuple instead of single value.
+                  value is a tuple instead of single value.  The default for
+                  nargs is ``1`` (except if the type is a tuple, then it's
+                  the arity of the tuple).
     :param metavar: how the value is represented in the help page.
     :param expose_value: if this is `True` then the value is passed onwards
                          to the command callback and stored on the context,
@@ -1180,11 +1182,21 @@ class Parameter(object):
     param_type_name = 'parameter'
 
     def __init__(self, param_decls=None, type=None, required=False,
-                 default=None, callback=None, nargs=1, metavar=None,
+                 default=None, callback=None, nargs=None, metavar=None,
                  expose_value=True, is_eager=False, envvar=None):
         self.name, self.opts, self.secondary_opts = \
             self._parse_decls(param_decls or (), expose_value)
+
         self.type = convert_type(type, default)
+
+        # Default nargs to what the type tells us if we have that
+        # information available.
+        if nargs is None:
+            if self.type.is_composite:
+                nargs = self.type.arity
+            else:
+                nargs = 1
+
         self.required = required
         self.callback = callback
         self.nargs = nargs
@@ -1234,8 +1246,19 @@ class Parameter(object):
 
     def type_cast_value(self, ctx, value):
         """Given a value this runs it properly through the type system.
-        This automatically handles things like `nargs` and `multiple`.
+        This automatically handles things like `nargs` and `multiple` as
+        well as composite types.
         """
+        if self.type.is_composite:
+            if self.nargs <= 1:
+                raise TypeError('Attempted to invoke composite type '
+                                'but nargs has been set to %s.  This is '
+                                'not supported; nargs needs to be set to '
+                                'a fixed value > 1.' % self.nargs)
+            if self.multiple:
+                return tuple(self.type(x or (), self, ctx) for x in value or ())
+            return self.type(value or (), self, ctx)
+
         def _convert(value, level):
             if level == 0:
                 return self.type(value, self, ctx)

@@ -55,6 +55,42 @@ And on the command line:
 
     invoke(findme, args=['--pos', '2.0', '3.0'])
 
+.. _tuple-type:
+
+Tuples as Multi Value Options
+-----------------------------
+
+.. versionadded:: 4.0
+
+As you can see that by using `nargs` set to a specific number each item in
+the resulting tuple is of the same type.  This might not be what you want.
+Commonly you might want to use different types for different indexes in
+the tuple.  For this you can directly specify a tuple as type:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--item', type=(unicode, int))
+    def putitem(item):
+        click.echo('name=%s id=%d' % item)
+
+And on the command line:
+
+.. click:run::
+
+    invoke(putitem, args=['--item', 'peter', '1338'])
+
+By using a tuple literal as type, `nargs` gets automatically set to the
+length of the tuple and the :class:`click.Tuple` type is automatically
+used.  The above example is thus equivalent to this:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--item', nargs=2, type=click.Tuple([unicode, int]))
+    def putitem(item):
+        click.echo('name=%s id=%d' % item)
+
 Multiple Options
 ----------------
 

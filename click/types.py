@@ -20,6 +20,7 @@ class ParamType(object):
         This can be the case when the object is used with prompt
         inputs.
     """
+    is_composite = False
 
     #: the descriptive name of this type
     name = None
@@ -65,6 +66,14 @@ class ParamType(object):
     def fail(self, message, param=None, ctx=None):
         """Helper method to fail with an invalid value message."""
         raise BadParameter(message, ctx=ctx, param=param)
+
+
+class CompositeParamType(ParamType):
+    is_composite = True
+
+    @property
+    def arity(self):
+        raise NotImplementedError()
 
 
 class FuncParamType(ParamType):
@@ -405,10 +414,40 @@ class Path(ParamType):
         return rv
 
 
+class Tuple(CompositeParamType):
+    """The default behavior of Click is to apply a type on a value directly.
+    This works well in most cases, except for when `nargs` is set to a fixed
+    count and differnt types should be used for different items.  In this
+    case the :class:`Tuple` type can be used.  This type can only be used
+    if `nargs` is set to a fixed number.
+
+    For more information see :ref:`tuple-type`.
+
+    This can be selected by using a Python tuple literal as a type.
+
+    :param types: a list of types that should be used for the tuple items.
+    """
+
+    def __init__(self, types):
+        self.types = [convert_type(ty) for ty in types]
+
+    @property
+    def arity(self):
+        return len(self.types)
+
+    def convert(self, value, param, ctx):
+        if len(value) != len(self.types):
+            raise TypeError('It would appear that nargs is set to conflict '
+                            'with the composite type arity.')
+        return tuple(ty(x, param, ctx) for ty, x in zip(self.types, value))
+
+
 def convert_type(ty, default=None):
     """Converts a callable or python ty into the most appropriate param
     ty.
     """
+    if isinstance(ty, tuple):
+        return Tuple(ty)
     if isinstance(ty, ParamType):
         return ty
     guessed_type = False

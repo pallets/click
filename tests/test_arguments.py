@@ -34,6 +34,27 @@ def test_nargs_tup(runner):
     ]
 
 
+def test_nargs_tup_composite(runner):
+    variations = [
+        dict(type=(unicode, int)),
+        dict(type=click.Tuple([unicode, int])),
+        dict(nargs=2, type=click.Tuple([unicode, int])),
+        dict(nargs=2, type=(unicode, int)),
+    ]
+
+    for opts in variations:
+        @click.command()
+        @click.argument('item', **opts)
+        def copy(item):
+            click.echo('name=%s id=%d' % item)
+
+        result = runner.invoke(copy, ['peter', '1'])
+        assert not result.exception
+        assert result.output.splitlines() == [
+            'name=peter id=1',
+        ]
+
+
 def test_nargs_err(runner):
     @click.command()
     @click.argument('x')

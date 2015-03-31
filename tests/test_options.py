@@ -46,6 +46,21 @@ def test_invalid_nargs(runner):
         assert False, 'Expected a type error because of an invalid option.'
 
 
+def test_nargs_tup_composite_mult(runner):
+    @click.command()
+    @click.option('--item', type=(unicode, int), multiple=True)
+    def copy(item):
+        for item in item:
+            click.echo('name=%s id=%d' % item)
+
+    result = runner.invoke(copy, ['--item', 'peter', '1', '--item', 'max', '2'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'name=peter id=1',
+        'name=max id=2',
+    ]
+
+
 def test_counting(runner):
     @click.command()
     @click.option('-v', count=True, help='Verbosity',

@@ -129,6 +129,8 @@ Types
 
 .. autoclass:: IntRange
 
+.. autoclass:: Tuple
+
 .. autoclass:: ParamType
    :members:
 
