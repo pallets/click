@@ -6,7 +6,7 @@ This contains all major version changes between Click releases.
 Version 4.0
 -----------
 
-(codename to be selected, release date to be decided)
+(codename "zoom zoom", released on March 31st 2015)
 
 - Added `color` parameters to lots of interfaces that directly or indirectly
   call into echoing.  This previously was always autodetection (with the
