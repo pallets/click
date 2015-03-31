@@ -2,12 +2,13 @@ import os
 import sys
 import codecs
 from contextlib import contextmanager
-from itertools import chain, repeat
+from itertools import repeat
 from functools import update_wrapper
 
 from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo
-from .exceptions import ClickException, UsageError, BadParameter, Abort
+from .exceptions import ClickException, UsageError, BadParameter, Abort, \
+     MissingParameter
 from .termui import prompt, confirm
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
@@ -1194,6 +1195,13 @@ class Parameter(object):
         self.metavar = metavar
         self.envvar = envvar
 
+    @property
+    def human_readable_name(self):
+        """Returns the human readable name of this parameter.  This is the
+        same as the name for options, but the metavar for arguments.
+        """
+        return self.name
+
     def make_metavar(self):
         if self.metavar is not None:
             return self.metavar
@@ -1259,20 +1267,9 @@ class Parameter(object):
             value = self.get_default(ctx)
 
         if self.required and self.value_is_missing(value):
-            ctx.fail(self.get_missing_message(ctx))
+            raise MissingParameter(ctx=ctx, param=self)
 
         return value
-
-    def get_missing_message(self, ctx):
-        rv = 'Missing %s %s.' % (
-            self.param_type_name,
-            ' / '.join('"%s"' % x for x in chain(
-                self.opts, self.secondary_opts)),
-        )
-        extra = self.type.get_missing_message(self)
-        if extra:
-            rv += '  ' + extra
-        return rv
 
     def resolve_envvar_value(self, ctx):
         if self.envvar is None:
@@ -1596,6 +1593,12 @@ class Argument(Parameter):
             else:
                 required = attrs.get('nargs', 1) > 0
         Parameter.__init__(self, param_decls, required=required, **attrs)
+
+    @property
+    def human_readable_name(self):
+        if self.metavar is not None:
+            return self.metavar
+        return self.name.upper()
 
     def make_metavar(self):
         if self.metavar is not None:

@@ -29,6 +29,10 @@ Version 4.0
 - Fixed an issue with bash completion not working properly for commands with
   non ASCII characters or dashes.
 - Added a way to manually update the progressbar.
+- Changed the formatting of missing arguments.  Previously the internal
+  argument name was shown in error messages, now the metavar is shown if
+  passed.  In case an automated metavar is selected, it's stripped of
+  extra formatting first.
 
 Version 3.3
 -----------
