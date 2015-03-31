@@ -26,7 +26,7 @@ available for options:
     (this is intentional as arguments might be too specific to be
     automatically documented)
 
-On the other hand arguments unlike options can accept an arbitrary number
+On the other hand arguments, unlike options, can accept an arbitrary number
 of arguments.  Options can strictly ever only accept a fixed number of
 arguments (defaults to 1).
 
