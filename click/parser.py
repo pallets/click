@@ -274,7 +274,15 @@ class OptionParser(object):
                 state.rargs.insert(0, explicit_value)
 
             nargs = option.nargs
-            if len(state.rargs) < nargs:
+            if nargs == -1:
+                end = self._next_flag(state)
+                if end >= 0:
+                    value = tuple(state.rargs[:end])
+                    del state.rargs[:end]
+                else:
+                    value = tuple(state.rargs)
+                    state.rargs = []
+            elif len(state.rargs) < nargs:
                 _error_args(nargs, opt)
             elif nargs == 1:
                 value = state.rargs.pop(0)
@@ -289,6 +297,13 @@ class OptionParser(object):
             value = None
 
         option.process(value, state)
+
+    def _next_flag(self, state):
+        is_flag = lambda v: (v.startswith('-') and len(v) == 2) or v.startswith('--')
+        flags = [idx for (idx, v) in enumerate(state.rargs) if is_flag(v)]
+        if len(flags) == 0:
+            return -1
+        return min(flags)
 
     def _match_short_opt(self, arg, state):
         stop = False
