@@ -87,3 +87,24 @@ def test_wrapping_long_options_strings(runner):
         'Options:',
         '  --help  Show this message and exit.',
     ]
+
+
+def test_formatting_empty_help_lines(runner):
+    @click.command()
+    def cli():
+        """Top level command
+
+        """
+
+    result = runner.invoke(cli, ['--help'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'Usage: cli [OPTIONS]',
+        '',
+        '  Top level command',
+        '',
+        '',
+        '',
+        'Options:',
+        '  --help  Show this message and exit.',
+    ]
