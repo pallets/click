@@ -20,7 +20,7 @@ def iter_rows(rows, col_count):
 
 def add_subsequent_indent(text, subsequent_indent):
     lines = text.splitlines()
-    lines = [lines[0]] + [subsequent_indent + line for line in lines[1:]]
+    lines = lines[:1] + [subsequent_indent + line for line in lines[1:]]
     return '\n'.join(lines)
 
 
