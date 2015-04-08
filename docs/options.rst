@@ -330,6 +330,27 @@ replaced with the :func:`password_option` decorator:
     def encrypt(password):
         click.echo('Encrypting password to %s' % password.encode('rot13'))
 
+Dynamic Defaults for Prompts
+----------------------------
+
+The ``auto_envvar_prefix`` and ``default_map`` options for the context
+allow the program to read option values from the environment or a
+configuration file.  However, this overrides the prompting mechanism, so
+that the user does not get the option to change the value interactively.
+
+If you want to let the user configure the default value, but still be
+prompted if the option isn't specified on the command line, you can do so
+by supplying a callable as the default value. For example, to get a default
+from the environment:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--username', prompt=True,
+                  default=lambda: os.environ.get('USER', ''))
+    def hello(username):
+        print("Hello,", username)
+
 Callbacks and Eager Options
 ---------------------------
 
