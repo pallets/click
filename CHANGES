@@ -15,6 +15,7 @@ Version 4.1
 - Handle ^C in less-pager properly.
 - Handle return value of `None` from `sys.getfilesystemencoding`
 - Fix crash when writing to unicode files with `click.echo`.
+- Fix type inference with multiple options.
 
 Version 4.0
 -----------
