@@ -127,7 +127,7 @@ class MissingParameter(BadParameter):
             param_type,
             param_hint and ' %s' % param_hint or '',
             msg and '.  ' or '.',
-            msg,
+            msg and msg or '',
         )
 
 
