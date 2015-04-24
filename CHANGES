@@ -10,6 +10,13 @@ Version 5.0
 
 - Removed various deprecated functionality.
 
+Version 4.1
+-----------
+
+(bugfix release, release date yet to be decided)
+
+- Fix a bug where error messages would include a trailing `None` string.
+
 Version 4.0
 -----------
 
