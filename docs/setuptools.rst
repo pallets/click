@@ -13,11 +13,11 @@ Why would you want to do that?  There are a bunch of reasons:
     module the Python interpreter loads has an incorrect name.  This might
     sound like a small issue but it has quite significant implications.
 
-    The first module is not called by it's actual name, but the
+    The first module is not called by its actual name, but the
     interpreter renames it to ``__main__``.  While that is a perfectly
     valid name it means that if another piece of code wants to import from
-    that module it will trigger the import a second time under it's real
-    name and all the sudden your code is imported twice.
+    that module it will trigger the import a second time under its real
+    name and all of a sudden your code is imported twice.
 
 2.  Not on all platforms are things that easy to execute.  On Linux and OS
     X you can add a comment to the beginning of the file (``#/usr/bin/env
