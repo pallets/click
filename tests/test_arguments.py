@@ -210,3 +210,38 @@ def test_eat_options(runner):
         'bar',
         '-x',
     ]
+
+
+def test_nargs_star_ordering(runner):
+    @click.command()
+    @click.argument('a', nargs=-1)
+    @click.argument('b')
+    @click.argument('c')
+    def cmd(a, b, c):
+        for arg in (a, b, c):
+            click.echo(arg)
+
+    result = runner.invoke(cmd, ['a', 'b', 'c'])
+    assert result.output.splitlines() == [
+        "('a',)",
+        'b',
+        'c',
+    ]
+
+
+def test_nargs_specified_plus_star_ordering(runner):
+    @click.command()
+    @click.argument('a', nargs=-1)
+    @click.argument('b')
+    @click.argument('c', nargs=2)
+    def cmd(a, b, c):
+        for arg in (a, b, c):
+            click.echo(arg)
+
+    result = runner.invoke(cmd, ['a', 'b', 'c', 'd', 'e', 'f'])
+    print result.output
+    assert result.output.splitlines() == [
+        "('a', 'b', 'c')",
+        'd',
+        "('e', 'f')",
+    ]
