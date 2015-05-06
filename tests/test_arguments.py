@@ -239,7 +239,6 @@ def test_nargs_specified_plus_star_ordering(runner):
             click.echo(arg)
 
     result = runner.invoke(cmd, ['a', 'b', 'c', 'd', 'e', 'f'])
-    print result.output
     assert result.output.splitlines() == [
         "('a', 'b', 'c')",
         'd',
