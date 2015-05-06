@@ -10,7 +10,7 @@ class ClickException(Exception):
 
     def __init__(self, message):
         if PY2:
-            if message is not None and not isinstance(message, unicode):
+            if message is not None:
                 message = message.encode('utf-8')
         Exception.__init__(self, message)
         self.message = message
