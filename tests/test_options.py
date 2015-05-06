@@ -192,6 +192,7 @@ def test_custom_validation_unicode(runner):
         click.echo(foo)
 
     result = runner.invoke(cmd, ['--foo', '-1'])
+    assert not result.exception
     assert u'Invalid value for "--foo": That’s no good' in result.output
 
     result = runner.invoke(cmd, ['--foo', '42'])
