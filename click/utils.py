@@ -275,6 +275,13 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     if message is not None and not isinstance(message, echo_native_types):
         message = text_type(message)
 
+    if nl:
+        message = message or u''
+        if isinstance(message, text_type):
+            message += u'\n'
+        else:
+            message += b'\n'
+
     # If there is a message, and we're in Python 3, and the value looks
     # like bytes, we manually need to find the binary stream and write the
     # message in there.  This is done separately so that most stream
@@ -285,8 +292,6 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
         if binary_file is not None:
             file.flush()
             binary_file.write(message)
-            if nl:
-                binary_file.write(b'\n')
             binary_file.flush()
             return
 
@@ -307,8 +312,6 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
 
     if message:
         file.write(message)
-    if nl:
-        file.write(u'\n')
     file.flush()
 
 
