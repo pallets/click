@@ -269,9 +269,9 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
         binary_file = _find_binary_writer(file)
         if binary_file is not None:
             file.flush()
-            binary_file.write(message)
             if nl:
-                binary_file.write(b'\n')
+                message += b'\n'
+            binary_file.write(message)
             binary_file.flush()
             return
 
@@ -290,8 +290,10 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
                 message = strip_ansi(message)
 
     if message:
+        if nl:
+            message += '\n'
         file.write(message)
-    if nl:
+    if nl and not message:
         file.write('\n')
     file.flush()
 
