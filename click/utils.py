@@ -191,6 +191,10 @@ class LazyFile(object):
     def __exit__(self, exc_type, exc_value, tb):
         self.close_intelligently()
 
+    def __iter__(self):
+        self.open()
+        return iter(self._f)
+
 
 class KeepOpenFile(object):
 
@@ -208,6 +212,9 @@ class KeepOpenFile(object):
 
     def __repr__(self):
         return repr(self._file)
+
+    def __iter__(self):
+        return iter(self._file)
 
 
 def echo(message=None, file=None, nl=True, err=False, color=None):
