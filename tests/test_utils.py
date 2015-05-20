@@ -1,7 +1,8 @@
 import os
 import sys
-import click
 
+import click
+import click.utils
 import click._termui_impl
 
 
@@ -227,3 +228,23 @@ def test_open_file(runner):
         result = runner.invoke(cli, ['-'], input='foobar')
         assert result.exception is None
         assert result.output == 'foobar\nmeep\n'
+
+
+def test_iter_keepopenfile(tmpdir):
+
+    expected = list(map(str, range(10)))
+    p = tmpdir.mkdir('testdir').join('testfile')
+    p.write(os.linesep.join(expected))
+    f = p.open()
+    for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
+        assert e_line == a_line.strip()
+
+
+def test_iter_lazyfile(tmpdir):
+
+    expected = list(map(str, range(10)))
+    p = tmpdir.mkdir('testdir').join('testfile')
+    p.write(os.linesep.join(expected))
+    f = p.open()
+    for e_line, a_line in zip(expected, click.utils.LazyFile(f.name)):
+        assert e_line == a_line.strip()
