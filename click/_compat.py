@@ -255,7 +255,11 @@ else:
 
     def _stream_is_misconfigured(stream):
         """A stream is misconfigured if its encoding is ASCII."""
-        return is_ascii_encoding(getattr(stream, 'encoding', None))
+        # If the stream does not have an encoding set, we assume it's set
+        # to ASCII.  This appears to happen in certain unittest
+        # environments.  It's not quite clear what the correct behavior is
+        # but this at least will force Click to recover somehow.
+        return is_ascii_encoding(getattr(stream, 'encoding', None) or 'ascii')
 
     def _is_compatible_text_stream(stream, encoding, errors):
         stream_encoding = getattr(stream, 'encoding', None)
