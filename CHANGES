@@ -10,6 +10,8 @@ Version 4.1
 
 - Fix a bug where error messages would include a trailing `None` string.
 - Fix a bug where Click would crash on docstrings with trailing newlines.
+- Support streams with encoding set to `None` on Python 3 by barfing with
+  a better error.
 
 Version 4.0
 -----------
