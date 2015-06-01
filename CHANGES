@@ -12,6 +12,7 @@ Version 4.1
 - Fix a bug where Click would crash on docstrings with trailing newlines.
 - Support streams with encoding set to `None` on Python 3 by barfing with
   a better error.
+- Handle ^C in less-pager properly.
 
 Version 4.0
 -----------

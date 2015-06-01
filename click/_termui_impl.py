@@ -308,7 +308,22 @@ def _pipepager(text, cmd, color):
         c.stdin.close()
     except IOError:
         pass
-    c.wait()
+
+    # Less doesn't respect ^C, but catches it for its own UI purposes (aborting
+    # search or other commands inside less).
+    #
+    # That means when the user hits ^C, the parent process (click) terminates,
+    # but less is still alive, paging the output and messing up the terminal.
+    #
+    # If the user wants to make the pager exit on ^C, they should set
+    # `LESS='-K'`. It's not our decision to make.
+    while True:
+        try:
+            c.wait()
+        except KeyboardInterrupt:
+            pass
+        else:
+            break
 
 
 def _tempfilepager(text, cmd, color):
