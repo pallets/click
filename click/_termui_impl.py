@@ -306,7 +306,7 @@ def _pipepager(text, cmd, color):
     try:
         c.stdin.write(text.encode(encoding, 'replace'))
         c.stdin.close()
-    except IOError:
+    except (IOError, KeyboardInterrupt):
         pass
 
     # Less doesn't respect ^C, but catches it for its own UI purposes (aborting
