@@ -133,13 +133,12 @@ class HelpFormatter(object):
         :param args: whitespace separated list of arguments.
         :param prefix: the prefix for the first line.
         """
-        prefix = '%*s%s' % (self.current_indent, prefix, prog)
-        self.write(prefix)
+        prefix = '%*s%s ' % (self.current_indent, prefix, prog)
 
-        text_width = max(self.width - self.current_indent - term_len(prefix), 10)
-        indent = ' ' * (term_len(prefix) + 1)
+        text_width = max(self.width - self.current_indent, 10)
+        indent = ' ' * term_len(prefix)
         self.write(wrap_text(args, text_width,
-                             initial_indent=' ',
+                             initial_indent=prefix,
                              subsequent_indent=indent))
 
         self.write('\n')
