@@ -46,6 +46,9 @@ from .formatting import HelpFormatter, wrap_text
 # Parsing
 from .parser import OptionParser
 
+# Global context variable
+from .context import ctx
+
 
 __all__ = [
     # Core classes

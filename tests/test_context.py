@@ -110,3 +110,16 @@ def test_multi_enter(runner):
     result = runner.invoke(cli, [])
     assert result.exception is None
     assert called == [True]
+
+
+def test_global_context_object(runner):
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        assert click.ctx
+        ctx.obj = 'FOOBAR'
+        assert click.ctx.obj == 'FOOBAR'
+
+    assert not click.ctx
+    result = runner.invoke(cli, [], catch_exceptions=False)
+    assert not click.ctx

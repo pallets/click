@@ -12,6 +12,7 @@ from .exceptions import ClickException, UsageError, BadParameter, Abort, \
 from .termui import prompt, confirm
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
+from .context import _ctx_stack
 
 from ._compat import PY2, isidentifier, iteritems
 
@@ -291,10 +292,17 @@ class Context(object):
 
     def __enter__(self):
         self._depth += 1
+        _ctx_stack.push(self)
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
         self._depth -= 1
+        if _ctx_stack.pop() is not self:
+            raise RuntimeError(
+                'The wrong context got popped off the stack. Note that click '
+                'doesn\'t support multiple applications being invoked in the '
+                'same process.'
+            )
         if self._depth == 0:
             self.close()
 
