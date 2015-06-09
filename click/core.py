@@ -4,6 +4,7 @@ import codecs
 from contextlib import contextmanager
 from itertools import repeat
 from functools import update_wrapper
+import traceback
 
 from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo
@@ -1617,6 +1618,50 @@ class Argument(Parameter):
     def add_to_parser(self, parser, ctx):
         parser.add_argument(dest=self.name, nargs=self.nargs,
                             obj=self)
+
+
+class BrokenCommand(Command):
+
+    """
+    Rather than completely crash the CLI when a broken plugin is loaded, this
+    class provides a modified help message informing the user that the plugin is
+    broken and they should contact the owner.  If the user executes the plugin
+    or specifies `--help` a traceback is reported showing the exception the
+    plugin loader encountered.
+    """
+
+    def __init__(self, name):
+
+        """
+        Define the special help messages after instantiating
+        :class:`click.Command()`.
+        """
+
+        Command.__init__(self, name)
+
+        util_name = os.path.basename(sys.argv and sys.argv[0] or __file__)
+
+        if os.environ.get('CLICK_HONESTLY'):  # pragma no cover
+            icon = u'\U0001F4A9'
+        else:
+            icon = u'\u2020'
+
+        self.help = (
+            "\nWarning: entry point could not be loaded. Contact "
+            "its author for help.\n\n\b\n"
+            + traceback.format_exc())
+        self.short_help = (
+            icon + " Warning: could not load plugin. See `%s %s --help`."
+            % (util_name, self.name))
+
+    def invoke(self, ctx):
+
+        """
+        Print the traceback instead of doing nothing.
+        """
+
+        echo(self.help, color=ctx.color)
+        ctx.exit(1)
 
 
 # Circular dependency between decorators and core

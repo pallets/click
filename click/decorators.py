@@ -4,6 +4,7 @@ import inspect
 from functools import update_wrapper
 
 from ._compat import iteritems
+from .core import BrokenCommand
 from .utils import echo
 
 
@@ -115,13 +116,43 @@ def command(name=None, cls=None, **attrs):
     return decorator
 
 
-def group(name=None, **attrs):
+def group(name=None, plugins=None, **attrs):
     """Creates a new :class:`Group` with a function as callback.  This
     works otherwise the same as :func:`command` just that the `cls`
     parameter is set to :class:`Group`.
+
+    .. versionadded:: 5.0
+       Added `plugins`.
+
+    :param plugins: An iterable like `pkg_resources.iter_entry_points()` that
+                    procuces one instance of  :class:`pkg_resources.EntryPoint()`
+                    per iteration.  Used to load click commands or groups from
+                    setuptools entry-points and attach them to the group being
+                    created by this decorator.
     """
+
     attrs.setdefault('cls', Group)
-    return command(name, **attrs)
+    attrs.update(name=name)  # Some people may be using name as a positional arg
+
+    def decorator(f):
+
+        attrs.setdefault('cls', Group)
+        obj = command(**attrs)(f)
+
+        if plugins is not None:
+            for entry_point in plugins:
+                try:
+                    obj.add_command(entry_point.load())
+
+                except Exception:
+                    # Catch this so a busted plugin doesn't take down the CLI.
+                    # Handled by registering a dummy command that does nothing
+                    # other than explain the error.
+                    obj.add_command(BrokenCommand(entry_point.name))
+
+        return obj
+
+    return decorator
 
 
 def _param_memo(f, param):
