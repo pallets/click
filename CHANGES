@@ -9,6 +9,7 @@ Version 5.0
 (codename to be decided, release date to be determined)
 
 - Removed various deprecated functionality.
+- Atomic files now only accept the `w` mode.
 
 Version 4.1
 -----------

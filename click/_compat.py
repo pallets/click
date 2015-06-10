@@ -403,6 +403,19 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
             return open(filename, mode), True
         return io.open(filename, mode, encoding=encoding, errors=errors), True
 
+    # Some usability stuff for atomic writes
+    if 'a' in mode:
+        raise ValueError(
+            'Appending to an existing file is not supported, because that '
+            'would involve an expensive `copy`-operation to a temporary '
+            'file. Open the file in normal `w`-mode and copy explicitly '
+            'if that\'s what you\'re after.'
+        )
+    if 'x' in mode:
+        raise ValueError('Use the `overwrite`-parameter instead.')
+    if 'w' not in mode:
+        raise ValueError('Atomic writes only make sense with `w`-mode.')
+
     # Atomic writes are more complicated.  They work by opening a file
     # as a proxy in the same folder and then using the fdopen
     # functionality to wrap it in a Python file.  Then we wrap it in an
