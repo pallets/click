@@ -10,6 +10,8 @@ Version 5.0
 
 - Removed various deprecated functionality.
 - Atomic files now only accept the `w` mode.
+- Change the usage part of help output for very long commands to wrap
+  their arguments onto the next line, indented by 4 spaces.
 
 Version 4.1
 -----------
