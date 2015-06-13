@@ -116,14 +116,15 @@ def test_wrapping_long_command_name(runner):
     assert not result.exception
     assert result.output.splitlines() == [
         'Usage: cli a_very_very_very_long command ',
-        '            [OPTIONS] FIRST SECOND THIRD FOURTH FIFTH',
-        '            SIXTH',
+        '           [OPTIONS] FIRST SECOND THIRD FOURTH FIFTH',
+        '           SIXTH',
         '',
         '  A command.',
         '',
         'Options:',
         '  --help  Show this message and exit.',
     ]
+
 
 def test_formatting_empty_help_lines(runner):
     @click.command()
