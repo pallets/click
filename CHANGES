@@ -13,6 +13,7 @@ Version 4.1
 - Support streams with encoding set to `None` on Python 3 by barfing with
   a better error.
 - Handle ^C in less-pager properly.
+- Handle return value of `None` from `sys.getfilesystemencoding`
 
 Version 4.0
 -----------

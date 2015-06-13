@@ -2,7 +2,8 @@ import os
 import sys
 import stat
 
-from ._compat import open_stream, text_type, filename_to_ui, get_streerror
+from ._compat import open_stream, text_type, filename_to_ui, \
+    get_filesystem_encoding, get_streerror
 from .exceptions import BadParameter
 from .utils import safecall, LazyFile
 
@@ -114,7 +115,7 @@ class StringParamType(ParamType):
                     value = value.decode(enc)
             except UnicodeError:
                 try:
-                    value = value.decode(sys.getfilesystemencoding())
+                    value = value.decode(get_filesystem_encoding())
                 except UnicodeError:
                     value = value.decode('utf-8', 'replace')
             return value
