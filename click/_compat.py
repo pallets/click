@@ -14,6 +14,10 @@ DEFAULT_COLUMNS = 80
 _ansi_re = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')
 
 
+def get_filesystem_encoding():
+    return sys.getfilesystemencoding() or sys.getdefaultencoding()
+
+
 def _make_text_stream(stream, encoding, errors):
     if encoding is None:
         encoding = get_best_encoding(stream)
@@ -189,7 +193,7 @@ if PY2:
 
     def filename_to_ui(value):
         if isinstance(value, bytes):
-            value = value.decode(sys.getfilesystemencoding(), 'replace')
+            value = value.decode(get_filesystem_encoding(), 'replace')
         return value
 else:
     import io
@@ -364,7 +368,7 @@ else:
 
     def filename_to_ui(value):
         if isinstance(value, bytes):
-            value = value.decode(sys.getfilesystemencoding(), 'replace')
+            value = value.decode(get_filesystem_encoding(), 'replace')
         else:
             value = value.encode('utf-8', 'surrogateescape') \
                 .decode('utf-8', 'replace')

@@ -2,10 +2,10 @@ import os
 import sys
 from collections import deque
 
-from ._compat import text_type, open_stream, get_streerror, string_types, \
-     PY2, binary_streams, text_streams, filename_to_ui, \
-     auto_wrap_for_ansi, strip_ansi, should_strip_ansi, \
-     _default_text_stdout, _default_text_stderr, is_bytes, WIN
+from ._compat import text_type, open_stream, get_filesystem_encoding, \
+    get_streerror, string_types, PY2, binary_streams, text_streams, \
+    filename_to_ui, auto_wrap_for_ansi, strip_ansi, should_strip_ansi, \
+    _default_text_stdout, _default_text_stderr, is_bytes, WIN
 
 if not PY2:
     from ._compat import _find_binary_writer
@@ -90,7 +90,7 @@ def make_str(value):
     """Converts a value into a valid string."""
     if isinstance(value, bytes):
         try:
-            return value.decode(sys.getfilesystemencoding())
+            return value.decode(get_filesystem_encoding())
         except UnicodeError:
             return value.decode('utf-8', 'replace')
     return text_type(value)
