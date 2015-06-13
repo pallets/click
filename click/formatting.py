@@ -18,12 +18,6 @@ def iter_rows(rows, col_count):
         yield row + ('',) * (col_count - len(row))
 
 
-def add_subsequent_indent(text, subsequent_indent):
-    lines = text.splitlines()
-    lines = lines[:1] + [subsequent_indent + line for line in lines[1:]]
-    return '\n'.join(lines)
-
-
 def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
               preserve_paragraphs=False):
     """A helper function that intelligently wraps text.  By default, it
@@ -46,13 +40,11 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
     """
     from ._textwrap import TextWrapper
     text = text.expandtabs()
-    post_wrap_indent = subsequent_indent[:-1]
-    subsequent_indent = subsequent_indent[-1:]
     wrapper = TextWrapper(width, initial_indent=initial_indent,
                           subsequent_indent=subsequent_indent,
                           replace_whitespace=False)
     if not preserve_paragraphs:
-        return add_subsequent_indent(wrapper.fill(text), post_wrap_indent)
+        return wrapper.fill(text)
 
     p = []
     buf = []
@@ -83,11 +75,9 @@ def wrap_text(text, width=78, initial_indent='', subsequent_indent='',
     for indent, raw, text in p:
         with wrapper.extra_indent(' ' * indent):
             if raw:
-                rv.append(add_subsequent_indent(wrapper.indent_only(text),
-                                                post_wrap_indent))
+                rv.append(wrapper.indent_only(text))
             else:
-                rv.append(add_subsequent_indent(wrapper.fill(text),
-                                                post_wrap_indent))
+                rv.append(wrapper.fill(text))
 
     return '\n\n'.join(rv)
 
@@ -133,14 +123,23 @@ class HelpFormatter(object):
         :param args: whitespace separated list of arguments.
         :param prefix: the prefix for the first line.
         """
-        prefix = '%*s%s' % (self.current_indent, prefix, prog)
-        self.write(prefix)
+        usage_prefix = '%*s%s ' % (self.current_indent, prefix, prog)
+        text_width = self.width - self.current_indent
 
-        text_width = max(self.width - self.current_indent - term_len(prefix), 10)
-        indent = ' ' * (term_len(prefix) + 1)
-        self.write(wrap_text(args, text_width,
-                             initial_indent=' ',
-                             subsequent_indent=indent))
+        if text_width >= (term_len(usage_prefix) + 20):
+            # The arguments will fit to the right of the prefix.
+            indent = ' ' * term_len(usage_prefix)
+            self.write(wrap_text(args, text_width,
+                                 initial_indent=usage_prefix,
+                                 subsequent_indent=indent))
+        else:
+            # The prefix is too long, put the arguments on the next line.
+            self.write(usage_prefix)
+            self.write('\n')
+            indent = ' ' * (max(self.current_indent, term_len(prefix)) + 4)
+            self.write(wrap_text(args, text_width,
+                                 initial_indent=indent,
+                                 subsequent_indent=indent))
 
         self.write('\n')
 
