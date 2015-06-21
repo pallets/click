@@ -292,7 +292,7 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     if message:
         file.write(message)
     if nl:
-        file.write('\n')
+        file.write(u'\n')
     file.flush()
 
 

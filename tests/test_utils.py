@@ -39,6 +39,13 @@ def test_echo(runner):
         assert out.getvalue() == b'\x1b[31mx\x1b[39m'
 
 
+def test_echo_custom_file():
+    import io
+    f = io.StringIO()
+    click.echo(u'hello', file=f)
+    assert f.getvalue() == u'hello\n'
+
+
 def test_styling():
     examples = [
         ('x', dict(fg='black'), '\x1b[30mx\x1b[0m'),
