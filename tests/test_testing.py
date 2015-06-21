@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 import click
 
@@ -140,3 +142,44 @@ def test_with_color_but_pause_not_blocking():
     result = runner.invoke(cli, color=True)
     assert not result.exception
     assert result.output == ''
+
+
+def test_exit_code_and_output_from_sys_exit():
+    # See issue #362
+    @click.command()
+    def cli_string():
+        click.echo('hello world')
+        sys.exit('error')
+
+    @click.command()
+    def cli_int():
+        click.echo('hello world')
+        sys.exit(1)
+
+    @click.command()
+    def cli_float():
+        click.echo('hello world')
+        sys.exit(1.0)
+
+    @click.command()
+    def cli_no_error():
+        click.echo('hello world')
+
+    runner = CliRunner()
+
+    result = runner.invoke(cli_string)
+    assert result.exit_code == 1
+    assert result.output == 'hello world\nerror\n'
+
+    result = runner.invoke(cli_int)
+    assert result.exit_code == 1
+    assert result.output == 'hello world\n'
+
+    result = runner.invoke(cli_float)
+    assert result.exit_code == 1
+    assert result.output == 'hello world\n1.0\n'
+
+    result = runner.invoke(cli_no_error)
+    assert result.exit_code == 0
+    assert result.output == 'hello world\n'
+

@@ -270,6 +270,7 @@ class CliRunner(object):
         with self.isolation(input=input, env=env, color=color) as out:
             exception = None
             exit_code = 0
+            error_message = ''
 
             try:
                 cli.main(args=args or (),
@@ -278,6 +279,9 @@ class CliRunner(object):
                 if e.code != 0:
                     exception = e
                 exit_code = e.code
+                if not isinstance(exit_code, int):
+                    error_message = '%s\n' % exit_code
+                    exit_code = 1
                 exc_info = sys.exc_info()
             except Exception as e:
                 if not catch_exceptions:
@@ -287,7 +291,9 @@ class CliRunner(object):
                 exc_info = sys.exc_info()
             finally:
                 sys.stdout.flush()
-                output = out.getvalue()
+                if not PY2:
+                    error_message = error_message.encode(self.charset)
+                output = out.getvalue() + error_message
 
         return Result(runner=self,
                       output_bytes=output,
