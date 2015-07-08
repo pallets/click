@@ -1027,10 +1027,21 @@ class Group(MultiCommand):
     :param commands: a dictionary of commands.
     """
 
-    def __init__(self, name=None, commands=None, **attrs):
+    def __init__(self, name=None, commands=None, plugins=None, **attrs):
         MultiCommand.__init__(self, name, **attrs)
         #: the registered subcommands by their exported names.
         self.commands = commands or {}
+
+        # Register external commands from setuptools entry-points
+        if plugins:
+            for entry_point in plugins:
+                try:
+                    self.add_command(entry_point.load())
+                except Exception:
+                    # Catch this so a busted plugin doesn't take down the CLI.
+                    # Handled by registering a dummy command that does nothing
+                    # other than explain the error.
+                    self.add_command(BrokenCommand(entry_point.name))
 
     def add_command(self, cmd, name=None):
         """Registers another :class:`Command` with this group.  If the name
