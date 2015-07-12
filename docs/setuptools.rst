@@ -20,7 +20,7 @@ Why would you want to do that?  There are a bunch of reasons:
     name and all of a sudden your code is imported twice.
 
 2.  Not on all platforms are things that easy to execute.  On Linux and OS
-    X you can add a comment to the beginning of the file (``#/usr/bin/env
+    X you can add a comment to the beginning of the file (``#!/usr/bin/env
     python``) and your script works like an executable (assuming it has
     the executable bit set).  This however does not work on Windows.
     While on Windows you can associate interpreters with file extensions
