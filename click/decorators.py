@@ -4,6 +4,7 @@ import inspect
 from functools import update_wrapper
 
 from ._compat import iteritems
+from .core import BrokenCommand
 from .utils import echo
 
 
