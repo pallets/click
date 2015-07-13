@@ -803,7 +803,7 @@ class Command(BaseCommand):
 class MultiCommand(Command):
     """A multi command is the basic implementation of a command that
     dispatches to subcommands.  The most common version is the
-    :class:`Command`.
+    :class:`Group`.
 
     :param invoke_without_command: this controls how the multi command itself
                                    is invoked.  By default it's only invoked
