@@ -418,7 +418,7 @@ class Path(ParamType):
 class Tuple(CompositeParamType):
     """The default behavior of Click is to apply a type on a value directly.
     This works well in most cases, except for when `nargs` is set to a fixed
-    count and differnt types should be used for different items.  In this
+    count and different types should be used for different items.  In this
     case the :class:`Tuple` type can be used.  This type can only be used
     if `nargs` is set to a fixed number.
 
