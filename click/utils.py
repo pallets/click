@@ -2,6 +2,8 @@ import os
 import sys
 from collections import deque
 
+from .globals import resolve_color_default
+
 from ._compat import text_type, open_stream, get_filesystem_encoding, \
     get_streerror, string_types, PY2, binary_streams, text_streams, \
     filename_to_ui, auto_wrap_for_ansi, strip_ansi, should_strip_ansi, \
@@ -294,6 +296,7 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     # to strip the color or we use the colorama support to translate the
     # ansi codes to API calls.
     if message and not is_bytes(message):
+        color = resolve_color_default(color)
         if should_strip_ansi(file, color):
             message = strip_ansi(message)
         elif WIN:
