@@ -45,6 +45,7 @@ def unpack_args(args, nargs_spec):
     nargs_spec = deque(nargs_spec)
     rv = []
     spos = None
+    spos_rv = None
 
     def _fetch(c):
         try:
@@ -58,24 +59,34 @@ def unpack_args(args, nargs_spec):
     while nargs_spec:
         nargs = _fetch(nargs_spec)
         if nargs == 1:
-            rv.append(_fetch(args))
+            arg = _fetch(args)
+            if spos is not None:
+                spos_rv.append(arg)
+            else:
+                rv.append(arg)
         elif nargs > 1:
             x = [_fetch(args) for _ in range(nargs)]
             # If we're reversed, we're pulling in the arguments in reverse,
             # so we need to turn them around.
             if spos is not None:
                 x.reverse()
-            rv.append(tuple(x))
+                spos_rv.append(x)
+            else:
+                rv.append(tuple(x))
         elif nargs < 0:
             if spos is not None:
                 raise TypeError('Cannot have two nargs < 0')
             spos = len(rv)
             rv.append(None)
+            # handle reversing arg order after spos set
+            spos_rv = []
 
     # spos is the position of the wildcard (star).  If it's not `None`,
     # we fill it with the remainder.
     if spos is not None:
         rv[spos] = tuple(args)
+        spos_rv.reverse()
+        rv.extend(spos_rv)
         args = []
         rv[spos + 1:] = reversed(rv[spos + 1:])
 
