@@ -433,6 +433,9 @@ class Tuple(CompositeParamType):
         self.types = [convert_type(ty) for ty in types]
 
     @property
+    def name(self):
+        return "<"+" ".join(ty.name for ty in self.types)+">"
+    @property
     def arity(self):
         return len(self.types)
 
@@ -447,14 +450,18 @@ def convert_type(ty, default=None):
     """Converts a callable or python ty into the most appropriate param
     ty.
     """
+    guessed_type = False
+    if ty is None and default is not None:
+        if isinstance(default,tuple):
+            ty=tuple(map(type,default))
+        else:
+            ty = type(default)
+        guessed_type = True
+
     if isinstance(ty, tuple):
         return Tuple(ty)
     if isinstance(ty, ParamType):
         return ty
-    guessed_type = False
-    if ty is None and default is not None:
-        ty = type(default)
-        guessed_type = True
     if ty is text_type or ty is str or ty is None:
         return STRING
     if ty is int:

@@ -1150,6 +1150,7 @@ class Parameter(object):
         self.name, self.opts, self.secondary_opts = \
             self._parse_decls(param_decls or (), expose_value)
 
+
         self.type = convert_type(type, default)
 
         # Default nargs to what the type tells us if we have that
