@@ -38,6 +38,8 @@ def unpack_args(args, nargs_spec):
     (((0, 1, 2, 3, 4, 5),), [])
     >>> unpack_args(range(6), [1, 1])
     ((0, 1), [2, 3, 4, 5])
+    >>> unpack_args(range(6), [-1,1,1,1,1])
+    (((0, 1), 5, 4, 3, 2), [])
     """
     args = deque(args)
     nargs_spec = deque(nargs_spec)
@@ -46,7 +48,10 @@ def unpack_args(args, nargs_spec):
 
     def _fetch(c):
         try:
-            return (spos is not None and c.pop() or c.popleft())
+            if spos is None:
+                return c.popleft()
+            else:
+                return c.pop()
         except IndexError:
             return None
 
@@ -72,6 +77,7 @@ def unpack_args(args, nargs_spec):
     if spos is not None:
         rv[spos] = tuple(args)
         args = []
+        rv[spos + 1:] = reversed(rv[spos + 1:])
 
     return tuple(rv), list(args)
 
