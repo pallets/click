@@ -18,7 +18,7 @@ Version 5.0
 Version 4.1
 -----------
 
-(bugfix release, release date yet to be decided)
+(bugfix release, released on July 14th 2015)
 
 - Fix a bug where error messages would include a trailing `None` string.
 - Fix a bug where Click would crash on docstrings with trailing newlines.
