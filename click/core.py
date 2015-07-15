@@ -12,8 +12,10 @@ from .exceptions import ClickException, UsageError, BadParameter, Abort, \
 from .termui import prompt, confirm
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
+from .globals import push_context, pop_context
 
 from ._compat import PY2, isidentifier, iteritems
+
 
 _missing = object()
 
@@ -291,9 +293,11 @@ class Context(object):
 
     def __enter__(self):
         self._depth += 1
+        push_context(self)
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
+        pop_context()
         self._depth -= 1
         if self._depth == 0:
             self.close()
@@ -431,8 +435,6 @@ class Context(object):
                     kwargs[param.name] = param.get_default(ctx)
 
         args = args[2:]
-        if getattr(callback, '__click_pass_context__', False):
-            args = (ctx,) + args
         with augment_usage_errors(self):
             with ctx:
                 return callback(*args, **kwargs)

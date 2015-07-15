@@ -18,6 +18,9 @@
 from .core import Context, BaseCommand, Command, MultiCommand, Group, \
      CommandCollection, Parameter, Option, Argument
 
+# Globals
+from .globals import get_current_context
+
 # Decorators
 from .decorators import pass_context, pass_obj, make_pass_decorator, \
      command, group, argument, option, confirmation_option, \
@@ -51,6 +54,9 @@ __all__ = [
     # Core classes
     'Context', 'BaseCommand', 'Command', 'MultiCommand', 'Group',
     'CommandCollection', 'Parameter', 'Option', 'Argument',
+
+    # Globals
+    'get_current_context',
 
     # Decorators
     'pass_context', 'pass_obj', 'make_pass_decorator', 'command', 'group',

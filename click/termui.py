@@ -7,6 +7,7 @@ from ._compat import raw_input, text_type, string_types, \
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type
+from .globals import resolve_color_default
 
 
 # The prompt functions to use.  The doc tools currently override these
@@ -197,6 +198,7 @@ def echo_via_pager(text, color=None):
     :param color: controls if the pager supports ANSI colors or not.  The
                   default is autodetection.
     """
+    color = resolve_color_default(color)
     if not isinstance(text, string_types):
         text = text_type(text)
     from ._termui_impl import pager
@@ -287,6 +289,7 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                   which is not the case by default.
     """
     from ._termui_impl import ProgressBar
+    color = resolve_color_default(color)
     return ProgressBar(iterable=iterable, length=length, show_eta=show_eta,
                        show_percent=show_percent, show_pos=show_pos,
                        item_show_func=item_show_func, fill_char=fill_char,
