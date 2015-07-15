@@ -2,7 +2,7 @@ import os
 import sys
 from collections import deque
 
-from .globals import resolve_color_default
+from .globals import resolve_color_default, with_ui_lock
 
 from ._compat import text_type, open_stream, get_filesystem_encoding, \
     get_streerror, string_types, PY2, binary_streams, text_streams, \
@@ -225,6 +225,7 @@ class KeepOpenFile(object):
         return iter(self._file)
 
 
+@with_ui_lock
 def echo(message=None, file=None, nl=True, err=False, color=None):
     """Prints a message plus a newline to the given file or stdout.  On
     first sight, this looks like the print function, but it has improved

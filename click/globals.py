@@ -1,7 +1,17 @@
-from threading import local
+from threading import local, RLock
+from functools import update_wrapper
 
 
+ui_lock = RLock()
 _local = local()
+
+
+def with_ui_lock(f):
+    def wrapper(*args, **kwargs):
+        with ui_lock:
+            return f(*args, **kwargs)
+
+    return update_wrapper(wrapper, f)
 
 
 def get_current_context(silent=False):

@@ -7,7 +7,7 @@ from ._compat import raw_input, text_type, string_types, \
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type
-from .globals import resolve_color_default
+from .globals import resolve_color_default, with_ui_lock
 
 
 # The prompt functions to use.  The doc tools currently override these
@@ -31,6 +31,7 @@ def _build_prompt(text, suffix, show_default=False, default=None):
     return prompt + suffix
 
 
+@with_ui_lock
 def prompt(text, default=None, hide_input=False,
            confirmation_prompt=False, type=None,
            value_proc=None, prompt_suffix=': ',
@@ -102,6 +103,7 @@ def prompt(text, default=None, hide_input=False,
         echo('Error: the two entered values do not match', err=err)
 
 
+@with_ui_lock
 def confirm(text, default=False, abort=False, prompt_suffix=': ',
             show_default=True, err=False):
     """Prompts for confirmation (yes/no question).
@@ -187,6 +189,7 @@ def get_terminal_size():
     return int(cr[1]), int(cr[0])
 
 
+@with_ui_lock
 def echo_via_pager(text, color=None):
     """This function takes a text and shows it via an environment specific
     pager on stdout.
@@ -298,6 +301,7 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                        width=width, color=color)
 
 
+@with_ui_lock
 def clear():
     """Clears the terminal screen.  This will have the effect of clearing
     the whole visible space of the terminal and moving the cursor to the
@@ -412,6 +416,7 @@ def secho(text, file=None, nl=True, err=False, color=None, **styles):
     return echo(style(text, **styles), file=file, nl=nl, err=err, color=color)
 
 
+@with_ui_lock
 def edit(text=None, editor=None, env=None, require_save=True,
          extension='.txt', filename=None):
     r"""Edits the given text in the defined editor.  If an editor is given
@@ -449,6 +454,7 @@ def edit(text=None, editor=None, env=None, require_save=True,
     editor.edit_file(filename)
 
 
+@with_ui_lock
 def launch(url, wait=False, locate=False):
     """This function launches the given URL (or filename) in the default
     viewer application for this file type.  If this is an executable, it
@@ -480,6 +486,7 @@ def launch(url, wait=False, locate=False):
 _getchar = None
 
 
+@with_ui_lock
 def getchar(echo=False):
     """Fetches a single character from the terminal and returns it.  This
     will always return a unicode character and under certain rare
@@ -502,6 +509,7 @@ def getchar(echo=False):
     return f(echo)
 
 
+@with_ui_lock
 def pause(info='Press any key to continue ...', err=False):
     """This command stops execution and waits for the user to press any
     key to continue.  This is similar to the Windows batch "pause"
