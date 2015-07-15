@@ -338,3 +338,42 @@ your own commands and commands from another application are discouraged
 and if you can avoid it, you should.  It's a much better idea to have
 everything below a subcommand be forwarded to another application than to
 handle some arguments yourself.
+
+
+Global Context Access
+---------------------
+
+.. versionadded:: 5.0
+
+Starting with Click 5.0 it is possible to access the current context from
+anywhere within the same through through the use of the
+:func:`get_current_context` function which returns it.  This is primarily
+useful for accessing the context bound object as well as some flags that
+are stored on it to customize the runtime behavior.  For instance the
+:func:`echo` function does this to infer the default value of the `color`
+flag.
+
+Example usage::
+
+    def get_current_command_name():
+        return click.get_current_context().info_name
+
+It should be noted that this only works within the current thread.  If you
+spawn additional threads then those threads will not have the ability to
+refer to the current context.  If you want to give another thread the
+ability to refer to this context you need to use the context within the
+thread as a context manager::
+
+    def spawn_thread(ctx, func):
+        def wrapper():
+            with ctx:
+                func()
+        t = threading.Thread(target=wrapper)
+        t.start()
+        return t
+
+Now the thread function can access the context like the main thread would
+do.  However if you do use this for threading you need to be very careful
+as the vast majority of the context is not thread safe!  You are only
+allowed to read from the context, but not to perform any modifications on
+it.

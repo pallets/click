@@ -14,6 +14,7 @@ Version 5.0
   their arguments onto the next line, indented by 4 spaces.
 - Fix a bug where return code and error messages were incorrect when
   using ``CliRunner``.
+- added `get_current_context`.
 
 Version 4.1
 -----------

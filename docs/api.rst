@@ -106,6 +106,8 @@ Context
 .. autoclass:: Context
    :members:
 
+.. autofunction:: get_current_context
+
 Types
 -----
 
