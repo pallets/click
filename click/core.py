@@ -191,6 +191,8 @@ class Context(object):
             obj = parent.obj
         #: the user object stored.
         self.obj = obj
+        self._meta = getattr(parent, 'meta', {})
+
         #: A dictionary (-like object) with defaults for parameters.
         if default_map is None \
            and parent is not None \
@@ -301,6 +303,34 @@ class Context(object):
         self._depth -= 1
         if self._depth == 0:
             self.close()
+
+    @property
+    def meta(self):
+        """This is a dictionary which is shared with all the contexts
+        that are nested.  It exists so that click utiltiies can store some
+        state here if they need to.  It is however the responsibility of
+        that code to manage this dictionary well.
+
+        The keys are supposed to be unique dotted strings.  For instance
+        module paths are a good choice for it.  What is stored in there is
+        irrelevant for the operation of click.  However what is important is
+        that code that places data here adheres to the general semantics of
+        the system.
+
+        Example usage::
+
+            LANG_KEY = __name__ + '.lang'
+
+            def set_language(value):
+                ctx = get_current_context()
+                ctx.meta[LANG_KEY] = value
+
+            def get_language():
+                return get_current_context().meta.get(LANG_KEY, 'en_US')
+
+        .. versionadded:: 5.0
+        """
+        return self._meta
 
     def make_formatter(self):
         """Creates the formatter for the help and usage output."""

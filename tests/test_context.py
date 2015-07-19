@@ -123,3 +123,22 @@ def test_global_context_object(runner):
     assert click.get_current_context(silent=True) is None
     runner.invoke(cli, [], catch_exceptions=False)
     assert click.get_current_context(silent=True) is None
+
+
+def test_context_meta(runner):
+    LANG_KEY = __name__ + '.lang'
+
+    def set_language(value):
+        click.get_current_context().meta[LANG_KEY] = value
+
+    def get_language():
+        return click.get_current_context().meta.get(LANG_KEY, 'en_US')
+
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        assert get_language() == 'en_US'
+        set_language('de_DE')
+        assert get_language() == 'de_DE'
+
+    runner.invoke(cli, [], catch_exceptions=False)
