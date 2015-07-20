@@ -142,3 +142,27 @@ def test_context_meta(runner):
         assert get_language() == 'de_DE'
 
     runner.invoke(cli, [], catch_exceptions=False)
+
+
+def test_context_pushing():
+    rv = []
+
+    @click.command()
+    def cli():
+        pass
+
+    ctx = click.Context(cli)
+
+    @ctx.call_on_close
+    def test_callback():
+        rv.append(42)
+
+    with ctx.scope(cleanup=False):
+        pass
+
+    assert rv == []
+
+    with ctx.scope():
+        pass
+
+    assert rv == [42]

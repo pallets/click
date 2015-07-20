@@ -11,6 +11,8 @@ def get_current_context(silent=False):
     primarily useful for helpers such as :func:`echo` which might be
     interested in changing it's behavior based on the current context.
 
+    To push the current context, :meth:`Context.scope` can be used.
+
     .. versionadded:: 5.0
 
     :param silent: is set to `True` the return value is `None` if no context

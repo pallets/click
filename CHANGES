@@ -17,6 +17,7 @@ Version 5.0
 - added `get_current_context`.
 - added a `meta` dictionary to the context which is shared across the
   linked list of contexts to allow click utilities to place state there.
+- introduced `Context.scope`.
 
 Version 4.1
 -----------
