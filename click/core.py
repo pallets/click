@@ -335,10 +335,12 @@ class Context(object):
         """
         if not cleanup:
             self._depth += 1
-        with self as rv:
-            yield rv
-        if not cleanup:
-            self._depth -= 1
+        try:
+            with self as rv:
+                yield rv
+        finally:
+            if not cleanup:
+                self._depth -= 1
 
     @property
     def meta(self):

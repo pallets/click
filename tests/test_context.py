@@ -158,11 +158,13 @@ def test_context_pushing():
         rv.append(42)
 
     with ctx.scope(cleanup=False):
-        pass
+        # Internal
+        assert ctx._depth == 2
 
     assert rv == []
 
     with ctx.scope():
-        pass
+        # Internal
+        assert ctx._depth == 1
 
     assert rv == [42]
