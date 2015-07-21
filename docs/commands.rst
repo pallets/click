@@ -331,12 +331,12 @@ process the result of the previous command.  There are various ways in
 which this can be facilitated.  The most obvious way is to store a value
 on the context object and process it from function to function.  This
 works by decorating a function with :func:`pass_context` after which the
-context object is provided and a subcommand can store it's data there.
+context object is provided and a subcommand can store its data there.
 
 Another way to accomplish this is to setup pipelines by returning
 processing functions.  Think of it like this: when a subcommand gets
-invoked it processes all of it's parameters and comes up with a plan of
-how to do it's processing.  At that point it then returns a processing
+invoked it processes all of its parameters and comes up with a plan of
+how to do its processing.  At that point it then returns a processing
 function and returns.
 
 Where do the returned functions go?  The chained multicommand can register
