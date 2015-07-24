@@ -20,6 +20,7 @@ Version 5.0
 - introduced `Context.scope`.
 - The `echo` function is now threadsafe: It calls the `write` method of the
   underlying object only once.
+- `prompt(hide_input=True)` now prints a newline on `^C`.
 
 Version 4.1
 -----------

@@ -69,6 +69,11 @@ def prompt(text, default=None, hide_input=False,
             echo(text, nl=False, err=err)
             return f('')
         except (KeyboardInterrupt, EOFError):
+            # getpass doesn't print a newline if the user aborts input with ^C.
+            # Allegedly this behavior is inherited from getpass(3).
+            # A doc bug has been filed at https://bugs.python.org/issue24711
+            if hide_input:
+                echo(None, err=err)
             raise Abort()
 
     if value_proc is None:

@@ -124,6 +124,21 @@ def test_prompts(runner):
     assert result.output == 'Foo [Y/n]: n\nno :(\n'
 
 
+def test_prompts_abort(monkeypatch, capsys):
+    def f(_):
+        raise KeyboardInterrupt()
+
+    monkeypatch.setattr('click.termui.hidden_prompt_func', f)
+
+    try:
+        click.prompt('Password', hide_input=True)
+    except click.Abort:
+        click.echo('Screw you.')
+
+    out, err = capsys.readouterr()
+    assert out == 'Password: \nScrew you.\n'
+
+
 def test_echo_via_pager(monkeypatch, capfd):
     monkeypatch.setitem(os.environ, 'PAGER', 'cat')
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda x: True)
