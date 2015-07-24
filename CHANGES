@@ -18,6 +18,8 @@ Version 5.0
 - added a `meta` dictionary to the context which is shared across the
   linked list of contexts to allow click utilities to place state there.
 - introduced `Context.scope`.
+- The `echo` function is now threadsafe: It calls the `write` method of the
+  underlying object only once.
 
 Version 4.1
 -----------
