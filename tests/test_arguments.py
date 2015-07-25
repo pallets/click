@@ -212,6 +212,28 @@ def test_eat_options(runner):
     ]
 
 
+def test_eat_options_with_default(runner):
+    @click.command()
+    @click.argument('files', nargs=-1, default=('test',))
+    def cmd(files):
+        for filename in files:
+            click.echo(filename)
+
+    result = runner.invoke(cmd, ['--'])
+    assert result.output == 'test\n'
+
+
+def test_eat_options_with_default_and_type(runner):
+    @click.command()
+    @click.argument('files', nargs=-1, default=('test',), type=str)
+    def cmd(files):
+        for filename in files:
+            click.echo(filename)
+
+    result = runner.invoke(cmd, ['--'])
+    assert result.output == 'test\n'
+
+
 def test_nargs_star_ordering(runner):
     @click.command()
     @click.argument('a', nargs=-1)
