@@ -160,7 +160,9 @@ Starting with Click 5.0 there will be a warning for the use of the
 ``unicode_literals`` future import in Python 2.  This has been done due to
 the negative consequences of this import with regards to unintentionally
 causing bugs due to introducing Unicode data to APIs that are incapable of
-handling them.
+handling them.  For some examples of this issue, see the discussion on
+this github issue: `python-future#22
+<https://github.com/PythonCharmers/python-future/issues/22>`_.
 
 If you use ``unicode_literals`` in any file that defines a Click command
 or that invokes a click command you will be given a warning.  You are
