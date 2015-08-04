@@ -88,4 +88,9 @@ __all__ = [
 ]
 
 
+# Controls if click should emit the warning about the use of unicode
+# literals.
+disable_unicode_literals_warning = False
+
+
 __version__ = '5.0-dev'

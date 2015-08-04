@@ -152,3 +152,24 @@ Python 3 bug tracker:
 *   `LC_CTYPE=C:  pydoc leaves terminal in an unusable state
     <http://bugs.python.org/issue21398>`_ (this is relevant to Click
     because the pager support is provided by the stdlib pydoc module)
+
+Unicode Literals
+----------------
+
+Starting with Click 5.0 there will be a warning for the use of the
+``unicode_literals`` future import in Python 2.  This has been done due to
+the negative consequences of this import with regards to unintentionally
+causing bugs due to introducing Unicode data to APIs that are incapable of
+handling them.
+
+If you use ``unicode_literals`` in any file that defines a Click command
+or that invokes a click command you will be given a warning.  You are
+strongly encouraged to not use ``unicode_literals`` and instead use
+explicit ``u`` prefixes for your Unicode strings.
+
+If you do want to ignore the warning and continue using
+``unicode_literals`` on your own peril, you can disable the warning as
+follows::
+
+    import click
+    click.disable_unicode_literals_warning = True

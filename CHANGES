@@ -21,6 +21,7 @@ Version 5.0
 - The `echo` function is now threadsafe: It calls the `write` method of the
   underlying object only once.
 - `prompt(hide_input=True)` now prints a newline on `^C`.
+- Click will now warn if users are using ``unicode_literals``.
 
 Version 4.1
 -----------

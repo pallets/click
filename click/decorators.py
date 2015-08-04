@@ -3,7 +3,7 @@ import inspect
 
 from functools import update_wrapper
 
-from ._compat import iteritems
+from ._compat import iteritems, _check_for_unicode_literals
 from .utils import echo
 from .globals import get_current_context
 
@@ -84,6 +84,7 @@ def _make_command(f, name, attrs, cls):
     else:
         help = inspect.cleandoc(help)
     attrs['help'] = help
+    _check_for_unicode_literals()
     return cls(name=name or f.__name__.lower(),
                callback=f, params=params, **attrs)
 

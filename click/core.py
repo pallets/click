@@ -14,7 +14,7 @@ from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
 from .globals import push_context, pop_context
 
-from ._compat import PY2, isidentifier, iteritems
+from ._compat import PY2, isidentifier, iteritems, _check_for_unicode_literals
 
 
 _missing = object()
@@ -658,6 +658,8 @@ class BaseCommand(object):
                                    'Either switch to Python 2 or consult '
                                    'http://click.pocoo.org/python3/ '
                                    'for mitigation steps.')
+        else:
+            _check_for_unicode_literals()
 
         if args is None:
             args = sys.argv[1:]
