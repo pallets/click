@@ -91,7 +91,7 @@ To test the script, you can make a new virtualenv and then install your
 package::
 
     $ virtualenv venv
-    $ source venv/bin/activate
+    $ . venv/bin/activate
     $ pip install --editable .
 
 Afterwards, your command should be available:
