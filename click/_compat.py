@@ -21,7 +21,7 @@ def _find_unicode_literals_frame():
     frm = sys._getframe(1)
     idx = 1
     while frm is not None:
-        if frm.f_globals.get('__name__').startswith('click.'):
+        if frm.f_globals.get('__name__', '').startswith('click.'):
             frm = frm.f_back
             idx += 1
         elif frm.f_code.co_flags & __future__.unicode_literals.compiler_flag:
