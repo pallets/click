@@ -257,10 +257,11 @@ def pager(text, color=None):
     stdout = _default_text_stdout()
     if not isatty(sys.stdin) or not isatty(stdout):
         return _nullpager(stdout, text, color)
-    if 'PAGER' in os.environ:
+    pager_cmd = (os.environ.get('PAGER', None) or '').strip()
+    if pager_cmd:
         if WIN:
-            return _tempfilepager(text, os.environ['PAGER'], color)
-        return _pipepager(text, os.environ['PAGER'], color)
+            return _tempfilepager(text, pager_cmd, color)
+        return _pipepager(text, pager_cmd, color)
     if os.environ.get('TERM') in ('dumb', 'emacs'):
         return _nullpager(stdout, text, color)
     if WIN or sys.platform.startswith('os2'):

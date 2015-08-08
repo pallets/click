@@ -22,6 +22,8 @@ Version 5.0
   underlying object only once.
 - `prompt(hide_input=True)` now prints a newline on `^C`.
 - Click will now warn if users are using ``unicode_literals``.
+- Click will now ignore the ``PAGER`` environment variable if it is empty or
+  contains only whitespace.
 
 Version 4.1
 -----------

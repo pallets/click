@@ -1,6 +1,8 @@
 import os
 import sys
 
+import pytest
+
 import click
 import click.utils
 import click._termui_impl
@@ -139,8 +141,9 @@ def test_prompts_abort(monkeypatch, capsys):
     assert out == 'Password: \nScrew you.\n'
 
 
-def test_echo_via_pager(monkeypatch, capfd):
-    monkeypatch.setitem(os.environ, 'PAGER', 'cat')
+@pytest.mark.parametrize('cat', ['cat', 'cat ', 'cat '])
+def test_echo_via_pager(monkeypatch, capfd, cat):
+    monkeypatch.setitem(os.environ, 'PAGER', cat)
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda x: True)
     click.echo_via_pager('haha')
     out, err = capfd.readouterr()
