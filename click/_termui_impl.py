@@ -181,8 +181,6 @@ class ProgressBar(object):
         from .termui import get_terminal_size
 
         if self.is_hidden:
-            echo(self.label, file=self.file, color=self.color)
-            self.file.flush()
             return
 
         # Update width in case the terminal has been resized
