@@ -60,7 +60,7 @@ hard:
     full understanding of the command line how the parser is going to
     behave.  This goes against Click's ambitions of dispatching to
     subparsers.
-*   argparse currently does not support disabling of interspearsed
+*   argparse currently does not support disabling of interspersed
     arguments.  Without this feature it's not possible to safely implement
     Click's nested parsing nature.
 
