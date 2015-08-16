@@ -24,6 +24,7 @@ Version 5.0
 - Click will now warn if users are using ``unicode_literals``.
 - Click will now ignore the ``PAGER`` environment variable if it is empty or
   contains only whitespace.
+- The `click-contrib` GitHub organization was created.
 
 Version 4.1
 -----------

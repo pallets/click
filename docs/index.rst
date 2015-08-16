@@ -93,6 +93,7 @@ Miscellaneous Pages
 .. toctree::
    :maxdepth: 2
 
+   contrib
    changelog
    upgrading
    license
