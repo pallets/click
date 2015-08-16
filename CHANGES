@@ -6,7 +6,7 @@ This contains all major version changes between Click releases.
 Version 5.0
 -----------
 
-(codename to be decided, release date to be determined)
+(codename "tok tok", released on 16th August 2015)
 
 - Removed various deprecated functionality.
 - Atomic files now only accept the `w` mode.

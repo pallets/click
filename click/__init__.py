@@ -93,4 +93,4 @@ __all__ = [
 disable_unicode_literals_warning = False
 
 
-__version__ = '5.0-dev'
+__version__ = '5.0'
