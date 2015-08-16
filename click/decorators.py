@@ -112,7 +112,9 @@ def command(name=None, cls=None, **attrs):
     if cls is None:
         cls = Command
     def decorator(f):
-        return _make_command(f, name, attrs, cls)
+        cmd = _make_command(f, name, attrs, cls)
+        cmd.__doc__ = f.__doc__
+        return cmd
     return decorator
 
 
