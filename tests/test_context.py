@@ -168,3 +168,19 @@ def test_context_pushing():
         assert ctx._depth == 1
 
     assert rv == [42]
+
+
+def test_pass_obj(runner):
+    @click.group()
+    @click.pass_context
+    def cli(ctx):
+        ctx.obj = 'test'
+
+    @cli.command()
+    @click.pass_obj
+    def test(obj):
+        click.echo(obj)
+
+    result = runner.invoke(cli, ['test'])
+    assert not result.exception
+    assert result.output == 'test\n'
