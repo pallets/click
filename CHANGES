@@ -3,6 +3,13 @@ Click Changelog
 
 This contains all major version changes between Click releases.
 
+Version 5.1
+-----------
+
+(bugfix release, release date to be determined)
+
+- Fix a bug in `pass_obj` that would accidentally pass the context too.
+
 Version 5.0
 -----------
 

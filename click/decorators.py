@@ -22,7 +22,6 @@ def pass_obj(f):
     context onwards (:attr:`Context.obj`).  This is useful if that object
     represents the state of a nested system.
     """
-    @pass_context
     def new_func(*args, **kwargs):
         return f(get_current_context().obj, *args, **kwargs)
     return update_wrapper(new_func, f)
