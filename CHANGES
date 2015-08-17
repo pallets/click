@@ -6,7 +6,7 @@ This contains all major version changes between Click releases.
 Version 5.1
 -----------
 
-(bugfix release, release date to be determined)
+(bugfix release, released on 17th August 2015)
 
 - Fix a bug in `pass_obj` that would accidentally pass the context too.
 
