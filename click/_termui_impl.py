@@ -140,25 +140,27 @@ class ProgressBar(object):
     def format_pct(self):
         return ('% 4d%%' % int(self.pct * 100))[1:]
 
-    def format_progress_line(self):
-        show_percent = self.show_percent
-
-        info_bits = []
+    def format_bar(self):
         if self.length_known:
             bar_length = int(self.pct * self.width)
             bar = self.fill_char * bar_length
             bar += self.empty_char * (self.width - bar_length)
-            if show_percent is None:
-                show_percent = not self.show_pos
+        elif self.finished:
+            bar = self.fill_char * self.width
         else:
-            if self.finished:
-                bar = self.fill_char * self.width
-            else:
-                bar = list(self.empty_char * (self.width or 1))
-                if self.time_per_iteration != 0:
-                    bar[int((math.cos(self.pos * self.time_per_iteration)
-                        / 2.0 + 0.5) * self.width)] = self.fill_char
-                bar = ''.join(bar)
+            bar = list(self.empty_char * (self.width or 1))
+            if self.time_per_iteration != 0:
+                bar[int((math.cos(self.pos * self.time_per_iteration)
+                    / 2.0 + 0.5) * self.width)] = self.fill_char
+            bar = ''.join(bar)
+        return bar
+
+    def format_progress_line(self):
+        show_percent = self.show_percent
+
+        info_bits = []
+        if self.length_known and show_percent is None:
+            show_percent = not self.show_pos
 
         if self.show_pos:
             info_bits.append(self.format_pos())
@@ -173,7 +175,7 @@ class ProgressBar(object):
 
         return (self.bar_template % {
             'label': self.label,
-            'bar': bar,
+            'bar': self.format_bar(),
             'info': self.info_sep.join(info_bits)
         }).rstrip()
 
