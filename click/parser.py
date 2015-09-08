@@ -157,9 +157,11 @@ class OptionParser(object):
         #: second mode where it will ignore it and continue processing
         #: after shifting all the unknown options into the resulting args.
         self.ignore_unknown_options = False
+        self.option_value_separators = set('=')
         if ctx is not None:
             self.allow_interspersed_args = ctx.allow_interspersed_args
             self.ignore_unknown_options = ctx.ignore_unknown_options
+            self.option_value_separators = ctx.option_value_separators
         self._short_opt = {}
         self._long_opt = {}
         self._opt_prefixes = set(['-', '--'])
@@ -337,15 +339,17 @@ class OptionParser(object):
         if self.ignore_unknown_options and unknown_options:
             state.largs.append(prefix + ''.join(unknown_options))
 
+    def _split_long_option(self, arg):
+        # Long option handling happens in two parts. The first part is
+        # supporting explicitly attached values. In any case, we will try to
+        # long match the option first.
+        for sep in self.option_value_separators:
+            if sep in arg:
+                return arg.split(sep, 1)
+        return arg, None
+
     def _process_opts(self, arg, state):
-        explicit_value = None
-        # Long option handling happens in two parts.  The first part is
-        # supporting explicitly attached values.  In any case, we will try
-        # to long match the option first.
-        if '=' in arg:
-            long_opt, explicit_value = arg.split('=', 1)
-        else:
-            long_opt = arg
+        long_opt, explicit_value = self._split_long_option(arg)
         norm_long_opt = normalize_opt(long_opt, self.ctx)
 
         # At this point we will match the (assumed) long option through
