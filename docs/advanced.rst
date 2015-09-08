@@ -146,6 +146,28 @@ And how it works on the command line:
 
     invoke(cli, prog_name='cli', args=['--NAME=Pete'])
 
+Option value separator
+----------------------
+
+Options must separate its name from the value using a space or a ``=``
+character like in ``--option=value``.  In order to use a different value
+separator, you can override the separator list. This might be used to define
+Windows compatible option value separators like ``--option:value``.
+
+    CONTEXT_SETTINGS = dict(option_value_separators=set(['=', ':']))
+
+    @click.command(context_settings=CONTEXT_SETTINGS)
+    @click.option('--name')
+    def cli(name):
+        click.echo('Name: %s' % name)
+
+That could be called using either ``=`` or ``:`` as separator:
+
+.. click:run::
+
+    invoke(cli, prog_name='cli', args=['--name:Pete'])
+
+
 Invoking Other Commands
 -----------------------
 

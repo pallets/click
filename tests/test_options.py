@@ -304,3 +304,15 @@ def test_option_custom_class(runner):
     result = runner.invoke(cmd, ['--help'])
     assert 'I am a help text' in result.output
     assert 'you wont see me' not in result.output
+
+
+def test_option_custom_separator(runner):
+    @click.command(context_settings=dict(option_value_separators=set(':')))
+    @click.option('--foo')
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd, ['--foo:value'])
+    print(result.output)
+    assert result.exit_code == 0
+    assert result.output.strip() == 'value'

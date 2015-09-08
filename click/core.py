@@ -167,6 +167,10 @@ class Context(object):
                   codes are used in texts that Click prints which is by
                   default not the case.  This for instance would affect
                   help output.
+    :param option_value_separators: list of characters that may be used
+                                    separate to separate options and values
+                                    like in ``--option=value``. The default is
+                                    ``('=')``.
     """
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
@@ -175,7 +179,8 @@ class Context(object):
                  resilient_parsing=False, allow_extra_args=None,
                  allow_interspersed_args=None,
                  ignore_unknown_options=None, help_option_names=None,
-                 token_normalize_func=None, color=None):
+                 token_normalize_func=None, color=None,
+                 option_value_separators=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -250,6 +255,12 @@ class Context(object):
         #:
         #: .. versionadded:: 4.0
         self.ignore_unknown_options = ignore_unknown_options
+
+        if option_value_separators is None:
+            option_value_separators = command.option_value_separators
+        #: List of option value separators. This is used to allow
+        #: parsing options like ``--option=value``.
+        self.option_value_separators = option_value_separators
 
         if help_option_names is None:
             if parent is not None:
@@ -553,6 +564,8 @@ class BaseCommand(object):
     allow_interspersed_args = True
     #: the default for the :attr:`Context.ignore_unknown_options` flag.
     ignore_unknown_options = False
+    #: the default for the :attr:`Context.option_value_separators` flag.
+    option_value_separators = set('=')
 
     def __init__(self, name, context_settings=None):
         #: the name the command thinks it has.  Upon registering a command
