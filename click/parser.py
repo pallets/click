@@ -157,6 +157,8 @@ class OptionParser(object):
         #: second mode where it will ignore it and continue processing
         #: after shifting all the unknown options into the resulting args.
         self.ignore_unknown_options = False
+        #: This allows to separate long option names an values by something
+        #: different than the default '=' character, as in ``--option=value``.
         self.option_value_separators = set('=')
         if ctx is not None:
             self.allow_interspersed_args = ctx.allow_interspersed_args
