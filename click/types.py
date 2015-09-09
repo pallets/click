@@ -173,7 +173,7 @@ class DateTime(ParamType):
         ]
 
     def get_metavar(self, param):
-        return '[{}]'.format('|'.join(self.formats))
+        return '[%s]' % '|'.join(self.formats)
 
     def _try_to_convert_date(self, value, format):
         try:
@@ -189,7 +189,7 @@ class DateTime(ParamType):
                 return dtime
 
         self.fail(
-            'invalid datetime format: {}. (choose from {})'.format(
+            'invalid datetime format: %s. (choose from %s)' % (
                 value, ', '.join(self.formats)))
 
     def __repr__(self):
