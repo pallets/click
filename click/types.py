@@ -1,5 +1,6 @@
 import os
 import stat
+from datetime import datetime
 
 from ._compat import open_stream, text_type, filename_to_ui, \
     get_filesystem_encoding, get_streerror, _get_argv_encoding, PY2
@@ -180,6 +181,39 @@ class Choice(ParamType):
 
     def __repr__(self):
         return 'Choice(%r)' % list(self.choices)
+
+
+class DateTime(ParamType):
+    name = 'datetime'
+
+    def __init__(self, formats=None):
+        self.formats = formats or [
+            '%Y-%m-%d',
+            '%Y-%m-%dT%H:%M:%S'
+        ]
+
+    def get_metavar(self, param):
+        return '[{}]'.format('|'.join(self.formats))
+
+    def _try_to_convert_date(self, value, format):
+        try:
+            return datetime.strptime(value, format)
+        except ValueError:
+            return None
+
+    def convert(self, value, param, ctx):
+        # Exact match
+        for format in self.formats:
+            dtime = self._try_to_convert_date(value, format)
+            if dtime:
+                return dtime
+
+        self.fail(
+            'invalid datetime format: {}. (choose from {})'.format(
+                value, ', '.join(self.formats)))
+
+    def __repr__(self):
+        return 'DateTime'
 
 
 class IntParamType(ParamType):
