@@ -28,7 +28,7 @@ from .decorators import pass_context, pass_obj, make_pass_decorator, \
 
 # Types
 from .types import ParamType, File, Path, Choice, IntRange, Tuple, \
-     STRING, INT, FLOAT, BOOL, UUID, UNPROCESSED
+     DateTime, STRING, INT, FLOAT, BOOL, UUID, UNPROCESSED
 
 # Utilities
 from .utils import echo, get_binary_stream, get_text_stream, open_file, \
