@@ -18,6 +18,18 @@ def test_nargs_star(runner):
     ]
 
 
+def test_nargs_default(runner):
+    try:
+        @click.command()
+        @click.argument('src', nargs=-1, default=42)
+        def copy(src):
+            pass
+    except TypeError as e:
+        assert 'nargs=-1' in str(e)
+    else:
+        assert False
+
+
 def test_nargs_tup(runner):
     @click.command()
     @click.argument('name', nargs=1)

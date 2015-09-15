@@ -1674,6 +1674,9 @@ class Argument(Parameter):
             else:
                 required = attrs.get('nargs', 1) > 0
         Parameter.__init__(self, param_decls, required=required, **attrs)
+        if self.default is not None and self.nargs < 0:
+            raise TypeError('nargs=-1 in combination with a default value '
+                            'is not supported.')
 
     @property
     def human_readable_name(self):

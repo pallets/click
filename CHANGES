@@ -13,6 +13,7 @@ Version 6.0
 - Actively reject multi commands within chained multi commands.  This
   cannot be supported with the current setup of how the invocation for
   subcommands works.
+- Explicitly disallow nargs=-1 with a set default.
 
 Version 5.1
 -----------
