@@ -3,6 +3,14 @@ Click Changelog
 
 This contains all major version changes between Click releases.
 
+Version 6.0
+-----------
+
+(codename and release date to be decided)
+
+- Optimized the progressbar rendering to not render when it did not
+  actually change.
+
 Version 5.1
 -----------
 
