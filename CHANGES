@@ -10,6 +10,9 @@ Version 6.0
 
 - Optimized the progressbar rendering to not render when it did not
   actually change.
+- Actively reject multi commands within chained multi commands.  This
+  cannot be supported with the current setup of how the invocation for
+  subcommands works.
 
 Version 5.1
 -----------
