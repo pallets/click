@@ -184,3 +184,22 @@ def test_pass_obj(runner):
     result = runner.invoke(cli, ['test'])
     assert not result.exception
     assert result.output == 'test\n'
+
+
+def test_close_before_pop(runner):
+    called = []
+
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        ctx.obj = 'test'
+        @ctx.call_on_close
+        def foo():
+            assert click.get_current_context().obj == 'test'
+            called.append(True)
+        click.echo('aha!')
+
+    result = runner.invoke(cli, [])
+    assert not result.exception
+    assert result.output == 'aha!\n'
+    assert called == [True]

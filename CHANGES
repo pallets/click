@@ -14,6 +14,7 @@ Version 6.0
   cannot be supported with the current setup of how the invocation for
   subcommands works.
 - Explicitly disallow nargs=-1 with a set default.
+- The context is now closed before it's popped from the stack.
 
 Version 5.1
 -----------

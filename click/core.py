@@ -318,10 +318,10 @@ class Context(object):
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
-        pop_context()
         self._depth -= 1
         if self._depth == 0:
             self.close()
+        pop_context()
 
     @contextmanager
     def scope(self, cleanup=True):
