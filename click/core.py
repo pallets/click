@@ -1517,9 +1517,12 @@ class Option(Parameter):
                 if split_char in decl:
                     first, second = decl.split(split_char, 1)
                     first = first.rstrip()
-                    possible_names.append(split_opt(first))
-                    opts.append(first)
-                    secondary_opts.append(second.lstrip())
+                    if first:
+                        possible_names.append(split_opt(first))
+                        opts.append(first)
+                    second = second.lstrip()
+                    if second:
+                        secondary_opts.append(second.lstrip())
                 else:
                     possible_names.append(split_opt(decl))
                     opts.append(decl)

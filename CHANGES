@@ -15,6 +15,7 @@ Version 6.0
   subcommands works.
 - Explicitly disallow nargs=-1 with a set default.
 - The context is now closed before it's popped from the stack.
+- Added support for short aliases for the false flag on toggles.
 
 Version 5.1
 -----------

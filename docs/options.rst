@@ -201,6 +201,29 @@ can alternatively split the parameters through ``;`` instead:
     if __name__ == '__main__':
         log()
 
+.. versionchanged:: 6.0
+
+If you want to define an alias for the second option only, then you will
+need to use leading whitespace to disambiguate the format string:
+
+Example:
+
+.. click:example::
+
+    import sys
+
+    @click.command()
+    @click.option('--shout/--no-shout', ' /S', default=False)
+    def info(shout):
+        rv = sys.platform
+        if shout:
+            rv = rv.upper() + '!!!!111'
+        click.echo(rv)
+
+.. click:run::
+
+    invoke(info, args=['--help'])
+
 Feature Switches
 ----------------
 
