@@ -30,7 +30,7 @@ least a dash has been provided.  Example::
     $ repo clone -<TAB><TAB>
     --deep     --help     --rev      --shallow  -r
 	
-Additionally, custom suggestions can be given to an argument with the ``autocomplete`` parameter as a list of strings.  Example::
+Additionally, custom suggestions can be given to an argument with the ``autocompletion`` parameter as a list of strings.  Example::
 
 .. click:example::
 
