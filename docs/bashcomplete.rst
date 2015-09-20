@@ -29,6 +29,16 @@ least a dash has been provided.  Example::
     clone    commit   copy     delete   setuser
     $ repo clone -<TAB><TAB>
     --deep     --help     --rev      --shallow  -r
+	
+Additionally, custom suggestions can be given to an argument with the ``autocomplete`` parameter as a list of strings.  Example::
+
+.. click:example::
+
+    @cli.command()
+	@click.argument("name", type=click.STRING, autocompletion=["John", "Simon", "Doe"])
+	def cmd1(name):
+        click.echo('Name: %s' % name)
+
 
 Activation
 ----------
