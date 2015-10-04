@@ -213,7 +213,7 @@ Example:
     import sys
 
     @click.command()
-    @click.option('--shout/--no-shout', ' /S', default=False)
+    @click.option('--shout/--no-shout', ' /-S', default=False)
     def info(shout):
         rv = sys.platform
         if shout:
