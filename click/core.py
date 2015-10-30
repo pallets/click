@@ -756,8 +756,6 @@ class Command(BaseCommand):
         self.help = help
         self.epilog = epilog
         self.options_metavar = options_metavar
-        if short_help is None and help:
-            short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
 
@@ -987,15 +985,13 @@ class MultiCommand(Command):
         """Extra format methods for multi methods that adds all the commands
         after the options.
         """
-        rows = []
-        for subcommand in self.list_commands(ctx):
-            cmd = self.get_command(ctx, subcommand)
-            # What is this, the tool lied about a command.  Ignore it
-            if cmd is None:
-                continue
+        commands = filter(lambda cmd: cmd[0] is not None,
+                          [(c, self.get_command(ctx, c)) for c in self.list_commands(ctx)])
 
-            help = cmd.short_help or ''
-            rows.append((subcommand, help))
+        limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
+
+        rows = [(cmd[0], cmd[1].short_help or cmd[1].help and make_default_short_help(cmd[1].help, limit) or '')
+                for cmd in commands]
 
         if rows:
             with formatter.section('Commands'):
