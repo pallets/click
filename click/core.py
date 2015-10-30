@@ -1024,13 +1024,24 @@ class MultiCommand(Command):
         """Extra format methods for multi methods that adds all the commands
         after the options.
         """
-        commands = filter(lambda cmd: cmd[0] is not None or cmd[1].hidden,
-                          [(c, self.get_command(ctx, c)) for c in self.list_commands(ctx)])
+        commands = []
+        for subcommand in self.list_commands(ctx):
+            cmd = self.get_command(ctx, subcommand)
+            # What is this, the tool lied about a command.  Ignore it
+            if cmd is None:
+                continue
+            if cmd.hidden:
+                continue
 
+            commands.append((subcommand, cmd))
+
+        # allow for 3 times the default spacing
         limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
 
-        rows = [(cmd[0], cmd[1].short_help or cmd[1].help and make_default_short_help(cmd[1].help, limit) or '')
-                for cmd in commands]
+        rows = []
+        for subcommand, cmd in commands:
+            help = cmd.short_help or cmd.help and make_default_short_help(cmd.help, limit)
+            rows.append((subcommand, help or ''))
 
         if rows:
             with formatter.section('Commands'):
