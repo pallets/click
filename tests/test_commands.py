@@ -59,18 +59,12 @@ def test_auto_shorthelp(runner):
         """This is a long text that is too long to show as short help
         and will be truncated instead."""
 
-    @cli.command(context_settings={'short_help_width': 20})
-    def width():
-        """This is a long text that is too long to show as short help
-        and will be truncated instead."""
-
     result = runner.invoke(cli, ['--help'])
     assert re.search(
         r'Commands:\n\s+'
-        r'long\s+This is a long text that is too long to show\.\.\.\n\s+'
+        r'long\s+This is a long text that is too long to show as short help\.\.\.\n\s+'
         r'short\s+This is a short text\.\n\s+'
-        r'special-chars\s+Login and store the token in ~/.netrc\.\s+'
-        r'width\s+This is a long text\.\.\.\n\s*',
+        r'special-chars\s+Login and store the token in ~/.netrc\.\s*',
         result.output) is not None
 
 
