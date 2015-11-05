@@ -580,7 +580,7 @@ def get_os_args():
             if arg == '-m':
                 break
             if arg == '-c':
-                argv[0] = '-c'
+                argv[0] = u'-c'
                 break
 
     return argv
