@@ -11,8 +11,8 @@ from ._compat import text_type, open_stream, get_filesystem_encoding, \
 
 if not PY2:
     from ._compat import _find_binary_writer
-    if WIN:
-        from ._winconsole import _get_windows_argv
+else WIN:
+    from ._winconsole import _get_windows_argv
 
 
 echo_native_types = string_types + (bytes, bytearray)
