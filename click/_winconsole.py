@@ -227,7 +227,7 @@ def _get_windows_argv():
             if arg == '-m':
                 break
             if arg == '-c':
-                argv[0] = '-c'
+                argv[0] = u'-c'
                 break
 
     return argv
