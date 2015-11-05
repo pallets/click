@@ -4,6 +4,8 @@ import os
 import click
 import pytest
 
+from click._compat import text_type
+
 
 def test_prefixes(runner):
     @click.command()
@@ -144,31 +146,34 @@ def test_multiple_envvar(runner):
 
 def test_multiple_default_help(runner):
     @click.command()
-    @click.option("--arg1", multiple=True, default=('foo', 'bar'),
+    @click.option('--arg1', multiple=True, default=('foo', 'bar'),
                   show_default=True)
-    @click.option("--arg2", multiple=True, default=(1, 2), type=int,
+    @click.option('--arg2', multiple=True, default=(1, 2), type=int,
                   show_default=True)
     def cmd(arg, arg2):
         pass
 
     result = runner.invoke(cmd, ['--help'])
     assert not result.exception
-    assert "foo, bar" in result.output
-    assert "1, 2" in result.output
+    assert 'foo, bar' in result.output
+    assert '1, 2' in result.output
+
 
 def test_multiple_default_type(runner):
     @click.command()
-    @click.option("--arg1", multiple=True, default=('foo', 'bar'))
-    @click.option("--arg2", multiple=True, default=(1, "a"))
+    @click.option('--arg1', multiple=True, default=('foo', 'bar'))
+    @click.option('--arg2', multiple=True, default=(1, 'a'))
     def cmd(arg1, arg2):
-        assert all(isinstance(e[0],str) for e in arg1)
-        assert all(isinstance(e[1],str) for e in arg1)
+        assert all(isinstance(e[0], text_type) for e in arg1)
+        assert all(isinstance(e[1], text_type) for e in arg1)
 
-        assert all(isinstance(e[0],int) for e in arg2)
-        assert all(isinstance(e[1],str) for e in arg2)
+        assert all(isinstance(e[0], int) for e in arg2)
+        assert all(isinstance(e[1], text_type) for e in arg2)
 
-    result = runner.invoke(cmd, "--arg1 a b --arg1 test 1 --arg2 2 two --arg2 4 four".split())
+    result = runner.invoke(cmd, '--arg1 a b --arg1 test 1 --arg2 2 '
+                           'two --arg2 4 four'.split())
     assert not result.exception
+
 
 def test_nargs_envvar(runner):
     @click.command()

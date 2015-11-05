@@ -1,9 +1,8 @@
 import os
-import sys
 import stat
 
 from ._compat import open_stream, text_type, filename_to_ui, \
-    get_filesystem_encoding, get_streerror
+    get_filesystem_encoding, get_streerror, _get_argv_encoding
 from .exceptions import BadParameter
 from .utils import safecall, LazyFile
 
@@ -109,15 +108,16 @@ class StringParamType(ParamType):
 
     def convert(self, value, param, ctx):
         if isinstance(value, bytes):
+            enc = _get_argv_encoding()
             try:
-                enc = getattr(sys.stdin, 'encoding', None)
-                if enc is not None:
-                    value = value.decode(enc)
+                value = value.decode(enc)
             except UnicodeError:
-                try:
-                    value = value.decode(get_filesystem_encoding())
-                except UnicodeError:
-                    value = value.decode('utf-8', 'replace')
+                fs_enc = get_filesystem_encoding()
+                if fs_enc != enc:
+                    try:
+                        value = value.decode(fs_enc)
+                    except UnicodeError:
+                        value = value.decode('utf-8', 'replace')
             return value
         return value
 

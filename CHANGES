@@ -19,6 +19,9 @@ Version 6.0
 - Click will now attempt to aid you with debugging locale errors
   better by listing with the help of the OS what locales are
   available.
+- Click used to return byte strings on Python 2 in some unit-testing
+  situations.  This has been fixed to correctly return unicode strings
+  now.
 
 Version 5.1
 -----------

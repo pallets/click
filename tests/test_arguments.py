@@ -235,7 +235,7 @@ def test_nargs_star_ordering(runner):
 
     result = runner.invoke(cmd, ['a', 'b', 'c'])
     assert result.output.splitlines() == [
-        "('a',)",
+        "(u'a',)",
         'b',
         'c',
     ]
@@ -252,7 +252,7 @@ def test_nargs_specified_plus_star_ordering(runner):
 
     result = runner.invoke(cmd, ['a', 'b', 'c', 'd', 'e', 'f'])
     assert result.output.splitlines() == [
-        "('a', 'b', 'c')",
+        "(u'a', u'b', u'c')",
         'd',
-        "('e', 'f')",
+        "(u'e', u'f')",
     ]
