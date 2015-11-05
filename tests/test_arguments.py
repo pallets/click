@@ -237,7 +237,7 @@ def test_nargs_star_ordering(runner):
 
     result = runner.invoke(cmd, ['a', 'b', 'c'])
     assert result.output.splitlines() == [
-        PY2 and "(u'a',)" or "('a')",
+        PY2 and "(u'a',)" or "('a',)",
         'b',
         'c',
     ]
