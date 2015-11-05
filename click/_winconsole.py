@@ -242,7 +242,8 @@ _stream_factories = {
 
 def _get_windows_console_stream(f, encoding, errors):
     if encoding in ('utf-16-le', None) \
-       and errors in ('strict', None):
+       and errors in ('strict', None) and \
+       hasattr(f, 'isatty') and f.isatty():
         func = _stream_factories.get(f.fileno())
         if func is not None:
             return func()
