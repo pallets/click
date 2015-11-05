@@ -22,6 +22,13 @@ Version 6.0
 - Click used to return byte strings on Python 2 in some unit-testing
   situations.  This has been fixed to correctly return unicode strings
   now.
+- For Windows users on Python 2, Click will now handle Unicode more
+  correctly handle Unicode coming in from the system.  This also has
+  the disappointing side effect that filenames will now be always
+  unicode by default in the `Path` type which means that this can
+  introduce small bugs for code not aware of this.
+- Added a `type` parameter to `Path` to force a specific string type
+  on the value.
 
 Version 5.1
 -----------

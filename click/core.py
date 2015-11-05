@@ -13,7 +13,7 @@ from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
 from .globals import push_context, pop_context
 
-from ._compat import PY2, isidentifier, iteritems
+from ._compat import PY2, isidentifier, iteritems, get_os_args
 from ._unicodefun import _check_for_unicode_literals, _verify_python3_env
 
 
@@ -670,9 +670,10 @@ class BaseCommand(object):
             _check_for_unicode_literals()
 
         if args is None:
-            args = sys.argv[1:]
+            args = get_os_args()
         else:
             args = list(args)
+
         if prog_name is None:
             prog_name = make_str(os.path.basename(
                 sys.argv and sys.argv[0] or __file__))

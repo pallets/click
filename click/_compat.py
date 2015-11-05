@@ -551,6 +551,41 @@ def isatty(stream):
         return False
 
 
+def get_os_args():
+    # On Python 3 or non windows environments, we just return the args
+    # as they are.
+    if not PY2 or os.name != 'nt':
+        return sys.argv[1:]
+
+    from ctypes import WINFUNCTYPE, windll, POINTER, byref, c_int
+    from ctypes.wintypes import LPWSTR, LPCWSTR
+
+    GetCommandLineW = WINFUNCTYPE(LPWSTR)(
+        ('GetCommandLineW', windll.kernel32))
+    CommandLineToArgvW = WINFUNCTYPE(
+        POINTER(LPWSTR), LPCWSTR, POINTER(c_int))(
+            ('CommandLineToArgvW', windll.shell32))
+
+    argc = c_int(0)
+    argv_unicode = CommandLineToArgvW(GetCommandLineW(), byref(argc))
+    argv = [argv_unicode[i] for i in range(0, argc.value)]
+
+    if not hasattr(sys, 'frozen'):
+        argv = argv[1:]
+        while len(argv) > 0:
+            arg = argv[0]
+            if not arg.startswith('-') or arg == '-':
+                break
+            argv = argv[1:]
+            if arg == '-m':
+                break
+            if arg == '-c':
+                argv[0] = '-c'
+                break
+
+    return argv
+
+
 def _get_argv_encoding():
     if os.name == 'nt':
         import locale
