@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
+from click._compat import PY2
 
 
 def test_nargs_star(runner):
@@ -235,7 +236,7 @@ def test_nargs_star_ordering(runner):
 
     result = runner.invoke(cmd, ['a', 'b', 'c'])
     assert result.output.splitlines() == [
-        "(u'a',)",
+        PY2 and "(u'a',)" or "('a')",
         'b',
         'c',
     ]
@@ -252,7 +253,7 @@ def test_nargs_specified_plus_star_ordering(runner):
 
     result = runner.invoke(cmd, ['a', 'b', 'c', 'd', 'e', 'f'])
     assert result.output.splitlines() == [
-        "(u'a', u'b', u'c')",
+        PY2 and "(u'a', u'b', u'c')" or "('a', 'b', 'c')",
         'd',
-        "(u'e', u'f')",
+        PY2 and "(u'e', u'f')" or "('e', 'f')",
     ]
