@@ -41,6 +41,9 @@ def prompt(text, default=None, hide_input=False,
     If the user aborts the input by sending a interrupt signal, this
     function will catch it and raise a :exc:`Abort` exception.
 
+    .. versionadded:: 6.0
+       Added unicode support for cmd.exe on Windows.
+
     .. versionadded:: 4.0
        Added the `err` parameter.
 
