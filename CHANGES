@@ -16,6 +16,9 @@ Version 6.0
 - Explicitly disallow nargs=-1 with a set default.
 - The context is now closed before it's popped from the stack.
 - Added support for short aliases for the false flag on toggles.
+- Click will now attempt to aid you with debugging locale errors
+  better by listing with the help of the OS what locales are
+  available.
 
 Version 5.1
 -----------

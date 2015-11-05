@@ -1,6 +1,5 @@
 import os
 import sys
-import codecs
 from contextlib import contextmanager
 from itertools import repeat
 from functools import update_wrapper
@@ -14,7 +13,8 @@ from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
 from .globals import push_context, pop_context
 
-from ._compat import PY2, isidentifier, iteritems, _check_for_unicode_literals
+from ._compat import PY2, isidentifier, iteritems
+from ._unicodefun import _check_for_unicode_literals, _verify_python3_env
 
 
 _missing = object()
@@ -665,18 +665,7 @@ class BaseCommand(object):
         # sane at this point of reject further execution to avoid a
         # broken script.
         if not PY2:
-            try:
-                import locale
-                fs_enc = codecs.lookup(locale.getpreferredencoding()).name
-            except Exception:
-                fs_enc = 'ascii'
-            if fs_enc == 'ascii':
-                raise RuntimeError('Click will abort further execution '
-                                   'because Python 3 was configured to use '
-                                   'ASCII as encoding for the environment. '
-                                   'Either switch to Python 2 or consult '
-                                   'http://click.pocoo.org/python3/ '
-                                   'for mitigation steps.')
+            _verify_python3_env()
         else:
             _check_for_unicode_literals()
 
