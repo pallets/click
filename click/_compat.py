@@ -586,13 +586,6 @@ def isatty(stream):
         return False
 
 
-def _get_argv_encoding():
-    if os.name == 'nt':
-        import locale
-        return locale.getpreferredencoding()
-    return getattr(sys.stdin, 'encoding', None) or get_filesystem_encoding()
-
-
 def _make_cached_stream_func(src_func, wrapper_func):
     cache = WeakKeyDictionary()
     def func():
