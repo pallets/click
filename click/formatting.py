@@ -4,6 +4,10 @@ from .parser import split_opt
 from ._compat import term_len
 
 
+# Can force a width.  This is used by the test system
+FORCED_WIDTH = None
+
+
 def measure_table(rows):
     widths = {}
     for row in rows:
@@ -99,7 +103,9 @@ class HelpFormatter(object):
         if max_width is None:
             max_width = 80
         if width is None:
-            width = max(min(get_terminal_size()[0], max_width) - 2, 50)
+            width = FORCED_WIDTH
+            if width is None:
+                width = max(min(get_terminal_size()[0], max_width) - 2, 50)
         self.width = width
         self.current_indent = 0
         self.buffer = []

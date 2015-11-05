@@ -33,6 +33,7 @@ Version 6.0
   with unicode in the Python windows console.  For Python 3 the work
   is delegated to the Python interpreter as general support for Unicode
   in the console is implemented to some degree.
+- Unittests now always force a certain virtual terminal width.
 
 Version 5.1
 -----------

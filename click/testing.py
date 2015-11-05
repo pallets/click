@@ -157,6 +157,8 @@ class CliRunner(object):
         old_stdin = sys.stdin
         old_stdout = sys.stdout
         old_stderr = sys.stderr
+        old_forced_width = clickpkg.formatting.FORCED_WIDTH
+        clickpkg.formatting.FORCED_WIDTH = 80
 
         env = self.make_env(env)
 
@@ -236,6 +238,7 @@ class CliRunner(object):
             clickpkg.termui.hidden_prompt_func = old_hidden_prompt_func
             clickpkg.termui._getchar = old__getchar_func
             clickpkg.utils.should_strip_ansi = old_should_strip_ansi
+            clickpkg.formatting.FORCED_WIDTH = old_forced_width
 
     def invoke(self, cli, args=None, input=None, env=None,
                catch_exceptions=True, color=False, **extra):
