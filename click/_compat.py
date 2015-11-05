@@ -178,7 +178,7 @@ if PY2:
         from ._winconsole import _get_windows_console_stream
     else:
         set_binary_mode = lambda x: x
-        _get_windows_console_stream = lambda x: None
+        _get_windows_console_stream = lambda *x: None
 
     def isidentifier(x):
         return _identifier_re.search(x) is not None
