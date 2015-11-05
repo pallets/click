@@ -236,7 +236,8 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     Primarily it means that you can print binary data as well as Unicode
     data on both 2.x and 3.x to the given file in the most appropriate way
     possible.  This is a very carefree function as in that it will try its
-    best to not fail.
+    best to not fail.  As of Click 6.0 this includes support for unicode
+    output on the Windows console.
 
     In addition to that, if `colorama`_ is installed, the echo function will
     also support clever handling of ANSI codes.  Essentially it will then
@@ -247,6 +248,12 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
         terminal.
 
     .. _colorama: http://pypi.python.org/pypi/colorama
+
+    .. versionchanged:: 6.0
+       As of Click 6.0 the echo function will properly support unicode
+       output on the windows console.  Not that click does not modify
+       the interpreter in any way which means that `sys.stdout` or the
+       print statement or function will still not provide unicode support.
 
     .. versionchanged:: 2.0
        Starting with version 2.0 of Click, the echo function will work
@@ -394,10 +401,12 @@ def get_os_args():
     will actually be a list of unicode strings instead because the
     default behavior on that platform otherwise will not be able to
     carry all possible values that sys.argv can have.
+
+    .. versionadded:: 6.0
     """
-    if not PY2 or os.name != 'nt':
-        return sys.argv[1:]
-    return _get_windows_argv()
+    if PY2 and WIN:
+        return _get_windows_argv()
+    return sys.argv[1:]
 
 
 def format_filename(filename, shorten=False):

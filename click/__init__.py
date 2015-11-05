@@ -32,7 +32,7 @@ from .types import ParamType, File, Path, Choice, IntRange, Tuple, \
 
 # Utilities
 from .utils import echo, get_binary_stream, get_text_stream, open_file, \
-     format_filename, get_app_dir
+     format_filename, get_app_dir, get_os_args
 
 # Terminal functions
 from .termui import prompt, confirm, get_terminal_size, echo_via_pager, \
@@ -69,7 +69,7 @@ __all__ = [
 
     # Utilities
     'echo', 'get_binary_stream', 'get_text_stream', 'open_file',
-    'format_filename', 'get_app_dir',
+    'format_filename', 'get_app_dir', 'get_os_args',
 
     # Terminal functions
     'prompt', 'confirm', 'get_terminal_size', 'echo_via_pager',
