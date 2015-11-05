@@ -11,7 +11,7 @@ from ._compat import text_type, open_stream, get_filesystem_encoding, \
 
 if not PY2:
     from ._compat import _find_binary_writer
-else WIN:
+elif WIN:
     from ._winconsole import _get_windows_argv
 
 
