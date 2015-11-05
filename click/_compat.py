@@ -456,7 +456,12 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
 
 
 # Used in a destructor call, needs extra protection from interpreter cleanup.
-_rename = os.rename
+if hasattr(os, 'replace'):
+    _replace = os.replace
+    _can_replace = True
+else:
+    _replace = os.rename
+    _can_replace = not WIN
 
 
 class _AtomicFile(object):
@@ -475,7 +480,12 @@ class _AtomicFile(object):
         if self.closed:
             return
         self._f.close()
-        _rename(self._tmp_filename, self._real_filename)
+        if not _can_replace:
+            try:
+                os.remove(self._real_filename)
+            except OSError:
+                pass
+        _replace(self._tmp_filename, self._real_filename)
         self.closed = True
 
     def __getattr__(self, name):

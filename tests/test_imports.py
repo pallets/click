@@ -2,6 +2,8 @@ import sys
 import json
 import subprocess
 
+from click._compat import WIN
+
 
 IMPORT_TEST = b'''\
 try:
@@ -32,6 +34,9 @@ ALLOWED_IMPORTS = set([
     'functools', 'stat', 're', 'codecs', 'inspect', 'itertools', 'io',
     'threading'
 ])
+
+if WIN:
+    ALLOWED_IMPORTS.update(['ctypes', 'ctypes.wintypes', 'msvcrt'])
 
 
 def test_light_imports():
