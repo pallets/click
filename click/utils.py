@@ -11,6 +11,8 @@ from ._compat import text_type, open_stream, get_filesystem_encoding, \
 
 if not PY2:
     from ._compat import _find_binary_writer
+    if WIN:
+        from ._winconsole import _get_windows_argv
 
 
 echo_native_types = string_types + (bytes, bytearray)
@@ -379,6 +381,23 @@ def open_file(filename, mode='r', encoding=None, errors='strict',
     if not should_close:
         f = KeepOpenFile(f)
     return f
+
+
+def get_os_args():
+    """This returns the argument part of sys.argv in the most appropriate
+    form for processing.  What this means is that this return value is in
+    a format that works for Click to process but does not necessarily
+    correspond well to what's actually standard for the interpreter.
+
+    On most environments the return value is ``sys.argv[:1]`` unchanged.
+    However if you are on Windows and running Python 2 the return value
+    will actually be a list of unicode strings instead because the
+    default behavior on that platform otherwise will not be able to
+    carry all possible values that sys.argv can have.
+    """
+    if not PY2 or os.name != 'nt':
+        return sys.argv[1:]
+    return _get_windows_argv()
 
 
 def format_filename(filename, shorten=False):

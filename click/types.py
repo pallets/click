@@ -354,17 +354,24 @@ class Path(ParamType):
     :param resolve_path: if this is true, then the path is fully resolved
                          before the value is passed onwards.  This means
                          that it's absolute and symlinks are resolved.
+    :param type: optionally a string type that should be used to
+                 represent the path.  The default is `None` which
+                 means the return value will be either bytes or
+                 unicode depending on what makes most sense given the
+                 input data Click deals with.
     """
     envvar_list_splitter = os.path.pathsep
 
     def __init__(self, exists=False, file_okay=True, dir_okay=True,
-                 writable=False, readable=True, resolve_path=False):
+                 writable=False, readable=True, resolve_path=False,
+                 path_type=None):
         self.exists = exists
         self.file_okay = file_okay
         self.dir_okay = dir_okay
         self.writable = writable
         self.readable = readable
         self.resolve_path = resolve_path
+        self.type = path_type
 
         if self.file_okay and not self.dir_okay:
             self.name = 'file'
@@ -411,6 +418,12 @@ class Path(ParamType):
                 self.path_type,
                 filename_to_ui(value)
             ), param, ctx)
+
+        if self.type is not None and not isinstance(rv, self.type):
+            if self.type is text_type:
+                rv = rv.decode(get_filesystem_encoding())
+            else:
+                rv = rv.encode(get_filesystem_encoding())
 
         return rv
 

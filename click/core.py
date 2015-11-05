@@ -670,9 +670,10 @@ class BaseCommand(object):
             _check_for_unicode_literals()
 
         if args is None:
-            args = sys.argv[1:]
+            args = get_os_args()
         else:
             args = list(args)
+
         if prog_name is None:
             prog_name = make_str(os.path.basename(
                 sys.argv and sys.argv[0] or __file__))
@@ -1711,3 +1712,4 @@ class Argument(Parameter):
 
 # Circular dependency between decorators and core
 from .decorators import command, group
+from .utils import get_os_args
