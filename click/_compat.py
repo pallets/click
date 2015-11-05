@@ -167,8 +167,18 @@ if PY2:
             else:
                 msvcrt.setmode(fileno, os.O_BINARY)
             return f
+
+        class WindowsConsole(_FixupStream):
+            def __repr__(self):
+                return '<%s name=%r>' % (
+                    self.__class__.__name__,
+                    self.name,
+                )
+
+        from ._winconsole import _get_windows_console_stream
     else:
         set_binary_mode = lambda x: x
+        _get_windows_console_stream = lambda x: None
 
     def isidentifier(x):
         return _identifier_re.search(x) is not None
@@ -183,12 +193,21 @@ if PY2:
         return set_binary_mode(sys.stderr)
 
     def get_text_stdin(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stdin, encoding, errors)
+        if rv is not None:
+            return rv
         return _make_text_stream(sys.stdin, encoding, errors)
 
     def get_text_stdout(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stdout, encoding, errors)
+        if rv is not None:
+            return rv
         return _make_text_stream(sys.stdout, encoding, errors)
 
     def get_text_stderr(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stderr, encoding, errors)
+        if rv is not None:
+            return rv
         return _make_text_stream(sys.stderr, encoding, errors)
 
     def filename_to_ui(value):
@@ -496,6 +515,19 @@ if WIN:
     # Windows has a smaller terminal
     DEFAULT_COLUMNS = 79
 
+    def _get_argv_encoding():
+        import locale
+        return locale.getpreferredencoding()
+
+    if PY2:
+        def raw_input(prompt=''):
+            sys.stderr.flush()
+            if prompt:
+                stdout = _default_text_stdout()
+                stdout.write(prompt)
+            stdin = _default_text_stdin()
+            return stdin.readline().rstrip('\r\n')
+
     try:
         import colorama
     except ImportError:
@@ -538,6 +570,9 @@ if WIN:
             win = colorama.win32.GetConsoleScreenBufferInfo(
                 colorama.win32.STDOUT).srWindow
             return win.Right - win.Left, win.Bottom - win.Top
+else:
+    def _get_argv_encoding():
+        return getattr(sys.stdin, 'encoding', None) or get_filesystem_encoding()
 
 
 def term_len(x):
@@ -549,41 +584,6 @@ def isatty(stream):
         return stream.isatty()
     except Exception:
         return False
-
-
-def get_os_args():
-    # On Python 3 or non windows environments, we just return the args
-    # as they are.
-    if not PY2 or os.name != 'nt':
-        return sys.argv[1:]
-
-    from ctypes import WINFUNCTYPE, windll, POINTER, byref, c_int
-    from ctypes.wintypes import LPWSTR, LPCWSTR
-
-    GetCommandLineW = WINFUNCTYPE(LPWSTR)(
-        ('GetCommandLineW', windll.kernel32))
-    CommandLineToArgvW = WINFUNCTYPE(
-        POINTER(LPWSTR), LPCWSTR, POINTER(c_int))(
-            ('CommandLineToArgvW', windll.shell32))
-
-    argc = c_int(0)
-    argv_unicode = CommandLineToArgvW(GetCommandLineW(), byref(argc))
-    argv = [argv_unicode[i] for i in range(0, argc.value)]
-
-    if not hasattr(sys, 'frozen'):
-        argv = argv[1:]
-        while len(argv) > 0:
-            arg = argv[0]
-            if not arg.startswith('-') or arg == '-':
-                break
-            argv = argv[1:]
-            if arg == '-m':
-                break
-            if arg == '-c':
-                argv[0] = '-c'
-                break
-
-    return argv
 
 
 def _get_argv_encoding():
@@ -612,6 +612,8 @@ def _make_cached_stream_func(src_func, wrapper_func):
     return func
 
 
+_default_text_stdin = _make_cached_stream_func(
+    lambda: sys.stdin, get_text_stdin)
 _default_text_stdout = _make_cached_stream_func(
     lambda: sys.stdout, get_text_stdout)
 _default_text_stderr = _make_cached_stream_func(
