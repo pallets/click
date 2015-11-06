@@ -157,6 +157,9 @@ if PY2:
     # binary only, patch it back to the system, and then use a wrapper
     # stream that converts newlines.  It's not quite clear what's the
     # correct option here.
+    #
+    # This code also lives in _winconsole for the fallback to the console
+    # emulation stream.
     if WIN:
         import msvcrt
         def set_binary_mode(f):
@@ -167,13 +170,6 @@ if PY2:
             else:
                 msvcrt.setmode(fileno, os.O_BINARY)
             return f
-
-        class WindowsConsole(_FixupStream):
-            def __repr__(self):
-                return '<%s name=%r>' % (
-                    self.__class__.__name__,
-                    self.name,
-                )
     else:
         set_binary_mode = lambda x: x
 

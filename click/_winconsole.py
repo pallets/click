@@ -9,10 +9,12 @@
 # echo and prmopt.
 
 import io
+import os
 import sys
 import zlib
 import time
 import ctypes
+import msvcrt
 from click._compat import _NonClosingTextIOWrapper, text_type, PY2
 from ctypes import byref, POINTER, pythonapi, c_int, c_char, c_char_p, \
      c_void_p, py_object, c_ssize_t, c_ulong, windll, WINFUNCTYPE
@@ -256,4 +258,10 @@ def _get_windows_console_stream(f, encoding, errors):
                 f = getattr(f, 'buffer')
                 if f is None:
                     return None
+            else:
+                # If we are on Python 2 we need to set the stream that we
+                # deal with to binary mode as otherwise the exercise if a
+                # bit moot.  The same problems apply as for
+                # get_binary_stdin and friends from _compat.
+                msvcrt.setmode(f.fileno(), os.O_BINARY)
             return func(f)
