@@ -12,7 +12,8 @@ from ._compat import text_type, open_stream, get_filesystem_encoding, \
 if not PY2:
     from ._compat import _find_binary_writer
 elif WIN:
-    from ._winconsole import _get_windows_argv
+    from ._winconsole import _get_windows_argv, \
+         _hash_py_argv, _initial_argv_hash
 
 
 echo_native_types = string_types + (bytes, bytearray)
@@ -404,7 +405,9 @@ def get_os_args():
 
     .. versionadded:: 6.0
     """
-    if PY2 and WIN:
+    # We can only extract the unicode argv if sys.argv has not been
+    # changed since the startup of the application.
+    if PY2 and WIN and _initial_argv_hash == _hash_py_argv():
         return _get_windows_argv()
     return sys.argv[1:]
 

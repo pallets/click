@@ -10,14 +10,13 @@
 
 import io
 import sys
+import zlib
 import ctypes
 from click._compat import _NonClosingTextIOWrapper, text_type, PY2
 from ctypes import byref, POINTER, pythonapi, c_int, c_char, c_char_p, \
      c_void_p, py_object, c_ssize_t, c_ulong, windll, WINFUNCTYPE
 from ctypes.wintypes import LPWSTR, LPCWSTR
 
-
-PY2 = sys.version_info[0] == 2
 
 c_ssize_p = POINTER(c_ssize_t)
 
@@ -212,25 +211,31 @@ def _get_text_stderr(buffer_stream):
     return ConsoleStream(text_stream, buffer_stream)
 
 
-def _get_windows_argv():
-    argc = c_int(0)
-    argv_unicode = CommandLineToArgvW(GetCommandLineW(), byref(argc))
-    argv = [argv_unicode[i] for i in range(0, argc.value)]
+if PY2:
+    def _hash_py_argv():
+        return zlib.crc32('\x00'.join(sys.argv[1:]))
 
-    if not hasattr(sys, 'frozen'):
-        argv = argv[1:]
-        while len(argv) > 0:
-            arg = argv[0]
-            if not arg.startswith('-') or arg == '-':
-                break
+    _initial_argv_hash = _hash_py_argv()
+
+    def _get_windows_argv():
+        argc = c_int(0)
+        argv_unicode = CommandLineToArgvW(GetCommandLineW(), byref(argc))
+        argv = [argv_unicode[i] for i in range(0, argc.value)]
+
+        if not hasattr(sys, 'frozen'):
             argv = argv[1:]
-            if arg == '-m':
-                break
-            if arg == '-c':
-                argv[0] = u'-c'
-                break
+            while len(argv) > 0:
+                arg = argv[0]
+                if not arg.startswith('-') or arg == '-':
+                    break
+                argv = argv[1:]
+                if arg == '-m':
+                    break
+                if arg == '-c':
+                    argv[0] = u'-c'
+                    break
 
-    return argv
+        return argv
 
 
 _stream_factories = {
