@@ -36,7 +36,8 @@ ALLOWED_IMPORTS = set([
 ])
 
 if WIN:
-    ALLOWED_IMPORTS.update(['ctypes', 'ctypes.wintypes', 'msvcrt', 'zlib'])
+    ALLOWED_IMPORTS.update(['ctypes', 'ctypes.wintypes', 'msvcrt', 'time',
+                            'zlib'])
 
 
 def test_light_imports():
