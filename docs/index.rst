@@ -75,6 +75,7 @@ usage patterns.
    bashcomplete
    exceptions
    python3
+   wincmd
 
 API Reference
 -------------
