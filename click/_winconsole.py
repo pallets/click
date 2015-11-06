@@ -232,13 +232,10 @@ if PY2:
                 if not arg.startswith('-') or arg == '-':
                     break
                 argv = argv[1:]
-                if arg == '-m':
-                    break
-                if arg == '-c':
-                    argv[0] = u'-c'
+                if arg in ('-c', '-m'):
                     break
 
-        return argv
+        return argv[1:]
 
 
 _stream_factories = {
