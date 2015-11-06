@@ -11,6 +11,7 @@
 import io
 import sys
 import zlib
+import time
 import ctypes
 from click._compat import _NonClosingTextIOWrapper, text_type, PY2
 from ctypes import byref, POINTER, pythonapi, c_int, c_char, c_char_p, \
@@ -91,7 +92,7 @@ class _WindowsConsoleRawIOBase(io.RawIOBase):
         self.handle = handle
 
     def isatty(self):
-        super(WindowsConsoleRawIOBase, self).isatty()
+        io.RawIOBase.isatty(self)
         return True
 
 
