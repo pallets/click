@@ -2,7 +2,7 @@ import os
 import stat
 
 from ._compat import open_stream, text_type, filename_to_ui, \
-    get_filesystem_encoding, get_streerror, _get_argv_encoding
+    get_filesystem_encoding, get_streerror, _get_argv_encoding, PY2
 from .exceptions import BadParameter
 from .utils import safecall, LazyFile
 
@@ -168,7 +168,7 @@ class IntParamType(ParamType):
     def convert(self, value, param, ctx):
         try:
             return int(value)
-        except ValueError:
+        except (ValueError, UnicodeError):
             self.fail('%s is not a valid integer' % value, param, ctx)
 
     def __repr__(self):
@@ -237,7 +237,7 @@ class FloatParamType(ParamType):
     def convert(self, value, param, ctx):
         try:
             return float(value)
-        except ValueError:
+        except (UnicodeError, ValueError):
             self.fail('%s is not a valid floating point value' %
                       value, param, ctx)
 
@@ -251,8 +251,10 @@ class UUIDParameterType(ParamType):
     def convert(self, value, param, ctx):
         import uuid
         try:
+            if PY2 and isinstance(value, text_type):
+                value = value.encode('ascii')
             return uuid.UUID(value)
-        except ValueError:
+        except (UnicodeError, ValueError):
             self.fail('%s is not a valid UUID value' % value, param, ctx)
 
     def __repr__(self):
