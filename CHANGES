@@ -34,6 +34,8 @@ Version 6.0
   by emulating an output stream.  This also applies to getting the
   virtual output and input streams via `click.get_text_stream(...)`.
 - Unittests now always force a certain virtual terminal width.
+- Added support for allowing dashes to indicate standard streams to the
+  `Path` type.
 
 Version 5.1
 -----------
