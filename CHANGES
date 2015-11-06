@@ -29,10 +29,10 @@ Version 6.0
   introduce small bugs for code not aware of this.
 - Added a `type` parameter to `Path` to force a specific string type
   on the value.
-- For users running Python 2 the echo() and prompt() functions now work
-  with unicode in the Python windows console.  For Python 3 the work
-  is delegated to the Python interpreter as general support for Unicode
-  in the console is implemented to some degree.
+- For users running Python on Windows the `echo`) and `prompt` functions
+  now work with full unicode functionality in the Python windows console
+  by emulating an output stream.  This also applies to getting the
+  virtual output and input streams via `click.get_text_stream(...)`.
 - Unittests now always force a certain virtual terminal width.
 
 Version 5.1

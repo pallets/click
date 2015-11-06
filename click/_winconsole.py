@@ -11,7 +11,7 @@
 import io
 import sys
 import ctypes
-from click._compat import _NonClosingTextIOWrapper, text_type
+from click._compat import _NonClosingTextIOWrapper, text_type, PY2
 from ctypes import byref, POINTER, pythonapi, c_int, c_char, c_char_p, \
      c_void_p, py_object, c_ssize_t, c_ulong, windll, WINFUNCTYPE
 from ctypes.wintypes import LPWSTR, LPCWSTR
@@ -191,25 +191,25 @@ class ConsoleStream(object):
         )
 
 
-def _get_text_stdin():
+def _get_text_stdin(buffer_stream):
     text_stream = _NonClosingTextIOWrapper(
         io.BufferedReader(_WindowsConsoleReader(STDIN_HANDLE)),
         'utf-16-le', 'strict', line_buffering=True)
-    return ConsoleStream(text_stream, sys.stdin)
+    return ConsoleStream(text_stream, buffer_stream)
 
 
-def _get_text_stdout():
+def _get_text_stdout(buffer_stream):
     text_stream = _NonClosingTextIOWrapper(
         _WindowsConsoleWriter(STDOUT_HANDLE),
         'utf-16-le', 'strict', line_buffering=True)
-    return ConsoleStream(text_stream, sys.stdout)
+    return ConsoleStream(text_stream, buffer_stream)
 
 
-def _get_text_stderr():
+def _get_text_stderr(buffer_stream):
     text_stream = _NonClosingTextIOWrapper(
         _WindowsConsoleWriter(STDERR_HANDLE),
         'utf-16-le', 'strict', line_buffering=True)
-    return ConsoleStream(text_stream, sys.stderr)
+    return ConsoleStream(text_stream, buffer_stream)
 
 
 def _get_windows_argv():
@@ -246,4 +246,8 @@ def _get_windows_console_stream(f, encoding, errors):
        hasattr(f, 'isatty') and f.isatty():
         func = _stream_factories.get(f.fileno())
         if func is not None:
-            return func()
+            if not PY2:
+                f = getattr(f, 'buffer')
+                if f is None:
+                    return None
+            return func(f)

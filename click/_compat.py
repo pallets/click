@@ -174,11 +174,8 @@ if PY2:
                     self.__class__.__name__,
                     self.name,
                 )
-
-        from ._winconsole import _get_windows_console_stream
     else:
         set_binary_mode = lambda x: x
-        _get_windows_console_stream = lambda *x: None
 
     def isidentifier(x):
         return _identifier_re.search(x) is not None
@@ -377,12 +374,21 @@ else:
         return writer
 
     def get_text_stdin(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stdin, encoding, errors)
+        if rv is not None:
+            return rv
         return _force_correct_text_reader(sys.stdin, encoding, errors)
 
     def get_text_stdout(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stdout, encoding, errors)
+        if rv is not None:
+            return rv
         return _force_correct_text_writer(sys.stdout, encoding, errors)
 
     def get_text_stderr(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stderr, encoding, errors)
+        if rv is not None:
+            return rv
         return _force_correct_text_writer(sys.stderr, encoding, errors)
 
     def filename_to_ui(value):
@@ -525,6 +531,8 @@ if WIN:
     # Windows has a smaller terminal
     DEFAULT_COLUMNS = 79
 
+    from ._winconsole import _get_windows_console_stream
+
     def _get_argv_encoding():
         import locale
         return locale.getpreferredencoding()
@@ -583,6 +591,8 @@ if WIN:
 else:
     def _get_argv_encoding():
         return getattr(sys.stdin, 'encoding', None) or get_filesystem_encoding()
+
+    _get_windows_console_stream = lambda *x: None
 
 
 def term_len(x):
