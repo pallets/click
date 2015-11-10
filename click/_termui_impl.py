@@ -129,7 +129,18 @@ class ProgressBar(object):
 
     def format_eta(self):
         if self.eta_known:
-            return time.strftime('%H:%M:%S', time.gmtime(self.eta + 1))
+            t = self.eta + 1
+            seconds = t % 60
+            t /= 60
+            minutes = t % 60
+            t /= 60
+            hours = t % 24
+            t /= 24
+            if t > 0:
+                days = t
+                return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
+            else:
+                return '%02d:%02d:%02d' % (hours, minutes, seconds)
         return ''
 
     def format_pos(self):
