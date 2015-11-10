@@ -5,7 +5,7 @@ from itertools import repeat
 from functools import update_wrapper
 
 from .types import convert_type, IntRange, BOOL
-from .utils import make_str, make_default_short_help, echo
+from .utils import make_str, make_default_short_help, echo, get_os_args
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
      MissingParameter
 from .termui import prompt, confirm
@@ -13,7 +13,7 @@ from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
 from .globals import push_context, pop_context
 
-from ._compat import PY2, isidentifier, iteritems, get_os_args
+from ._compat import PY2, isidentifier, iteritems
 from ._unicodefun import _check_for_unicode_literals, _verify_python3_env
 
 
