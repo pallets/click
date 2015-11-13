@@ -30,6 +30,19 @@ suppressed by passing ``nl=False``::
 
     click.echo(b'\xe2\x98\x83', nl=False)
 
+Last but not least :func:`echo` uses click's intelligent internal output
+streams to stdout and stderr which support unicode output on the Windows
+console.  This means for as long as you are using `click.echo` you can
+output unicode character (there are some limitations on the default font
+with regards to which characters can be displayed).  This functionality is
+new in Click 6.0.
+
+.. versionadded:: 6.0
+
+Click now emulates output streams on Windows to support unicode to the
+Windows console through separate APIs.  For more information see
+`wincmd`_.
+
 .. versionadded:: 3.0
 
 Starting with Click 3.0 you can also easily print to standard error by
@@ -265,6 +278,12 @@ Example::
 
     stdin_text = click.get_text_stream('stdin')
     stdout_binary = click.get_binary_stream('stdout')
+
+.. versionadded:: 6.0
+
+Click now emulates output streams on Windows to support unicode to the
+Windows console through separate APIs.  For more information see
+`wincmd`_.
 
 
 Intelligent File Opening

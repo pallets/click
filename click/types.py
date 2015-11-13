@@ -1,9 +1,8 @@
 import os
-import sys
 import stat
 
 from ._compat import open_stream, text_type, filename_to_ui, \
-    get_filesystem_encoding, get_streerror
+    get_filesystem_encoding, get_streerror, _get_argv_encoding, PY2
 from .exceptions import BadParameter
 from .utils import safecall, LazyFile
 
@@ -109,15 +108,16 @@ class StringParamType(ParamType):
 
     def convert(self, value, param, ctx):
         if isinstance(value, bytes):
+            enc = _get_argv_encoding()
             try:
-                enc = getattr(sys.stdin, 'encoding', None)
-                if enc is not None:
-                    value = value.decode(enc)
+                value = value.decode(enc)
             except UnicodeError:
-                try:
-                    value = value.decode(get_filesystem_encoding())
-                except UnicodeError:
-                    value = value.decode('utf-8', 'replace')
+                fs_enc = get_filesystem_encoding()
+                if fs_enc != enc:
+                    try:
+                        value = value.decode(fs_enc)
+                    except UnicodeError:
+                        value = value.decode('utf-8', 'replace')
             return value
         return value
 
@@ -168,7 +168,7 @@ class IntParamType(ParamType):
     def convert(self, value, param, ctx):
         try:
             return int(value)
-        except ValueError:
+        except (ValueError, UnicodeError):
             self.fail('%s is not a valid integer' % value, param, ctx)
 
     def __repr__(self):
@@ -237,7 +237,7 @@ class FloatParamType(ParamType):
     def convert(self, value, param, ctx):
         try:
             return float(value)
-        except ValueError:
+        except (UnicodeError, ValueError):
             self.fail('%s is not a valid floating point value' %
                       value, param, ctx)
 
@@ -251,8 +251,10 @@ class UUIDParameterType(ParamType):
     def convert(self, value, param, ctx):
         import uuid
         try:
+            if PY2 and isinstance(value, text_type):
+                value = value.encode('ascii')
             return uuid.UUID(value)
-        except ValueError:
+        except (UnicodeError, ValueError):
             self.fail('%s is not a valid UUID value' % value, param, ctx)
 
     def __repr__(self):
@@ -343,6 +345,9 @@ class Path(ParamType):
     handle it returns just the filename.  Secondly, it can perform various
     basic checks about what the file or directory should be.
 
+    .. versionchanged:: 6.0
+       `allow_dash` was added.
+
     :param exists: if set to true, the file or directory needs to exist for
                    this value to be valid.  If this is not required and a
                    file does indeed not exist, then all further checks are
@@ -354,17 +359,27 @@ class Path(ParamType):
     :param resolve_path: if this is true, then the path is fully resolved
                          before the value is passed onwards.  This means
                          that it's absolute and symlinks are resolved.
+    :param allow_dash: If this is set to `True`, a single dash to indicate
+                       standard streams is permitted.
+    :param type: optionally a string type that should be used to
+                 represent the path.  The default is `None` which
+                 means the return value will be either bytes or
+                 unicode depending on what makes most sense given the
+                 input data Click deals with.
     """
     envvar_list_splitter = os.path.pathsep
 
     def __init__(self, exists=False, file_okay=True, dir_okay=True,
-                 writable=False, readable=True, resolve_path=False):
+                 writable=False, readable=True, resolve_path=False,
+                 allow_dash=False, path_type=None):
         self.exists = exists
         self.file_okay = file_okay
         self.dir_okay = dir_okay
         self.writable = writable
         self.readable = readable
         self.resolve_path = resolve_path
+        self.allow_dash = allow_dash
+        self.type = path_type
 
         if self.file_okay and not self.dir_okay:
             self.name = 'file'
@@ -376,20 +391,32 @@ class Path(ParamType):
             self.name = 'path'
             self.path_type = 'Path'
 
+    def coerce_path_result(self, rv):
+        if self.type is not None and not isinstance(rv, self.type):
+            if self.type is text_type:
+                rv = rv.decode(get_filesystem_encoding())
+            else:
+                rv = rv.encode(get_filesystem_encoding())
+        return rv
+
     def convert(self, value, param, ctx):
         rv = value
-        if self.resolve_path:
-            rv = os.path.realpath(rv)
 
-        try:
-            st = os.stat(rv)
-        except OSError:
-            if not self.exists:
-                return rv
-            self.fail('%s "%s" does not exist.' % (
-                self.path_type,
-                filename_to_ui(value)
-            ), param, ctx)
+        is_dash = self.file_okay and self.allow_dash and rv in (b'-', '-')
+
+        if not is_dash:
+            if self.resolve_path:
+                rv = os.path.realpath(rv)
+
+            try:
+                st = os.stat(rv)
+            except OSError:
+                if not self.exists:
+                    return self.coerce_path_result(rv)
+                self.fail('%s "%s" does not exist.' % (
+                    self.path_type,
+                    filename_to_ui(value)
+                ), param, ctx)
 
         if not self.file_okay and stat.S_ISREG(st.st_mode):
             self.fail('%s "%s" is a file.' % (
@@ -412,7 +439,7 @@ class Path(ParamType):
                 filename_to_ui(value)
             ), param, ctx)
 
-        return rv
+        return self.coerce_path_result(rv)
 
 
 class Tuple(CompositeParamType):

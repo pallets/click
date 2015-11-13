@@ -11,6 +11,9 @@ from ._compat import text_type, open_stream, get_filesystem_encoding, \
 
 if not PY2:
     from ._compat import _find_binary_writer
+elif WIN:
+    from ._winconsole import _get_windows_argv, \
+         _hash_py_argv, _initial_argv_hash
 
 
 echo_native_types = string_types + (bytes, bytearray)
@@ -234,7 +237,8 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     Primarily it means that you can print binary data as well as Unicode
     data on both 2.x and 3.x to the given file in the most appropriate way
     possible.  This is a very carefree function as in that it will try its
-    best to not fail.
+    best to not fail.  As of Click 6.0 this includes support for unicode
+    output on the Windows console.
 
     In addition to that, if `colorama`_ is installed, the echo function will
     also support clever handling of ANSI codes.  Essentially it will then
@@ -245,6 +249,12 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
         terminal.
 
     .. _colorama: http://pypi.python.org/pypi/colorama
+
+    .. versionchanged:: 6.0
+       As of Click 6.0 the echo function will properly support unicode
+       output on the windows console.  Not that click does not modify
+       the interpreter in any way which means that `sys.stdout` or the
+       print statement or function will still not provide unicode support.
 
     .. versionchanged:: 2.0
        Starting with version 2.0 of Click, the echo function will work
@@ -379,6 +389,27 @@ def open_file(filename, mode='r', encoding=None, errors='strict',
     if not should_close:
         f = KeepOpenFile(f)
     return f
+
+
+def get_os_args():
+    """This returns the argument part of sys.argv in the most appropriate
+    form for processing.  What this means is that this return value is in
+    a format that works for Click to process but does not necessarily
+    correspond well to what's actually standard for the interpreter.
+
+    On most environments the return value is ``sys.argv[:1]`` unchanged.
+    However if you are on Windows and running Python 2 the return value
+    will actually be a list of unicode strings instead because the
+    default behavior on that platform otherwise will not be able to
+    carry all possible values that sys.argv can have.
+
+    .. versionadded:: 6.0
+    """
+    # We can only extract the unicode argv if sys.argv has not been
+    # changed since the startup of the application.
+    if PY2 and WIN and _initial_argv_hash == _hash_py_argv():
+        return _get_windows_argv()
+    return sys.argv[1:]
 
 
 def format_filename(filename, shorten=False):

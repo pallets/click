@@ -3,7 +3,8 @@ import inspect
 
 from functools import update_wrapper
 
-from ._compat import iteritems, _check_for_unicode_literals
+from ._compat import iteritems
+from ._unicodefun import _check_for_unicode_literals
 from .utils import echo
 from .globals import get_current_context
 

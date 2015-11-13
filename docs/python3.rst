@@ -139,6 +139,12 @@ some newer Linux systems, you could also try ``C.UTF-8`` as the locale::
     export LC_ALL=C.UTF-8
     export LANG=C.UTF-8
 
+On some systems it was reported that `UTF-8` has to be written as `UTF8`
+and vice versa.  To see which locales are supported you can invoke
+``locale -a``::
+
+    locale -a
+
 You need to do this before you invoke your Python script.  If you are
 curious about the reasons for this, you can join the discussions in the
 Python 3 bug tracker:

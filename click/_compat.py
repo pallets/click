@@ -5,8 +5,6 @@ import sys
 import codecs
 from weakref import WeakKeyDictionary
 
-import click
-
 
 PY2 = sys.version_info[0] == 2
 WIN = sys.platform.startswith('win')
@@ -14,39 +12,6 @@ DEFAULT_COLUMNS = 80
 
 
 _ansi_re = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')
-
-
-def _find_unicode_literals_frame():
-    import __future__
-    frm = sys._getframe(1)
-    idx = 1
-    while frm is not None:
-        if frm.f_globals.get('__name__', '').startswith('click.'):
-            frm = frm.f_back
-            idx += 1
-        elif frm.f_code.co_flags & __future__.unicode_literals.compiler_flag:
-            return idx
-        else:
-            break
-    return 0
-
-
-def _check_for_unicode_literals():
-    if not __debug__:
-        return
-    if not PY2 or click.disable_unicode_literals_warning:
-        return
-    bad_frame = _find_unicode_literals_frame()
-    if bad_frame <= 0:
-        return
-    from warnings import warn
-    warn(Warning('Click detected the use of the unicode_literals '
-                 '__future__ import.  This is heavily discouraged '
-                 'because it can introduce subtle bugs in your '
-                 'code.  You should instead use explicit u"" literals '
-                 'for your unicode strings.  For more information see '
-                 'http://click.pocoo.org/python3/'),
-         stacklevel=bad_frame)
 
 
 def get_filesystem_encoding():
@@ -192,6 +157,9 @@ if PY2:
     # binary only, patch it back to the system, and then use a wrapper
     # stream that converts newlines.  It's not quite clear what's the
     # correct option here.
+    #
+    # This code also lives in _winconsole for the fallback to the console
+    # emulation stream.
     if WIN:
         import msvcrt
         def set_binary_mode(f):
@@ -218,12 +186,21 @@ if PY2:
         return set_binary_mode(sys.stderr)
 
     def get_text_stdin(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stdin, encoding, errors)
+        if rv is not None:
+            return rv
         return _make_text_stream(sys.stdin, encoding, errors)
 
     def get_text_stdout(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stdout, encoding, errors)
+        if rv is not None:
+            return rv
         return _make_text_stream(sys.stdout, encoding, errors)
 
     def get_text_stderr(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stderr, encoding, errors)
+        if rv is not None:
+            return rv
         return _make_text_stream(sys.stderr, encoding, errors)
 
     def filename_to_ui(value):
@@ -393,12 +370,21 @@ else:
         return writer
 
     def get_text_stdin(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stdin, encoding, errors)
+        if rv is not None:
+            return rv
         return _force_correct_text_reader(sys.stdin, encoding, errors)
 
     def get_text_stdout(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stdout, encoding, errors)
+        if rv is not None:
+            return rv
         return _force_correct_text_writer(sys.stdout, encoding, errors)
 
     def get_text_stderr(encoding=None, errors=None):
+        rv = _get_windows_console_stream(sys.stderr, encoding, errors)
+        if rv is not None:
+            return rv
         return _force_correct_text_writer(sys.stderr, encoding, errors)
 
     def filename_to_ui(value):
@@ -472,7 +458,12 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
 
 
 # Used in a destructor call, needs extra protection from interpreter cleanup.
-_rename = os.rename
+if hasattr(os, 'replace'):
+    _replace = os.replace
+    _can_replace = True
+else:
+    _replace = os.rename
+    _can_replace = not WIN
 
 
 class _AtomicFile(object):
@@ -491,7 +482,12 @@ class _AtomicFile(object):
         if self.closed:
             return
         self._f.close()
-        _rename(self._tmp_filename, self._real_filename)
+        if not _can_replace:
+            try:
+                os.remove(self._real_filename)
+            except OSError:
+                pass
+        _replace(self._tmp_filename, self._real_filename)
         self.closed = True
 
     def __getattr__(self, name):
@@ -530,6 +526,21 @@ def should_strip_ansi(stream=None, color=None):
 if WIN:
     # Windows has a smaller terminal
     DEFAULT_COLUMNS = 79
+
+    from ._winconsole import _get_windows_console_stream
+
+    def _get_argv_encoding():
+        import locale
+        return locale.getpreferredencoding()
+
+    if PY2:
+        def raw_input(prompt=''):
+            sys.stderr.flush()
+            if prompt:
+                stdout = _default_text_stdout()
+                stdout.write(prompt)
+            stdin = _default_text_stdin()
+            return stdin.readline().rstrip('\r\n')
 
     try:
         import colorama
@@ -573,6 +584,11 @@ if WIN:
             win = colorama.win32.GetConsoleScreenBufferInfo(
                 colorama.win32.STDOUT).srWindow
             return win.Right - win.Left, win.Bottom - win.Top
+else:
+    def _get_argv_encoding():
+        return getattr(sys.stdin, 'encoding', None) or get_filesystem_encoding()
+
+    _get_windows_console_stream = lambda *x: None
 
 
 def term_len(x):
@@ -605,6 +621,8 @@ def _make_cached_stream_func(src_func, wrapper_func):
     return func
 
 
+_default_text_stdin = _make_cached_stream_func(
+    lambda: sys.stdin, get_text_stdin)
 _default_text_stdout = _make_cached_stream_func(
     lambda: sys.stdout, get_text_stdout)
 _default_text_stderr = _make_cached_stream_func(

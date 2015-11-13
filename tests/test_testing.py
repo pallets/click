@@ -5,7 +5,7 @@ import click
 
 from click.testing import CliRunner
 
-from click._compat import PY2
+from click._compat import PY2, WIN
 
 # Use the most reasonable io that users would use for the python version.
 if PY2:
@@ -117,6 +117,7 @@ def test_catch_exceptions():
     assert result.exit_code == 1
 
 
+@pytest.mark.skipif(WIN, reason='Test does not make sense on Windows.')
 def test_with_color():
     @click.command()
     def cli():
@@ -182,4 +183,3 @@ def test_exit_code_and_output_from_sys_exit():
     result = runner.invoke(cli_no_error)
     assert result.exit_code == 0
     assert result.output == 'hello world\n'
-

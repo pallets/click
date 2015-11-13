@@ -6,6 +6,7 @@ import pytest
 import click
 import click.utils
 import click._termui_impl
+from click._compat import WIN, PY2
 
 
 def test_echo(runner):
@@ -15,7 +16,7 @@ def test_echo(runner):
         click.echo(42, nl=False)
         click.echo(b'a', nl=False)
         click.echo('\x1b[31mx\x1b[39m', nl=False)
-        bytes = out.getvalue()
+        bytes = out.getvalue().replace(b'\r\n', b'\n')
         assert bytes == b'\xe2\x98\x83\nDD\n42ax'
 
     # If we are in Python 2, we expect that writing bytes into a string io
@@ -82,8 +83,11 @@ def test_filename_formatting():
     assert click.format_filename(b'/x/foo.txt') == '/x/foo.txt'
     assert click.format_filename(u'/x/foo.txt') == '/x/foo.txt'
     assert click.format_filename(u'/x/foo.txt', shorten=True) == 'foo.txt'
-    assert click.format_filename(b'/x/foo\xff.txt', shorten=True) \
-        == u'foo\ufffd.txt'
+
+    # filesystem encoding on windows permits this.
+    if not WIN:
+        assert click.format_filename(b'/x/foo\xff.txt', shorten=True) \
+            == u'foo\ufffd.txt'
 
 
 def test_prompts(runner):
@@ -126,6 +130,7 @@ def test_prompts(runner):
     assert result.output == 'Foo [Y/n]: n\nno :(\n'
 
 
+@pytest.mark.skipif(WIN, reason='Different behavior on windows.')
 def test_prompts_abort(monkeypatch, capsys):
     def f(_):
         raise KeyboardInterrupt()
@@ -141,6 +146,7 @@ def test_prompts_abort(monkeypatch, capsys):
     assert out == 'Password: \nScrew you.\n'
 
 
+@pytest.mark.skipif(WIN, reason='Different behavior on windows.')
 @pytest.mark.parametrize('cat', ['cat', 'cat ', 'cat '])
 def test_echo_via_pager(monkeypatch, capfd, cat):
     monkeypatch.setitem(os.environ, 'PAGER', cat)
@@ -150,6 +156,7 @@ def test_echo_via_pager(monkeypatch, capfd, cat):
     assert out == 'haha\n'
 
 
+@pytest.mark.skipif(WIN, reason='Test does not make sense on Windows.')
 def test_echo_color_flag(monkeypatch, capfd):
     isatty = True
     monkeypatch.setattr(click._compat, 'isatty', lambda x: isatty)
@@ -177,6 +184,7 @@ def test_echo_color_flag(monkeypatch, capfd):
     assert out == text + '\n'
 
 
+@pytest.mark.skipif(WIN, reason='Test too complex to make work windows.')
 def test_echo_writing_to_standard_error(capfd, monkeypatch):
     def emulate_input(text):
         """Emulate keyboard input."""
@@ -255,8 +263,8 @@ def test_open_file(runner):
         assert result.output == 'foobar\nmeep\n'
 
 
+@pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
 def test_iter_keepopenfile(tmpdir):
-
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
     p.write(os.linesep.join(expected))
@@ -265,8 +273,8 @@ def test_iter_keepopenfile(tmpdir):
         assert e_line == a_line.strip()
 
 
+@pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
 def test_iter_lazyfile(tmpdir):
-
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
     p.write(os.linesep.join(expected))

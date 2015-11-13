@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
+from click._compat import PY2
 
 
 def test_nargs_star(runner):
@@ -118,7 +119,8 @@ def test_file_atomics(runner):
     with runner.isolated_filesystem():
         with open('foo.txt', 'wb') as f:
             f.write(b'OLD\n')
-        result = runner.invoke(inout, ['foo.txt'], input='Hey!')
+        result = runner.invoke(inout, ['foo.txt'], input='Hey!',
+        catch_exceptions=False)
         assert result.output == ''
         assert result.exit_code == 0
         with open('foo.txt', 'rb') as f:
@@ -235,7 +237,7 @@ def test_nargs_star_ordering(runner):
 
     result = runner.invoke(cmd, ['a', 'b', 'c'])
     assert result.output.splitlines() == [
-        "('a',)",
+        PY2 and "(u'a',)" or "('a',)",
         'b',
         'c',
     ]
@@ -252,7 +254,7 @@ def test_nargs_specified_plus_star_ordering(runner):
 
     result = runner.invoke(cmd, ['a', 'b', 'c', 'd', 'e', 'f'])
     assert result.output.splitlines() == [
-        "('a', 'b', 'c')",
+        PY2 and "(u'a', u'b', u'c')" or "('a', 'b', 'c')",
         'd',
-        "('e', 'f')",
+        PY2 and "(u'e', u'f')" or "('e', 'f')",
     ]

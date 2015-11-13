@@ -16,6 +16,26 @@ Version 6.0
 - Explicitly disallow nargs=-1 with a set default.
 - The context is now closed before it's popped from the stack.
 - Added support for short aliases for the false flag on toggles.
+- Click will now attempt to aid you with debugging locale errors
+  better by listing with the help of the OS what locales are
+  available.
+- Click used to return byte strings on Python 2 in some unit-testing
+  situations.  This has been fixed to correctly return unicode strings
+  now.
+- For Windows users on Python 2, Click will now handle Unicode more
+  correctly handle Unicode coming in from the system.  This also has
+  the disappointing side effect that filenames will now be always
+  unicode by default in the `Path` type which means that this can
+  introduce small bugs for code not aware of this.
+- Added a `type` parameter to `Path` to force a specific string type
+  on the value.
+- For users running Python on Windows the `echo`) and `prompt` functions
+  now work with full unicode functionality in the Python windows console
+  by emulating an output stream.  This also applies to getting the
+  virtual output and input streams via `click.get_text_stream(...)`.
+- Unittests now always force a certain virtual terminal width.
+- Added support for allowing dashes to indicate standard streams to the
+  `Path` type.
 
 Version 5.1
 -----------

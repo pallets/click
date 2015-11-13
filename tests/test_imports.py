@@ -2,6 +2,8 @@ import sys
 import json
 import subprocess
 
+from click._compat import WIN
+
 
 IMPORT_TEST = b'''\
 try:
@@ -30,8 +32,12 @@ click.echo(json.dumps(rv))
 ALLOWED_IMPORTS = set([
     'weakref', 'os', 'struct', 'collections', 'sys', 'contextlib',
     'functools', 'stat', 're', 'codecs', 'inspect', 'itertools', 'io',
-    'threading'
+    'threading', 'colorama'
 ])
+
+if WIN:
+    ALLOWED_IMPORTS.update(['ctypes', 'ctypes.wintypes', 'msvcrt', 'time',
+                            'zlib'])
 
 
 def test_light_imports():
