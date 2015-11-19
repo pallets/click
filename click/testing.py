@@ -20,6 +20,23 @@ else:
     import io
     from ._compat import _find_binary_reader
 
+# Output stream class for outputing simultaneously to several streams
+class MultOutput(object):
+
+	def __init__(self, outputs):
+		self._outputs = outputs
+
+	def write(self, s):
+		for o in self._outputs:
+			o.write(s)
+
+	def writelines(self, lines):
+		for o in self._outputs:
+			o.writelines(lines)
+
+	def flush(self):
+		for o in self._outputs:
+			o.flush()
 
 class EchoingStdin(object):
 
@@ -135,7 +152,7 @@ class CliRunner(object):
         return rv
 
     @contextlib.contextmanager
-    def isolation(self, input=None, env=None, color=False):
+    def isolation(self, input=None, env=None, color=False, tee=False):
         """A context manager that sets up the isolation for invoking of a
         command line tool.  This sets up stdin with the given input data
         and `os.environ` with the overrides from the given dictionary.
@@ -163,7 +180,12 @@ class CliRunner(object):
         env = self.make_env(env)
 
         if PY2:
-            sys.stdout = sys.stderr = bytes_output = StringIO()
+            if tee:
+                bytes_output = StringIO()
+                sys.stdout = MultOutput([sys.stdout, bytes_output])
+                sys.stderr = MultOutput([sys.stderr, bytes_output])
+            else:
+                sys.stdout = sys.stderr = bytes_output = StringIO()
             if self.echo_stdin:
                 input = EchoingStdin(input, bytes_output)
         else:
@@ -241,7 +263,7 @@ class CliRunner(object):
             clickpkg.formatting.FORCED_WIDTH = old_forced_width
 
     def invoke(self, cli, args=None, input=None, env=None,
-               catch_exceptions=True, color=False, **extra):
+               catch_exceptions=True, color=False, tee=False, **extra):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
         arguments are passed to the :meth:`~clickpkg.Command.main` function of
@@ -270,7 +292,7 @@ class CliRunner(object):
                       application can still override this explicitly.
         """
         exc_info = None
-        with self.isolation(input=input, env=env, color=color) as out:
+        with self.isolation(input=input, env=env, color=color, tee=tee) as out:
             exception = None
             exit_code = 0
 

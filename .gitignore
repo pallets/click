@@ -8,3 +8,6 @@ build
 docs/_build
 click.egg-info
 .tox
+.swp
+.*.swp
+.cache

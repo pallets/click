@@ -26,15 +26,23 @@ def test_runner():
             o.write(chunk)
             o.flush()
 
+	# Invoke copy command
     runner = CliRunner()
     result = runner.invoke(test, input='Hello World!\n')
     assert not result.exception
     assert result.output == 'Hello World!\n'
 
+	# Invoke copy command with input echoing
     runner = CliRunner(echo_stdin=True)
     result = runner.invoke(test, input='Hello World!\n')
     assert not result.exception
     assert result.output == 'Hello World!\nHello World!\n'
+
+	# Invoke copy command without blocking output to stderr and stdout (change nothing to result output string)
+    runner = CliRunner()
+    result = runner.invoke(test, input='Hello World!\n', tee=True)
+    assert not result.exception
+    assert result.output == 'Hello World!\n'
 
 
 def test_runner_with_stream():
