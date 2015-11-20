@@ -1,3 +1,4 @@
+# vi: ts=4 et
 import os
 import sys
 import shutil
@@ -23,20 +24,39 @@ else:
 # Output stream class for outputing simultaneously to several streams
 class MultOutput(object):
 
-	def __init__(self, outputs):
-		self._outputs = outputs
+    def __init__(self, outputs):
+        self._outputs = outputs
 
-	def write(self, s):
-		for o in self._outputs:
-			o.write(s)
+    def write(self, s):
+        for o in self._outputs:
+            o.write(s)
 
-	def writelines(self, lines):
-		for o in self._outputs:
-			o.writelines(lines)
+    def writelines(self, lines):
+        for o in self._outputs:
+            o.writelines(lines)
 
-	def flush(self):
-		for o in self._outputs:
-			o.flush()
+    def flush(self):
+        for o in self._outputs:
+            o.flush()
+
+    # For Python 3 io library (defined by io.IOBase)
+    def closed(self):
+        for o in self._outputs:
+            if not o.closed:
+                return False
+        return True
+
+    # For Python 3 io library (defined by io.IOBase)
+    def writable(self):
+        return True
+
+    # For Python 3 io library (defined by io.IOBase)
+    def readable(self):
+        return False
+
+    # For Python 3 io library (defined by io.IOBase)
+    def seekable(self):
+        return False
 
 class EchoingStdin(object):
 
@@ -193,8 +213,11 @@ class CliRunner(object):
             if self.echo_stdin:
                 input = EchoingStdin(input, bytes_output)
             input = io.TextIOWrapper(input, encoding=self.charset)
-            sys.stdout = sys.stderr = io.TextIOWrapper(
-                bytes_output, encoding=self.charset)
+            if tee:
+                sys.stdout = io.TextIOWrapper(MultOutput([sys.stdout, bytes_output]), encoding=self.charset)
+                sys.stderr = io.TextIOWrapper(MultOutput([sys.stderr, bytes_output]), encoding=self.charset)
+            else:
+                sys.stdout = sys.stderr = io.TextIOWrapper(bytes_output, encoding=self.charset)
 
         sys.stdin = input
 
