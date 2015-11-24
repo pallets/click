@@ -39,6 +39,9 @@ Version 6.0
   mode is enabled.
 - Relaxed restriction that disallowed chained commands to have other
   chained commands as child commands.
+- Arguments with positive nargs can now have defaults implemented.
+  Previously this configuration would often result in slightly unexpected
+  values be returned.
 
 Version 5.1
 -----------

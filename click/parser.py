@@ -16,14 +16,66 @@
     and might cause us issues.
 """
 import re
-from .exceptions import UsageError, NoSuchOption, BadOptionUsage
-from .utils import unpack_args
+from collections import deque
+from .exceptions import UsageError, NoSuchOption, BadOptionUsage, \
+     BadArgumentUsage
 
 
-def _error_args(nargs, opt):
+def _unpack_args(args, nargs_spec):
+    """Given an iterable of arguments and an iterable of nargs specifications,
+    it returns a tuple with all the unpacked arguments at the first index
+    and all remaining arguments as the second.
+
+    The nargs specification is the number of arguments that should be consumed
+    or `-1` to indicate that this position should eat up all the remainders.
+
+    Missing items are filled with `None`.
+    """
+    args = deque(args)
+    nargs_spec = deque(nargs_spec)
+    rv = []
+    spos = None
+
+    def _fetch(c):
+        try:
+            if spos is None:
+                return c.popleft()
+            else:
+                return c.pop()
+        except IndexError:
+            return None
+
+    while nargs_spec:
+        nargs = _fetch(nargs_spec)
+        if nargs == 1:
+            rv.append(_fetch(args))
+        elif nargs > 1:
+            x = [_fetch(args) for _ in range(nargs)]
+            # If we're reversed, we're pulling in the arguments in reverse,
+            # so we need to turn them around.
+            if spos is not None:
+                x.reverse()
+            rv.append(tuple(x))
+        elif nargs < 0:
+            if spos is not None:
+                raise TypeError('Cannot have two nargs < 0')
+            spos = len(rv)
+            rv.append(None)
+
+    # spos is the position of the wildcard (star).  If it's not `None`,
+    # we fill it with the remainder.
+    if spos is not None:
+        rv[spos] = tuple(args)
+        args = []
+        rv[spos + 1:] = reversed(rv[spos + 1:])
+
+    return tuple(rv), list(args)
+
+
+def _error_opt_args(nargs, opt):
     if nargs == 1:
-        raise BadOptionUsage(opt, '%s option requires an argument' % opt)
-    raise BadOptionUsage(opt, '%s option requires %d arguments' % (opt, nargs))
+        raise BadOptionUsage('%s option requires an argument' % opt)
+    raise BadOptionUsage('%s option requires %d arguments' % (opt, nargs))
 
 
 def split_opt(opt):
@@ -116,6 +168,13 @@ class Argument(object):
         self.obj = obj
 
     def process(self, value, state):
+        if self.nargs > 1:
+            holes = sum(1 for x in value if x is None)
+            if holes == len(value):
+                value = None
+            elif holes != 0:
+                raise BadArgumentUsage('argument %s takes %d values'
+                                       % (self.dest, self.nargs))
         state.opts[self.dest] = value
         state.order.append(self.obj)
 
@@ -213,8 +272,8 @@ class OptionParser(object):
         return state.opts, state.largs, state.order
 
     def _process_args_for_args(self, state):
-        pargs, args = unpack_args(state.largs + state.rargs,
-                                  [x.nargs for x in self._args])
+        pargs, args = _unpack_args(state.largs + state.rargs,
+                                   [x.nargs for x in self._args])
 
         for idx, arg in enumerate(self._args):
             arg.process(pargs[idx], state)
@@ -275,7 +334,7 @@ class OptionParser(object):
 
             nargs = option.nargs
             if len(state.rargs) < nargs:
-                _error_args(nargs, opt)
+                _error_opt_args(nargs, opt)
             elif nargs == 1:
                 value = state.rargs.pop(0)
             else:
@@ -283,7 +342,7 @@ class OptionParser(object):
                 del state.rargs[:nargs]
 
         elif explicit_value is not None:
-            raise BadOptionUsage(opt, '%s option does not take a value' % opt)
+            raise BadOptionUsage('%s option does not take a value' % opt)
 
         else:
             value = None
@@ -315,7 +374,7 @@ class OptionParser(object):
 
                 nargs = option.nargs
                 if len(state.rargs) < nargs:
-                    _error_args(nargs, opt)
+                    _error_opt_args(nargs, opt)
                 elif nargs == 1:
                     value = state.rargs.pop(0)
                 else:
