@@ -153,6 +153,8 @@ Exceptions
 
 .. autoexception:: BadOptionUsage
 
+.. autoexception:: BadArgumentUsage
+
 Formatting
 ----------
 
