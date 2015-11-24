@@ -929,9 +929,9 @@ class MultiCommand(Command):
 
         if self.chain:
             for param in self.params:
-                if isinstance(param, Argument):
+                if isinstance(param, Argument) and not param.required:
                     raise RuntimeError('Multi commands in chain mode cannot '
-                                       'have other arguments.')
+                                       'have optional arguments.')
 
     def collect_usage_pieces(self, ctx):
         rv = Command.collect_usage_pieces(self, ctx)

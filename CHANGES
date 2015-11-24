@@ -38,8 +38,8 @@ Version 6.0
   `Path` type.
 - Multi commands in chain mode no longer propagate arguments left over
   from parsing to the callbacks.  It's also now disallowed through an
-  exception that arguments are attached to multi commands if chain mode
-  is enabled.
+  exception when optional arguments are attached to multi commands if chain
+  mode is enabled.
 
 Version 5.1
 -----------

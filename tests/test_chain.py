@@ -189,9 +189,31 @@ def test_args_and_chain(runner):
     ]
 
 
-def test_multicommand_no_args(runner):
+def test_multicommand_arg_behavior(runner):
     with pytest.raises(RuntimeError):
         @click.group(chain=True)
-        @click.argument('forbidden')
-        def cli():
+        @click.argument('forbidden', required=False)
+        def bad_cli():
             pass
+
+    with pytest.raises(RuntimeError):
+        @click.group(chain=True)
+        @click.argument('forbidden', nargs=-1)
+        def bad_cli2():
+            pass
+
+    @click.group(chain=True)
+    @click.argument('arg')
+    def cli(arg):
+        click.echo('cli:%s' % arg)
+
+    @cli.command()
+    def a():
+        click.echo('a')
+
+    result = runner.invoke(cli, ['foo', 'a'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'cli:foo',
+        'a',
+    ]
