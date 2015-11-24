@@ -3,6 +3,13 @@ import click
 import pytest
 
 
+def debug():
+    click.echo('%s=%s' % (
+        sys._getframe(1).f_code.co_name,
+        '|'.join(click.get_current_context().args),
+    ))
+
+
 def test_basic_chaining(runner):
     @click.group(chain=True)
     def cli():
@@ -157,12 +164,6 @@ def test_pipeline(runner):
 
 
 def test_args_and_chain(runner):
-    def debug():
-        click.echo('%s=%s' % (
-            sys._getframe(1).f_code.co_name,
-            '|'.join(click.get_current_context().args),
-        ))
-
     @click.group(chain=True)
     def cli():
         debug()
@@ -216,4 +217,35 @@ def test_multicommand_arg_behavior(runner):
     assert result.output.splitlines() == [
         'cli:foo',
         'a',
+    ]
+
+
+def test_multicommand_chaining(runner):
+    @click.group(chain=True)
+    def cli():
+        debug()
+
+    @cli.group()
+    def l1a():
+        debug()
+
+    @l1a.command()
+    def l2a():
+        debug()
+
+    @l1a.command()
+    def l2b():
+        debug()
+
+    @cli.command()
+    def l1b():
+        debug()
+
+    result = runner.invoke(cli, ['l1a', 'l2a', 'l1b'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'cli=',
+        'l1a=',
+        'l2a=',
+        'l1b=',
     ]

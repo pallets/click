@@ -37,25 +37,6 @@ def _bashcomplete(cmd, prog_name, complete_var=None):
         sys.exit(1)
 
 
-def _check_multicommand(base_command, cmd_name, cmd, register=False):
-    if not base_command.chain or not isinstance(cmd, MultiCommand):
-        return
-    if register:
-        hint = 'It is not possible to add multi commands as children to ' \
-               'another multi command that is in chain mode'
-    else:
-        hint = 'Found a multi command as subcommand to a multi command ' \
-               'that is in chain mode.  This is not supported'
-    raise RuntimeError('%s.  Command "%s" is set to chain and "%s" was '
-                       'added as subcommand but it in itself is a '
-                       'multi command.  ("%s" is a %s within a chained '
-                       '%s named "%s")' % (
-                           hint, base_command.name, cmd_name,
-                           cmd_name, cmd.__class__.__name__,
-                           base_command.__class__.__name__,
-                           base_command.name))
-
-
 def batch(iterable, batch_size):
     return list(zip(*repeat(iter(iterable), batch_size)))
 
@@ -206,6 +187,11 @@ class Context(object):
         self.params = {}
         #: the leftover arguments.
         self.args = []
+        #: protected arguments.  These are arguments that are prepended
+        #: to `args` when certain parsing scenarios are encountered but
+        #: must be never propagated to another arguments.  This is used
+        #: to implement nested parsing.
+        self.protected_args = []
         if obj is None and parent is not None:
             obj = parent.obj
         #: the user object stored.
@@ -1001,7 +987,15 @@ class MultiCommand(Command):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
             echo(ctx.get_help(), color=ctx.color)
             ctx.exit()
-        return Command.parse_args(self, ctx, args)
+
+        rest = Command.parse_args(self, ctx, args)
+        if self.chain:
+            ctx.protected_args = rest
+            ctx.args = []
+        elif rest:
+            ctx.protected_args, ctx.args = rest[:1], rest[1:]
+
+        return ctx.args
 
     def invoke(self, ctx):
         def _process_result(value):
@@ -1010,7 +1004,7 @@ class MultiCommand(Command):
                                    **ctx.params)
             return value
 
-        if not ctx.args:
+        if not ctx.protected_args:
             # If we are invoked without command the chain flag controls
             # how this happens.  If we are not in chain mode, the return
             # value here is the return value of the command.
@@ -1025,7 +1019,10 @@ class MultiCommand(Command):
                     return _process_result([])
             ctx.fail('Missing command.')
 
-        args = ctx.args
+        # Fetch args back out
+        args = ctx.protected_args + ctx.args
+        ctx.args = []
+        ctx.protected_args = []
 
         # If we're not in chain mode, we only allow the invocation of a
         # single command but we also inform the current context about the
@@ -1047,9 +1044,6 @@ class MultiCommand(Command):
         # set to ``*`` to inform the command that subcommands are executed
         # but nothing else.
         with ctx:
-            # The master command does not receive any arguments.  That
-            # would be silly.
-            ctx.args = []
             ctx.invoked_subcommand = args and '*' or None
             Command.invoke(self, ctx)
 
@@ -1129,7 +1123,6 @@ class Group(MultiCommand):
         name = name or cmd.name
         if name is None:
             raise TypeError('Command has no name.')
-        _check_multicommand(self, name, cmd, register=True)
         self.commands[name] = cmd
 
     def command(self, *args, **kwargs):
@@ -1182,8 +1175,6 @@ class CommandCollection(MultiCommand):
     def get_command(self, ctx, cmd_name):
         for source in self.sources:
             rv = source.get_command(ctx, cmd_name)
-            if self.chain:
-                _check_multicommand(self, cmd_name, rv)
             if rv is not None:
                 return rv
 

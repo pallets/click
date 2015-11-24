@@ -322,6 +322,28 @@ subcommands happens one after another so the exact subcommands that will
 be handled are not yet available when the callback fires.
 
 
+Nested Group Commands with Chaining
+-----------------------------------
+
+.. versionadded:: 6.0
+
+Before Click 6 it was not possible for chain commands to be nested as
+behavior was not entirely defined.  In Click 6 this has been corrected
+and group commands can now be nested below chain commands.  The following
+logic applies as a result:
+
+*   if a chain command is used below a chain command it will not be
+    possible for the outer command to accept any more arguments with the
+    start of the sub command.  This is done in order to ensure that
+    commands do not change behavior when nested below other commands.
+*   Click now internally has the concept of protected arguments which is
+    what is used to ensure nested parsing does not accidentally mix
+    rest arguments intended for the callbacks with leftover arguments for
+    parsing.  This change has cleaned up some accidental bugs in the past
+    where the context showed arguments that were not actually intended for
+    the command.
+
+
 Multi Command Pipelines
 -----------------------
 

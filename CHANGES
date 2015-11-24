@@ -10,9 +10,6 @@ Version 6.0
 
 - Optimized the progressbar rendering to not render when it did not
   actually change.
-- Actively reject multi commands within chained multi commands.  This
-  cannot be supported with the current setup of how the invocation for
-  subcommands works.
 - Explicitly disallow nargs=-1 with a set default.
 - The context is now closed before it's popped from the stack.
 - Added support for short aliases for the false flag on toggles.
@@ -40,6 +37,8 @@ Version 6.0
   from parsing to the callbacks.  It's also now disallowed through an
   exception when optional arguments are attached to multi commands if chain
   mode is enabled.
+- Relaxed restriction that disallowed chained commands to have other
+  chained commands as child commands.
 
 Version 5.1
 -----------
