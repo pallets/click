@@ -36,6 +36,10 @@ Version 6.0
 - Unittests now always force a certain virtual terminal width.
 - Added support for allowing dashes to indicate standard streams to the
   `Path` type.
+- Multi commands in chain mode no longer propagate arguments left over
+  from parsing to the callbacks.  It's also now disallowed through an
+  exception that arguments are attached to multi commands if chain mode
+  is enabled.
 
 Version 5.1
 -----------

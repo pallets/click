@@ -927,6 +927,12 @@ class MultiCommand(Command):
         #: overridden with the :func:`resultcallback` decorator.
         self.result_callback = result_callback
 
+        if self.chain:
+            for param in self.params:
+                if isinstance(param, Argument):
+                    raise RuntimeError('Multi commands in chain mode cannot '
+                                       'have other arguments.')
+
     def collect_usage_pieces(self, ctx):
         rv = Command.collect_usage_pieces(self, ctx)
         rv.append(self.subcommand_metavar)
@@ -1041,6 +1047,9 @@ class MultiCommand(Command):
         # set to ``*`` to inform the command that subcommands are executed
         # but nothing else.
         with ctx:
+            # The master command does not receive any arguments.  That
+            # would be silly.
+            ctx.args = []
             ctx.invoked_subcommand = args and '*' or None
             Command.invoke(self, ctx)
 
@@ -1054,7 +1063,7 @@ class MultiCommand(Command):
                                            allow_extra_args=True,
                                            allow_interspersed_args=False)
                 contexts.append(sub_ctx)
-                args = sub_ctx.args
+                args, sub_ctx.args = sub_ctx.args, []
 
             rv = []
             for sub_ctx in contexts:

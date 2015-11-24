@@ -1,4 +1,6 @@
+import sys
 import click
+import pytest
 
 
 def test_basic_chaining(runner):
@@ -152,3 +154,44 @@ def test_pipeline(runner):
         'FOO',
         'BAR',
     ]
+
+
+def test_args_and_chain(runner):
+    def debug():
+        click.echo('%s=%s' % (
+            sys._getframe(1).f_code.co_name,
+            '|'.join(click.get_current_context().args),
+        ))
+
+    @click.group(chain=True)
+    def cli():
+        debug()
+
+    @cli.command()
+    def a():
+        debug()
+
+    @cli.command()
+    def b():
+        debug()
+
+    @cli.command()
+    def c():
+        debug()
+
+    result = runner.invoke(cli, ['a', 'b', 'c'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'cli=',
+        'a=',
+        'b=',
+        'c=',
+    ]
+
+
+def test_multicommand_no_args(runner):
+    with pytest.raises(RuntimeError):
+        @click.group(chain=True)
+        @click.argument('forbidden')
+        def cli():
+            pass
