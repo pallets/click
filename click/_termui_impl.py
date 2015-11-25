@@ -191,6 +191,7 @@ class ProgressBar(object):
 
     def render_progress(self):
         from .termui import get_terminal_size
+        clear_width = self.width
 
         if self.is_hidden:
             buf = [self.label]
@@ -208,7 +209,6 @@ class ProgressBar(object):
                     self.max_width = new_width
                 self.width = new_width
 
-            clear_width = self.width
             if self.max_width is not None:
                 clear_width = self.max_width
 

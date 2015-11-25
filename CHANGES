@@ -8,6 +8,8 @@ Version 6.1
 
 (bugfix release, release date to be decided)
 
+- Resolved an issue with invisible progress bars no longer rendering.
+
 Version 6.0
 -----------
 
