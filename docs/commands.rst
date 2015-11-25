@@ -190,6 +190,7 @@ A custom multi command just needs to implement a list and load method:
 
     import click
     import os
+    import sys
 
     plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
 
@@ -204,12 +205,28 @@ A custom multi command just needs to implement a list and load method:
             return rv
 
         def get_command(self, ctx, name):
-            ns = {}
-            fn = os.path.join(plugin_folder, name + '.py')
-            with open(fn) as f:
-                code = compile(f.read(), fn, 'exec')
-                eval(code, ns, ns)
-            return ns['cli']
+            # avoid eval()-based import,
+            # use "lazy" submodule import instead
+
+            sys.path.append(os.path.abspath(plugin_folder))
+
+            try:
+                # __import__ allows (sub)module import
+                # via name as string;
+                # non-empty 'fromlist' necessary for
+                # sub-module imports to be considered
+                # (yet ignored itself)
+                command = __import__("%s.%s" % (plugin_folder, name),
+                                     fromlist=['foo'])
+            except ImportError as err:
+                print("Cannot import '%s' from '%s': %s" %
+                      (name, plugin_folder, err))
+                return
+
+            # default = None effectively ignores files
+            # without 'cli' method, i.e., __init__.py
+            return getattr(command, "cli", None)
+
 
     cli = MyCLI(help='This tool\'s subcommands are loaded from a '
                 'plugin folder dynamically.')
