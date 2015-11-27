@@ -191,10 +191,11 @@ class ProgressBar(object):
 
     def render_progress(self):
         from .termui import get_terminal_size
-        clear_width = self.width
+        nl = False
 
         if self.is_hidden:
             buf = [self.label]
+            nl = True
         else:
             buf = []
             # Update width in case the terminal has been resized
@@ -209,6 +210,7 @@ class ProgressBar(object):
                     self.max_width = new_width
                 self.width = new_width
 
+            clear_width = self.width
             if self.max_width is not None:
                 clear_width = self.max_width
 
@@ -219,13 +221,13 @@ class ProgressBar(object):
                 self.max_width = line_len
             buf.append(line)
 
-        buf.append(' ' * (clear_width - line_len))
+            buf.append(' ' * (clear_width - line_len))
         line = ''.join(buf)
 
         # Render the line only if it changed.
         if line != self._last_line:
             self._last_line = line
-            echo(line, file=self.file, color=self.color, nl='')
+            echo(line, file=self.file, color=self.color, nl=nl)
             self.file.flush()
 
     def make_step(self, n_steps):
