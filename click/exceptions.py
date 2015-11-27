@@ -116,12 +116,13 @@ class MissingParameter(BadParameter):
             param_type = self.param.param_type_name
 
         msg = self.message
-        msg_extra = self.param.type.get_missing_message(self.param)
-        if msg_extra:
-            if msg:
-                msg += '.  ' + msg_extra
-            else:
-                msg = msg_extra
+        if self.param is not None:
+            msg_extra = self.param.type.get_missing_message(self.param)
+            if msg_extra:
+                if msg:
+                    msg += '.  ' + msg_extra
+                else:
+                    msg = msg_extra
 
         return 'Missing %s%s%s%s' % (
             param_type,

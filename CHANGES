@@ -11,9 +11,11 @@ Version 7.0
 Version 6.1
 -----------
 
-(bugfix release, release date to be decided)
+(bugfix release, released on November 27th 2015)
 
 - Resolved an issue with invisible progress bars no longer rendering.
+- Disable chain commands with subcommands as they were inherently broken.
+- Fix `MissingParameter` not working without parameters passed.
 
 Version 6.0
 -----------

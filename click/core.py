@@ -37,6 +37,27 @@ def _bashcomplete(cmd, prog_name, complete_var=None):
         sys.exit(1)
 
 
+def _check_multicommand(base_command, cmd_name, cmd, register=False):
+    if not base_command.chain or not isinstance(cmd, MultiCommand):
+        return
+    if register:
+        hint = 'It is not possible to add multi commands as children to ' \
+               'another multi command that is in chain mode'
+    else:
+        hint = 'Found a multi command as subcommand to a multi command ' \
+               'that is in chain mode.  This is not supported'
+    raise RuntimeError('%s.  Command "%s" is set to chain and "%s" was '
+                       'added as subcommand but it in itself is a '
+                       'multi command.  ("%s" is a %s within a chained '
+                       '%s named "%s").  This restriction was supposed to '
+                       'be lifted in 6.0 but the fix was flawed.  This '
+                       'will be fixed in Click 7.0' % (
+                           hint, base_command.name, cmd_name,
+                           cmd_name, cmd.__class__.__name__,
+                           base_command.__class__.__name__,
+                           base_command.name))
+
+
 def batch(iterable, batch_size):
     return list(zip(*repeat(iter(iterable), batch_size)))
 
@@ -1123,6 +1144,7 @@ class Group(MultiCommand):
         name = name or cmd.name
         if name is None:
             raise TypeError('Command has no name.')
+        _check_multicommand(self, name, cmd, register=True)
         self.commands[name] = cmd
 
     def command(self, *args, **kwargs):
@@ -1176,6 +1198,8 @@ class CommandCollection(MultiCommand):
         for source in self.sources:
             rv = source.get_command(ctx, cmd_name)
             if rv is not None:
+                if self.chain:
+                    _check_multicommand(self, cmd_name, rv)
                 return rv
 
     def list_commands(self, ctx):
