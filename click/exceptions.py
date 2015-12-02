@@ -164,10 +164,13 @@ class BadOptionUsage(UsageError):
     for an option is not correct.
 
     .. versionadded:: 4.0
+
+    :param option_name: the name of the option being used incorrectly.
     """
 
-    def __init__(self, message, ctx=None):
+    def __init__(self, option_name, message, ctx=None):
         UsageError.__init__(self, message, ctx)
+        self.option_name = option_name
 
 
 class BadArgumentUsage(UsageError):
