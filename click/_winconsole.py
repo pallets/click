@@ -232,7 +232,7 @@ if PY2:
                 if not arg.startswith('-') or arg == '-':
                     break
                 argv = argv[1:]
-                if arg in ('-c', '-m'):
+                if arg.startswith(('-c', '-m')):
                     break
 
         return argv[1:]
