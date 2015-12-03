@@ -290,6 +290,27 @@ def test_path_option(runner):
         result = runner.invoke(exists, ['-f', '.'])
         assert 'exists=True' in result.output
 
+    @click.command()
+    @click.argument('some_file', type=click.Path(exists=True, allow_dash=True))
+    def dash_allowed(some_file):
+        if some_file == '-':
+            click.echo("It's standard in :-D")
+        else:
+            click.echo("It's not standard in :-(")
+
+    with runner.isolated_filesystem():
+        result = runner.invoke(dash_allowed, ['-'])
+        assert "It's standard in :-D" in result.output
+
+        result = runner.invoke(dash_allowed, ['xxx'])
+        assert 'Error: Invalid value for "some_file": Path "xxx" does not exist' \
+            in result.output
+
+        with open('foo.txt', 'wb') as f:
+            f.write(b"bar\n")
+        result = runner.invoke(dash_allowed, ['foo.txt'])
+        assert "It's not standard in :-(" in result.output
+
 
 def test_choice_option(runner):
     @click.command()
