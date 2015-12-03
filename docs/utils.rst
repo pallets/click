@@ -266,7 +266,7 @@ streams respond to Unicode and binary data.
 
 Because of this, click provides the :func:`get_binary_stream` and
 :func:`get_text_stream` functions, which produce consistent results with
-different Python versions and for a wide variety pf terminal configurations.
+different Python versions and for a wide variety of terminal configurations.
 
 The end result is that these functions will always return a functional
 stream object (except in very odd cases in Python 3; see
