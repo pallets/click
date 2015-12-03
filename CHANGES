@@ -3,6 +3,15 @@ Click Changelog
 
 This contains all major version changes between Click releases.
 
+Version 6.3
+-----------
+
+(bugfix release; unreleased)
+
+- Fix argument checks for interpreter invoke with `-m` and `-c`
+  on Windows.
+
+
 Version 6.2
 -----------
 
