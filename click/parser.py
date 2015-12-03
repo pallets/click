@@ -74,8 +74,8 @@ def _unpack_args(args, nargs_spec):
 
 def _error_opt_args(nargs, opt):
     if nargs == 1:
-        raise BadOptionUsage('%s option requires an argument' % opt)
-    raise BadOptionUsage('%s option requires %d arguments' % (opt, nargs))
+        raise BadOptionUsage(opt, '%s option requires an argument' % opt)
+    raise BadOptionUsage(opt, '%s option requires %d arguments' % (opt, nargs))
 
 
 def split_opt(opt):
@@ -342,7 +342,7 @@ class OptionParser(object):
                 del state.rargs[:nargs]
 
         elif explicit_value is not None:
-            raise BadOptionUsage('%s option does not take a value' % opt)
+            raise BadOptionUsage(opt, '%s option does not take a value' % opt)
 
         else:
             value = None
