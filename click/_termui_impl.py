@@ -129,7 +129,7 @@ class ProgressBar(object):
 
     def format_eta(self):
         if self.eta_known:
-            t = self.eta + 1
+            t = int(math.floor(self.eta + 1))
             seconds = t % 60
             t /= 60
             minutes = t % 60
