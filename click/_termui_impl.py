@@ -88,6 +88,7 @@ class ProgressBar(object):
         self.current_item = None
         self.is_hidden = not isatty(self.file)
         self._last_line = None
+        self.short_limit = 0.5
 
     def __enter__(self):
         self.entered = True
@@ -103,8 +104,11 @@ class ProgressBar(object):
         self.render_progress()
         return self
 
+    def is_fast(self):
+        return time.time() - self.start <= self.short_limit
+
     def render_finish(self):
-        if self.is_hidden:
+        if self.is_hidden or self.is_fast():
             return
         self.file.write(AFTER_BAR)
         self.file.flush()
@@ -225,7 +229,8 @@ class ProgressBar(object):
         line = ''.join(buf)
 
         # Render the line only if it changed.
-        if line != self._last_line:
+
+        if line != self._last_line and not self.is_fast():
             self._last_line = line
             echo(line, file=self.file, color=self.color, nl=nl)
             self.file.flush()
