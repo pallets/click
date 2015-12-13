@@ -31,6 +31,8 @@ def test_progressbar_length_hint(runner, monkeypatch):
             else:
                 raise StopIteration
 
+        next = __next__
+
     @click.command()
     def cli():
         with click.progressbar(Hinted(10), label='test') as progress:
