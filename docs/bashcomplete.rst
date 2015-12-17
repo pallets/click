@@ -56,16 +56,16 @@ Here is an example of using a callback function to generate dynamic suggestions:
 
 .. click:example::
 
-    def lookup_names(ctx, incomplete, cwords, cword):
-        names = []
-        # Do stuff here to dynamically generate the list of names...
-        return names
+    import os
+   
+    def get_env_vars(ctx, incomplete, cwords, cword):
+        return os.environ.keys()
 
     @click.command()
-    @click.argument("name", type=click.STRING, autocompletion=lookup_names)
-    def cmd1(name):
-        click.echo('Name: %s' % name)
-
+    @click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
+    def cmd1(envvar):
+        click.echo('Environment variable: %s' % envvar)
+        click.echo('Value: %s' % os.environ[envvar])
   
 
 Activation
