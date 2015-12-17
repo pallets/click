@@ -30,14 +30,17 @@ least a dash has been provided.  Example::
     $ repo clone -<TAB><TAB>
     --deep     --help     --rev      --shallow  -r
 	
-Additionally, custom suggestions can be given to an argument with the ``autocompletion`` parameter as a list of strings.  Example::
+Additionally, custom suggestions can be given to an argument with the
+``autocompletion`` parameter.  ``autocompletion`` may be a list of strings, or a
+callback function that returns a list of strings.
 
 .. click:example::
 
-    @cli.command()
-	@click.argument("name", type=click.STRING, autocompletion=["John", "Simon", "Doe"])
-	def cmd1(name):
+    @click.command()
+    @click.argument("name", type=click.STRING, autocompletion=["John", "Simon", "Doe"])
+    def cmd1(name):
         click.echo('Name: %s' % name)
+    
 
 
 Activation
