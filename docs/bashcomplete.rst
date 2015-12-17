@@ -21,7 +21,7 @@ This might be relaxed in future versions.
 What it Completes
 -----------------
 
-Generally, the Bash completion support will complete subcommands and
+By default, the Bash completion support will complete subcommands and
 parameters.  Subcommands are always listed whereas parameters only if at
 least a dash has been provided.  Example::
 
@@ -30,9 +30,9 @@ least a dash has been provided.  Example::
     $ repo clone -<TAB><TAB>
     --deep     --help     --rev      --shallow  -r
 	
-Additionally, custom suggestions can be given to an argument with the
-``autocompletion`` parameter.  ``autocompletion`` may be a list of strings, or a
-callback function that returns a list of strings.
+Additionally, custom suggestions can be provided for arguments with the
+``autocompletion`` parameter.  ``autocompletion`` may be a list of strings, as
+in the following example:
 
 .. click:example::
 
@@ -41,7 +41,32 @@ callback function that returns a list of strings.
     def cmd1(name):
         click.echo('Name: %s' % name)
     
+Alternatively, ``autocompletion`` may be a callback function that returns a list
+of strings. This is useful when the suggestions need to be dynamically generated
+at bash completion time. The callback function will be passed 4 keyword
+arguments:
 
+- ``ctx`` - The current click context.
+- ``incomplete`` - The partial word that is being completed, as a string.  May
+  be an empty string ``''`` if no characters have been entered yet.
+- ``cwords`` - The bash `COMP_WORDS <https://www.gnu.org/software/bash/manual/html_node/Programmable-Completion.html#Programmable-Completion>`_ array, as a list of strings.
+- ``cword`` - The bash `COMP_CWORD <https://www.gnu.org/software/bash/manual/html_node/Programmable-Completion.html#Programmable-Completion>`_ variable, as an integer.
+
+Here is an example of using a callback function to generate dynamic suggestions:
+
+.. click:example::
+
+    def lookup_names(ctx, incomplete, cwords, cword):
+        names = []
+        # Do stuff here to dynamically generate the list of names...
+        return names
+
+    @click.command()
+    @click.argument("name", type=click.STRING, autocompletion=lookup_names)
+    def cmd1(name):
+        click.echo('Name: %s' % name)
+
+  
 
 Activation
 ----------
