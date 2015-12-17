@@ -67,7 +67,7 @@ def do_complete(cli, prog_name):
                 if len(arguments) <= param.nargs or param.nargs == -1:
                     try:
                         if callable(param.autocompletion):
-                            choices.extend(param.autocompletion(context=ctx,
+                            choices.extend(param.autocompletion(ctx=ctx,
                                                                 incomplete=incomplete,
                                                                 cwords=cwords,
                                                                 cword=cword))
