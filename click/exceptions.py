@@ -9,14 +9,21 @@ class ClickException(Exception):
     exit_code = 1
 
     def __init__(self, message):
+        ctor_msg = message
         if PY2:
-            if message is not None:
-                message = message.encode('utf-8')
-        Exception.__init__(self, message)
+            if ctor_msg is not None:
+                ctor_msg = ctor_msg.encode('utf-8')
+        Exception.__init__(self, ctor_msg)
         self.message = message
 
     def format_message(self):
         return self.message
+
+    def __unicode__(self):
+        return self.message
+
+    def __str__(self):
+        return self.message.encode('utf-8')
 
     def show(self, file=None):
         if file is None:

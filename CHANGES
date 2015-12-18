@@ -8,6 +8,8 @@ Version 7.0
 
 (upcoming release with new features, release date to be decided)
 
+- The exception objects now store unicode properly.
+
 Version 6.3
 -----------
 
