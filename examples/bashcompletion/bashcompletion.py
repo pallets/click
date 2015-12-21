@@ -6,9 +6,12 @@ def cli():
     pass
 
 @cli.command()
-@click.argument("name", type=click.STRING, autocompletion=["John", "Simon", "Doe"])
-def cmd1(name):
-    click.echo('Name: %s' % name)
+@click.option('-c', '--count', type=click.INT, default=1)
+@click.argument("first", type=click.STRING, autocompletion=["John", "Bob", "Fred"])
+@click.argument("last", type=click.STRING, autocompletion=["Smith", "Simon", "Doe"])
+def cmd1(count, first, last):
+    for c in range(count):
+        click.echo('Name: %s %s' % (first, last))
 
 def get_env_vars(ctx, incomplete, cwords, cword):
     return os.environ.keys()

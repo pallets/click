@@ -63,8 +63,8 @@ def do_complete(cli, prog_name):
     else:
         for param in ctx.command.params:
             if isinstance(param, Argument):
-                arguments = [k for k in args if k  != ctx.command.name]
-                if len(arguments) <= param.nargs or param.nargs == -1:
+                value = ctx.params[param.name]
+                if (value == None) or (isinstance(value, tuple) and (len(value) < param.nargs or param.nargs == -1)):
                     try:
                         if callable(param.autocompletion):
                             choices.extend(param.autocompletion(ctx=ctx,
@@ -75,6 +75,7 @@ def do_complete(cli, prog_name):
                             choices.extend(param.autocompletion)
                     except AttributeError:
                         pass
+                    break
 
     for item in choices:
         if item.startswith(incomplete):
