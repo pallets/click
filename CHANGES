@@ -17,6 +17,7 @@ Version 6.3
 
 - Fix argument checks for interpreter invoke with `-m` and `-c`
   on Windows.
+- Fixed a bug that cased locale detection to error out on Python 3.
 
 Version 6.2
 -----------
