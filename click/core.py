@@ -737,11 +737,13 @@ class Command(BaseCommand):
                        shown on the command listing of the parent command.
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
+    :param hidden: hide this command from help outputs.
     """
 
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
-                 options_metavar='[OPTIONS]', add_help_option=True):
+                 options_metavar='[OPTIONS]', add_help_option=True,
+                 hidden=False):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -757,6 +759,7 @@ class Command(BaseCommand):
             short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self.hidden = hidden
 
     def get_usage(self, ctx):
         formatter = ctx.make_formatter()
@@ -995,6 +998,8 @@ class MultiCommand(Command):
             cmd = self.get_command(ctx, subcommand)
             # What is this, the tool lied about a command.  Ignore it
             if cmd is None:
+                continue
+            if cmd.hidden:
                 continue
 
             help = cmd.short_help or ''
@@ -1442,6 +1447,7 @@ class Option(Parameter):
                                variable in case a prefix is defined on the
                                context.
     :param help: the help string.
+    :param hidden: hide this option from help outputs.
     """
     param_type_name = 'option'
 
@@ -1449,7 +1455,7 @@ class Option(Parameter):
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, count=False, allow_from_autoenv=True,
-                 type=None, help=None, **attrs):
+                 type=None, help=None, hidden=False, **attrs):
         default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
 
@@ -1462,6 +1468,7 @@ class Option(Parameter):
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
         self.hide_input = hide_input
+        self.hidden = hidden
 
         # Flags
         if is_flag is None:
@@ -1589,6 +1596,8 @@ class Option(Parameter):
             parser.add_option(self.opts, **kwargs)
 
     def get_help_record(self, ctx):
+        if self.hidden:
+            return
         any_prefix_is_slash = []
 
         def _write_opts(opts):

@@ -397,3 +397,47 @@ def test_evaluation_order(runner):
         'normal1',
         'missing',
     ]
+
+
+def test_hidden_option(runner):
+    @click.command()
+    @click.option('--nope', hidden=True)
+    def cli(nope):
+        click.echo(nope)
+
+    result = runner.invoke(cli, ['--help'])
+    assert result.exit_code == 0
+    assert '--nope' not in result.output
+
+
+def test_hidden_command(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command(hidden=True)
+    def nope():
+        pass
+
+    result = runner.invoke(cli, ['--help'])
+    assert result.exit_code == 0
+    assert 'nope' not in result.output
+
+
+def test_hidden_group(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.group(hidden=True)
+    def subgroup():
+        pass
+
+    @subgroup.command()
+    def nope():
+        pass
+
+    result = runner.invoke(cli, ['--help'])
+    assert result.exit_code == 0
+    assert 'subgroup' not in result.output
+    assert 'nope' not in result.output
