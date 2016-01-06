@@ -737,11 +737,16 @@ class Command(BaseCommand):
                        shown on the command listing of the parent command.
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
+    :param no_args_is_help: this controls what happens if no arguments are
+                            provided. If enabled this will add
+                            ``--help`` as argument if no arguments are
+                            passed.
+
     """
 
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
-                 options_metavar='[OPTIONS]', add_help_option=True):
+                 options_metavar='[OPTIONS]', add_help_option=True, no_args_is_help=None):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -757,6 +762,7 @@ class Command(BaseCommand):
             short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self.no_args_is_help = no_args_is_help
 
     def get_usage(self, ctx):
         formatter = ctx.make_formatter()
@@ -866,6 +872,11 @@ class Command(BaseCommand):
                 formatter.write_text(self.epilog)
 
     def parse_args(self, ctx, args):
+
+        if not args and self.no_args_is_help and not ctx.resilient_parsing:
+            echo(ctx.get_help(), color=ctx.color)
+            ctx.exit()
+
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
 
