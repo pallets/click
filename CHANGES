@@ -9,6 +9,7 @@ Version 7.0
 (upcoming release with new features, release date to be decided)
 
 - The exception objects now store unicode properly.
+- Added the ability to hide commands and options from help.
 
 Version 6.3
 -----------
