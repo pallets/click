@@ -76,9 +76,12 @@ def _verify_python3_env():
                 if l.lower() in ('c.utf8', 'c.utf-8'):
                     has_c_utf8 = True
 
-        for l in good_locales:
-            locale.setlocale(locale.LC_ALL, l)
-            return
+        try:
+            for l in good_locales:
+                locale.setlocale(locale.LC_ALL, l)
+                return
+        except:
+            pass
 
         extra += '\n\n'
         if not good_locales:
