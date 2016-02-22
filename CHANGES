@@ -14,7 +14,7 @@ Version 7.0
 Version 6.3
 -----------
 
-(bugfix release; unreleased)
+(bugfix release; released on February 22 2016)
 
 - Fix argument checks for interpreter invoke with `-m` and `-c`
   on Windows.
