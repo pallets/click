@@ -253,3 +253,38 @@ def test_unprocessed_options(runner):
         'Verbosity: 4',
         'Args: -foo|-x|--muhaha|x|y|-x',
     ]
+
+
+def test_didyoumean_on_no_such_command(runner):
+    @click.group(enable_didyoumean=True)
+    def cli(ctx):
+        pass
+
+    @cli.command()
+    def foo():
+        pass
+
+    @cli.command()
+    def bar():
+        pass
+
+    @cli.command()
+    def barrr():
+        pass
+
+    result = runner.invoke(cli, ['fo'])
+    assert result.output == (
+        'Usage: cli [OPTIONS] COMMAND [ARGS]...\n\n'
+        'Error: No such command "fo".\n\n'
+        'Did you mean one of these?\n'
+        '    foo\n'
+    )
+
+    result = runner.invoke(cli, ['barr'])
+    assert result.output == (
+        'Usage: cli [OPTIONS] COMMAND [ARGS]...\n\n'
+        'Error: No such command "barr".\n\n'
+        'Did you mean one of these?\n'
+        '    barrr\n'
+        '    bar\n'
+    )
