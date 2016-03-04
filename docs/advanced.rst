@@ -346,7 +346,7 @@ Global Context Access
 .. versionadded:: 5.0
 
 Starting with Click 5.0 it is possible to access the current context from
-anywhere within the same through through the use of the
+anywhere within the same thread through the use of the
 :func:`get_current_context` function which returns it.  This is primarily
 useful for accessing the context bound object as well as some flags that
 are stored on it to customize the runtime behavior.  For instance the
