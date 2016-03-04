@@ -1,5 +1,6 @@
 import os
 import sys
+import difflib
 from contextlib import contextmanager
 from itertools import repeat
 from functools import update_wrapper
@@ -914,13 +915,16 @@ class MultiCommand(Command):
                   multiple commands to be chained together.
     :param result_callback: the result callback to attach to this multi
                             command.
+    :param enable_didyoumean: this enables the did you mean functionality
+                              which prints suggestions for commands if the
+                              given command does not exist.
     """
     allow_extra_args = True
     allow_interspersed_args = False
 
     def __init__(self, name=None, invoke_without_command=False,
                  no_args_is_help=None, subcommand_metavar=None,
-                 chain=False, result_callback=None, **attrs):
+                 chain=False, result_callback=None, enable_didyoumean=False, **attrs):
         Command.__init__(self, name, **attrs)
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
@@ -936,6 +940,7 @@ class MultiCommand(Command):
         #: The result callback that is stored.  This can be set or
         #: overridden with the :func:`resultcallback` decorator.
         self.result_callback = result_callback
+        self.enable_didyoumean = enable_didyoumean
 
         if self.chain:
             for param in self.params:
@@ -1113,7 +1118,19 @@ class MultiCommand(Command):
         if cmd is None:
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
-            ctx.fail('No such command "%s".' % original_cmd_name)
+            error_msg = 'No such command "%s".' % original_cmd_name
+
+            # If the command is not found and the 'did you mean' functionality
+            # for this group is enabled the closest matches for the not-found
+            # command will be suggested.
+            if self.enable_didyoumean:
+                matches = difflib.get_close_matches(original_cmd_name,
+                                                    self.list_commands(ctx),
+                                                    3, 0.7)
+                if matches:
+                    error_msg += '\n\nDid you mean one of these?\n    %s' % '\n    '.join(matches)
+
+            ctx.fail(error_msg)
 
         return cmd_name, cmd, args[1:]
 

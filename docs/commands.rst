@@ -556,3 +556,54 @@ know:
 -   When a Click script is invoked as command line application (through
     :meth:`BaseCommand.main`) the return value is ignored unless the
     `standalone_mode` is disabled in which case it's bubbled through.
+
+
+Did you mean functionality
+--------------------------
+
+.. versionadded:: 6.4
+
+All :class:`MultiCommand` based classes like the built-in :class:`Group`
+and :class:`CommandCollection` support a *Did you mean* functionality.
+If this functionality is enabled and a command can not be found the help
+text gets extended with suggestions of commands which the user could have meant.
+
+This example shows how to enable the *did you mean* functionality:
+
+.. click:example::
+
+    import click
+
+    @click.group(enable_didyoumean=True)
+    def cli(ctx):
+        pass
+
+    @cli.command()
+    def foo():
+        pass
+
+    @cli.command()
+    def bar():
+        pass
+
+    @cli.command()
+    def barrr():
+        pass
+
+    if __name__ == '__main__':
+        cli()
+
+
+The following help text will be echoed if a not existing command is triggered:
+
+.. click:run::
+
+    $ cli barr
+    Usage: cli [OPTIONS] COMMAND [ARGS]...
+
+    Error: No such command "barr".
+
+    Did you mean one of these?
+        barrr
+        bar
+
