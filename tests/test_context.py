@@ -206,6 +206,7 @@ def test_close_before_pop(runner):
     assert result.output == 'aha!\n'
     assert called == [True]
 
+
 def test_make_pass_decorator_args(runner):
     """
     Test to check that make_pass_decorator doesn't consume arguments based on
@@ -240,6 +241,7 @@ def test_make_pass_decorator_args(runner):
     result = runner.invoke(cli, ['test2'])
     assert not result.exception
     assert result.output == 'foocmd\n'
+
 
 def test_exit_not_standalone_failure():
     @click.command()

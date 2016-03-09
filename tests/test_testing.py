@@ -154,14 +154,32 @@ def test_exit_code_and_output_from_sys_exit():
         sys.exit('error')
 
     @click.command()
+    @click.pass_context
+    def cli_string_ctx_exit(ctx):
+        click.echo('hello world')
+        ctx.exit('error')
+
+    @click.command()
     def cli_int():
         click.echo('hello world')
         sys.exit(1)
 
     @click.command()
+    @click.pass_context
+    def cli_int_ctx_exit(ctx):
+        click.echo('hello world')
+        ctx.exit(1)
+
+    @click.command()
     def cli_float():
         click.echo('hello world')
         sys.exit(1.0)
+
+    @click.command()
+    @click.pass_context
+    def cli_float_ctx_exit(ctx):
+        click.echo('hello world')
+        ctx.exit(1.0)
 
     @click.command()
     def cli_no_error():
@@ -173,11 +191,23 @@ def test_exit_code_and_output_from_sys_exit():
     assert result.exit_code == 1
     assert result.output == 'hello world\nerror\n'
 
+    result = runner.invoke(cli_string_ctx_exit)
+    assert result.exit_code == 1
+    assert result.output == 'hello world\nerror\n'
+
     result = runner.invoke(cli_int)
     assert result.exit_code == 1
     assert result.output == 'hello world\n'
 
+    result = runner.invoke(cli_int_ctx_exit)
+    assert result.exit_code == 1
+    assert result.output == 'hello world\n'
+
     result = runner.invoke(cli_float)
+    assert result.exit_code == 1
+    assert result.output == 'hello world\n1.0\n'
+
+    result = runner.invoke(cli_float_ctx_exit)
     assert result.exit_code == 1
     assert result.output == 'hello world\n1.0\n'
 
