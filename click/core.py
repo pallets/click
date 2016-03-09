@@ -7,7 +7,7 @@ from functools import update_wrapper
 from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo, get_os_args
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
-     MissingParameter
+     MissingParameter, Exit
 from .termui import prompt, confirm
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
@@ -480,7 +480,7 @@ class Context(object):
 
     def exit(self, code=0):
         """Exits the application with a given exit code."""
-        sys.exit(code)
+        raise Exit(code, self)
 
     def get_usage(self):
         """Helper method to get formatted usage string for the current
@@ -700,6 +700,12 @@ class BaseCommand(object):
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
                 raise Abort()
+            except Exit as e:
+                if not standalone_mode:
+                    if e.exit_code:
+                        raise
+                    return None
+                sys.exit(e.exit_code)
             except ClickException as e:
                 if not standalone_mode:
                     raise
