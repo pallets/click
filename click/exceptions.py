@@ -13,6 +13,7 @@ class ClickException(Exception):
 
     #: The exit code for this exception
     exit_code = 1
+    show_prefix = 'Error: '
 
     def __init__(self, message):
         ctor_msg = message
@@ -37,19 +38,17 @@ class ClickException(Exception):
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
-        echo('Error: %s' % self.format_message(), file=file)
+        echo('%s%s' % (self.show_prefix, self.format_message()), file=file)
 
 
-class UsageError(ClickException):
-    """An internal exception that signals a usage error.  This typically
-    aborts any further handling.
+class ContextAwareException(ClickException):
+    """An exception that knows how to use a :class:`~click.Context` object
+    to properly display itself.
 
     :param message: the error message to display.
     :param ctx: optionally the context that caused this error.  Click will
                 fill in the context automatically in some situations.
     """
-    exit_code = 2
-
     def __init__(self, message, ctx=None):
         ClickException.__init__(self, message)
         self.ctx = ctx
@@ -67,7 +66,33 @@ class UsageError(ClickException):
         if self.ctx is not None:
             color = self.ctx.color
             echo(self.ctx.get_usage() + '\n%s' % hint, file=file, color=color)
-        echo('Error: %s' % self.format_message(), file=file, color=color)
+        echo('%s%s' % (self.show_prefix, self.format_message()), file=file, color=color)
+
+
+class Exit(ContextAwareException):
+    """An exception that indicates that the application should exit with some
+    status code.
+
+    :param code: the status code to exit with.
+    :param ctx: optionally the context that caused this error.  Click will
+                fill in the context automatically in some situations.
+    """
+    show_prefix = 'Exit: '
+
+    def __init__(self, code, ctx=None):
+        ContextAwareException.__init__(self, str(code), ctx=None)
+        self.exit_code = code
+
+
+class UsageError(ContextAwareException):
+    """An internal exception that signals a usage error.  This typically
+    aborts any further handling.
+
+    :param message: the error message to display.
+    :param ctx: optionally the context that caused this error.  Click will
+                fill in the context automatically in some situations.
+    """
+    exit_code = 2
 
 
 class BadParameter(UsageError):
