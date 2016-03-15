@@ -30,18 +30,21 @@ def get_completion_script(prog_name, complete_var):
 
 def resolve_ctx(cli, prog_name, args):
     ctx = cli.make_context(prog_name, args, resilient_parsing=True)
-    while ctx.args and isinstance(ctx.command, MultiCommand):
-        cmd = ctx.command.get_command(ctx, ctx.args[0])
+    args = ctx.protected_args + ctx.args
+    while args and isinstance(ctx.command, MultiCommand):
+        cmd = ctx.command.get_command(ctx, args[0])
         if cmd is None:
             return None
-        ctx = cmd.make_context(ctx.args[0], ctx.args[1:], parent=ctx,
+        ctx = cmd.make_context(args[0], args[1:], parent=ctx,
                                resilient_parsing=True)
+        args = ctx.protected_args + ctx.args
     return ctx
 
 
 def do_complete(cli, prog_name):
     cwords = split_arg_string(os.environ['COMP_WORDS'])
     cword = int(os.environ['COMP_CWORD'])
+    
     args = cwords[1:cword]
     try:
         incomplete = cwords[cword]
