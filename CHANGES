@@ -3,6 +3,14 @@ Click Changelog
 
 This contains all major version changes between Click releases.
 
+Version 6.4
+-----------
+
+(bugfix release)
+
+- Fix bug in bash completion where click would discard one or more trailing
+  arguments. See #471.
+
 Version 6.3
 -----------
 
