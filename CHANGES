@@ -11,6 +11,14 @@ Version 7.0
 - The exception objects now store unicode properly.
 - Added the ability to hide commands and options from help.
 
+Version 6.4
+-----------
+
+(bugfix release)
+
+- Fix bug in bash completion where click would discard one or more trailing
+  arguments. See #471.
+
 Version 6.3
 -----------
 
