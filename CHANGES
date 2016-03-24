@@ -14,7 +14,7 @@ Version 7.0
 Version 6.4
 -----------
 
-(bugfix release)
+(bugfix release; released on March 24th 2016)
 
 - Fix bug in bash completion where click would discard one or more trailing
   arguments. See #471.
