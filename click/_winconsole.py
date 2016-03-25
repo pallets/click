@@ -16,15 +16,18 @@ import time
 import ctypes
 import msvcrt
 from click._compat import _NonClosingTextIOWrapper, text_type, PY2
-from ctypes import byref, POINTER, pythonapi, c_int, c_char, c_char_p, \
+from ctypes import byref, POINTER, c_int, c_char, c_char_p, \
      c_void_p, py_object, c_ssize_t, c_ulong, windll, WINFUNCTYPE
+try:
+    from ctypes import pythonapi
+    PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
+    PyBuffer_Release = pythonapi.PyBuffer_Release
+except ImportError:
+    pythonapi = None
 from ctypes.wintypes import LPWSTR, LPCWSTR
 
 
 c_ssize_p = POINTER(c_ssize_t)
-
-PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
-PyBuffer_Release = pythonapi.PyBuffer_Release
 
 kernel32 = windll.kernel32
 GetStdHandle = kernel32.GetStdHandle
@@ -77,15 +80,20 @@ class Py_buffer(ctypes.Structure):
         _fields_.insert(-1, ('smalltable', c_ssize_t * 2))
 
 
-def get_buffer(obj, writable=False):
-    buf = Py_buffer()
-    flags = PyBUF_WRITABLE if writable else PyBUF_SIMPLE
-    PyObject_GetBuffer(py_object(obj), byref(buf), flags)
-    try:
-        buffer_type = c_char * buf.len
-        return buffer_type.from_address(buf.buf)
-    finally:
-        PyBuffer_Release(byref(buf))
+# On PyPy we cannot get buffers so our ability to operate here is
+# serverly limited.
+if pythonapi is None:
+    get_buffer = None
+else:
+    def get_buffer(obj, writable=False):
+        buf = Py_buffer()
+        flags = PyBUF_WRITABLE if writable else PyBUF_SIMPLE
+        PyObject_GetBuffer(py_object(obj), byref(buf), flags)
+        try:
+            buffer_type = c_char * buf.len
+            return buffer_type.from_address(buf.buf)
+        finally:
+            PyBuffer_Release(byref(buf))
 
 
 class _WindowsConsoleRawIOBase(io.RawIOBase):
@@ -246,7 +254,8 @@ _stream_factories = {
 
 
 def _get_windows_console_stream(f, encoding, errors):
-    if encoding in ('utf-16-le', None) \
+    if get_buffer is not None and \
+       encoding in ('utf-16-le', None) \
        and errors in ('strict', None) and \
        hasattr(f, 'isatty') and f.isatty():
         func = _stream_factories.get(f.fileno())
