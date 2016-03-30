@@ -358,7 +358,9 @@ class Path(ParamType):
     :param readable: if true, a readable check is performed.
     :param resolve_path: if this is true, then the path is fully resolved
                          before the value is passed onwards.  This means
-                         that it's absolute and symlinks are resolved.
+                         that it's absolute and symlinks are resolved.  It
+                         will not expand a tilde-prefix, as this is
+                         supposed to be done by the shell only.
     :param allow_dash: If this is set to `True`, a single dash to indicate
                        standard streams is permitted.
     :param type: optionally a string type that should be used to
