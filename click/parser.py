@@ -373,7 +373,10 @@ class OptionParser(object):
                     stop = True
 
                 nargs = option.nargs
-                if len(state.rargs) < nargs:
+                const = option.const
+                if len(state.rargs) < nargs and const:
+                    value = const
+                elif len(state.rargs) < nargs:
                     _error_opt_args(nargs, opt)
                 elif nargs == 1:
                     value = state.rargs.pop(0)

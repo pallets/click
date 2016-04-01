@@ -1593,7 +1593,10 @@ class Option(Parameter):
                                   **kwargs)
         else:
             kwargs['action'] = action
-            parser.add_option(self.opts, **kwargs)
+            if self.flag_value is not None:
+                parser.add_option(self.opts, const=self.flag_value, **kwargs)
+            else:
+                parser.add_option(self.opts, **kwargs)
 
     def get_help_record(self, ctx):
         if self.hidden:
