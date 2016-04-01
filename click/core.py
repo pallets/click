@@ -654,7 +654,7 @@ class BaseCommand(object):
                           name from ``sys.argv[0]``.
         :param complete_var: the environment variable that controls the
                              bash completion support.  The default is
-                             ``"_<prog_name>_COMPLETE"`` with prog name in
+                             ``"_<prog_name>_COMPLETE"`` with prog_name in
                              uppercase.
         :param standalone_mode: the default behavior is to invoke the script
                                 in standalone mode.  Click will then
@@ -669,7 +669,7 @@ class BaseCommand(object):
                       constructor.  See :class:`Context` for more information.
         """
         # If we are in Python 3, we will verify that the environment is
-        # sane at this point of reject further execution to avoid a
+        # sane at this point or reject further execution to avoid a
         # broken script.
         if not PY2:
             _verify_python3_env()
@@ -1424,9 +1424,9 @@ class Option(Parameter):
 
     :param show_default: controls if the default value should be shown on the
                          help page.  Normally, defaults are not shown.
-    :param prompt: if set to `True` or a non empty string then the user will
-                   be prompted for input if not set.  If set to `True` the
-                   prompt will be the option name capitalized.
+    :param prompt: if set to `True` or a non empty string then the user will be
+                   prompted for input.  If set to `True` the prompt will be the
+                   option name capitalized.
     :param confirmation_prompt: if set then the value will need to be confirmed
                                 if it was prompted for.
     :param hide_input: if this is `True` then the input on the prompt will be
