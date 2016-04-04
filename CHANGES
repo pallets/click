@@ -11,6 +11,13 @@ Version 7.0
 - The exception objects now store unicode properly.
 - Added the ability to hide commands and options from help.
 
+Version 6.5
+-----------
+
+(bugfix release; not yet released)
+
+- Fix bug in `click.Path` where it would crash when passed a `-`. See #551.
+
 Version 6.4
 -----------
 
