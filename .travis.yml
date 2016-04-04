@@ -17,5 +17,11 @@ install:
 
 script: make test
 
+branches:
+  only:
+    - master
+    - auto
+    - /^.*-maintenance$/
+
 notifications:
   email: false
