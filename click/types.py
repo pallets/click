@@ -435,7 +435,7 @@ class Path(ParamType):
                 self.path_type,
                 filename_to_ui(value)
             ), param, ctx)
-        if self.readable and not os.access(value, os.R_OK):
+        if self.readable and not is_dash and not os.access(value, os.R_OK):
             self.fail('%s "%s" is not readable.' % (
                 self.path_type,
                 filename_to_ui(value)
