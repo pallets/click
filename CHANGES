@@ -10,6 +10,7 @@ Version 7.0
 
 - The exception objects now store unicode properly.
 - Added the ability to hide commands and options from help.
+- Added Float Range in Types
 
 Version 6.3
 -----------
