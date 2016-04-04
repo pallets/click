@@ -95,4 +95,4 @@ __all__ = [
 disable_unicode_literals_warning = False
 
 
-__version__ = '6.5-dev'
+__version__ = '6.5'
