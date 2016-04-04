@@ -3,10 +3,10 @@ Click Changelog
 
 This contains all major version changes between Click releases.
 
-Version 6.5
+Version 6.6
 -----------
 
-(bugfix release; not yet released)
+(bugfix release; released on April 4th 2016)
 
 - Fix bug in `click.Path` where it would crash when passed a `-`. See #551.
 
