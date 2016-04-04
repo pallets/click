@@ -106,6 +106,17 @@ def test_file_args(runner):
         assert result.exit_code == 0
 
 
+def test_path_args(runner):
+    @click.command()
+    @click.argument('input', type=click.Path(dir_okay=False, allow_dash=True))
+    def foo(input):
+        click.echo(input)
+
+    result = runner.invoke(foo, ['-'])
+    assert result.output == '-\n'
+    assert result.exit_code == 0
+
+
 def test_file_atomics(runner):
     @click.command()
     @click.argument('output', type=click.File('wb', atomic=True))
