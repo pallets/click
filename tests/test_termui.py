@@ -42,3 +42,23 @@ def test_progressbar_length_hint(runner, monkeypatch):
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
     result = runner.invoke(cli, [])
     assert result.exception is None
+
+
+def test_show_default(runner, monkeypatch):
+    @click.option('-t', default='hello', prompt=True, show_default=True)
+    @click.command()
+    def cli():
+        pass
+
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+    assert '[hello]' in runner.invoke(cli, [], input='none').output
+
+
+def test_do_not_show_default(runner, monkeypatch):
+    @click.option('-t', default='hello', prompt=True, show_default=False)
+    @click.command()
+    def cli():
+        pass
+
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+    assert '[hello]' not in runner.invoke(cli, [], input='none').output
