@@ -51,7 +51,9 @@ class UsageError(ClickException):
         color = None
         if self.ctx is not None:
             color = self.ctx.color
-            echo(self.ctx.get_usage() + '\n', file=file, color=color)
+            echo(self.ctx.get_usage() + '\nTry "%s %s" for help.\n'
+                 % (self.ctx.command_path, self.ctx.help_option_names[0]),
+                 file=file, color=color)
         echo('Error: %s' % self.format_message(), file=file, color=color)
 
 
