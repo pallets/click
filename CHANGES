@@ -11,6 +11,7 @@ Version 7.0
 - The exception objects now store unicode properly.
 - Added the ability to hide commands and options from help.
 - Added Float Range in Types.
+- `secho`'s first argument can now be `None`, like in `echo`.
 
 Version 6.5
 -----------

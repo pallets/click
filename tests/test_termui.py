@@ -42,3 +42,10 @@ def test_progressbar_length_hint(runner, monkeypatch):
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
     result = runner.invoke(cli, [])
     assert result.exception is None
+
+
+def test_secho(runner):
+    with runner.isolation() as out:
+        click.secho(None, nl=False)
+        bytes = out.getvalue()
+        assert bytes == b''
