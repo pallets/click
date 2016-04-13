@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import pytest
+
 import click
 
 
@@ -203,3 +205,27 @@ def test_close_before_pop(runner):
     assert not result.exception
     assert result.output == 'aha!\n'
     assert called == [True]
+
+
+def test_exit_not_standalone_failure():
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        ctx.exit(1)
+
+    with pytest.raises(click.exceptions.Exit) as e:
+        cli.main([], 'test_exit_not_standalone', standalone_mode=False)
+    assert e.value.exit_code == 1
+
+
+def test_exit_not_standalone_success():
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        ctx.exit(0)
+
+    assert cli.main(
+        [],
+        'test_exit_not_standalone',
+        standalone_mode=False,
+    ) is None
