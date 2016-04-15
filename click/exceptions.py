@@ -51,8 +51,11 @@ class UsageError(ClickException):
             file = get_text_stderr()
         color = None
         hint = ''
-        if (self.cmd is not None and
-                self.cmd.get_help_option(self.ctx) is not None):
+        if (
+            self.cmd is not None and
+            self.cmd.hint_help and
+            self.cmd.get_help_option(self.ctx) is not None
+        ):
             hint = ('Try "%s %s" for help.\n'
                     % (self.ctx.command_path, self.ctx.help_option_names[0]))
         if self.ctx is not None:
