@@ -212,3 +212,14 @@ def test_formatting_usage_custom_help(runner):
         '',
         'Error: Missing argument "arg".'
     ]
+
+
+def test_formatting_usage_error_no_hints(runner):
+    @click.command(hint_help=False)
+    @click.argument('arg')
+    def cmd(arg):
+        click.echo('arg:' + arg)
+
+    result = runner.invoke(cmd, [])
+    assert result.exit_code == 2
+    assert "--help" not in result.output

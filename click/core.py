@@ -737,13 +737,15 @@ class Command(BaseCommand):
                        shown on the command listing of the parent command.
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
+    :param hint_help: by default the ``--help`` is mentioned in usage errors.
+                      This can be disabled by this parameter.
     :param hidden: hide this command from help outputs.
     """
 
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
                  options_metavar='[OPTIONS]', add_help_option=True,
-                 hidden=False):
+                 hint_help=True, hidden=False):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -759,6 +761,7 @@ class Command(BaseCommand):
             short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self.hint_help = hint_help
         self.hidden = hidden
 
     def get_usage(self, ctx):
