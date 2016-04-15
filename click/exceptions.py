@@ -44,16 +44,20 @@ class UsageError(ClickException):
     def __init__(self, message, ctx=None):
         ClickException.__init__(self, message)
         self.ctx = ctx
+        self.cmd = self.ctx and self.ctx.command or None
 
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
         color = None
+        hint = ''
+        if (self.cmd is not None and
+                self.cmd.get_help_option(self.ctx) is not None):
+            hint = ('Try "%s %s" for help.\n'
+                    % (self.ctx.command_path, self.ctx.help_option_names[0]))
         if self.ctx is not None:
             color = self.ctx.color
-            echo(self.ctx.get_usage() + '\nTry "%s %s" for help.\n'
-                 % (self.ctx.command_path, self.ctx.help_option_names[0]),
-                 file=file, color=color)
+            echo(self.ctx.get_usage() + '\n%s' % hint, file=file, color=color)
         echo('Error: %s' % self.format_message(), file=file, color=color)
 
 
