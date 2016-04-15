@@ -12,6 +12,7 @@ Version 7.0
 - Added the ability to hide commands and options from help.
 - Added Float Range in Types.
 - `secho`'s first argument can now be `None`, like in `echo`.
+- Usage errors now hint at the `--help` option.
 
 Version 6.5
 -----------
