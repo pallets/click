@@ -8,7 +8,7 @@ it suffers from the Unicode text model in Python 3.  All examples in the
 documentation were written so that they could run on both Python 2.x and
 Python 3.3 or higher.
 
-At the moment, it is strongly recommended is to use Python 2 for Click
+At the moment, it is strongly recommended to use Python 2 for Click
 utilities unless Python 3 is a hard requirement.
 
 .. _python3-limitations:
