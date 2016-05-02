@@ -87,6 +87,10 @@ script like this:
     @click.option('--debug/--no-debug', default=False)
     @click.pass_context
     def cli(ctx, debug):
+        # ensure that ctx.obj exists and is a dict (in case `cli()` is called
+        # by means other than the `if` block below
+        ctx.ensure_object(dict)
+
         ctx.obj['DEBUG'] = debug
 
     @cli.command()
