@@ -48,7 +48,8 @@ def get_choices(cli, prog_name, args, incomplete):
               # and secondary options
               choices.append((opt, None))
     elif isinstance(ctx.command, MultiCommand):
-        for cmd in ctx.command.commands.values():
+        for name in ctx.command.list_commands(ctx):
+            cmd = ctx.command.get_command(ctx, name)
             choices.append((cmd.name, cmd.short_help))
 
     for item, help in choices:
