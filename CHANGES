@@ -14,7 +14,7 @@ Version 7.0
 - `secho`'s first argument can now be `None`, like in `echo`.
 - Usage errors now hint at the `--help` option.
 
-Version 6.5
+Version 6.6
 -----------
 
 (bugfix release; released on April 4th 2016)
