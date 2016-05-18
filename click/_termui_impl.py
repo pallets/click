@@ -400,8 +400,12 @@ class Editor(object):
         else:
             environ = None
         try:
-            c = subprocess.Popen('%s "%s"' % (editor, filename),
-                                 env=environ, shell=True)
+            editor_args = [editor]
+            if os.path.basename(editor) == 'gvim':
+                editor_args.append('-f')
+
+            editor_args.append(filename)
+            c = subprocess.Popen(editor_args, env=environ, shell=True)
             exit_code = c.wait()
             if exit_code != 0:
                 raise ClickException('%s: Editing failed!' % editor)
