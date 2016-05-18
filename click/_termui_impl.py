@@ -394,15 +394,15 @@ class Editor(object):
     def edit_file(self, filename):
         import subprocess
         editor = self.get_editor()
+        if os.path.basename(editor) == 'gvim':
+            editor += " -f"
+
         if self.env:
             environ = os.environ.copy()
             environ.update(self.env)
         else:
             environ = None
         try:
-            if os.path.basename(editor) == 'gvim':
-                editor += " -f"
-
             c = subprocess.Popen('%s "%s"' % (editor, filename),
                                  env=environ, shell=True)
             exit_code = c.wait()
