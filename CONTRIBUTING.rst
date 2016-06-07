@@ -33,7 +33,7 @@ Submitting patches
   may ignore the line-length-limit if following it would make the code uglier.
 
 - For features: Consider whether your feature would be a better fit for an
-  `external package <click.pocoo.org/contrib/>`_
+  `external package <http://click.pocoo.org/contrib/>`_
 
 Running the testsuite
 ---------------------
