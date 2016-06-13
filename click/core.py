@@ -1461,7 +1461,7 @@ class Option(Parameter):
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, count=False, allow_from_autoenv=True,
-                 type=None, help=None, hidden=False, **attrs):
+                 type=None, help=None, hidden=False, show_choices=True, **attrs):
         default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
 
@@ -1507,6 +1507,7 @@ class Option(Parameter):
         self.allow_from_autoenv = allow_from_autoenv
         self.help = help
         self.show_default = show_default
+        self.show_choices = show_choices
 
         # Sanity check for stuff we don't support
         if __debug__:
@@ -1658,8 +1659,8 @@ class Option(Parameter):
         if self.is_bool_flag:
             return confirm(self.prompt, default)
 
-        return prompt(self.prompt, default=default,
-                      hide_input=self.hide_input,
+        return prompt(self.prompt, default=default, type=self.type,
+                      hide_input=self.hide_input, show_choices=self.show_choices,
                       confirmation_prompt=self.confirmation_prompt,
                       value_proc=lambda x: self.process_value(ctx, x))
 

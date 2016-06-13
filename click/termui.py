@@ -6,7 +6,7 @@ from ._compat import raw_input, text_type, string_types, \
      isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
 from .utils import echo
 from .exceptions import Abort, UsageError
-from .types import convert_type
+from .types import convert_type, Choice
 from .globals import resolve_color_default
 
 
@@ -24,22 +24,26 @@ def hidden_prompt_func(prompt):
     return getpass.getpass(prompt)
 
 
-def _build_prompt(text, suffix, show_default=False, default=None):
+def _build_prompt(text, suffix, show_default=False, default=None, show_choices=True, type=None):
     prompt = text
+    if type is not None and show_choices and isinstance(type, Choice):
+        prompt += ' (' + ", ".join(map(str, type.choices)) + ')'
     if default is not None and show_default:
         prompt = '%s [%s]' % (prompt, default)
     return prompt + suffix
 
 
-def prompt(text, default=None, hide_input=False,
-           confirmation_prompt=False, type=None,
-           value_proc=None, prompt_suffix=': ',
-           show_default=True, err=False):
+def prompt(text, default=None, hide_input=False, confirmation_prompt=False,
+           type=None, value_proc=None, prompt_suffix=': ', show_default=True,
+           err=False, show_choices=True):
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
     If the user aborts the input by sending a interrupt signal, this
     function will catch it and raise a :exc:`Abort` exception.
+
+    .. versionadded:: 7.0
+       Added the show_choices parameter.
 
     .. versionadded:: 6.0
        Added unicode support for cmd.exe on Windows.
@@ -61,6 +65,10 @@ def prompt(text, default=None, hide_input=False,
     :param show_default: shows or hides the default value in the prompt.
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``, the same as with echo.
+    :param show_choices: Show or hide choices if the passed type is a Choice.
+                         For example if type is a Choice of either day or week,
+                         show_choices is true and text is "Group by" then the
+                         prompt will be "Group by (day, week): ".
     """
     result = None
 
@@ -82,7 +90,7 @@ def prompt(text, default=None, hide_input=False,
     if value_proc is None:
         value_proc = convert_type(type, default)
 
-    prompt = _build_prompt(text, prompt_suffix, show_default, default)
+    prompt = _build_prompt(text, prompt_suffix, show_default, default, show_choices, type)
 
     while 1:
         while 1:
