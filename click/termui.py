@@ -167,7 +167,11 @@ def get_terminal_size():
             return sz.columns, sz.lines
 
     if get_winterm_size is not None:
-        return get_winterm_size()
+        size = get_winterm_size()
+        if size == (0, 0):
+            return (79, 24)
+        else:
+            return size
 
     def ioctl_gwinsz(fd):
         try:
