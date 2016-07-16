@@ -115,18 +115,21 @@ class MissingParameter(BadParameter):
         self.param_type = param_type
 
     def format_message(self):
+        param_type = self.param_type
+        if param_type is None and self.param is not None:
+            param_type = self.param.param_type_name
+
         if self.param_hint is not None:
             param_hint = self.param_hint
         elif self.param is not None:
-            param_hint = self.param.opts or [self.param.human_readable_name]
+            if param_type == 'argument' and self.param.metavar:
+                param_hint = [self.param.metavar]
+            else:
+                param_hint = self.param.opts or [self.param.human_readable_name]
         else:
             param_hint = None
         if isinstance(param_hint, (tuple, list)):
             param_hint = ' / '.join('"%s"' % x for x in param_hint)
-
-        param_type = self.param_type
-        if param_type is None and self.param is not None:
-            param_type = self.param.param_type_name
 
         msg = self.message
         if self.param is not None:
