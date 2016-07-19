@@ -224,11 +224,6 @@ def _get_text_stderr(buffer_stream):
 
 
 if PY2:
-    def _hash_py_argv():
-        return zlib.crc32('\x00'.join(sys.argv[1:]))
-
-    _initial_argv_hash = _hash_py_argv()
-
     def _get_windows_argv():
         argc = c_int(0)
         argv_unicode = CommandLineToArgvW(GetCommandLineW(), byref(argc))
