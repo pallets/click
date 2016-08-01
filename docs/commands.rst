@@ -437,7 +437,7 @@ you're not satisfied with the defaults.
 
 The default map can be nested arbitrarily for each subcommand and
 provided when the script is invoked.  Alternatively, it can also be
-overriden at any point by commands.  For instance, a top-level command could
+overridden at any point by commands.  For instance, a top-level command could
 load the defaults from a configuration file.
 
 Example usage:

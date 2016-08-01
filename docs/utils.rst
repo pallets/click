@@ -226,7 +226,7 @@ Launching Applications
 .. versionadded:: 2.0
 
 Click supports launching applications through :func:`launch`.  This can be
-used to open the default application assocated with a URL or filetype.
+used to open the default application associated with a URL or filetype.
 This can be used to launch web browsers or picture viewers, for instance.
 In addition to this, it can also launch the file manager and automatically
 select the provided file.
