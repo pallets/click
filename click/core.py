@@ -1,3 +1,4 @@
+import errno
 import os
 import sys
 from contextlib import contextmanager
@@ -705,6 +706,11 @@ class BaseCommand(object):
                     raise
                 e.show()
                 sys.exit(e.exit_code)
+            except IOError as e:
+                if e.errno == errno.EPIPE:
+                    sys.exit(1)
+                else:
+                    raise
         except Abort:
             if not standalone_mode:
                 raise
