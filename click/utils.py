@@ -1,5 +1,6 @@
 import os
 import sys
+import errno
 
 from .globals import resolve_color_default
 
@@ -236,9 +237,13 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     if message and not PY2 and is_bytes(message):
         binary_file = _find_binary_writer(file)
         if binary_file is not None:
-            file.flush()
-            binary_file.write(message)
-            binary_file.flush()
+            try:
+                file.flush()
+                binary_file.write(message)
+                binary_file.flush()
+            except IOError, e:
+                if e.errno != errno.EPIPE:
+                    raise
             return
 
     # ANSI-style support.  If there is no message or we are dealing with
@@ -257,7 +262,11 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
                 message = strip_ansi(message)
 
     if message:
-        file.write(message)
+        try:
+            file.write(message)
+        except IOError, e:
+            if e.errno != errno.EPIPE:
+                raise
     file.flush()
 
 
