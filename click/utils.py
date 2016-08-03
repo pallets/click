@@ -241,7 +241,7 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
                 file.flush()
                 binary_file.write(message)
                 binary_file.flush()
-            except IOError, e:
+            except IOError as e:
                 if e.errno != errno.EPIPE:
                     raise
             return
@@ -264,7 +264,7 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     if message:
         try:
             file.write(message)
-        except IOError, e:
+        except IOError as e:
             if e.errno != errno.EPIPE:
                 raise
     file.flush()
