@@ -752,6 +752,8 @@ class Command(BaseCommand):
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
         self.params = params or []
+        if help and '\f' in help:
+            help = help.split('\f', 1)[0]
         self.help = help
         self.epilog = epilog
         self.options_metavar = options_metavar

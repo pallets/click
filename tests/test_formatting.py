@@ -212,3 +212,32 @@ def test_formatting_usage_custom_help(runner):
         '',
         'Error: Missing argument "arg".'
     ]
+
+
+def test_truncating_docstring(runner):
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        """First paragraph.
+
+        This is a very long second
+        paragraph and not correctly
+        wrapped but it will be rewrapped.
+        \f
+
+        :param click.core.Context ctx: Click context.
+        """
+
+    result = runner.invoke(cli, ['--help'], terminal_width=60)
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'Usage: cli [OPTIONS]',
+        '',
+        '  First paragraph.',
+        '',
+        '  This is a very long second paragraph and not correctly',
+        '  wrapped but it will be rewrapped.',
+        '',
+        'Options:',
+        '  --help  Show this message and exit.',
+    ]
