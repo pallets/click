@@ -78,6 +78,40 @@ And what it looks like:
 
 .. _doc-meta-variables:
 
+Truncating Help Texts
+---------------------
+
+Click gets command help text from function docstrings.  However if you
+already use docstrings to document function arguments you may not want
+to see :param: and :return: lines in your help text.
+
+You can use the ``\f`` escape marker to have Click truncate the help text
+after the marker.
+
+Example:
+
+.. click:example::
+
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        """First paragraph.
+
+        This is a very long second
+        paragraph and not correctly
+        wrapped but it will be rewrapped.
+        \f
+
+        :param click.core.Context ctx: Click context.
+        """
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(cli, args=['--help'])
+
+
 Meta Variables
 --------------
 
