@@ -3,6 +3,13 @@ Click Changelog
 
 This contains all major version changes between Click releases.
 
+Version 6.7
+-----------
+
+(bugfix release; yet to be released)
+
+- Make `click.progressbar` work with `codecs.open` files. See #637.
+
 Version 6.6
 -----------
 
