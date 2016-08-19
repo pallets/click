@@ -20,6 +20,7 @@ Version 6.7
 (bugfix release; yet to be released)
 
 - Make `click.progressbar` work with `codecs.open` files. See #637.
+- Fix bug in bash completion with nested subcommands. See #639.
 
 Version 6.6
 -----------
