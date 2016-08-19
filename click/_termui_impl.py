@@ -14,7 +14,7 @@ import sys
 import time
 import math
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
-     open_stream, strip_ansi, term_len, get_best_encoding, WIN
+     open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types
 from .utils import echo
 from .exceptions import ClickException
 
@@ -31,7 +31,7 @@ def _length_hint(obj):
     """Returns the length hint of an object."""
     try:
         return len(obj)
-    except TypeError:
+    except (AttributeError, TypeError):
         try:
             get_hint = type(obj).__length_hint__
         except AttributeError:
@@ -41,7 +41,7 @@ def _length_hint(obj):
         except TypeError:
             return None
         if hint is NotImplemented or \
-           not isinstance(hint, (int, long)) or \
+           not isinstance(hint, int_types) or \
            hint < 0:
             return None
         return hint

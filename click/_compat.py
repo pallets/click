@@ -139,6 +139,7 @@ if PY2:
     bytes = str
     raw_input = raw_input
     string_types = (str, unicode)
+    int_types = (int, long)
     iteritems = lambda x: x.iteritems()
     range_type = xrange
 
@@ -212,6 +213,7 @@ else:
     text_type = str
     raw_input = input
     string_types = (str,)
+    int_types = (int,)
     range_type = range
     isidentifier = lambda x: x.isidentifier()
     iteritems = lambda x: iter(x.items())

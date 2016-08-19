@@ -17,12 +17,11 @@ install:
 
 script: make test
 
+branches:
+  only:
+    - master
+    - auto
+    - /^.*-maintenance$/
+
 notifications:
   email: false
-  irc:
-    channels:
-      - "chat.freenode.net#pocoo"
-    on_success: change
-    on_failure: always
-    use_notice: true
-    skip_join: true

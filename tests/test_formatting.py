@@ -145,3 +145,70 @@ def test_formatting_empty_help_lines(runner):
         'Options:',
         '  --help  Show this message and exit.',
     ]
+
+
+def test_formatting_usage_error(runner):
+    @click.command()
+    @click.argument('arg')
+    def cmd(arg):
+        click.echo('arg:' + arg)
+
+    result = runner.invoke(cmd, [])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        'Usage: cmd [OPTIONS] ARG',
+        'Try "cmd --help" for help.',
+        '',
+        'Error: Missing argument "arg".'
+    ]
+
+
+def test_formatting_usage_error_nested(runner):
+    @click.group()
+    def cmd():
+        pass
+
+    @cmd.command()
+    @click.argument('bar')
+    def foo(bar):
+        click.echo('foo:' + bar)
+
+    result = runner.invoke(cmd, ['foo'])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        'Usage: cmd foo [OPTIONS] BAR',
+        'Try "cmd foo --help" for help.',
+        '',
+        'Error: Missing argument "bar".'
+    ]
+
+
+def test_formatting_usage_error_no_help(runner):
+    @click.command(add_help_option=False)
+    @click.argument('arg')
+    def cmd(arg):
+        click.echo('arg:' + arg)
+
+    result = runner.invoke(cmd, [])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        'Usage: cmd [OPTIONS] ARG',
+        '',
+        'Error: Missing argument "arg".'
+    ]
+
+
+def test_formatting_usage_custom_help(runner):
+    @click.command(context_settings=dict(help_option_names=['--man']))
+    @click.argument('arg')
+    def cmd(arg):
+        click.echo('arg:' + arg)
+
+    result = runner.invoke(cmd, [])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        'Usage: cmd [OPTIONS] ARG',
+        'Try "cmd --man" for help.',
+        '',
+        'Error: Missing argument "arg".'
+    ]

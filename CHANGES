@@ -3,6 +3,17 @@ Click Changelog
 
 This contains all major version changes between Click releases.
 
+Version 7.0
+-----------
+
+(upcoming release with new features, release date to be decided)
+
+- The exception objects now store unicode properly.
+- Added the ability to hide commands and options from help.
+- Added Float Range in Types.
+- `secho`'s first argument can now be `None`, like in `echo`.
+- Usage errors now hint at the `--help` option.
+
 Version 6.6
 -----------
 
@@ -26,7 +37,6 @@ Version 6.3
 - Fix argument checks for interpreter invoke with `-m` and `-c`
   on Windows.
 - Fixed a bug that cased locale detection to error out on Python 3.
-
 
 Version 6.2
 -----------
