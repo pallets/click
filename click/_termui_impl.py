@@ -31,7 +31,7 @@ def _length_hint(obj):
     """Returns the length hint of an object."""
     try:
         return len(obj)
-    except TypeError:
+    except (AttributeError, TypeError):
         try:
             get_hint = type(obj).__length_hint__
         except AttributeError:
