@@ -31,7 +31,7 @@ def get_completion_script(prog_name, complete_var):
 def resolve_ctx(cli, prog_name, args):
     ctx = cli.make_context(prog_name, args, resilient_parsing=True)
     while ctx.args + ctx.protected_args and isinstance(ctx.command, MultiCommand):
-        a = ctx.args + ctx.protected_args
+        a = ctx.protected_args + ctx.args
         cmd = ctx.command.get_command(ctx, a[0])
         if cmd is None:
             return None
