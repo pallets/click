@@ -35,6 +35,8 @@ Submitting patches
 - For features: Consider whether your feature would be a better fit for an
   `external package <http://click.pocoo.org/contrib/>`_
 
+- For bugfixes: Submit against the latest maintenance branch instead of master!
+
 Running the testsuite
 ---------------------
 
