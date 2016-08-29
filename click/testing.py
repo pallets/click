@@ -213,7 +213,7 @@ class CliRunner(object):
         old_env = {}
         try:
             for key, value in iteritems(env):
-                old_env[key] = os.environ.get(value)
+                old_env[key] = os.environ.get(key)
                 if value is None:
                     try:
                         del os.environ[key]
