@@ -1,3 +1,4 @@
+import os
 import sys
 
 import pytest
@@ -183,3 +184,21 @@ def test_exit_code_and_output_from_sys_exit():
     result = runner.invoke(cli_no_error)
     assert result.exit_code == 0
     assert result.output == 'hello world\n'
+
+
+def test_env():
+    @click.command()
+    def cli_env():
+        click.echo('ENV=%s' % os.environ['TEST_CLICK_ENV'])
+
+    runner = CliRunner()
+
+    env_orig = dict(os.environ)
+    env = dict(env_orig)
+    assert 'TEST_CLICK_ENV' not in env
+    env['TEST_CLICK_ENV'] = 'some_value'
+    result = runner.invoke(cli_env, env=env)
+    assert result.exit_code == 0
+    assert result.output == 'ENV=some_value\n'
+
+    assert os.environ == env_orig
