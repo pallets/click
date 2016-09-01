@@ -1260,7 +1260,8 @@ class Parameter(object):
 
     def __init__(self, param_decls=None, type=None, required=False,
                  default=None, callback=None, nargs=None, metavar=None,
-                 expose_value=True, is_eager=False, envvar=None):
+                 expose_value=True, is_eager=False, envvar=None,
+                 completer=None, choices=None):
         self.name, self.opts, self.secondary_opts = \
             self._parse_decls(param_decls or (), expose_value)
 
@@ -1283,6 +1284,8 @@ class Parameter(object):
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
+        self.completer = completer
+        self.choices = choices
 
     @property
     def human_readable_name(self):
@@ -1414,6 +1417,15 @@ class Parameter(object):
 
     def get_usage_pieces(self, ctx):
         return []
+
+    def get_completion(self):
+        if self.completer:
+            for thing in self.completer():
+                yield str(thing)
+        if self.choices:
+            for thing in self.choices:
+                yield str(thing)
+
 
 
 class Option(Parameter):

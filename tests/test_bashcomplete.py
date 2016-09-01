@@ -60,3 +60,31 @@ def test_long_chain():
     assert list(get_choices(cli, 'lol', ['asub', 'bsub'], '')) == ['csub']
     assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], '-')) == ['--csub-opt']
     assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], '')) == []
+
+
+def test_completer():
+
+    def custom_completer():
+        yield 'custom'
+        for i in [0, 1, 2]:
+            yield i
+        yield 'bye'
+
+    @click.command()
+    @click.option('--local-opt', completer=custom_completer)
+    def cli(local_opt):
+        pass
+
+    assert list(get_choices(cli, 'lol', [], '-')) == ['--local-opt']
+    assert list(get_choices(cli, 'lol', ['--local-opt'], '')) == ['custom', '0', '1', '2', 'bye']
+
+
+def test_choices():
+
+    @click.command()
+    @click.option('--local-opt', choices=['foo', 'bar', 'spam', 'eggs'])
+    def cli(local_opt):
+        pass
+
+    assert list(get_choices(cli, 'lol', [], '-')) == ['--local-opt']
+    assert list(get_choices(cli, 'lol', ['--local-opt'], '')) == ['foo', 'bar', 'spam', 'eggs']
