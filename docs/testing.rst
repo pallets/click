@@ -51,12 +51,12 @@ Example::
         def cli(debug):
             click.echo('Debug mode is %s' % ('on' if debug else 'off')) 
     
-        @cli.command()
+        @click.command()
         def sync():
             click.echo('Syncing')
     
         runner = CliRunner()
-        result = runner.invoke(cli, ['--debug', 'sync'])
+        result = runner.invoke(click, ['--debug', 'sync'])
         assert result.exit_code == 0
         assert 'Debug mode is on' in result.output
         assert 'Syncing' in result.output
