@@ -34,6 +34,18 @@ def pager():
 
 
 @cli.command()
+def spinner():
+    """Demonstrates using the spinner."""
+    def do_work():
+        time.sleep(3)
+
+    click.echo('starting work')
+    with click.spinner():
+        do_work()
+    click.echo('all done!')
+
+
+@cli.command()
 @click.option('--count', default=8000, type=click.IntRange(1, 100000),
               help='The number of items to process.')
 def progress(count):

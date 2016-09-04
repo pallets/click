@@ -1,6 +1,18 @@
 import click
 
 
+def test_spinner(runner, monkeypatch):
+
+    @click.command()
+    def cli():
+        with click.spinner():
+            for thing in range(10):
+                pass
+
+    result = runner.invoke(cli, [])
+    assert result.exception is None
+
+
 def test_progressbar_strip_regression(runner, monkeypatch):
     label = '    padded line'
 

@@ -213,6 +213,21 @@ def echo_via_pager(text, color=None):
     return pager(text + '\n', color)
 
 
+def spinner():
+    """This function creates a context manager that is used to display a
+    spinner as long as the context has not exited.
+
+    Example usage::
+
+        with spinner():
+            do_something()
+            do_something_else()
+
+    """
+    from ._termui_impl import Spinner
+    return Spinner()
+
+
 def progressbar(iterable=None, length=None, label=None, show_eta=True,
                 show_percent=None, show_pos=False,
                 item_show_func=None, fill_char='#', empty_char='-',
