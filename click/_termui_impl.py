@@ -14,7 +14,8 @@ import sys
 import time
 import math
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
-     open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types
+     open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
+     CYGWIN
 from .utils import echo
 from .exceptions import ClickException
 
@@ -478,6 +479,13 @@ def open_url(url, wait=False, locate=False):
             args = 'start %s "" "%s"' % (
                 wait and '/WAIT' or '', url.replace('"', ''))
         return os.system(args)
+    elif CYGWIN:
+        if locate:
+            pass
+        else:
+            args = 'cygstart %s "%s"' % (
+                wait and '-w' or '', url.replace('"', ''))
+            return os.system(args)
 
     try:
         if locate:

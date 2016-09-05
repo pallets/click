@@ -8,6 +8,7 @@ from weakref import WeakKeyDictionary
 
 PY2 = sys.version_info[0] == 2
 WIN = sys.platform.startswith('win')
+CYGWIN = sys.platform.startswith('cygwin')
 DEFAULT_COLUMNS = 80
 
 
