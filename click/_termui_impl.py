@@ -481,11 +481,12 @@ def open_url(url, wait=False, locate=False):
         return os.system(args)
     elif CYGWIN:
         if locate:
-            pass
+            url = _unquote_file(url)
+            args = 'cygstart "%s"' % (os.path.dirname(url).replace('"', ''))
         else:
             args = 'cygstart %s "%s"' % (
                 wait and '-w' or '', url.replace('"', ''))
-            return os.system(args)
+        return os.system(args)
 
     try:
         if locate:
