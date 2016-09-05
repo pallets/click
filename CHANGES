@@ -13,6 +13,7 @@ Version 7.0
 - Added Float Range in Types.
 - `secho`'s first argument can now be `None`, like in `echo`.
 - Usage errors now hint at the `--help` option.
+- ``launch`` now works properly under Cygwin. See #650.
 
 Version 6.7
 -----------
