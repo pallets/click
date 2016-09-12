@@ -694,13 +694,7 @@ class BaseCommand(object):
         try:
             try:
                 with self.make_context(prog_name, args, **extra) as ctx:
-                    try:
-                        rv = self.invoke(ctx)
-                    except IOError as e:
-                        if e.errno == errno.EPIPE:
-                            sys.exit(errno.EPIPE)
-                        else:
-                            raise
+                    rv = self.invoke(ctx)
                     if not standalone_mode:
                         return rv
                     ctx.exit()
@@ -712,6 +706,11 @@ class BaseCommand(object):
                     raise
                 e.show()
                 sys.exit(e.exit_code)
+            except IOError as e:
+                if e.errno == errno.EPIPE:
+                    sys.exit(1)
+                else:
+                    raise
         except Abort:
             if not standalone_mode:
                 raise
