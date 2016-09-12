@@ -1,3 +1,4 @@
+import errno
 import os
 import sys
 from contextlib import contextmanager
@@ -693,7 +694,13 @@ class BaseCommand(object):
         try:
             try:
                 with self.make_context(prog_name, args, **extra) as ctx:
-                    rv = self.invoke(ctx)
+                    try:
+                        rv = self.invoke(ctx)
+                    except IOError as e:
+                        if e.errno == errno.EPIPE:
+                            sys.exit(errno.EPIPE)
+                        else:
+                            raise
                     if not standalone_mode:
                         return rv
                     ctx.exit()
