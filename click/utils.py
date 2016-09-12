@@ -1,6 +1,6 @@
+import errno
 import os
 import sys
-import errno
 
 from .globals import resolve_color_default
 
