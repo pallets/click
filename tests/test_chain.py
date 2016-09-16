@@ -220,33 +220,33 @@ def test_multicommand_arg_behavior(runner):
     ]
 
 
-@pytest.mark.xfail
 def test_multicommand_chaining(runner):
     @click.group(chain=True)
     def cli():
         debug()
 
-    @cli.group()
-    def l1a():
-        debug()
+    with pytest.raises(RuntimeError):
+        @cli.group()
+        def l1a():
+            debug()
 
-    @l1a.command()
-    def l2a():
-        debug()
+        @l1a.command()
+        def l2a():
+            debug()
 
-    @l1a.command()
-    def l2b():
-        debug()
+        @l1a.command()
+        def l2b():
+            debug()
 
-    @cli.command()
-    def l1b():
-        debug()
+        @cli.command()
+        def l1b():
+            debug()
 
-    result = runner.invoke(cli, ['l1a', 'l2a', 'l1b'])
-    assert not result.exception
-    assert result.output.splitlines() == [
-        'cli=',
-        'l1a=',
-        'l2a=',
-        'l1b=',
-    ]
+        result = runner.invoke(cli, ['l1a', 'l2a', 'l1b'])
+        assert not result.exception
+        assert result.output.splitlines() is not [
+            'cli=',
+            'l1a=',
+            'l2a=',
+            'l1b=',
+        ]
