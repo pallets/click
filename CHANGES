@@ -23,6 +23,7 @@ Version 6.7
 - Make `click.progressbar` work with `codecs.open` files. See #637.
 - Fix bug in bash completion with nested subcommands. See #639.
 - Fix test runner not saving caller env correctly. See #644.
+- Fix handling of SIGPIPE. See #626
 
 Version 6.6
 -----------
