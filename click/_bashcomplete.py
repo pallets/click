@@ -2,8 +2,7 @@ import os
 import re
 from .utils import echo
 from .parser import split_arg_string
-from .core import MultiCommand, Option
-
+from .core import MultiCommand, Option, Argument
 
 COMPLETION_SCRIPT = '''
 %(complete_func)s() {
@@ -53,6 +52,22 @@ def get_choices(cli, prog_name, args, incomplete):
             choices.extend(param.secondary_opts)
     elif isinstance(ctx.command, MultiCommand):
         choices.extend(ctx.command.list_commands(ctx))
+    else:
+        for param in ctx.command.params:
+            if isinstance(param, Argument):
+                value = ctx.params[param.name]
+                if (value == None) or (isinstance(value, tuple) and (len(value) < param.nargs or param.nargs == -1)):
+                    try:
+                        if callable(param.autocompletion):
+                            choices.extend(param.autocompletion(ctx=ctx,
+                                                                incomplete=incomplete,
+                                                                cwords=cwords,
+                                                                cword=cword))
+                        else:
+                            choices.extend(param.autocompletion)
+                    except AttributeError:
+                        pass
+                    break
 
     for item in choices:
         if item.startswith(incomplete):

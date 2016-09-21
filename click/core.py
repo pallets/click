@@ -1690,6 +1690,8 @@ class Argument(Parameter):
                 required = False
             else:
                 required = attrs.get('nargs', 1) > 0
+        if attrs.get('autocompletion') is not None:
+            self.autocompletion =  attrs.pop('autocompletion')
         Parameter.__init__(self, param_decls, required=required, **attrs)
         if self.default is not None and self.nargs < 0:
             raise TypeError('nargs=-1 in combination with a default value '
