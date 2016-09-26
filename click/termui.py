@@ -34,7 +34,8 @@ def _build_prompt(text, suffix, show_default=False, default=None):
 def prompt(text, default=None, hide_input=False,
            confirmation_prompt=False, type=None,
            value_proc=None, prompt_suffix=': ',
-           show_default=True, err=False):
+           show_default=True, err=False,
+           allow_empty=False):
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
@@ -61,6 +62,8 @@ def prompt(text, default=None, hide_input=False,
     :param show_default: shows or hides the default value in the prompt.
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``, the same as with echo.
+    :param allow_empty: if set to true and the user doesn't input anything,
+                        return ``None``.
     """
     result = None
 
@@ -94,6 +97,8 @@ def prompt(text, default=None, hide_input=False,
             # that really makes sense.
             elif default is not None:
                 return default
+            elif allow_empty:
+                return None
         try:
             result = value_proc(value)
         except UsageError as e:
