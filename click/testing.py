@@ -3,8 +3,9 @@ import sys
 import shutil
 import tempfile
 import contextlib
+import shlex
 
-from ._compat import iteritems, PY2
+from ._compat import iteritems, PY2, string_types
 
 
 # If someone wants to vendor click, we want to ensure the
@@ -260,7 +261,10 @@ class CliRunner(object):
            The ``color`` parameter was added.
 
         :param cli: the command to invoke
-        :param args: the arguments to invoke
+        :param args: the arguments to invoke. It may be given as an iterable
+                     or a string. When given as string it will be interpreted
+                     as a Unix shell command. More details at
+                     :func:`shlex.split`.
         :param input: the input data for `sys.stdin`.
         :param env: the environment overrides.
         :param catch_exceptions: Whether to catch any other exceptions than
@@ -273,6 +277,9 @@ class CliRunner(object):
         with self.isolation(input=input, env=env, color=color) as out:
             exception = None
             exit_code = 0
+
+            if isinstance(args, string_types):
+                args = shlex.split(args)
 
             try:
                 cli.main(args=args or (),

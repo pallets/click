@@ -14,6 +14,8 @@ Version 7.0
 - `secho`'s first argument can now be `None`, like in `echo`.
 - Usage errors now hint at the `--help` option.
 - ``launch`` now works properly under Cygwin. See #650.
+- `CliRunner.invoke` now may receive `args` as a string representing
+  a Unix shell command. See #664.
 
 Version 6.7
 -----------
