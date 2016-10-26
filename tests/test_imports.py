@@ -29,11 +29,11 @@ import json
 click.echo(json.dumps(rv))
 '''
 
-ALLOWED_IMPORTS = set([
+ALLOWED_IMPORTS = {
     'weakref', 'os', 'struct', 'collections', 'sys', 'contextlib',
     'functools', 'stat', 're', 'codecs', 'inspect', 'itertools', 'io',
     'threading', 'colorama', 'errno'
-])
+}
 
 if WIN:
     ALLOWED_IMPORTS.update(['ctypes', 'ctypes.wintypes', 'msvcrt', 'time',
