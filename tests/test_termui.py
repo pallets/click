@@ -44,6 +44,26 @@ def test_progressbar_length_hint(runner, monkeypatch):
     assert result.exception is None
 
 
+def test_choices_list_in_prompt(runner, monkeypatch):
+    @click.command()
+    @click.option('-g', type=click.Choice(['none', 'day', 'week', 'month']),
+                  prompt=True)
+    def cli_with_choices(g):
+        pass
+
+    @click.command()
+    @click.option('-g', type=click.Choice(['none', 'day', 'week', 'month']),
+                  prompt=True, show_choices=False)
+    def cli_without_choices(g):
+        pass
+
+    result = runner.invoke(cli_with_choices, [], input='none')
+    assert '(none, day, week, month)' in result.output
+
+    result = runner.invoke(cli_without_choices, [], input='none')
+    assert '(none, day, week, month)' not in result.output
+
+
 def test_secho(runner):
     with runner.isolation() as out:
         click.secho(None, nl=False)
