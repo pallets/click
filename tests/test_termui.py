@@ -45,20 +45,23 @@ def test_progressbar_length_hint(runner, monkeypatch):
 
 
 def test_choices_list_in_prompt(runner, monkeypatch):
-    @click.option('-g', type=click.Choice(['none', 'day', 'week', 'month']), prompt=True)
     @click.command()
-    def cli_with_choices():
+    @click.option('-g', type=click.Choice(['none', 'day', 'week', 'month']),
+                  prompt=True)
+    def cli_with_choices(g):
         pass
 
-    @click.option('-g', type=click.Choice(['none', 'day', 'week', 'month']), prompt=True, show_choices=False)
     @click.command()
-    def cli_without_choices():
+    @click.option('-g', type=click.Choice(['none', 'day', 'week', 'month']),
+                  prompt=True, show_choices=False)
+    def cli_without_choices(g):
         pass
 
-    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+    result = runner.invoke(cli_with_choices, [], input='none')
+    assert '(none, day, week, month)' in result.output
 
-    assert '(none, day, week, month)' in runner.invoke(cli_with_choices, [], input='none').output
-    assert '(none, day, week, month)' not in runner.invoke(cli_without_choices, [], input='none').output
+    result = runner.invoke(cli_without_choices, [], input='none')
+    assert '(none, day, week, month)' not in result.output
 
 
 def test_secho(runner):
