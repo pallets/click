@@ -244,7 +244,7 @@ And from the command line:
 
     invoke(touch, ['--', '-foo.txt', 'bar.txt'])
 
-If you don't like the '--' marker, you can set ignore_unknown_options to
+If you don't like the ``--`` marker, you can set ignore_unknown_options to
 True to avoid checking unknown options:
 
 .. click:example::
