@@ -1720,7 +1720,7 @@ class Argument(Parameter):
     def make_metavar(self):
         if self.metavar is not None:
             return self.metavar
-        var = self.name.upper()
+        var = self.opts[0].upper()
         if not self.required:
             var = '[%s]' % var
         if self.nargs != 1:
