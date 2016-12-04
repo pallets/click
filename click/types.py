@@ -425,7 +425,7 @@ class Path(ParamType):
         if self.file_okay and not self.dir_okay:
             self.name = 'file'
             self.path_type = 'File'
-        if self.dir_okay and not self.file_okay:
+        elif self.dir_okay and not self.file_okay:
             self.name = 'directory'
             self.path_type = 'Directory'
         else:
