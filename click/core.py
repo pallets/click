@@ -1763,7 +1763,7 @@ class Argument(Parameter):
         return [self.make_metavar()]
 
     def get_error_hint(self, ctx):
-        return self.make_metavar()
+        return '"%s"' % self.make_metavar()
 
     def add_to_parser(self, parser, ctx):
         parser.add_argument(dest=self.name, nargs=self.nargs,
