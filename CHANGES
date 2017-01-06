@@ -12,6 +12,7 @@ Version 6.7
 - Fix bug in bash completion with nested subcommands. See #639.
 - Fix test runner not saving caller env correctly. See #644.
 - Fix handling of SIGPIPE. See #626
+- Deal with broken Windows environments such as Google App Engine's. See #711.
 
 Version 6.6
 -----------
