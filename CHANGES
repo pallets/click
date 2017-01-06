@@ -6,7 +6,7 @@ This contains all major version changes between Click releases.
 Version 6.7
 -----------
 
-(bugfix release; yet to be released)
+(bugfix release; released on January 6th 2017)
 
 - Make `click.progressbar` work with `codecs.open` files. See #637.
 - Fix bug in bash completion with nested subcommands. See #639.
