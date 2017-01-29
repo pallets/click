@@ -277,7 +277,7 @@ options:
     If you go with this solution, the extra arguments will be collected in
     :attr:`Context.args`.
 2.  You can attach a :func:`argument` with ``nargs`` set to `-1` which
-    will eat up all leftover arguments.  In this case it's recommeded to
+    will eat up all leftover arguments.  In this case it's recommended to
     set the `type` to :data:`UNPROCESSED` to avoid any string processing
     on those arguments as otherwise they are forced into unicode strings
     automatically which is often not what you want.
