@@ -14,6 +14,8 @@ click = sys.modules[__name__.rsplit('.', 1)[0]]
 
 def _find_unicode_literals_frame():
     import __future__
+    if not hasattr(sys, '_getframe'):  # not all Python implementations have it
+        return 0
     frm = sys._getframe(1)
     idx = 1
     while frm is not None:
