@@ -431,7 +431,7 @@ def secho(message=None, file=None, nl=True, err=False, color=None, **styles):
 
 
 def edit(text=None, editor=None, env=None, require_save=True,
-         extension='.txt', filename=None):
+         nano_autosave=False, extension='.txt', filename=None):
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
     system search path is used for finding the executable) it overrides
@@ -448,10 +448,13 @@ def edit(text=None, editor=None, env=None, require_save=True,
 
     :param text: the text to edit.
     :param editor: optionally the editor to use.  Defaults to automatic
-                   detection.
+                   detection based on $EDITOR and $VISUAL envvars.
     :param env: environment variables to forward to the editor.
     :param require_save: if this is true, then not saving in the editor
                          will make the return value become `None`.
+    :param nano_autosave: if True and the editor is GNU nano, then changes
+                          will be saved automatically on exit, without
+                          asking the user. (equiv. of nano --tempfile option).
     :param extension: the extension to tell the editor about.  This defaults
                       to `.txt` but changing this might change syntax
                       highlighting.
@@ -461,7 +464,7 @@ def edit(text=None, editor=None, env=None, require_save=True,
     """
     from ._termui_impl import Editor
     editor = Editor(editor=editor, env=env, require_save=require_save,
-                    extension=extension)
+                    nano_autosave=nano_autosave, extension=extension)
     if filename is None:
         return editor.edit(text)
     editor.edit_file(filename)
