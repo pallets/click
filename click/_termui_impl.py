@@ -395,13 +395,18 @@ class Editor(object):
     def edit_file(self, filename):
         import subprocess
         editor = self.get_editor()
+        # Allow nano to skip the save prompt if save is not required
+        if editor == 'nano' and not self.require_save:
+            no_save = '-t'
+        else:
+            no_save = ''
         if self.env:
             environ = os.environ.copy()
             environ.update(self.env)
         else:
             environ = None
         try:
-            c = subprocess.Popen('%s "%s"' % (editor, filename),
+            c = subprocess.Popen('%s %s "%s"' % (editor, no_save, filename),
                                  env=environ, shell=True)
             exit_code = c.wait()
             if exit_code != 0:
