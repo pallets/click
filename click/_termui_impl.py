@@ -372,10 +372,12 @@ def _nullpager(stream, text, color):
 class Editor(object):
 
     def __init__(self, editor=None, env=None, require_save=True,
+                 nano_autosave=False,
                  extension='.txt'):
         self.editor = editor
         self.env = env
         self.require_save = require_save
+        self.nano_autosave = nano_autosave
         self.extension = extension
 
     def get_editor(self):
@@ -396,7 +398,7 @@ class Editor(object):
         import subprocess
         editor = self.get_editor()
         # Allow nano to skip the save prompt if save is not required
-        if editor == 'nano' and not self.require_save:
+        if editor == 'nano' and self.nano_autosave:
             no_save = '-t'
         else:
             no_save = ''
