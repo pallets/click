@@ -3,6 +3,14 @@ Click Changelog
 
 This contains all major version changes between Click releases.
 
+Version 6.8
+-----------
+
+(bugfix release; yet to be released)
+
+- Disabled sys._getframes() on Python interpreters that don't support it. See
+  #728.
+
 Version 6.7
 -----------
 
