@@ -235,7 +235,11 @@ def version_option(version=None, *param_decls, **attrs):
     :param others: everything else is forwarded to :func:`option`.
     """
     if version is None:
-        module = sys._getframe(1).f_globals.get('__name__')
+        if hasattr(sys, '_getframe'):
+            module = sys._getframe(1).f_globals.get('__name__')
+        else:
+            module = ''
+
     def decorator(f):
         prog_name = attrs.pop('prog_name', None)
         message = attrs.pop('message', '%(prog)s, version %(version)s')

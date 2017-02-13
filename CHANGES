@@ -20,6 +20,14 @@ Version 7.0
 - `CliRunner.invoke` now may receive `args` as a string representing
   a Unix shell command. See #664.
 
+Version 6.8
+-----------
+
+(bugfix release; yet to be released)
+
+- Disabled sys._getframes() on Python interpreters that don't support it. See
+  #728.
+
 Version 6.7
 -----------
 
