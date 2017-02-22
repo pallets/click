@@ -10,6 +10,7 @@ Version 6.8
 
 - Disabled sys._getframes() on Python interpreters that don't support it. See
   #728.
+- Fix bug in test runner when calling ``sys.exit`` with ``None``. See #739.
 
 Version 6.7
 -----------
