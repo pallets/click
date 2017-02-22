@@ -1,9 +1,9 @@
-import os
-import sys
-import shutil
-import tempfile
 import contextlib
+import os
 import shlex
+import shutil
+import sys
+import tempfile
 
 from ._compat import iteritems, PY2, string_types
 
@@ -197,6 +197,7 @@ class CliRunner(object):
             return char
 
         default_color = color
+
         def should_strip_ansi(stream=None, color=None):
             if color is None:
                 return not default_color
@@ -285,21 +286,24 @@ class CliRunner(object):
                 cli.main(args=args or (),
                          prog_name=self.get_default_prog_name(cli), **extra)
             except SystemExit as e:
-                if e.code != 0:
+                exc_info = sys.exc_info()
+                exit_code = e.code
+                if exit_code is None:
+                    exit_code = 0
+
+                if exit_code != 0:
                     exception = e
 
-                exc_info = sys.exc_info()
-
-                exit_code = e.code
                 if not isinstance(exit_code, int):
                     sys.stdout.write(str(exit_code))
                     sys.stdout.write('\n')
                     exit_code = 1
+
             except Exception as e:
                 if not catch_exceptions:
                     raise
                 exception = e
-                exit_code = -1
+                exit_code = 1
                 exc_info = sys.exc_info()
             finally:
                 sys.stdout.flush()
