@@ -261,7 +261,7 @@ def _get_windows_console_stream(f, encoding, errors):
         func = _stream_factories.get(f.fileno())
         if func is not None:
             if not PY2:
-                f = getattr(f, 'buffer')
+                f = getattr(f, 'buffer', None)
                 if f is None:
                     return None
             else:
