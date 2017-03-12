@@ -40,18 +40,30 @@ def resolve_ctx(cli, prog_name, args):
 
 
 def get_choices(cli, prog_name, args, incomplete):
+    # resolve_ctx will change args in place
+    # need to grab the last completed one here and now
+    last_complete = [a for a in (args if args else ['']) if a != '='][-1]
+    if incomplete == '=':
+        incomplete = ''
+
     ctx = resolve_ctx(cli, prog_name, args)
     if ctx is None:
         return
 
     choices = []
+
+    if last_complete:
+        for param in ctx.command.params:
+            if last_complete in param.opts:
+                choices.extend(param.get_completion())
+                break
     if incomplete and not incomplete[:1].isalnum():
         for param in ctx.command.params:
             if not isinstance(param, Option):
                 continue
             choices.extend(param.opts)
             choices.extend(param.secondary_opts)
-    elif isinstance(ctx.command, MultiCommand):
+    if isinstance(ctx.command, MultiCommand):
         choices.extend(ctx.command.list_commands(ctx))
 
     for item in choices:
