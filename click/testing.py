@@ -1,9 +1,9 @@
-import os
-import sys
-import shutil
-import tempfile
 import contextlib
+import os
 import shlex
+import shutil
+import sys
+import tempfile
 
 from ._compat import iteritems, PY2, string_types
 
