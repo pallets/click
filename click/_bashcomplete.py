@@ -38,7 +38,7 @@ def resolve_ctx(cli, prog_name, args):
     return ctx
 
 
-def get_choices(cli, prog_name, args, incomplete):
+def get_choices(cli, prog_name, args, incomplete, cwords, cword):
     ctx = resolve_ctx(cli, prog_name, args)
     if ctx is None:
         return
@@ -83,7 +83,7 @@ def do_complete(cli, prog_name):
     except IndexError:
         incomplete = ''
 
-    for item in get_choices(cli, prog_name, args, incomplete):
+    for item in get_choices(cli, prog_name, args, incomplete, cwords, cword):
         echo(item)
 
     return True
