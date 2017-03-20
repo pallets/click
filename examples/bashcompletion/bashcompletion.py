@@ -5,6 +5,7 @@ import os
 def cli():
     pass
 
+
 @cli.command()
 @click.option('-c', '--count', type=click.INT, default=1)
 @click.argument("first", type=click.STRING, autocompletion=["John", "Bob", "Fred"])
@@ -26,3 +27,13 @@ def cmd2(envvar):
 def cmd3():
     pass
 
+@click.group()
+def group():
+    pass
+
+@group.command()
+@click.argument("color", type=click.STRING, autocompletion=['red', 'green', 'blue'])
+def subcmd(color):
+    click.echo('Color is: %s' % color)
+
+cli.add_command(group)
