@@ -14,7 +14,7 @@ def cmd1(count, first, last):
     for c in range(count):
         click.echo('Name: %s %s' % (first, last))
 
-def get_env_vars(ctx, incomplete, cwords, cword):
+def get_env_vars(ctx, args, incomplete):
     return os.environ.keys()
 
 @cli.command()

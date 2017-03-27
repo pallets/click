@@ -38,7 +38,7 @@ def resolve_ctx(cli, prog_name, args):
     return ctx
 
 
-def get_choices(cli, prog_name, args, incomplete, cwords, cword):
+def get_choices(cli, prog_name, args, incomplete):
     ctx = resolve_ctx(cli, prog_name, args)
     if ctx is None:
         return
@@ -60,9 +60,8 @@ def get_choices(cli, prog_name, args, incomplete, cwords, cword):
                     try:
                         if callable(param.autocompletion):
                             choices.extend(param.autocompletion(ctx=ctx,
-                                                                incomplete=incomplete,
-                                                                cwords=cwords,
-                                                                cword=cword))
+                                                                args=args,
+                                                                incomplete=incomplete))
                         else:
                             choices.extend(param.autocompletion)
                     except AttributeError:
@@ -83,7 +82,7 @@ def do_complete(cli, prog_name):
     except IndexError:
         incomplete = ''
 
-    for item in get_choices(cli, prog_name, args, incomplete, cwords, cword):
+    for item in get_choices(cli, prog_name, args, incomplete):
         echo(item)
 
     return True

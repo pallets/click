@@ -14,7 +14,25 @@ def test_basic():
     def sub(local_opt):
         pass
 
-    assert list(get_choices(cli, 'lol', [], '')) == ['sub']
+    COLORS = ['red', 'green', 'blue']
+    @cli.command()
+    @click.argument('color', autocompletion=COLORS)
+    def sub2(color):
+        pass
+
+    def get_colors(ctx, args, incomplete):
+        return COLORS
+
+    @cli.command()
+    @click.argument('color', autocompletion=get_colors)
+    def sub3(color):
+        pass
+
+    assert list(get_choices(cli, 'lol', [], '')) == ['sub', 'sub2', 'sub3']
     assert list(get_choices(cli, 'lol', [], '-')) == ['--global-opt']
     assert list(get_choices(cli, 'lol', ['sub'], '')) == []
     assert list(get_choices(cli, 'lol', ['sub'], '-')) == ['--local-opt']
+    assert list(get_choices(cli, 'lol', ['sub2'], '')) == COLORS
+    assert list(get_choices(cli, 'lol', ['sub2'], 'g')) == ['green']
+    assert list(get_choices(cli, 'lol', ['sub3'], '')) == COLORS
+    assert list(get_choices(cli, 'lol', ['sub2'], 'b')) == ['blue']
