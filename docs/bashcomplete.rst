@@ -80,7 +80,7 @@ with dashes replaced by underscores.
 
 If your tool is called ``foo-bar``, then the magic variable is called
 ``_FOO_BAR_COMPLETE``.  By exporting it with the ``source`` value it will
-spit out the activation script which can be trivally activated.
+spit out the activation script which can be trivially activated.
 
 For instance, to enable Bash completion for your ``foo-bar`` script, this
 is what you would need to put into your ``.bashrc``::

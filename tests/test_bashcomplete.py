@@ -3,7 +3,18 @@
 import click
 from click._bashcomplete import get_choices
 
-def test_basic():
+
+def test_single_command():
+    @click.command()
+    @click.option('--local-opt')
+    def cli(local_opt):
+        pass
+
+    assert list(get_choices(cli, 'lol', [], '-')) == ['--local-opt']
+    assert list(get_choices(cli, 'lol', [], '')) == []
+
+
+def test_small_chain():
     @click.group()
     @click.option('--global-opt')
     def cli(global_opt):
@@ -14,25 +25,44 @@ def test_basic():
     def sub(local_opt):
         pass
 
-    COLORS = ['red', 'green', 'blue']
-    @cli.command()
-    @click.argument('color', autocompletion=COLORS)
-    def sub2(color):
-        pass
-
-    def get_colors(ctx, args, incomplete):
-        return COLORS
-
-    @cli.command()
-    @click.argument('color', autocompletion=get_colors)
-    def sub3(color):
-        pass
-
-    assert list(get_choices(cli, 'lol', [], '')) == ['sub', 'sub2', 'sub3']
+    assert list(get_choices(cli, 'lol', [], '')) == ['sub']
     assert list(get_choices(cli, 'lol', [], '-')) == ['--global-opt']
     assert list(get_choices(cli, 'lol', ['sub'], '')) == []
     assert list(get_choices(cli, 'lol', ['sub'], '-')) == ['--local-opt']
-    assert list(get_choices(cli, 'lol', ['sub2'], '')) == COLORS
-    assert list(get_choices(cli, 'lol', ['sub2'], 'g')) == ['green']
-    assert list(get_choices(cli, 'lol', ['sub3'], '')) == COLORS
-    assert list(get_choices(cli, 'lol', ['sub2'], 'b')) == ['blue']
+
+
+def test_long_chain():
+    @click.group('cli')
+    @click.option('--cli-opt')
+    def cli(cli_opt):
+        pass
+
+    @cli.group('asub')
+    @click.option('--asub-opt')
+    def asub(asub_opt):
+        pass
+
+    @asub.group('bsub')
+    @click.option('--bsub-opt')
+    def bsub(bsub_opt):
+        pass
+
+    COLORS = ['red', 'green', 'blue']
+    def get_colors(ctx, args, incomplete):
+        return COLORS
+
+    @bsub.command('csub')
+    @click.option('--csub-opt')
+    @click.argument('color', autocompletion=get_colors)
+    def csub(csub_opt, color):
+        pass
+
+    assert list(get_choices(cli, 'lol', [], '-')) == ['--cli-opt']
+    assert list(get_choices(cli, 'lol', [], '')) == ['asub']
+    assert list(get_choices(cli, 'lol', ['asub'], '-')) == ['--asub-opt']
+    assert list(get_choices(cli, 'lol', ['asub'], '')) == ['bsub']
+    assert list(get_choices(cli, 'lol', ['asub', 'bsub'], '-')) == ['--bsub-opt']
+    assert list(get_choices(cli, 'lol', ['asub', 'bsub'], '')) == ['csub']
+    assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], '-')) == ['--csub-opt']
+    assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], '')) == COLORS
+    assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], 'b')) == ['blue']

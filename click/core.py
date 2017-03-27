@@ -1,3 +1,4 @@
+import errno
 import os
 import sys
 from contextlib import contextmanager
@@ -654,7 +655,7 @@ class BaseCommand(object):
                           name from ``sys.argv[0]``.
         :param complete_var: the environment variable that controls the
                              bash completion support.  The default is
-                             ``"_<prog_name>_COMPLETE"`` with prog name in
+                             ``"_<prog_name>_COMPLETE"`` with prog_name in
                              uppercase.
         :param standalone_mode: the default behavior is to invoke the script
                                 in standalone mode.  Click will then
@@ -669,7 +670,7 @@ class BaseCommand(object):
                       constructor.  See :class:`Context` for more information.
         """
         # If we are in Python 3, we will verify that the environment is
-        # sane at this point of reject further execution to avoid a
+        # sane at this point or reject further execution to avoid a
         # broken script.
         if not PY2:
             _verify_python3_env()
@@ -705,6 +706,11 @@ class BaseCommand(object):
                     raise
                 e.show()
                 sys.exit(e.exit_code)
+            except IOError as e:
+                if e.errno == errno.EPIPE:
+                    sys.exit(1)
+                else:
+                    raise
         except Abort:
             if not standalone_mode:
                 raise
@@ -737,11 +743,13 @@ class Command(BaseCommand):
                        shown on the command listing of the parent command.
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
+    :param hidden: hide this command from help outputs.
     """
 
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
-                 options_metavar='[OPTIONS]', add_help_option=True):
+                 options_metavar='[OPTIONS]', add_help_option=True,
+                 hidden=False):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -757,6 +765,7 @@ class Command(BaseCommand):
             short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self.hidden = hidden
 
     def get_usage(self, ctx):
         formatter = ctx.make_formatter()
@@ -995,6 +1004,8 @@ class MultiCommand(Command):
             cmd = self.get_command(ctx, subcommand)
             # What is this, the tool lied about a command.  Ignore it
             if cmd is None:
+                continue
+            if cmd.hidden:
                 continue
 
             help = cmd.short_help or ''
@@ -1419,9 +1430,9 @@ class Option(Parameter):
 
     :param show_default: controls if the default value should be shown on the
                          help page.  Normally, defaults are not shown.
-    :param prompt: if set to `True` or a non empty string then the user will
-                   be prompted for input if not set.  If set to `True` the
-                   prompt will be the option name capitalized.
+    :param prompt: if set to `True` or a non empty string then the user will be
+                   prompted for input.  If set to `True` the prompt will be the
+                   option name capitalized.
     :param confirmation_prompt: if set then the value will need to be confirmed
                                 if it was prompted for.
     :param hide_input: if this is `True` then the input on the prompt will be
@@ -1442,6 +1453,7 @@ class Option(Parameter):
                                variable in case a prefix is defined on the
                                context.
     :param help: the help string.
+    :param hidden: hide this option from help outputs.
     """
     param_type_name = 'option'
 
@@ -1449,7 +1461,7 @@ class Option(Parameter):
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, count=False, allow_from_autoenv=True,
-                 type=None, help=None, **attrs):
+                 type=None, help=None, hidden=False, show_choices=True, **attrs):
         default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
 
@@ -1462,6 +1474,7 @@ class Option(Parameter):
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
         self.hide_input = hide_input
+        self.hidden = hidden
 
         # Flags
         if is_flag is None:
@@ -1494,6 +1507,7 @@ class Option(Parameter):
         self.allow_from_autoenv = allow_from_autoenv
         self.help = help
         self.show_default = show_default
+        self.show_choices = show_choices
 
         # Sanity check for stuff we don't support
         if __debug__:
@@ -1589,6 +1603,8 @@ class Option(Parameter):
             parser.add_option(self.opts, **kwargs)
 
     def get_help_record(self, ctx):
+        if self.hidden:
+            return
         any_prefix_is_slash = []
 
         def _write_opts(opts):
@@ -1643,8 +1659,8 @@ class Option(Parameter):
         if self.is_bool_flag:
             return confirm(self.prompt, default)
 
-        return prompt(self.prompt, default=default,
-                      hide_input=self.hide_input,
+        return prompt(self.prompt, default=default, type=self.type,
+                      hide_input=self.hide_input, show_choices=self.show_choices,
                       confirmation_prompt=self.confirmation_prompt,
                       value_proc=lambda x: self.process_value(ctx, x))
 

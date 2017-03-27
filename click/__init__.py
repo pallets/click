@@ -28,7 +28,7 @@ from .decorators import pass_context, pass_obj, make_pass_decorator, \
 
 # Types
 from .types import ParamType, File, Path, Choice, IntRange, Tuple, \
-     STRING, INT, FLOAT, BOOL, UUID, UNPROCESSED
+     STRING, INT, FLOAT, BOOL, UUID, UNPROCESSED, FloatRange
 
 # Utilities
 from .utils import echo, get_binary_stream, get_text_stream, open_file, \
@@ -66,7 +66,7 @@ __all__ = [
 
     # Types
     'ParamType', 'File', 'Path', 'Choice', 'IntRange', 'Tuple', 'STRING',
-    'INT', 'FLOAT', 'BOOL', 'UUID', 'UNPROCESSED',
+    'INT', 'FLOAT', 'BOOL', 'UUID', 'UNPROCESSED', 'FloatRange'
 
     # Utilities
     'echo', 'get_binary_stream', 'get_text_stream', 'open_file',
@@ -95,4 +95,4 @@ __all__ = [
 disable_unicode_literals_warning = False
 
 
-__version__ = '6.6.bashautocompletion'
+__version__ = '7.0-dev'

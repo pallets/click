@@ -277,7 +277,7 @@ options:
     If you go with this solution, the extra arguments will be collected in
     :attr:`Context.args`.
 2.  You can attach a :func:`argument` with ``nargs`` set to `-1` which
-    will eat up all leftover arguments.  In this case it's recommeded to
+    will eat up all leftover arguments.  In this case it's recommended to
     set the `type` to :data:`UNPROCESSED` to avoid any string processing
     on those arguments as otherwise they are forced into unicode strings
     automatically which is often not what you want.
@@ -346,7 +346,7 @@ Global Context Access
 .. versionadded:: 5.0
 
 Starting with Click 5.0 it is possible to access the current context from
-anywhere within the same through through the use of the
+anywhere within the same thread through the use of the
 :func:`get_current_context` function which returns it.  This is primarily
 useful for accessing the context bound object as well as some flags that
 are stored on it to customize the runtime behavior.  For instance the

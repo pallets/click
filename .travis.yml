@@ -5,6 +5,7 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
+  - "3.6"
   - "pypy"
 
 env:
@@ -17,12 +18,11 @@ install:
 
 script: make test
 
+branches:
+  only:
+    - master
+    - auto
+    - /^.*-maintenance$/
+
 notifications:
   email: false
-  irc:
-    channels:
-      - "chat.freenode.net#pocoo"
-    on_success: change
-    on_failure: always
-    use_notice: true
-    skip_join: true

@@ -32,6 +32,11 @@ Submitting patches
 - Try to follow `PEP8 <http://legacy.python.org/dev/peps/pep-0008/>`_, but you
   may ignore the line-length-limit if following it would make the code uglier.
 
+- For features: Consider whether your feature would be a better fit for an
+  `external package <http://click.pocoo.org/contrib/>`_
+
+- For bugfixes: Submit against the latest maintenance branch instead of master!
+
 Running the testsuite
 ---------------------
 

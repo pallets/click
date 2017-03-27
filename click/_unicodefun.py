@@ -14,6 +14,8 @@ click = sys.modules[__name__.rsplit('.', 1)[0]]
 
 def _find_unicode_literals_frame():
     import __future__
+    if not hasattr(sys, '_getframe'):  # not all Python implementations have it
+        return 0
     frm = sys._getframe(1)
     idx = 1
     while frm is not None:
@@ -94,7 +96,7 @@ def _verify_python3_env():
         else:
             extra += (
                 'This system lists a couple of UTF-8 supporting locales that\n'
-                'you can pick from.  The following suitable locales where\n'
+                'you can pick from.  The following suitable locales were\n'
                 'discovered: %s'
             ) % ', '.join(sorted(good_locales))
 
@@ -114,6 +116,5 @@ def _verify_python3_env():
 
     raise RuntimeError('Click will abort further execution because Python 3 '
                        'was configured to use ASCII as encoding for the '
-                       'environment.  Either run this under Python 2 or '
-                       'consult http://click.pocoo.org/python3/ for '
-                       'mitigation steps.' + extra)
+                       'environment.  Consult http://click.pocoo.org/python3/'
+                       'for mitigation steps.' + extra)
