@@ -257,7 +257,10 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
                 message = strip_ansi(message)
 
     if message:
-        file.write(message)
+        try:
+            file.write(message)
+        except UnicodeEncodeError as e:
+            file.write(message.encode(e.encoding, 'backslashreplace').decode(e.encoding))
     file.flush()
 
 
