@@ -1266,7 +1266,8 @@ class Parameter(object):
 
     def __init__(self, param_decls=None, type=None, required=False,
                  default=None, callback=None, nargs=None, metavar=None,
-                 expose_value=True, is_eager=False, envvar=None):
+                 expose_value=True, is_eager=False, envvar=None,
+                 autocompletion=None):
         self.name, self.opts, self.secondary_opts = \
             self._parse_decls(param_decls or (), expose_value)
 
@@ -1289,6 +1290,8 @@ class Parameter(object):
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
+        if autocompletion is not None:
+            self.autocompletion =  autocompletion
 
     @property
     def human_readable_name(self):
@@ -1706,8 +1709,6 @@ class Argument(Parameter):
                 required = False
             else:
                 required = attrs.get('nargs', 1) > 0
-        if attrs.get('autocompletion') is not None:
-            self.autocompletion =  attrs.pop('autocompletion')
         Parameter.__init__(self, param_decls, required=required, **attrs)
         if self.default is not None and self.nargs < 0:
             raise TypeError('nargs=-1 in combination with a default value '

@@ -3,6 +3,7 @@ import re
 from .utils import echo
 from .parser import split_arg_string
 from .core import MultiCommand, Option, Argument
+from .types import Choice
 
 COMPLETION_SCRIPT = '''
 %(complete_func)s() {
@@ -54,9 +55,13 @@ def get_choices(cli, prog_name, args, incomplete):
         choices.extend(ctx.command.list_commands(ctx))
     else:
         for param in ctx.command.params:
-            if isinstance(param, Argument):
+            if isinstance(param, Option) and isinstance(param.type, Choice):
+                if args[-1] in param.opts:
+                    choices.extend(param.type.choices)
+                    break
+            elif hasattr(param, 'autocompletion'):
                 value = ctx.params[param.name]
-                if (value == None) or (isinstance(value, tuple) and (len(value) < param.nargs or param.nargs == -1)):
+                if (value is None) or (isinstance(value, tuple) and (len(value) < param.nargs or param.nargs == -1)):
                     try:
                         if callable(param.autocompletion):
                             choices.extend(param.autocompletion(ctx=ctx,
