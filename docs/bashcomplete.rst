@@ -13,7 +13,8 @@ Limitations
 Bash completion is only available if a script has been installed properly,
 and not executed through the ``python`` command.  For information about
 how to do that, see :ref:`setuptools-integration`.  Also, Click currently
-only supports completion for Bash.
+only supports completion for Bash. Zsh support is available through Zsh's
+bash completion compatibility mode.
 
 Currently, Bash completion is an internal feature that is not customizable.
 This might be relaxed in future versions.
@@ -21,8 +22,9 @@ This might be relaxed in future versions.
 What it Completes
 -----------------
 
-Generally, the Bash completion support will complete subcommands and
-parameters.  Subcommands are always listed whereas parameters only if at
+Generally, the Bash completion support will complete subcommands, options
+and any option or argument values where the type is click.Choice.
+Subcommands and choices are always listed whereas options only if at
 least a dash has been provided.  Example::
 
     $ repo <TAB><TAB>
@@ -67,3 +69,14 @@ This can be easily accomplished::
 And then you would put this into your bashrc instead::
 
     . /path/to/foo-bar-complete.sh
+
+Zsh Compatibility
+----------------
+
+To enable Bash completion in Zsh, add the following lines to your .zshrc:
+
+    autoload bashcompinit
+    bashcompinit
+
+See https://github.com/pallets/click/issues/323 for more information on
+this issue.

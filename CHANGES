@@ -8,6 +8,8 @@ Version 7.0
 
 (upcoming release with new features, release date to be decided)
 
+- Added support for bash completion of type=click.Choice for Options and
+  Arguments. See #535.
 - The user is now presented with the available choices if prompt=True and
   type=click.Choice in a click.option. The choices are listed within
   parentthesis like 'Choose fruit (apple, orange): '.
