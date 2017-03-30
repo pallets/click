@@ -98,6 +98,9 @@ def is_incomplete_argument(current_params, cmd_param):
 
 def get_user_autocompletions(ctx, args, incomplete, cmd_param):
     """
+    :param ctx: context associated with the parsed command
+    :param args: full list of args
+    :param incomplete: the incomplete text to autocomplete
     :param cmd_param: command definition
     :return: all the possible user-specified completions for the param
     """
@@ -142,7 +145,6 @@ def get_choices(cli, prog_name, args, incomplete):
                 choices.extend([param_opt for param_opt in param.opts + param.secondary_opts
                                 if param_opt not in all_args or param.multiple])
         found_param = True
-
     if not found_param:
         # completion for option values by choices
         for cmd_param in ctx.command.params:
