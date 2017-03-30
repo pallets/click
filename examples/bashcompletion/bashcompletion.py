@@ -1,25 +1,17 @@
 import click
 import os
+from netifaces import interfaces, ifaddresses, AF_INET
 
 @click.group()
 def cli():
     pass
-
-
-@cli.command()
-@click.option('-c', '--count', type=click.INT, default=1)
-@click.argument("first", type=click.STRING, autocompletion=["John", "Bob", "Fred"])
-@click.argument("last", type=click.STRING, autocompletion=["Smith", "Simon", "Doe"])
-def cmd1(count, first, last):
-    for c in range(count):
-        click.echo('Name: %s %s' % (first, last))
 
 def get_env_vars(ctx, args, incomplete):
     return os.environ.keys()
 
 @cli.command()
 @click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
-def cmd2(envvar):
+def cmd1(envvar):
     click.echo('Environment variable: %s' % envvar)
     click.echo('Value: %s' % os.environ[envvar])
 
@@ -31,9 +23,16 @@ def cmd3():
 def group():
     pass
 
+def ip4_addresses():
+    ip_list = []
+    for interface in interfaces():
+        for link in ifaddresses(interface)[AF_INET]:
+            ip_list.append(link['addr'])
+    return ip_list
+
 @group.command()
-@click.argument("color", type=click.STRING, autocompletion=['red', 'green', 'blue'])
-def subcmd(color):
-    click.echo('Color is: %s' % color)
+@click.argument("ip", type=click.STRING, autocompletion=ip4_addresses)
+def subcmd(ip):
+    click.echo('Chosen IP is %s' % color)
 
 cli.add_command(group)

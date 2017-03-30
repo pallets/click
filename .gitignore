@@ -10,3 +10,4 @@ click.egg-info
 .tox
 .cache
 .ropeproject
+.idea
