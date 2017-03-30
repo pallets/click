@@ -107,7 +107,7 @@ def get_user_autocompletions(ctx, args, incomplete, cmd_param):
     choices = []
     if isinstance(cmd_param.type, Choice):
         choices.extend(cmd_param.type.choices)
-    elif hasattr(cmd_param, 'autocompletion'):
+    elif cmd_param.autocompletion is not None:
         choices.extend(cmd_param.autocompletion(ctx=ctx,
                                                 args=args,
                                                 incomplete=incomplete))

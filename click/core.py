@@ -1290,8 +1290,7 @@ class Parameter(object):
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
-        if autocompletion is not None:
-            self.autocompletion =  autocompletion
+        self.autocompletion =  autocompletion
 
     @property
     def human_readable_name(self):

@@ -29,8 +29,8 @@ least a dash has been provided.  Example::
     $ repo clone -<TAB><TAB>
     --deep     --help     --rev      --shallow  -r
 
-Additionally, custom suggestions can be provided for arguments with the
-``autocompletion`` parameter.  ``autocompletion`` should a callback function
+Additionally, custom suggestions can be provided for arguments and options with
+the ``autocompletion`` parameter.  ``autocompletion`` should a callback function
 that returns a list of strings. This is useful when the suggestions need to be
 dynamically generated at bash completion time. The callback function will be
 passed 3 keyword arguments:
