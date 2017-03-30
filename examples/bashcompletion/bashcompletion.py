@@ -1,6 +1,5 @@
 import click
 import os
-from netifaces import interfaces, ifaddresses, AF_INET
 
 @click.group()
 def cli():
@@ -15,24 +14,18 @@ def cmd1(envvar):
     click.echo('Environment variable: %s' % envvar)
     click.echo('Value: %s' % os.environ[envvar])
 
-@cli.command()
-def cmd3():
-    pass
-
 @click.group()
 def group():
     pass
 
-def ip4_addresses():
-    ip_list = []
-    for interface in interfaces():
-        for link in ifaddresses(interface)[AF_INET]:
-            ip_list.append(link['addr'])
-    return ip_list
+def list_users(ctx, args, incomplete):
+    # Here you can generate completions dynamically
+    users = ['bob', 'alice']
+    return users
 
 @group.command()
-@click.argument("ip", type=click.STRING, autocompletion=ip4_addresses)
-def subcmd(ip):
-    click.echo('Chosen IP is %s' % color)
+@click.argument("user", type=click.STRING, autocompletion=list_users)
+def subcmd(user):
+    click.echo('Chosen user is %s' % user)
 
 cli.add_command(group)
