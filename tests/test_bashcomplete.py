@@ -227,3 +227,23 @@ def test_long_chain_choice():
     assert list(get_choices(cli, 'lol',
         ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt', 'bsubopt1', 'bsubarg1'],
                             '')) == ['bbsubarg1', 'bbsubarg2']
+
+
+def test_tuple_option_choice():
+    option_type = (
+        click.Choice(['opt_value1_1', 'opt_value1_2']),
+        click.Choice(['opt_value2_1', 'opt_value2_2']),
+        str
+    )
+
+    @click.command()
+    @click.option('--opt', type=option_type)
+    @click.option('--some-other-opt')
+    def cli(opt):
+        pass
+
+    assert list(get_choices(cli, 'prog_name', ['--opt'], '')) == \
+        ['opt_value1_1', 'opt_value1_2']
+    assert list(get_choices(cli, 'prog_name', ['--opt', 'opt_value1_2'], '')) == \
+        ['opt_value2_1', 'opt_value2_2']
+    assert list(get_choices(cli, 'prog_name', ['--opt', 'opt_value1_2', 'opt_value2_1'], '')) == []

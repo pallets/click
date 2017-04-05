@@ -6,7 +6,7 @@ import re
 from .utils import echo
 from .parser import split_arg_string
 from .core import MultiCommand, Option, Argument
-from .types import Choice
+from .types import Choice, Tuple
 
 
 WORDBREAK = '='
@@ -80,6 +80,19 @@ def is_incomplete_option(all_args, cmd_param):
     return True if last_option and last_option in cmd_param.opts else False
 
 
+def last_option_values(all_args):
+    option_index = last_option_index(all_args)
+    return all_args[option_index:]
+
+
+def last_option_index(all_args):
+    for index, arg_str in enumerate(reversed([arg for arg in all_args if arg != WORDBREAK])):
+        if start_of_option(arg_str):
+            return len(all_args) - index
+
+    return -1
+
+
 def is_incomplete_argument(current_params, cmd_param):
     """
     :param current_params: the current params and values for this argument as already entered
@@ -136,6 +149,16 @@ def get_choices(cli, prog_name, args, incomplete):
             if isinstance(cmd_param, Option) and is_incomplete_option(all_args, cmd_param):
                 if isinstance(cmd_param.type, Choice):
                     choices.extend(cmd_param.type.choices)
+                elif isinstance(cmd_param.type, Tuple):
+                    values_provided = len(last_option_values(all_args))
+                    tuple_value_types = cmd_param.type.types
+                    current_value_type = tuple_value_types[values_provided]
+
+                    if isinstance(current_value_type, Choice):
+                        # We're in a Choice value of a Tuple Option, so add the
+                        # available choices.
+                        choices.extend(current_value_type.choices)
+
                 found_param = True
                 break
     if not found_param:
