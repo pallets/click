@@ -104,15 +104,14 @@ def get_user_autocompletions(ctx, args, incomplete, cmd_param):
     :param cmd_param: command definition
     :return: all the possible user-specified completions for the param
     """
-    choices = []
     if isinstance(cmd_param.type, Choice):
-        choices = cmd_param.type.choices
+        return cmd_param.type.choices
     elif cmd_param.autocompletion is not None:
-        choices = cmd_param.autocompletion(ctx=ctx,
-                                           args=args,
-                                           incomplete=incomplete)
-    for c in choices:
-        yield c
+        return cmd_param.autocompletion(ctx=ctx,
+                                        args=args,
+                                        incomplete=incomplete)
+    else:
+        return []
 
 def get_choices(cli, prog_name, args, incomplete):
     """
