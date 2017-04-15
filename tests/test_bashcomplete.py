@@ -85,7 +85,8 @@ def test_long_chain():
 
     COLORS = ['red', 'green', 'blue']
     def get_colors(ctx, args, incomplete):
-        return COLORS
+        for c in COLORS:
+            yield c
 
     CSUB_OPT_CHOICES = ['foo', 'bar']
     CSUB_CHOICES = ['bar', 'baz']

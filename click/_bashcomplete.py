@@ -106,12 +106,13 @@ def get_user_autocompletions(ctx, args, incomplete, cmd_param):
     """
     choices = []
     if isinstance(cmd_param.type, Choice):
-        choices.extend(cmd_param.type.choices)
+        choices = cmd_param.type.choices
     elif cmd_param.autocompletion is not None:
-        choices.extend(cmd_param.autocompletion(ctx=ctx,
-                                                args=args,
-                                                incomplete=incomplete))
-    return choices
+        choices = cmd_param.autocompletion(ctx=ctx,
+                                           args=args,
+                                           incomplete=incomplete)
+    for c in choices:
+        yield c
 
 def get_choices(cli, prog_name, args, incomplete):
     """
