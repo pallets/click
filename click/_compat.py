@@ -32,7 +32,7 @@ def is_ascii_encoding(encoding):
     """Checks if a given encoding is ascii."""
     try:
         return codecs.lookup(encoding).name == 'ascii'
-    except LookupError:
+    except (LookupError, TypeError):
         return False
 
 
