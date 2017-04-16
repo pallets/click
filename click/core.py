@@ -25,7 +25,7 @@ SUBCOMMAND_METAVAR = 'COMMAND [ARGS]...'
 SUBCOMMANDS_METAVAR = 'COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...'
 
 
-def _bashcomplete(cmd, prog_name, complete_var=None):
+def _shellcomplete(cmd, prog_name, complete_var=None):
     """Internal handler for the bash completion support."""
     if complete_var is None:
         complete_var = '_%s_COMPLETE' % (prog_name.replace('-', '_')).upper()
@@ -33,9 +33,14 @@ def _bashcomplete(cmd, prog_name, complete_var=None):
     if not complete_instr:
         return
 
-    from ._bashcomplete import bashcomplete
-    if bashcomplete(cmd, prog_name, complete_var, complete_instr):
-        sys.exit(1)
+    if complete_instr in ['source', 'complete']:
+        from ._bashcomplete import bashcomplete
+        if bashcomplete(cmd, prog_name, complete_var, complete_instr):
+            sys.exit(1)
+    elif complete_instr in ['source-fish', 'complete-fish']:
+        from ._fishcomplete import fishcomplete
+        if fishcomplete(cmd, prog_name, complete_var, complete_instr):
+            sys.exit(1)
 
 
 def _check_multicommand(base_command, cmd_name, cmd, register=False):
@@ -689,7 +694,7 @@ class BaseCommand(object):
         # Hook for the Bash completion.  This only activates if the Bash
         # completion is actually enabled, otherwise this is quite a fast
         # noop.
-        _bashcomplete(self, prog_name, complete_var)
+        _shellcomplete(self, prog_name, complete_var)
 
         try:
             try:
