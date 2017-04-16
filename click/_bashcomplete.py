@@ -8,7 +8,6 @@ from .parser import split_arg_string
 from .core import MultiCommand, Option, Argument
 from .types import Choice
 
-
 WORDBREAK = '='
 
 COMPLETION_SCRIPT = '''
@@ -97,6 +96,22 @@ def is_incomplete_argument(current_params, cmd_param):
         return True
     return False
 
+def get_user_autocompletions(ctx, args, incomplete, cmd_param):
+    """
+    :param ctx: context associated with the parsed command
+    :param args: full list of args
+    :param incomplete: the incomplete text to autocomplete
+    :param cmd_param: command definition
+    :return: all the possible user-specified completions for the param
+    """
+    if isinstance(cmd_param.type, Choice):
+        return cmd_param.type.choices
+    elif cmd_param.autocompletion is not None:
+        return cmd_param.autocompletion(ctx=ctx,
+                                        args=args,
+                                        incomplete=incomplete)
+    else:
+        return []
 
 def get_choices(cli, prog_name, args, incomplete):
     """
@@ -134,16 +149,14 @@ def get_choices(cli, prog_name, args, incomplete):
         # completion for option values by choices
         for cmd_param in ctx.command.params:
             if isinstance(cmd_param, Option) and is_incomplete_option(all_args, cmd_param):
-                if isinstance(cmd_param.type, Choice):
-                    choices.extend(cmd_param.type.choices)
+                choices.extend(get_user_autocompletions(ctx, all_args, incomplete, cmd_param))
                 found_param = True
                 break
     if not found_param:
         # completion for argument values by choices
         for cmd_param in ctx.command.params:
             if isinstance(cmd_param, Argument) and is_incomplete_argument(ctx.params, cmd_param):
-                if isinstance(cmd_param.type, Choice):
-                    choices.extend(cmd_param.type.choices)
+                choices.extend(get_user_autocompletions(ctx, all_args, incomplete, cmd_param))
                 found_param = True
                 break
 

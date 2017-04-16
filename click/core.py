@@ -1266,7 +1266,8 @@ class Parameter(object):
 
     def __init__(self, param_decls=None, type=None, required=False,
                  default=None, callback=None, nargs=None, metavar=None,
-                 expose_value=True, is_eager=False, envvar=None):
+                 expose_value=True, is_eager=False, envvar=None,
+                 autocompletion=None):
         self.name, self.opts, self.secondary_opts = \
             self._parse_decls(param_decls or (), expose_value)
 
@@ -1289,6 +1290,7 @@ class Parameter(object):
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
+        self.autocompletion =  autocompletion
 
     @property
     def human_readable_name(self):

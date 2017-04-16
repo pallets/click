@@ -7,12 +7,13 @@ Version 7.0
 -----------
 
 (upcoming release with new features, release date to be decided)
-
+- Added support for dynamic bash completion from a user-supplied callback.
+  See #755
 - Added support for bash completion of type=click.Choice for Options and
   Arguments. See #535.
 - The user is now presented with the available choices if prompt=True and
   type=click.Choice in a click.option. The choices are listed within
-  parentthesis like 'Choose fruit (apple, orange): '.
+  parenthesis like 'Choose fruit (apple, orange): '.
 - The exception objects now store unicode properly.
 - Added the ability to hide commands and options from help.
 - Added Float Range in Types.

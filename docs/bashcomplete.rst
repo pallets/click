@@ -16,9 +16,6 @@ how to do that, see :ref:`setuptools-integration`.  Also, Click currently
 only supports completion for Bash. Zsh support is available through Zsh's
 bash completion compatibility mode.
 
-Currently, Bash completion is an internal feature that is not customizable.
-This might be relaxed in future versions.
-
 What it Completes
 -----------------
 
@@ -31,6 +28,33 @@ least a dash has been provided.  Example::
     clone    commit   copy     delete   setuser
     $ repo clone -<TAB><TAB>
     --deep     --help     --rev      --shallow  -r
+
+Additionally, custom suggestions can be provided for arguments and options with
+the ``autocompletion`` parameter.  ``autocompletion`` should a callback function
+that returns a list of strings. This is useful when the suggestions need to be
+dynamically generated at bash completion time. The callback function will be
+passed 3 keyword arguments:
+
+- ``ctx`` - The current click context.
+- ``args`` - The list of arguments passed in.
+- ``incomplete`` - The partial word that is being completed, as a string.  May
+  be an empty string ``''`` if no characters have been entered yet.
+
+Here is an example of using a callback function to generate dynamic suggestions:
+
+.. click:example::
+
+    import os
+
+    def get_env_vars(ctx, incomplete, cwords, cword):
+        return os.environ.keys()
+
+    @click.command()
+    @click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
+    def cmd1(envvar):
+        click.echo('Environment variable: %s' % envvar)
+        click.echo('Value: %s' % os.environ[envvar])
+
 
 Activation
 ----------
