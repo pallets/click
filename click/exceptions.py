@@ -214,4 +214,4 @@ class FileError(ClickException):
 
 
 class Abort(RuntimeError):
-    """An internal signalling exception that signals Click to abort."""
+    """An internal signaling exception that signals Click to abort."""
