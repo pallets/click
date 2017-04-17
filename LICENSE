@@ -1,4 +1,4 @@
-Copyright (c) 2014 by Armin Ronacher.
+Copyright (c) 2015 by Armin Ronacher.
 
 Click uses parts of optparse written by Gregory P. Ward and maintained by the
 Python software foundation.  This is limited to code in the parser.py
