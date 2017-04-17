@@ -6,7 +6,7 @@
 dist
 build
 docs/_build
-click.egg-info
+*.egg-info
 .tox
 .cache
 .ropeproject
