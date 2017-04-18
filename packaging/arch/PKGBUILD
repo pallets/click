@@ -1,0 +1,18 @@
+_pyname="click"
+_pyver="" # set to 2 for py2, leave blank for py3
+pkgname="python${_pyver}-${_pyname}"
+pkgver="0.1"
+pkgrel="3"
+pkgdesc="Command Line Interface Creation Kit"
+arch=("any")
+url="http://click.pocoo.org/"
+license=("BSD")
+depends=("python${_pyver}")
+makedepends=("python${_pyver}-setuptools")
+source=("https://github.com/mitsuhiko/${_pyname}/archive/master.tar.gz")
+sha256sums=("34e58b1072bc0b96eb8a5b49005c95723902811e638ef456bc5715edb797ca2d")
+
+package() {
+	cd ${srcdir}/${_pyname}-master
+	python${_pyver} setup.py install --root=${pkgdir} --optimize=1
+}
