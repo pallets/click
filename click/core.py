@@ -640,12 +640,13 @@ class BaseCommand(object):
         """This is the way to invoke a script with all the bells and
         whistles as a command line application.
 
-        If *standalone_mode* is ``True`` (default), the application will
+        If ``standalone_mode`` is ``True`` (default), the application will
         terminate immediately after the command was executed. The return value
         of :meth:`invoke` will be passed to :func:`sys.exit` and thus be used
-        as the application's exit-code.
+        as the application's exit-code. Note that a return-value of ``None``
+        is mapped to ``0`` in this case.
 
-        Otherwise, if *standalone_mode* is ``False``, the return value of
+        Otherwise, if ``standalone_mode`` is ``False``, the return value of
         :meth:`invoke` is returned instead and no ``SystemExit`` will be
         raised.
 
@@ -653,7 +654,11 @@ class BaseCommand(object):
         a :class:`Command`.
 
         .. versionadded:: 3.0
-           Added the `standalone_mode` flag to control the standalone mode.
+           Added the ``standalone_mode`` flag to control the standalone mode.
+
+        .. versionchanged:: 7.0
+           ``standalone_mode`` set to ``True`` causes the generated
+           ``SystemExit`` exception to carry the result of :meth:`invoke()`.
 
         :param args: the arguments that should be used for parsing.  If not
                      provided, ``sys.argv[1:]`` is used.
@@ -704,6 +709,8 @@ class BaseCommand(object):
                     rv = self.invoke(ctx)
                     if not standalone_mode:
                         return rv
+                    if rv is None:
+                        rv = 0
                     ctx.exit(rv)
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
