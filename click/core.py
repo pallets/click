@@ -1334,8 +1334,8 @@ class Parameter(object):
                                 'not supported; nargs needs to be set to '
                                 'a fixed value > 1.' % self.nargs)
             if self.multiple:
-                return tuple(self.type(x or (), self, ctx) for x in value or ())
-            return self.type(value or (), self, ctx)
+                return tuple(self.type(x, self, ctx) for x in value or ())
+            return self.type(value, self, ctx) or ()
 
         def _convert(value, level):
             if level == 0:
