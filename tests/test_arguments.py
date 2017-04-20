@@ -59,13 +59,18 @@ def test_nargs_tup_composite(runner):
         @click.command()
         @click.argument('item', **opts)
         def copy(item):
-            click.echo('name=%s id=%d' % item)
+            if item:
+                click.echo('name=%s id=%d' % item)
 
         result = runner.invoke(copy, ['peter', '1'])
         assert not result.exception
         assert result.output.splitlines() == [
             'name=peter id=1',
         ]
+
+        result = runner.invoke(copy, [])
+        assert result.exit_code == 2
+        assert 'Missing argument "item"' in result.output
 
 
 def test_nargs_err(runner):

@@ -63,6 +63,25 @@ def test_nargs_tup_composite_mult(runner):
     ]
 
 
+def test_nargs_tup_composite(runner):
+    @click.command()
+    @click.option('--item', type=(str, int))
+    def copy(item):
+        assert type(item) is tuple
+        if item:
+            click.echo('name=%s id=%d' % item)
+
+    result = runner.invoke(copy, ['--item', 'peter', '1'])
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'name=peter id=1',
+    ]
+
+    result = runner.invoke(copy, [])
+    assert not result.exception
+    assert result.exit_code == 0
+
+
 def test_counting(runner):
     @click.command()
     @click.option('-v', count=True, help='Verbosity',
