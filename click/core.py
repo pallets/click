@@ -1298,7 +1298,7 @@ class Parameter(object):
         metavar = self.type.get_metavar(self)
         if metavar is None:
             metavar = self.type.name.upper()
-        if self.nargs != 1:
+        if self.nargs != 1 and not self.type.is_composite:
             metavar += '...'
         return metavar
 

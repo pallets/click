@@ -455,13 +455,13 @@ class Tuple(CompositeParamType):
 
     :param types: a list of types that should be used for the tuple items.
     """
+    name = 'tuple'
 
     def __init__(self, types):
         self.types = [convert_type(ty) for ty in types]
 
-    @property
-    def name(self):
-        return "<" + " ".join(ty.name for ty in self.types) + ">"
+    def get_metavar(self, param):
+        return '<%s>' % ' '.join(ty.name for ty in self.types).upper()
 
     @property
     def arity(self):
