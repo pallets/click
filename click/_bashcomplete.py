@@ -44,7 +44,7 @@ def resolve_ctx(cli, prog_name, args):
     """
     ctx = cli.make_context(prog_name, args, resilient_parsing=True)
     args_remaining = ctx.protected_args + ctx.args
-    while args_remaining:
+    while ctx is not None and args_remaining:
       if isinstance(ctx.command, MultiCommand):
         cmd = ctx.command.get_command(ctx, args_remaining[0])
         if cmd is None:
