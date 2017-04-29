@@ -169,6 +169,11 @@ def get_choices(cli, prog_name, args, incomplete):
         # completion for any subcommands
         choices.extend(ctx.command.list_commands(ctx))
 
+    if not start_of_option(incomplete) and ctx.parent is not None and isinstance(ctx.parent.command, MultiCommand) and ctx.parent.command.chain:
+        # completion for chained commands
+        remaining_comands = set(ctx.parent.command.list_commands(ctx.parent))-set(ctx.parent.protected_args)
+        choices.extend(remaining_comands)
+
     for item in choices:
         if item.startswith(incomplete):
             yield item
