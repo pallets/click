@@ -12,6 +12,7 @@ WORDBREAK = '='
 
 COMPLETION_SCRIPT = '''
 %(complete_func)s() {
+    local IFS=$'\n'
     COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \\
                    COMP_CWORD=$COMP_CWORD \\
                    %(autocomplete_var)s=complete $1 ) )
@@ -42,14 +43,18 @@ def resolve_ctx(cli, prog_name, args):
     :return: the final context/command parsed
     """
     ctx = cli.make_context(prog_name, args, resilient_parsing=True)
-    while ctx.protected_args + ctx.args and isinstance(ctx.command, MultiCommand):
-        a = ctx.protected_args + ctx.args
-        cmd = ctx.command.get_command(ctx, a[0])
+    args_remaining = ctx.protected_args + ctx.args
+    while args_remaining:
+      if isinstance(ctx.command, MultiCommand):
+        cmd = ctx.command.get_command(ctx, args_remaining[0])
         if cmd is None:
             return None
-        ctx = cmd.make_context(a[0], a[1:], parent=ctx, resilient_parsing=True)
-    return ctx
+        ctx = cmd.make_context(args_remaining[0], args_remaining[1:], parent=ctx, resilient_parsing=True)
+        args_remaining = ctx.protected_args + ctx.args
+      else:
+        ctx = ctx.parent
 
+    return ctx
 
 def start_of_option(param_str):
     """

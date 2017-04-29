@@ -1,31 +1,16 @@
 import click
 import os
 
-@click.group()
+@click.group(chain=True)
 def cli():
-    pass
-
-def get_env_vars(ctx, args, incomplete):
-    return os.environ.keys()
+	pass
 
 @cli.command()
-@click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
-def cmd1(envvar):
-    click.echo('Environment variable: %s' % envvar)
-    click.echo('Value: %s' % os.environ[envvar])
+@click.option('-n', is_flag=True)
+def cmd1(n):
+	pass
 
-@click.group()
-def group():
-    pass
-
-def list_users(ctx, args, incomplete):
-    # Here you can generate completions dynamically
-    users = ['bob', 'alice']
-    return users
-
-@group.command()
-@click.argument("user", type=click.STRING, autocompletion=list_users)
-def subcmd(user):
-    click.echo('Chosen user is %s' % user)
-
-cli.add_command(group)
+@cli.command()
+@click.option('-b', is_flag=True)
+def cmd2(b):
+	pass
