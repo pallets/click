@@ -12,6 +12,7 @@ WORDBREAK = '='
 
 COMPLETION_SCRIPT = '''
 %(complete_func)s() {
+    local IFS=$'\n'
     COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \\
                    COMP_CWORD=$COMP_CWORD \\
                    %(autocomplete_var)s=complete $1 ) )
