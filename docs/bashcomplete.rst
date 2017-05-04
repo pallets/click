@@ -46,7 +46,7 @@ Here is an example of using a callback function to generate dynamic suggestions:
 
     import os
 
-    def get_env_vars(ctx, incomplete, cwords, cword):
+    def get_env_vars(ctx, args, incomplete):
         return os.environ.keys()
 
     @click.command()
