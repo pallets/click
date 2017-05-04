@@ -25,6 +25,15 @@ SUBCOMMAND_METAVAR = 'COMMAND [ARGS]...'
 SUBCOMMANDS_METAVAR = 'COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...'
 
 
+def fast_exit(code):
+    """Exit without garbage collection, this speeds up exit by about 10ms for
+    things like bash completion.
+    """
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(code)
+
+
 def _bashcomplete(cmd, prog_name, complete_var=None):
     """Internal handler for the bash completion support."""
     if complete_var is None:
@@ -35,7 +44,7 @@ def _bashcomplete(cmd, prog_name, complete_var=None):
 
     from ._bashcomplete import bashcomplete
     if bashcomplete(cmd, prog_name, complete_var, complete_instr):
-        sys.exit(1)
+        fast_exit(1)
 
 
 def _check_multicommand(base_command, cmd_name, cmd, register=False):
