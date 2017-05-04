@@ -12,6 +12,7 @@ Version 6.8
   #728.
 - Fix bug in test runner when calling ``sys.exit`` with ``None``. See #739.
 - Fix crash on Windows console, see #744.
+- Fix bashcompletion on chained commands. See #754.
 
 Version 6.7
 -----------

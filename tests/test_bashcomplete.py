@@ -60,3 +60,28 @@ def test_long_chain():
     assert list(get_choices(cli, 'lol', ['asub', 'bsub'], '')) == ['csub']
     assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], '-')) == ['--csub-opt']
     assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], '')) == []
+
+
+def test_chaining():
+    @click.group('cli', chain=True)
+    @click.option('--cli-opt')
+    def cli(cli_opt):
+        pass
+
+    @cli.command('asub')
+    @click.option('--asub-opt')
+    def asub(asub_opt):
+        pass
+
+    @cli.command('bsub')
+    @click.option('--bsub-opt')
+    def bsub(bsub_opt, arg):
+        pass
+
+    assert list(get_choices(cli, 'lol', [], '-')) == ['--cli-opt']
+    assert list(get_choices(cli, 'lol', [], '')) == ['asub', 'bsub']
+    assert list(get_choices(cli, 'lol', ['asub'], '-')) == ['--asub-opt']
+    assert list(get_choices(cli, 'lol', ['asub'], '')) == ['bsub']
+    assert list(get_choices(cli, 'lol', ['bsub'], '')) == ['asub']
+    assert list(get_choices(cli, 'lol', ['asub', '--asub-opt', '5', 'bsub'], '-')) == ['--bsub-opt']
+    assert list(get_choices(cli, 'lol', ['asub', 'bsub'], '-')) == ['--bsub-opt']
