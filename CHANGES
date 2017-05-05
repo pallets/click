@@ -8,7 +8,7 @@ Version 7.0
 
 (upcoming release with new features, release date to be decided)
 - Added support for dynamic bash completion from a user-supplied callback.
-  See #755
+  See #755.
 - Added support for bash completion of type=click.Choice for Options and
   Arguments. See #535.
 - The user is now presented with the available choices if prompt=True and
@@ -22,6 +22,8 @@ Version 7.0
 - ``launch`` now works properly under Cygwin. See #650.
 - `CliRunner.invoke` now may receive `args` as a string representing
   a Unix shell command. See #664.
+- Fix bug that caused bashcompletion to give inproper completions on 
+  chained commands. See #774.
 
 Version 6.8
 -----------
@@ -32,6 +34,7 @@ Version 6.8
   #728.
 - Fix bug in test runner when calling ``sys.exit`` with ``None``. See #739.
 - Fix crash on Windows console, see #744.
+- Fix bashcompletion on chained commands. See #754.
 
 Version 6.7
 -----------
