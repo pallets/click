@@ -30,14 +30,18 @@ def get_completion_script(prog_name, complete_var):
 
 def resolve_ctx(cli, prog_name, args):
     ctx = cli.make_context(prog_name, args, resilient_parsing=True)
-    while ctx.protected_args + ctx.args and isinstance(ctx.command, MultiCommand):
-        a = ctx.protected_args + ctx.args
-        cmd = ctx.command.get_command(ctx, a[0])
+    args_remaining = ctx.protected_args + ctx.args
+    while ctx is not None and args_remaining:
+      if isinstance(ctx.command, MultiCommand):
+        cmd = ctx.command.get_command(ctx, args_remaining[0])
         if cmd is None:
             return None
-        ctx = cmd.make_context(a[0], a[1:], parent=ctx, resilient_parsing=True)
-    return ctx
+        ctx = cmd.make_context(args_remaining[0], args_remaining[1:], parent=ctx, resilient_parsing=True)
+        args_remaining = ctx.protected_args + ctx.args
+      else:
+        ctx = ctx.parent
 
+    return ctx
 
 def get_choices(cli, prog_name, args, incomplete):
     ctx = resolve_ctx(cli, prog_name, args)
@@ -45,7 +49,8 @@ def get_choices(cli, prog_name, args, incomplete):
         return
 
     choices = []
-    if incomplete and not incomplete[:1].isalnum():
+    incomplete_is_start_of_option = incomplete and not incomplete[:1].isalnum()
+    if incomplete_is_start_of_option:
         for param in ctx.command.params:
             if not isinstance(param, Option):
                 continue
@@ -53,6 +58,11 @@ def get_choices(cli, prog_name, args, incomplete):
             choices.extend(param.secondary_opts)
     elif isinstance(ctx.command, MultiCommand):
         choices.extend(ctx.command.list_commands(ctx))
+
+    if not incomplete_is_start_of_option and ctx.parent is not None and isinstance(ctx.parent.command, MultiCommand) and ctx.parent.command.chain:
+        # completion for chained commands
+        remaining_comands = set(ctx.parent.command.list_commands(ctx.parent))-set(ctx.parent.protected_args)
+        choices.extend(remaining_comands)
 
     for item in choices:
         if item.startswith(incomplete):
