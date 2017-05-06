@@ -300,6 +300,9 @@ class BoolParamType(ParamType):
             return False
         self.fail('%s is not a valid boolean' % value, param, ctx)
 
+    def completions(self, incomplete):
+        return ["yes ", "no "]
+
     def __repr__(self):
         return 'BOOL'
 
