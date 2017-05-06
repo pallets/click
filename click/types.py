@@ -323,6 +323,40 @@ class UUIDParameterType(ParamType):
         return 'UUID'
 
 
+def _complete_path(path_type, incomplete):
+    """Helper method for implementing the completions() method
+    for File and Path parameter types.
+    """
+
+    # Try listing the files in the relative or absolute path
+    # specified in `incomplete` minus the last path component,
+    # otherwise list files starting from the current working directory.
+    entries = []
+    base_path = ''
+    if os.path.sep in incomplete:
+        split = incomplete.rsplit(os.path.sep, 1)
+        base_path = split[0]
+
+    if base_path:
+        if os.path.isdir(base_path):
+            entries = [os.path.join(base_path, e) for e in os.listdir(base_path)]
+    else:
+        entries = os.listdir(".")
+
+    return [
+        # Append slashes to any entries which are directories, or
+        # spaces for other files since they cannot be further completed
+        e + os.path.sep if os.path.isdir(e) else e + " "
+
+        for e in sorted(entries)
+
+        # Filter out undesired elements
+        if (path_type == 'Path' or
+            (path_type == 'Directory' and os.path.isdir(e)) or
+            (path_type == 'File' and not os.path.isdir(e)))
+    ]
+
+
 class File(ParamType):
     """Declares a parameter to be a file for reading or writing.  The file
     is automatically closed once the context tears down (after the command
@@ -399,6 +433,9 @@ class File(ParamType):
                 filename_to_ui(value),
                 get_streerror(e),
             ), param, ctx)
+
+    def completions(self, incomplete):
+        return _complete_path("File", incomplete)
 
 
 class Path(ParamType):
@@ -504,6 +541,9 @@ class Path(ParamType):
                 ), param, ctx)
 
         return self.coerce_path_result(rv)
+
+    def completions(self, incomplete):
+        return _complete_path(self.path_type, incomplete)
 
 
 class Tuple(CompositeParamType):
