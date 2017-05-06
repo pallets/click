@@ -30,7 +30,7 @@ least a dash has been provided.  Example::
     --deep     --help     --rev      --shallow  -r
 
 Additionally, custom suggestions can be provided for arguments and options with
-the ``autocompletion`` parameter.  ``autocompletion`` should a callback function
+the ``autocompletion`` parameter.  ``autocompletion`` should be a callback function
 that returns a list of strings. This is useful when the suggestions need to be
 dynamically generated at bash completion time. The callback function will be
 passed 3 keyword arguments:
@@ -40,6 +40,11 @@ passed 3 keyword arguments:
 - ``incomplete`` - The partial word that is being completed, as a string.  May
   be an empty string ``''`` if no characters have been entered yet.
 
+The returned strings should have spaces appended to them in the case that
+they cannot be further completed, omitting the space allows the completion
+to be invoked multiple times, which can be useful for completing path-like
+strings by searching a database or filesystem.
+
 Here is an example of using a callback function to generate dynamic suggestions:
 
 .. click:example::
@@ -47,7 +52,7 @@ Here is an example of using a callback function to generate dynamic suggestions:
     import os
 
     def get_env_vars(ctx, args, incomplete):
-        return os.environ.keys()
+        return [key + ' ' for key in os.environ.keys()]
 
     @click.command()
     @click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)

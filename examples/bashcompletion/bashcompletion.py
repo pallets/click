@@ -6,7 +6,7 @@ def cli():
     pass
 
 def get_env_vars(ctx, args, incomplete):
-    return os.environ.keys()
+    return [key + ' ' for key in os.environ.keys()]
 
 @cli.command()
 @click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
@@ -20,7 +20,7 @@ def group():
 
 def list_users(ctx, args, incomplete):
     # Here you can generate completions dynamically
-    users = ['bob', 'alice']
+    users = ['bob ', 'alice ']
     return users
 
 @group.command()
