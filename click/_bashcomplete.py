@@ -19,7 +19,7 @@ COMPLETION_SCRIPT = '''
     return 0
 }
 
-complete -F %(complete_func)s -o default %(script_names)s
+complete -F %(complete_func)s -o nospace %(script_names)s
 '''
 
 _invalid_ident_char_re = re.compile(r'[^a-zA-Z0-9_]')
