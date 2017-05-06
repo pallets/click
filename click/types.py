@@ -67,6 +67,23 @@ class ParamType(object):
         """Helper method to fail with an invalid value message."""
         raise BadParameter(message, ctx=ctx, param=param)
 
+    def completions(self, incomplete):
+        """Report possible completions for this parameter.
+
+        This takes the currently incomplete word for this parameter,
+        which may be an empty string if no characters have been entered yet.
+
+        This method should return a list of words that are suitable completions
+        for the parameter.
+
+        Suggested completions which cannot be completed further, should
+        be completed with a space appended. This allows support for
+        partial path like completions which may be searched in a database
+        or filesystem.
+
+        .. versionadded:: 7.0
+        """
+        return None
 
 class CompositeParamType(ParamType):
     is_composite = True
