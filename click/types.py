@@ -175,6 +175,9 @@ class Choice(ParamType):
         self.fail('invalid choice: %s. (choose from %s)' %
                   (value, ', '.join(self.choices)), param, ctx)
 
+    def completions(self, incomplete):
+        return [c + " " for c in self.choices]
+
     def __repr__(self):
         return 'Choice(%r)' % list(self.choices)
 
