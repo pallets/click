@@ -337,11 +337,16 @@ def _complete_path(path_type, incomplete):
         split = incomplete.rsplit(os.path.sep, 1)
         base_path = split[0]
 
-    if base_path:
-        if os.path.isdir(base_path):
-            entries = [os.path.join(base_path, e) for e in os.listdir(base_path)]
-    else:
-        entries = os.listdir(".")
+    try:
+        if base_path:
+            if os.path.isdir(base_path):
+                entries = [os.path.join(base_path, e) for e in os.listdir(base_path)]
+        else:
+            entries = os.listdir(".")
+    except OSError:
+        # If for any reason the os reports an error from os.listdir(), just
+        # ignore this and avoid a stack trace
+        pass
 
     return [
         # Append slashes to any entries which are directories, or
