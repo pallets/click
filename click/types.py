@@ -337,6 +337,11 @@ def _complete_path(path_type, incomplete):
         split = incomplete.rsplit(os.path.sep, 1)
         base_path = split[0]
 
+        # If there was nothing on the left of the last separator,
+        # we are completing files in the filesystem root
+        if not base_path:
+            base_path = os.path.sep
+
     try:
         if base_path:
             if os.path.isdir(base_path):
