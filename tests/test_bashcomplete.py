@@ -2,6 +2,10 @@
 
 import click
 from click._bashcomplete import get_choices
+import os
+import tempfile
+import shutil
+from contextlib import contextmanager
 
 
 def test_single_command():
@@ -267,3 +271,92 @@ def test_long_chain_choice():
     assert list(get_choices(cli, 'lol',
         ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt', 'bsubopt1', 'bsubarg1'],
                             '')) == ['bbsubarg1 ', 'bbsubarg2 ']
+
+
+# Helper for path tests
+@contextmanager
+def tempdir(chdir=False):
+    temp = tempfile.mkdtemp()
+    cwd = os.getcwd()
+
+    if chdir:
+        os.chdir(temp)
+
+    yield temp
+
+    os.chdir(cwd)
+    shutil.rmtree(temp)
+
+
+def test_absolute_path():
+    @click.command()
+    @click.option('--path', type=click.Path())
+    def cli(local_opt):
+        pass
+
+    with tempdir() as temp:
+        os.mkdir(os.path.join(temp, 'dira'))
+        os.mkdir(os.path.join(temp, 'dirb'))
+        with open(os.path.join(temp, 'dirb', 'file.txt'), 'w') as f:
+            f.write('content')
+
+        assert list(get_choices(cli, 'lol', ['--path'], temp)) == [temp + os.path.sep]
+        assert list(get_choices(cli, 'lol', ['--path'], temp + os.path.sep)) == \
+            [os.path.join(temp, 'dira') + os.path.sep, os.path.join(temp, 'dirb') + os.path.sep]
+        assert list(get_choices(cli, 'lol', ['--path'], os.path.join(temp, 'dirb'))) == \
+            [os.path.join(temp, 'dirb') + os.path.sep]
+        assert list(get_choices(cli, 'lol', ['--path'], os.path.join(temp, 'dirb') + os.path.sep)) == \
+            [os.path.join(temp, 'dirb', 'file.txt') + ' ']
+
+
+def test_relative_path():
+    @click.command()
+    @click.option('--path', type=click.Path())
+    def cli(local_opt):
+        pass
+
+    with tempdir(chdir=True) as temp:
+        os.mkdir(os.path.join(temp, 'dira'))
+        os.mkdir(os.path.join(temp, 'dirb'))
+        with open(os.path.join(temp, 'dirb', 'file.txt'), 'w') as f:
+            f.write('content')
+
+        assert list(get_choices(cli, 'lol', ['--path'], '')) == ['dira' + os.path.sep, 'dirb' + os.path.sep]
+        assert list(get_choices(cli, 'lol', ['--path'], 'dir')) == ['dira' + os.path.sep, 'dirb' + os.path.sep]
+        assert list(get_choices(cli, 'lol', ['--path'], 'x')) == []
+        assert list(get_choices(cli, 'lol', ['--path'], os.path.join('x', 'y', 'z'))) == []
+        assert list(get_choices(cli, 'lol', ['--path'], 'dira')) == ['dira' + os.path.sep]
+        assert list(get_choices(cli, 'lol', ['--path'], 'dirb' + os.path.sep)) == [os.path.join('dirb', 'file.txt') + ' ']
+
+
+def test_directories_only():
+    @click.command()
+    @click.option('--path', type=click.Path(file_okay=False))
+    def cli(local_opt):
+        pass
+
+    with tempdir(chdir=True) as temp:
+        os.mkdir(os.path.join(temp, 'dira'))
+        os.mkdir(os.path.join(temp, 'dirb'))
+        with open(os.path.join(temp, 'file.txt'), 'w') as f:
+            f.write('content')
+
+        assert list(get_choices(cli, 'lol', ['--path'], '')) == ['dira' + os.path.sep, 'dirb' + os.path.sep]
+        assert list(get_choices(cli, 'lol', ['--path'], 'dir')) == ['dira' + os.path.sep, 'dirb' + os.path.sep]
+
+
+def test_files_only():
+    @click.command()
+    @click.option('--path', type=click.Path(dir_okay=False))
+    def cli(local_opt):
+        pass
+
+    with tempdir(chdir=True) as temp:
+        os.mkdir(os.path.join(temp, 'dira'))
+        os.mkdir(os.path.join(temp, 'dirb'))
+        with open(os.path.join(temp, 'file.txt'), 'w') as f:
+            f.write('content')
+
+        assert list(get_choices(cli, 'lol', ['--path'], '')) == ['file.txt ']
+        assert list(get_choices(cli, 'lol', ['--path'], 'fil')) == ['file.txt ']
+        assert list(get_choices(cli, 'lol', ['--path'], 'dir')) == []
