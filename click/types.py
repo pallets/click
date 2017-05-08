@@ -360,10 +360,9 @@ def _complete_path(path_type, incomplete):
 
         for e in sorted(entries)
 
-        # Filter out undesired elements
-        if (path_type == 'Path' or
-            (path_type == 'Directory' and os.path.isdir(e)) or
-            (path_type == 'File' and not os.path.isdir(e)))
+        # Filter out non directory elements when searching for a directory,
+        # the opposite is fine, however.
+        if not (path_type == 'Directory' and not os.path.isdir(e))
     ]
 
 
