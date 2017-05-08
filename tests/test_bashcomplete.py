@@ -356,7 +356,10 @@ def test_files_only():
         os.mkdir(os.path.join(temp, 'dirb'))
         with open(os.path.join(temp, 'file.txt'), 'w') as f:
             f.write('content')
+        with open(os.path.join(temp, 'dirb', 'file.txt'), 'w') as f:
+            f.write('content')
 
-        assert list(get_choices(cli, 'lol', ['--path'], '')) == ['file.txt ']
+        assert list(get_choices(cli, 'lol', ['--path'], '')) == ['dira' + os.path.sep, 'dirb' + os.path.sep, 'file.txt ']
         assert list(get_choices(cli, 'lol', ['--path'], 'fil')) == ['file.txt ']
-        assert list(get_choices(cli, 'lol', ['--path'], 'dir')) == []
+        assert list(get_choices(cli, 'lol', ['--path'], 'dir')) == ['dira' + os.path.sep, 'dirb' + os.path.sep]
+        assert list(get_choices(cli, 'lol', ['--path'], 'dirb/')) == [os.path.join('dirb', 'file.txt') + ' ']
