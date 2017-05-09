@@ -24,7 +24,7 @@ from .globals import get_current_context
 # Decorators
 from .decorators import pass_context, pass_obj, make_pass_decorator, \
      command, group, argument, option, confirmation_option, \
-     password_option, version_option, help_option
+     password_option, version_option, help_option, pass_fixture
 
 # Types
 from .types import ParamType, File, Path, Choice, IntRange, Tuple, \

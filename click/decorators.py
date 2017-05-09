@@ -28,6 +28,28 @@ def pass_obj(f):
     return update_wrapper(new_func, f)
 
 
+def pass_fixture(fixture):
+    """Allows to pass a fixture in a way similar to what pytest does.
+    """
+    if not inspect.isgeneratorfunction(fixture):
+        raise TypeError('fixture does not yield anything.')
+    def decorator(f):
+        def new_func(*args, **kwargs):
+            it = fixture()
+            val = next(it)
+            res = f(val, *args[1:], **kwargs)
+            try:
+                next(it)
+            except StopIteration:
+                pass
+            else:
+                raise RuntimeError('fixture has more than one yield.')
+            return res
+
+        return update_wrapper(new_func, f)
+    return decorator
+
+
 def make_pass_decorator(object_type, ensure=False):
     """Given an object type this creates a decorator that will work
     similar to :func:`pass_obj` but instead of passing the object of the
