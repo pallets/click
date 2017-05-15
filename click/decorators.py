@@ -61,7 +61,7 @@ def make_pass_decorator(object_type, ensure=False):
                 raise RuntimeError('Managed to invoke callback without a '
                                    'context object of type %r existing'
                                    % object_type.__name__)
-            return ctx.invoke(f, obj, *args[1:], **kwargs)
+            return ctx.invoke(f, obj, *args, **kwargs)
         return update_wrapper(new_func, f)
     return decorator
 
