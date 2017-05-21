@@ -1567,8 +1567,8 @@ class Option(Parameter):
                     opts.append(decl)
 
         if name is None and possible_names:
-            possible_names.sort(key=lambda x: len(x[0]))
-            name = possible_names[-1][1].replace('-', '_').lower()
+            possible_names.sort(key=lambda x: -len(x[0]))  # group long options first
+            name = possible_names[0][1].replace('-', '_').lower()
             if not isidentifier(name):
                 name = None
 
