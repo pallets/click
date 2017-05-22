@@ -345,8 +345,11 @@ def test_aliases_for_flags(runner):
     (['-c', '-b', '-a'], 'c'),
     (['-a', '--apple', '-b', '--banana', '-c', '--cantaloupe'], 'apple'),
     (['-c', '-a', '--cantaloupe', '-b', '--banana', '--apple'], 'cantaloupe'),
+    (['--from', '-f', '_from'], '_from'),
+    (['--return', '-r', '_ret'], '_ret'),
 ])
-def test_multiple_long_options(runner, option_args, expected):
+def test_option_names(runner, option_args, expected):
+
     @click.command()
     @click.option(*option_args, is_flag=True)
     def cmd(**kwargs):
@@ -355,5 +358,6 @@ def test_multiple_long_options(runner, option_args, expected):
     assert cmd.params[0].name == expected
 
     for form in option_args:
-        result = runner.invoke(cmd, [form])
-        assert result.output == 'True\n'
+        if form.startswith('-'):
+            result = runner.invoke(cmd, [form])
+            assert result.output == 'True\n'
