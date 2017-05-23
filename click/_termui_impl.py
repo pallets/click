@@ -372,10 +372,12 @@ def _nullpager(stream, text, color):
 class Editor(object):
 
     def __init__(self, editor=None, env=None, require_save=True,
+                 nano_autosave=False,
                  extension='.txt'):
         self.editor = editor
         self.env = env
         self.require_save = require_save
+        self.nano_autosave = nano_autosave
         self.extension = extension
 
     def get_editor(self):
@@ -395,13 +397,18 @@ class Editor(object):
     def edit_file(self, filename):
         import subprocess
         editor = self.get_editor()
+        # Allow nano to skip the save prompt if save is not required
+        if editor == 'nano' and self.nano_autosave:
+            no_save = '-t'
+        else:
+            no_save = ''
         if self.env:
             environ = os.environ.copy()
             environ.update(self.env)
         else:
             environ = None
         try:
-            c = subprocess.Popen('%s "%s"' % (editor, filename),
+            c = subprocess.Popen('%s %s "%s"' % (editor, no_save, filename),
                                  env=environ, shell=True)
             exit_code = c.wait()
             if exit_code != 0:
