@@ -72,11 +72,18 @@ def _verify_python3_env():
             rv = rv.decode('ascii', 'replace')
 
         for line in rv.splitlines():
-            locale = line.strip()
-            if locale.lower().endswith(('.utf-8', '.utf8')):
-                good_locales.add(locale)
-                if locale.lower() in ('c.utf8', 'c.utf-8'):
+            l = line.strip()
+            if l.lower().endswith(('.utf-8', '.utf8')):
+                good_locales.add(l)
+                if l.lower() in ('c.utf8', 'c.utf-8'):
                     has_c_utf8 = True
+
+        try:
+            for l in good_locales:
+                locale.setlocale(locale.LC_ALL, l)
+                return
+        except:
+            pass
 
         extra += '\n\n'
         if not good_locales:
