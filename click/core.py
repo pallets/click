@@ -647,15 +647,27 @@ class BaseCommand(object):
     def main(self, args=None, prog_name=None, complete_var=None,
              standalone_mode=True, **extra):
         """This is the way to invoke a script with all the bells and
-        whistles as a command line application.  This will always terminate
-        the application after a call.  If this is not wanted, ``SystemExit``
-        needs to be caught.
+        whistles as a command line application.
+
+        If ``standalone_mode`` is ``True`` (default), the application will
+        terminate immediately after the command was executed. The return value
+        of :meth:`invoke` will be passed to :func:`sys.exit` and thus be used
+        as the application's exit-code. Note that a return-value of ``None``
+        is mapped to ``0`` in this case.
+
+        Otherwise, if ``standalone_mode`` is ``False``, the return value of
+        :meth:`invoke` is returned instead and no ``SystemExit`` will be
+        raised.
 
         This method is also available by directly calling the instance of
         a :class:`Command`.
 
         .. versionadded:: 3.0
-           Added the `standalone_mode` flag to control the standalone mode.
+           Added the ``standalone_mode`` flag to control the standalone mode.
+
+        .. versionchanged:: 7.0
+           ``standalone_mode`` set to ``True`` causes the generated
+           ``SystemExit`` exception to carry the result of :meth:`invoke()`.
 
         :param args: the arguments that should be used for parsing.  If not
                      provided, ``sys.argv[1:]`` is used.
@@ -671,7 +683,7 @@ class BaseCommand(object):
                                 handle exceptions and convert them into
                                 error messages and the function will never
                                 return but shut down the interpreter.  If
-                                this is set to `False` they will be
+                                this is set to ``False`` they will be
                                 propagated to the caller and the return
                                 value of this function is the return value
                                 of :meth:`invoke`.
@@ -706,7 +718,9 @@ class BaseCommand(object):
                     rv = self.invoke(ctx)
                     if not standalone_mode:
                         return rv
-                    ctx.exit()
+                    if rv is None:
+                        rv = 0
+                    ctx.exit(rv)
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
                 raise Abort()
