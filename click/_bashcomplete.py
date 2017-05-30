@@ -19,7 +19,7 @@ COMPLETION_SCRIPT = '''
     return 0
 }
 
-complete -F %(complete_func)s -o default %(script_names)s
+complete -F %(complete_func)s -o nospace %(script_names)s
 '''
 
 _invalid_ident_char_re = re.compile(r'[^a-zA-Z0-9_]')
@@ -109,14 +109,12 @@ def get_user_autocompletions(ctx, args, incomplete, cmd_param):
     :param cmd_param: command definition
     :return: all the possible user-specified completions for the param
     """
-    if isinstance(cmd_param.type, Choice):
-        return cmd_param.type.choices
-    elif cmd_param.autocompletion is not None:
+    if cmd_param.autocompletion is not None:
         return cmd_param.autocompletion(ctx=ctx,
                                         args=args,
                                         incomplete=incomplete)
     else:
-        return []
+        return cmd_param.type.completions(incomplete) or []
 
 def get_choices(cli, prog_name, args, incomplete):
     """
@@ -147,7 +145,7 @@ def get_choices(cli, prog_name, args, incomplete):
         # completions for options
         for param in ctx.command.params:
             if isinstance(param, Option):
-                choices.extend([param_opt for param_opt in param.opts + param.secondary_opts
+                choices.extend([param_opt + " " for param_opt in param.opts + param.secondary_opts
                                 if param_opt not in all_args or param.multiple])
         found_param = True
     if not found_param:
@@ -167,12 +165,12 @@ def get_choices(cli, prog_name, args, incomplete):
 
     if not found_param and isinstance(ctx.command, MultiCommand):
         # completion for any subcommands
-        choices.extend(ctx.command.list_commands(ctx))
+        choices.extend([cmd + " " for cmd in ctx.command.list_commands(ctx)])
 
     if not start_of_option(incomplete) and ctx.parent is not None and isinstance(ctx.parent.command, MultiCommand) and ctx.parent.command.chain:
         # completion for chained commands
         remaining_comands = set(ctx.parent.command.list_commands(ctx.parent))-set(ctx.parent.protected_args)
-        choices.extend(remaining_comands)
+        choices.extend([cmd + " " for cmd in remaining_comands])
 
     for item in choices:
         if item.startswith(incomplete):
