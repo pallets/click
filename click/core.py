@@ -762,8 +762,8 @@ class Command(BaseCommand):
 
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
-                 options_metavar='[OPTIONS]', add_help_option=True, hidden,
-                 no_args_is_help=None):
+                 options_metavar='[OPTIONS]', add_help_option=True,
+                 hidden=False, no_args_is_help=None):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
