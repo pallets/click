@@ -11,8 +11,11 @@
 """
 import os
 import sys
+import threading
 import time
 import math
+import itertools
+
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
      open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
      CYGWIN
@@ -46,6 +49,34 @@ def _length_hint(obj):
            hint < 0:
             return None
         return hint
+
+
+class Spinner(object):
+    spinner_cycle = itertools.cycle(['-', '/', '|', '\\'])
+
+    def __init__(self):
+        self.stop_running = threading.Event()
+        self.spin_thread = threading.Thread(target=self.init_spin)
+
+    def start(self):
+        self.spin_thread.start()
+
+    def stop(self):
+        self.stop_running.set()
+        self.spin_thread.join()
+
+    def init_spin(self):
+        while not self.stop_running.is_set():
+            sys.stdout.write(next(self.spinner_cycle))
+            sys.stdout.flush()
+            time.sleep(0.25)
+            sys.stdout.write('\b')
+
+    def __enter__(self):
+        self.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
 
 
 class ProgressBar(object):

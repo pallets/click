@@ -44,6 +44,8 @@ Utilities
 
 .. autofunction:: progressbar
 
+.. autofunction:: spinner
+
 .. autofunction:: clear
 
 .. autofunction:: style
