@@ -474,3 +474,13 @@ def test_hidden_group(runner):
     assert result.exit_code == 0
     assert 'subgroup' not in result.output
     assert 'nope' not in result.output
+
+def test_echo_handles_encoding_errors(runner):
+    import io
+    from click._compat import text_type
+
+    message = b'\xd1\x82\xd0\xb5\xd0\xba\xd1\x81\xd1\x82'.decode('utf-8')
+    f = io.TextIOWrapper(io.BytesIO(), encoding='latin-1')
+
+    click.echo(message, file=f)
+    assert f.buffer.getvalue().strip() == message.encode('latin-1', 'backslashreplace')
