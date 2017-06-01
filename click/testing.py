@@ -126,7 +126,7 @@ class CliRunner(object):
         for it.  The default is the `name` attribute or ``"root"`` if not
         set.
         """
-        return cli.name or 'root'
+        return getattr(cli, 'name', 'root') or 'root'
 
     def make_env(self, overrides=None):
         """Returns the environment overrides for invoking a script."""
