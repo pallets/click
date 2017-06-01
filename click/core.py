@@ -645,7 +645,7 @@ class BaseCommand(object):
         raise NotImplementedError('Base commands are not invokable by default')
 
     def main(self, args=None, prog_name=None, complete_var=None,
-             standalone_mode=True, **extra):
+             standalone_mode=True, py2_encoding='utf-8', **extra):
         """This is the way to invoke a script with all the bells and
         whistles as a command line application.  This will always terminate
         the application after a call.  If this is not wanted, ``SystemExit``
@@ -675,6 +675,8 @@ class BaseCommand(object):
                                 propagated to the caller and the return
                                 value of this function is the return value
                                 of :meth:`invoke`.
+        :param py2_encoding: which encoding to use for decoding args in 
+                             python 2. Defaults to 'uf-8'.
         :param extra: extra keyword arguments are forwarded to the context
                       constructor.  See :class:`Context` for more information.
         """
@@ -685,11 +687,17 @@ class BaseCommand(object):
             _verify_python3_env()
         else:
             _check_for_unicode_literals()
-
-        if args is None:
-            args = get_os_args()
-        else:
-            args = list(args)
+               
+        if PY2:
+            if args is None:
+                args = [arg.decode(py2_encoding) for arg in get_os_args]
+            else:
+                args = [arg.decode(py2_encoding) for arg in get_os_args]
+        else:      
+            if args is None:
+                args = get_os_args()
+            else:
+                args = list(args)
 
         if prog_name is None:
             prog_name = make_str(os.path.basename(
