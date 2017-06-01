@@ -221,7 +221,7 @@ class OptionParser(object):
             self.ignore_unknown_options = ctx.ignore_unknown_options
         self._short_opt = {}
         self._long_opt = {}
-        self._opt_prefixes = set(['-', '--'])
+        self._opt_prefixes = {'-', '--'}
         self._args = []
 
     def add_option(self, opts, dest, action=None, nargs=1, const=None,
