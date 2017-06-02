@@ -395,6 +395,9 @@ class Editor(object):
     def edit_file(self, filename):
         import subprocess
         editor = self.get_editor()
+        if os.path.basename(editor) == 'gvim':
+            editor += " -f"
+
         if self.env:
             environ = os.environ.copy()
             environ.update(self.env)
