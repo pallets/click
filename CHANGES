@@ -25,6 +25,7 @@ Version 7.0
   a Unix shell command. See #664.
 - Fix bug that caused bashcompletion to give inproper completions on 
   chained commands. See #774.
+- Add support for bright colors.
 
 Version 6.8
 -----------
