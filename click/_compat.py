@@ -215,6 +215,10 @@ if PY2:
         if isinstance(value, bytes):
             value = value.decode(get_filesystem_encoding(), 'replace')
         return value
+
+    def is_iterable(value):
+        return hasattr(value, '__iter__') and not isinstance(value, basestring)
+
 else:
     import io
     text_type = str
@@ -403,6 +407,9 @@ else:
             value = value.encode('utf-8', 'surrogateescape') \
                 .decode('utf-8', 'replace')
         return value
+
+    def is_iterable(value):
+        return not isinstance(value, str) and isinstance(value, Iterable)
 
 
 def get_streerror(e, default=None):
