@@ -85,13 +85,16 @@ class Py_buffer(ctypes.Structure):
 if pythonapi is None:
     get_buffer = None
 else:
-    def get_buffer(obj, writable=False):
+    def get_buffer(obj, offset=0, writable=False):
         buf = Py_buffer()
         flags = PyBUF_WRITABLE if writable else PyBUF_SIMPLE
         PyObject_GetBuffer(py_object(obj), byref(buf), flags)
         try:
-            buffer_type = c_char * buf.len
-            return buffer_type.from_address(buf.buf)
+            if offset >= buf.len:
+                raise IndexError("buffer index out of range")
+
+            buffer_type = c_char * (buf.len - offset)
+            return buffer_type.from_address(buf.buf + offset)
         finally:
             PyBuffer_Release(byref(buf))
 
@@ -151,17 +154,24 @@ class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
 
     def write(self, b):
         bytes_to_be_written = len(b)
-        buf = get_buffer(b)
-        code_units_to_be_written = min(bytes_to_be_written,
-                                       MAX_BYTES_WRITTEN) // 2
-        code_units_written = c_ulong()
+        total_bytes_written = 0
 
-        WriteConsoleW(self.handle, buf, code_units_to_be_written,
-                      byref(code_units_written), None)
-        bytes_written = 2 * code_units_written.value
+        while total_bytes_written < bytes_to_be_written:
+            buf = get_buffer(b, total_bytes_written)
+            code_units_to_be_written = \
+                min(bytes_to_be_written - total_bytes_written,
+                    MAX_BYTES_WRITTEN) // 2
+            code_units_written = c_ulong()
 
-        if bytes_written == 0 and bytes_to_be_written > 0:
-            raise OSError(self._get_error_message(GetLastError()))
+            WriteConsoleW(self.handle, buf, code_units_to_be_written,
+                          byref(code_units_written), None)
+            bytes_written = 2 * code_units_written.value
+
+            if bytes_written == 0 and bytes_to_be_written > 0:
+                raise OSError(self._get_error_message(GetLastError()))
+
+            total_bytes_written += bytes_written
+
         return bytes_written
 
 
