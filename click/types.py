@@ -402,11 +402,11 @@ class Path(ParamType):
                          supposed to be done by the shell only.
     :param allow_dash: If this is set to `True`, a single dash to indicate
                        standard streams is permitted.
-    :param type: optionally a string type that should be used to
-                 represent the path.  The default is `None` which
-                 means the return value will be either bytes or
-                 unicode depending on what makes most sense given the
-                 input data Click deals with.
+    :param path_type: optionally a string type that should be used to
+                      represent the path.  The default is `None` which
+                      means the return value will be either bytes or
+                      unicode depending on what makes most sense given the
+                      input data Click deals with.
     """
     envvar_list_splitter = os.path.pathsep
 
