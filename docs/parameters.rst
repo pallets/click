@@ -47,8 +47,8 @@ different behavior and some are supported out of the box:
 
 ``bool`` / :data:`click.BOOL`:
     A parameter that accepts boolean values.  This is automatically used
-    for boolean flags.  If used with string values ``1``, ``yes``, ``y``
-    and ``true`` convert to `True` and ``0``, ``no``, ``n`` and ``false``
+    for boolean flags.  If used with string values ``1``, ``yes``, ``y``, ``t``
+    and ``true`` convert to `True` and ``0``, ``no``, ``n``, ``f`` and ``false``
     convert to `False`.
 
 :data:`click.UUID`:
