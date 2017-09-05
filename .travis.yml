@@ -9,14 +9,11 @@ python:
   - "pypy"
 
 env:
-  - REQUIREMENTS=colorama
-  - REQUIREMENTS=default
+  - KIND=colorama
+  - KIND=normal
 
-install:
-  - pip install -r .travis-$REQUIREMENTS-requirements.txt
-  - pip install --editable .
-
-script: make test
+install: pip install tox
+script: tox -e py-$KIND
 
 branches:
   only:
