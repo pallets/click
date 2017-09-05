@@ -180,6 +180,28 @@ def test_boolean_option(runner):
         assert result.output == '%s\n' % (default)
 
 
+def test_boolean_conversion(runner):
+    for default in True, False:
+        @click.command()
+        @click.option('--flag', default=default, type=bool)
+        def cli(flag):
+            click.echo(flag)
+
+        for value in 'true', 't,' '1', 'yes', 'y':
+            result = runner.invoke(cli, ['--flag', value])
+            assert not result.exception
+            assert result.output == 'True\n'
+
+        for value in 'false', 'f', '0', 'no', 'n':
+            result = runner.invoke(cli, ['--flag', value])
+            assert not result.exception
+            assert result.output == 'False\n'
+
+        result = runner.invoke(cli, [])
+        assert not result.exception
+        assert result.output == '%s\n' % default
+
+
 def test_file_option(runner):
     @click.command()
     @click.option('--file', type=click.File('w'))

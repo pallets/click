@@ -25,6 +25,7 @@ Version 7.0
   a Unix shell command. See #664.
 - Fix bug that caused bashcompletion to give improper completions on 
   chained commands. See #774.
+- 't' and 'f' are now converted to True and False. 
 - Fix bug that caused bashcompletion to give improper completions on
   chained commands when a required option/argument was being completed.
   See #790.
