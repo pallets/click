@@ -706,7 +706,7 @@ class BaseCommand(object):
                     rv = self.invoke(ctx)
                     if not standalone_mode:
                         return rv
-                    ctx.exit()
+                    ctx.exit(rv)
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
                 raise Abort()
