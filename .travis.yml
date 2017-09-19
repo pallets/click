@@ -9,14 +9,21 @@ python:
   - "pypy"
 
 env:
-  - REQUIREMENTS=colorama
-  - REQUIREMENTS=default
+  - TEST_EXTRA=-colorama
+  - TEST_EXTRA=
 
 install:
-  - pip install -r .travis-$REQUIREMENTS-requirements.txt
-  - pip install --editable .
+  - pip install tox
 
-script: make test
+script:
+  - |
+    set -x
+    if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then
+      tox -e "pypy${TEST_EXTRA}"
+    else
+      tox -e "py${TRAVIS_PYTHON_VERSION/./}${TEST_EXTRA}"
+    fi
+    set +x
 
 branches:
   only:
