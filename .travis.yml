@@ -42,4 +42,4 @@ notifications:
 
 after_success:
   - pip install codecov
-  - travis_retry codecov --env TOXENV -X search gcov --required --flags $TOX_PY $TEST_EXTRA
+  - travis_retry codecov --env TOXENV -X fix search gcov --required --flags $TOX_PY $TEST_EXTRA
