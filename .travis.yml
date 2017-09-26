@@ -10,8 +10,8 @@ python:
   - "pypy"
 
 env:
-  - TEST_EXTRA=-colorama
   - TEST_EXTRA=
+  - TEST_EXTRA=colorama
 
 install:
   - pip install tox
@@ -24,7 +24,10 @@ script:
     else
       TOX_PY="py${TRAVIS_PYTHON_VERSION/./}"
     fi
-    export TOXENV="${TOX_PY}${TEST_EXTRA}-coverage"
+    export TOXENV="${TOX_PY}-coverage"
+    if [[ $TEST_EXTRA == colorama ]]; then
+      TOXENV="$TOXENV-colorama"
+    fi
     tox
     set +x
 
@@ -39,4 +42,4 @@ notifications:
 
 after_success:
   - pip install codecov
-  - travis_retry codecov --env TOXENV -X search gcov --required --flags $TOX_PY
+  - travis_retry codecov --env TOXENV -X search gcov --required --flags $TOX_PY $TEST_EXTRA
