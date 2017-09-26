@@ -613,6 +613,7 @@ def isatty(stream):
 
 def _make_cached_stream_func(src_func, wrapper_func):
     cache = WeakKeyDictionary()
+
     def func():
         stream = src_func()
         try:

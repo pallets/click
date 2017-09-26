@@ -111,6 +111,7 @@ def command(name=None, cls=None, **attrs):
     """
     if cls is None:
         cls = Command
+
     def decorator(f):
         cmd = _make_command(f, name, attrs, cls)
         cmd.__doc__ = f.__doc__
@@ -305,4 +306,4 @@ def help_option(*param_decls, **attrs):
 
 
 # Circular dependencies between core and decorators
-from .core import Command, Group, Argument, Option
+from .core import Command, Group, Argument, Option  # noqa: E402

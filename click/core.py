@@ -315,7 +315,7 @@ class Context(object):
                and parent.auto_envvar_prefix is not None and \
                self.info_name is not None:
                 auto_envvar_prefix = '%s_%s' % (parent.auto_envvar_prefix,
-                                           self.info_name.upper())
+                                                self.info_name.upper())
         else:
             self.auto_envvar_prefix = auto_envvar_prefix.upper()
         self.auto_envvar_prefix = auto_envvar_prefix
@@ -997,6 +997,7 @@ class MultiCommand(Command):
             if old_callback is None or replace:
                 self.result_callback = f
                 return f
+
             def function(__value, *args, **kwargs):
                 return f(old_callback(__value, *args, **kwargs),
                          *args, **kwargs)
@@ -1299,7 +1300,7 @@ class Parameter(object):
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
-        self.autocompletion =  autocompletion
+        self.autocompletion = autocompletion
 
     @property
     def human_readable_name(self):
@@ -1762,4 +1763,4 @@ class Argument(Parameter):
 
 
 # Circular dependency between decorators and core
-from .decorators import command, group
+from .decorators import command, group  # noqa: E402
