@@ -20,10 +20,12 @@ script:
   - |
     set -x
     if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then
-      tox -e "pypy${TEST_EXTRA}"
+      TOX_PY=pypy
     else
-      tox -e "py${TRAVIS_PYTHON_VERSION/./}${TEST_EXTRA}"
+      TOX_PY="py${TRAVIS_PYTHON_VERSION/./}"
     fi
+    export TOXENV="${TOX_PY}${TEST_EXTRA}-coverage"
+    tox
     set +x
 
 branches:
@@ -34,3 +36,7 @@ branches:
 
 notifications:
   email: false
+
+after_success:
+  - pip install codecov
+  - travis_retry codecov --env TOXENV -X search gcov --required --flags $TOX_PY
