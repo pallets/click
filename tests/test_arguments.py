@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+
 import click
 from click._compat import PY2
 
@@ -114,6 +116,28 @@ def test_path_args(runner):
 
     result = runner.invoke(foo, ['-'])
     assert result.output == '-\n'
+    assert result.exit_code == 0
+
+
+def test_executable_args(runner):
+    @click.command()
+    @click.argument('exe', type=click.Executable())
+    def foo(exe):
+        click.echo(exe)
+
+    result = runner.invoke(foo, ['python'])
+    assert result.output == '%s\n' % sys.executable
+    assert result.exit_code == 0
+
+
+def test_executable_args_not_absolute(runner):
+    @click.command()
+    @click.argument('exe', type=click.Executable(absolute_path=False))
+    def foo(exe):
+        click.echo(exe)
+
+    result = runner.invoke(foo, ['python'])
+    assert result.output == 'python\n'
     assert result.exit_code == 0
 
 

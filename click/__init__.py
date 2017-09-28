@@ -28,7 +28,7 @@ from .decorators import pass_context, pass_obj, make_pass_decorator, \
 
 # Types
 from .types import ParamType, File, Path, Choice, IntRange, Tuple, \
-     STRING, INT, FLOAT, BOOL, UUID, UNPROCESSED, FloatRange
+     STRING, INT, FLOAT, BOOL, UUID, UNPROCESSED, FloatRange, Executable
 
 # Utilities
 from .utils import echo, get_binary_stream, get_text_stream, open_file, \
@@ -66,7 +66,7 @@ __all__ = [
 
     # Types
     'ParamType', 'File', 'Path', 'Choice', 'IntRange', 'Tuple', 'STRING',
-    'INT', 'FLOAT', 'BOOL', 'UUID', 'UNPROCESSED', 'FloatRange'
+    'INT', 'FLOAT', 'BOOL', 'UUID', 'UNPROCESSED', 'FloatRange', 'Executable',
 
     # Utilities
     'echo', 'get_binary_stream', 'get_text_stream', 'open_file',

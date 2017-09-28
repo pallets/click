@@ -395,9 +395,10 @@ class Path(ParamType):
     :param dir_okay: controls if a directory is a possible value.
     :param writable: if true, a writable check is performed.
     :param readable: if true, a readable check is performed.
+    :param executable: if true, a executable check is performed.
     :param resolve_path: if this is true, then the path is fully resolved
                          before the value is passed onwards.  This means
-                         that it's absolute and symlinks are resolved.  It
+                         that it is absolute and symlinks are resolved.  It
                          will not expand a tilde-prefix, as this is
                          supposed to be done by the shell only.
     :param allow_dash: If this is set to `True`, a single dash to indicate
@@ -411,13 +412,14 @@ class Path(ParamType):
     envvar_list_splitter = os.path.pathsep
 
     def __init__(self, exists=False, file_okay=True, dir_okay=True,
-                 writable=False, readable=True, resolve_path=False,
-                 allow_dash=False, path_type=None):
+                 writable=False, readable=True, executable=False,
+                 resolve_path=False, allow_dash=False, path_type=None):
         self.exists = exists
         self.file_okay = file_okay
         self.dir_okay = dir_okay
         self.writable = writable
         self.readable = readable
+        self.executable = executable
         self.resolve_path = resolve_path
         self.allow_dash = allow_dash
         self.type = path_type
@@ -479,8 +481,49 @@ class Path(ParamType):
                     self.path_type,
                     filename_to_ui(value)
                 ), param, ctx)
+            if self.executable and not os.access(value, os.X_OK):
+                self.fail('%s "%s" is not executable.' % (
+                    self.path_type,
+                    filename_to_ui(value)
+                ), param, ctx)
 
         return self.coerce_path_result(rv)
+
+
+class Executable(Path):
+    """The executable type is similar to the :class:`Path` type but checks
+    for an executable file.  A file without path information will be looked
+    up in $PATH.
+
+    For more information see :ref:`tuple-type`.
+
+    :param absolute_path: use the absolute (but not necessarily resolved path).
+    :param resolve_path: if this is true, then the path is fully resolved
+                         before the value is passed onwards.  This means
+                         that it is absolute and symlinks are resolved.  It
+                         will not expand a tilde-prefix, as this is
+                         supposed to be done by the shell only.
+    :param writable: if true, a writable check is performed.
+    :param readable: if true, a readable check is performed.
+    """
+    def __init__(self, absolute_path=True, resolve_path=False, writable=False,
+                 readable=False):
+        self.absolute_path = absolute_path
+        super(Executable, self).__init__(
+            exists=True, file_okay=True, dir_okay=False,
+            writable=writable, readable=readable, executable=True,
+            resolve_path=False, allow_dash=False, path_type=None)
+
+    def convert(self, value, param, ctx):
+        from shutil import which
+        exe = which(value)
+        if exe is None:
+            self.fail('Executable "%s" not found.' % (
+                filename_to_ui(value)
+            ), param, ctx)
+        if self.absolute_path:
+            value = exe
+        return value
 
 
 class Tuple(CompositeParamType):
