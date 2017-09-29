@@ -45,16 +45,20 @@ def resolve_ctx(cli, prog_name, args):
     ctx = cli.make_context(prog_name, args, resilient_parsing=True)
     args_remaining = ctx.protected_args + ctx.args
     while ctx is not None and args_remaining:
-      if isinstance(ctx.command, MultiCommand):
-        cmd = ctx.command.get_command(ctx, args_remaining[0])
-        if cmd is None:
-            return None
-        ctx = cmd.make_context(args_remaining[0], args_remaining[1:], parent=ctx, resilient_parsing=True)
-        args_remaining = ctx.protected_args + ctx.args
-      else:
-        ctx = ctx.parent
+        if isinstance(ctx.command, MultiCommand):
+            cmd = ctx.command.get_command(ctx, args_remaining[0])
+            if cmd is None:
+                return None
+            ctx = cmd.make_context(
+                args_remaining[0], args_remaining[1:], parent=ctx,
+                resilient_parsing=True
+            )
+            args_remaining = ctx.protected_args + ctx.args
+        else:
+            ctx = ctx.parent
 
     return ctx
+
 
 def start_of_option(param_str):
     """
@@ -101,6 +105,7 @@ def is_incomplete_argument(current_params, cmd_param):
         return True
     return False
 
+
 def get_user_autocompletions(ctx, args, incomplete, cmd_param):
     """
     :param ctx: context associated with the parsed command
@@ -117,6 +122,7 @@ def get_user_autocompletions(ctx, args, incomplete, cmd_param):
                                         incomplete=incomplete)
     else:
         return []
+
 
 def get_choices(cli, prog_name, args, incomplete):
     """
@@ -171,7 +177,8 @@ def get_choices(cli, prog_name, args, incomplete):
 
     if not start_of_option(incomplete) and ctx.parent is not None and isinstance(ctx.parent.command, MultiCommand) and ctx.parent.command.chain:
         # completion for chained commands
-        remaining_comands = set(ctx.parent.command.list_commands(ctx.parent))-set(ctx.parent.protected_args)
+        remaining_comands = (set(ctx.parent.command.list_commands(ctx.parent)) -
+                             set(ctx.parent.protected_args))
         choices.extend(remaining_comands)
 
     for item in choices:
