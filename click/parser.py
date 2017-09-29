@@ -321,7 +321,7 @@ class OptionParser(object):
         if opt not in self._long_opt:
             possibilities = [word for word in self._long_opt
                              if word.startswith(opt)]
-            raise NoSuchOption(opt, possibilities=possibilities)
+            raise NoSuchOption(opt, possibilities=possibilities, ctx=self.ctx)
 
         option = self._long_opt[opt]
         if option.takes_value:
@@ -364,7 +364,7 @@ class OptionParser(object):
                 if self.ignore_unknown_options:
                     unknown_options.append(ch)
                     continue
-                raise NoSuchOption(opt)
+                raise NoSuchOption(opt, ctx=self.ctx)
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
                 # next arg, and stop consuming characters of arg.
