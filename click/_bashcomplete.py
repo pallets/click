@@ -115,7 +115,7 @@ def get_user_autocompletions(ctx, args, incomplete, cmd_param):
     :return: all the possible user-specified completions for the param
     """
     if isinstance(cmd_param.type, Choice):
-        return cmd_param.type.choices
+        return [c for c in cmd_param.type.choices if c.startswith(incomplete)]
     elif cmd_param.autocompletion is not None:
         return cmd_param.autocompletion(ctx=ctx,
                                         args=args,
@@ -148,6 +148,7 @@ def get_choices(cli, prog_name, args, incomplete):
         incomplete = ''
 
     choices = []
+    user_choices = []
     found_param = False
     if start_of_option(incomplete):
         # completions for partial options
@@ -159,14 +160,14 @@ def get_choices(cli, prog_name, args, incomplete):
         # completion for option values from user supplied values
         for param in ctx.command.params:
             if is_incomplete_option(all_args, param):
-                choices.extend(get_user_autocompletions(ctx, all_args, incomplete, param))
+                user_choices.extend(get_user_autocompletions(ctx, all_args, incomplete, param))
                 found_param = True
                 break
         # completion for argument values from user supplied values
         if not found_param:
             for param in ctx.command.params:
                 if is_incomplete_argument(ctx.params, param):
-                    choices.extend(get_user_autocompletions(ctx, all_args, incomplete, param))
+                    user_choices.extend(get_user_autocompletions(ctx, all_args, incomplete, param))
                     # Stop looking for other completions only if this argument is required
                     found_param = param.required
                     break
@@ -180,12 +181,16 @@ def get_choices(cli, prog_name, args, incomplete):
             while ctx.parent is not None:
                 ctx = ctx.parent
                 if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
-                    remaining_commands = set(ctx.command.list_commands(ctx))-set(ctx.protected_args)
+                    remaining_commands = sorted(set(ctx.command.list_commands(ctx))-set(ctx.protected_args))
                     choices.extend(remaining_commands)
+
+    for item in user_choices:
+        yield item
 
     for item in choices:
         if item.startswith(incomplete):
             yield item
+
 
 
 def do_complete(cli, prog_name):

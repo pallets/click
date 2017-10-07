@@ -86,13 +86,20 @@ def test_long_chain():
     COLORS = ['red', 'green', 'blue']
     def get_colors(ctx, args, incomplete):
         for c in COLORS:
-            yield c
+            if c.startswith(incomplete):
+                yield c
+
+    def search_colors(ctx, args, incomplete):
+        for c in COLORS:
+            if incomplete in c:
+                yield c
 
     CSUB_OPT_CHOICES = ['foo', 'bar']
     CSUB_CHOICES = ['bar', 'baz']
     @bsub.command('csub')
     @click.option('--csub-opt', type=click.Choice(CSUB_OPT_CHOICES))
     @click.option('--csub', type=click.Choice(CSUB_CHOICES))
+    @click.option('--search-color', autocompletion=search_colors)
     @click.argument('color', autocompletion=get_colors)
     def csub(csub_opt, color):
         pass
@@ -103,13 +110,14 @@ def test_long_chain():
     assert list(get_choices(cli, 'lol', ['asub'], '')) == ['bsub']
     assert list(get_choices(cli, 'lol', ['asub', 'bsub'], '-')) == ['--bsub-opt']
     assert list(get_choices(cli, 'lol', ['asub', 'bsub'], '')) == ['csub']
-    assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], '-')) == ['--csub-opt', '--csub']
+    assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], '-')) == ['--csub-opt', '--csub', '--search-color']
     assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub', '--csub-opt'], '')) == CSUB_OPT_CHOICES
     assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], '--csub')) == ['--csub-opt', '--csub']
     assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub', '--csub'], '')) == CSUB_CHOICES
     assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub', '--csub-opt'], 'f')) == ['foo']
     assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], '')) == COLORS
     assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub'], 'b')) == ['blue']
+    assert list(get_choices(cli, 'lol', ['asub', 'bsub', 'csub', '--search-color'], 'een')) == ['green']
 
 
 def test_chaining():
@@ -129,14 +137,22 @@ def test_chaining():
     def bsub(bsub_opt, arg):
         pass
 
+    @cli.command('csub')
+    @click.option('--csub-opt')
+    @click.argument('arg', type=click.Choice(['carg1', 'carg2']), required=False)
+    def csub(csub_opt, arg):
+        pass
+
     assert list(get_choices(cli, 'lol', [], '-')) == ['--cli-opt']
-    assert list(get_choices(cli, 'lol', [], '')) == ['asub', 'bsub']
+    assert list(get_choices(cli, 'lol', [], '')) == ['asub', 'bsub', 'csub']
     assert list(get_choices(cli, 'lol', ['asub'], '-')) == ['--asub-opt']
-    assert list(get_choices(cli, 'lol', ['asub'], '')) == ['bsub']
+    assert list(get_choices(cli, 'lol', ['asub'], '')) == ['bsub', 'csub']
     assert list(get_choices(cli, 'lol', ['bsub'], '')) == ['arg1', 'arg2']
     assert list(get_choices(cli, 'lol', ['asub', '--asub-opt'], '')) == []
     assert list(get_choices(cli, 'lol', ['asub', '--asub-opt', '5', 'bsub'], '-')) == ['--bsub-opt']
     assert list(get_choices(cli, 'lol', ['asub', 'bsub'], '-')) == ['--bsub-opt']
+    assert list(get_choices(cli, 'lol', ['asub', 'csub'], '')) == ['carg1', 'carg2', 'bsub']
+    assert list(get_choices(cli, 'lol', ['asub', 'csub'], '-')) == ['--csub-opt']
 
 
 def test_argument_choice():

@@ -29,6 +29,8 @@ Version 7.0
 - Fix bug that caused bashcompletion to give inproper completions on
   chained commands when a required option/argument was being completed.
   See #790.
+- Allow autocompletion function to determine whether or not to return
+  completions that start with the incomplete argument.
 
 Version 6.8
 -----------
