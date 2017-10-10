@@ -132,7 +132,8 @@ def test_long_chain():
 def test_chaining():
     @click.group('cli', chain=True)
     @click.option('--cli-opt')
-    def cli(cli_opt):
+    @click.argument('arg', type=click.Choice(['cliarg1', 'cliarg2']))
+    def cli(cli_opt, arg):
         pass
 
     @cli.command()
@@ -142,33 +143,35 @@ def test_chaining():
 
     @cli.command(help='bsub help')
     @click.option('--bsub-opt')
-    @click.argument('arg', type=click.Choice(['arg1', 'arg2']), required=True)
+    @click.argument('arg', type=click.Choice(['arg1', 'arg2']))
     def bsub(bsub_opt, arg):
         pass
 
     @cli.command()
     @click.option('--csub-opt')
-    @click.argument('arg', type=click.Choice(['carg1', 'carg2']), required=False)
+    @click.argument('arg', type=click.Choice(['carg1', 'carg2']), default='carg1')
     def csub(csub_opt, arg):
         pass
 
     assert choices_without_help(cli, [], '-') == ['--cli-opt']
-    assert choices_without_help(cli, [], '') == ['asub', 'bsub', 'csub']
-    assert choices_without_help(cli, ['asub'], '-') == ['--asub-opt']
-    assert choices_without_help(cli, ['asub'], '') == ['bsub', 'csub']
-    assert choices_without_help(cli, ['bsub'], '') == ['arg1', 'arg2']
-    assert choices_without_help(cli, ['asub', '--asub-opt'], '') == []
-    assert choices_without_help(cli, ['asub', '--asub-opt', '5', 'bsub'], '-') == ['--bsub-opt']
-    assert choices_without_help(cli, ['asub', 'bsub'], '-') == ['--bsub-opt']
-    assert choices_with_help(cli, ['asub'], 'b') == [('bsub', 'bsub help')]
-    assert choices_without_help(cli, ['asub', 'csub'], '-') == ['--csub-opt']
+    assert choices_without_help(cli, [], '') == ['cliarg1', 'cliarg2']
+    assert choices_without_help(cli, ['cliarg1', 'asub'], '-') == ['--asub-opt']
+    assert choices_without_help(cli, ['cliarg1', 'asub'], '') == ['bsub', 'csub']
+    assert choices_without_help(cli, ['cliarg1', 'bsub'], '') == ['arg1', 'arg2']
+    assert choices_without_help(cli, ['cliarg1', 'asub', '--asub-opt'], '') == []
+    assert choices_without_help(cli, ['cliarg1', 'asub', '--asub-opt', '5', 'bsub'], '-') == ['--bsub-opt']
+    assert choices_without_help(cli, ['cliarg1', 'asub', 'bsub'], '-') == ['--bsub-opt']
+    assert choices_without_help(cli, ['cliarg1', 'asub', 'csub'], '') == ['carg1', 'carg2']
+    assert choices_without_help(cli, ['cliarg1', 'bsub', 'arg1', 'csub'], '') == ['carg1', 'carg2']
+    assert choices_without_help(cli, ['cliarg1', 'asub', 'csub'], '-') == ['--csub-opt']
+    assert choices_with_help(cli, ['cliarg1', 'asub'], 'b') == [('bsub', 'bsub help')]
 
 
 def test_argument_choice():
     @click.command()
-    @click.argument('arg1', required=False, type=click.Choice(['arg11', 'arg12']))
-    @click.argument('arg2', required=False, type=click.Choice(['arg21', 'arg22']))
-    @click.argument('arg3', required=False, type=click.Choice(['arg', 'argument']))
+    @click.argument('arg1', required=True, type=click.Choice(['arg11', 'arg12']))
+    @click.argument('arg2', type=click.Choice(['arg21', 'arg22']), default='arg21')
+    @click.argument('arg3', type=click.Choice(['arg', 'argument']), default='arg')
     def cli():
         pass
 
@@ -182,7 +185,7 @@ def test_argument_choice():
 def test_option_choice():
     @click.command()
     @click.option('--opt1', type=click.Choice(['opt11', 'opt12']), help='opt1 help')
-    @click.option('--opt2', type=click.Choice(['opt21', 'opt22']))
+    @click.option('--opt2', type=click.Choice(['opt21', 'opt22']), default='opt21')
     @click.option('--opt3', type=click.Choice(['opt', 'option']))
     def cli():
         pass
@@ -218,6 +221,8 @@ def test_option_and_arg_choice():
     assert choices_without_help(cli, [''], '--opt1=') == ['opt11', 'opt12']
     assert choices_without_help(cli, [], '') == ['arg11', 'arg12']
     assert choices_without_help(cli, ['--opt2'], '') == ['opt21', 'opt22']
+    assert choices_without_help(cli, ['arg11'], '--opt') == ['--opt1', '--opt2']
+    assert choices_without_help(cli, [], '--opt') == ['--opt1', '--opt2']
 
 
 def test_boolean_flag_choice():
@@ -258,11 +263,37 @@ def test_multi_option_choice():
 
 def test_variadic_argument_choice():
     @click.command()
+    @click.option('--opt', type=click.Choice(['opt1', 'opt2']))
     @click.argument('src', nargs=-1, type=click.Choice(['src1', 'src2']))
     def cli(local_opt):
         pass
 
     assert choices_without_help(cli, ['src1', 'src2'], '') == ['src1', 'src2']
+    assert choices_without_help(cli, ['src1', 'src2'], '--o') == ['--opt']
+    assert choices_without_help(cli, ['src1', 'src2', '--opt'], '') == ['opt1', 'opt2']
+    assert choices_without_help(cli, ['src1', 'src2'], '') == ['src1', 'src2']
+
+
+def test_variadic_argument_complete():
+
+    def _complete(ctx, args, incomplete):
+        return ['abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vwx', 'yz']
+
+    @click.group()
+    def entrypoint():
+        pass
+
+    @click.command()
+    @click.option('--opt', autocompletion=_complete)
+    @click.argument('arg', nargs=-1)
+    def subcommand(opt, arg):
+        pass
+
+    entrypoint.add_command(subcommand)
+
+    assert choices_without_help(entrypoint, ['subcommand', '--opt'], '') == _complete(0,0,0)
+    assert choices_without_help(entrypoint, ['subcommand', 'whatever', '--opt'], '') == _complete(0,0,0)
+    assert choices_without_help(entrypoint, ['subcommand', 'whatever', '--opt', 'abc'], '') == []
 
 
 def test_long_chain_choice():
@@ -273,7 +304,7 @@ def test_long_chain_choice():
     @cli.group()
     @click.option('--sub-opt', type=click.Choice(['subopt1', 'subopt2']))
     @click.argument('sub-arg', required=False, type=click.Choice(['subarg1', 'subarg2']))
-    def sub(sub_opt):
+    def sub(sub_opt, sub_arg):
         pass
 
     @sub.command(short_help='bsub help')
@@ -283,15 +314,60 @@ def test_long_chain_choice():
     def bsub(bsub_opt):
         pass
 
-    assert choices_with_help(cli, ['sub'], '') == [('subarg1', None), ('subarg2', None), ('bsub', 'bsub help')]
+    @sub.group('csub')
+    def csub():
+        pass
+
+    @csub.command()
+    def dsub():
+        pass
+
+    assert choices_with_help(cli, ['sub', 'subarg1'], '') == [('bsub', 'bsub help'), ('csub', '')]
+    assert choices_without_help(cli, ['sub'], '') == ['subarg1', 'subarg2']
     assert choices_without_help(cli, ['sub', '--sub-opt'], '') == ['subopt1', 'subopt2']
     assert choices_without_help(cli, ['sub', '--sub-opt', 'subopt1'], '') == \
-        ['subarg1', 'subarg2', 'bsub']
+           ['subarg1', 'subarg2']
     assert choices_without_help(cli,
-        ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub'], '-') == ['--bsub-opt']
+                                ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub'], '-') == ['--bsub-opt']
     assert choices_without_help(cli,
-        ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt'], '') == \
-        ['bsubopt1', 'bsubopt2']
+                                ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub'], '') == ['bsubarg1', 'bsubarg2']
     assert choices_without_help(cli,
-        ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt', 'bsubopt1', 'bsubarg1'],
-                            '') == ['bbsubarg1', 'bbsubarg2']
+                                ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt'], '') == \
+           ['bsubopt1', 'bsubopt2']
+    assert choices_without_help(cli,
+                                ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt', 'bsubopt1', 'bsubarg1'],
+                                '') == ['bbsubarg1', 'bbsubarg2']
+    assert choices_without_help(cli,
+                                ['sub', '--sub-opt', 'subopt1', 'subarg1', 'csub'],
+                                '') == ['dsub']
+
+
+def test_chained_multi():
+    @click.group()
+    def cli():
+        pass
+
+    @cli.group()
+    def sub():
+        pass
+
+    @sub.group()
+    def bsub():
+        pass
+
+    @sub.group(chain=True)
+    def csub():
+        pass
+
+    @csub.command()
+    def dsub():
+        pass
+
+    @csub.command()
+    def esub():
+        pass
+
+    assert choices_without_help(cli, ['sub'], '') == ['bsub', 'csub']
+    assert choices_without_help(cli, ['sub'], 'c') == ['csub']
+    assert choices_without_help(cli, ['sub', 'csub'], '') == ['dsub', 'esub']
+    assert choices_without_help(cli, ['sub', 'csub', 'dsub'], '') == ['esub']

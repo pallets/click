@@ -214,7 +214,7 @@ class Context(object):
                  resilient_parsing=False, allow_extra_args=None,
                  allow_interspersed_args=None,
                  ignore_unknown_options=None, help_option_names=None,
-                 token_normalize_func=None, color=None):
+                 token_normalize_func=None, color=None, ignore_default_values=False):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -314,6 +314,12 @@ class Context(object):
         #: Indicates if resilient parsing is enabled.  In that case Click
         #: will do its best to not cause any failures.
         self.resilient_parsing = resilient_parsing
+
+        #: Indicates that default values should be ignored.
+        #: Useful for completion.
+
+        #: .. versionadded:: 7.0
+        self.ignore_default_values = ignore_default_values
 
         # If there is no envvar prefix yet, but the parent has one and
         # the command on this level has a name, we can expand the envvar
@@ -1153,7 +1159,7 @@ class MultiCommand(Command):
         # an option we want to kick off parsing again for arguments to
         # resolve things like --help which now should go to the main
         # place.
-        if cmd is None:
+        if cmd is None and not ctx.resilient_parsing:
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
             ctx.fail('No such command "%s".' % original_cmd_name)
@@ -1409,7 +1415,7 @@ class Parameter(object):
     def full_process_value(self, ctx, value):
         value = self.process_value(ctx, value)
 
-        if value is None:
+        if value is None and not ctx.ignore_default_values:
             value = self.get_default(ctx)
 
         if self.required and self.value_is_missing(value):

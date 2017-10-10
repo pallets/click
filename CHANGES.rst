@@ -74,8 +74,19 @@ Version 7.0
 - Added support for bash completions containing spaces. (`#773`_)
 - Added support for dynamic bash completion from a user-supplied callback.
   (`#755`_)
+- Fix bug that caused bashcompletion to give improper completions on
+  chained commands when a required option/argument was being completed.
+  (`#790`_)(`#806`_)
+- Allow autocompletion function to determine whether or not to return
+  completions that start with the incomplete argument.
+- Add native ZSH autocompletion support. (`#323`_)(`#865`_)
+- Add support for auto-completion documentation. (`#866`_)(`#869`_)
 - Added support for bash completion of type=click.Choice for Options and
   Arguments. (`#535`_)
+- Fix bug that caused bashcompletion to give improper completions on
+  chained commands. (`#774`_)
+- Fix completion of subcommand options after last argument (`#919`_)
+- Fix incorrect completions when defaults are present (`#925`_)
 - The user is now presented with the available choices if prompt=True and
   type=click.Choice in a click.option. The choices are listed within
   parenthesis like 'Choose fruit (apple, orange): '.
@@ -87,17 +98,8 @@ Version 7.0
 - ``launch`` now works properly under Cygwin. (`#650`_)
 - `CliRunner.invoke` now may receive `args` as a string representing
   a Unix shell command. See (`#664`_).
-- Fix bug that caused bashcompletion to give improper completions on
-  chained commands. (`#774`_)
 - Add support for bright colors.
 - 't' and 'f' are now converted to True and False.
-- Fix bug that caused bashcompletion to give improper completions on
-  chained commands when a required option/argument was being completed.
-  (`#790`_)(`#806`_)
-- Allow autocompletion function to determine whether or not to return
-  completions that start with the incomplete argument.
-- Add native ZSH autocompletion support. (`#323`_)(`#865`_)
-- Add support for auto-completion documentation. See (`#866`_)(`#869`_)
 - Subcommands that are named by the function now automatically have the
   underscore replaced with a dash.  So if you register a function named
   `my_command` it becomes `my-command` in the command line interface.
@@ -107,6 +109,9 @@ Version 7.0
 - Force stdout/stderr writable.  This works around issues with badly patched
   standard streams like those from jupyter.
 
+.. _#866: https://github.com/pallets/click/issues/866
+.. _#919: https://github.com/pallets/click/issues/919
+.. _#925: https://github.com/pallets/click/issues/925
 .. _#1027: https://github.com/pallets/click/pull/1027
 .. _#1012: https://github.com/pallets/click/pull/1012
 .. _#447: https://github.com/pallets/click/issues/447
@@ -192,7 +197,6 @@ Version 7.0
 .. _#664: https://github.com/pallets/click/pull/664
 .. _#774: https://github.com/pallets/click/pull/774
 .. _#790: https://github.com/pallets/click/pull/790
-
 
 Version 6.8
 -----------
