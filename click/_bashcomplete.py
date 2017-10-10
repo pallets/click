@@ -10,6 +10,7 @@ from .types import Choice
 
 WORDBREAK = '='
 
+# Note, only BASH version 4.4 and later have the nosort option.
 COMPLETION_SCRIPT_BASH = '''
 %(complete_func)s() {
     local IFS=$'\n'
@@ -19,7 +20,17 @@ COMPLETION_SCRIPT_BASH = '''
     return 0
 }
 
-complete -F %(complete_func)s %(script_names)s
+%(complete_func)setup() {
+    local COMPLETION_OPTIONS=""
+    local BASH_VERSION_ARR=(${BASH_VERSION//./ })
+    if [ ${BASH_VERSION_ARR[0]} -ge 4 ] && [ ${BASH_VERSION_ARR[1]} -ge 4 ];then
+        COMPLETION_OPTIONS="-o nosort"
+    fi
+
+    complete $COMPLETION_OPTIONS -F %(complete_func)s %(script_names)s
+}
+
+%(complete_func)setup
 '''
 
 COMPLETION_SCRIPT_ZSH = '''
@@ -41,11 +52,13 @@ COMPLETION_SCRIPT_ZSH = '''
     done
 
     if [ -n "$completions_with_descriptions" ]; then
-        _describe '' completions_with_descriptions
+        _describe -V unsorted completions_with_descriptions -U -Q
     fi
+
     if [ -n "$completions" ]; then
-        compadd -M 'r:|=* l:|=* r:|=*' -a completions
+        compadd -U -V unsorted -Q -a completions
     fi
+    compstate[insert]="automenu"
 }
 
 compdef %(complete_func)s %(script_names)s
@@ -232,7 +245,8 @@ def get_choices(cli, prog_name, args, incomplete):
             return get_user_autocompletions(ctx, all_args, incomplete, param)
 
     add_subcommand_completions(ctx, incomplete, completions)
-    return completions
+    # Sort before returning so that proper ordering can be enforced in custom types.
+    return sorted(completions)
 
 
 def do_complete(cli, prog_name, include_descriptions):
