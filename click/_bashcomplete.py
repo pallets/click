@@ -225,7 +225,7 @@ def do_complete(cli, prog_name):
 
 def bashcomplete(cli, prog_name, complete_var, complete_instr):
     if complete_instr.startswith('source'):
-        shell = 'zsh' if complete_instr.endswith('zsh') else 'bash'
+        shell = 'zsh' if complete_instr == 'source_zsh' else 'bash'
         echo(get_completion_script(prog_name, complete_var, shell))
         return True
     elif complete_instr == 'complete':
