@@ -10,7 +10,7 @@ from .types import Choice
 
 WORDBREAK = '='
 
-COMPLETION_SCRIPT = '''
+COMPLETION_SCRIPT_BASH = '''
 %(complete_func)s() {
     local IFS=$'\n'
     COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \\
@@ -19,15 +19,30 @@ COMPLETION_SCRIPT = '''
     return 0
 }
 
-complete -F %(complete_func)s -o default %(script_names)s
+complete -F %(complete_func)s %(script_names)s
+'''
+
+COMPLETION_SCRIPT_ZSH = '''
+%(complete_func)s() {
+    emulate -L zsh
+    local IFS=$'\n'
+    local completions=( $( env COMP_WORDS="${words[*]}" \\
+                        COMP_CWORD=$((CURRENT-1)) \\
+                        %(autocomplete_var)s="complete" \\
+                        %(script_names)s ) )
+    compadd -M 'r:|=* l:|=* r:|=*' -a -- completions 
+}
+
+compdef %(complete_func)s %(script_names)s
 '''
 
 _invalid_ident_char_re = re.compile(r'[^a-zA-Z0-9_]')
 
 
-def get_completion_script(prog_name, complete_var):
+def get_completion_script(prog_name, complete_var, shell):
     cf_name = _invalid_ident_char_re.sub('', prog_name.replace('-', '_'))
-    return (COMPLETION_SCRIPT % {
+    script = COMPLETION_SCRIPT_ZSH if shell == 'zsh' else COMPLETION_SCRIPT_BASH
+    return (script % {
         'complete_func': '_%s_completion' % cf_name,
         'script_names': prog_name,
         'autocomplete_var': complete_var,
@@ -209,8 +224,9 @@ def do_complete(cli, prog_name):
 
 
 def bashcomplete(cli, prog_name, complete_var, complete_instr):
-    if complete_instr == 'source':
-        echo(get_completion_script(prog_name, complete_var))
+    if complete_instr.startswith('source'):
+        shell = 'zsh' if complete_instr.endswith('zsh') else 'bash'
+        echo(get_completion_script(prog_name, complete_var, shell))
         return True
     elif complete_instr == 'complete':
         return do_complete(cli, prog_name)
