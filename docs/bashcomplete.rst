@@ -75,7 +75,11 @@ is what you would need to put into your ``.bashrc``::
 
     eval "$(_FOO_BAR_COMPLETE=source foo-bar)"
 
-From this point onwards, your script will have Bash completion enabled.
+For zsh users add this to your ``.zshrc``::
+
+    eval "$(_FOO_BAR_COMPLETE=source_zsh foo-bar)"
+
+From this point onwards, your script will have autocompletion enabled.
 
 Activation Script
 -----------------
@@ -90,17 +94,12 @@ This can be easily accomplished::
 
     _FOO_BAR_COMPLETE=source foo-bar > foo-bar-complete.sh
 
-And then you would put this into your bashrc instead::
+For zsh:
+
+    _FOO_BAR_COMPLETE=source_zsh foo-bar > foo-bar-complete.sh
+
+And then you would put this into your .bashrc or .zshrc instead::
 
     . /path/to/foo-bar-complete.sh
 
-Zsh Compatibility
------------------
 
-To enable Bash completion in Zsh, add the following lines to your .zshrc:
-
-    autoload bashcompinit
-    bashcompinit
-
-See https://github.com/pallets/click/issues/323 for more information on
-this issue.
