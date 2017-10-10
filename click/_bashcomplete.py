@@ -154,7 +154,7 @@ def get_choices(cli, prog_name, args, incomplete):
 
     ctx = resolve_ctx(cli, prog_name, args)
     if ctx is None:
-        return
+        return []
 
     # In newer versions of bash long opts with '='s are partitioned, but it's easier to parse
     # without the '='
