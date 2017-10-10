@@ -126,6 +126,22 @@ def get_user_autocompletions(ctx, args, incomplete, cmd_param):
         return []
 
 
+def add_subcommand_completions(ctx, incomplete, completions_out):
+    # Add subcommand completions.
+    if isinstance(ctx.command, MultiCommand):
+        completions_out.extend(
+            [c for c in ctx.command.list_commands(ctx) if c.startswith(incomplete)])
+
+    # Walk up the context list and add any other completion possibilities from chained commands
+    while ctx.parent is not None:
+        ctx = ctx.parent
+        if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
+            remaining_commands = sorted(
+                set(ctx.command.list_commands(ctx)) - set(ctx.protected_args))
+            completions_out.extend(
+                [c for c in remaining_commands if c.startswith(incomplete)])
+
+
 def get_choices(cli, prog_name, args, incomplete):
     """
     :param cli: command definition
@@ -149,52 +165,32 @@ def get_choices(cli, prog_name, args, incomplete):
     elif incomplete == WORDBREAK:
         incomplete = ''
 
-    choices = []
-    user_choices = []
-    found_param = False
+    completions = []
     if start_of_option(incomplete):
         # completions for partial options
         for param in ctx.command.params:
             if isinstance(param, Option):
-                choices.extend([param_opt for param_opt in param.opts + param.secondary_opts
-                                if param_opt not in all_args or param.multiple])
-    else:
-        # completion for option values from user supplied values
-        for param in ctx.command.params:
-            if is_incomplete_option(all_args, param):
-                user_choices.extend(get_user_autocompletions(
-                    ctx, all_args, incomplete, param))
-                found_param = True
-                break
-        # completion for argument values from user supplied values
-        if not found_param:
-            for param in ctx.command.params:
-                if is_incomplete_argument(ctx.params, param):
-                    user_choices.extend(get_user_autocompletions(
-                        ctx, all_args, incomplete, param))
-                    # Stop looking for other completions only if this argument is required
-                    found_param = param.required
-                    break
+                param_opts = [param_opt for param_opt in param.opts +
+                              param.secondary_opts if param_opt not in all_args or param.multiple]
+                completions.extend(
+                    [c for c in param_opts if c.startswith(incomplete)])
+        return completions
+    # completion for option values from user supplied values
+    for param in ctx.command.params:
+        if is_incomplete_option(all_args, param):
+            return get_user_autocompletions(ctx, all_args, incomplete, param)
+    # completion for argument values from user supplied values
+    for param in ctx.command.params:
+        if is_incomplete_argument(ctx.params, param):
+            completions.extend(get_user_autocompletions(
+                ctx, all_args, incomplete, param))
+            # Stop looking for other completions only if this argument is required.
+            if param.required:
+                return completions
+            break
 
-        if not found_param and isinstance(ctx.command, MultiCommand):
-            # completion for any subcommands
-            choices.extend(ctx.command.list_commands(ctx))
-
-        if not found_param:
-            # Walk up the context list and add any other completion possibilities from chained commands
-            while ctx.parent is not None:
-                ctx = ctx.parent
-                if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
-                    remaining_commands = sorted(
-                        set(ctx.command.list_commands(ctx)) - set(ctx.protected_args))
-                    choices.extend(remaining_commands)
-
-    for item in user_choices:
-        yield item
-
-    for item in choices:
-        if item.startswith(incomplete):
-            yield item
+    add_subcommand_completions(ctx, incomplete, completions)
+    return completions
 
 
 def do_complete(cli, prog_name):
