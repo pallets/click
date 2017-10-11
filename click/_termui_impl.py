@@ -15,7 +15,7 @@ import time
 import math
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
      open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
-     CYGWIN
+     CYGWIN, is_iterable
 from .utils import echo
 from .exceptions import ClickException
 
@@ -325,7 +325,11 @@ def _pipepager(text, cmd, color):
                          env=env)
     encoding = get_best_encoding(c.stdin)
     try:
-        c.stdin.write(text.encode(encoding, 'replace'))
+        if is_iterable(text):
+            for s in text:
+                c.stdin.write(s.encode(encoding, 'replace'))
+        else:
+            c.stdin.write(text.encode(encoding, 'replace'))
         c.stdin.close()
     except (IOError, KeyboardInterrupt):
         pass

@@ -1,9 +1,11 @@
 import os
 import sys
 import struct
+import itertools
 
 from ._compat import raw_input, text_type, string_types, \
-     isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
+     isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN, \
+     is_iterable
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type, Choice
@@ -215,10 +217,14 @@ def echo_via_pager(text, color=None):
                   default is autodetection.
     """
     color = resolve_color_default(color)
-    if not isinstance(text, string_types):
-        text = text_type(text)
+    if is_iterable(text):
+        text = itertools.chain(text, ['\n'])
+    else:
+        if not isinstance(text, string_types):
+            text = text_type(text)
+        text += '\n'
     from ._termui_impl import pager
-    return pager(text + '\n', color)
+    return pager(text, color)
 
 
 def progressbar(iterable=None, length=None, label=None, show_eta=True,
