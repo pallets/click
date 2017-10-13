@@ -73,12 +73,14 @@ def make_input_stream(input, charset):
 class Result(object):
     """Holds the captured result of an invoked CLI script."""
 
-    def __init__(self, runner, output_bytes, exit_code, exception,
-                 exc_info=None):
+    def __init__(self, runner, stdout_bytes, stderr_bytes, exit_code,
+                 exception, exc_info=None):
         #: The runner that created the result
         self.runner = runner
-        #: The output as bytes.
-        self.output_bytes = output_bytes
+        #: The standard output as bytes.
+        self.stdout_bytes = stdout_bytes
+        #: The standard error as bytes, or False(y) if not available
+        self.stderr_bytes = stderr_bytes
         #: The exit code as integer.
         self.exit_code = exit_code
         #: The exception that happend if one did.
@@ -88,12 +90,27 @@ class Result(object):
 
     @property
     def output(self):
-        """The output as unicode string."""
-        return self.output_bytes.decode(self.runner.charset, 'replace') \
+        """The (standard) output as unicode string."""
+        return self.stdout
+
+    @property
+    def stdout(self):
+        """The standard output as unicode string."""
+        return self.stderr_bytes.decode(self.runner.charset, 'replace') \
             .replace('\r\n', '\n')
 
+    @property
+    def stderr(self):
+        """The standard error as unicode string."""
+        if not self.stderr_bytes:
+            raise ValueError("stderr not separately captured")
+        return self.stderr_bytes.decode(self.runner.charset, 'replace') \
+            .replace('\r\n', '\n')
+
+
     def __repr__(self):
-        return '<Result %s>' % (
+        return '<%s %s>' % (
+            type(self).__name__,
             self.exception and repr(self.exception) or 'okay',
         )
 
@@ -114,12 +131,14 @@ class CliRunner(object):
                        will automatically echo the input.
     """
 
-    def __init__(self, charset=None, env=None, echo_stdin=False):
+    def __init__(self, charset=None, env=None, echo_stdin=False,
+                 mix_stderr=False):
         if charset is None:
             charset = 'utf-8'
         self.charset = charset
         self.env = env or {}
         self.echo_stdin = echo_stdin
+        self.mix_stderr = mix_stderr
 
     def get_default_prog_name(self, cli):
         """Given a command object it will return the default program name
@@ -164,16 +183,26 @@ class CliRunner(object):
         env = self.make_env(env)
 
         if PY2:
-            sys.stdout = sys.stderr = bytes_output = StringIO()
-            if self.echo_stdin:
-                input = EchoingStdin(input, bytes_output)
+            bytes_output = StringIO()
+            sys.stdout = bytes_output
+            if not self.mix_stderr:
+                bytes_error = StringIO()
+                sys.stderr = bytes_error
         else:
             bytes_output = io.BytesIO()
-            if self.echo_stdin:
-                input = EchoingStdin(input, bytes_output)
             input = io.TextIOWrapper(input, encoding=self.charset)
-            sys.stdout = sys.stderr = io.TextIOWrapper(
+            sys.stdout = io.TextIOWrapper(
                 bytes_output, encoding=self.charset)
+            if not self.mix_stderr:
+                bytes_error = io.BytesIO()
+                sys.stderr = io.TextIOWrapper(
+                    bytes_error, encoding=self.charset)
+
+        if self.mix_stderr:
+            sys.stderr = sys.stdout
+
+        if self.echo_stdin:
+            input = EchoingStdin(input, bytes_output)
 
         sys.stdin = input
 
@@ -223,7 +252,7 @@ class CliRunner(object):
                         pass
                 else:
                     os.environ[key] = value
-            yield bytes_output
+            yield (bytes_output, not self.mix_stderr and bytes_error)
         finally:
             for key, value in iteritems(old_env):
                 if value is None:
@@ -243,7 +272,7 @@ class CliRunner(object):
             clickpkg.formatting.FORCED_WIDTH = old_forced_width
 
     def invoke(self, cli, args=None, input=None, env=None,
-               catch_exceptions=True, color=False, **extra):
+               catch_exceptions=True, color=False, mix_stderr=False, **extra):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
         arguments are passed to the :meth:`~clickpkg.Command.main` function of
@@ -275,7 +304,8 @@ class CliRunner(object):
                       application can still override this explicitly.
         """
         exc_info = None
-        with self.isolation(input=input, env=env, color=color) as out:
+        with self.isolation(input=input, env=env, color=color,
+                            mix_stderr=mix_stderr) as outstreams:
             exception = None
             exit_code = 0
 
@@ -307,10 +337,12 @@ class CliRunner(object):
                 exc_info = sys.exc_info()
             finally:
                 sys.stdout.flush()
-                output = out.getvalue()
+                stdout = outstreams[0].getvalue()
+                stderr = outstreams[1] and outstreams[1].getvalue()
 
         return Result(runner=self,
-                      output_bytes=output,
+                      stdout_bytes=stdout,
+                      stderr_bytes=stderr,
                       exit_code=exit_code,
                       exception=exception,
                       exc_info=exc_info)
