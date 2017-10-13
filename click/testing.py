@@ -96,7 +96,7 @@ class Result(object):
     @property
     def stdout(self):
         """The standard output as unicode string."""
-        return self.stderr_bytes.decode(self.runner.charset, 'replace') \
+        return self.stdout_bytes.decode(self.runner.charset, 'replace') \
             .replace('\r\n', '\n')
 
     @property
@@ -129,10 +129,15 @@ class CliRunner(object):
                        to stdout.  This is useful for showing examples in
                        some circumstances.  Note that regular prompts
                        will automatically echo the input.
+    :param mix_stderr: if this is set to `False`, then stdout and stderr are
+                       preserved as independent streams.  This is useful for
+                       Unix-philosophy apps that have predictable stdout and
+                       noisy stderr, such that each may be measured
+                       independently
     """
 
     def __init__(self, charset=None, env=None, echo_stdin=False,
-                 mix_stderr=False):
+                 mix_stderr=True):
         if charset is None:
             charset = 'utf-8'
         self.charset = charset
@@ -184,12 +189,16 @@ class CliRunner(object):
 
         if PY2:
             bytes_output = StringIO()
+            if self.echo_stdin:
+                input = EchoingStdin(input, bytes_output)
             sys.stdout = bytes_output
             if not self.mix_stderr:
                 bytes_error = StringIO()
                 sys.stderr = bytes_error
         else:
             bytes_output = io.BytesIO()
+            if self.echo_stdin:
+                input = EchoingStdin(input, bytes_output)
             input = io.TextIOWrapper(input, encoding=self.charset)
             sys.stdout = io.TextIOWrapper(
                 bytes_output, encoding=self.charset)
@@ -200,9 +209,6 @@ class CliRunner(object):
 
         if self.mix_stderr:
             sys.stderr = sys.stdout
-
-        if self.echo_stdin:
-            input = EchoingStdin(input, bytes_output)
 
         sys.stdin = input
 
@@ -304,8 +310,7 @@ class CliRunner(object):
                       application can still override this explicitly.
         """
         exc_info = None
-        with self.isolation(input=input, env=env, color=color,
-                            mix_stderr=mix_stderr) as outstreams:
+        with self.isolation(input=input, env=env, color=color) as outstreams:
             exception = None
             exit_code = 0
 

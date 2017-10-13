@@ -65,7 +65,7 @@ def test_choices_list_in_prompt(runner, monkeypatch):
 
 
 def test_secho(runner):
-    with runner.isolation() as out:
+    with runner.isolation() as outstreams:
         click.secho(None, nl=False)
-        bytes = out.getvalue()
+        bytes = outstreams[0].getvalue()
         assert bytes == b''
