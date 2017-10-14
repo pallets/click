@@ -1328,12 +1328,13 @@ class Parameter(object):
     def add_to_parser(self, parser, ctx):
         pass
 
+
     def consume_value(self, ctx, opts):
         value = opts.get(self.name)
         if value is None:
-            value = ctx.lookup_default(self.name)
-        if value is None:
             value = self.value_from_envvar(ctx)
+        if value is None:
+            value = ctx.lookup_default(self.name)
         return value
 
     def type_cast_value(self, ctx, value):
