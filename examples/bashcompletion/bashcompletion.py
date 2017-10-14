@@ -13,14 +13,14 @@ def get_env_vars(ctx, args, incomplete):
             yield key
 
 
-@cli.command()
+@cli.command(help='A command to print environment variables')
 @click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
 def cmd1(envvar):
     click.echo('Environment variable: %s' % envvar)
     click.echo('Value: %s' % os.environ[envvar])
 
 
-@click.group()
+@click.group(help='A group that holds a subcommand')
 def group():
     pass
 
@@ -33,7 +33,7 @@ def list_users(ctx, args, incomplete):
             yield user
 
 
-@group.command()
+@group.command(help='Choose a user')
 @click.argument("user", type=click.STRING, autocompletion=list_users)
 def subcmd(user):
     click.echo('Chosen user is %s' % user)

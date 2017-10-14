@@ -32,6 +32,7 @@ Version 7.0
 - Allow autocompletion function to determine whether or not to return
   completions that start with the incomplete argument.
 - Add native ZSH autocompletion support See #323.
+- Add support for auto-completion documentation. See #866.
 
 
 Version 6.8
