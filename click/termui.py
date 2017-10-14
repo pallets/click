@@ -93,7 +93,7 @@ def prompt(text, default=None, hide_input=False,
             # prompt is always skipped because that's the only thing
             # that really makes sense.
             elif default is not None:
-                return default
+                return value_proc(default)
         try:
             result = value_proc(value)
         except UsageError as e:
