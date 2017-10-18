@@ -268,9 +268,9 @@ def test_iter_keepopenfile(tmpdir):
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
     p.write(os.linesep.join(expected))
-    f = p.open()
-    for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
-        assert e_line == a_line.strip()
+    with p.open() as f:
+        for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
+            assert e_line == a_line.strip()
 
 
 @pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
@@ -278,6 +278,7 @@ def test_iter_lazyfile(tmpdir):
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
     p.write(os.linesep.join(expected))
-    f = p.open()
-    for e_line, a_line in zip(expected, click.utils.LazyFile(f.name)):
-        assert e_line == a_line.strip()
+    with p.open() as f:
+        with click.utils.LazyFile(f.name) as lf:
+            for e_line, a_line in zip(expected, lf):
+                assert e_line == a_line.strip()
