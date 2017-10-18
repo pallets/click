@@ -1230,7 +1230,7 @@ class CommandCollection(MultiCommand):
 
 
 class Parameter(object):
-    """A parameter to a command comes in two versions: they are either
+    r"""A parameter to a command comes in two versions: they are either
     :class:`Option`\s or :class:`Argument`\s.  Other subclasses are currently
     not supported by design as some of the internals for parsing are
     intentionally not finalized.

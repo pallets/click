@@ -84,7 +84,7 @@ def test_counting(runner):
     assert result.output == 'verbosity=0\n'
 
     result = runner.invoke(cli, ['--help'])
-    assert re.search('-v\s+Verbosity', result.output) is not None
+    assert re.search(r'-v\s+Verbosity', result.output) is not None
 
 
 @pytest.mark.parametrize('unknown_flag', ['--foo', '-f'])

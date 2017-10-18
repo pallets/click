@@ -90,7 +90,7 @@ def _make_command(f, name, attrs, cls):
 
 
 def command(name=None, cls=None, **attrs):
-    """Creates a new :class:`Command` and uses the decorated function as
+    r"""Creates a new :class:`Command` and uses the decorated function as
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as parameters to the command.
 
