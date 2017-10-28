@@ -95,7 +95,7 @@ And then you would put this into your bashrc instead::
     . /path/to/foo-bar-complete.sh
 
 Zsh Compatibility
-----------------
+-----------------
 
 To enable Bash completion in Zsh, add the following lines to your .zshrc:
 

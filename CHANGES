@@ -7,6 +7,7 @@ Version 7.0
 -----------
 
 (upcoming release with new features, release date to be decided)
+
 - Added support for bash completions containing spaces. See #773.
 - Added support for dynamic bash completion from a user-supplied callback.
   See #755.
