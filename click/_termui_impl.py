@@ -13,6 +13,7 @@ import os
 import sys
 import time
 import math
+
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
      open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
      CYGWIN
@@ -272,35 +273,35 @@ class ProgressBar(object):
         del next
 
 
-def pager(text, color=None):
+def pager(generator, color=None):
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
     if not isatty(sys.stdin) or not isatty(stdout):
-        return _nullpager(stdout, text, color)
+        return _nullpager(stdout, generator, color)
     pager_cmd = (os.environ.get('PAGER', None) or '').strip()
     if pager_cmd:
         if WIN:
-            return _tempfilepager(text, pager_cmd, color)
-        return _pipepager(text, pager_cmd, color)
+            return _tempfilepager(generator, pager_cmd, color)
+        return _pipepager(generator, pager_cmd, color)
     if os.environ.get('TERM') in ('dumb', 'emacs'):
-        return _nullpager(stdout, text, color)
+        return _nullpager(stdout, generator, color)
     if WIN or sys.platform.startswith('os2'):
-        return _tempfilepager(text, 'more <', color)
+        return _tempfilepager(generator, 'more <', color)
     if hasattr(os, 'system') and os.system('(less) 2>/dev/null') == 0:
-        return _pipepager(text, 'less', color)
+        return _pipepager(generator, 'less', color)
 
     import tempfile
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
         if hasattr(os, 'system') and os.system('more "%s"' % filename) == 0:
-            return _pipepager(text, 'more', color)
-        return _nullpager(stdout, text, color)
+            return _pipepager(generator, 'more', color)
+        return _nullpager(stdout, generator, color)
     finally:
         os.unlink(filename)
 
 
-def _pipepager(text, cmd, color):
+def _pipepager(generator, cmd, color):
     """Page through text by feeding it to another program.  Invoking a
     pager through this might support colors.
     """
@@ -318,17 +319,19 @@ def _pipepager(text, cmd, color):
         elif 'r' in less_flags or 'R' in less_flags:
             color = True
 
-    if not color:
-        text = strip_ansi(text)
-
     c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                          env=env)
     encoding = get_best_encoding(c.stdin)
     try:
-        c.stdin.write(text.encode(encoding, 'replace'))
-        c.stdin.close()
+        for text in generator:
+            if not color:
+                text = strip_ansi(text)
+
+            c.stdin.write(text.encode(encoding, 'replace'))
     except (IOError, KeyboardInterrupt):
         pass
+    else:
+        c.stdin.close()
 
     # Less doesn't respect ^C, but catches it for its own UI purposes (aborting
     # search or other commands inside less).
@@ -347,10 +350,12 @@ def _pipepager(text, cmd, color):
             break
 
 
-def _tempfilepager(text, cmd, color):
+def _tempfilepager(generator, cmd, color):
     """Page through text by invoking a program on a temporary file."""
     import tempfile
     filename = tempfile.mktemp()
+    # TODO: This never terminates if the passed generator never terminates.
+    text = "".join(generator)
     if not color:
         text = strip_ansi(text)
     encoding = get_best_encoding(sys.stdout)
@@ -362,11 +367,12 @@ def _tempfilepager(text, cmd, color):
         os.unlink(filename)
 
 
-def _nullpager(stream, text, color):
+def _nullpager(stream, generator, color):
     """Simply print unformatted text.  This is the ultimate fallback."""
-    if not color:
-        text = strip_ansi(text)
-    stream.write(text)
+    for text in generator:
+        if not color:
+            text = strip_ansi(text)
+        stream.write(text)
 
 
 class Editor(object):
