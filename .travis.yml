@@ -18,7 +18,7 @@ install:
 
 script:
   - |
-    set -x
+    set -ex
     if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then
       TOX_PY=pypy
     else
