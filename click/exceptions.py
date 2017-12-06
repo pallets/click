@@ -19,11 +19,14 @@ class ClickException(Exception):
     def format_message(self):
         return self.message
 
-    def __unicode__(self):
+    def __str__(self):
         return self.message
 
-    def __str__(self):
-        return self.message.encode('utf-8')
+    if PY2:
+        __unicode__ = __str__
+
+        def __str__(self):
+            return self.message.encode('utf-8')
 
     def show(self, file=None):
         if file is None:
