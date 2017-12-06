@@ -14,6 +14,9 @@ Version 6.8
 - Fix crash on Windows console, see #744.
 - Fix bashcompletion on chained commands. See #754.
 - Fix option naming routine to match documentation.  See #793
+- Fixed the behavior of click error messages with regards to unicode on 2.x
+  and 3.x respectively.  Message is now always unicode and the str and unicode
+  special methods work as you expect on that platform.
 
 Version 6.7
 -----------
