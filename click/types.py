@@ -134,7 +134,7 @@ class Choice(ParamType):
     name = 'choice'
 
     def __init__(self, choices):
-        self.choices = choices
+        self.choices = list(choices)
 
     def get_metavar(self, param):
         return '[%s]' % '|'.join(self.choices)
