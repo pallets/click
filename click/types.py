@@ -129,6 +129,9 @@ class Choice(ParamType):
     """The choice type allows a value to be checked against a fixed set of
     supported values.  All of these values have to be strings.
 
+    You should only pass *choices* as list or tuple.  Other iterables (like
+    generators) may lead to surprising results.
+
     See :ref:`choice-opts` for an example.
     """
     name = 'choice'
