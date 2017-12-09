@@ -18,6 +18,7 @@ setup(
     version=version,
     url='http://github.com/mitsuhiko/click',
     packages=['click'],
+    tests_require=['pytest>=2.8'],
     description='A simple wrapper around optparse for '
                 'powerful command line utilities.',
     classifiers=[
