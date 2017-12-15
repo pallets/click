@@ -22,6 +22,8 @@ when an inner command runs:
 
 .. click:example::
 
+    import click
+
     @click.group()
     @click.option('--debug/--no-debug', default=False)
     def cli(debug):
@@ -30,6 +32,11 @@ when an inner command runs:
     @cli.command()
     def sync():
         click.echo('Synching')
+
+    if __name__ == '__main__':
+        cli.add_command(sync)
+        cli()
+
 
 Here is what this looks like:
 
