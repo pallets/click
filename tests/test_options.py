@@ -199,7 +199,7 @@ def test_nargs_envvar(runner):
 
 
 def test_custom_validation(runner):
-    def validate_pos_int(ctx, value):
+    def validate_pos_int(ctx, param, value):
         if value < 0:
             raise click.BadParameter('Value needs to be positive')
         return value
