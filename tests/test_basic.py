@@ -412,7 +412,7 @@ def test_required_option(runner):
 def test_evaluation_order(runner):
     called = []
 
-    def memo(ctx, value):
+    def memo(ctx, param, value):
         called.append(value)
         return value
 
