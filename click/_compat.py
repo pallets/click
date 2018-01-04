@@ -11,7 +11,7 @@ WIN = sys.platform.startswith('win')
 DEFAULT_COLUMNS = 80
 
 
-_ansi_re = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')
+_ansi_re = re.compile(r'\033\[((?:\d|;)*)([a-zA-Z])')
 
 
 def get_filesystem_encoding():
