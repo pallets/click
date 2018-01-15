@@ -211,11 +211,17 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     :param color: controls if the terminal supports ANSI colors or not.  The
                   default is autodetection.
     """
-    if file is None:
+    if is_running_jupyter():
         if err:
-            file = _default_text_stderr()
+            file = sys.stderr
         else:
-            file = _default_text_stdout()
+            file = sys.stdout
+    else:
+        if file is None:
+            if err:
+                file = _default_text_stderr()
+            else:
+                file = _default_text_stdout()
 
     # Convert non bytes/text into the native string type.
     if message is not None and not isinstance(message, echo_native_types):
@@ -346,6 +352,11 @@ def get_os_args():
     if PY2 and WIN and _initial_argv_hash == _hash_py_argv():
         return _get_windows_argv()
     return sys.argv[1:]
+
+
+def is_running_jupyter():
+    """Return if running inside a Jupyter Notebook"""
+    return bool(os.getenv("JPY_PARENT_PID"))
 
 
 def format_filename(filename, shorten=False):
