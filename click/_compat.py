@@ -463,7 +463,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     else:
         f = os.fdopen(fd, mode)
 
-    return _AtomicFile(f, tmp_filename, filename), True
+    return _AtomicFile(f, tmp_filename, os.path.realpath(filename)), True
 
 
 # Used in a destructor call, needs extra protection from interpreter cleanup.
