@@ -253,3 +253,19 @@ def test_unprocessed_options(runner):
         'Verbosity: 4',
         'Args: -foo|-x|--muhaha|x|y|-x',
     ]
+
+
+def test_no_args_is_help_off(runner):
+    @click.command()
+    def cli():
+        """This is the help."""
+    result = runner.invoke(cli)
+    assert 'This is the help.' not in result.output
+
+
+def test_no_args_is_help_on(runner):
+    @click.command(no_args_is_help=True)
+    def cli():
+        """This is the help."""
+    result = runner.invoke(cli)
+    assert 'This is the help.' in result.output
