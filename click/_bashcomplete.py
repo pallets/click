@@ -42,7 +42,7 @@ def resolve_ctx(cli, prog_name, args):
     :param args: full list of args
     :return: the final context/command parsed
     """
-    ctx = cli.make_context(prog_name, args, resilient_parsing=True)
+    ctx = cli.make_context(prog_name, args, resilient_parsing=True, ignore_default_values=True)
     args_remaining = ctx.protected_args + ctx.args
     while ctx is not None and args_remaining:
         if isinstance(ctx.command, MultiCommand):
@@ -50,7 +50,7 @@ def resolve_ctx(cli, prog_name, args):
             if cmd is None:
                 return None
             ctx = cmd.make_context(
-                args_remaining[0], args_remaining[1:], parent=ctx, resilient_parsing=True)
+                args_remaining[0], args_remaining[1:], parent=ctx, resilient_parsing=True, ignore_default_values=True)
             args_remaining = ctx.protected_args + ctx.args
         else:
             ctx = ctx.parent
@@ -98,6 +98,7 @@ def is_incomplete_argument(current_params, cmd_param):
     if not isinstance(cmd_param, Argument):
         return False
     current_param_values = current_params[cmd_param.name]
+    print(current_param_values)
     if current_param_values is None:
         return True
     if cmd_param.nargs == -1:

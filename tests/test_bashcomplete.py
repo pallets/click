@@ -133,13 +133,13 @@ def test_chaining():
 
     @cli.command('bsub')
     @click.option('--bsub-opt')
-    @click.argument('arg', type=click.Choice(['arg1', 'arg2']), required=True)
+    @click.argument('arg', type=click.Choice(['arg1', 'arg2']), required=True, default='arg1')
     def bsub(bsub_opt, arg):
         pass
 
     @cli.command('csub')
     @click.option('--csub-opt')
-    @click.argument('arg', type=click.Choice(['carg1', 'carg2']), required=False)
+    @click.argument('arg', type=click.Choice(['carg1', 'carg2']), required=False, default='carg1')
     def csub(csub_opt, arg):
         pass
 
@@ -158,8 +158,8 @@ def test_chaining():
 def test_argument_choice():
     @click.command()
     @click.argument('arg1', required=False, type=click.Choice(['arg11', 'arg12']))
-    @click.argument('arg2', required=False, type=click.Choice(['arg21', 'arg22']))
-    @click.argument('arg3', required=False, type=click.Choice(['arg', 'argument']))
+    @click.argument('arg2', required=False, type=click.Choice(['arg21', 'arg22']), default='arg21')
+    @click.argument('arg3', required=False, type=click.Choice(['arg', 'argument']), default='arg')
     def cli():
         pass
 
@@ -173,7 +173,7 @@ def test_argument_choice():
 def test_option_choice():
     @click.command()
     @click.option('--opt1', type=click.Choice(['opt11', 'opt12']))
-    @click.option('--opt2', type=click.Choice(['opt21', 'opt22']))
+    @click.option('--opt2', type=click.Choice(['opt21', 'opt22']), default='opt21')
     @click.option('--opt3', type=click.Choice(['opt', 'option']))
     def cli():
         pass

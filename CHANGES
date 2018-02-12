@@ -31,6 +31,7 @@ Version 7.0
   See #790.
 - Allow autocompletion function to determine whether or not to return
   completions that start with the incomplete argument.
+- Ignore default values when searching for bashcompletions. See #925.
 
 Version 6.8
 -----------
