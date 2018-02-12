@@ -133,7 +133,7 @@ def test_chaining():
 
     @cli.command('bsub')
     @click.option('--bsub-opt')
-    @click.argument('arg', type=click.Choice(['arg1', 'arg2']), required=True, default='arg1')
+    @click.argument('arg', type=click.Choice(['arg1', 'arg2']), required=True)
     def bsub(bsub_opt, arg):
         pass
 

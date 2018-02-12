@@ -98,7 +98,6 @@ def is_incomplete_argument(current_params, cmd_param):
     if not isinstance(cmd_param, Argument):
         return False
     current_param_values = current_params[cmd_param.name]
-    print(current_param_values)
     if current_param_values is None:
         return True
     if cmd_param.nargs == -1:
