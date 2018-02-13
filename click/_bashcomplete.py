@@ -166,6 +166,7 @@ def get_choices(cli, prog_name, args, incomplete):
         incomplete = partition_incomplete[2]
     elif incomplete == WORDBREAK:
         incomplete = ''
+
     completions = []
     if start_of_option(incomplete):
         # completions for partial options
