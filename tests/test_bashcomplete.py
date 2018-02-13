@@ -247,11 +247,14 @@ def test_multi_option_choice():
 
 def test_variadic_argument_choice():
     @click.command()
+    @click.option('--opt', type=click.Choice(['opt1', 'opt2']))
     @click.argument('src', nargs=-1, type=click.Choice(['src1', 'src2']))
     def cli(local_opt):
         pass
 
     assert list(get_choices(cli, 'lol', ['src1', 'src2'], '')) == ['src1', 'src2']
+    assert list(get_choices(cli, 'lol', ['src1', 'src2'], '--o')) == ['--opt']
+    assert list(get_choices(cli, 'lol', ['src1', 'src2', '--opt'], '')) == ['opt1', 'opt2']
 
 
 def test_long_chain_choice():

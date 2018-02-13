@@ -52,8 +52,10 @@ def resolve_ctx(cli, prog_name, args):
             ctx = cmd.make_context(
                 args_remaining[0], args_remaining[1:], parent=ctx, resilient_parsing=True)
             args_remaining = ctx.protected_args + ctx.args
-        else:
+        elif ctx.parent is not None:
             ctx = ctx.parent
+        else:
+            break
 
     return ctx
 
@@ -164,7 +166,6 @@ def get_choices(cli, prog_name, args, incomplete):
         incomplete = partition_incomplete[2]
     elif incomplete == WORDBREAK:
         incomplete = ''
-
     completions = []
     if start_of_option(incomplete):
         # completions for partial options
