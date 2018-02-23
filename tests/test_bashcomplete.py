@@ -348,7 +348,7 @@ def test_chained_multi():
     def dsub():
         pass
 
-    @csub.group()
+    @csub.command()
     def esub():
         pass
 
