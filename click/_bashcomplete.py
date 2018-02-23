@@ -53,7 +53,7 @@ def resolve_ctx(cli, prog_name, args):
                 ctx = cmd.make_context(cmd_name, args, parent=ctx, resilient_parsing=True)
                 args = ctx.protected_args + ctx.args
             else:
-                # Walk chained subcommand contexts.
+                # Walk chained subcommand contexts saving the last one.
                 while args:
                     cmd_name, cmd, args = ctx.command.resolve_command(ctx, args)
                     if cmd is None:
@@ -64,7 +64,7 @@ def resolve_ctx(cli, prog_name, args):
                                                resilient_parsing=True)
                     args = sub_ctx.args
                 ctx = sub_ctx
-                args = sub_ctx.args
+                args = sub_ctx.protected_args + sub_ctx.args
         else:
             break
     return ctx

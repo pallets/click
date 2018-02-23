@@ -245,7 +245,6 @@ def test_multi_option_choice():
     assert list(get_choices(cli, 'lol', ['-m', 'm1', '-m'], '')) == ['m1', 'm2']
     assert list(get_choices(cli, 'lol', ['-m', 'm1'], '')) == ['arg1', 'arg2']
 
-
 def test_variadic_argument_choice():
     @click.command()
     @click.option('--opt', type=click.Choice(['opt1', 'opt2']))
@@ -290,22 +289,70 @@ def test_long_chain_choice():
     def sub(sub_opt):
         pass
 
-    @sub.command('bsub')
+    @sub.group('bsub')
     @click.option('--bsub-opt', type=click.Choice(['bsubopt1', 'bsubopt2']))
     @click.argument('bsub-arg1', required=False, type=click.Choice(['bsubarg1', 'bsubarg2']))
     @click.argument('bbsub-arg2', required=False, type=click.Choice(['bbsubarg1', 'bbsubarg2']))
     def bsub(bsub_opt):
         pass
 
-    assert list(get_choices(cli, 'lol', ['sub'], '')) == ['subarg1', 'subarg2', 'bsub']
+    @sub.group('csub')
+    def csub():
+        pass
+
+    @csub.command()
+    def dsub():
+        pass
+
+    assert list(get_choices(cli, 'lol', ['sub'], '')) == ['subarg1', 'subarg2', 'bsub', 'csub']
     assert list(get_choices(cli, 'lol', ['sub', '--sub-opt'], '')) == ['subopt1', 'subopt2']
     assert list(get_choices(cli, 'lol', ['sub', '--sub-opt', 'subopt1'], '')) == \
-        ['subarg1', 'subarg2', 'bsub']
+       ['subarg1', 'subarg2', 'bsub', 'csub']
     assert list(get_choices(cli, 'lol',
         ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub'], '-')) == ['--bsub-opt']
+    assert list(get_choices(cli, 'lol',
+                            ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub'], '')) == ['bsubarg1', 'bsubarg2']
     assert list(get_choices(cli, 'lol',
         ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt'], '')) == \
         ['bsubopt1', 'bsubopt2']
     assert list(get_choices(cli, 'lol',
-        ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt', 'bsubopt1', 'bsubarg1'],
+                            ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt', 'bsubopt1', 'bsubarg1'],
                             '')) == ['bbsubarg1', 'bbsubarg2']
+    assert list(get_choices(cli, 'lol',
+                            ['sub', '--sub-opt', 'subopt1', 'subarg1', 'csub'],
+                            '')) == ['dsub']
+
+
+def test_chained_multi():
+    @click.group()
+    def cli():
+        pass
+
+    @cli.group('sub')
+    @click.option('--sub-opt', type=click.Choice(['subopt1', 'subopt2']))
+    def sub(sub_opt):
+        pass
+
+    @sub.group('bsub')
+    @click.option('--bsub-opt', type=click.Choice(['bsubopt1', 'bsubopt2']))
+    @click.argument('bsub-arg1', required=False, type=click.Choice(['bsubarg1', 'bsubarg2']))
+    @click.argument('bbsub-arg2', required=False, type=click.Choice(['bbsubarg1', 'bbsubarg2']))
+    def bsub(bsub_opt):
+        pass
+
+    @sub.group('csub', chain=True)
+    def csub():
+        pass
+
+    @csub.command()
+    def dsub():
+        pass
+
+    @csub.group()
+    def esub():
+        pass
+
+    assert list(get_choices(cli, 'lol', ['sub'], '')) == ['bsub', 'csub']
+    assert list(get_choices(cli, 'lol', ['sub'], 'c')) == ['csub']
+    assert list(get_choices(cli, 'lol', ['sub', 'csub'], '')) == ['dsub', 'esub']
+    assert list(get_choices(cli, 'lol', ['sub', 'csub', 'dsub'], '')) == ['esub']
