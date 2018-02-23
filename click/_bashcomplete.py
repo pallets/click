@@ -43,18 +43,33 @@ def resolve_ctx(cli, prog_name, args):
     :return: the final context/command parsed
     """
     ctx = cli.make_context(prog_name, args, resilient_parsing=True, ignore_default_values=True)
-    args_remaining = ctx.protected_args + ctx.args
-    while ctx is not None and args_remaining:
+    args = ctx.protected_args + ctx.args
+    while args:
         if isinstance(ctx.command, MultiCommand):
-            cmd = ctx.command.get_command(ctx, args_remaining[0])
-            if cmd is None:
-                return None
-            ctx = cmd.make_context(
-                args_remaining[0], args_remaining[1:], parent=ctx, resilient_parsing=True, ignore_default_values=True)
-            args_remaining = ctx.protected_args + ctx.args
+            if not ctx.command.chain:
+                cmd_name, cmd, args = ctx.command.resolve_command(ctx, args)
+                if cmd is None:
+                    return ctx
+                ctx = cmd.make_context(cmd_name, args, parent=ctx,
+                                       resilient_parsing=True,
+                                       ignore_default_values=True)
+                args = ctx.protected_args + ctx.args
+            else:
+                # Walk chained subcommand contexts saving the last one.
+                while args:
+                    cmd_name, cmd, args = ctx.command.resolve_command(ctx, args)
+                    if cmd is None:
+                        return ctx
+                    sub_ctx = cmd.make_context(cmd_name, args, parent=ctx,
+                                               allow_extra_args=True,
+                                               allow_interspersed_args=False,
+                                               resilient_parsing=True,
+                                               ignore_default_values=True)
+                    args = sub_ctx.args
+                ctx = sub_ctx
+                args = sub_ctx.protected_args + sub_ctx.args
         else:
-            ctx = ctx.parent
-
+            break
     return ctx
 
 
@@ -182,12 +197,7 @@ def get_choices(cli, prog_name, args, incomplete):
     # completion for argument values from user supplied values
     for param in ctx.command.params:
         if is_incomplete_argument(ctx.params, param):
-            completions.extend(get_user_autocompletions(
-                ctx, all_args, incomplete, param))
-            # Stop looking for other completions only if this argument is required.
-            if param.required:
-                return completions
-            break
+            return get_user_autocompletions(ctx, all_args, incomplete, param)
 
     add_subcommand_completions(ctx, incomplete, completions)
     return completions
