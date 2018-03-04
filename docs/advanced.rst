@@ -28,7 +28,7 @@ aliases on the help page in order to avoid confusion.
 
 This following example implements a subclass of :class:`Group` that
 accepts a prefix for a command.  If there were a command called ``push``,
-it would accept ``pus`` as an alias (so long as it was unique):
+it would accept ``push`` as an alias (so long as it was unique):
 
 .. click:example::
 
