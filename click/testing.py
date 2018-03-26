@@ -95,13 +95,13 @@ class Result(object):
     @property
     def stdout(self):
         """The output on stdout as unicode string."""
-        return self.output_wrapper.bytes_output[0].getvalue().decode(
+        return self.output_wrapper.streams[0].getvalue().decode(
             self.runner.charset, 'replace').replace('\r\n', '\n')
 
     @property
     def stderr(self):
         """The output on stderr as unicode string."""
-        return self.output_wrapper.bytes_output[1].getvalue().decode(
+        return self.output_wrapper.streams[1].getvalue().decode(
             self.runner.charset, 'replace').replace('\r\n', '\n')
 
     def __repr__(self):
