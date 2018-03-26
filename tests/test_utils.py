@@ -34,8 +34,9 @@ def test_echo(runner):
     @click.command()
     def cli():
         click.echo(b'\xf6')
+        click.echo(b'\xf7', err=True)
     result = runner.invoke(cli, [])
-    assert result.output_bytes == b'\xf6\n'
+    assert result.output_wrapper.getvalue() == b'\xf6\n\xf7\n'
 
     # Ensure we do not strip for bytes.
     with runner.isolation() as out:
