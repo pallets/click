@@ -8,6 +8,7 @@ from weakref import WeakKeyDictionary
 
 PY2 = sys.version_info[0] == 2
 WIN = sys.platform.startswith('win')
+CYGWIN = sys.platform.startswith('cygwin')
 DEFAULT_COLUMNS = 80
 
 
@@ -139,6 +140,7 @@ if PY2:
     bytes = str
     raw_input = raw_input
     string_types = (str, unicode)
+    int_types = (int, long)
     iteritems = lambda x: x.iteritems()
     range_type = xrange
 
@@ -165,11 +167,12 @@ if PY2:
     # available (which is why we use try-catch instead of the WIN variable
     # here), such as the Google App Engine development server on Windows. In
     # those cases there is just nothing we can do.
+    def set_binary_mode(f):
+        return f
+
     try:
         import msvcrt
-    except ImportError:
-        set_binary_mode = lambda x: x
-    else:
+
         def set_binary_mode(f):
             try:
                 fileno = f.fileno()
@@ -178,6 +181,23 @@ if PY2:
             else:
                 msvcrt.setmode(fileno, os.O_BINARY)
             return f
+    except ImportError:
+        pass
+
+    try:
+        import fcntl
+
+        def set_binary_mode(f):
+            try:
+                fileno = f.fileno()
+            except Exception:
+                pass
+            else:
+                flags = fcntl.fcntl(f, fcntl.F_GETFL)
+                fcntl.fcntl(f, fcntl.F_SETFL, flags & ~os.O_NONBLOCK)
+            return f
+    except ImportError:
+        pass
 
     def isidentifier(x):
         return _identifier_re.search(x) is not None
@@ -218,6 +238,7 @@ else:
     text_type = str
     raw_input = input
     string_types = (str,)
+    int_types = (int,)
     range_type = range
     isidentifier = lambda x: x.isidentifier()
     iteritems = lambda x: iter(x.items())

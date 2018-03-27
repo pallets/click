@@ -9,7 +9,11 @@ class ClickException(Exception):
     exit_code = 1
 
     def __init__(self, message):
-        Exception.__init__(self, message)
+        ctor_msg = message
+        if PY2:
+            if ctor_msg is not None:
+                ctor_msg = ctor_msg.encode('utf-8')
+        Exception.__init__(self, ctor_msg)
         self.message = message
 
     def format_message(self):
@@ -43,14 +47,20 @@ class UsageError(ClickException):
     def __init__(self, message, ctx=None):
         ClickException.__init__(self, message)
         self.ctx = ctx
+        self.cmd = self.ctx and self.ctx.command or None
 
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
         color = None
+        hint = ''
+        if (self.cmd is not None and
+                self.cmd.get_help_option(self.ctx) is not None):
+            hint = ('Try "%s %s" for help.\n'
+                    % (self.ctx.command_path, self.ctx.help_option_names[0]))
         if self.ctx is not None:
             color = self.ctx.color
-            echo(self.ctx.get_usage() + '\n', file=file, color=color)
+            echo(self.ctx.get_usage() + '\n%s' % hint, file=file, color=color)
         echo('Error: %s' % self.format_message(), file=file, color=color)
 
 
@@ -170,10 +180,13 @@ class BadOptionUsage(UsageError):
     for an option is not correct.
 
     .. versionadded:: 4.0
+
+    :param option_name: the name of the option being used incorrectly.
     """
 
-    def __init__(self, message, ctx=None):
+    def __init__(self, option_name, message, ctx=None):
         UsageError.__init__(self, message, ctx)
+        self.option_name = option_name
 
 
 class BadArgumentUsage(UsageError):

@@ -202,3 +202,23 @@ def test_env():
     assert result.output == 'ENV=some_value\n'
 
     assert os.environ == env_orig
+
+
+@pytest.mark.parametrize('args, expected_output', [
+    (None, 'bar\n'),
+    ([], 'bar\n'),
+    ('', 'bar\n'),
+    (['--foo', 'one two'], 'one two\n'),
+    ('--foo "one two"', 'one two\n'),
+])
+def test_args(args, expected_output):
+
+    @click.command()
+    @click.option('--foo', default='bar')
+    def cli_args(foo):
+        click.echo(foo)
+
+    runner = CliRunner()
+    result = runner.invoke(cli_args, args=args)
+    assert result.exit_code == 0
+    assert result.output == expected_output

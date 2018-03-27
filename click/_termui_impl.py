@@ -14,7 +14,8 @@ import sys
 import time
 import math
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
-     open_stream, strip_ansi, term_len, get_best_encoding, WIN
+     open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
+     CYGWIN
 from .utils import echo
 from .exceptions import ClickException
 
@@ -41,7 +42,7 @@ def _length_hint(obj):
         except TypeError:
             return None
         if hint is NotImplemented or \
-           not isinstance(hint, (int, long)) or \
+           not isinstance(hint, int_types) or \
            hint < 0:
             return None
         return hint
@@ -477,6 +478,14 @@ def open_url(url, wait=False, locate=False):
         else:
             args = 'start %s "" "%s"' % (
                 wait and '/WAIT' or '', url.replace('"', ''))
+        return os.system(args)
+    elif CYGWIN:
+        if locate:
+            url = _unquote_file(url)
+            args = 'cygstart "%s"' % (os.path.dirname(url).replace('"', ''))
+        else:
+            args = 'cygstart %s "%s"' % (
+                wait and '-w' or '', url.replace('"', ''))
         return os.system(args)
 
     try:

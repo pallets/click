@@ -1,0 +1,12 @@
+$ bashcompletion
+
+  bashcompletion is a simple example of an application that
+  tries to autocomplete commands, arguments and options.
+
+  This example requires Click 2.0 or higher.
+
+Usage:
+
+  $ pip install --editable .
+  $ eval "$(_BASHCOMPLETION_COMPLETE=source bashcompletion)"
+  $ bashcompletion --help

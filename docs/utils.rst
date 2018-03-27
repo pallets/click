@@ -226,7 +226,7 @@ Launching Applications
 .. versionadded:: 2.0
 
 Click supports launching applications through :func:`launch`.  This can be
-used to open the default application assocated with a URL or filetype.
+used to open the default application associated with a URL or filetype.
 This can be used to launch web browsers or picture viewers, for instance.
 In addition to this, it can also launch the file manager and automatically
 select the provided file.
@@ -266,7 +266,7 @@ streams respond to Unicode and binary data.
 
 Because of this, click provides the :func:`get_binary_stream` and
 :func:`get_text_stream` functions, which produce consistent results with
-different Python versions and for a wide variety pf terminal configurations.
+different Python versions and for a wide variety of terminal configurations.
 
 The end result is that these functions will always return a functional
 stream object (except in very odd cases in Python 3; see

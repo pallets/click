@@ -16,7 +16,7 @@ setup(
     author='Armin Ronacher',
     author_email='armin.ronacher@active-4.com',
     version=version,
-    url='http://github.com/mitsuhiko/click',
+    url='http://github.com/pallets/click',
     packages=['click'],
     description='A simple wrapper around optparse for '
                 'powerful command line utilities.',

@@ -51,7 +51,7 @@ If you are on Windows (or none of the above methods worked) you must install
 Once you have it installed, run the ``pip`` command from above, but without
 the `sudo` prefix.
 
-.. _installing pip: http://pip.readthedocs.org/en/latest/installing.html
+.. _installing pip: https://pip.readthedocs.io/en/latest/installing.html
 
 Once you have virtualenv installed, just fire up a shell and create
 your own environment.  I usually create a project folder and a `venv`
@@ -79,7 +79,7 @@ And if you want to go back to the real world, use the following command::
 
     $ deactivate
 
-After doing this, the prompt of your shell should be as familar as before.
+After doing this, the prompt of your shell should be as familiar as before.
 
 Now, let's move on. Enter the following command to get Click activated in your
 virtualenv::
@@ -102,23 +102,23 @@ Examples of Click applications can be found in the documentation as well
 as in the GitHub repository together with readme files:
 
 *   ``inout``: `File input and output
-    <https://github.com/mitsuhiko/click/tree/master/examples/inout>`_
+    <https://github.com/pallets/click/tree/master/examples/inout>`_
 *   ``naval``: `Port of docopt naval example
-    <https://github.com/mitsuhiko/click/tree/master/examples/naval>`_
+    <https://github.com/pallets/click/tree/master/examples/naval>`_
 *   ``aliases``: `Command alias example
-    <https://github.com/mitsuhiko/click/tree/master/examples/aliases>`_
+    <https://github.com/pallets/click/tree/master/examples/aliases>`_
 *   ``repo``: `Git-/Mercurial-like command line interface
-    <https://github.com/mitsuhiko/click/tree/master/examples/repo>`_
+    <https://github.com/pallets/click/tree/master/examples/repo>`_
 *   ``complex``: `Complex example with plugin loading
-    <https://github.com/mitsuhiko/click/tree/master/examples/complex>`_
+    <https://github.com/pallets/click/tree/master/examples/complex>`_
 *   ``validation``: `Custom parameter validation example
-    <https://github.com/mitsuhiko/click/tree/master/examples/validation>`_
+    <https://github.com/pallets/click/tree/master/examples/validation>`_
 *   ``colors``: `Colorama ANSI color support
-    <https://github.com/mitsuhiko/click/tree/master/examples/colors>`_
+    <https://github.com/pallets/click/tree/master/examples/colors>`_
 *   ``termui``: `Terminal UI functions demo
-    <https://github.com/mitsuhiko/click/tree/master/examples/termui>`_
+    <https://github.com/pallets/click/tree/master/examples/termui>`_
 *   ``imagepipe``: `Multi command chaining demo
-    <https://github.com/mitsuhiko/click/tree/master/examples/imagepipe>`_
+    <https://github.com/pallets/click/tree/master/examples/imagepipe>`_
 
 Basic Concepts
 --------------
