@@ -321,7 +321,7 @@ are important to know about how this ignoring of unhandled flag happens:
     generally end up like that.  Note that because the parser cannot know
     if an option will accept an argument or not, the ``bar`` part might be
     handled as an argument.
-*   Unknown short options might be partially handled and reassmebled if
+*   Unknown short options might be partially handled and reassembled if
     necessary.  For instance in the above example there is an option
     called ``-v`` which enables verbose mode.  If the command would be
     ignored with ``-va`` then the ``-v`` part would be handled by Click
