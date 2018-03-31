@@ -37,6 +37,8 @@ Version 7.0
 - Stdout is now automatically set to non blocking.
 - Use realpath to convert atomic file internally into its full canonical
   path so that changing working directories does not harm it.
+- Force stdout/stderr writable.  This works around issues with badly patched
+  standard streams like those from jupyter.
 
 Version 6.8
 -----------
