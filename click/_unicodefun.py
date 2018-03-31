@@ -62,8 +62,11 @@ def _verify_python3_env():
     extra = ''
     if os.name == 'posix':
         import subprocess
-        rv = subprocess.Popen(['locale', '-a'], stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE).communicate()[0]
+        try:
+            rv = subprocess.Popen(['locale', '-a'], stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE).communicate()[0]
+        except OSError:
+            rv = b''
         good_locales = set()
         has_c_utf8 = False
 
