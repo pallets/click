@@ -440,7 +440,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     # Standard streams first.  These are simple because they don't need
     # special handling for the atomic flag.  It's entirely ignored.
     if filename == '-':
-        if 'w' in mode:
+        if any(m in mode for m in ['w', 'a', 'x']):
             if 'b' in mode:
                 return get_binary_stdout(), False
             return get_text_stdout(encoding=encoding, errors=errors), False
