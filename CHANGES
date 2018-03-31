@@ -31,6 +31,9 @@ Version 7.0
   See #790.
 - Allow autocompletion function to determine whether or not to return
   completions that start with the incomplete argument.
+- Subcommands that are named by the function now automatically have the
+  underscore replaced with a dash.  So if you register a function named
+  `my_command` it becomes `my-command` in the command line interface.
 
 Version 6.8
 -----------

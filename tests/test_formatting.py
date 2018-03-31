@@ -74,11 +74,11 @@ def test_wrapping_long_options_strings(runner):
 
     # 54 is chosen as a length where the second line is one character
     # longer than the maximum length.
-    result = runner.invoke(cli, ['a_very_long', 'command', '--help'],
+    result = runner.invoke(cli, ['a-very-long', 'command', '--help'],
                            terminal_width=54)
     assert not result.exception
     assert result.output.splitlines() == [
-        'Usage: cli a_very_long command [OPTIONS] FIRST SECOND',
+        'Usage: cli a-very-long command [OPTIONS] FIRST SECOND',
         '                               THIRD FOURTH FIFTH',
         '                               SIXTH',
         '',
@@ -111,11 +111,11 @@ def test_wrapping_long_command_name(runner):
         """A command.
         """
 
-    result = runner.invoke(cli, ['a_very_very_very_long', 'command', '--help'],
+    result = runner.invoke(cli, ['a-very-very-very-long', 'command', '--help'],
                            terminal_width=54)
     assert not result.exception
     assert result.output.splitlines() == [
-        'Usage: cli a_very_very_very_long command ',
+        'Usage: cli a-very-very-very-long command ',
         '           [OPTIONS] FIRST SECOND THIRD FOURTH FIFTH',
         '           SIXTH',
         '',

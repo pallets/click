@@ -62,7 +62,7 @@ def test_auto_shorthelp(runner):
         r'Commands:\n\s+'
         r'long\s+This is a long text that is too long to show\.\.\.\n\s+'
         r'short\s+This is a short text\.\n\s+'
-        r'special_chars\s+Login and store the token in ~/.netrc\.\s*',
+        r'special-chars\s+Login and store the token in ~/.netrc\.\s*',
         result.output) is not None
 
 
@@ -206,7 +206,7 @@ def test_other_command_invoke_with_defaults(runner):
     @click.option('--foo', type=click.INT, default=42)
     @click.pass_context
     def other_cmd(ctx, foo):
-        assert ctx.info_name == 'other_cmd'
+        assert ctx.info_name == 'other-cmd'
         click.echo(foo)
 
     result = runner.invoke(cli, [])
@@ -253,3 +253,17 @@ def test_unprocessed_options(runner):
         'Verbosity: 4',
         'Args: -foo|-x|--muhaha|x|y|-x',
     ]
+
+
+def test_subcommand_naming(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    def foo_bar():
+        click.echo('foo-bar')
+
+    result = runner.invoke(cli, ['foo-bar'])
+    assert not result.exception
+    assert result.output.splitlines() == ['foo-bar']
