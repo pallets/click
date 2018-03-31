@@ -1631,7 +1631,7 @@ class Option(Parameter):
         help = self.help or ''
         extra = []
         if self.default is not None and self.show_default:
-            extra.append('default: %s' % (
+            extra.append(u'default:\xa0%s' % (
                          ', '.join('%s' % d for d in self.default)
                          if isinstance(self.default, (list, tuple))
                          else self.default, ))
