@@ -416,7 +416,7 @@ class Editor(object):
         if text and not text.endswith('\n'):
             text += '\n'
 
-        fd, name = tempfile.mkstemp(prefix='editor-', suffix=self.extension)
+        fd, name = tempfile.TemporaryFile(prefix='editor-', suffix=self.extension)
         try:
             if WIN:
                 encoding = 'utf-8-sig'
