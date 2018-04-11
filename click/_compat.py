@@ -200,13 +200,14 @@ if PY2:
         pass
 
     try:
+        import fcntl
+
         def set_binary_mode(f):
             try:
                 fileno = f.fileno()
             except Exception:
                 pass
             else:
-                import fcntl
                 flags = fcntl.fcntl(fileno, fcntl.F_GETFL)
                 fcntl.fcntl(fileno, fcntl.F_SETFL, flags & ~os.O_NONBLOCK)
             return f
