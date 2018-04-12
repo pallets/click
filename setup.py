@@ -21,6 +21,7 @@ setup(
     description='A simple wrapper around optparse for '
                 'powerful command line utilities.',
     classifiers=[
+        'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
