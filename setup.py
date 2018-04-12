@@ -20,6 +20,7 @@ setup(
     packages=['click'],
     description='A simple wrapper around optparse for '
                 'powerful command line utilities.',
+    license='BSD',
     classifiers=[
         'License :: OSI Approved :: BSD License',
         'Programming Language :: Python',
