@@ -292,6 +292,11 @@ What it looks like:
     println()
     invoke(digest, args=['--help'])
 
+.. note::
+
+    You should only pass the choices as list or tuple.  Other iterables (like
+    generators) may lead to surprising results.
+
 .. _option-prompting:
 
 Prompting

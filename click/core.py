@@ -59,9 +59,7 @@ def _check_multicommand(base_command, cmd_name, cmd, register=False):
     raise RuntimeError('%s.  Command "%s" is set to chain and "%s" was '
                        'added as subcommand but it in itself is a '
                        'multi command.  ("%s" is a %s within a chained '
-                       '%s named "%s").  This restriction was supposed to '
-                       'be lifted in 6.0 but the fix was flawed.  This '
-                       'will be fixed in Click 7.0' % (
+                       '%s named "%s").' % (
                            hint, base_command.name, cmd_name,
                            cmd_name, cmd.__class__.__name__,
                            base_command.__class__.__name__,

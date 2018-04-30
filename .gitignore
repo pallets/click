@@ -3,6 +3,7 @@
 *.pyo
 *.egg-ignore
 *.egg-info
+.pytest_cache
 dist
 build
 docs/_build
