@@ -210,7 +210,7 @@ As such it runs standalone:
     @click.command()
     @pass_repo
     def cp(repo):
-        click.echo(repo)
+        click.echo(isinstance(repo, Repo))
 
 As you can see:
 
