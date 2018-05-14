@@ -8,7 +8,7 @@ from weakref import WeakKeyDictionary
 
 PY2 = sys.version_info[0] == 2
 CYGWIN = sys.platform.startswith('cygwin')
-APP_ENGINE = os.environ.get('SERVER_SOFTWARE','').startswith('Development')
+APP_ENGINE = os.environ.get('SERVER_SOFTWARE', '').startswith('Development')
 WIN = sys.platform.startswith('win') and not APP_ENGINE
 DEFAULT_COLUMNS = 80
 
