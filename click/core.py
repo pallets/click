@@ -1,4 +1,5 @@
 import errno
+import inspect
 import os
 import sys
 from contextlib import contextmanager
@@ -14,7 +15,7 @@ from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
 from .globals import push_context, pop_context
 
-from ._compat import PY2, isidentifier, iteritems
+from ._compat import PY2, isidentifier, iteritems, string_types
 from ._unicodefun import _check_for_unicode_literals, _verify_python3_env
 
 
@@ -1444,7 +1445,9 @@ class Option(Parameter):
     All other parameters are passed onwards to the parameter constructor.
 
     :param show_default: controls if the default value should be shown on the
-                         help page.  Normally, defaults are not shown.
+                         help page. Normally, defaults are not shown. If this
+                         value is a string, it shows the string instead of the
+                         value. This is particularly useful for dynamic options.
     :param show_envvar: controls if an environment variable should be shown on
                         the help page.  Normally, environment variables
                         are not shown.
@@ -1653,10 +1656,16 @@ class Option(Parameter):
                            if isinstance(envvar, (list, tuple))
                            else envvar, ))
         if self.default is not None and self.show_default:
-            extra.append('default: %s' % (
-                         ', '.join('%s' % d for d in self.default)
-                         if isinstance(self.default, (list, tuple))
-                         else self.default, ))
+            if isinstance(self.show_default, string_types):
+                default_string = '({})'.format(self.show_default)
+            elif isinstance(self.default, (list, tuple)):
+                default_string = ', '.join('%s' % d for d in self.default)
+            elif inspect.isfunction(self.default):
+                default_string = "(dynamic)"
+            else:
+                default_string = self.default
+            extra.append('default: {}'.format(default_string))
+
         if self.required:
             extra.append('required')
         if extra:
