@@ -379,7 +379,7 @@ class Context(object):
     @property
     def meta(self):
         """This is a dictionary which is shared with all the contexts
-        that are nested.  It exists so that click utiltiies can store some
+        that are nested.  It exists so that click utilities can store some
         state here if they need to.  It is however the responsibility of
         that code to manage this dictionary well.
 
