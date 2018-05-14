@@ -129,6 +129,9 @@ class Choice(ParamType):
     """The choice type allows a value to be checked against a fixed set of
     supported values.  All of these values have to be strings.
 
+    You should only pass *choices* as list or tuple.  Other iterables (like
+    generators) may lead to surprising results.
+
     See :ref:`choice-opts` for an example.
     """
     name = 'choice'
@@ -274,9 +277,9 @@ class BoolParamType(ParamType):
         if isinstance(value, bool):
             return bool(value)
         value = value.lower()
-        if value in ('true', '1', 'yes', 'y'):
+        if value in ('true', 't', '1', 'yes', 'y'):
             return True
-        elif value in ('false', '0', 'no', 'n'):
+        elif value in ('false', 'f', '0', 'no', 'n'):
             return False
         self.fail('%s is not a valid boolean' % value, param, ctx)
 
@@ -402,11 +405,11 @@ class Path(ParamType):
                          supposed to be done by the shell only.
     :param allow_dash: If this is set to `True`, a single dash to indicate
                        standard streams is permitted.
-    :param type: optionally a string type that should be used to
-                 represent the path.  The default is `None` which
-                 means the return value will be either bytes or
-                 unicode depending on what makes most sense given the
-                 input data Click deals with.
+    :param path_type: optionally a string type that should be used to
+                      represent the path.  The default is `None` which
+                      means the return value will be either bytes or
+                      unicode depending on what makes most sense given the
+                      input data Click deals with.
     """
     envvar_list_splitter = os.path.pathsep
 

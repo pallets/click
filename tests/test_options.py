@@ -84,7 +84,7 @@ def test_counting(runner):
     assert result.output == 'verbosity=0\n'
 
     result = runner.invoke(cli, ['--help'])
-    assert re.search('-v\s+Verbosity', result.output) is not None
+    assert re.search(r'-v\s+Verbosity', result.output) is not None
 
 
 @pytest.mark.parametrize('unknown_flag', ['--foo', '-f'])
@@ -199,7 +199,7 @@ def test_nargs_envvar(runner):
 
 
 def test_custom_validation(runner):
-    def validate_pos_int(ctx, value):
+    def validate_pos_int(ctx, param, value):
         if value < 0:
             raise click.BadParameter('Value needs to be positive')
         return value
@@ -309,6 +309,35 @@ def test_option_custom_class(runner):
     result = runner.invoke(cmd, ['--help'])
     assert 'I am a help text' in result.output
     assert 'you wont see me' not in result.output
+
+
+def test_option_custom_class_reusable(runner):
+    """Ensure we can reuse a custom class option. See Issue #926"""
+
+    class CustomOption(click.Option):
+        def get_help_record(self, ctx):
+            '''a dumb override of a help text for testing'''
+            return ('--help', 'I am a help text')
+
+    # Assign to a variable to re-use the decorator.
+    testoption = click.option('--testoption', cls=CustomOption, help='you wont see me')
+
+    @click.command()
+    @testoption
+    def cmd1(testoption):
+        click.echo(testoption)
+
+    @click.command()
+    @testoption
+    def cmd2(testoption):
+        click.echo(testoption)
+
+    # Both of the commands should have the --help option now.
+    for cmd in (cmd1, cmd2):
+
+        result = runner.invoke(cmd, ['--help'])
+        assert 'I am a help text' in result.output
+        assert 'you wont see me' not in result.output
 
 
 def test_aliases_for_flags(runner):

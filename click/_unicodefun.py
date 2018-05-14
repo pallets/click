@@ -62,8 +62,11 @@ def _verify_python3_env():
     extra = ''
     if os.name == 'posix':
         import subprocess
-        rv = subprocess.Popen(['locale', '-a'], stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE).communicate()[0]
+        try:
+            rv = subprocess.Popen(['locale', '-a'], stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE).communicate()[0]
+        except OSError:
+            rv = b''
         good_locales = set()
         has_c_utf8 = False
 
@@ -116,5 +119,5 @@ def _verify_python3_env():
 
     raise RuntimeError('Click will abort further execution because Python 3 '
                        'was configured to use ASCII as encoding for the '
-                       'environment.  Consult http://click.pocoo.org/python3/'
+                       'environment.  Consult http://click.pocoo.org/python3/ '
                        'for mitigation steps.' + extra)

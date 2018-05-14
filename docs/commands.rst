@@ -29,7 +29,7 @@ when an inner command runs:
 
     @cli.command()
     def sync():
-        click.echo('Synching')
+        click.echo('Syncing')
 
 Here is what this looks like:
 

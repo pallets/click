@@ -74,11 +74,11 @@ def test_wrapping_long_options_strings(runner):
 
     # 54 is chosen as a length where the second line is one character
     # longer than the maximum length.
-    result = runner.invoke(cli, ['a_very_long', 'command', '--help'],
+    result = runner.invoke(cli, ['a-very-long', 'command', '--help'],
                            terminal_width=54)
     assert not result.exception
     assert result.output.splitlines() == [
-        'Usage: cli a_very_long command [OPTIONS] FIRST SECOND',
+        'Usage: cli a-very-long command [OPTIONS] FIRST SECOND',
         '                               THIRD FOURTH FIFTH',
         '                               SIXTH',
         '',
@@ -111,11 +111,11 @@ def test_wrapping_long_command_name(runner):
         """A command.
         """
 
-    result = runner.invoke(cli, ['a_very_very_very_long', 'command', '--help'],
+    result = runner.invoke(cli, ['a-very-very-very-long', 'command', '--help'],
                            terminal_width=54)
     assert not result.exception
     assert result.output.splitlines() == [
-        'Usage: cli a_very_very_very_long command ',
+        'Usage: cli a-very-very-very-long command ',
         '           [OPTIONS] FIRST SECOND THIRD FOURTH FIFTH',
         '           SIXTH',
         '',
@@ -159,7 +159,43 @@ def test_formatting_usage_error(runner):
         'Usage: cmd [OPTIONS] ARG',
         'Try "cmd --help" for help.',
         '',
-        'Error: Missing argument "arg".'
+        'Error: Missing argument "ARG".'
+    ]
+
+
+def test_formatting_usage_error_metavar_missing_arg(runner):
+    """
+    :author: @r-m-n
+    Including attribution to #612
+    """
+    @click.command()
+    @click.argument('arg', metavar='metavar')
+    def cmd(arg):
+        pass
+
+    result = runner.invoke(cmd, [])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        'Usage: cmd [OPTIONS] metavar',
+        'Try "cmd --help" for help.',
+        '',
+        'Error: Missing argument "metavar".'
+    ]
+
+
+def test_formatting_usage_error_metavar_bad_arg(runner):
+    @click.command()
+    @click.argument('arg', type=click.INT, metavar='metavar')
+    def cmd(arg):
+        pass
+
+    result = runner.invoke(cmd, ['3.14'])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        'Usage: cmd [OPTIONS] metavar',
+        'Try "cmd --help" for help.',
+        '',
+        'Error: Invalid value for "metavar": 3.14 is not a valid integer'
     ]
 
 
@@ -179,7 +215,7 @@ def test_formatting_usage_error_nested(runner):
         'Usage: cmd foo [OPTIONS] BAR',
         'Try "cmd foo --help" for help.',
         '',
-        'Error: Missing argument "bar".'
+        'Error: Missing argument "BAR".'
     ]
 
 
@@ -194,7 +230,7 @@ def test_formatting_usage_error_no_help(runner):
     assert result.output.splitlines() == [
         'Usage: cmd [OPTIONS] ARG',
         '',
-        'Error: Missing argument "arg".'
+        'Error: Missing argument "ARG".'
     ]
 
 
@@ -210,5 +246,5 @@ def test_formatting_usage_custom_help(runner):
         'Usage: cmd [OPTIONS] ARG',
         'Try "cmd --man" for help.',
         '',
-        'Error: Missing argument "arg".'
+        'Error: Missing argument "ARG".'
     ]

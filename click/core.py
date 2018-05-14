@@ -59,9 +59,7 @@ def _check_multicommand(base_command, cmd_name, cmd, register=False):
     raise RuntimeError('%s.  Command "%s" is set to chain and "%s" was '
                        'added as subcommand but it in itself is a '
                        'multi command.  ("%s" is a %s within a chained '
-                       '%s named "%s").  This restriction was supposed to '
-                       'be lifted in 6.0 but the fix was flawed.  This '
-                       'will be fixed in Click 7.0' % (
+                       '%s named "%s").' % (
                            hint, base_command.name, cmd_name,
                            cmd_name, cmd.__class__.__name__,
                            base_command.__class__.__name__,
@@ -381,7 +379,7 @@ class Context(object):
     @property
     def meta(self):
         """This is a dictionary which is shared with all the contexts
-        that are nested.  It exists so that click utiltiies can store some
+        that are nested.  It exists so that click utilities can store some
         state here if they need to.  It is however the responsibility of
         that code to manage this dictionary well.
 
@@ -828,8 +826,6 @@ class Command(BaseCommand):
     def make_parser(self, ctx):
         """Creates the underlying option parser for this command."""
         parser = OptionParser(ctx)
-        parser.allow_interspersed_args = ctx.allow_interspersed_args
-        parser.ignore_unknown_options = ctx.ignore_unknown_options
         for param in self.get_params(ctx):
             param.add_to_parser(parser, ctx)
         return parser
@@ -1230,7 +1226,7 @@ class CommandCollection(MultiCommand):
 
 
 class Parameter(object):
-    """A parameter to a command comes in two versions: they are either
+    r"""A parameter to a command comes in two versions: they are either
     :class:`Option`\s or :class:`Argument`\s.  Other subclasses are currently
     not supported by design as some of the internals for parsing are
     intentionally not finalized.
@@ -1330,12 +1326,13 @@ class Parameter(object):
     def add_to_parser(self, parser, ctx):
         pass
 
+
     def consume_value(self, ctx, opts):
         value = opts.get(self.name)
         if value is None:
-            value = ctx.lookup_default(self.name)
-        if value is None:
             value = self.value_from_envvar(ctx)
+        if value is None:
+            value = ctx.lookup_default(self.name)
         return value
 
     def type_cast_value(self, ctx, value):
@@ -1431,6 +1428,13 @@ class Parameter(object):
 
     def get_usage_pieces(self, ctx):
         return []
+
+    def get_error_hint(self, ctx):
+        """Get a stringified version of the param for use in error messages to
+        indicate which param caused the error.
+        """
+        hint_list = self.opts or [self.human_readable_name]
+        return ' / '.join('"%s"' % x for x in hint_list)
 
 
 class Option(Parameter):
@@ -1755,6 +1759,9 @@ class Argument(Parameter):
 
     def get_usage_pieces(self, ctx):
         return [self.make_metavar()]
+
+    def get_error_hint(self, ctx):
+        return '"%s"' % self.make_metavar()
 
     def add_to_parser(self, parser, ctx):
         parser.add_argument(dest=self.name, nargs=self.nargs,

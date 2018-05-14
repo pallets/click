@@ -184,7 +184,7 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     -   hide ANSI codes automatically if the destination file is not a
         terminal.
 
-    .. _colorama: http://pypi.python.org/pypi/colorama
+    .. _colorama: https://pypi.org/project/colorama/
 
     .. versionchanged:: 6.0
        As of Click 6.0 the echo function will properly support unicode
