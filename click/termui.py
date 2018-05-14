@@ -16,8 +16,25 @@ from .globals import resolve_color_default
 # functions to customize how they work.
 visible_prompt_func = raw_input
 
-_ansi_colors = ('black', 'red', 'green', 'yellow', 'blue', 'magenta',
-                'cyan', 'white', 'reset')
+_ansi_colors = {
+    'black': 30,
+    'red': 31,
+    'green': 32,
+    'yellow': 33,
+    'blue': 34,
+    'magenta': 35,
+    'cyan': 36,
+    'white': 37,
+    'reset': 39,
+    'bright_black': 90,
+    'bright_red': 91,
+    'bright_green': 92,
+    'bright_yellow': 93,
+    'bright_blue': 94,
+    'bright_magenta': 95,
+    'bright_cyan': 96,
+    'bright_white': 97,
+}
 _ansi_reset_all = '\033[0m'
 
 
@@ -368,9 +385,20 @@ def style(text, fg=None, bg=None, bold=None, dim=None, underline=None,
     * ``magenta``
     * ``cyan``
     * ``white`` (might be light gray)
+    * ``bright_black``
+    * ``bright_red``
+    * ``bright_green``
+    * ``bright_yellow``
+    * ``bright_blue``
+    * ``bright_magenta``
+    * ``bright_cyan``
+    * ``bright_white``
     * ``reset`` (reset the color code only)
 
     .. versionadded:: 2.0
+
+    .. versionadded:: 7.0
+       Added support for bright colors.
 
     :param text: the string to style with ansi codes.
     :param fg: if provided this will become the foreground color.
@@ -390,13 +418,13 @@ def style(text, fg=None, bg=None, bold=None, dim=None, underline=None,
     bits = []
     if fg:
         try:
-            bits.append('\033[%dm' % (_ansi_colors.index(fg) + 30))
-        except ValueError:
+            bits.append('\033[%dm' % (_ansi_colors[fg]))
+        except KeyError:
             raise TypeError('Unknown color %r' % fg)
     if bg:
         try:
-            bits.append('\033[%dm' % (_ansi_colors.index(bg) + 40))
-        except ValueError:
+            bits.append('\033[%dm' % (_ansi_colors[bg] + 10))
+        except KeyError:
             raise TypeError('Unknown color %r' % bg)
     if bold is not None:
         bits.append('\033[%dm' % (1 if bold else 22))
