@@ -24,6 +24,11 @@ setup(
     maintainer_email='contact@palletsprojects.com',
     long_description=readme,
     packages=['click'],
+    extras_require={
+        'docs': [
+            'sphinx',
+        ],
+    },
     description='A simple wrapper around optparse for '
                 'powerful command line utilities.',
     license='BSD',
