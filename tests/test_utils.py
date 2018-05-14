@@ -10,13 +10,13 @@ from click._compat import WIN, PY2
 
 
 def test_echo(runner):
-    with runner.isolation() as out:
+    with runner.isolation() as outstreams:
         click.echo(u'\N{SNOWMAN}')
         click.echo(b'\x44\x44')
         click.echo(42, nl=False)
         click.echo(b'a', nl=False)
         click.echo('\x1b[31mx\x1b[39m', nl=False)
-        bytes = out.getvalue().replace(b'\r\n', b'\n')
+        bytes = outstreams[0].getvalue().replace(b'\r\n', b'\n')
         assert bytes == b'\xe2\x98\x83\nDD\n42ax'
 
     # If we are in Python 2, we expect that writing bytes into a string io
@@ -35,12 +35,12 @@ def test_echo(runner):
     def cli():
         click.echo(b'\xf6')
     result = runner.invoke(cli, [])
-    assert result.output_bytes == b'\xf6\n'
+    assert result.stdout_bytes == b'\xf6\n'
 
     # Ensure we do not strip for bytes.
-    with runner.isolation() as out:
+    with runner.isolation() as outstreams:
         click.echo(bytearray(b'\x1b[31mx\x1b[39m'), nl=False)
-        assert out.getvalue() == b'\x1b[31mx\x1b[39m'
+        assert outstreams[0].getvalue() == b'\x1b[31mx\x1b[39m'
 
 
 def test_echo_custom_file():
