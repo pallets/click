@@ -769,12 +769,14 @@ class Command(BaseCommand):
         self.epilog = epilog
         self.options_metavar = options_metavar
         if short_help is None and help:
-            try:
-                max_width = min(context_settings.get('max_content_width'),
-                                get_terminal_size()[0])
-                echo('trying to max width with %s' % max_width)
-                short_help = make_default_short_help(help, max_width)
-            except (AttributeError, TypeError) as e:
+            if (context_settings is not None and
+                isinstance(context_settings.get('max_content_width'), int)):
+                    max_width = min(context_settings.get('max_content_width'),
+                                    get_terminal_size()[0])
+                    # arbitrary trim width, if a subcommond is longer than the
+                    # it get printed poorly
+                    short_help = make_default_short_help(help, max_width - 20)
+            else:
                 short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
@@ -1013,16 +1015,30 @@ class MultiCommand(Command):
         after the options.
         """
         rows = []
-        for subcommand in self.list_commands(ctx):
-            cmd = self.get_command(ctx, subcommand)
-            # What is this, the tool lied about a command.  Ignore it
-            if cmd is None:
-                continue
-            if cmd.hidden:
-                continue
-
-            help = cmd.short_help or ''
-            rows.append((subcommand, help))
+        # Ignore errant none case and hidden commands
+        commands = [self.get_command(ctx, cmd) for cmd in self.list_commands(ctx)
+                    if cmd is not None]
+        commands = [cmd for cmd in commands if not cmd.hidden]
+        if len(commands) > 0:
+            name_length = lambda c: len(c.name)
+            # formater adds wraps additional spaces
+            command_names_width = max(map(name_length,commands)) + 4
+            ctx_width = ctx.max_content_width or ctx.terminal_width
+            if ctx_width is not None:
+                max_width = min(ctx_width, get_terminal_size()[0])
+            else:
+                max_width = get_terminal_size()[0]
+            # add space to allow for truncating word with elipse
+            max_width = max_width - command_names_width - 6
+            for subcommand in commands:
+                if subcommand.help is None:
+                    help = ''
+                else:
+                    if len(subcommand.help) < max_width:
+                        help = subcommand.help
+                    else:
+                        help = make_default_short_help(subcommand.help, max_width)
+                rows.append((subcommand.name, help))
 
         if rows:
             with formatter.section('Commands'):
