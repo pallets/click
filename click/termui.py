@@ -193,8 +193,14 @@ def get_terminal_size():
             sz = shutil_get_terminal_size()
             return sz.columns, sz.lines
 
+    # We provide a sensible default for get_winterm_size() when being invoked
+    # inside a subprocess. Without this, it would not provide a useful input.
     if get_winterm_size is not None:
-        return get_winterm_size()
+        size = get_winterm_size()
+        if size == (0, 0):
+            return (79, 24)
+        else:
+            return size
 
     def ioctl_gwinsz(fd):
         try:
