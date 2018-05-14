@@ -103,34 +103,6 @@ Example:
     invoke(hello, args=['--help'])
 
 
-Command Short Help
-------------------
-
-For commands, a short help snippet is generated.  By default, it's the first
-sentence of the help message of the command, unless it's too long.  This can
-also be overridden:
-
-.. click:example::
-
-    @click.group()
-    def cli():
-        """A simple command line tool."""
-
-    @cli.command('init', short_help='init the repo')
-    def init():
-        """Initializes the repository."""
-
-    @cli.command('delete', short_help='delete the repo')
-    def delete():
-        """Deletes the repository."""
-
-And what it looks like:
-
-.. click:run::
-
-    invoke(cli, prog_name='repo.py')
-
-
 Help Parameter Customization
 ----------------------------
 
