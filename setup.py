@@ -1,15 +1,18 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import io
 import re
-import ast
 from setuptools import setup
 
 
 _version_re = re.compile(r'__version__\s+=\s+(.*)')
 
 
-with open('click/__init__.py', 'rb') as f:
-    version = str(ast.literal_eval(_version_re.search(
-        f.read().decode('utf-8')).group(1)))
+with io.open('README.rst', 'rt', encoding='utf8') as f:
+    readme = f.read()
 
+with io.open('click/__init__.py', 'rt', encoding='utf8') as f:
+    version = re.search(r'__version__ = \'(.*?)\'', f.read()).group(1)
 
 setup(
     name='click',
@@ -19,6 +22,7 @@ setup(
     author_email='armin.ronacher@active-4.com',
     maintainer='Pallets team',
     maintainer_email='contact@palletsprojects.com',
+    long_description=readme,
     packages=['click'],
     description='A simple wrapper around optparse for '
                 'powerful command line utilities.',
