@@ -1288,6 +1288,12 @@ class Parameter(object):
             else:
                 nargs = 1
 
+        if nargs < 0 and self.type.is_composite:
+            if len(self.type.types) > 0:
+                self.type = self.type.types[0]
+            else:
+                self.type = types.STRING
+
         self.required = required
         self.callback = callback
         self.nargs = nargs
@@ -1379,7 +1385,7 @@ class Parameter(object):
     def full_process_value(self, ctx, value):
         value = self.process_value(ctx, value)
 
-        if value is None:
+        if self.value_is_missing(value):
             value = self.get_default(ctx)
 
         if self.required and self.value_is_missing(value):
