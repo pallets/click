@@ -1445,6 +1445,9 @@ class Option(Parameter):
 
     :param show_default: controls if the default value should be shown on the
                          help page.  Normally, defaults are not shown.
+    :param show_envvar: controls if an environment variable should be shown on
+                        the help page.  Normally, environment variables
+                        are not shown.
     :param prompt: if set to `True` or a non empty string then the user will be
                    prompted for input.  If set to `True` the prompt will be the
                    option name capitalized.
@@ -1476,7 +1479,8 @@ class Option(Parameter):
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, count=False, allow_from_autoenv=True,
-                 type=None, help=None, hidden=False, show_choices=True, **attrs):
+                 type=None, help=None, hidden=False, show_choices=True,
+                 show_envvar=False, **attrs):
         default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
 
@@ -1523,6 +1527,7 @@ class Option(Parameter):
         self.help = help
         self.show_default = show_default
         self.show_choices = show_choices
+        self.show_envvar = show_envvar
 
         # Sanity check for stuff we don't support
         if __debug__:
@@ -1636,6 +1641,17 @@ class Option(Parameter):
 
         help = self.help or ''
         extra = []
+        if self.show_envvar:
+            envvar = self.envvar
+            if envvar is None:
+                if self.allow_from_autoenv and \
+                    ctx.auto_envvar_prefix is not None:
+                    envvar = '%s_%s' % (ctx.auto_envvar_prefix, self.name.upper())
+            if envvar is not None:
+              extra.append('env var: %s' % (
+                           ', '.join('%s' % d for d in envvar)
+                           if isinstance(envvar, (list, tuple))
+                           else envvar, ))
         if self.default is not None and self.show_default:
             extra.append('default: %s' % (
                          ', '.join('%s' % d for d in self.default)
