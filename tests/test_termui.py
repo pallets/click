@@ -44,6 +44,19 @@ def test_progressbar_length_hint(runner, monkeypatch):
     assert result.exception is None
 
 
+def test_progressbar_hidden(runner, monkeypatch):
+    label = 'whatever'
+
+    @click.command()
+    def cli():
+        with click.progressbar(tuple(range(10)), label=label) as progress:
+            for thing in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: False)
+    assert runner.invoke(cli, []).output == ''
+
+
 def test_choices_list_in_prompt(runner, monkeypatch):
     @click.command()
     @click.option('-g', type=click.Choice(['none', 'day', 'week', 'month']),
