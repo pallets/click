@@ -146,14 +146,36 @@ def test_prompts_abort(monkeypatch, capsys):
     assert out == 'Password: \nScrew you.\n'
 
 
+def _test_gen_func():
+    yield 'a'
+    yield 'b'
+    yield 'c'
+    yield 'abc'
+
+
 @pytest.mark.skipif(WIN, reason='Different behavior on windows.')
 @pytest.mark.parametrize('cat', ['cat', 'cat ', 'cat '])
-def test_echo_via_pager(monkeypatch, capfd, cat):
+@pytest.mark.parametrize('test', [
+    # We need lambda here, because pytest will
+    # reuse the parameters, and then the generators
+    # are already used and will not yield anymore
+    ('just text\n', lambda: 'just text'),
+    ('iterable\n', lambda: ["itera", "ble"]),
+    ('abcabc\n', lambda: _test_gen_func),
+    ('abcabc\n', lambda: _test_gen_func()),
+    ('012345\n', lambda: (c for c in range(6))),
+])
+def test_echo_via_pager(monkeypatch, capfd, cat, test):
     monkeypatch.setitem(os.environ, 'PAGER', cat)
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda x: True)
-    click.echo_via_pager('haha')
+
+    expected_output = test[0]
+    test_input = test[1]()
+
+    click.echo_via_pager(test_input)
+
     out, err = capfd.readouterr()
-    assert out == 'haha\n'
+    assert out == expected_output
 
 
 @pytest.mark.skipif(WIN, reason='Test does not make sense on Windows.')

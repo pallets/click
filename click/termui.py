@@ -1,6 +1,8 @@
 import os
 import sys
 import struct
+import inspect
+import itertools
 
 from ._compat import raw_input, text_type, string_types, \
      isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
@@ -203,22 +205,33 @@ def get_terminal_size():
     return int(cr[1]), int(cr[0])
 
 
-def echo_via_pager(text, color=None):
+def echo_via_pager(text_or_generator, color=None):
     """This function takes a text and shows it via an environment specific
     pager on stdout.
 
     .. versionchanged:: 3.0
        Added the `color` flag.
 
-    :param text: the text to page.
+    :param text_or_generator: the text to page, or alternatively, a
+                              generator emitting the text to page.
     :param color: controls if the pager supports ANSI colors or not.  The
                   default is autodetection.
     """
     color = resolve_color_default(color)
-    if not isinstance(text, string_types):
-        text = text_type(text)
+
+    if inspect.isgeneratorfunction(text_or_generator):
+        i = text_or_generator()
+    elif isinstance(text_or_generator, string_types):
+        i = [text_or_generator]
+    else:
+        i = iter(text_or_generator)
+
+    # convert every element of i to a text type if necessary
+    text_generator = (el if isinstance(el, string_types) else text_type(el)
+                      for el in i)
+
     from ._termui_impl import pager
-    return pager(text + '\n', color)
+    return pager(itertools.chain(text_generator, "\n"), color)
 
 
 def progressbar(iterable=None, length=None, label=None, show_eta=True,
