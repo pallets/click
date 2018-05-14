@@ -318,8 +318,12 @@ class CliRunner(object):
                 args = shlex.split(args)
 
             try:
-                cli.main(args=args or (),
-                         prog_name=self.get_default_prog_name(cli), **extra)
+                prog_name = extra.pop("prog_name")
+            except KeyError:
+                prog_name = self.get_default_prog_name(cli)
+
+            try:
+                cli.main(args=args or (), prog_name=prog_name, **extra)
             except SystemExit as e:
                 exc_info = sys.exc_info()
                 exit_code = e.code

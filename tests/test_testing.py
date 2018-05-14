@@ -246,3 +246,14 @@ def test_args(args, expected_output):
     result = runner.invoke(cli_args, args=args)
     assert result.exit_code == 0
     assert result.output == expected_output
+
+
+def test_setting_prog_name_in_extra():
+    @click.command()
+    def cli():
+        click.echo("ok")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, prog_name="foobar")
+    assert not result.exception
+    assert result.output == 'ok\n'
