@@ -1,4 +1,5 @@
 import click
+import time
 
 
 def test_progressbar_strip_regression(runner, monkeypatch):
@@ -82,3 +83,41 @@ def test_secho(runner):
         click.secho(None, nl=False)
         bytes = outstreams[0].getvalue()
         assert bytes == b''
+
+
+def test_progressbar_yields_all_items(runner):
+    with click.progressbar(range(3)) as progress:
+        assert len(list(progress)) == 3
+
+
+def test_progressbar_update(runner, monkeypatch):
+    class FakeClock(object):
+        def __init__(self):
+            self.now = time.time()
+
+        def advance_time(self, seconds=1):
+            self.now += seconds
+
+        def time(self):
+            return self.now
+
+    fake_clock = FakeClock()
+
+    @click.command()
+    def cli():
+        with click.progressbar(range(4)) as progress:
+            for _ in progress:
+                fake_clock.advance_time()
+                print("")
+
+    monkeypatch.setattr(time, 'time', fake_clock.time)
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+    output = runner.invoke(cli, []).output
+
+    lines = [line for line in output.split('\n') if '[' in line]
+
+    assert '  0%' in lines[0]
+    assert ' 25%  00:00:03' in lines[1]
+    assert ' 50%  00:00:02' in lines[2]
+    assert ' 75%  00:00:01' in lines[3]
+    assert '100%          ' in lines[4]

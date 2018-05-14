@@ -103,7 +103,7 @@ class ProgressBar(object):
         if not self.entered:
             raise RuntimeError('You need to use progress bars in a with block.')
         self.render_progress()
-        return self
+        return self.generator()
 
     def render_finish(self):
         if self.is_hidden:
@@ -131,13 +131,13 @@ class ProgressBar(object):
 
     def format_eta(self):
         if self.eta_known:
-            t = self.eta + 1
+            t = int(self.eta)
             seconds = t % 60
-            t /= 60
+            t //= 60
             minutes = t % 60
-            t /= 60
+            t //= 60
             hours = t % 24
-            t /= 24
+            t //= 24
             if t > 0:
                 days = t
                 return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
@@ -251,23 +251,25 @@ class ProgressBar(object):
         self.current_item = None
         self.finished = True
 
-    def next(self):
+    def generator(self):
+        """
+        Returns a generator which yields the items added to the bar during
+        construction, and updates the progress bar *after* the yielded block
+        returns.
+        """
+        if not self.entered:
+            raise RuntimeError('You need to use progress bars in a with block.')
+
         if self.is_hidden:
-            return next(self.iter)
-        try:
-            rv = next(self.iter)
-            self.current_item = rv
-        except StopIteration:
+            for rv in self.iter:
+                yield rv
+        else:
+            for rv in self.iter:
+                self.current_item = rv
+                yield rv
+                self.update(1)
             self.finish()
             self.render_progress()
-            raise StopIteration()
-        else:
-            self.update(1)
-            return rv
-
-    if not PY2:
-        __next__ = next
-        del next
 
 
 def pager(generator, color=None):
