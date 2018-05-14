@@ -1431,6 +1431,13 @@ class Parameter(object):
     def get_usage_pieces(self, ctx):
         return []
 
+    def get_error_hint(self, ctx):
+        """Get a stringified version of the param for use in error messages to
+        indicate which param caused the error.
+        """
+        hint_list = self.opts or [self.human_readable_name]
+        return ' / '.join('"%s"' % x for x in hint_list)
+
 
 class Option(Parameter):
     """Options are usually optional values on the command line and
@@ -1754,6 +1761,9 @@ class Argument(Parameter):
 
     def get_usage_pieces(self, ctx):
         return [self.make_metavar()]
+
+    def get_error_hint(self, ctx):
+        return '"%s"' % self.make_metavar()
 
     def add_to_parser(self, parser, ctx):
         parser.add_argument(dest=self.name, nargs=self.nargs,
