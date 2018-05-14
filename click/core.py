@@ -9,7 +9,7 @@ from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo, get_os_args
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
      MissingParameter
-from .termui import prompt, confirm
+from .termui import prompt, confirm, get_terminal_size
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
 from .globals import push_context, pop_context
@@ -769,7 +769,13 @@ class Command(BaseCommand):
         self.epilog = epilog
         self.options_metavar = options_metavar
         if short_help is None and help:
-            short_help = make_default_short_help(help)
+            try:
+                max_width = min(context_settings.get('max_content_width'),
+                                get_terminal_size()[0])
+                echo('trying to max width with %s' % max_width)
+                short_help = make_default_short_help(help, max_width)
+            except (AttributeError, TypeError) as e:
+                short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
         self.hidden = hidden
