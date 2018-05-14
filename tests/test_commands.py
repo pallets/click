@@ -62,7 +62,7 @@ def test_auto_shorthelp(runner):
     result = runner.invoke(cli, ['--help'])
     assert re.search(
         r'Commands:\n\s+'
-        r'long\s+This is a long text that is too long to show\.\.\.\n\s+'
+        r'long\s+This is a long text that is too long to show as short help\.\.\.\n\s+'
         r'short\s+This is a short text\.\n\s+'
         r'special-chars\s+Login and store the token in ~/.netrc\.\s*',
         result.output) is not None
