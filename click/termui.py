@@ -520,6 +520,11 @@ def getchar(echo=False):
     return f(echo)
 
 
+def raw_terminal():
+    from ._termui_impl import raw_terminal as f
+    return f()
+
+
 def pause(info='Press any key to continue ...', err=False):
     """This command stops execution and waits for the user to press any
     key to continue.  This is similar to the Windows batch "pause"
