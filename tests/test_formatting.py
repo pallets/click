@@ -163,7 +163,7 @@ def test_formatting_usage_error(runner):
     ]
 
 
-def test_formatting_usage_error_metavar(runner):
+def test_formatting_usage_error_metavar_missing_arg(runner):
     """
     :author: @r-m-n
     Including attribution to #612
@@ -180,6 +180,22 @@ def test_formatting_usage_error_metavar(runner):
         'Try "cmd --help" for help.',
         '',
         'Error: Missing argument "metavar".'
+    ]
+
+
+def test_formatting_usage_error_metavar_bad_arg(runner):
+    @click.command()
+    @click.argument('arg', type=click.INT, metavar='metavar')
+    def cmd(arg):
+        pass
+
+    result = runner.invoke(cmd, ['3.14'])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        'Usage: cmd [OPTIONS] metavar',
+        'Try "cmd --help" for help.',
+        '',
+        'Error: Invalid value for "metavar": 3.14 is not a valid integer'
     ]
 
 
