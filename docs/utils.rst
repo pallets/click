@@ -95,7 +95,7 @@ a single function called :func:`secho`::
     click.secho('ATTENTION', blink=True, bold=True)
 
 
-.. _colorama: https://pypi.python.org/pypi/colorama
+.. _colorama: https://pypi.org/project/colorama/
 
 Pager Support
 -------------
