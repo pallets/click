@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+
 import click
+import pytest
 
 
 def test_other_command_invoke(runner):
@@ -267,3 +269,49 @@ def test_subcommand_naming(runner):
     result = runner.invoke(cli, ['foo-bar'])
     assert not result.exception
     assert result.output.splitlines() == ['foo-bar']
+
+
+def test_environment_variables(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    @click.option('--name', envvar='CLICK_NAME')
+    def foo(name):
+        click.echo(name)
+
+    result = runner.invoke(cli, ['foo'], env={'CLICK_NAME': 'environment'})
+
+    assert not result.exception
+    assert result.output == 'environment\n'
+
+
+# Ensures the variables are read in the following order:
+# 1. CLI
+# 2. Environment
+# 3. Defaults
+variable_precedence_testdata = [
+    (['foo', '--name=cli'], {'CLICK_NAME': 'environment'}, 'cli\n'),
+    (['foo'], {'CLICK_NAME': 'environment'}, 'environment\n'),
+    (['foo'], None, 'defaults\n'),
+]
+
+
+@pytest.mark.parametrize("command,environment,expected",
+                          variable_precedence_testdata)
+def test_variable_precendence_00(runner, command, environment, expected):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    @click.option('--name', envvar='CLICK_NAME')
+    def foo(name):
+        click.echo(name)
+
+    defaults = {'foo': {'name': 'defaults'}}
+    result = runner.invoke(cli, command, default_map=defaults, env=environment)
+
+    assert not result.exception
+    assert result.output == expected
