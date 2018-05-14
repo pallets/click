@@ -746,8 +746,7 @@ class Command(BaseCommand):
     :param help: the help string to use for this command.
     :param epilog: like the help string but it's printed at the end of the
                    help page after everything else.
-    :param short_help: the short help to use for this command.  This is
-                       shown on the command listing of the parent command.
+    :param short_help: deprecated in favor of help
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
     :param hidden: hide this command from help outputs.
@@ -765,20 +764,9 @@ class Command(BaseCommand):
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
         self.params = params or []
-        self.help = help
+        self.help = help or short_help
         self.epilog = epilog
         self.options_metavar = options_metavar
-        if short_help is None and help:
-            if (context_settings is not None and
-                isinstance(context_settings.get('max_content_width'), int)):
-                    max_width = min(context_settings.get('max_content_width'),
-                                    get_terminal_size()[0])
-                    # arbitrary trim width, if a subcommond is longer than the
-                    # it get printed poorly
-                    short_help = make_default_short_help(help, max_width - 20)
-            else:
-                short_help = make_default_short_help(help)
-        self.short_help = short_help
         self.add_help_option = add_help_option
         self.hidden = hidden
 
