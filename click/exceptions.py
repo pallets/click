@@ -81,8 +81,10 @@ class BadParameter(UsageError):
     def format_message(self):
         if self.param_hint is not None:
             param_hint = self.param_hint
+        elif self.param.metavar is not None:
+            param_hint = self.param.human_readable_name
         elif self.param is not None:
-            param_hint = self.param.opts or [self.param.human_readable_name]
+            param_hint = self.param.opts
         else:
             return 'Invalid value: %s' % self.message
         if isinstance(param_hint, (tuple, list)):
@@ -110,8 +112,10 @@ class MissingParameter(BadParameter):
     def format_message(self):
         if self.param_hint is not None:
             param_hint = self.param_hint
+        elif self.param.metavar is not None:
+            param_hint = self.param.human_readable_name
         elif self.param is not None:
-            param_hint = self.param.opts or [self.param.human_readable_name]
+            param_hint = self.param.opts
         else:
             param_hint = None
         if isinstance(param_hint, (tuple, list)):
