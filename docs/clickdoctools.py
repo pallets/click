@@ -15,7 +15,7 @@ from docutils import nodes
 from docutils.statemachine import ViewList
 
 from sphinx.domains import Domain
-from sphinx.util.compat import Directive
+from docutils.parsers.rst import Directive
 
 PY2 = sys.version_info[0] == 2
 
