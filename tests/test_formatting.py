@@ -163,6 +163,22 @@ def test_formatting_usage_error(runner):
     ]
 
 
+def test_formatting_usage_error_metavar(runner):
+    @click.command()
+    @click.argument('arg', metavar='metavar')
+    def cmd(arg):
+        click.echo('arg:' + arg)
+
+    result = runner.invoke(cmd, [])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        'Usage: cmd [OPTIONS] metavar',
+        'Try "cmd --help" for help.',
+        '',
+        'Error: Missing argument "metavar".'
+    ]
+
+
 def test_formatting_usage_error_nested(runner):
     @click.group()
     def cmd():
