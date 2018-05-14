@@ -89,18 +89,17 @@ exclude_patterns = ['_build']
 
 # -- Options for HTML output ---------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  Major themes that come with
-# Sphinx are currently 'default' and 'sphinxdoc'.
-#html_theme = 'default'
 
-# Theme options are theme-specific and customize the look and feel of a theme
-# further.  For a list of options available for each theme, see the
-# documentation.
-html_theme_options = {
-}
-
-# Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = ['_themes']
+try:
+    import pocoo_sphinx_themes
+    html_theme = 'click'
+    html_theme_path = [pocoo_sphinx_themes.get_html_theme_path()]
+    pygments_style = 'pocoo_sphinx_themes.pocoo.PocooStyle'
+except ImportError:
+    html_theme = 'default'
+    print('-' * 74)
+    print('Warning: pocoo_sphinx_themes not installed, using default theme.')
+    print('-' * 74)
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
