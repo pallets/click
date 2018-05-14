@@ -202,6 +202,28 @@ def test_missing_arg(runner):
     assert 'Missing argument "arg".' in result.output
 
 
+def test_missing_arg_human_readable(runner):
+    @click.command()
+    @click.argument('arg', metavar='arg-metavar')
+    def cmd(arg):
+        click.echo('arg:' + arg)
+
+    result = runner.invoke(cmd, [])
+    assert result.exit_code == 2
+    assert 'Missing argument arg-metavar.' in result.output
+
+
+def test_bad_arg_human_readable(runner):
+    @click.command()
+    @click.argument('arg', type=click.INT, metavar='arg-metavar')
+    def cmd(arg):
+        click.echo('arg: ' + str(arg))
+
+    result = runner.invoke(cmd, ['3.14'])
+    assert result.exit_code == 2
+    assert 'Invalid value for arg-metavar' in result.output
+
+
 def test_implicit_non_required(runner):
     @click.command()
     @click.argument('f', default='test')
