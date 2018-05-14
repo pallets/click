@@ -4,7 +4,6 @@ import click
 
 
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='COMPLEX')
-CONTEXT_SETTINGS['max_content_width'] = 700
 
 
 class Context(object):
