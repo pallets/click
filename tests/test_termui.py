@@ -2,15 +2,28 @@ import click
 import time
 
 
+class FakeClock(object):
+    def __init__(self):
+        self.now = time.time()
+
+    def advance_time(self, seconds=1):
+        self.now += seconds
+
+    def time(self):
+        return self.now
+
+
 def test_progressbar_strip_regression(runner, monkeypatch):
+    fake_clock = FakeClock()
     label = '    padded line'
 
     @click.command()
     def cli():
         with click.progressbar(tuple(range(10)), label=label) as progress:
             for thing in progress:
-                pass
+                fake_clock.advance_time()
 
+    monkeypatch.setattr(time, 'time', fake_clock.time)
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
     assert label in runner.invoke(cli, []).output
 
@@ -34,26 +47,31 @@ def test_progressbar_length_hint(runner, monkeypatch):
 
         next = __next__
 
+    fake_clock = FakeClock()
+
     @click.command()
     def cli():
         with click.progressbar(Hinted(10), label='test') as progress:
             for thing in progress:
-                pass
+                fake_clock.advance_time()
 
+    monkeypatch.setattr(time, 'time', fake_clock.time)
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
     result = runner.invoke(cli, [])
     assert result.exception is None
 
 
 def test_progressbar_hidden(runner, monkeypatch):
+    fake_clock = FakeClock()
     label = 'whatever'
 
     @click.command()
     def cli():
         with click.progressbar(tuple(range(10)), label=label) as progress:
             for thing in progress:
-                pass
+                fake_clock.advance_time()
 
+    monkeypatch.setattr(time, 'time', fake_clock.time)
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: False)
     assert runner.invoke(cli, []).output == ''
 
@@ -91,16 +109,6 @@ def test_progressbar_yields_all_items(runner):
 
 
 def test_progressbar_update(runner, monkeypatch):
-    class FakeClock(object):
-        def __init__(self):
-            self.now = time.time()
-
-        def advance_time(self, seconds=1):
-            self.now += seconds
-
-        def time(self):
-            return self.now
-
     fake_clock = FakeClock()
 
     @click.command()
@@ -116,8 +124,7 @@ def test_progressbar_update(runner, monkeypatch):
 
     lines = [line for line in output.split('\n') if '[' in line]
 
-    assert '  0%' in lines[0]
-    assert ' 25%  00:00:03' in lines[1]
-    assert ' 50%  00:00:02' in lines[2]
-    assert ' 75%  00:00:01' in lines[3]
-    assert '100%          ' in lines[4]
+    assert ' 25%  00:00:03' in lines[0]
+    assert ' 50%  00:00:02' in lines[1]
+    assert ' 75%  00:00:01' in lines[2]
+    assert '100%          ' in lines[3]

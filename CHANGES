@@ -23,10 +23,10 @@ Version 7.0
 - ``launch`` now works properly under Cygwin. See #650.
 - `CliRunner.invoke` now may receive `args` as a string representing
   a Unix shell command. See #664.
-- Fix bug that caused bashcompletion to give improper completions on 
+- Fix bug that caused bashcompletion to give improper completions on
   chained commands. See #774.
 - Add support for bright colors.
-- 't' and 'f' are now converted to True and False. 
+- 't' and 'f' are now converted to True and False.
 - Fix bug that caused bashcompletion to give improper completions on
   chained commands when a required option/argument was being completed.
   See #790.
