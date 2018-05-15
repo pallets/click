@@ -61,7 +61,8 @@ ANSI Colors
 Starting with Click 2.0, the :func:`echo` function gained extra
 functionality to deal with ANSI colors and styles.  Note that on Windows,
 this functionality is only available if `colorama`_ is installed.  If it
-is installed, then ANSI codes are intelligently handled.
+is installed, then ANSI codes are intelligently handled. Note that in Python
+2, the echo function doesn't parse color code information from bytearrays.
 
 Primarily this means that:
 
