@@ -180,6 +180,28 @@ def test_boolean_option(runner):
         assert result.output == '%s\n' % (default)
 
 
+def test_boolean_conversion(runner):
+    for default in True, False:
+        @click.command()
+        @click.option('--flag', default=default, type=bool)
+        def cli(flag):
+            click.echo(flag)
+
+        for value in 'true', 't', '1', 'yes', 'y':
+            result = runner.invoke(cli, ['--flag', value])
+            assert not result.exception
+            assert result.output == 'True\n'
+
+        for value in 'false', 'f', '0', 'no', 'n':
+            result = runner.invoke(cli, ['--flag', value])
+            assert not result.exception
+            assert result.output == 'False\n'
+
+        result = runner.invoke(cli, [])
+        assert not result.exception
+        assert result.output == '%s\n' % default
+
+
 def test_file_option(runner):
     @click.command()
     @click.option('--file', type=click.File('w'))
@@ -343,6 +365,39 @@ def test_int_range_option(runner):
     assert result.output == '0\n'
 
 
+def test_float_range_option(runner):
+    @click.command()
+    @click.option('--x', type=click.FloatRange(0, 5))
+    def cli(x):
+        click.echo(x)
+
+    result = runner.invoke(cli, ['--x=5.0'])
+    assert not result.exception
+    assert result.output == '5.0\n'
+
+    result = runner.invoke(cli, ['--x=6.0'])
+    assert result.exit_code == 2
+    assert 'Invalid value for "--x": 6.0 is not in the valid range of 0 to 5.\n' \
+        in result.output
+
+    @click.command()
+    @click.option('--x', type=click.FloatRange(0, 5, clamp=True))
+    def clamp(x):
+        click.echo(x)
+
+    result = runner.invoke(clamp, ['--x=5.0'])
+    assert not result.exception
+    assert result.output == '5.0\n'
+
+    result = runner.invoke(clamp, ['--x=6.0'])
+    assert not result.exception
+    assert result.output == '5\n'
+
+    result = runner.invoke(clamp, ['--x=-1.0'])
+    assert not result.exception
+    assert result.output == '0\n'
+
+
 def test_required_option(runner):
     @click.command()
     @click.option('--foo', required=True)
@@ -357,7 +412,7 @@ def test_required_option(runner):
 def test_evaluation_order(runner):
     called = []
 
-    def memo(ctx, value):
+    def memo(ctx, param, value):
         called.append(value)
         return value
 
@@ -397,3 +452,47 @@ def test_evaluation_order(runner):
         'normal1',
         'missing',
     ]
+
+
+def test_hidden_option(runner):
+    @click.command()
+    @click.option('--nope', hidden=True)
+    def cli(nope):
+        click.echo(nope)
+
+    result = runner.invoke(cli, ['--help'])
+    assert result.exit_code == 0
+    assert '--nope' not in result.output
+
+
+def test_hidden_command(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command(hidden=True)
+    def nope():
+        pass
+
+    result = runner.invoke(cli, ['--help'])
+    assert result.exit_code == 0
+    assert 'nope' not in result.output
+
+
+def test_hidden_group(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.group(hidden=True)
+    def subgroup():
+        pass
+
+    @subgroup.command()
+    def nope():
+        pass
+
+    result = runner.invoke(cli, ['--help'])
+    assert result.exit_code == 0
+    assert 'subgroup' not in result.output
+    assert 'nope' not in result.output

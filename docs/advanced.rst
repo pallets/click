@@ -277,7 +277,7 @@ options:
     If you go with this solution, the extra arguments will be collected in
     :attr:`Context.args`.
 2.  You can attach a :func:`argument` with ``nargs`` set to `-1` which
-    will eat up all leftover arguments.  In this case it's recommeded to
+    will eat up all leftover arguments.  In this case it's recommended to
     set the `type` to :data:`UNPROCESSED` to avoid any string processing
     on those arguments as otherwise they are forced into unicode strings
     automatically which is often not what you want.
@@ -295,8 +295,8 @@ In the end you end up with something like this:
     @click.option('-v', '--verbose', is_flag=True, help='Enables verbose mode')
     @click.argument('timeit_args', nargs=-1, type=click.UNPROCESSED)
     def cli(verbose, timeit_args):
-        """A wrapper around Python's timeit."""
-        cmdline = ['python', '-mtimeit'] + list(timeit_args)
+        """A fake wrapper around Python's timeit."""
+        cmdline = ['echo', 'python', '-mtimeit'] + list(timeit_args)
         if verbose:
             click.echo('Invoking: %s' % ' '.join(cmdline))
         call(cmdline)
@@ -321,7 +321,7 @@ are important to know about how this ignoring of unhandled flag happens:
     generally end up like that.  Note that because the parser cannot know
     if an option will accept an argument or not, the ``bar`` part might be
     handled as an argument.
-*   Unknown short options might be partially handled and reassmebled if
+*   Unknown short options might be partially handled and reassembled if
     necessary.  For instance in the above example there is an option
     called ``-v`` which enables verbose mode.  If the command would be
     ignored with ``-va`` then the ``-v`` part would be handled by Click
@@ -346,7 +346,7 @@ Global Context Access
 .. versionadded:: 5.0
 
 Starting with Click 5.0 it is possible to access the current context from
-anywhere within the same through through the use of the
+anywhere within the same thread through the use of the
 :func:`get_current_context` function which returns it.  This is primarily
 useful for accessing the context bound object as well as some flags that
 are stored on it to customize the runtime behavior.  For instance the

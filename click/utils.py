@@ -43,6 +43,7 @@ def make_str(value):
 
 
 def make_default_short_help(help, max_length=45):
+    """Return a condensed version of help string."""
     words = help.split()
     total_length = 0
     result = []
@@ -171,7 +172,7 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
 
     Primarily it means that you can print binary data as well as Unicode
     data on both 2.x and 3.x to the given file in the most appropriate way
-    possible.  This is a very carefree function as in that it will try its
+    possible.  This is a very carefree function in that it will try its
     best to not fail.  As of Click 6.0 this includes support for unicode
     output on the Windows console.
 
@@ -183,7 +184,7 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     -   hide ANSI codes automatically if the destination file is not a
         terminal.
 
-    .. _colorama: http://pypi.python.org/pypi/colorama
+    .. _colorama: https://pypi.org/project/colorama/
 
     .. versionchanged:: 6.0
        As of Click 6.0 the echo function will properly support unicode

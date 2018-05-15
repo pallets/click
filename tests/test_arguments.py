@@ -106,6 +106,17 @@ def test_file_args(runner):
         assert result.exit_code == 0
 
 
+def test_path_args(runner):
+    @click.command()
+    @click.argument('input', type=click.Path(dir_okay=False, allow_dash=True))
+    def foo(input):
+        click.echo(input)
+
+    result = runner.invoke(foo, ['-'])
+    assert result.output == '-\n'
+    assert result.exit_code == 0
+
+
 def test_file_atomics(runner):
     @click.command()
     @click.argument('output', type=click.File('wb', atomic=True))
@@ -177,7 +188,7 @@ def test_empty_nargs(runner):
 
     result = runner.invoke(cmd2, [])
     assert result.exit_code == 2
-    assert 'Missing argument "arg"' in result.output
+    assert 'Missing argument "ARG..."' in result.output
 
 
 def test_missing_arg(runner):
@@ -188,7 +199,7 @@ def test_missing_arg(runner):
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2
-    assert 'Missing argument "arg".' in result.output
+    assert 'Missing argument "ARG".' in result.output
 
 
 def test_implicit_non_required(runner):

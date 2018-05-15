@@ -129,6 +129,9 @@ class Choice(ParamType):
     """The choice type allows a value to be checked against a fixed set of
     supported values.  All of these values have to be strings.
 
+    You should only pass *choices* as list or tuple.  Other iterables (like
+    generators) may lead to surprising results.
+
     See :ref:`choice-opts` for an example.
     """
     name = 'choice'
@@ -214,23 +217,6 @@ class IntRange(IntParamType):
         return 'IntRange(%r, %r)' % (self.min, self.max)
 
 
-class BoolParamType(ParamType):
-    name = 'boolean'
-
-    def convert(self, value, param, ctx):
-        if isinstance(value, bool):
-            return bool(value)
-        value = value.lower()
-        if value in ('true', '1', 'yes', 'y'):
-            return True
-        elif value in ('false', '0', 'no', 'n'):
-            return False
-        self.fail('%s is not a valid boolean' % value, param, ctx)
-
-    def __repr__(self):
-        return 'BOOL'
-
-
 class FloatParamType(ParamType):
     name = 'float'
 
@@ -243,6 +229,62 @@ class FloatParamType(ParamType):
 
     def __repr__(self):
         return 'FLOAT'
+
+
+class FloatRange(FloatParamType):
+    """A parameter that works similar to :data:`click.FLOAT` but restricts
+    the value to fit into a range.  The default behavior is to fail if the
+    value falls outside the range, but it can also be silently clamped
+    between the two edges.
+
+    See :ref:`ranges` for an example.
+    """
+    name = 'float range'
+
+    def __init__(self, min=None, max=None, clamp=False):
+        self.min = min
+        self.max = max
+        self.clamp = clamp
+
+    def convert(self, value, param, ctx):
+        rv = FloatParamType.convert(self, value, param, ctx)
+        if self.clamp:
+            if self.min is not None and rv < self.min:
+                return self.min
+            if self.max is not None and rv > self.max:
+                return self.max
+        if self.min is not None and rv < self.min or \
+           self.max is not None and rv > self.max:
+            if self.min is None:
+                self.fail('%s is bigger than the maximum valid value '
+                          '%s.' % (rv, self.max), param, ctx)
+            elif self.max is None:
+                self.fail('%s is smaller than the minimum valid value '
+                          '%s.' % (rv, self.min), param, ctx)
+            else:
+                self.fail('%s is not in the valid range of %s to %s.'
+                          % (rv, self.min, self.max), param, ctx)
+        return rv
+
+    def __repr__(self):
+        return 'FloatRange(%r, %r)' % (self.min, self.max)
+
+
+class BoolParamType(ParamType):
+    name = 'boolean'
+
+    def convert(self, value, param, ctx):
+        if isinstance(value, bool):
+            return bool(value)
+        value = value.lower()
+        if value in ('true', 't', '1', 'yes', 'y'):
+            return True
+        elif value in ('false', 'f', '0', 'no', 'n'):
+            return False
+        self.fail('%s is not a valid boolean' % value, param, ctx)
+
+    def __repr__(self):
+        return 'BOOL'
 
 
 class UUIDParameterType(ParamType):
@@ -358,14 +400,16 @@ class Path(ParamType):
     :param readable: if true, a readable check is performed.
     :param resolve_path: if this is true, then the path is fully resolved
                          before the value is passed onwards.  This means
-                         that it's absolute and symlinks are resolved.
+                         that it's absolute and symlinks are resolved.  It
+                         will not expand a tilde-prefix, as this is
+                         supposed to be done by the shell only.
     :param allow_dash: If this is set to `True`, a single dash to indicate
                        standard streams is permitted.
-    :param type: optionally a string type that should be used to
-                 represent the path.  The default is `None` which
-                 means the return value will be either bytes or
-                 unicode depending on what makes most sense given the
-                 input data Click deals with.
+    :param path_type: optionally a string type that should be used to
+                      represent the path.  The default is `None` which
+                      means the return value will be either bytes or
+                      unicode depending on what makes most sense given the
+                      input data Click deals with.
     """
     envvar_list_splitter = os.path.pathsep
 
@@ -384,7 +428,7 @@ class Path(ParamType):
         if self.file_okay and not self.dir_okay:
             self.name = 'file'
             self.path_type = 'File'
-        if self.dir_okay and not self.file_okay:
+        elif self.dir_okay and not self.file_okay:
             self.name = 'directory'
             self.path_type = 'Directory'
         else:
@@ -418,26 +462,26 @@ class Path(ParamType):
                     filename_to_ui(value)
                 ), param, ctx)
 
-        if not self.file_okay and stat.S_ISREG(st.st_mode):
-            self.fail('%s "%s" is a file.' % (
-                self.path_type,
-                filename_to_ui(value)
-            ), param, ctx)
-        if not self.dir_okay and stat.S_ISDIR(st.st_mode):
-            self.fail('%s "%s" is a directory.' % (
-                self.path_type,
-                filename_to_ui(value)
-            ), param, ctx)
-        if self.writable and not os.access(value, os.W_OK):
-            self.fail('%s "%s" is not writable.' % (
-                self.path_type,
-                filename_to_ui(value)
-            ), param, ctx)
-        if self.readable and not os.access(value, os.R_OK):
-            self.fail('%s "%s" is not readable.' % (
-                self.path_type,
-                filename_to_ui(value)
-            ), param, ctx)
+            if not self.file_okay and stat.S_ISREG(st.st_mode):
+                self.fail('%s "%s" is a file.' % (
+                    self.path_type,
+                    filename_to_ui(value)
+                ), param, ctx)
+            if not self.dir_okay and stat.S_ISDIR(st.st_mode):
+                self.fail('%s "%s" is a directory.' % (
+                    self.path_type,
+                    filename_to_ui(value)
+                ), param, ctx)
+            if self.writable and not os.access(value, os.W_OK):
+                self.fail('%s "%s" is not writable.' % (
+                    self.path_type,
+                    filename_to_ui(value)
+                ), param, ctx)
+            if self.readable and not os.access(value, os.R_OK):
+                self.fail('%s "%s" is not readable.' % (
+                    self.path_type,
+                    filename_to_ui(value)
+                ), param, ctx)
 
         return self.coerce_path_result(rv)
 

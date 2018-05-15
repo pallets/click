@@ -44,7 +44,7 @@ properly by this function.
 Multicommand Chaining API
 `````````````````````````
 
-Click 3 introduced multicommand chaning.  This required a change in how
+Click 3 introduced multicommand chaining.  This required a change in how
 Click internally dispatches.  Unfortunately this change was not correctly
 implemented and it appeared that it was possible to provide an API that
 can inform the super command about all the subcommands that will be

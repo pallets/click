@@ -7,13 +7,85 @@ Version 7.0
 -----------
 
 (upcoming release with new features, release date to be decided)
-
+- Added support for bash completions containing spaces. See #773.
+- Added support for dynamic bash completion from a user-supplied callback.
+  See #755.
+- Added support for bash completion of type=click.Choice for Options and
+  Arguments. See #535.
+- The user is now presented with the available choices if prompt=True and
+  type=click.Choice in a click.option. The choices are listed within
+  parenthesis like 'Choose fruit (apple, orange): '.
 - The exception objects now store unicode properly.
+- Added the ability to hide commands and options from help.
+- Added Float Range in Types.
+- `secho`'s first argument can now be `None`, like in `echo`.
+- Usage errors now hint at the `--help` option.
+- ``launch`` now works properly under Cygwin. See #650.
+- `CliRunner.invoke` now may receive `args` as a string representing
+  a Unix shell command. See #664.
+- Fix bug that caused bashcompletion to give improper completions on
+  chained commands. See #774.
+- Add support for bright colors.
+- 't' and 'f' are now converted to True and False.
+- Fix bug that caused bashcompletion to give improper completions on
+  chained commands when a required option/argument was being completed.
+  See #790.
+- Allow autocompletion function to determine whether or not to return
+  completions that start with the incomplete argument.
+- Subcommands that are named by the function now automatically have the
+  underscore replaced with a dash.  So if you register a function named
+  `my_command` it becomes `my-command` in the command line interface.
+- Stdout is now automatically set to non blocking.
+- Use realpath to convert atomic file internally into its full canonical
+  path so that changing working directories does not harm it.
+- Force stdout/stderr writable.  This works around issues with badly patched
+  standard streams like those from jupyter.
+
+Version 6.8
+-----------
+
+(bugfix release; yet to be released)
+
+- Disabled sys._getframes() on Python interpreters that don't support it. See
+  #728.
+- Fix bug in test runner when calling ``sys.exit`` with ``None``. See #739.
+- Fix crash on Windows console, see #744.
+- Fix bashcompletion on chained commands. See #754.
+- Fix option naming routine to match documentation.  See #793
+- Fixed the behavior of click error messages with regards to unicode on 2.x
+  and 3.x respectively.  Message is now always unicode and the str and unicode
+  special methods work as you expect on that platform.
+
+Version 6.7
+-----------
+
+(bugfix release; released on January 6th 2017)
+
+- Make `click.progressbar` work with `codecs.open` files. See #637.
+- Fix bug in bash completion with nested subcommands. See #639.
+- Fix test runner not saving caller env correctly. See #644.
+- Fix handling of SIGPIPE. See #626
+- Deal with broken Windows environments such as Google App Engine's. See #711.
+
+Version 6.6
+-----------
+
+(bugfix release; released on April 4th 2016)
+
+- Fix bug in `click.Path` where it would crash when passed a `-`. See #551.
+
+Version 6.4
+-----------
+
+(bugfix release; released on March 24th 2016)
+
+- Fix bug in bash completion where click would discard one or more trailing
+  arguments. See #471.
 
 Version 6.3
 -----------
 
-(bugfix release; unreleased)
+(bugfix release; released on February 22 2016)
 
 - Fix argument checks for interpreter invoke with `-m` and `-c`
   on Windows.

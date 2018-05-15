@@ -1,3 +1,4 @@
+import errno
 import os
 import sys
 from contextlib import contextmanager
@@ -24,6 +25,15 @@ SUBCOMMAND_METAVAR = 'COMMAND [ARGS]...'
 SUBCOMMANDS_METAVAR = 'COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...'
 
 
+def fast_exit(code):
+    """Exit without garbage collection, this speeds up exit by about 10ms for
+    things like bash completion.
+    """
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(code)
+
+
 def _bashcomplete(cmd, prog_name, complete_var=None):
     """Internal handler for the bash completion support."""
     if complete_var is None:
@@ -34,7 +44,7 @@ def _bashcomplete(cmd, prog_name, complete_var=None):
 
     from ._bashcomplete import bashcomplete
     if bashcomplete(cmd, prog_name, complete_var, complete_instr):
-        sys.exit(1)
+        fast_exit(1)
 
 
 def _check_multicommand(base_command, cmd_name, cmd, register=False):
@@ -49,9 +59,7 @@ def _check_multicommand(base_command, cmd_name, cmd, register=False):
     raise RuntimeError('%s.  Command "%s" is set to chain and "%s" was '
                        'added as subcommand but it in itself is a '
                        'multi command.  ("%s" is a %s within a chained '
-                       '%s named "%s").  This restriction was supposed to '
-                       'be lifted in 6.0 but the fix was flawed.  This '
-                       'will be fixed in Click 7.0' % (
+                       '%s named "%s").' % (
                            hint, base_command.name, cmd_name,
                            cmd_name, cmd.__class__.__name__,
                            base_command.__class__.__name__,
@@ -371,7 +379,7 @@ class Context(object):
     @property
     def meta(self):
         """This is a dictionary which is shared with all the contexts
-        that are nested.  It exists so that click utiltiies can store some
+        that are nested.  It exists so that click utilities can store some
         state here if they need to.  It is however the responsibility of
         that code to manage this dictionary well.
 
@@ -654,7 +662,7 @@ class BaseCommand(object):
                           name from ``sys.argv[0]``.
         :param complete_var: the environment variable that controls the
                              bash completion support.  The default is
-                             ``"_<prog_name>_COMPLETE"`` with prog name in
+                             ``"_<prog_name>_COMPLETE"`` with prog_name in
                              uppercase.
         :param standalone_mode: the default behavior is to invoke the script
                                 in standalone mode.  Click will then
@@ -669,7 +677,7 @@ class BaseCommand(object):
                       constructor.  See :class:`Context` for more information.
         """
         # If we are in Python 3, we will verify that the environment is
-        # sane at this point of reject further execution to avoid a
+        # sane at this point or reject further execution to avoid a
         # broken script.
         if not PY2:
             _verify_python3_env()
@@ -705,6 +713,11 @@ class BaseCommand(object):
                     raise
                 e.show()
                 sys.exit(e.exit_code)
+            except IOError as e:
+                if e.errno == errno.EPIPE:
+                    sys.exit(1)
+                else:
+                    raise
         except Abort:
             if not standalone_mode:
                 raise
@@ -737,11 +750,13 @@ class Command(BaseCommand):
                        shown on the command listing of the parent command.
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
+    :param hidden: hide this command from help outputs.
     """
 
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
-                 options_metavar='[OPTIONS]', add_help_option=True):
+                 options_metavar='[OPTIONS]', add_help_option=True,
+                 hidden=False):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -757,6 +772,7 @@ class Command(BaseCommand):
             short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self.hidden = hidden
 
     def get_usage(self, ctx):
         formatter = ctx.make_formatter()
@@ -810,8 +826,6 @@ class Command(BaseCommand):
     def make_parser(self, ctx):
         """Creates the underlying option parser for this command."""
         parser = OptionParser(ctx)
-        parser.allow_interspersed_args = ctx.allow_interspersed_args
-        parser.ignore_unknown_options = ctx.ignore_unknown_options
         for param in self.get_params(ctx):
             param.add_to_parser(parser, ctx)
         return parser
@@ -995,6 +1009,8 @@ class MultiCommand(Command):
             cmd = self.get_command(ctx, subcommand)
             # What is this, the tool lied about a command.  Ignore it
             if cmd is None:
+                continue
+            if cmd.hidden:
                 continue
 
             help = cmd.short_help or ''
@@ -1210,7 +1226,7 @@ class CommandCollection(MultiCommand):
 
 
 class Parameter(object):
-    """A parameter to a command comes in two versions: they are either
+    r"""A parameter to a command comes in two versions: they are either
     :class:`Option`\s or :class:`Argument`\s.  Other subclasses are currently
     not supported by design as some of the internals for parsing are
     intentionally not finalized.
@@ -1255,7 +1271,8 @@ class Parameter(object):
 
     def __init__(self, param_decls=None, type=None, required=False,
                  default=None, callback=None, nargs=None, metavar=None,
-                 expose_value=True, is_eager=False, envvar=None):
+                 expose_value=True, is_eager=False, envvar=None,
+                 autocompletion=None):
         self.name, self.opts, self.secondary_opts = \
             self._parse_decls(param_decls or (), expose_value)
 
@@ -1278,6 +1295,7 @@ class Parameter(object):
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
+        self.autocompletion =  autocompletion
 
     @property
     def human_readable_name(self):
@@ -1308,12 +1326,13 @@ class Parameter(object):
     def add_to_parser(self, parser, ctx):
         pass
 
+
     def consume_value(self, ctx, opts):
         value = opts.get(self.name)
         if value is None:
-            value = ctx.lookup_default(self.name)
-        if value is None:
             value = self.value_from_envvar(ctx)
+        if value is None:
+            value = ctx.lookup_default(self.name)
         return value
 
     def type_cast_value(self, ctx, value):
@@ -1410,6 +1429,13 @@ class Parameter(object):
     def get_usage_pieces(self, ctx):
         return []
 
+    def get_error_hint(self, ctx):
+        """Get a stringified version of the param for use in error messages to
+        indicate which param caused the error.
+        """
+        hint_list = self.opts or [self.human_readable_name]
+        return ' / '.join('"%s"' % x for x in hint_list)
+
 
 class Option(Parameter):
     """Options are usually optional values on the command line and
@@ -1419,9 +1445,12 @@ class Option(Parameter):
 
     :param show_default: controls if the default value should be shown on the
                          help page.  Normally, defaults are not shown.
-    :param prompt: if set to `True` or a non empty string then the user will
-                   be prompted for input if not set.  If set to `True` the
-                   prompt will be the option name capitalized.
+    :param show_envvar: controls if an environment variable should be shown on
+                        the help page.  Normally, environment variables
+                        are not shown.
+    :param prompt: if set to `True` or a non empty string then the user will be
+                   prompted for input.  If set to `True` the prompt will be the
+                   option name capitalized.
     :param confirmation_prompt: if set then the value will need to be confirmed
                                 if it was prompted for.
     :param hide_input: if this is `True` then the input on the prompt will be
@@ -1442,6 +1471,7 @@ class Option(Parameter):
                                variable in case a prefix is defined on the
                                context.
     :param help: the help string.
+    :param hidden: hide this option from help outputs.
     """
     param_type_name = 'option'
 
@@ -1449,7 +1479,8 @@ class Option(Parameter):
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, count=False, allow_from_autoenv=True,
-                 type=None, help=None, **attrs):
+                 type=None, help=None, hidden=False, show_choices=True,
+                 show_envvar=False, **attrs):
         default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
 
@@ -1462,6 +1493,7 @@ class Option(Parameter):
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
         self.hide_input = hide_input
+        self.hidden = hidden
 
         # Flags
         if is_flag is None:
@@ -1494,6 +1526,8 @@ class Option(Parameter):
         self.allow_from_autoenv = allow_from_autoenv
         self.help = help
         self.show_default = show_default
+        self.show_choices = show_choices
+        self.show_envvar = show_envvar
 
         # Sanity check for stuff we don't support
         if __debug__:
@@ -1542,8 +1576,8 @@ class Option(Parameter):
                     opts.append(decl)
 
         if name is None and possible_names:
-            possible_names.sort(key=lambda x: len(x[0]))
-            name = possible_names[-1][1].replace('-', '_').lower()
+            possible_names.sort(key=lambda x: -len(x[0]))  # group long options first
+            name = possible_names[0][1].replace('-', '_').lower()
             if not isidentifier(name):
                 name = None
 
@@ -1589,6 +1623,8 @@ class Option(Parameter):
             parser.add_option(self.opts, **kwargs)
 
     def get_help_record(self, ctx):
+        if self.hidden:
+            return
         any_prefix_is_slash = []
 
         def _write_opts(opts):
@@ -1605,6 +1641,17 @@ class Option(Parameter):
 
         help = self.help or ''
         extra = []
+        if self.show_envvar:
+            envvar = self.envvar
+            if envvar is None:
+                if self.allow_from_autoenv and \
+                    ctx.auto_envvar_prefix is not None:
+                    envvar = '%s_%s' % (ctx.auto_envvar_prefix, self.name.upper())
+            if envvar is not None:
+              extra.append('env var: %s' % (
+                           ', '.join('%s' % d for d in envvar)
+                           if isinstance(envvar, (list, tuple))
+                           else envvar, ))
         if self.default is not None and self.show_default:
             extra.append('default: %s' % (
                          ', '.join('%s' % d for d in self.default)
@@ -1643,8 +1690,8 @@ class Option(Parameter):
         if self.is_bool_flag:
             return confirm(self.prompt, default)
 
-        return prompt(self.prompt, default=default,
-                      hide_input=self.hide_input,
+        return prompt(self.prompt, default=default, type=self.type,
+                      hide_input=self.hide_input, show_choices=self.show_choices,
                       confirmation_prompt=self.confirmation_prompt,
                       value_proc=lambda x: self.process_value(ctx, x))
 
@@ -1728,6 +1775,9 @@ class Argument(Parameter):
 
     def get_usage_pieces(self, ctx):
         return [self.make_metavar()]
+
+    def get_error_hint(self, ctx):
+        return '"%s"' % self.make_metavar()
 
     def add_to_parser(self, parser, ctx):
         parser.add_argument(dest=self.name, nargs=self.nargs,

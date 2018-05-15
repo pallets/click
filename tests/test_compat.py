@@ -1,4 +1,5 @@
 import click
+import pytest
 
 
 if click.__version__ >= '3.0':
@@ -11,10 +12,10 @@ if click.__version__ >= '3.0':
         def cli(foo):
             click.echo(foo)
 
-        result = runner.invoke(cli, ['--foo', 'wat'])
-        assert result.exit_code == 0
-        assert 'WAT' in result.output
-        assert 'Invoked legacy parameter callback' in result.output
+        with pytest.warns(Warning, match='Invoked legacy parameter callback'):
+            result = runner.invoke(cli, ['--foo', 'wat'])
+            assert result.exit_code == 0
+            assert 'WAT' in result.output
 
 
 def test_bash_func_name():

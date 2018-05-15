@@ -10,13 +10,13 @@ from click._compat import WIN, PY2
 
 
 def test_echo(runner):
-    with runner.isolation() as out:
+    with runner.isolation() as outstreams:
         click.echo(u'\N{SNOWMAN}')
         click.echo(b'\x44\x44')
         click.echo(42, nl=False)
         click.echo(b'a', nl=False)
         click.echo('\x1b[31mx\x1b[39m', nl=False)
-        bytes = out.getvalue().replace(b'\r\n', b'\n')
+        bytes = outstreams[0].getvalue().replace(b'\r\n', b'\n')
         assert bytes == b'\xe2\x98\x83\nDD\n42ax'
 
     # If we are in Python 2, we expect that writing bytes into a string io
@@ -35,12 +35,12 @@ def test_echo(runner):
     def cli():
         click.echo(b'\xf6')
     result = runner.invoke(cli, [])
-    assert result.output_bytes == b'\xf6\n'
+    assert result.stdout_bytes == b'\xf6\n'
 
     # Ensure we do not strip for bytes.
-    with runner.isolation() as out:
+    with runner.isolation() as outstreams:
         click.echo(bytearray(b'\x1b[31mx\x1b[39m'), nl=False)
-        assert out.getvalue() == b'\x1b[31mx\x1b[39m'
+        assert outstreams[0].getvalue() == b'\x1b[31mx\x1b[39m'
 
 
 def test_echo_custom_file():
@@ -146,14 +146,36 @@ def test_prompts_abort(monkeypatch, capsys):
     assert out == 'Password: \nScrew you.\n'
 
 
+def _test_gen_func():
+    yield 'a'
+    yield 'b'
+    yield 'c'
+    yield 'abc'
+
+
 @pytest.mark.skipif(WIN, reason='Different behavior on windows.')
 @pytest.mark.parametrize('cat', ['cat', 'cat ', 'cat '])
-def test_echo_via_pager(monkeypatch, capfd, cat):
+@pytest.mark.parametrize('test', [
+    # We need lambda here, because pytest will
+    # reuse the parameters, and then the generators
+    # are already used and will not yield anymore
+    ('just text\n', lambda: 'just text'),
+    ('iterable\n', lambda: ["itera", "ble"]),
+    ('abcabc\n', lambda: _test_gen_func),
+    ('abcabc\n', lambda: _test_gen_func()),
+    ('012345\n', lambda: (c for c in range(6))),
+])
+def test_echo_via_pager(monkeypatch, capfd, cat, test):
     monkeypatch.setitem(os.environ, 'PAGER', cat)
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda x: True)
-    click.echo_via_pager('haha')
+
+    expected_output = test[0]
+    test_input = test[1]()
+
+    click.echo_via_pager(test_input)
+
     out, err = capfd.readouterr()
-    assert out == 'haha\n'
+    assert out == expected_output
 
 
 @pytest.mark.skipif(WIN, reason='Test does not make sense on Windows.')
@@ -268,9 +290,9 @@ def test_iter_keepopenfile(tmpdir):
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
     p.write(os.linesep.join(expected))
-    f = p.open()
-    for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
-        assert e_line == a_line.strip()
+    with p.open() as f:
+        for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
+            assert e_line == a_line.strip()
 
 
 @pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
@@ -278,6 +300,7 @@ def test_iter_lazyfile(tmpdir):
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
     p.write(os.linesep.join(expected))
-    f = p.open()
-    for e_line, a_line in zip(expected, click.utils.LazyFile(f.name)):
-        assert e_line == a_line.strip()
+    with p.open() as f:
+        with click.utils.LazyFile(f.name) as lf:
+            for e_line, a_line in zip(expected, lf):
+                assert e_line == a_line.strip()

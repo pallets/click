@@ -16,8 +16,9 @@ Basic Value Options
 The most basic option is a value option.  These options accept one
 argument which is a value.  If no type is provided, the type of the default
 value is used.  If no default value is provided, the type is assumed to be
-:data:`STRING`.  By default, the name of the parameter is the first long
-option defined; otherwise the first short one is used.
+:data:`STRING`.  Unless a name is explicitly specified, the name of the
+parameter is the first long option defined; otherwise the first short one is
+used.
 
 .. click:example::
 
@@ -25,6 +26,15 @@ option defined; otherwise the first short one is used.
     @click.option('--n', default=1)
     def dots(n):
         click.echo('.' * n)
+
+.. click:example::
+
+    # How to use a Python reserved word such as `from` as a parameter
+    @click.command()
+    @click.option('--from', '-f', '_from')
+    @click.option('--to', '-t')
+    def reserved_param_name(_from, to):
+        click.echo('from %s to %s' % (_from, to))
 
 And on the command line:
 
@@ -281,6 +291,11 @@ What it looks like:
     invoke(digest, args=['--hash-type=foo'])
     println()
     invoke(digest, args=['--help'])
+
+.. note::
+
+    You should only pass the choices as list or tuple.  Other iterables (like
+    generators) may lead to surprising results.
 
 .. _option-prompting:
 

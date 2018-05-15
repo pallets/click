@@ -13,8 +13,10 @@ import os
 import sys
 import time
 import math
+
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
-     open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types
+     open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
+     CYGWIN
 from .utils import echo
 from .exceptions import ClickException
 
@@ -31,7 +33,7 @@ def _length_hint(obj):
     """Returns the length hint of an object."""
     try:
         return len(obj)
-    except TypeError:
+    except (AttributeError, TypeError):
         try:
             get_hint = type(obj).__length_hint__
         except AttributeError:
@@ -102,7 +104,7 @@ class ProgressBar(object):
         if not self.entered:
             raise RuntimeError('You need to use progress bars in a with block.')
         self.render_progress()
-        return self
+        return self.generator()
 
     def is_fast(self):
         return time.time() - self.start <= self.short_limit
@@ -133,13 +135,13 @@ class ProgressBar(object):
 
     def format_eta(self):
         if self.eta_known:
-            t = self.eta + 1
+            t = int(self.eta)
             seconds = t % 60
-            t /= 60
+            t //= 60
             minutes = t % 60
-            t /= 60
+            t //= 60
             hours = t % 24
-            t /= 24
+            t //= 24
             if t > 0:
                 days = t
                 return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
@@ -195,44 +197,41 @@ class ProgressBar(object):
 
     def render_progress(self):
         from .termui import get_terminal_size
-        nl = False
 
         if self.is_hidden:
-            buf = [self.label]
-            nl = True
-        else:
-            buf = []
-            # Update width in case the terminal has been resized
-            if self.autowidth:
-                old_width = self.width
-                self.width = 0
-                clutter_length = term_len(self.format_progress_line())
-                new_width = max(0, get_terminal_size()[0] - clutter_length)
-                if new_width < old_width:
-                    buf.append(BEFORE_BAR)
-                    buf.append(' ' * self.max_width)
-                    self.max_width = new_width
-                self.width = new_width
+            return
 
-            clear_width = self.width
-            if self.max_width is not None:
-                clear_width = self.max_width
+        buf = []
+        # Update width in case the terminal has been resized
+        if self.autowidth:
+            old_width = self.width
+            self.width = 0
+            clutter_length = term_len(self.format_progress_line())
+            new_width = max(0, get_terminal_size()[0] - clutter_length)
+            if new_width < old_width:
+                buf.append(BEFORE_BAR)
+                buf.append(' ' * self.max_width)
+                self.max_width = new_width
+            self.width = new_width
 
-            buf.append(BEFORE_BAR)
-            line = self.format_progress_line()
-            line_len = term_len(line)
-            if self.max_width is None or self.max_width < line_len:
-                self.max_width = line_len
-            buf.append(line)
+        clear_width = self.width
+        if self.max_width is not None:
+            clear_width = self.max_width
 
-            buf.append(' ' * (clear_width - line_len))
+        buf.append(BEFORE_BAR)
+        line = self.format_progress_line()
+        line_len = term_len(line)
+        if self.max_width is None or self.max_width < line_len:
+            self.max_width = line_len
+
+        buf.append(line)
+        buf.append(' ' * (clear_width - line_len))
         line = ''.join(buf)
-
         # Render the line only if it changed.
 
         if line != self._last_line and not self.is_fast():
             self._last_line = line
-            echo(line, file=self.file, color=self.color, nl=nl)
+            echo(line, file=self.file, color=self.color, nl=True)
             self.file.flush()
 
     def make_step(self, n_steps):
@@ -257,54 +256,56 @@ class ProgressBar(object):
         self.current_item = None
         self.finished = True
 
-    def next(self):
+    def generator(self):
+        """
+        Returns a generator which yields the items added to the bar during
+        construction, and updates the progress bar *after* the yielded block
+        returns.
+        """
+        if not self.entered:
+            raise RuntimeError('You need to use progress bars in a with block.')
+
         if self.is_hidden:
-            return next(self.iter)
-        try:
-            rv = next(self.iter)
-            self.current_item = rv
-        except StopIteration:
+            for rv in self.iter:
+                yield rv
+        else:
+            for rv in self.iter:
+                self.current_item = rv
+                yield rv
+                self.update(1)
             self.finish()
             self.render_progress()
-            raise StopIteration()
-        else:
-            self.update(1)
-            return rv
-
-    if not PY2:
-        __next__ = next
-        del next
 
 
-def pager(text, color=None):
+def pager(generator, color=None):
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
     if not isatty(sys.stdin) or not isatty(stdout):
-        return _nullpager(stdout, text, color)
+        return _nullpager(stdout, generator, color)
     pager_cmd = (os.environ.get('PAGER', None) or '').strip()
     if pager_cmd:
         if WIN:
-            return _tempfilepager(text, pager_cmd, color)
-        return _pipepager(text, pager_cmd, color)
+            return _tempfilepager(generator, pager_cmd, color)
+        return _pipepager(generator, pager_cmd, color)
     if os.environ.get('TERM') in ('dumb', 'emacs'):
-        return _nullpager(stdout, text, color)
+        return _nullpager(stdout, generator, color)
     if WIN or sys.platform.startswith('os2'):
-        return _tempfilepager(text, 'more <', color)
+        return _tempfilepager(generator, 'more <', color)
     if hasattr(os, 'system') and os.system('(less) 2>/dev/null') == 0:
-        return _pipepager(text, 'less', color)
+        return _pipepager(generator, 'less', color)
 
     import tempfile
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
         if hasattr(os, 'system') and os.system('more "%s"' % filename) == 0:
-            return _pipepager(text, 'more', color)
-        return _nullpager(stdout, text, color)
+            return _pipepager(generator, 'more', color)
+        return _nullpager(stdout, generator, color)
     finally:
         os.unlink(filename)
 
 
-def _pipepager(text, cmd, color):
+def _pipepager(generator, cmd, color):
     """Page through text by feeding it to another program.  Invoking a
     pager through this might support colors.
     """
@@ -322,17 +323,19 @@ def _pipepager(text, cmd, color):
         elif 'r' in less_flags or 'R' in less_flags:
             color = True
 
-    if not color:
-        text = strip_ansi(text)
-
     c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE,
                          env=env)
     encoding = get_best_encoding(c.stdin)
     try:
-        c.stdin.write(text.encode(encoding, 'replace'))
-        c.stdin.close()
+        for text in generator:
+            if not color:
+                text = strip_ansi(text)
+
+            c.stdin.write(text.encode(encoding, 'replace'))
     except (IOError, KeyboardInterrupt):
         pass
+    else:
+        c.stdin.close()
 
     # Less doesn't respect ^C, but catches it for its own UI purposes (aborting
     # search or other commands inside less).
@@ -351,10 +354,12 @@ def _pipepager(text, cmd, color):
             break
 
 
-def _tempfilepager(text, cmd, color):
+def _tempfilepager(generator, cmd, color):
     """Page through text by invoking a program on a temporary file."""
     import tempfile
     filename = tempfile.mktemp()
+    # TODO: This never terminates if the passed generator never terminates.
+    text = "".join(generator)
     if not color:
         text = strip_ansi(text)
     encoding = get_best_encoding(sys.stdout)
@@ -366,11 +371,12 @@ def _tempfilepager(text, cmd, color):
         os.unlink(filename)
 
 
-def _nullpager(stream, text, color):
+def _nullpager(stream, generator, color):
     """Simply print unformatted text.  This is the ultimate fallback."""
-    if not color:
-        text = strip_ansi(text)
-    stream.write(text)
+    for text in generator:
+        if not color:
+            text = strip_ansi(text)
+        stream.write(text)
 
 
 class Editor(object):
@@ -482,6 +488,14 @@ def open_url(url, wait=False, locate=False):
         else:
             args = 'start %s "" "%s"' % (
                 wait and '/WAIT' or '', url.replace('"', ''))
+        return os.system(args)
+    elif CYGWIN:
+        if locate:
+            url = _unquote_file(url)
+            args = 'cygstart "%s"' % (os.path.dirname(url).replace('"', ''))
+        else:
+            args = 'cygstart %s "%s"' % (
+                wait and '-w' or '', url.replace('"', ''))
         return os.system(args)
 
     try:

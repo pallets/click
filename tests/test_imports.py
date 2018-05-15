@@ -32,7 +32,7 @@ click.echo(json.dumps(rv))
 ALLOWED_IMPORTS = set([
     'weakref', 'os', 'struct', 'collections', 'sys', 'contextlib',
     'functools', 'stat', 're', 'codecs', 'inspect', 'itertools', 'io',
-    'threading', 'colorama'
+    'threading', 'colorama', 'errno', 'fcntl'
 ])
 
 if WIN:
@@ -48,7 +48,6 @@ def test_light_imports():
     if sys.version_info[0] != 2:
         rv = rv.decode('utf-8')
     imported = json.loads(rv)
-    print(imported)
 
     for module in imported:
         if module == 'click' or module.startswith('click.'):
