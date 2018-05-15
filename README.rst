@@ -28,6 +28,8 @@ Install and update using `pip`_:
 
     $ pip install click
 
+Click supports Python 3.4 and newer, Python 2.7, and PyPy
+
 A Simple Example
 ----------------
 
@@ -86,7 +88,4 @@ Links
 
 * Test coverage: https://codecov.io/gh/pallets/click
 
-.. _WSGI: https://wsgi.readthedocs.io
-.. _Werkzeug: https://www.palletsprojects.com/p/werkzeug/
-.. _Jinja: https://www.palletsprojects.com/p/jinja/
 .. _pip: https://pip.pypa.io/en/stable/quickstart/
