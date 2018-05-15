@@ -567,7 +567,7 @@ else:
             pass
 
     def getchar(echo):
-        with raw_terminal():
+        with raw_terminal() as fd:
             ch = os.read(fd, 32)
             if echo and isatty(sys.stdout):
                 sys.stdout.write(ch)
