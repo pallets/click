@@ -45,6 +45,19 @@ And on the command line:
 In this case the option is of type :data:`INT` because the default value
 is an integer.
 
+To show the default values when showing command help, use ``show_default=True``
+
+.. click:example::
+
+    @click.command()
+    @click.option('--n', default=1, show_default=True)
+    def dots(n):
+        click.echo('.' * n)
+
+.. click:run::
+
+   invoke(dots, args=['--help'])
+
 Multi Value Options
 -------------------
 
@@ -388,6 +401,21 @@ from the environment:
                   default=lambda: os.environ.get('USER', ''))
     def hello(username):
         print("Hello,", username)
+
+To describe what the default value will be, set it in ``show_default``.
+
+.. click:example::
+
+    @click.command()
+    @click.option('--username', prompt=True,
+                  default=lambda: os.environ.get('USER', ''),
+                  show_default='current user')
+    def hello(username):
+        print("Hello,", username)
+
+.. click:run::
+
+   invoke(hello, args=['--help'])
 
 Callbacks and Eager Options
 ---------------------------

@@ -174,6 +174,33 @@ def test_multiple_default_type(runner):
                            'two --arg2 4 four'.split())
     assert not result.exception
 
+def test_dynamic_default_help_unset(runner):
+    @click.command()
+    @click.option('--username', prompt=True,
+                  default=lambda: os.environ.get('USER', ''),
+                  show_default=True)
+    def cmd(username):
+        print("Hello,", username)
+
+    result = runner.invoke(cmd, ['--help'])
+    assert result.exit_code == 0
+    assert '--username' in result.output
+    assert 'lambda' not in result.output
+    assert '(dynamic)' in result.output
+
+def test_dynamic_default_help_text(runner):
+    @click.command()
+    @click.option('--username', prompt=True,
+                  default=lambda: os.environ.get('USER', ''),
+                  show_default='current user')
+    def cmd(username):
+        print("Hello,", username)
+
+    result = runner.invoke(cmd, ['--help'])
+    assert result.exit_code == 0
+    assert '--username' in result.output
+    assert 'lambda' not in result.output
+    assert '(current user)' in result.output
 
 def test_nargs_envvar(runner):
     @click.command()
@@ -301,7 +328,6 @@ def test_multiline_help(runner):
     assert '  --foo TEXT  hello' in out
     assert '              i am' in out
     assert '              multiline' in out
-
 
 def test_argument_custom_class(runner):
     class CustomArgument(click.Argument):
