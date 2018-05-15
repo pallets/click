@@ -781,13 +781,6 @@ class Command(BaseCommand):
         self.help = help
         self.epilog = epilog
         self.options_metavar = options_metavar
-        if short_help is None and help:
-            if (context_settings is not None and
-                'short_help_width' in context_settings):
-                    short_width = context_settings.get('short_help_width')
-                    short_help = make_default_short_help(help, short_width)
-            else:
-                short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
         self.hidden = hidden
@@ -1031,7 +1024,7 @@ class MultiCommand(Command):
         """Extra format methods for multi methods that adds all the commands
         after the options.
         """
-        rows = []
+        commands = []
         for subcommand in self.list_commands(ctx):
             cmd = self.get_command(ctx, subcommand)
             # What is this, the tool lied about a command.  Ignore it
@@ -1040,14 +1033,20 @@ class MultiCommand(Command):
             if cmd.hidden:
                 continue
 
-            help = cmd.short_help or ''
-            if cmd.deprecated:
-                help += DEPRECATED_HELP_NOTICE
-            rows.append((subcommand, help))
+            commands.append((subcommand, cmd))
 
-        if rows:
-            with formatter.section('Commands'):
-                formatter.write_dl(rows)
+        # allow for 3 times the default spacing
+        if len(commands):
+            limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
+
+            rows = []
+            for subcommand, cmd in commands:
+                help = cmd.short_help or cmd.help and make_default_short_help(cmd.help, limit)
+                rows.append((subcommand, help or ''))
+
+            if rows:
+                with formatter.section('Commands'):
+                    formatter.write_dl(rows)
 
     def parse_args(self, ctx, args):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
