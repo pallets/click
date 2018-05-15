@@ -1036,16 +1036,17 @@ class MultiCommand(Command):
             commands.append((subcommand, cmd))
 
         # allow for 3 times the default spacing
-        limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
+        if len(commands):
+            limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
 
-        rows = []
-        for subcommand, cmd in commands:
-            help = cmd.short_help or cmd.help and make_default_short_help(cmd.help, limit)
-            rows.append((subcommand, help or ''))
+            rows = []
+            for subcommand, cmd in commands:
+                help = cmd.short_help or cmd.help and make_default_short_help(cmd.help, limit)
+                rows.append((subcommand, help or ''))
 
-        if rows:
-            with formatter.section('Commands'):
-                formatter.write_dl(rows)
+            if rows:
+                with formatter.section('Commands'):
+                    formatter.write_dl(rows)
 
     def parse_args(self, ctx, args):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
