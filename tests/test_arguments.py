@@ -290,9 +290,9 @@ def test_defaults_for_nargs(runner):
     assert 'argument a takes 2 values' in result.output
 
 
-@pytest.mark.xfail(strict=True)
 def test_multiple_param_decls_not_allowed(runner):
-    @click.command()
-    @click.argument('x', click.Choice(['a', 'b']))
-    def copy(x):
-        click.echo(x)
+    with pytest.raises(TypeError):
+        @click.command()
+        @click.argument('x', click.Choice(['a', 'b']))
+        def copy(x):
+            click.echo(x)
