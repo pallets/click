@@ -204,6 +204,30 @@ def test_env():
     assert os.environ == env_orig
 
 
+def test_stderr():
+    @click.command()
+    def cli_stderr():
+        click.echo("stdout")
+        click.echo("stderr", err=True)
+
+    runner = CliRunner(mix_stderr=False)
+
+    result = runner.invoke(cli_stderr)
+
+    assert result.output == 'stdout\n'
+    assert result.stdout == 'stdout\n'
+    assert result.stderr == 'stderr\n'
+
+    runner_mix = CliRunner(mix_stderr=True)
+    result_mix = runner_mix.invoke(cli_stderr)
+
+    assert result_mix.output == 'stdout\nstderr\n'
+    assert result_mix.stdout == 'stdout\nstderr\n'
+
+    with pytest.raises(ValueError):
+        result_mix.stderr
+
+
 @pytest.mark.parametrize('args, expected_output', [
     (None, 'bar\n'),
     ([], 'bar\n'),
@@ -222,3 +246,14 @@ def test_args(args, expected_output):
     result = runner.invoke(cli_args, args=args)
     assert result.exit_code == 0
     assert result.output == expected_output
+
+
+def test_setting_prog_name_in_extra():
+    @click.command()
+    def cli():
+        click.echo("ok")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, prog_name="foobar")
+    assert not result.exception
+    assert result.output == 'ok\n'

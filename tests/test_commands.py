@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+
 import click
+import pytest
 
 
 def test_other_command_invoke(runner):
@@ -57,12 +59,18 @@ def test_auto_shorthelp(runner):
         """This is a long text that is too long to show as short help
         and will be truncated instead."""
 
+    @cli.command(context_settings={'short_help_width': 20})
+    def width():
+        """This is a long text that is too long to show as short help
+        and will be truncated instead."""
+
     result = runner.invoke(cli, ['--help'])
     assert re.search(
         r'Commands:\n\s+'
         r'long\s+This is a long text that is too long to show\.\.\.\n\s+'
         r'short\s+This is a short text\.\n\s+'
-        r'special-chars\s+Login and store the token in ~/.netrc\.\s*',
+        r'special-chars\s+Login and store the token in ~/.netrc\.\s+'
+        r'width\s+This is a long text\.\.\.\n\s*',
         result.output) is not None
 
 
@@ -255,15 +263,27 @@ def test_unprocessed_options(runner):
     ]
 
 
-def test_subcommand_naming(runner):
-    @click.group()
-    def cli():
+def test_deprecated_in_help_messages(runner):
+    @click.command(deprecated=True)
+    def cmd_with_help():
+        """CLI HELP"""
         pass
 
-    @cli.command()
-    def foo_bar():
-        click.echo('foo-bar')
+    result = runner.invoke(cmd_with_help, ['--help'])
+    assert '(DEPRECATED)' in result.output
 
-    result = runner.invoke(cli, ['foo-bar'])
-    assert not result.exception
-    assert result.output.splitlines() == ['foo-bar']
+    @click.command(deprecated=True)
+    def cmd_without_help():
+        pass
+
+    result = runner.invoke(cmd_without_help, ['--help'])
+    assert '(DEPRECATED)' in result.output
+
+
+def test_deprecated_in_invocation(runner):
+    @click.command(deprecated=True)
+    def deprecated_cmd():
+        debug()
+
+    result = runner.invoke(deprecated_cmd)
+    assert 'DeprecationWarning:' in result.output

@@ -8,6 +8,7 @@ dist
 build
 docs/_build
 click.egg-info
+venv/
 .tox
 .cache
 .ropeproject

@@ -15,8 +15,15 @@ from docutils import nodes
 from docutils.statemachine import ViewList
 
 from sphinx.domains import Domain
-from sphinx.util.compat import Directive
+from docutils.parsers.rst import Directive
 
+PY2 = sys.version_info[0] == 2
+
+if PY2:
+    text_type = unicode
+else:
+    text_type = str
+    
 
 class EchoingStdin(object):
 
@@ -70,7 +77,7 @@ def fake_modules():
 
 @contextlib.contextmanager
 def isolation(input=None, env=None):
-    if isinstance(input, unicode):
+    if isinstance(input, text_type):
         input = input.encode('utf-8')
     input = StringIO(input or '')
     output = StringIO()

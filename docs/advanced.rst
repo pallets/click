@@ -295,8 +295,8 @@ In the end you end up with something like this:
     @click.option('-v', '--verbose', is_flag=True, help='Enables verbose mode')
     @click.argument('timeit_args', nargs=-1, type=click.UNPROCESSED)
     def cli(verbose, timeit_args):
-        """A wrapper around Python's timeit."""
-        cmdline = ['python', '-mtimeit'] + list(timeit_args)
+        """A fake wrapper around Python's timeit."""
+        cmdline = ['echo', 'python', '-mtimeit'] + list(timeit_args)
         if verbose:
             click.echo('Invoking: %s' % ' '.join(cmdline))
         call(cmdline)

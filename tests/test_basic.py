@@ -187,7 +187,7 @@ def test_boolean_conversion(runner):
         def cli(flag):
             click.echo(flag)
 
-        for value in 'true', 't,' '1', 'yes', 'y':
+        for value in 'true', 't', '1', 'yes', 'y':
             result = runner.invoke(cli, ['--flag', value])
             assert not result.exception
             assert result.output == 'True\n'

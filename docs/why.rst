@@ -8,7 +8,7 @@ This question is easy to answer: because there is not a single command
 line utility for Python out there which ticks the following boxes:
 
 *   is lazily composable without restrictions
-*   fully follows the Unix command line conventions
+*   supports implementation of Unix/POSIX command line conventions
 *   supports loading values from environment variables out of the box
 *   supports for prompting of custom values
 *   is fully nestable and composable

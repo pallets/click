@@ -159,7 +159,43 @@ def test_formatting_usage_error(runner):
         'Usage: cmd [OPTIONS] ARG',
         'Try "cmd --help" for help.',
         '',
-        'Error: Missing argument "arg".'
+        'Error: Missing argument "ARG".'
+    ]
+
+
+def test_formatting_usage_error_metavar_missing_arg(runner):
+    """
+    :author: @r-m-n
+    Including attribution to #612
+    """
+    @click.command()
+    @click.argument('arg', metavar='metavar')
+    def cmd(arg):
+        pass
+
+    result = runner.invoke(cmd, [])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        'Usage: cmd [OPTIONS] metavar',
+        'Try "cmd --help" for help.',
+        '',
+        'Error: Missing argument "metavar".'
+    ]
+
+
+def test_formatting_usage_error_metavar_bad_arg(runner):
+    @click.command()
+    @click.argument('arg', type=click.INT, metavar='metavar')
+    def cmd(arg):
+        pass
+
+    result = runner.invoke(cmd, ['3.14'])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        'Usage: cmd [OPTIONS] metavar',
+        'Try "cmd --help" for help.',
+        '',
+        'Error: Invalid value for "metavar": 3.14 is not a valid integer'
     ]
 
 
@@ -179,7 +215,7 @@ def test_formatting_usage_error_nested(runner):
         'Usage: cmd foo [OPTIONS] BAR',
         'Try "cmd foo --help" for help.',
         '',
-        'Error: Missing argument "bar".'
+        'Error: Missing argument "BAR".'
     ]
 
 
@@ -194,7 +230,7 @@ def test_formatting_usage_error_no_help(runner):
     assert result.output.splitlines() == [
         'Usage: cmd [OPTIONS] ARG',
         '',
-        'Error: Missing argument "arg".'
+        'Error: Missing argument "ARG".'
     ]
 
 
@@ -210,5 +246,25 @@ def test_formatting_usage_custom_help(runner):
         'Usage: cmd [OPTIONS] ARG',
         'Try "cmd --man" for help.',
         '',
-        'Error: Missing argument "arg".'
+        'Error: Missing argument "ARG".'
+    ]
+
+def test_formatting_custom_type_metavar(runner):
+    class MyType(click.ParamType):
+        def get_metavar(self, param):
+            return "MY_TYPE"
+
+    @click.command("foo")
+    @click.help_option()
+    @click.argument("param", type=MyType())
+    def cmd(param):
+        pass
+
+    result = runner.invoke(cmd, '--help')
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'Usage: foo [OPTIONS] MY_TYPE',
+        '',
+        'Options:',
+        '  --help  Show this message and exit.'
     ]

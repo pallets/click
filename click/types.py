@@ -133,11 +133,15 @@ class Choice(ParamType):
     generators) may lead to surprising results.
 
     See :ref:`choice-opts` for an example.
+
+    :param case_sensitive: Set to false to make choices case insensitive.
+    Defaults to true.
     """
     name = 'choice'
 
-    def __init__(self, choices):
+    def __init__(self, choices, case_sensitive=True):
         self.choices = choices
+        self.case_sensitive = case_sensitive
 
     def get_metavar(self, param):
         return '[%s]' % '|'.join(self.choices)
@@ -150,13 +154,25 @@ class Choice(ParamType):
         if value in self.choices:
             return value
 
-        # Match through normalization
+        # Match through normalization and case sensitivity
+        # first do token_normalize_func, then lowercase
+        # preserve original `value` to produce an accurate message in
+        # `self.fail`
+        normed_value = value
+        normed_choices = self.choices
+
         if ctx is not None and \
            ctx.token_normalize_func is not None:
-            value = ctx.token_normalize_func(value)
-            for choice in self.choices:
-                if ctx.token_normalize_func(choice) == value:
-                    return choice
+            normed_value = ctx.token_normalize_func(value)
+            normed_choices = [ctx.token_normalize_func(choice) for choice in
+                              self.choices]
+
+        if not self.case_sensitive:
+            normed_value = normed_value.lower()
+            normed_choices = [choice.lower() for choice in normed_choices]
+
+        if normed_value in normed_choices:
+            return normed_value
 
         self.fail('invalid choice: %s. (choose from %s)' %
                   (value, ', '.join(self.choices)), param, ctx)
@@ -277,7 +293,7 @@ class BoolParamType(ParamType):
         if isinstance(value, bool):
             return bool(value)
         value = value.lower()
-        if value in ('true', 't,' '1', 'yes', 'y'):
+        if value in ('true', 't', '1', 'yes', 'y'):
             return True
         elif value in ('false', 'f', '0', 'no', 'n'):
             return False
