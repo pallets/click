@@ -47,26 +47,31 @@ def test_progressbar_length_hint(runner, monkeypatch):
 
         next = __next__
 
+    fake_clock = FakeClock()
+
     @click.command()
     def cli():
         with click.progressbar(Hinted(10), label='test') as progress:
             for thing in progress:
-                time.sleep(.5)
+                fake_clock.advance_time()
 
+    monkeypatch.setattr(time, 'time', fake_clock.time)
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
     result = runner.invoke(cli, [])
     assert result.exception is None
 
 
 def test_progressbar_hidden(runner, monkeypatch):
+    fake_clock = FakeClock()
     label = 'whatever'
 
     @click.command()
     def cli():
         with click.progressbar(tuple(range(10)), label=label) as progress:
             for thing in progress:
-                pass
+                fake_clock.advance_time()
 
+    monkeypatch.setattr(time, 'time', fake_clock.time)
     monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: False)
     assert runner.invoke(cli, []).output == ''
 
