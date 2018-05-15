@@ -1,28 +1,43 @@
+sudo: false
 language: python
 python:
-  - "2.6"
   - "2.7"
-  - "3.3"
   - "3.4"
   - "3.5"
+  - "3.6"
   - "pypy"
 
 env:
-  - REQUIREMENTS=colorama
-  - REQUIREMENTS=default
+  - TEST_EXTRA=
+  - TEST_EXTRA=colorama
 
 install:
-  - pip install -r .travis-$REQUIREMENTS-requirements.txt
-  - pip install --editable .
+  - pip install tox
 
-script: make test
+script:
+  - |
+    set -ex
+    if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then
+      TOX_PY=pypy
+    else
+      TOX_PY="py${TRAVIS_PYTHON_VERSION/./}"
+    fi
+    export TOXENV="${TOX_PY}-coverage"
+    if [[ $TEST_EXTRA == colorama ]]; then
+      TOXENV="$TOXENV-colorama"
+    fi
+    tox
+    set +x
+
+branches:
+  only:
+    - master
+    - auto
+    - /^.*-maintenance$/
 
 notifications:
   email: false
-  irc:
-    channels:
-      - "chat.freenode.net#pocoo"
-    on_success: change
-    on_failure: always
-    use_notice: true
-    skip_join: true
+
+after_success:
+  - pip install codecov
+  - travis_retry codecov --env TOXENV -X fix search gcov --required --flags $TOX_PY $TEST_EXTRA
