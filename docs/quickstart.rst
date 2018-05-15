@@ -120,8 +120,8 @@ as in the GitHub repository together with readme files:
 *   ``imagepipe``: `Multi command chaining demo
     <https://github.com/pallets/click/tree/master/examples/imagepipe>`_
 
-Basic Concepts
---------------
+Basic Concepts - Creating a Command
+-----------------------------------
 
 Click is based on declaring commands through decorators.  Internally, there
 is a non-decorator interface for advanced use cases, but it's discouraged

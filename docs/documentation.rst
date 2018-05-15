@@ -76,6 +76,7 @@ And what it looks like:
 
     invoke(cli, args=['--help'])
 
+.. _doc-meta-variables:
 
 Meta Variables
 --------------
