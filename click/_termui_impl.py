@@ -13,7 +13,7 @@ import os
 import sys
 import time
 import math
-
+import contextlib
 from ._compat import _default_text_stdout, range_type, PY2, isatty, \
      open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
      CYGWIN
@@ -525,6 +525,10 @@ def _translate_ch_to_exc(ch):
 if WIN:
     import msvcrt
 
+    @contextlib.contextmanager
+    def raw_terminal():
+        yield
+
     def getchar(echo):
         rv = msvcrt.getch()
         if echo:
@@ -541,7 +545,8 @@ else:
     import tty
     import termios
 
-    def getchar(echo):
+    @contextlib.contextmanager
+    def raw_terminal():
         if not isatty(sys.stdin):
             f = open('/dev/tty')
             fd = f.fileno()
@@ -552,9 +557,7 @@ else:
             old_settings = termios.tcgetattr(fd)
             try:
                 tty.setraw(fd)
-                ch = os.read(fd, 32)
-                if echo and isatty(sys.stdout):
-                    sys.stdout.write(ch)
+                yield fd
             finally:
                 termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
                 sys.stdout.flush()
@@ -562,5 +565,11 @@ else:
                     f.close()
         except termios.error:
             pass
-        _translate_ch_to_exc(ch)
-        return ch.decode(get_best_encoding(sys.stdin), 'replace')
+
+    def getchar(echo):
+        with raw_terminal() as fd:
+            ch = os.read(fd, 32)
+            if echo and isatty(sys.stdout):
+                sys.stdout.write(ch)
+            _translate_ch_to_exc(ch)
+            return ch.decode(get_best_encoding(sys.stdin), 'replace')
