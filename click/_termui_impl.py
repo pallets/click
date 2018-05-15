@@ -233,7 +233,7 @@ class ProgressBar(object):
 
         if line != self._last_line and not self.is_fast():
             self._last_line = line
-            echo(line, file=self.file, color=self.color, nl=True)
+            echo(line, file=self.file, color=self.color, nl=False)
             self.file.flush()
 
     def make_step(self, n_steps):
