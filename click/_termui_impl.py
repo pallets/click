@@ -245,7 +245,16 @@ class ProgressBar(object):
             return
 
         self.last_eta = time.time()
-        self.avg = self.avg[-6:] + [-(self.start - time.time()) / (self.pos)]
+
+        # self.avg is a rolling list of length <= 7 of steps where steps are
+        # defined as time elapsed divided by the total progress through
+        # self.length.
+        if self.pos:
+            step = (time.time() - self.start) / self.pos
+        else:
+            step = time.time() - self.start
+
+        self.avg = self.avg[-6:] + [step]
 
         self.eta_known = self.length_known
 
