@@ -42,7 +42,7 @@ def test_other_command_forward(runner):
 
 
 def test_auto_shorthelp(runner):
-    @click.group()
+    @click.group(context_settings={'max_content_width': 67})
     def cli():
         pass
 

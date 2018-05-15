@@ -137,7 +137,7 @@ def commit(repo, files, message):
     click.echo('Commit message:\n' + msg)
 
 
-@cli.command(short_help='Copies files.')
+@cli.command(help='Copies files.')
 @click.option('--force', is_flag=True,
               help='forcibly copy over an existing managed file')
 @click.argument('src', nargs=-1, type=click.Path())

@@ -9,7 +9,7 @@ from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo, get_os_args
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
      MissingParameter
-from .termui import prompt, confirm
+from .termui import prompt, confirm, get_terminal_size
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
 from .globals import push_context, pop_context
@@ -746,8 +746,7 @@ class Command(BaseCommand):
     :param help: the help string to use for this command.
     :param epilog: like the help string but it's printed at the end of the
                    help page after everything else.
-    :param short_help: the short help to use for this command.  This is
-                       shown on the command listing of the parent command.
+    :param short_help: deprecated in favor of help
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
     :param hidden: hide this command from help outputs.
@@ -765,12 +764,9 @@ class Command(BaseCommand):
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
         self.params = params or []
-        self.help = help
+        self.help = help or short_help
         self.epilog = epilog
         self.options_metavar = options_metavar
-        if short_help is None and help:
-            short_help = make_default_short_help(help)
-        self.short_help = short_help
         self.add_help_option = add_help_option
         self.hidden = hidden
 
@@ -1005,16 +1001,30 @@ class MultiCommand(Command):
         after the options.
         """
         rows = []
-        for subcommand in self.list_commands(ctx):
-            cmd = self.get_command(ctx, subcommand)
-            # What is this, the tool lied about a command.  Ignore it
-            if cmd is None:
-                continue
-            if cmd.hidden:
-                continue
-
-            help = cmd.short_help or ''
-            rows.append((subcommand, help))
+        # Ignore errant none case and hidden commands
+        commands = [self.get_command(ctx, cmd) for cmd in self.list_commands(ctx)
+                    if cmd is not None]
+        commands = [cmd for cmd in commands if not cmd.hidden]
+        if len(commands) > 0:
+            name_length = lambda c: len(c.name)
+            # formater adds wraps additional spaces
+            command_names_width = max(map(name_length,commands)) + 4
+            ctx_width = ctx.max_content_width or ctx.terminal_width
+            if ctx_width is not None:
+                max_width = min(ctx_width, get_terminal_size()[0])
+            else:
+                max_width = get_terminal_size()[0]
+            # add space to allow for truncating word with elipse
+            max_width = max_width - command_names_width - 6
+            for subcommand in commands:
+                if subcommand.help is None:
+                    help = ''
+                else:
+                    if len(subcommand.help) < max_width:
+                        help = subcommand.help
+                    else:
+                        help = make_default_short_help(subcommand.help, max_width)
+                rows.append((subcommand.name, help))
 
         if rows:
             with formatter.section('Commands'):

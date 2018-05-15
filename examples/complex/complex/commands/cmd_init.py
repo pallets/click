@@ -2,7 +2,7 @@ import click
 from complex.cli import pass_context
 
 
-@click.command('init', short_help='Initializes a repo.')
+@click.command('init', help='Initializes a repo.')
 @click.argument('path', required=False, type=click.Path(resolve_path=True))
 @pass_context
 def cli(ctx, path):
