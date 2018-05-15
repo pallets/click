@@ -557,6 +557,33 @@ And from the command line:
     invoke(greet, env={'GREETER_USERNAME': 'john'},
            auto_envvar_prefix='GREETER')
 
+When using ``auto_envvar_prefix`` with command groups, the command name needs
+to be included in the environment variable, between the prefix and the parameter name, *i.e.* *PREFIX_COMMAND_VARIABLE*.
+
+Example:
+
+.. click:example::
+
+   @click.group()
+   @click.option('--debug/--no-debug')
+   def cli(debug):
+       click.echo('Debug mode is %s' % ('on' if debug else 'off'))
+
+   @cli.command()
+   @click.option('--username')
+   def greet(username):
+       click.echo('Hello %s!' % username)
+
+   if __name__ == '__main__':
+       cli(auto_envvar_prefix='GREETER')
+
+.. click:run::
+
+   invoke(cli, args=['greet',],
+          env={'GREETER_GREET_USERNAME': 'John', 'GREETER_DEBUG': 'false'},
+          auto_envvar_prefix='GREETER')
+
+
 The second option is to manually pull values in from specific environment
 variables by defining the name of the environment variable on the option.
 
