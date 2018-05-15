@@ -769,7 +769,12 @@ class Command(BaseCommand):
         self.epilog = epilog
         self.options_metavar = options_metavar
         if short_help is None and help:
-            short_help = make_default_short_help(help)
+            if (context_settings is not None and
+                'short_help_width' in context_settings):
+                    short_width = context_settings.get('short_help_width')
+                    short_help = make_default_short_help(help, short_width)
+            else:
+                short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
         self.hidden = hidden
