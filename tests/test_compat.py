@@ -20,6 +20,6 @@ if click.__version__ >= '3.0':
 
 def test_bash_func_name():
     from click._bashcomplete import get_completion_script
-    script = get_completion_script('foo-bar baz_blah', '_COMPLETE_VAR').strip()
+    script = get_completion_script('foo-bar baz_blah', '_COMPLETE_VAR', 'bash').strip()
     assert script.startswith('_foo_barbaz_blah_completion()')
     assert '_COMPLETE_VAR=complete $1' in script
