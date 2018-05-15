@@ -10,7 +10,7 @@ from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo, get_os_args
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
      MissingParameter
-from .termui import prompt, confirm
+from .termui import prompt, confirm, style
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
 from .globals import push_context, pop_context
@@ -24,6 +24,15 @@ _missing = object()
 
 SUBCOMMAND_METAVAR = 'COMMAND [ARGS]...'
 SUBCOMMANDS_METAVAR = 'COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...'
+
+DEPRECATED_HELP_NOTICE = ' (DEPRECATED)'
+DEPRECATED_INVOKE_NOTICE = 'DeprecationWarning: ' + \
+                           'The command %(name)s is deprecated.'
+
+
+def _maybe_show_deprecated_notice(cmd):
+    if cmd.deprecated:
+        echo(style(DEPRECATED_INVOKE_NOTICE % {'name': cmd.name}, fg='red'), err=True)
 
 
 def fast_exit(code):
@@ -752,12 +761,15 @@ class Command(BaseCommand):
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
     :param hidden: hide this command from help outputs.
+
+    :param deprecated: issues a message indicating that
+                             the command is deprecated.
     """
 
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
                  options_metavar='[OPTIONS]', add_help_option=True,
-                 hidden=False):
+                 hidden=False, deprecated=False):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -779,6 +791,7 @@ class Command(BaseCommand):
         self.short_help = short_help
         self.add_help_option = add_help_option
         self.hidden = hidden
+        self.deprecated = deprecated
 
     def get_usage(self, ctx):
         formatter = ctx.make_formatter()
@@ -864,7 +877,14 @@ class Command(BaseCommand):
         if self.help:
             formatter.write_paragraph()
             with formatter.indentation():
-                formatter.write_text(self.help)
+                help_text = self.help
+                if self.deprecated:
+                    help_text += DEPRECATED_HELP_NOTICE
+                formatter.write_text(help_text)
+        elif self.deprecated:
+            formatter.write_paragraph()
+            with formatter.indentation():
+                formatter.write_text(DEPRECATED_HELP_NOTICE)
 
     def format_options(self, ctx, formatter):
         """Writes all the options into the formatter if they exist."""
@@ -905,6 +925,7 @@ class Command(BaseCommand):
         """Given a context, this invokes the attached callback (if it exists)
         in the right way.
         """
+        _maybe_show_deprecated_notice(self)
         if self.callback is not None:
             return ctx.invoke(self.callback, **ctx.params)
 
@@ -1020,6 +1041,8 @@ class MultiCommand(Command):
                 continue
 
             help = cmd.short_help or ''
+            if cmd.deprecated:
+                help += DEPRECATED_HELP_NOTICE
             rows.append((subcommand, help))
 
         if rows:

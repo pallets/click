@@ -263,61 +263,27 @@ def test_unprocessed_options(runner):
     ]
 
 
-def test_subcommand_naming(runner):
-    @click.group()
-    def cli():
+def test_deprecated_in_help_messages(runner):
+    @click.command(deprecated=True)
+    def cmd_with_help():
+        """CLI HELP"""
         pass
 
-    @cli.command()
-    def foo_bar():
-        click.echo('foo-bar')
+    result = runner.invoke(cmd_with_help, ['--help'])
+    assert '(DEPRECATED)' in result.output
 
-    result = runner.invoke(cli, ['foo-bar'])
-    assert not result.exception
-    assert result.output.splitlines() == ['foo-bar']
-
-
-def test_environment_variables(runner):
-    @click.group()
-    def cli():
+    @click.command(deprecated=True)
+    def cmd_without_help():
         pass
 
-    @cli.command()
-    @click.option('--name', envvar='CLICK_NAME')
-    def foo(name):
-        click.echo(name)
-
-    result = runner.invoke(cli, ['foo'], env={'CLICK_NAME': 'environment'})
-
-    assert not result.exception
-    assert result.output == 'environment\n'
+    result = runner.invoke(cmd_without_help, ['--help'])
+    assert '(DEPRECATED)' in result.output
 
 
-# Ensures the variables are read in the following order:
-# 1. CLI
-# 2. Environment
-# 3. Defaults
-variable_precedence_testdata = [
-    (['foo', '--name=cli'], {'CLICK_NAME': 'environment'}, 'cli\n'),
-    (['foo'], {'CLICK_NAME': 'environment'}, 'environment\n'),
-    (['foo'], None, 'defaults\n'),
-]
+def test_deprecated_in_invocation(runner):
+    @click.command(deprecated=True)
+    def deprecated_cmd():
+        debug()
 
-
-@pytest.mark.parametrize("command,environment,expected",
-                          variable_precedence_testdata)
-def test_variable_precendence_00(runner, command, environment, expected):
-    @click.group()
-    def cli():
-        pass
-
-    @cli.command()
-    @click.option('--name', envvar='CLICK_NAME')
-    def foo(name):
-        click.echo(name)
-
-    defaults = {'foo': {'name': 'defaults'}}
-    result = runner.invoke(cli, command, default_map=defaults, env=environment)
-
-    assert not result.exception
-    assert result.output == expected
+    result = runner.invoke(deprecated_cmd)
+    assert 'DeprecationWarning:' in result.output
