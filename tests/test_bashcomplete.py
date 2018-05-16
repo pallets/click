@@ -160,7 +160,7 @@ def test_chaining():
     assert choices_without_help(cli, ['asub', '--asub-opt'], '') == []
     assert choices_without_help(cli, ['asub', '--asub-opt', '5', 'bsub'], '-') == ['--bsub-opt']
     assert choices_without_help(cli, ['asub', 'bsub'], '-') == ['--bsub-opt']
-    assert choices_with_help(cli, ['asub', 'csub'], '') == [('carg1', None), ('carg2', None), ('bsub', 'bsub help')]
+    assert choices_with_help(cli, ['asub'], 'b') == [('bsub', 'bsub help')]
     assert choices_without_help(cli, ['asub', 'csub'], '-') == ['--csub-opt']
 
 
@@ -276,7 +276,7 @@ def test_long_chain_choice():
     def sub(sub_opt):
         pass
 
-    @sub.command(help='bsub help')
+    @sub.command(short_help='bsub help')
     @click.option('--bsub-opt', type=click.Choice(['bsubopt1', 'bsubopt2']))
     @click.argument('bsub-arg1', required=False, type=click.Choice(['bsubarg1', 'bsubarg2']))
     @click.argument('bbsub-arg2', required=False, type=click.Choice(['bbsubarg1', 'bbsubarg2']))

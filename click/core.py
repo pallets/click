@@ -879,6 +879,9 @@ class Command(BaseCommand):
             with formatter.indentation():
                 formatter.write_text(DEPRECATED_HELP_NOTICE)
 
+    def get_short_help_str(self, limit=45):
+        return self.short_help or self.help and make_default_short_help(self.help, limit) or ''
+
     def format_options(self, ctx, formatter):
         """Writes all the options into the formatter if they exist."""
         opts = []
@@ -1041,8 +1044,8 @@ class MultiCommand(Command):
 
             rows = []
             for subcommand, cmd in commands:
-                help = cmd.short_help or cmd.help and make_default_short_help(cmd.help, limit)
-                rows.append((subcommand, help or ''))
+                help = cmd.get_short_help_str(limit)
+                rows.append((subcommand, help))
 
             if rows:
                 with formatter.section('Commands'):

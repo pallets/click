@@ -64,7 +64,7 @@ completions a help string can be provided by returning a tuple instead of a
 string. The first element of the tuple is the completion and the second is the
 help string to display.
 
-Here is an example of using a callback function to generate dynamic suggestions with a help strings:
+Here is an example of using a callback function to generate dynamic suggestions with help strings:
 
 .. click:example::
 

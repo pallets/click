@@ -164,7 +164,7 @@ def add_subcommand_completions(ctx, incomplete, completions_out):
     # Add subcommand completions.
     if isinstance(ctx.command, MultiCommand):
         completions_out.extend(
-            [(c, ctx.command.get_command(ctx, c).short_help) for c in ctx.command.list_commands(ctx) if c.startswith(incomplete)])
+            [(c, ctx.command.get_command(ctx, c).get_short_help_str()) for c in ctx.command.list_commands(ctx) if c.startswith(incomplete)])
 
     # Walk up the context list and add any other completion possibilities from chained commands
     while ctx.parent is not None:
@@ -173,7 +173,7 @@ def add_subcommand_completions(ctx, incomplete, completions_out):
             remaining_commands = sorted(
                 set(ctx.command.list_commands(ctx)) - set(ctx.protected_args))
             completions_out.extend(
-                [(c, ctx.command.get_command(ctx, c).short_help) for c in remaining_commands if c.startswith(incomplete)])
+                [(c, ctx.command.get_command(ctx, c).get_short_help_str()) for c in remaining_commands if c.startswith(incomplete)])
 
 
 def get_choices(cli, prog_name, args, incomplete):
