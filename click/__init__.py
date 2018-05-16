@@ -66,7 +66,7 @@ __all__ = [
 
     # Types
     'ParamType', 'File', 'Path', 'Choice', 'IntRange', 'Tuple', 'STRING',
-    'INT', 'FLOAT', 'BOOL', 'UUID', 'UNPROCESSED', 'FloatRange'
+    'INT', 'FLOAT', 'BOOL', 'UUID', 'UNPROCESSED', 'FloatRange',
 
     # Utilities
     'echo', 'get_binary_stream', 'get_text_stream', 'open_file',

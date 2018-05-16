@@ -2,6 +2,12 @@ from ._compat import PY2, filename_to_ui, get_text_stderr
 from .utils import echo
 
 
+def _join_param_hints(param_hint):
+    if isinstance(param_hint, (tuple, list)):
+        return ' / '.join('"%s"' % x for x in param_hint)
+    return param_hint
+
+
 class ClickException(Exception):
     """An exception that Click can handle and show to the user."""
 
@@ -19,11 +25,14 @@ class ClickException(Exception):
     def format_message(self):
         return self.message
 
-    def __unicode__(self):
+    def __str__(self):
         return self.message
 
-    def __str__(self):
-        return self.message.encode('utf-8')
+    if PY2:
+        __unicode__ = __str__
+
+        def __str__(self):
+            return self.message.encode('utf-8')
 
     def show(self, file=None):
         if file is None:
@@ -89,11 +98,11 @@ class BadParameter(UsageError):
         if self.param_hint is not None:
             param_hint = self.param_hint
         elif self.param is not None:
-            param_hint = self.param.opts or [self.param.human_readable_name]
+            param_hint = self.param.get_error_hint(self.ctx)
         else:
             return 'Invalid value: %s' % self.message
-        if isinstance(param_hint, (tuple, list)):
-            param_hint = ' / '.join('"%s"' % x for x in param_hint)
+        param_hint = _join_param_hints(param_hint)
+
         return 'Invalid value for %s: %s' % (param_hint, self.message)
 
 
@@ -118,11 +127,10 @@ class MissingParameter(BadParameter):
         if self.param_hint is not None:
             param_hint = self.param_hint
         elif self.param is not None:
-            param_hint = self.param.opts or [self.param.human_readable_name]
+            param_hint = self.param.get_error_hint(self.ctx)
         else:
             param_hint = None
-        if isinstance(param_hint, (tuple, list)):
-            param_hint = ' / '.join('"%s"' % x for x in param_hint)
+        param_hint = _join_param_hints(param_hint)
 
         param_type = self.param_type
         if param_type is None and self.param is not None:

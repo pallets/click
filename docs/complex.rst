@@ -153,10 +153,10 @@ One obvious way to remedy this is to store a reference to the repo in the
 plugin, but then a command needs to be aware that it's attached below such a
 plugin.
 
-There is a much better system that can built by taking advantage of the linked
-nature of contexts.  We know that the plugin context is linked to the context
-that created our repo.  Because of that, we can start a search for the last
-level where the object stored by the context was a repo.
+There is a much better system that can be built by taking advantage of the
+linked nature of contexts.  We know that the plugin context is linked to the
+context that created our repo.  Because of that, we can start a search for
+the last level where the object stored by the context was a repo.
 
 Built-in support for this is provided by the :func:`make_pass_decorator`
 factory, which will create decorators for us that find objects (it
@@ -210,7 +210,7 @@ As such it runs standalone:
     @click.command()
     @pass_repo
     def cp(repo):
-        click.echo(repo)
+        click.echo(isinstance(repo, Repo))
 
 As you can see:
 

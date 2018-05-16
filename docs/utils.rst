@@ -41,7 +41,7 @@ new in Click 6.0.
 
 Click now emulates output streams on Windows to support unicode to the
 Windows console through separate APIs.  For more information see
-`wincmd`_.
+:doc:`wincmd`.
 
 .. versionadded:: 3.0
 
@@ -61,7 +61,8 @@ ANSI Colors
 Starting with Click 2.0, the :func:`echo` function gained extra
 functionality to deal with ANSI colors and styles.  Note that on Windows,
 this functionality is only available if `colorama`_ is installed.  If it
-is installed, then ANSI codes are intelligently handled.
+is installed, then ANSI codes are intelligently handled. Note that in Python
+2, the echo function doesn't parse color code information from bytearrays.
 
 Primarily this means that:
 
@@ -95,7 +96,7 @@ a single function called :func:`secho`::
     click.secho('ATTENTION', blink=True, bold=True)
 
 
-.. _colorama: https://pypi.python.org/pypi/colorama
+.. _colorama: https://pypi.org/project/colorama/
 
 Pager Support
 -------------
@@ -113,6 +114,17 @@ Example:
     def less():
         click.echo_via_pager('\n'.join('Line %d' % idx
                                        for idx in range(200)))
+
+If you want to use the pager for a lot of text, especially if generating everything in advance would take a lot of time, you can pass a generator (or generator function) instead of a string:
+
+.. click:example::
+    def _generate_output():
+        for idx in range(50000):
+            yield "Line %d\n" % idx
+
+    @click.command()
+    def less():
+        click.echo_via_pager(_generate_output())
 
 
 Screen Clearing
@@ -283,7 +295,7 @@ Example::
 
 Click now emulates output streams on Windows to support unicode to the
 Windows console through separate APIs.  For more information see
-`wincmd`_.
+:doc:`wincmd`.
 
 
 Intelligent File Opening

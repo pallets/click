@@ -51,7 +51,7 @@ If you are on Windows (or none of the above methods worked) you must install
 Once you have it installed, run the ``pip`` command from above, but without
 the `sudo` prefix.
 
-.. _installing pip: http://pip.readthedocs.org/en/latest/installing.html
+.. _installing pip: https://pip.readthedocs.io/en/latest/installing.html
 
 Once you have virtualenv installed, just fire up a shell and create
 your own environment.  I usually create a project folder and a `venv`
@@ -120,8 +120,8 @@ as in the GitHub repository together with readme files:
 *   ``imagepipe``: `Multi command chaining demo
     <https://github.com/pallets/click/tree/master/examples/imagepipe>`_
 
-Basic Concepts
---------------
+Basic Concepts - Creating a Command
+-----------------------------------
 
 Click is based on declaring commands through decorators.  Internally, there
 is a non-decorator interface for advanced use cases, but it's discouraged
@@ -174,7 +174,9 @@ correction in case the terminal is misconfigured instead of dying with an
 As an added benefit, starting with Click 2.0, the echo function also
 has good support for ANSI colors.  It will automatically strip ANSI codes
 if the output stream is a file and if colorama is supported, ANSI colors
-will also work on Windows.  See :ref:`ansi-colors` for more information.
+will also work on Windows. Note that in Python 2, the :func:`echo` function
+does not parse color code information from bytearrays. See :ref:`ansi-colors`
+for more information.
 
 If you don't need this, you can also use the `print()` construct /
 function.

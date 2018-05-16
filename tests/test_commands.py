@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+
 import click
+import pytest
 
 
 def test_other_command_invoke(runner):
@@ -60,9 +62,9 @@ def test_auto_shorthelp(runner):
     result = runner.invoke(cli, ['--help'])
     assert re.search(
         r'Commands:\n\s+'
-        r'long\s+This is a long text that is too long to show\.\.\.\n\s+'
+        r'long\s+This is a long text that is too long to show as short help\.\.\.\n\s+'
         r'short\s+This is a short text\.\n\s+'
-        r'special_chars\s+Login and store the token in ~/.netrc\.\s*',
+        r'special-chars\s+Login and store the token in ~/.netrc\.\s*',
         result.output) is not None
 
 
@@ -206,7 +208,7 @@ def test_other_command_invoke_with_defaults(runner):
     @click.option('--foo', type=click.INT, default=42)
     @click.pass_context
     def other_cmd(ctx, foo):
-        assert ctx.info_name == 'other_cmd'
+        assert ctx.info_name == 'other-cmd'
         click.echo(foo)
 
     result = runner.invoke(cli, [])
@@ -253,3 +255,29 @@ def test_unprocessed_options(runner):
         'Verbosity: 4',
         'Args: -foo|-x|--muhaha|x|y|-x',
     ]
+
+
+def test_deprecated_in_help_messages(runner):
+    @click.command(deprecated=True)
+    def cmd_with_help():
+        """CLI HELP"""
+        pass
+
+    result = runner.invoke(cmd_with_help, ['--help'])
+    assert '(DEPRECATED)' in result.output
+
+    @click.command(deprecated=True)
+    def cmd_without_help():
+        pass
+
+    result = runner.invoke(cmd_without_help, ['--help'])
+    assert '(DEPRECATED)' in result.output
+
+
+def test_deprecated_in_invocation(runner):
+    @click.command(deprecated=True)
+    def deprecated_cmd():
+        debug()
+
+    result = runner.invoke(deprecated_cmd)
+    assert 'DeprecationWarning:' in result.output

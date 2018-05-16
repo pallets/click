@@ -188,7 +188,7 @@ def test_empty_nargs(runner):
 
     result = runner.invoke(cmd2, [])
     assert result.exit_code == 2
-    assert 'Missing argument "arg"' in result.output
+    assert 'Missing argument "ARG..."' in result.output
 
 
 def test_missing_arg(runner):
@@ -199,7 +199,7 @@ def test_missing_arg(runner):
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2
-    assert 'Missing argument "arg".' in result.output
+    assert 'Missing argument "ARG".' in result.output
 
 
 def test_implicit_non_required(runner):

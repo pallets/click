@@ -7,25 +7,31 @@ from weakref import WeakKeyDictionary
 
 
 PY2 = sys.version_info[0] == 2
-WIN = sys.platform.startswith('win')
 CYGWIN = sys.platform.startswith('cygwin')
+# Determine local App Engine environment, per Google's own suggestion
+APP_ENGINE = ('APPENGINE_RUNTIME' in os.environ and
+              'Development/' in os.environ['SERVER_SOFTWARE'])
+WIN = sys.platform.startswith('win') and not APP_ENGINE
 DEFAULT_COLUMNS = 80
 
 
-_ansi_re = re.compile('\033\[((?:\d|;)*)([a-zA-Z])')
+_ansi_re = re.compile(r'\033\[((?:\d|;)*)([a-zA-Z])')
 
 
 def get_filesystem_encoding():
     return sys.getfilesystemencoding() or sys.getdefaultencoding()
 
 
-def _make_text_stream(stream, encoding, errors):
+def _make_text_stream(stream, encoding, errors,
+                      force_readable=False, force_writable=False):
     if encoding is None:
         encoding = get_best_encoding(stream)
     if errors is None:
         errors = 'replace'
     return _NonClosingTextIOWrapper(stream, encoding, errors,
-                                    line_buffering=True)
+                                    line_buffering=True,
+                                    force_readable=force_readable,
+                                    force_writable=force_writable)
 
 
 def is_ascii_encoding(encoding):
@@ -46,8 +52,10 @@ def get_best_encoding(stream):
 
 class _NonClosingTextIOWrapper(io.TextIOWrapper):
 
-    def __init__(self, stream, encoding, errors, **extra):
-        self._stream = stream = _FixupStream(stream)
+    def __init__(self, stream, encoding, errors,
+                 force_readable=False, force_writable=False, **extra):
+        self._stream = stream = _FixupStream(stream, force_readable,
+                                             force_writable)
         io.TextIOWrapper.__init__(self, stream, encoding, errors, **extra)
 
     # The io module is a place where the Python 3 text behavior
@@ -82,10 +90,16 @@ class _FixupStream(object):
     """The new io interface needs more from streams than streams
     traditionally implement.  As such, this fix-up code is necessary in
     some circumstances.
+
+    The forcing of readable and writable flags are there because some tools
+    put badly patched objects on sys (one such offender are certain version
+    of jupyter notebook).
     """
 
-    def __init__(self, stream):
+    def __init__(self, stream, force_readable=False, force_writable=False):
         self._stream = stream
+        self._force_readable = force_readable
+        self._force_writable = force_writable
 
     def __getattr__(self, name):
         return getattr(self._stream, name)
@@ -102,6 +116,8 @@ class _FixupStream(object):
         return self._stream.read(size)
 
     def readable(self):
+        if self._force_readable:
+            return True
         x = getattr(self._stream, 'readable', None)
         if x is not None:
             return x()
@@ -112,6 +128,8 @@ class _FixupStream(object):
         return True
 
     def writable(self):
+        if self._force_writable:
+            return True
         x = getattr(self._stream, 'writable', None)
         if x is not None:
             return x()
@@ -167,10 +185,13 @@ if PY2:
     # available (which is why we use try-catch instead of the WIN variable
     # here), such as the Google App Engine development server on Windows. In
     # those cases there is just nothing we can do.
+    def set_binary_mode(f):
+        return f
+
     try:
         import msvcrt
     except ImportError:
-        set_binary_mode = lambda x: x
+        pass
     else:
         def set_binary_mode(f):
             try:
@@ -179,6 +200,21 @@ if PY2:
                 pass
             else:
                 msvcrt.setmode(fileno, os.O_BINARY)
+            return f
+
+    try:
+        import fcntl
+    except ImportError:
+        pass
+    else:
+        def set_binary_mode(f):
+            try:
+                fileno = f.fileno()
+            except Exception:
+                pass
+            else:
+                flags = fcntl.fcntl(fileno, fcntl.F_GETFL)
+                fcntl.fcntl(fileno, fcntl.F_SETFL, flags & ~os.O_NONBLOCK)
             return f
 
     def isidentifier(x):
@@ -197,19 +233,22 @@ if PY2:
         rv = _get_windows_console_stream(sys.stdin, encoding, errors)
         if rv is not None:
             return rv
-        return _make_text_stream(sys.stdin, encoding, errors)
+        return _make_text_stream(sys.stdin, encoding, errors,
+                                 force_readable=True)
 
     def get_text_stdout(encoding=None, errors=None):
         rv = _get_windows_console_stream(sys.stdout, encoding, errors)
         if rv is not None:
             return rv
-        return _make_text_stream(sys.stdout, encoding, errors)
+        return _make_text_stream(sys.stdout, encoding, errors,
+                                 force_writable=True)
 
     def get_text_stderr(encoding=None, errors=None):
         rv = _get_windows_console_stream(sys.stderr, encoding, errors)
         if rv is not None:
             return rv
-        return _make_text_stream(sys.stderr, encoding, errors)
+        return _make_text_stream(sys.stderr, encoding, errors,
+                                 force_writable=True)
 
     def filename_to_ui(value):
         if isinstance(value, bytes):
@@ -301,7 +340,8 @@ else:
 
         return False
 
-    def _force_correct_text_reader(text_reader, encoding, errors):
+    def _force_correct_text_reader(text_reader, encoding, errors,
+                                   force_readable=False):
         if _is_binary_reader(text_reader, False):
             binary_reader = text_reader
         else:
@@ -327,9 +367,11 @@ else:
         # we're so fundamentally fucked that nothing can repair it.
         if errors is None:
             errors = 'replace'
-        return _make_text_stream(binary_reader, encoding, errors)
+        return _make_text_stream(binary_reader, encoding, errors,
+                                 force_readable=force_readable)
 
-    def _force_correct_text_writer(text_writer, encoding, errors):
+    def _force_correct_text_writer(text_writer, encoding, errors,
+                                   force_writable=False):
         if _is_binary_writer(text_writer, False):
             binary_writer = text_writer
         else:
@@ -355,7 +397,8 @@ else:
         # we're so fundamentally fucked that nothing can repair it.
         if errors is None:
             errors = 'replace'
-        return _make_text_stream(binary_writer, encoding, errors)
+        return _make_text_stream(binary_writer, encoding, errors,
+                                 force_writable=force_writable)
 
     def get_binary_stdin():
         reader = _find_binary_reader(sys.stdin)
@@ -382,19 +425,22 @@ else:
         rv = _get_windows_console_stream(sys.stdin, encoding, errors)
         if rv is not None:
             return rv
-        return _force_correct_text_reader(sys.stdin, encoding, errors)
+        return _force_correct_text_reader(sys.stdin, encoding, errors,
+                                          force_readable=True)
 
     def get_text_stdout(encoding=None, errors=None):
         rv = _get_windows_console_stream(sys.stdout, encoding, errors)
         if rv is not None:
             return rv
-        return _force_correct_text_writer(sys.stdout, encoding, errors)
+        return _force_correct_text_writer(sys.stdout, encoding, errors,
+                                          force_writable=True)
 
     def get_text_stderr(encoding=None, errors=None):
         rv = _get_windows_console_stream(sys.stderr, encoding, errors)
         if rv is not None:
             return rv
-        return _force_correct_text_writer(sys.stderr, encoding, errors)
+        return _force_correct_text_writer(sys.stderr, encoding, errors,
+                                          force_writable=True)
 
     def filename_to_ui(value):
         if isinstance(value, bytes):
@@ -423,7 +469,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     # Standard streams first.  These are simple because they don't need
     # special handling for the atomic flag.  It's entirely ignored.
     if filename == '-':
-        if 'w' in mode:
+        if any(m in mode for m in ['w', 'a', 'x']):
             if 'b' in mode:
                 return get_binary_stdout(), False
             return get_text_stdout(encoding=encoding, errors=errors), False
@@ -463,7 +509,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     else:
         f = os.fdopen(fd, mode)
 
-    return _AtomicFile(f, tmp_filename, filename), True
+    return _AtomicFile(f, tmp_filename, os.path.realpath(filename)), True
 
 
 # Used in a destructor call, needs extra protection from interpreter cleanup.

@@ -1,6 +1,8 @@
 import os
 import sys
 import struct
+import inspect
+import itertools
 
 from ._compat import raw_input, text_type, string_types, \
      isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
@@ -14,8 +16,25 @@ from .globals import resolve_color_default
 # functions to customize how they work.
 visible_prompt_func = raw_input
 
-_ansi_colors = ('black', 'red', 'green', 'yellow', 'blue', 'magenta',
-                'cyan', 'white', 'reset')
+_ansi_colors = {
+    'black': 30,
+    'red': 31,
+    'green': 32,
+    'yellow': 33,
+    'blue': 34,
+    'magenta': 35,
+    'cyan': 36,
+    'white': 37,
+    'reset': 39,
+    'bright_black': 90,
+    'bright_red': 91,
+    'bright_green': 92,
+    'bright_yellow': 93,
+    'bright_blue': 94,
+    'bright_magenta': 95,
+    'bright_cyan': 96,
+    'bright_white': 97,
+}
 _ansi_reset_all = '\033[0m'
 
 
@@ -174,8 +193,14 @@ def get_terminal_size():
             sz = shutil_get_terminal_size()
             return sz.columns, sz.lines
 
+    # We provide a sensible default for get_winterm_size() when being invoked
+    # inside a subprocess. Without this, it would not provide a useful input.
     if get_winterm_size is not None:
-        return get_winterm_size()
+        size = get_winterm_size()
+        if size == (0, 0):
+            return (79, 24)
+        else:
+            return size
 
     def ioctl_gwinsz(fd):
         try:
@@ -203,22 +228,33 @@ def get_terminal_size():
     return int(cr[1]), int(cr[0])
 
 
-def echo_via_pager(text, color=None):
+def echo_via_pager(text_or_generator, color=None):
     """This function takes a text and shows it via an environment specific
     pager on stdout.
 
     .. versionchanged:: 3.0
        Added the `color` flag.
 
-    :param text: the text to page.
+    :param text_or_generator: the text to page, or alternatively, a
+                              generator emitting the text to page.
     :param color: controls if the pager supports ANSI colors or not.  The
                   default is autodetection.
     """
     color = resolve_color_default(color)
-    if not isinstance(text, string_types):
-        text = text_type(text)
+
+    if inspect.isgeneratorfunction(text_or_generator):
+        i = text_or_generator()
+    elif isinstance(text_or_generator, string_types):
+        i = [text_or_generator]
+    else:
+        i = iter(text_or_generator)
+
+    # convert every element of i to a text type if necessary
+    text_generator = (el if isinstance(el, string_types) else text_type(el)
+                      for el in i)
+
     from ._termui_impl import pager
-    return pager(text + '\n', color)
+    return pager(itertools.chain(text_generator, "\n"), color)
 
 
 def progressbar(iterable=None, length=None, label=None, show_eta=True,
@@ -355,9 +391,20 @@ def style(text, fg=None, bg=None, bold=None, dim=None, underline=None,
     * ``magenta``
     * ``cyan``
     * ``white`` (might be light gray)
+    * ``bright_black``
+    * ``bright_red``
+    * ``bright_green``
+    * ``bright_yellow``
+    * ``bright_blue``
+    * ``bright_magenta``
+    * ``bright_cyan``
+    * ``bright_white``
     * ``reset`` (reset the color code only)
 
     .. versionadded:: 2.0
+
+    .. versionadded:: 7.0
+       Added support for bright colors.
 
     :param text: the string to style with ansi codes.
     :param fg: if provided this will become the foreground color.
@@ -377,13 +424,13 @@ def style(text, fg=None, bg=None, bold=None, dim=None, underline=None,
     bits = []
     if fg:
         try:
-            bits.append('\033[%dm' % (_ansi_colors.index(fg) + 30))
-        except ValueError:
+            bits.append('\033[%dm' % (_ansi_colors[fg]))
+        except KeyError:
             raise TypeError('Unknown color %r' % fg)
     if bg:
         try:
-            bits.append('\033[%dm' % (_ansi_colors.index(bg) + 40))
-        except ValueError:
+            bits.append('\033[%dm' % (_ansi_colors[bg] + 10))
+        except KeyError:
             raise TypeError('Unknown color %r' % bg)
     if bold is not None:
         bits.append('\033[%dm' % (1 if bold else 22))
@@ -518,6 +565,11 @@ def getchar(echo=False):
     if f is None:
         from ._termui_impl import getchar as f
     return f(echo)
+
+
+def raw_terminal():
+    from ._termui_impl import raw_terminal as f
+    return f()
 
 
 def pause(info='Press any key to continue ...', err=False):

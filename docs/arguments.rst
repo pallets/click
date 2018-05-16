@@ -243,3 +243,21 @@ And from the command line:
 .. click:run::
 
     invoke(touch, ['--', '-foo.txt', 'bar.txt'])
+
+If you don't like the ``--`` marker, you can set ignore_unknown_options to
+True to avoid checking unknown options:
+
+.. click:example::
+
+    @click.command(context_settings={"ignore_unknown_options": True})
+    @click.argument('files', nargs=-1, type=click.Path())
+    def touch(files):
+        for filename in files:
+            click.echo(filename)
+
+And from the command line:
+
+.. click:run::
+
+    invoke(touch, ['-foo.txt', 'bar.txt'])
+
