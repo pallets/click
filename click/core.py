@@ -850,6 +850,10 @@ class Command(BaseCommand):
         self.format_help(ctx, formatter)
         return formatter.getvalue().rstrip('\n')
 
+    def get_short_help_str(self, limit=45):
+        """Gets short help for the command or makes it by shortening the long help string."""
+        return self.short_help or self.help and make_default_short_help(self.help, limit) or ''
+
     def format_help(self, ctx, formatter):
         """Writes the help into the formatter if it exists.
 
@@ -878,9 +882,6 @@ class Command(BaseCommand):
             formatter.write_paragraph()
             with formatter.indentation():
                 formatter.write_text(DEPRECATED_HELP_NOTICE)
-
-    def get_short_help_str(self, limit=45):
-        return self.short_help or self.help and make_default_short_help(self.help, limit) or ''
 
     def format_options(self, ctx, formatter):
         """Writes all the options into the formatter if they exist."""
