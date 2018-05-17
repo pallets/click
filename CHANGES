@@ -42,6 +42,7 @@ Version 7.0
   path so that changing working directories does not harm it.
 - Force stdout/stderr writable.  This works around issues with badly patched
   standard streams like those from jupyter.
+- Add support for auto-completion documentation. See #866.
 - Fix bug that caused bashcompletion to give improper completions on
   variadic arguments. See #919.
 - Ignore default values when searching for bashcompletions. See #925.

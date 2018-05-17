@@ -856,6 +856,10 @@ class Command(BaseCommand):
         self.format_help(ctx, formatter)
         return formatter.getvalue().rstrip('\n')
 
+    def get_short_help_str(self, limit=45):
+        """Gets short help for the command or makes it by shortening the long help string."""
+        return self.short_help or self.help and make_default_short_help(self.help, limit) or ''
+
     def format_help(self, ctx, formatter):
         """Writes the help into the formatter if it exists.
 
@@ -1047,8 +1051,8 @@ class MultiCommand(Command):
 
             rows = []
             for subcommand, cmd in commands:
-                help = cmd.short_help or cmd.help and make_default_short_help(cmd.help, limit)
-                rows.append((subcommand, help or ''))
+                help = cmd.get_short_help_str(limit)
+                rows.append((subcommand, help))
 
             if rows:
                 with formatter.section('Commands'):
