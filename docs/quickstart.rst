@@ -120,8 +120,8 @@ as in the GitHub repository together with readme files:
 *   ``imagepipe``: `Multi command chaining demo
     <https://github.com/pallets/click/tree/master/examples/imagepipe>`_
 
-Basic Concepts
---------------
+Basic Concepts - Creating a Command
+-----------------------------------
 
 Click is based on declaring commands through decorators.  Internally, there
 is a non-decorator interface for advanced use cases, but it's discouraged
@@ -174,7 +174,9 @@ correction in case the terminal is misconfigured instead of dying with an
 As an added benefit, starting with Click 2.0, the echo function also
 has good support for ANSI colors.  It will automatically strip ANSI codes
 if the output stream is a file and if colorama is supported, ANSI colors
-will also work on Windows.  See :ref:`ansi-colors` for more information.
+will also work on Windows. Note that in Python 2, the :func:`echo` function
+does not parse color code information from bytearrays. See :ref:`ansi-colors`
+for more information.
 
 If you don't need this, you can also use the `print()` construct /
 function.

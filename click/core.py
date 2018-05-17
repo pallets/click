@@ -1,4 +1,5 @@
 import errno
+import inspect
 import os
 import sys
 from contextlib import contextmanager
@@ -9,12 +10,12 @@ from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo, get_os_args
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
      MissingParameter
-from .termui import prompt, confirm
+from .termui import prompt, confirm, style
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
 from .globals import push_context, pop_context
 
-from ._compat import PY2, isidentifier, iteritems
+from ._compat import PY2, isidentifier, iteritems, string_types
 from ._unicodefun import _check_for_unicode_literals, _verify_python3_env
 
 
@@ -23,6 +24,15 @@ _missing = object()
 
 SUBCOMMAND_METAVAR = 'COMMAND [ARGS]...'
 SUBCOMMANDS_METAVAR = 'COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...'
+
+DEPRECATED_HELP_NOTICE = ' (DEPRECATED)'
+DEPRECATED_INVOKE_NOTICE = 'DeprecationWarning: ' + \
+                           'The command %(name)s is deprecated.'
+
+
+def _maybe_show_deprecated_notice(cmd):
+    if cmd.deprecated:
+        echo(style(DEPRECATED_INVOKE_NOTICE % {'name': cmd.name}, fg='red'), err=True)
 
 
 def fast_exit(code):
@@ -385,7 +395,7 @@ class Context(object):
     @property
     def meta(self):
         """This is a dictionary which is shared with all the contexts
-        that are nested.  It exists so that click utiltiies can store some
+        that are nested.  It exists so that click utilities can store some
         state here if they need to.  It is however the responsibility of
         that code to manage this dictionary well.
 
@@ -757,12 +767,15 @@ class Command(BaseCommand):
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
     :param hidden: hide this command from help outputs.
+
+    :param deprecated: issues a message indicating that
+                             the command is deprecated.
     """
 
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
                  options_metavar='[OPTIONS]', add_help_option=True,
-                 hidden=False):
+                 hidden=False, deprecated=False):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -774,11 +787,10 @@ class Command(BaseCommand):
         self.help = help
         self.epilog = epilog
         self.options_metavar = options_metavar
-        if short_help is None and help:
-            short_help = make_default_short_help(help)
         self.short_help = short_help
         self.add_help_option = add_help_option
         self.hidden = hidden
+        self.deprecated = deprecated
 
     def get_usage(self, ctx):
         formatter = ctx.make_formatter()
@@ -832,8 +844,6 @@ class Command(BaseCommand):
     def make_parser(self, ctx):
         """Creates the underlying option parser for this command."""
         parser = OptionParser(ctx)
-        parser.allow_interspersed_args = ctx.allow_interspersed_args
-        parser.ignore_unknown_options = ctx.ignore_unknown_options
         for param in self.get_params(ctx):
             param.add_to_parser(parser, ctx)
         return parser
@@ -866,7 +876,14 @@ class Command(BaseCommand):
         if self.help:
             formatter.write_paragraph()
             with formatter.indentation():
-                formatter.write_text(self.help)
+                help_text = self.help
+                if self.deprecated:
+                    help_text += DEPRECATED_HELP_NOTICE
+                formatter.write_text(help_text)
+        elif self.deprecated:
+            formatter.write_paragraph()
+            with formatter.indentation():
+                formatter.write_text(DEPRECATED_HELP_NOTICE)
 
     def format_options(self, ctx, formatter):
         """Writes all the options into the formatter if they exist."""
@@ -907,6 +924,7 @@ class Command(BaseCommand):
         """Given a context, this invokes the attached callback (if it exists)
         in the right way.
         """
+        _maybe_show_deprecated_notice(self)
         if self.callback is not None:
             return ctx.invoke(self.callback, **ctx.params)
 
@@ -1012,7 +1030,7 @@ class MultiCommand(Command):
         """Extra format methods for multi methods that adds all the commands
         after the options.
         """
-        rows = []
+        commands = []
         for subcommand in self.list_commands(ctx):
             cmd = self.get_command(ctx, subcommand)
             # What is this, the tool lied about a command.  Ignore it
@@ -1021,12 +1039,20 @@ class MultiCommand(Command):
             if cmd.hidden:
                 continue
 
-            help = cmd.short_help or ''
-            rows.append((subcommand, help))
+            commands.append((subcommand, cmd))
 
-        if rows:
-            with formatter.section('Commands'):
-                formatter.write_dl(rows)
+        # allow for 3 times the default spacing
+        if len(commands):
+            limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
+
+            rows = []
+            for subcommand, cmd in commands:
+                help = cmd.short_help or cmd.help and make_default_short_help(cmd.help, limit)
+                rows.append((subcommand, help or ''))
+
+            if rows:
+                with formatter.section('Commands'):
+                    formatter.write_dl(rows)
 
     def parse_args(self, ctx, args):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
@@ -1334,12 +1360,13 @@ class Parameter(object):
     def add_to_parser(self, parser, ctx):
         pass
 
+
     def consume_value(self, ctx, opts):
         value = opts.get(self.name)
         if value is None:
-            value = ctx.lookup_default(self.name)
-        if value is None:
             value = self.value_from_envvar(ctx)
+        if value is None:
+            value = ctx.lookup_default(self.name)
         return value
 
     def type_cast_value(self, ctx, value):
@@ -1436,6 +1463,13 @@ class Parameter(object):
     def get_usage_pieces(self, ctx):
         return []
 
+    def get_error_hint(self, ctx):
+        """Get a stringified version of the param for use in error messages to
+        indicate which param caused the error.
+        """
+        hint_list = self.opts or [self.human_readable_name]
+        return ' / '.join('"%s"' % x for x in hint_list)
+
 
 class Option(Parameter):
     """Options are usually optional values on the command line and
@@ -1444,7 +1478,12 @@ class Option(Parameter):
     All other parameters are passed onwards to the parameter constructor.
 
     :param show_default: controls if the default value should be shown on the
-                         help page.  Normally, defaults are not shown.
+                         help page. Normally, defaults are not shown. If this
+                         value is a string, it shows the string instead of the
+                         value. This is particularly useful for dynamic options.
+    :param show_envvar: controls if an environment variable should be shown on
+                        the help page.  Normally, environment variables
+                        are not shown.
     :param prompt: if set to `True` or a non empty string then the user will be
                    prompted for input.  If set to `True` the prompt will be the
                    option name capitalized.
@@ -1476,7 +1515,8 @@ class Option(Parameter):
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, count=False, allow_from_autoenv=True,
-                 type=None, help=None, hidden=False, show_choices=True, **attrs):
+                 type=None, help=None, hidden=False, show_choices=True,
+                 show_envvar=False, **attrs):
         default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
 
@@ -1523,6 +1563,7 @@ class Option(Parameter):
         self.help = help
         self.show_default = show_default
         self.show_choices = show_choices
+        self.show_envvar = show_envvar
 
         # Sanity check for stuff we don't support
         if __debug__:
@@ -1636,11 +1677,28 @@ class Option(Parameter):
 
         help = self.help or ''
         extra = []
+        if self.show_envvar:
+            envvar = self.envvar
+            if envvar is None:
+                if self.allow_from_autoenv and \
+                    ctx.auto_envvar_prefix is not None:
+                    envvar = '%s_%s' % (ctx.auto_envvar_prefix, self.name.upper())
+            if envvar is not None:
+              extra.append('env var: %s' % (
+                           ', '.join('%s' % d for d in envvar)
+                           if isinstance(envvar, (list, tuple))
+                           else envvar, ))
         if self.default is not None and self.show_default:
-            extra.append('default: %s' % (
-                         ', '.join('%s' % d for d in self.default)
-                         if isinstance(self.default, (list, tuple))
-                         else self.default, ))
+            if isinstance(self.show_default, string_types):
+                default_string = '({})'.format(self.show_default)
+            elif isinstance(self.default, (list, tuple)):
+                default_string = ', '.join('%s' % d for d in self.default)
+            elif inspect.isfunction(self.default):
+                default_string = "(dynamic)"
+            else:
+                default_string = self.default
+            extra.append('default: {}'.format(default_string))
+
         if self.required:
             extra.append('required')
         if extra:
@@ -1735,7 +1793,9 @@ class Argument(Parameter):
     def make_metavar(self):
         if self.metavar is not None:
             return self.metavar
-        var = self.name.upper()
+        var = self.type.get_metavar(self)
+        if not var:
+            var = self.name.upper()
         if not self.required:
             var = '[%s]' % var
         if self.nargs != 1:
@@ -1759,6 +1819,9 @@ class Argument(Parameter):
 
     def get_usage_pieces(self, ctx):
         return [self.make_metavar()]
+
+    def get_error_hint(self, ctx):
+        return '"%s"' % self.make_metavar()
 
     def add_to_parser(self, parser, ctx):
         parser.add_argument(dest=self.name, nargs=self.nargs,

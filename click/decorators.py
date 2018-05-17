@@ -164,10 +164,13 @@ def option(*param_decls, **attrs):
                 :class:`Option`.
     """
     def decorator(f):
-        if 'help' in attrs:
-            attrs['help'] = inspect.cleandoc(attrs['help'])
-        OptionClass = attrs.pop('cls', Option)
-        _param_memo(f, OptionClass(param_decls, **attrs))
+        # Issue 926, copy attrs, so pre-defined options can re-use the same cls=
+        option_attrs = attrs.copy()
+
+        if 'help' in option_attrs:
+            option_attrs['help'] = inspect.cleandoc(option_attrs['help'])
+        OptionClass = option_attrs.pop('cls', Option)
+        _param_memo(f, OptionClass(param_decls, **option_attrs))
         return f
     return decorator
 

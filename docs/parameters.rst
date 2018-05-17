@@ -77,18 +77,26 @@ fails with a `ValueError` is also supported, though discouraged.
 Parameter Names
 ---------------
 
-Parameters (both options and arguments) accept a number of positional
-arguments which are the parameter declarations.  Each string with a
-single dash is added as short argument; each string starting with a double
-dash as long one.  If a string is added without any dashes, it becomes the
-internal parameter name which is also used as variable name.
+Parameters (both options and arguments) accept a number of positional arguments
+which are passed to the command function as parameters. Each string with a
+single dash is added as a short argument; each string starting with a double
+dash as a long one.
 
-If a parameter is not given a name without dashes, a name is generated
+If a string is added without any dashes, it becomes the internal parameter name
+which is also used as variable name.
+
+If all names for a parameter contain dashes, the internal name is generated
 automatically by taking the longest argument and converting all dashes to
-underscores.  For an option with ``('-f', '--foo-bar')``, the parameter
-name is `foo_bar`.  For an option with ``('-x',)``, the parameter is `x`.
-For an option with ``('-f', '--filename', 'dest')``, the parameter is
-called `dest`.
+underscores.
+
+Examples:
+
+* For an option with ``('-f', '--foo-bar')``, the parameter name is `foo_bar`.
+* For an option with ``('-x',)``, the parameter is `x`.
+* For an option with ``('-f', '--filename', 'dest')``, the parameter name is  `dest`.
+* For an arguments with ``(`foogle`)``, the parameter name is `foogle`. To
+  provide a different human readable name for use in help text, see the section
+  about :ref:`doc-meta-variables`.
 
 Implementing Custom Types
 -------------------------
