@@ -10,6 +10,28 @@ decorator.  Since options can come in various different versions, there
 are a ton of parameters to configure their behavior. Options in click are
 distinct from :ref:`positional arguments <arguments>`.
 
+Name Your Options
+-----------------
+
+The naming rules can be found in :ref:`parameter_names`. In short, you
+can refer the option **implicitly** by the longest dash-prefixed argument:
+
+.. click:example::
+
+    @click.command()
+    @click.option('-s', '--string-to-echo')
+    def echo(string_to_echo):
+        click.echo(string_to_echo)
+
+Or, **explicitly**, by giving one non-dash-prefixed argument:
+
+.. click:example::
+
+    @click.command()
+    @click.option('-s', '--string-to-echo', 'string')
+    def echo(string):
+        click.echo(string)
+
 Basic Value Options
 -------------------
 
