@@ -306,8 +306,11 @@ def test_missing_choice(runner):
 
     result = runner.invoke(cmd)
     assert result.exit_code == 2
-    assert 'Error: Missing option "--foo".  Choose from foo, bar.' \
-        in result.output
+    error, separator, choices = result.output.partition('Choose from')
+    assert 'Error: Missing option "--foo". ' in error
+    assert 'Choose from' in separator
+    assert 'foo' in choices
+    assert 'bar' in choices
 
 
 def test_case_insensitive_choice(runner):

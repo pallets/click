@@ -274,7 +274,7 @@ def test_variadic_argument_choice():
     assert choices_without_help(cli, ['src1', 'src2'], '') == ['src1', 'src2']
 
 
-def test_variadic_argument_choice2():
+def test_variadic_argument_complete():
 
     def _complete(ctx, args, incomplete):
         return ['abc', 'def', 'ghi', 'jkl', 'mno', 'pqr', 'stu', 'vwx', 'yz']
@@ -293,6 +293,7 @@ def test_variadic_argument_choice2():
 
     assert choices_without_help(entrypoint, ['subcommand', '--opt'], '') == _complete(0,0,0)
     assert choices_without_help(entrypoint, ['subcommand', 'whatever', '--opt'], '') == _complete(0,0,0)
+    assert choices_without_help(entrypoint, ['subcommand', 'whatever', '--opt', 'abc'], '') == []
 
 
 def test_long_chain_choice():
@@ -347,15 +348,11 @@ def test_chained_multi():
         pass
 
     @cli.group()
-    @click.option('--sub-opt', type=click.Choice(['subopt1', 'subopt2']))
-    def sub(sub_opt):
+    def sub():
         pass
 
     @sub.group()
-    @click.option('--bsub-opt', type=click.Choice(['bsubopt1', 'bsubopt2']))
-    @click.argument('bsub-arg1', required=False, type=click.Choice(['bsubarg1', 'bsubarg2']))
-    @click.argument('bbsub-arg2', required=False, type=click.Choice(['bbsubarg1', 'bbsubarg2']))
-    def bsub(bsub_opt):
+    def bsub():
         pass
 
     @sub.group(chain=True)
@@ -374,3 +371,4 @@ def test_chained_multi():
     assert choices_without_help(cli, ['sub'], 'c') == ['csub']
     assert choices_without_help(cli, ['sub', 'csub'], '') == ['dsub', 'esub']
     assert choices_without_help(cli, ['sub', 'csub', 'dsub'], '') == ['esub']
+

@@ -10,6 +10,28 @@ decorator.  Since options can come in various different versions, there
 are a ton of parameters to configure their behavior. Options in click are
 distinct from :ref:`positional arguments <arguments>`.
 
+Name Your Options
+-----------------
+
+The naming rules can be found in :ref:`parameter_names`. In short, you
+can refer the option **implicitly** by the longest dash-prefixed argument:
+
+.. click:example::
+
+    @click.command()
+    @click.option('-s', '--string-to-echo')
+    def echo(string_to_echo):
+        click.echo(string_to_echo)
+
+Or, **explicitly**, by giving one non-dash-prefixed argument:
+
+.. click:example::
+
+    @click.command()
+    @click.option('-s', '--string-to-echo', 'string')
+    def echo(string):
+        click.echo(string)
+
 Basic Value Options
 -------------------
 
@@ -18,12 +40,21 @@ argument which is a value.  If no type is provided, the type of the default
 value is used.  If no default value is provided, the type is assumed to be
 :data:`STRING`.  Unless a name is explicitly specified, the name of the
 parameter is the first long option defined; otherwise the first short one is
-used.
+used. By default, options are not required, however to make an option required,
+simply pass in `required=True` as an argument to the decorator.
 
 .. click:example::
 
     @click.command()
     @click.option('--n', default=1)
+    def dots(n):
+        click.echo('.' * n)
+
+.. click:example::
+
+    # How to make an option required
+    @click.command()
+    @click.option('--n', required=True, type=int)
     def dots(n):
         click.echo('.' * n)
 

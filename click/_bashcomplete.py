@@ -26,7 +26,7 @@ COMPLETION_SCRIPT_ZSH = '''
 %(complete_func)s() {
     local -a completions
     local -a completions_with_descriptions
-    local -A response
+    local -a response
     response=("${(@f)$( env COMP_WORDS=\"${words[*]}\" \\
                         COMP_CWORD=$((CURRENT-1)) \\
                         %(autocomplete_var)s=\"complete_zsh\" \\

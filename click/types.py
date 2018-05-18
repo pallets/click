@@ -147,7 +147,7 @@ class Choice(ParamType):
         return '[%s]' % '|'.join(self.choices)
 
     def get_missing_message(self, param):
-        return 'Choose from %s.' % ', '.join(self.choices)
+        return 'Choose from:\n\t%s.' % ',\n\t'.join(self.choices)
 
     def convert(self, value, param, ctx):
         # Exact match
