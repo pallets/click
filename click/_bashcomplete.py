@@ -24,13 +24,28 @@ complete -F %(complete_func)s %(script_names)s
 
 COMPLETION_SCRIPT_ZSH = '''
 %(complete_func)s() {
-    emulate -L zsh
-    local IFS=$'\n'
-    local completions=( $( env COMP_WORDS="${words[*]}" \\
+    local -a completions
+    local -a completions_with_descriptions
+    local -a response
+    response=("${(@f)$( env COMP_WORDS=\"${words[*]}\" \\
                         COMP_CWORD=$((CURRENT-1)) \\
-                        %(autocomplete_var)s="complete" \\
-                        %(script_names)s ) )
-    compadd -M 'r:|=* l:|=* r:|=*' -a -- completions 
+                        %(autocomplete_var)s=\"complete_zsh\" \\
+                        %(script_names)s )}")
+
+    for key descr in ${(kv)response}; do
+      if [[ "$descr" == "_" ]]; then
+          completions+=("$key")
+      else
+          completions_with_descriptions+=("$key":"$descr")
+      fi
+    done
+
+    if [ -n "$completions_with_descriptions" ]; then
+        _describe '' completions_with_descriptions
+    fi
+    if [ -n "$completions" ]; then
+        compadd -M 'r:|=* l:|=* r:|=*' -a completions
+    fi
 }
 
 compdef %(complete_func)s %(script_names)s
@@ -131,21 +146,25 @@ def get_user_autocompletions(ctx, args, incomplete, cmd_param):
     :param cmd_param: command definition
     :return: all the possible user-specified completions for the param
     """
+    results = []
     if isinstance(cmd_param.type, Choice):
-        return [c for c in cmd_param.type.choices if c.startswith(incomplete)]
+        # Choices don't support descriptions.
+        results = [(c, None)
+                   for c in cmd_param.type.choices if c.startswith(incomplete)]
     elif cmd_param.autocompletion is not None:
-        return cmd_param.autocompletion(ctx=ctx,
-                                        args=args,
-                                        incomplete=incomplete)
-    else:
-        return []
+        dynamic_completions = cmd_param.autocompletion(ctx=ctx,
+                                                       args=args,
+                                                       incomplete=incomplete)
+        results = [c if isinstance(c, tuple) else (c, None)
+                   for c in dynamic_completions]
+    return results
 
 
 def add_subcommand_completions(ctx, incomplete, completions_out):
     # Add subcommand completions.
     if isinstance(ctx.command, MultiCommand):
         completions_out.extend(
-            [c for c in ctx.command.list_commands(ctx) if c.startswith(incomplete)])
+            [(c, ctx.command.get_command(ctx, c).get_short_help_str()) for c in ctx.command.list_commands(ctx) if c.startswith(incomplete)])
 
     # Walk up the context list and add any other completion possibilities from chained commands
     while ctx.parent is not None:
@@ -154,7 +173,7 @@ def add_subcommand_completions(ctx, incomplete, completions_out):
             remaining_commands = sorted(
                 set(ctx.command.list_commands(ctx)) - set(ctx.protected_args))
             completions_out.extend(
-                [c for c in remaining_commands if c.startswith(incomplete)])
+                [(c, ctx.command.get_command(ctx, c).get_short_help_str()) for c in remaining_commands if c.startswith(incomplete)])
 
 
 def get_choices(cli, prog_name, args, incomplete):
@@ -188,7 +207,7 @@ def get_choices(cli, prog_name, args, incomplete):
                 param_opts = [param_opt for param_opt in param.opts +
                               param.secondary_opts if param_opt not in all_args or param.multiple]
                 completions.extend(
-                    [c for c in param_opts if c.startswith(incomplete)])
+                    [(o, param.help) for o in param_opts if o.startswith(incomplete)])
         return completions
     # completion for option values from user supplied values
     for param in ctx.command.params:
@@ -208,7 +227,7 @@ def get_choices(cli, prog_name, args, incomplete):
     return completions
 
 
-def do_complete(cli, prog_name):
+def do_complete(cli, prog_name, include_descriptions):
     cwords = split_arg_string(os.environ['COMP_WORDS'])
     cword = int(os.environ['COMP_CWORD'])
     args = cwords[1:cword]
@@ -218,7 +237,10 @@ def do_complete(cli, prog_name):
         incomplete = ''
 
     for item in get_choices(cli, prog_name, args, incomplete):
-        echo(item)
+        echo(item[0])
+        if include_descriptions:
+            # ZSH has trouble dealing with empty array parameters when returned from commands, so use a well defined character '_' to indicate no description is present.
+            echo(item[1] if item[1] else '_')
 
     return True
 
@@ -228,6 +250,6 @@ def bashcomplete(cli, prog_name, complete_var, complete_instr):
         shell = 'zsh' if complete_instr == 'source_zsh' else 'bash'
         echo(get_completion_script(prog_name, complete_var, shell))
         return True
-    elif complete_instr == 'complete':
-        return do_complete(cli, prog_name)
+    elif complete_instr == 'complete' or complete_instr == 'complete_zsh':
+        return do_complete(cli, prog_name, complete_instr == 'complete_zsh')
     return False
