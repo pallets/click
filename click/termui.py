@@ -8,7 +8,7 @@ from ._compat import raw_input, text_type, string_types, \
      isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
 from .utils import echo
 from .exceptions import Abort, UsageError
-from .types import convert_type, Choice
+from .types import convert_type, Choice, Path
 from .globals import resolve_color_default
 
 
@@ -116,10 +116,11 @@ def prompt(text, default=None, hide_input=False, confirmation_prompt=False,
             value = prompt_func(prompt)
             if value:
                 break
-            # If a default is set and used, then the confirmation
-            # prompt is always skipped because that's the only thing
-            # that really makes sense.
             elif default is not None:
+                if isinstance(value_proc, Path):
+                    # validate Path default value(exists, dir_okay etc.)
+                    value = default
+                    break
                 return default
         try:
             result = value_proc(value)
