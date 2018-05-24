@@ -49,7 +49,7 @@ different behavior and some are supported out of the box:
     A parameter that accepts boolean values.  This is automatically used
     for boolean flags.  If used with string values ``1``, ``yes``, ``y``, ``t``
     and ``true`` convert to `True` and ``0``, ``no``, ``n``, ``f`` and ``false``
-    convert to `False`.
+    convert to `False`. An empty string will also convert to `False`.
 
 :data:`click.UUID`:
     A parameter that accepts UUID values.  This is not automatically

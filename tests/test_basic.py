@@ -192,7 +192,7 @@ def test_boolean_conversion(runner):
             assert not result.exception
             assert result.output == 'True\n'
 
-        for value in 'false', 'f', '0', 'no', 'n':
+        for value in 'false', 'f', '0', 'no', 'n', '':
             result = runner.invoke(cli, ['--flag', value])
             assert not result.exception
             assert result.output == 'False\n'
