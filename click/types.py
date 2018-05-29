@@ -295,7 +295,7 @@ class BoolParamType(ParamType):
         value = value.lower()
         if value in ('true', 't', '1', 'yes', 'y'):
             return True
-        elif value in ('false', 'f', '0', 'no', 'n'):
+        elif value in ('false', 'f', '0', 'no', 'n', ''):
             return False
         self.fail('%s is not a valid boolean' % value, param, ctx)
 
