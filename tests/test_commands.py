@@ -68,6 +68,21 @@ def test_auto_shorthelp(runner):
         result.output) is not None
 
 
+def test_formtter_section_label(runner):
+    @click.group(section_label='Elephants')
+    def cli():
+        pass
+
+    @cli.command()
+    def short():
+        """This is a short text."""
+
+    result = runner.invoke(cli, ['--help'])
+    assert re.search(
+        r'Elephants:\n\s+',
+        result.output) is not None
+
+
 def test_default_maps(runner):
     @click.group()
     def cli():

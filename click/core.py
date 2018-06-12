@@ -955,7 +955,8 @@ class MultiCommand(Command):
 
     def __init__(self, name=None, invoke_without_command=False,
                  no_args_is_help=None, subcommand_metavar=None,
-                 chain=False, result_callback=None, **attrs):
+                 chain=False, result_callback=None,
+                 section_label='Commands', **attrs):
         Command.__init__(self, name, **attrs)
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
@@ -971,6 +972,7 @@ class MultiCommand(Command):
         #: The result callback that is stored.  This can be set or
         #: overridden with the :func:`resultcallback` decorator.
         self.result_callback = result_callback
+        self.section_label = section_label
 
         if self.chain:
             for param in self.params:
@@ -1049,7 +1051,7 @@ class MultiCommand(Command):
                 rows.append((subcommand, help))
 
             if rows:
-                with formatter.section('Commands'):
+                with formatter.section(self.section_label):
                     formatter.write_dl(rows)
 
     def parse_args(self, ctx, args):
