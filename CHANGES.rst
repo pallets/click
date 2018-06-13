@@ -17,11 +17,24 @@ Version 7.0
 - Document customizing option names. (`#1016`_)(`#725`_)
 - Wrap click.Choice's missing message. (`#1000`_)(`#202`_)
 - Don't add newlines by default for progressbars. (`#1013`_)
-- Documented how `auto_envar_prefix` works with command groups. (`#1011`_)
+- Document how `auto_envar_prefix` works with command groups. (`#1011`_)
 - Add native ZSH completion script. (`#865`_)(`#323`_)
 - Fix failing bash completion function test signature.
-- Clarify how paramteres are named. (`1009`_)(`#949`_)
+- Clarify how paramteres are named. (`#1009`_)(`#949`_)
 - Document bytestripping behavior of CliRunner. (`#1010`_)(`#334`_)
+- Fix Google App Engine ImportError. (`#995`_)
+- Document that ANSI color info isn't parsedfrom bytearrays in Python 2. (`#334`_)
+- Add note to documentation on how parameters are named.
+- Fix formatting for short help. (`#1008`_)
+- Extract bar formatting to its own method. (`#414`_)
+- Move `fcntl` import. (`#965`_)
+- Fixed issues where `fd` was undefined. (`#1007`_)
+- Added deprecation flag to commands. (`#1005`_)
+- Fix various Sphinx errors. (`#883`_)
+- Add `case_sensitive=False` as an option to Choice types. (`#887`_)
+- Add details about Python version support. (`#1004`_)
+- Clarify documentation on command line options. (`#1003`_)(`#741`_)
+- Add `case_sensitive=False` as an option to Choice. (`#569`_)
 - Added support for bash completions containing spaces. See #773.
 - Added support for dynamic bash completion from a user-supplied callback.
   See #755.
@@ -74,12 +87,22 @@ Version 7.0
 .. _#1013: https://github.com/pallets/click/pull/1013
 .. _#1011: https://github.com/pallets/click/pull/1011
 .. _#865: https://github.com/pallets/click/pull/865
-.. _#202: https://github.com/pallets/click/issues/323
+.. _#323: https://github.com/pallets/click/issues/323
 .. _#1009: https://github.com/pallets/click/pull/1009
 .. _#949: https://github.com/pallets/click/issues/949
 .. _#1010: https://github.com/pallets/click/pull/1010
-.. _#949: https://github.com/pallets/click/issues/334
-
+.. _#334: https://github.com/pallets/click/issues/334
+.. _#995: https://github.com/pallets/click/pull/995
+.. _#1008: https://github.com/pallets/click/pull/1008
+.. _#414: https://github.com/pallets/click/pull/414
+.. _#965: https://github.com/pallets/click/pull/965
+.. _#1005: https://github.com/pallets/click/pull/1005
+.. _#883: https://github.com/pallets/click/pull/883
+.. _#887: https://github.com/pallets/click/pull/887
+.. _#1004: https://github.com/pallets/click/pull/1004
+.. _#1003: https://github.com/pallets/click/pull/1003
+.. _#741: https://github.com/pallets/click/issues/741
+.. _#569: https://github.com/pallets/click/pull/569
 
 
 
