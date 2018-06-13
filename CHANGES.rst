@@ -12,7 +12,7 @@ Version 7.0
 - Fixes a ZeroDivisionError in ProgressBar.make_step,
   when the arg passed to the first call of ProgressBar.update is 0. (`#1012`_)(`#447`_)
 - Document that options can be required=True. (`#1022`_)(`#514`_)
-- ZSH completion auto-documentation. (`#869`_)(`#866`_)
+- Add ZSH auto-completion documentation. (`#869`_)(`#866`_)
 - Fix path validation bug. (`#1020`_)(`#795`_)
 - Document customizing option names. (`#1016`_)(`#725`_)
 - Wrap click.Choice's missing message. (`#1000`_)(`#202`_)
@@ -38,7 +38,7 @@ Version 7.0
 - Better handling of help text for dynamic default option values. (`#996`_)
 - Allow short width to address cmd formatting. (`#1002`_)
 - Add test case checking for custom param type. (`#1001`_)
-- Make `Argument.make_metavar() default to type metavar. (`#675`_)
+- Make `Argument.make_metavar()` default to type metavar. (`#675`_)
 - Show progressbar only if total execution time is visible. (`#487`_)
 - Allow setting `prog_name` as extra in `CliRunner.invoke` (`#999`_)(`#616`_)
 - Add support for Sphinx 1.7+ (`#991`_)
@@ -57,12 +57,29 @@ Version 7.0
 - Add a test that ensures that when an Argument is formatted into a usage error,
   its metavar is used, not its name. (`#612`_)
 - Fix variable precedence. (`#874`_)(`#873`_)
-- Update README to match flask style. (`#990`_)
-- Added support for bash completions containing spaces. See #773.
+- Fix ResourceWarning that occurs during some tests. (`#878`_)
+- Update README to match flask style and add `long_description` to setup.py. (`#990`_)
+- Drop testing for 2.6 3.3 and 3.6.
+- Make locale optional (`#880`_)
+- Fix invalid escape sequences. (`#877`_)
+- Added workaround for jupyter. (`#918`_)
+- x and a filemodes now use stdout when file is '-'. (`#929`_)
+- _AtomicFile now uses the realpath of the original filename. (`#920`_)
+- Fix missing comma in `__all__ list (`#935`_)
+- Raw strings added so correct escaping occurs. (`#807`_)
+- Fix overzealous completion when
+  required options are being completed. (`#806`_)(`#790`_)
+- Add bool conversion for t and f. (`#842`_)
+- Update doc to match arg name for path_type. (`#801`_)
+- Add bright colors support for `click.style`
+  and fix the reset option for parameters fg and bg. (`#703`_)
+- Add test and documentation for Option naming: functionality. (`#799`_)
+- Use deterministic option name; can't rely on list sort. (`#794`_)(`#793`_)
+- Added support for bash completions containing spaces. (`#773`_)
 - Added support for dynamic bash completion from a user-supplied callback.
-  See #755.
+  (`#755`_)
 - Added support for bash completion of type=click.Choice for Options and
-  Arguments. See #535.
+  Arguments. (`#535`_)
 - The user is now presented with the available choices if prompt=True and
   type=click.Choice in a click.option. The choices are listed within
   parenthesis like 'Choose fruit (apple, orange): '.
@@ -71,20 +88,20 @@ Version 7.0
 - Added Float Range in Types.
 - `secho`'s first argument can now be `None`, like in `echo`.
 - Usage errors now hint at the `--help` option.
-- ``launch`` now works properly under Cygwin. See #650.
+- ``launch`` now works properly under Cygwin. (`#650`_)
 - `CliRunner.invoke` now may receive `args` as a string representing
-  a Unix shell command. See #664.
+  a Unix shell command. See (`#664`_).
 - Fix bug that caused bashcompletion to give improper completions on
-  chained commands. See #774.
+  chained commands. (`#774`_)
 - Add support for bright colors.
 - 't' and 'f' are now converted to True and False.
 - Fix bug that caused bashcompletion to give improper completions on
   chained commands when a required option/argument was being completed.
-  See #790.
+  (`#790`_)
 - Allow autocompletion function to determine whether or not to return
   completions that start with the incomplete argument.
-- Add native ZSH autocompletion support See #323.
-- Add support for auto-completion documentation. See #866.
+- Add native ZSH autocompletion support. (`#323`_)
+- Add support for auto-completion documentation. See (`#866`_)
 - Subcommands that are named by the function now automatically have the
   underscore replaced with a dash.  So if you register a function named
   `my_command` it becomes `my-command` in the command line interface.
@@ -156,6 +173,33 @@ Version 7.0
 .. _#874: https://github.com/pallets/click/pull/874
 .. _#873: https://github.com/pallets/click/issues/873
 .. _#990: https://github.com/pallets/click/pull/990
+.. _#684: https://github.com/pallets/click/pull/684
+.. _#878: https://github.com/pallets/click/pull/878
+.. _#880: https://github.com/pallets/click/issues/880
+.. _#877: https://github.com/pallets/click/pull/877
+.. _#918: https://github.com/pallets/click/pull/918
+.. _#929: https://github.com/pallets/click/pull/929
+.. _#920: https://github.com/pallets/click/pull/920
+.. _#935: https://github.com/pallets/click/pull/935
+.. _#807: https://github.com/pallets/click/pull/807
+.. _#806: https://github.com/pallets/click/pull/806
+.. _#790: https://github.com/pallets/click/pull/790
+.. _#842: https://github.com/pallets/click/pull/842
+.. _#801: https://github.com/pallets/click/pull/801
+.. _#703: https://github.com/pallets/click/issues/703
+.. _#799: https://github.com/pallets/click/pull/799
+.. _#794: https://github.com/pallets/click/pull/794
+.. _#793: https://github.com/pallets/click/issues/793
+.. _#773: https://github.com/pallets/click/pull/773
+.. _#755: https://github.com/pallets/click/pull/755
+.. _#535: https://github.com/pallets/click/pull/535
+.. _#650: https://github.com/pallets/click/pull/650
+.. _#664: https://github.com/pallets/click/pull/664
+.. _#774: https://github.com/pallets/click/pull/774
+.. _#790: https://github.com/pallets/click/pull/790
+.. _#323: https://github.com/pallets/click/pull/323
+
+
 
 Version 6.8
 -----------
