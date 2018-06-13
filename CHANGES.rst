@@ -65,8 +65,6 @@ Version 7.0
 - _AtomicFile now uses the realpath of the original filename. (`#920`_)
 - Fix missing comma in `__all__` list (`#935`_)
 - Raw strings added so correct escaping occurs. (`#807`_)
-- Fix overzealous completion when
-  required options are being completed. (`#806`_)(`#790`_)
 - Add bool conversion for t and f. (`#842`_)
 - Update doc to match arg name for path_type. (`#801`_)
 - Add bright colors support for `click.style`
@@ -95,7 +93,7 @@ Version 7.0
 - 't' and 'f' are now converted to True and False.
 - Fix bug that caused bashcompletion to give improper completions on
   chained commands when a required option/argument was being completed.
-  (`#790`_)
+  (`#790`_)(`#806`_)
 - Allow autocompletion function to determine whether or not to return
   completions that start with the incomplete argument.
 - Add native ZSH autocompletion support. (`#323`_)(`#865`_)
