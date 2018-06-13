@@ -17,6 +17,11 @@ Version 7.0
 - Document customizing option names. (`#1016`_)(`#725`_)
 - Wrap click.Choice's missing message. (`#1000`_)(`#202`_)
 - Don't add newlines by default for progressbars. (`#1013`_)
+- Documented how `auto_envar_prefix` works with command groups. (`#1011`_)
+- Add native ZSH completion script. (`#865`_)(`#323`_)
+- Fix failing bash completion function test signature.
+- Clarify how paramteres are named. (`1009`_)(`#949`_)
+- Document bytestripping behavior of CliRunner. (`#1010`_)(`#334`_)
 - Added support for bash completions containing spaces. See #773.
 - Added support for dynamic bash completion from a user-supplied callback.
   See #755.
@@ -57,6 +62,8 @@ Version 7.0
 .. _#1012: https://github.com/pallets/click/pull/1012
 .. _#447: https://github.com/pallets/click/issues/447
 .. _#1022: https://github.com/pallets/click/pull/1022
+.. _#869: https://github.com/pallets/click/pull/869
+.. _#866: https://github.com/pallets/click/issues/866
 .. _#514: https://github.com/pallets/click/issues/514
 .. _#1020: https://github.com/pallets/click/pull/1020
 .. _#795: https://github.com/pallets/click/issues/795
@@ -64,11 +71,14 @@ Version 7.0
 .. _#725: https://github.com/pallets/click/issues/725
 .. _#1000: https://github.com/pallets/click/pull/1000
 .. _#202: https://github.com/pallets/click/issues/202
-
-
-
-
-
+.. _#1013: https://github.com/pallets/click/pull/1013
+.. _#1011: https://github.com/pallets/click/pull/1011
+.. _#865: https://github.com/pallets/click/pull/865
+.. _#202: https://github.com/pallets/click/issues/323
+.. _#1009: https://github.com/pallets/click/pull/1009
+.. _#949: https://github.com/pallets/click/issues/949
+.. _#1010: https://github.com/pallets/click/pull/1010
+.. _#949: https://github.com/pallets/click/issues/334
 
 
 
