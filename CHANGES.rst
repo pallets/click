@@ -12,13 +12,11 @@ Version 7.0
 - Fixes a ZeroDivisionError in ProgressBar.make_step,
   when the arg passed to the first call of ProgressBar.update is 0. (`#1012`_)(`#447`_)
 - Document that options can be required=True. (`#1022`_)(`#514`_)
-- Add ZSH auto-completion documentation. (`#869`_)(`#866`_)
 - Fix path validation bug. (`#1020`_)(`#795`_)
 - Document customizing option names. (`#1016`_)(`#725`_)
 - Wrap click.Choice's missing message. (`#1000`_)(`#202`_)
 - Don't add newlines by default for progressbars. (`#1013`_)
 - Document how `auto_envar_prefix` works with command groups. (`#1011`_)
-- Add native ZSH completion script. (`#865`_)(`#323`_)
 - Fix failing bash completion function test signature.
 - Clarify how paramteres are named. (`#1009`_)(`#949`_)
 - Document bytestripping behavior of CliRunner. (`#1010`_)(`#334`_)
@@ -65,7 +63,7 @@ Version 7.0
 - Added workaround for jupyter. (`#918`_)
 - x and a filemodes now use stdout when file is '-'. (`#929`_)
 - _AtomicFile now uses the realpath of the original filename. (`#920`_)
-- Fix missing comma in `__all__ list (`#935`_)
+- Fix missing comma in `__all__` list (`#935`_)
 - Raw strings added so correct escaping occurs. (`#807`_)
 - Fix overzealous completion when
   required options are being completed. (`#806`_)(`#790`_)
@@ -100,8 +98,8 @@ Version 7.0
   (`#790`_)
 - Allow autocompletion function to determine whether or not to return
   completions that start with the incomplete argument.
-- Add native ZSH autocompletion support. (`#323`_)
-- Add support for auto-completion documentation. See (`#866`_)
+- Add native ZSH autocompletion support. (`#323`_)(`#865`_)
+- Add support for auto-completion documentation. See (`#866`_)(`#869`_)
 - Subcommands that are named by the function now automatically have the
   underscore replaced with a dash.  So if you register a function named
   `my_command` it becomes `my-command` in the command line interface.
@@ -183,7 +181,6 @@ Version 7.0
 .. _#935: https://github.com/pallets/click/pull/935
 .. _#807: https://github.com/pallets/click/pull/807
 .. _#806: https://github.com/pallets/click/pull/806
-.. _#790: https://github.com/pallets/click/pull/790
 .. _#842: https://github.com/pallets/click/pull/842
 .. _#801: https://github.com/pallets/click/pull/801
 .. _#703: https://github.com/pallets/click/issues/703
@@ -197,8 +194,6 @@ Version 7.0
 .. _#664: https://github.com/pallets/click/pull/664
 .. _#774: https://github.com/pallets/click/pull/774
 .. _#790: https://github.com/pallets/click/pull/790
-.. _#323: https://github.com/pallets/click/pull/323
-
 
 
 Version 6.8
