@@ -35,6 +35,29 @@ Version 7.0
 - Add details about Python version support. (`#1004`_)
 - Clarify documentation on command line options. (`#1003`_)(`#741`_)
 - Add `case_sensitive=False` as an option to Choice. (`#569`_)
+- Better handling of help text for dynamic default option values. (`#996`_)
+- Allow short width to address cmd formatting. (`#1002`_)
+- Add test case checking for custom param type. (`#1001`_)
+- Make `Argument.make_metavar() default to type metavar. (`#675`_)
+- Show progressbar only if total execution time is visible. (`#487`_)
+- Allow setting `prog_name` as extra in `CliRunner.invoke` (`#999`_)(`#616`_)
+- Add support for Sphinx 1.7+ (`#991`_)
+- Fix `get_winter_size()` so it correctly returns (0,0). (`#997`_)
+- Update progress after iteration. (`#706`_)(`#651`_)
+- Add `show_envvar` for showing environment variables in help. (`#710`_)
+- Add support for bright colors. (`#809`_)
+- Add documentation for `ignore_unkown_options`. (`#684`_)
+- Allow CliRunner to separate stdout and stderr. (`#868`_)
+- Implement streaming pager. (`#889`_)(`#409`_)
+- Progress bar now uses stderr by default. (`#863`_)
+- Do not set options twice. (`#962`_)
+- Add Py2/ unicode / str compatability for doc tools. (`#993`_)(`#719`_)
+- Add copy option attrs so that custom classes can be re-used. (`#994`_)(`#926`_)
+- `param_hint` in errors now derived from param itself. (`#709`_)(`#704`_)(`#598`_)
+- Add a test that ensures that when an Argument is formatted into a usage error,
+  its metavar is used, not its name. (`#612`_)
+- Fix variable precedence. (`#874`_)(`#873`_)
+- Update README to match flask style. (`#990`_)
 - Added support for bash completions containing spaces. See #773.
 - Added support for dynamic bash completion from a user-supplied callback.
   See #755.
@@ -103,8 +126,36 @@ Version 7.0
 .. _#1003: https://github.com/pallets/click/pull/1003
 .. _#741: https://github.com/pallets/click/issues/741
 .. _#569: https://github.com/pallets/click/pull/569
-
-
+.. _#1007: https://github.com/pallets/click/pull/1007
+.. _#996: https://github.com/pallets/click/pull/996
+.. _#1002: https://github.com/pallets/click/pull/1002
+.. _#1001: https://github.com/pallets/click/pull/1001
+.. _#675: https://github.com/pallets/click/pull/675
+.. _#487: https://github.com/pallets/click/pull/487
+.. _#999: https://github.com/pallets/click/pull/999
+.. _#616: https://github.com/pallets/click/issues/616
+.. _#991: https://github.com/pallets/click/pull/991
+.. _#997: https://github.com/pallets/click/pull/997
+.. _#706: https://github.com/pallets/click/pull/706
+.. _#651: https://github.com/pallets/click/issues/651
+.. _#710: https://github.com/pallets/click/pull/710
+.. _#809: https://github.com/pallets/click/pull/809
+.. _#868: https://github.com/pallets/click/pull/868
+.. _#889: https://github.com/pallets/click/pull/889
+.. _#409: https://github.com/pallets/click/issues/409
+.. _#863: https://github.com/pallets/click/pull/863
+.. _#962: https://github.com/pallets/click/pull/962
+.. _#993: https://github.com/pallets/click/pull/993
+.. _#994: https://github.com/pallets/click/pull/994
+.. _#926: https://github.com/pallets/click/issues/926
+.. _#709: https://github.com/pallets/click/pull/709
+.. _#612: https://github.com/pallets/click/pull/612
+.. _#704: https://github.com/pallets/click/issues/704
+.. _#598: https://github.com/pallets/click/issues/598
+.. _#719: https://github.com/pallets/click/issues/719
+.. _#874: https://github.com/pallets/click/pull/874
+.. _#873: https://github.com/pallets/click/issues/873
+.. _#990: https://github.com/pallets/click/pull/990
 
 Version 6.8
 -----------
