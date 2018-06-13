@@ -7,7 +7,9 @@ Version 7.0
 -----------
 
 (upcoming release with new features, release date to be decided)
-
+- Updated test env matrix. (`#1027`_)
+- Fixes a ZeroDivisionError in ProgressBar.make_step,
+  when the arg passed to the first call of ProgressBar.update is 0. (`#1012`_)(`#447`_)
 - Added support for bash completions containing spaces. See #773.
 - Added support for dynamic bash completion from a user-supplied callback.
   See #755.
@@ -43,6 +45,12 @@ Version 7.0
   path so that changing working directories does not harm it.
 - Force stdout/stderr writable.  This works around issues with badly patched
   standard streams like those from jupyter.
+
+.. _#1027: https://github.com/pallets/click/pull/1027
+.. _#1012: https://github.com/pallets/click/pull/1012
+.. _#447: https://github.com/pallets/click/issues/447
+
+
 
 Version 6.8
 -----------
