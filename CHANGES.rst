@@ -12,21 +12,70 @@ Version 7.0
 - Fixes a ZeroDivisionError in ProgressBar.make_step,
   when the arg passed to the first call of ProgressBar.update is 0. (`#1012`_)(`#447`_)
 - Document that options can be required=True. (`#1022`_)(`#514`_)
-- ZSH completion auto-documentation. (`#869`_)(`#866`_)
 - Fix path validation bug. (`#1020`_)(`#795`_)
 - Document customizing option names. (`#1016`_)(`#725`_)
 - Wrap click.Choice's missing message. (`#1000`_)(`#202`_)
 - Don't add newlines by default for progressbars. (`#1013`_)
-- Documented how `auto_envar_prefix` works with command groups. (`#1011`_)
-- Add native ZSH completion script. (`#865`_)(`#323`_)
+- Document how `auto_envar_prefix` works with command groups. (`#1011`_)
 - Fix failing bash completion function test signature.
-- Clarify how paramteres are named. (`1009`_)(`#949`_)
+- Clarify how paramteres are named. (`#1009`_)(`#949`_)
 - Document bytestripping behavior of CliRunner. (`#1010`_)(`#334`_)
-- Added support for bash completions containing spaces. See #773.
+- Fix Google App Engine ImportError. (`#995`_)
+- Document that ANSI color info isn't parsedfrom bytearrays in Python 2. (`#334`_)
+- Add note to documentation on how parameters are named.
+- Fix formatting for short help. (`#1008`_)
+- Extract bar formatting to its own method. (`#414`_)
+- Move `fcntl` import. (`#965`_)
+- Fixed issues where `fd` was undefined. (`#1007`_)
+- Added deprecation flag to commands. (`#1005`_)
+- Fix various Sphinx errors. (`#883`_)
+- Add `case_sensitive=False` as an option to Choice types. (`#887`_)
+- Add details about Python version support. (`#1004`_)
+- Clarify documentation on command line options. (`#1003`_)(`#741`_)
+- Add `case_sensitive=False` as an option to Choice. (`#569`_)
+- Better handling of help text for dynamic default option values. (`#996`_)
+- Allow short width to address cmd formatting. (`#1002`_)
+- Add test case checking for custom param type. (`#1001`_)
+- Make `Argument.make_metavar()` default to type metavar. (`#675`_)
+- Show progressbar only if total execution time is visible. (`#487`_)
+- Allow setting `prog_name` as extra in `CliRunner.invoke` (`#999`_)(`#616`_)
+- Add support for Sphinx 1.7+ (`#991`_)
+- Fix `get_winter_size()` so it correctly returns (0,0). (`#997`_)
+- Update progress after iteration. (`#706`_)(`#651`_)
+- Add `show_envvar` for showing environment variables in help. (`#710`_)
+- Add support for bright colors. (`#809`_)
+- Add documentation for `ignore_unkown_options`. (`#684`_)
+- Allow CliRunner to separate stdout and stderr. (`#868`_)
+- Implement streaming pager. (`#889`_)(`#409`_)
+- Progress bar now uses stderr by default. (`#863`_)
+- Do not set options twice. (`#962`_)
+- Add Py2/ unicode / str compatability for doc tools. (`#993`_)(`#719`_)
+- Add copy option attrs so that custom classes can be re-used. (`#994`_)(`#926`_)
+- `param_hint` in errors now derived from param itself. (`#709`_)(`#704`_)(`#598`_)
+- Add a test that ensures that when an Argument is formatted into a usage error,
+  its metavar is used, not its name. (`#612`_)
+- Fix variable precedence. (`#874`_)(`#873`_)
+- Fix ResourceWarning that occurs during some tests. (`#878`_)
+- Update README to match flask style and add `long_description` to setup.py. (`#990`_)
+- Drop testing for 2.6 3.3 and 3.6.
+- Make locale optional (`#880`_)
+- Fix invalid escape sequences. (`#877`_)
+- Added workaround for jupyter. (`#918`_)
+- x and a filemodes now use stdout when file is '-'. (`#929`_)
+- _AtomicFile now uses the realpath of the original filename. (`#920`_)
+- Fix missing comma in `__all__` list (`#935`_)
+- Raw strings added so correct escaping occurs. (`#807`_)
+- Add bool conversion for t and f. (`#842`_)
+- Update doc to match arg name for path_type. (`#801`_)
+- Add bright colors support for `click.style`
+  and fix the reset option for parameters fg and bg. (`#703`_)
+- Add test and documentation for Option naming: functionality. (`#799`_)
+- Use deterministic option name; can't rely on list sort. (`#794`_)(`#793`_)
+- Added support for bash completions containing spaces. (`#773`_)
 - Added support for dynamic bash completion from a user-supplied callback.
-  See #755.
+  (`#755`_)
 - Added support for bash completion of type=click.Choice for Options and
-  Arguments. See #535.
+  Arguments. (`#535`_)
 - The user is now presented with the available choices if prompt=True and
   type=click.Choice in a click.option. The choices are listed within
   parenthesis like 'Choose fruit (apple, orange): '.
@@ -35,20 +84,20 @@ Version 7.0
 - Added Float Range in Types.
 - `secho`'s first argument can now be `None`, like in `echo`.
 - Usage errors now hint at the `--help` option.
-- ``launch`` now works properly under Cygwin. See #650.
+- ``launch`` now works properly under Cygwin. (`#650`_)
 - `CliRunner.invoke` now may receive `args` as a string representing
-  a Unix shell command. See #664.
+  a Unix shell command. See (`#664`_).
 - Fix bug that caused bashcompletion to give improper completions on
-  chained commands. See #774.
+  chained commands. (`#774`_)
 - Add support for bright colors.
 - 't' and 'f' are now converted to True and False.
 - Fix bug that caused bashcompletion to give improper completions on
   chained commands when a required option/argument was being completed.
-  See #790.
+  (`#790`_)(`#806`_)
 - Allow autocompletion function to determine whether or not to return
   completions that start with the incomplete argument.
-- Add native ZSH autocompletion support See #323.
-- Add support for auto-completion documentation. See #866.
+- Add native ZSH autocompletion support. (`#323`_)(`#865`_)
+- Add support for auto-completion documentation. See (`#866`_)(`#869`_)
 - Subcommands that are named by the function now automatically have the
   underscore replaced with a dash.  So if you register a function named
   `my_command` it becomes `my-command` in the command line interface.
@@ -74,13 +123,75 @@ Version 7.0
 .. _#1013: https://github.com/pallets/click/pull/1013
 .. _#1011: https://github.com/pallets/click/pull/1011
 .. _#865: https://github.com/pallets/click/pull/865
-.. _#202: https://github.com/pallets/click/issues/323
+.. _#323: https://github.com/pallets/click/issues/323
 .. _#1009: https://github.com/pallets/click/pull/1009
 .. _#949: https://github.com/pallets/click/issues/949
 .. _#1010: https://github.com/pallets/click/pull/1010
-.. _#949: https://github.com/pallets/click/issues/334
-
-
+.. _#334: https://github.com/pallets/click/issues/334
+.. _#995: https://github.com/pallets/click/pull/995
+.. _#1008: https://github.com/pallets/click/pull/1008
+.. _#414: https://github.com/pallets/click/pull/414
+.. _#965: https://github.com/pallets/click/pull/965
+.. _#1005: https://github.com/pallets/click/pull/1005
+.. _#883: https://github.com/pallets/click/pull/883
+.. _#887: https://github.com/pallets/click/pull/887
+.. _#1004: https://github.com/pallets/click/pull/1004
+.. _#1003: https://github.com/pallets/click/pull/1003
+.. _#741: https://github.com/pallets/click/issues/741
+.. _#569: https://github.com/pallets/click/pull/569
+.. _#1007: https://github.com/pallets/click/pull/1007
+.. _#996: https://github.com/pallets/click/pull/996
+.. _#1002: https://github.com/pallets/click/pull/1002
+.. _#1001: https://github.com/pallets/click/pull/1001
+.. _#675: https://github.com/pallets/click/pull/675
+.. _#487: https://github.com/pallets/click/pull/487
+.. _#999: https://github.com/pallets/click/pull/999
+.. _#616: https://github.com/pallets/click/issues/616
+.. _#991: https://github.com/pallets/click/pull/991
+.. _#997: https://github.com/pallets/click/pull/997
+.. _#706: https://github.com/pallets/click/pull/706
+.. _#651: https://github.com/pallets/click/issues/651
+.. _#710: https://github.com/pallets/click/pull/710
+.. _#809: https://github.com/pallets/click/pull/809
+.. _#868: https://github.com/pallets/click/pull/868
+.. _#889: https://github.com/pallets/click/pull/889
+.. _#409: https://github.com/pallets/click/issues/409
+.. _#863: https://github.com/pallets/click/pull/863
+.. _#962: https://github.com/pallets/click/pull/962
+.. _#993: https://github.com/pallets/click/pull/993
+.. _#994: https://github.com/pallets/click/pull/994
+.. _#926: https://github.com/pallets/click/issues/926
+.. _#709: https://github.com/pallets/click/pull/709
+.. _#612: https://github.com/pallets/click/pull/612
+.. _#704: https://github.com/pallets/click/issues/704
+.. _#598: https://github.com/pallets/click/issues/598
+.. _#719: https://github.com/pallets/click/issues/719
+.. _#874: https://github.com/pallets/click/pull/874
+.. _#873: https://github.com/pallets/click/issues/873
+.. _#990: https://github.com/pallets/click/pull/990
+.. _#684: https://github.com/pallets/click/pull/684
+.. _#878: https://github.com/pallets/click/pull/878
+.. _#880: https://github.com/pallets/click/issues/880
+.. _#877: https://github.com/pallets/click/pull/877
+.. _#918: https://github.com/pallets/click/pull/918
+.. _#929: https://github.com/pallets/click/pull/929
+.. _#920: https://github.com/pallets/click/pull/920
+.. _#935: https://github.com/pallets/click/pull/935
+.. _#807: https://github.com/pallets/click/pull/807
+.. _#806: https://github.com/pallets/click/pull/806
+.. _#842: https://github.com/pallets/click/pull/842
+.. _#801: https://github.com/pallets/click/pull/801
+.. _#703: https://github.com/pallets/click/issues/703
+.. _#799: https://github.com/pallets/click/pull/799
+.. _#794: https://github.com/pallets/click/pull/794
+.. _#793: https://github.com/pallets/click/issues/793
+.. _#773: https://github.com/pallets/click/pull/773
+.. _#755: https://github.com/pallets/click/pull/755
+.. _#535: https://github.com/pallets/click/pull/535
+.. _#650: https://github.com/pallets/click/pull/650
+.. _#664: https://github.com/pallets/click/pull/664
+.. _#774: https://github.com/pallets/click/pull/774
+.. _#790: https://github.com/pallets/click/pull/790
 
 
 Version 6.8
