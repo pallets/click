@@ -7,9 +7,16 @@ Version 7.0
 -----------
 
 (upcoming release with new features, release date to be decided)
+
 - Updated test env matrix. (`#1027`_)
 - Fixes a ZeroDivisionError in ProgressBar.make_step,
   when the arg passed to the first call of ProgressBar.update is 0. (`#1012`_)(`#447`_)
+- Document that options can be required=True. (`#1022`_)(`#514`_)
+- ZSH completion auto-documentation. (`#869`_)(`#866`_)
+- Fix path validation bug. (`#1020`_)(`#795`_)
+- Document customizing option names. (`#1016`_)(`#725`_)
+- Wrap click.Choice's missing message. (`#1000`_)(`#202`_)
+- Don't add newlines by default for progressbars. (`#1013`_)
 - Added support for bash completions containing spaces. See #773.
 - Added support for dynamic bash completion from a user-supplied callback.
   See #755.
@@ -49,6 +56,20 @@ Version 7.0
 .. _#1027: https://github.com/pallets/click/pull/1027
 .. _#1012: https://github.com/pallets/click/pull/1012
 .. _#447: https://github.com/pallets/click/issues/447
+.. _#1022: https://github.com/pallets/click/pull/1022
+.. _#514: https://github.com/pallets/click/issues/514
+.. _#1020: https://github.com/pallets/click/pull/1020
+.. _#795: https://github.com/pallets/click/issues/795
+.. _#1016: https://github.com/pallets/click/pull/1016
+.. _#725: https://github.com/pallets/click/issues/725
+.. _#1000: https://github.com/pallets/click/pull/1000
+.. _#202: https://github.com/pallets/click/issues/202
+
+
+
+
+
+
 
 
 
