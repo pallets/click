@@ -108,11 +108,12 @@ Version 7.0
   standard streams like those from jupyter.
 - Add support for auto-completion documentation. See (`#866`_).
 - Fix bug that caused bashcompletion to give improper completions on
-  variadic arguments. See #919.
+  variadic arguments. See (`#919`_).
 - Ignore default values when searching for bashcompletions. See (`#925`_).
-- Use Python sorting order for ZSH completions. See (`#1047`_)
+- Use Python sorting order for ZSH completions. See (`#1047`_).
 
 .. _#866: https://github.com/pallets/click/issues/866
+.. _#919: https://github.com/pallets/click/issues/919
 .. _#925: https://github.com/pallets/click/issues/925
 .. _#1047: https://github.com/pallets/click/issues/1047
 .. _#1027: https://github.com/pallets/click/pull/1027
