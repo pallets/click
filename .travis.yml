@@ -1,43 +1,56 @@
+os: linux
 sudo: false
 language: python
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-  - "3.6"
-  - "pypy"
 
-env:
-  - TEST_EXTRA=
-  - TEST_EXTRA=colorama
+matrix:
+  include:
+    - python: 3.6
+      env: TOXENV=py,codecov
+    - python: 3.5
+      env: TOXENV=py,codecov
+    - python: 3.4
+      env: TOXENV=py,codecov
+    - python: 2.7
+      env: TOXENV=py,codecov
+    - python: pypy3
+      env: TOXENV=py,codecov
+    - python: nightly
+      env: TOXENV=py
+    - os: osx
+      language: generic
+      env: TOXENV=py3,py2,codecov
+      cache:
+        pip: false
+        directories:
+          - $HOME/Library/Caches/Homebrew
+          - $HOME/Library/Caches/pip
+  allow_failures:
+    - python: pypy3
+    - python: nightly
+    - os: osx
+  fast_finish: true
+
+before_install:
+  - |
+    if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+      brew upgrade python
+      brew install python@2
+      export PATH="/usr/local/opt/python/libexec/bin:${PATH}"
+    fi
 
 install:
   - pip install tox
 
 script:
-  - |
-    set -ex
-    if [[ $TRAVIS_PYTHON_VERSION == pypy ]]; then
-      TOX_PY=pypy
-    else
-      TOX_PY="py${TRAVIS_PYTHON_VERSION/./}"
-    fi
-    export TOXENV="${TOX_PY}-coverage"
-    if [[ $TEST_EXTRA == colorama ]]; then
-      TOXENV="$TOXENV-colorama"
-    fi
-    tox
-    set +x
+  - tox
+
+cache:
+  - pip
 
 branches:
   only:
     - master
-    - auto
-    - /^.*-maintenance$/
+    - /^.*-maintenance/
 
 notifications:
   email: false
-
-after_success:
-  - pip install codecov
-  - travis_retry codecov --env TOXENV -X fix search gcov --required --flags $TOX_PY $TEST_EXTRA
