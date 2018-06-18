@@ -41,11 +41,13 @@ COMPLETION_SCRIPT_ZSH = '''
     done
 
     if [ -n "$completions_with_descriptions" ]; then
-        _describe '' completions_with_descriptions
+        _describe -V unsorted completions_with_descriptions -U -Q
     fi
+    
     if [ -n "$completions" ]; then
-        compadd -M 'r:|=* l:|=* r:|=*' -a completions
+        compadd -U -V unsorted -Q -a completions
     fi
+    compstate[insert]="automenu"
 }
 
 compdef %(complete_func)s %(script_names)s
@@ -246,7 +248,8 @@ def do_complete(cli, prog_name, include_descriptions):
     except IndexError:
         incomplete = ''
 
-    for item in get_choices(cli, prog_name, args, incomplete):
+    # Sort before returning so that proper ordering can be enforced in custom types.
+    for item in sorted(get_choices(cli, prog_name, args, incomplete)):
         echo(item[0])
         if include_descriptions:
             # ZSH has trouble dealing with empty array parameters when returned from commands, so use a well defined character '_' to indicate no description is present.
