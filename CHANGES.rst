@@ -106,11 +106,15 @@ Version 7.0
   path so that changing working directories does not harm it.
 - Force stdout/stderr writable.  This works around issues with badly patched
   standard streams like those from jupyter.
-- Add support for auto-completion documentation. See #866.
+- Add support for auto-completion documentation. See (`#866`_).
 - Fix bug that caused bashcompletion to give improper completions on
   variadic arguments. See #919.
-- Ignore default values when searching for bashcompletions. See #925.
+- Ignore default values when searching for bashcompletions. See (`#925`_).
+- Use Python sorting order for ZSH completions. See (`#1047`_)
 
+.. _#866: https://github.com/pallets/click/issues/866
+.. _#925: https://github.com/pallets/click/issues/925
+.. _#1047: https://github.com/pallets/click/issues/1047
 .. _#1027: https://github.com/pallets/click/pull/1027
 .. _#1012: https://github.com/pallets/click/pull/1012
 .. _#447: https://github.com/pallets/click/issues/447
