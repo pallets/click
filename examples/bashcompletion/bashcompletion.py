@@ -28,7 +28,7 @@ def group():
 
 def list_users(ctx, args, incomplete):
     # You can generate completions with descriptions by returning
-    # tuples of (completion, description).
+    # tuples in the form (completion, description).
     users = [('bob', 'butcher'),
              ('alice', 'baker'),
              ('jerry', 'candlestick maker')]
