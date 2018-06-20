@@ -493,6 +493,13 @@ class Editor:
             f = os.fdopen(fd, "wb")
             f.write(text)
             f.close()
+            # If the filesystem resolution is 1 second, like Mac OS
+            # 10.12 Extended, or 2 seconds, like FAT32, and the editor
+            # closes very fast, require_save can fail. Set the modified
+            # time to be 2 seconds in the past to work around this.
+            os.utime(name, (os.path.getatime(name), os.path.getmtime(name) - 2))
+            # Depending on the resolution, the exact value might not be
+            # recorded, so get the new recorded value.
             timestamp = os.path.getmtime(name)
 
             self.edit_file(name)

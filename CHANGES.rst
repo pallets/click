@@ -41,6 +41,8 @@ Unreleased
     name instead of ``True`` or ``False``. :issue:`1538`
 -   Non-string objects passed to ``style()`` and ``secho()`` will be
     converted to string. :pr:`1146`
+-   ``edit(require_save=True)`` will detect saves for editors that exit
+    very fast on filesystems with 1 second resolution. :pr:`1050`
 
 
 Version 7.1.2
