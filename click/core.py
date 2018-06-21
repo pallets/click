@@ -888,13 +888,11 @@ class Command(BaseCommand):
         opts = []
         args = []
         for param in self.get_params(ctx):
-            if isinstance(param, Option):
-                rv = param.get_help_record(ctx)
-                if rv is not None:
+            rv = param.get_help_record(ctx)
+            if rv is not None:
+                if isinstance(param, Option):
                     opts.append(rv)
-            elif isinstance(param, Argument):
-                rv = param.get_help_record(ctx)
-                if rv is not None:
+                elif isinstance(param, Argument):
                     args.append(rv)
 
         if opts:
