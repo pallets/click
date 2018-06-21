@@ -106,6 +106,14 @@ def test_wrapping_long_options_strings(runner):
         '',
         'Options:',
         '  --help  Show this message and exit.',
+        '',
+        'Arguments:',
+        '  FIRST',
+        '  SECOND',
+        '  THIRD',
+        '  FOURTH',
+        '  FIFTH',
+        '  SIXTH'
     ]
 
 
@@ -143,6 +151,14 @@ def test_wrapping_long_command_name(runner):
         '',
         'Options:',
         '  --help  Show this message and exit.',
+        '',
+        'Arguments:',
+        '  FIRST',
+        '  SECOND',
+        '  THIRD',
+        '  FOURTH',
+        '  FIFTH',
+        '  SIXTH'
     ]
 
 
@@ -286,5 +302,8 @@ def test_formatting_custom_type_metavar(runner):
         'Usage: foo [OPTIONS] MY_TYPE',
         '',
         'Options:',
-        '  --help  Show this message and exit.'
+        '  --help  Show this message and exit.',
+        '',
+        'Arguments:',
+        '  PARAM',
     ]

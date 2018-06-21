@@ -1837,10 +1837,8 @@ class Argument(Parameter):
                             obj=self)
 
     def get_help_record(self, ctx):
-        if not self.help:
-            return None
         key = self.metavar if self.metavar else self.name.upper()
-        return (key, self.help)
+        return (key, self.help or '')
 
 
 # Circular dependency between decorators and core
