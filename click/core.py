@@ -886,14 +886,22 @@ class Command(BaseCommand):
     def format_options(self, ctx, formatter):
         """Writes all the options into the formatter if they exist."""
         opts = []
+        args = []
         for param in self.get_params(ctx):
             rv = param.get_help_record(ctx)
             if rv is not None:
-                opts.append(rv)
+                if isinstance(param, Option):
+                    opts.append(rv)
+                elif isinstance(param, Argument):
+                    args.append(rv)
 
         if opts:
             with formatter.section('Options'):
                 formatter.write_dl(opts)
+
+        if args:
+            with formatter.section('Arguments'):
+                formatter.write_dl(args)
 
     def format_epilog(self, ctx, formatter):
         """Writes the epilog into the formatter if it exists."""
@@ -1771,12 +1779,13 @@ class Argument(Parameter):
     """
     param_type_name = 'argument'
 
-    def __init__(self, param_decls, required=None, **attrs):
+    def __init__(self, param_decls, required=None, help=None, **attrs):
         if required is None:
             if attrs.get('default') is not None:
                 required = False
             else:
                 required = attrs.get('nargs', 1) > 0
+        self.help = help
         Parameter.__init__(self, param_decls, required=required, **attrs)
         if self.default is not None and self.nargs < 0:
             raise TypeError('nargs=-1 in combination with a default value '
@@ -1824,6 +1833,10 @@ class Argument(Parameter):
     def add_to_parser(self, parser, ctx):
         parser.add_argument(dest=self.name, nargs=self.nargs,
                             obj=self)
+
+    def get_help_record(self, ctx):
+        key = self.metavar if self.metavar else self.name.upper()
+        return (key, self.help or '')
 
 
 # Circular dependency between decorators and core
