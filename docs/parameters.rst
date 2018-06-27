@@ -91,11 +91,14 @@ If all names for a parameter contain dashes, the internal name is generated
 automatically by taking the longest argument and converting all dashes to
 underscores.
 
+All parameter names are converted to lowercase.
+
 Examples:
 
 * For an option with ``('-f', '--foo-bar')``, the parameter name is `foo_bar`.
 * For an option with ``('-x',)``, the parameter is `x`.
 * For an option with ``('-f', '--filename', 'dest')``, the parameter name is  `dest`.
+* For an option with ``('--CamelCaseOption',)``, the parameter is `camelcaseoption`.
 * For an arguments with ``(`foogle`)``, the parameter name is `foogle`. To
   provide a different human readable name for use in help text, see the section
   about :ref:`doc-meta-variables`.
