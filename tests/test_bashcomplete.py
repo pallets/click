@@ -371,3 +371,39 @@ def test_chained_multi():
     assert choices_without_help(cli, ['sub'], 'c') == ['csub']
     assert choices_without_help(cli, ['sub', 'csub'], '') == ['dsub', 'esub']
     assert choices_without_help(cli, ['sub', 'csub', 'dsub'], '') == ['esub']
+
+
+def test_hidden():
+    @click.group()
+    @click.option('--name', hidden=True)
+    @click.option('--choices', type=click.Choice([1, 2]), hidden=True)
+    def cli(name):
+        pass
+
+    @cli.group(hidden=True)
+    def hgroup():
+        pass
+
+    @hgroup.group()
+    def hgroupsub():
+        pass
+
+    @cli.command()
+    def asub():
+        pass
+
+    @cli.command(hidden=True)
+    @click.option('--hname')
+    def hsub():
+        pass
+
+    assert choices_without_help(cli, [], '--n') == []
+    assert choices_without_help(cli, [], '--c') == []
+    # If the user exactly types out the hidden param, complete its options.
+    assert choices_without_help(cli, ['--choices'], '') == [1, 2]
+    assert choices_without_help(cli, [], '') == ['asub']
+    assert choices_without_help(cli, [], '') == ['asub']
+    assert choices_without_help(cli, [], 'h') == []
+    # If the user exactly types out the hidden command, complete its subcommands.
+    assert choices_without_help(cli, ['hgroup'], '') == ['hgroupsub']
+    assert choices_without_help(cli, ['hsub'], '--h') == ['--hname']
