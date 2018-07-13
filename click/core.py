@@ -484,6 +484,26 @@ class Context(object):
                 rv = rv()
             return rv
 
+    def lookup_default_path(self, path):
+        """Looks up the default for a parameter path.  This by default
+        looks into the :attr:`default_map` if available.
+        """
+        if not isinstance(path, (tuple, list)):
+            path = path.split('.')
+        rv = None
+        if self.default_map is not None:
+            rv = self.default_map
+        elif self.parent is not None and self.parent.default_map is not None:
+            rv = self.parent.default_map
+        if rv is not None:
+            for key in path:
+                rv = rv.get(key)
+                if rv is None:
+                    break
+            if callable(rv):
+                rv = rv()
+            return rv
+
     def fail(self, message):
         """Aborts the execution of the program with a specific error
         message.
@@ -1298,13 +1318,15 @@ class Parameter(object):
                      order of processing.
     :param envvar: a string or list of strings that are environment variables
                    that should be checked.
+    :param default_path: a string or list of strings to specify the location in
+                         the default map
     """
     param_type_name = 'parameter'
 
     def __init__(self, param_decls=None, type=None, required=False,
                  default=None, callback=None, nargs=None, metavar=None,
                  expose_value=True, is_eager=False, envvar=None,
-                 autocompletion=None):
+                 autocompletion=None,default_path=None):
         self.name, self.opts, self.secondary_opts = \
             self._parse_decls(param_decls or (), expose_value)
 
@@ -1328,6 +1350,7 @@ class Parameter(object):
         self.metavar = metavar
         self.envvar = envvar
         self.autocompletion =  autocompletion
+        self.default_path = default_path
 
     @property
     def human_readable_name(self):
@@ -1364,7 +1387,10 @@ class Parameter(object):
         if value is None:
             value = self.value_from_envvar(ctx)
         if value is None:
-            value = ctx.lookup_default(self.name)
+            if self.default_path is not None:
+                value = ctx.lookup_default_path(self.default_path)
+            else:
+                value = ctx.lookup_default(self.name)
         return value
 
     def type_cast_value(self, ctx, value):
