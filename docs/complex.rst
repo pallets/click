@@ -187,8 +187,9 @@ The above example only works if there was an outer command that created a
 ``Repo`` object and stored it in the context.  For some more advanced use
 cases, this might become a problem.  The default behavior of
 :func:`make_pass_decorator` is to call :meth:`Context.find_object`
-which will find the object.  If it can't find the object, it will raise an
-error.  The alternative behavior is to use :meth:`Context.ensure_object`
+which will find the object.  If it can't find the object,
+:meth:`make_pass_decorator` will raise an error.
+The alternative behavior is to use :meth:`Context.ensure_object`
 which will find the object, and if it cannot find it, will create one and
 store it in the innermost context.  This behavior can also be enabled for
 :func:`make_pass_decorator` by passing ``ensure=True``:
