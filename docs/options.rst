@@ -62,10 +62,10 @@ simply pass in `required=True` as an argument to the decorator.
 
     # How to use a Python reserved word such as `from` as a parameter
     @click.command()
-    @click.option('--from', '-f', '_from')
+    @click.option('--from', '-f', 'from_')
     @click.option('--to', '-t')
-    def reserved_param_name(_from, to):
-        click.echo('from %s to %s' % (_from, to))
+    def reserved_param_name(from_, to):
+        click.echo('from %s to %s' % (from_, to))
 
 And on the command line:
 
