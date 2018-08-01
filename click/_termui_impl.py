@@ -54,7 +54,8 @@ class ProgressBar(object):
     def __init__(self, iterable, length=None, fill_char='#', empty_char=' ',
                  bar_template='%(bar)s', info_sep='  ', show_eta=True,
                  show_percent=None, show_pos=False, item_show_func=None,
-                 label=None, file=None, color=None, width=30):
+                 label=None, file=None, color=None, width=30,
+                 throttle=0.5):
         self.fill_char = fill_char
         self.empty_char = empty_char
         self.bar_template = bar_template
@@ -90,7 +91,7 @@ class ProgressBar(object):
         self.current_item = None
         self.is_hidden = not isatty(self.file)
         self._last_line = None
-        self.short_limit = 0.5
+        self.throttle = throttle
 
     def __enter__(self):
         self.entered = True
@@ -107,7 +108,7 @@ class ProgressBar(object):
         return self.generator()
 
     def is_fast(self):
-        return time.time() - self.start <= self.short_limit
+        return time.time() - self.start <= self.throttle
 
     def render_finish(self):
         if self.is_hidden or self.is_fast():
@@ -200,7 +201,7 @@ class ProgressBar(object):
     def render_progress(self):
         from .termui import get_terminal_size
 
-        if self.is_hidden:
+        if self.is_hidden or self.is_fast():
             return
 
         buf = []
@@ -231,7 +232,7 @@ class ProgressBar(object):
         line = ''.join(buf)
         # Render the line only if it changed.
 
-        if line != self._last_line and not self.is_fast():
+        if line != self._last_line:
             self._last_line = line
             echo(line, file=self.file, color=self.color, nl=False)
             self.file.flush()
@@ -241,7 +242,9 @@ class ProgressBar(object):
         if self.length_known and self.pos >= self.length:
             self.finished = True
 
-        if (time.time() - self.last_eta) < 1.0:
+        interval = time.time() - self.last_eta
+
+        if interval < self.throttle and not self.finished:
             return
 
         self.last_eta = time.time()
@@ -258,9 +261,10 @@ class ProgressBar(object):
 
         self.eta_known = self.length_known
 
+        self.render_progress()
+
     def update(self, n_steps):
         self.make_step(n_steps)
-        self.render_progress()
 
     def finish(self):
         self.eta_known = 0
@@ -285,7 +289,6 @@ class ProgressBar(object):
                 yield rv
                 self.update(1)
             self.finish()
-            self.render_progress()
 
 
 def pager(generator, color=None):

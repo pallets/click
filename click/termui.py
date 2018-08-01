@@ -262,7 +262,7 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                 show_percent=None, show_pos=False,
                 item_show_func=None, fill_char='#', empty_char='-',
                 bar_template='%(label)s  [%(bar)s]  %(info)s',
-                info_sep='  ', width=36, file=None, color=None):
+                info_sep='  ', width=36, file=None, color=None, throttle=0.5):
     """This function creates an iterable context manager that can be used
     to iterate over something while showing a progress bar.  It will
     either iterate over the `iterable` or `length` items (that are counted
@@ -340,6 +340,9 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                   default is autodetection.  This is only needed if ANSI
                   codes are included anywhere in the progress bar output
                   which is not the case by default.
+    :param throttle: Restrict output to this interval, in seconds,
+                  with a default of 0.5. For example, a value of 1
+                  ensures that a value is only printed every seconds.
     """
     from ._termui_impl import ProgressBar
     color = resolve_color_default(color)
@@ -348,7 +351,7 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                        item_show_func=item_show_func, fill_char=fill_char,
                        empty_char=empty_char, bar_template=bar_template,
                        info_sep=info_sep, file=file, label=label,
-                       width=width, color=color)
+                       width=width, color=color, throttle=throttle)
 
 
 def clear():
