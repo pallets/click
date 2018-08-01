@@ -94,6 +94,8 @@ class ProgressBar(object):
         self.throttle = throttle
 
     def __enter__(self):
+        if self.entered:
+            raise RuntimeError('This progress bar is already active.')
         self.entered = True
         self.render_progress()
         return self
