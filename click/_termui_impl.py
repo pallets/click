@@ -97,11 +97,10 @@ class ProgressBar(object):
         if self.entered:
             raise RuntimeError('This progress bar is already active.')
         self.entered = True
-        self.render_progress()
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
-        self.render_finish()
+        self.finish()
 
     def __iter__(self):
         if not self.entered:
@@ -138,19 +137,24 @@ class ProgressBar(object):
 
     def format_eta(self):
         if self.eta_known:
-            t = int(self.eta)
-            seconds = t % 60
-            t //= 60
-            minutes = t % 60
-            t //= 60
-            hours = t % 24
-            t //= 24
-            if t > 0:
-                days = t
-                return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
+            if not self.finished:
+                t = int(self.eta)
             else:
-                return '%02d:%02d:%02d' % (hours, minutes, seconds)
-        return ''
+                t = time.time() - self.start
+        else:
+            return ''
+
+        seconds = t % 60
+        t //= 60
+        minutes = t % 60
+        t //= 60
+        hours = t % 24
+        t //= 24
+        if t > 0:
+            days = t
+            return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
+        else:
+            return '%02d:%02d:%02d' % (hours, minutes, seconds)
 
     def format_pos(self):
         pos = str(self.pos)
@@ -187,7 +191,7 @@ class ProgressBar(object):
             info_bits.append(self.format_pos())
         if show_percent:
             info_bits.append(self.format_pct())
-        if self.show_eta and self.eta_known and not self.finished:
+        if self.show_eta and self.eta_known:
             info_bits.append(self.format_eta())
         if self.item_show_func is not None:
             item_info = self.item_show_func(self.current_item)
@@ -268,9 +272,10 @@ class ProgressBar(object):
         self.make_step(n_steps)
 
     def finish(self):
-        self.eta_known = 0
+        self.eta_known = True
         self.current_item = None
         self.finished = True
+        self.render_finish()
 
     def generator(self):
         """

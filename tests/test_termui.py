@@ -124,7 +124,29 @@ def test_progressbar_update(runner, monkeypatch):
 
     lines = [line for line in output.split('\n') if '[' in line]
 
+    assert len(lines) == 5
     assert ' 25%  00:00:03' in lines[0]
     assert ' 50%  00:00:02' in lines[1]
     assert ' 75%  00:00:01' in lines[2]
-    assert '100%          ' in lines[3]
+    assert '100%  00:00:04' in lines[3]
+
+
+def test_progressbar_update_with_throttle(runner, monkeypatch):
+    fake_clock = FakeClock()
+
+    @click.command()
+    def cli():
+        with click.progressbar(range(4), throttle=1.5) as progress:
+            for _ in progress:
+                fake_clock.advance_time()
+                print("")
+
+    monkeypatch.setattr(time, 'time', fake_clock.time)
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+    output = runner.invoke(cli, []).output
+
+    lines = [line for line in output.split('\n') if '[' in line]
+
+    assert len(lines) == 3
+    assert ' 50%  00:00:02' in lines[0]
+    assert '100%  00:00:04' in lines[1]
