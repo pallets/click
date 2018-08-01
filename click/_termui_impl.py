@@ -212,8 +212,7 @@ class ProgressBar(object):
             clutter_length = term_len(self.format_progress_line())
             new_width = max(0, get_terminal_size()[0] - clutter_length)
             if new_width < old_width:
-                buf.append(BEFORE_BAR)
-                buf.append(' ' * self.max_width)
+                self.clear_line()
                 self.max_width = new_width
             self.width = new_width
 
@@ -290,6 +289,29 @@ class ProgressBar(object):
                 self.update(1)
             self.finish()
 
+    def clear_line(self):
+        if self._last_line is None:
+            return
+
+        self._last_line = None
+
+        buf = [
+            BEFORE_BAR,
+            ' ' * self.max_width,
+            BEFORE_BAR,
+        ]
+        echo(''.join(buf), file=self.file, color=self.color, nl=False)
+
+    def echo(self, message=None, nl=True):
+        self.clear_line()
+
+        echo(message, file=self.file, color=self.color, nl=nl)
+
+    def secho(self, message=None, nl=True, **styles):
+        self.clear_line()
+
+        from .termui import secho
+        secho(message, file=self.file, color=self.color, nl=nl, **styles)
 
 def pager(generator, color=None):
     """Decide what method to use for paging through text."""
