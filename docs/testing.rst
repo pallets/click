@@ -61,6 +61,11 @@ Example::
         assert 'Debug mode is on' in result.output
         assert 'Syncing' in result.output
 
+Additional keyword arguments passed to ``.invoke()`` will be used to construct the initial Context object. For example, if you want to run your tests against a fixed terminal width you can use the following::
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ['--debug', 'sync'], terminal_width=60)
+
 File System Isolation
 ---------------------
 
