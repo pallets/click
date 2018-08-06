@@ -949,6 +949,9 @@ class MultiCommand(Command):
                   multiple commands to be chained together.
     :param result_callback: the result callback to attach to this multi
                             command.
+    :param section_label: this controls the label above the list of sub
+                          commands in the formatted text displayed for a
+                          given MultiCommand. Defaults to "Commands".
     """
     allow_extra_args = True
     allow_interspersed_args = False
