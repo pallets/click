@@ -331,9 +331,12 @@ class File(ParamType):
     opened in binary mode or for writing.  The encoding parameter can be used
     to force a specific encoding.
 
-    The `lazy` flag controls if the file should be opened immediately or
-    upon first IO.  The default is to be non lazy for standard input and
-    output streams as well as files opened for reading, lazy otherwise.
+    The `lazy` flag controls if the file should be opened immediately or upon
+    first IO. The default is to be non-lazy for standard input and output
+    streams as well as files opened for reading, `lazy` otherwise. When opening a
+    file lazily for reading, it is still opened temporarily for validation, but
+    will not be held open until first IO. lazy is mainly useful when opening
+    for writing to avoid creating the file until it is needed.
 
     Starting with Click 2.0, files can also be opened atomically in which
     case all writes go into a separate file in the same folder and upon
