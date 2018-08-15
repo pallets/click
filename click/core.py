@@ -778,6 +778,8 @@ class Command(BaseCommand):
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
         self.params = params or []
+        # if a form feed (page break) is found in the help text, truncate help
+        # text to the content preceding the first form feed
         if help and '\f' in help:
             help = help.split('\f', 1)[0]
         self.help = help
