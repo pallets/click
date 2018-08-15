@@ -87,6 +87,9 @@ script like this:
     @click.option('--debug/--no-debug', default=False)
     @click.pass_context
     def cli(ctx, debug):
+        if ctx.obj is None:  # This is needed when we get here via a setup tools entry point
+            ctx.obj = {}
+
         ctx.obj['DEBUG'] = debug
 
     @cli.command()
