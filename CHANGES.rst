@@ -55,7 +55,7 @@ Version 7.0
 - Add a test that ensures that when an Argument is formatted into a usage error,
   its metavar is used, not its name. (`#612`_)
 - Fix variable precedence. (`#874`_)(`#873`_)
-- Fix ResourceWarning that occurs during some tests. (`#878`_)
+- Fix ``ResourceWarning`` that occurs during some tests. (`#878`_)
 - Update README to match flask style and add ``long_description`` to setup.py. (`#990`_)
 - Drop testing for 2.6 3.3 and 3.6.
 - Make locale optional (`#880`_)
@@ -77,7 +77,7 @@ Version 7.0
 - Added support for bash completion of ``type=click.Choice`` for ``Options`` and
   ``Arguments``. (`#535`_)
 - The user is now presented with the available choices if ``prompt=True`` and
-  ``type=click.Choice`` in a ``click.optio``n. The choices are listed within
+  ``type=click.Choice`` in a ``click.option``. The choices are listed within
   parenthesis like ``'Choose fruit (apple, orange): '``.
 - The exception objects now store unicode properly.
 - Added the ability to hide commands and options from help.
