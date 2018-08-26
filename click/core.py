@@ -498,7 +498,7 @@ class Context(object):
 
     def exit(self, code=0):
         """Exits the application with a given exit code."""
-        raise Exit(code, self)
+        raise Exit(code)
 
     def get_usage(self):
         """Helper method to get formatted usage string for the current
@@ -714,16 +714,12 @@ class BaseCommand(object):
                     rv = self.invoke(ctx)
                     if not standalone_mode:
                         return rv
-                    ctx.exit()
+                    if not rv:
+                        rv = 0
+                    ctx.exit(rv)
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
                 raise Abort()
-            except Exit as e:
-                if not standalone_mode:
-                    if e.exit_code:
-                        raise
-                    return None
-                sys.exit(e.exit_code)
             except ClickException as e:
                 if not standalone_mode:
                     raise
@@ -734,6 +730,11 @@ class BaseCommand(object):
                     sys.exit(1)
                 else:
                     raise
+        except Exit as e:
+            if standalone_mode:
+                sys.exit(e.exit_code)
+            else:
+                return e.exit_code
         except Abort:
             if not standalone_mode:
                 raise
