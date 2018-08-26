@@ -231,5 +231,5 @@ class Exit(RuntimeError):
 
     :param code: the status code to exit with.
     """
-    def __init__(self, code):
+    def __init__(self, code=0):
         self.exit_code = code
