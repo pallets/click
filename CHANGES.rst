@@ -15,6 +15,7 @@ Unreleased
 -   Usage errors now hint at the ``--help`` option. (`#393`_, `#557`_)
 -   Implement streaming pager. (`#409`_, `#889`_)
 -   Extract bar formatting to its own method. (`#414`_)
+-   Add ``DateTime`` type for converting input in given date time formats. (`#423`_)
 -   ``secho``'s first argument can now be ``None``, like in ``echo``. (`#424`_)
 -   Fixes a ``ZeroDivisionError`` in ``ProgressBar.make_step``, when the arg passed to the first call of ``ProgressBar.update`` is 0. (`#447`_, `#1012`_)
 -   Show progressbar only if total execution time is visible. (`#487`_)
@@ -93,6 +94,7 @@ Unreleased
 .. _#393: https://github.com/pallets/click/issues/393
 .. _#409: https://github.com/pallets/click/issues/409
 .. _#414: https://github.com/pallets/click/pull/414
+.. _#423: https://github.com/pallets/click/pull/423
 .. _#424: https://github.com/pallets/click/pull/424
 .. _#447: https://github.com/pallets/click/issues/447
 .. _#487: https://github.com/pallets/click/pull/487

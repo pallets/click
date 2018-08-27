@@ -184,12 +184,32 @@ class Choice(ParamType):
 
 
 class DateTime(ParamType):
+    """The DateTime type converts date strings into `datetime` objects.
+
+    The format strings which are checked are configurable, but default to some
+    common (non-timezone aware) ISO 8601 formats.
+
+    When specifying *DateTime* formats, you should only pass a list or a tuple.
+    Other iterables, like generators, may lead to surprising results.
+
+    The format strings are processed using ``datetime.strptime``, and this
+    consequently defines the format strings which are allowed.
+
+    Parsing is tried using each format, in order, and the first format which
+    parses successfully is used.
+
+    :param formats: A list or tuple of date format strings, in the order in
+                    which they should be tried. Defaults to
+                    ``'%Y-%m-%d'``, ``'%Y-%m-%dT%H:%M:%S'``,
+                    ``'%Y-%m-%d %H:%M:%S'``.
+    """
     name = 'datetime'
 
     def __init__(self, formats=None):
         self.formats = formats or [
             '%Y-%m-%d',
-            '%Y-%m-%dT%H:%M:%S'
+            '%Y-%m-%dT%H:%M:%S',
+            '%Y-%m-%d %H:%M:%S'
         ]
 
     def get_metavar(self, param):

@@ -349,11 +349,13 @@ def test_datetime_option_default(runner):
 
     result = runner.invoke(cli, ['--start_date=2015-09'])
     assert result.exit_code == 2
-    assert 'Invalid value for "--start_date": invalid datetime format: 2015-09. ' \
-        '(choose from %Y-%m-%d, %Y-%m-%dT%H:%M:%S)' in result.output
+    assert ('Invalid value for "--start_date": '
+            'invalid datetime format: 2015-09. '
+            '(choose from %Y-%m-%d, %Y-%m-%dT%H:%M:%S, %Y-%m-%d %H:%M:%S)'
+            ) in result.output
 
     result = runner.invoke(cli, ['--help'])
-    assert '--start_date [%Y-%m-%d|%Y-%m-%dT%H:%M:%S]' in result.output
+    assert '--start_date [%Y-%m-%d|%Y-%m-%dT%H:%M:%S|%Y-%m-%d %H:%M:%S]' in result.output
 
 
 def test_datetime_option_custom(runner):
