@@ -91,7 +91,7 @@ If all names for a parameter contain dashes, the internal name is generated
 automatically by taking the longest argument and converting all dashes to
 underscores.
 
-All parameter names are converted to lowercase.
+The internal name is converted to lowercase.
 
 Examples:
 
