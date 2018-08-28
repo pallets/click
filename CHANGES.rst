@@ -8,6 +8,8 @@ Version 7.0
 
 (upcoming release with new features, release date to be decided)
 
+- Non-standalone calls to Context.exit return the exit code, rather than
+  calling ``sys.exit`` (`#667`_)(`#533`_)
 - Updated test env matrix. (`#1027`_)
 - Fixes a ``ZeroDivisionError`` in ``ProgressBar.make_step``,
   when the arg passed to the first call of ``ProgressBar.update`` is 0. (`#1012`_)(`#447`_)

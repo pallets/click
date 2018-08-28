@@ -9,7 +9,7 @@ from functools import update_wrapper
 from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo, get_os_args
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
-     MissingParameter
+     MissingParameter, Exit
 from .termui import prompt, confirm, style
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
@@ -498,7 +498,7 @@ class Context(object):
 
     def exit(self, code=0):
         """Exits the application with a given exit code."""
-        sys.exit(code)
+        raise Exit(code)
 
     def get_usage(self):
         """Helper method to get formatted usage string for the current
@@ -714,6 +714,13 @@ class BaseCommand(object):
                     rv = self.invoke(ctx)
                     if not standalone_mode:
                         return rv
+                    # it's not safe to `ctx.exit(rv)` here!
+                    # note that `rv` may actually contain data like "1" which
+                    # has obvious effects
+                    # more subtle case: `rv=[None, None]` can come out of
+                    # chained commands which all returned `None` -- so it's not
+                    # even always obvious that `rv` indicates success/failure
+                    # by its truthiness/falsiness
                     ctx.exit()
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
@@ -728,6 +735,19 @@ class BaseCommand(object):
                     sys.exit(1)
                 else:
                     raise
+        except Exit as e:
+            if standalone_mode:
+                sys.exit(e.exit_code)
+            else:
+                # in non-standalone mode, return the exit code
+                # note that this is only reached if `self.invoke` above raises
+                # an Exit explicitly -- thus bypassing the check there which
+                # would return its result
+                # the results of non-standalone execution may therefore be
+                # somewhat ambiguous: if there are codepaths which lead to
+                # `ctx.exit(1)` and to `return 1`, the caller won't be able to
+                # tell the difference between the two
+                return e.exit_code
         except Abort:
             if not standalone_mode:
                 raise
