@@ -1,5 +1,12 @@
-Welcome to the Click Documentation
-==================================
+.. rst-class:: hide-header
+
+Welcome to Click
+================
+
+.. image:: _static/click-logo.png
+    :align: center
+    :scale: 50%
+    :target: https://palletsprojects.com/p/click/
 
 click is a Python package for creating beautiful command line interfaces
 in a composable way with as little amount of code as necessary.  It's the
@@ -49,8 +56,8 @@ You can get the library directly from PyPI::
 
     pip install click
 
-Documentation Contents
-----------------------
+Documentation
+-------------
 
 This part of the documentation guides you through all the usage patterns
 of the library.
