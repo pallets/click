@@ -1,3 +1,3 @@
 .. currentmodule:: click
 
-.. include:: ../CHANGES
+.. include:: ../CHANGES.rst
