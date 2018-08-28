@@ -126,17 +126,18 @@ class StringParamType(ParamType):
 
 
 class Choice(ParamType):
-    """The choice type allows a value to be checked against a fixed set of
-    supported values.  All of these values have to be strings.
+    """The choice type allows a value to be checked against a fixed set
+    of supported values. All of these values have to be strings.
 
-    You should only pass *choices* as list or tuple.  Other iterables (like
-    generators) may lead to surprising results.
+    You should only pass a list or tuple of choices. Other iterables
+    (like generators) may lead to surprising results.
 
     See :ref:`choice-opts` for an example.
 
-    :param case_sensitive: Set to false to make choices case insensitive.
-    Defaults to true.
+    :param case_sensitive: Set to false to make choices case
+        insensitive. Defaults to true.
     """
+
     name = 'choice'
 
     def __init__(self, choices, case_sensitive=True):

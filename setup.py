@@ -17,7 +17,7 @@ with io.open('click/__init__.py', 'rt', encoding='utf8') as f:
 setup(
     name='click',
     version=version,
-    url='https://www.palletsprojects.com/p/click/',
+    url='https://palletsprojects.com/p/click/',
     author='Armin Ronacher',
     author_email='armin.ronacher@active-4.com',
     maintainer='Pallets team',
@@ -36,6 +36,7 @@ setup(
         ],
         'docs': [
             'sphinx',
+            'Pallets-Sphinx-Themes',
         ]
     },
     classifiers=[
@@ -50,6 +51,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
 )
