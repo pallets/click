@@ -41,7 +41,7 @@ new in Click 6.0.
 
 Click now emulates output streams on Windows to support unicode to the
 Windows console through separate APIs.  For more information see
-`wincmd`_.
+:doc:`/wincmd`.
 
 .. versionadded:: 3.0
 
@@ -283,7 +283,7 @@ Example::
 
 Click now emulates output streams on Windows to support unicode to the
 Windows console through separate APIs.  For more information see
-`wincmd`_.
+:doc:`/wincmd`.
 
 
 Intelligent File Opening
