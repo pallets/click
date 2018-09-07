@@ -70,7 +70,7 @@ the tuple.  For this you can directly specify a tuple as type:
 .. click:example::
 
     @click.command()
-    @click.option('--item', type=(unicode, int))
+    @click.option('--item', type=(str, int))
     def putitem(item):
         click.echo('name=%s id=%d' % item)
 
@@ -87,7 +87,7 @@ used.  The above example is thus equivalent to this:
 .. click:example::
 
     @click.command()
-    @click.option('--item', nargs=2, type=click.Tuple([unicode, int]))
+    @click.option('--item', nargs=2, type=click.Tuple([str, int]))
     def putitem(item):
         click.echo('name=%s id=%d' % item)
 
