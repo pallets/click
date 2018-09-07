@@ -5,7 +5,7 @@ from pallets_sphinx_themes import ProjectLink, get_version
 project = "Click"
 copyright = "2014 Pallets Team"
 author = "Pallets Team"
-release, version = get_version("Click")
+release, version = get_version("Click", version_length=1)
 
 # General --------------------------------------------------------------
 
@@ -16,9 +16,7 @@ intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
 # HTML -----------------------------------------------------------------
 
 html_theme = "click"
-html_theme_options = {
-    "index_sidebar_logo": False,
-}
+html_theme_options = {"index_sidebar_logo": False}
 html_context = {
     "project_links": [
         ProjectLink("Donate to Pallets", "https://palletsprojects.com/donate"),
@@ -36,6 +34,7 @@ singlehtml_sidebars = {"index": ["project.html", "versions.html", "localtoc.html
 html_static_path = ["_static"]
 html_favicon = "_static/click-icon.png"
 html_logo = "_static/click-logo-sidebar.png"
+html_title = "{} Documentation ({})".format(project, version)
 html_show_sourcelink = False
 html_domain_indices = False
 html_experimental_html5_writer = True
