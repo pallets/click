@@ -34,7 +34,7 @@ singlehtml_sidebars = {"index": ["project.html", "versions.html", "localtoc.html
 html_static_path = ["_static"]
 html_favicon = "_static/click-icon.png"
 html_logo = "_static/click-logo-sidebar.png"
-html_title = "{} Documentation ({})".format(project, version)
+html_title = "Click Documentation ({})".format(version)
 html_show_sourcelink = False
 html_domain_indices = False
 html_experimental_html5_writer = True
@@ -42,5 +42,5 @@ html_experimental_html5_writer = True
 # LaTeX ----------------------------------------------------------------
 
 latex_documents = [
-    (master_doc, "Click.tex", "Click Documentation", "Pallets Team", "manual")
+    (master_doc, "Click-{}.tex".format(version), html_title, author, "manual")
 ]
