@@ -193,6 +193,7 @@ def test_close_before_pop(runner):
     @click.pass_context
     def cli(ctx):
         ctx.obj = 'test'
+
         @ctx.call_on_close
         def foo():
             assert click.get_current_context().obj == 'test'
@@ -203,3 +204,55 @@ def test_close_before_pop(runner):
     assert not result.exception
     assert result.output == 'aha!\n'
     assert called == [True]
+
+
+def test_make_pass_decorator_args(runner):
+    """
+    Test to check that make_pass_decorator doesn't consume arguments based on
+    invocation order.
+    """
+    class Foo(object):
+        title = 'foocmd'
+
+    pass_foo = click.make_pass_decorator(Foo)
+
+    @click.group()
+    @click.pass_context
+    def cli(ctx):
+        ctx.obj = Foo()
+
+    @cli.command()
+    @click.pass_context
+    @pass_foo
+    def test1(foo, ctx):
+        click.echo(foo.title)
+
+    @cli.command()
+    @pass_foo
+    @click.pass_context
+    def test2(ctx, foo):
+        click.echo(foo.title)
+
+    result = runner.invoke(cli, ['test1'])
+    assert not result.exception
+    assert result.output == 'foocmd\n'
+
+    result = runner.invoke(cli, ['test2'])
+    assert not result.exception
+    assert result.output == 'foocmd\n'
+
+
+def test_exit_not_standalone():
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        ctx.exit(1)
+
+    assert cli.main([], 'test_exit_not_standalone', standalone_mode=False) == 1
+
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        ctx.exit(0)
+
+    assert cli.main([], 'test_exit_not_standalone', standalone_mode=False) == 0

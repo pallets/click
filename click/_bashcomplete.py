@@ -72,7 +72,7 @@ def resolve_ctx(cli, prog_name, args):
     :param args: full list of args
     :return: the final context/command parsed
     """
-    ctx = cli.make_context(prog_name, args, resilient_parsing=True, ignore_default_values=True)
+    ctx = cli.make_context(prog_name, args, resilient_parsing=True)
     args = ctx.protected_args + ctx.args
     while args:
         if isinstance(ctx.command, MultiCommand):
@@ -81,8 +81,7 @@ def resolve_ctx(cli, prog_name, args):
                 if cmd is None:
                     return ctx
                 ctx = cmd.make_context(cmd_name, args, parent=ctx,
-                                       resilient_parsing=True,
-                                       ignore_default_values=True)
+                                       resilient_parsing=True)
                 args = ctx.protected_args + ctx.args
             else:
                 # Walk chained subcommand contexts saving the last one.
@@ -93,8 +92,7 @@ def resolve_ctx(cli, prog_name, args):
                     sub_ctx = cmd.make_context(cmd_name, args, parent=ctx,
                                                allow_extra_args=True,
                                                allow_interspersed_args=False,
-                                               resilient_parsing=True,
-                                               ignore_default_values=True)
+                                               resilient_parsing=True)
                     args = sub_ctx.args
                 ctx = sub_ctx
                 args = sub_ctx.protected_args + sub_ctx.args

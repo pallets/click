@@ -223,3 +223,13 @@ class FileError(ClickException):
 
 class Abort(RuntimeError):
     """An internal signalling exception that signals Click to abort."""
+
+
+class Exit(RuntimeError):
+    """An exception that indicates that the application should exit with some
+    status code.
+
+    :param code: the status code to exit with.
+    """
+    def __init__(self, code=0):
+        self.exit_code = code

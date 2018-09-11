@@ -62,10 +62,10 @@ simply pass in `required=True` as an argument to the decorator.
 
     # How to use a Python reserved word such as `from` as a parameter
     @click.command()
-    @click.option('--from', '-f', '_from')
+    @click.option('--from', '-f', 'from_')
     @click.option('--to', '-t')
-    def reserved_param_name(_from, to):
-        click.echo('from %s to %s' % (_from, to))
+    def reserved_param_name(from_, to):
+        click.echo('from %s to %s' % (from_, to))
 
 And on the command line:
 
@@ -124,7 +124,7 @@ the tuple.  For this you can directly specify a tuple as type:
 .. click:example::
 
     @click.command()
-    @click.option('--item', type=(unicode, int))
+    @click.option('--item', type=(str, int))
     def putitem(item):
         click.echo('name=%s id=%d' % item)
 
@@ -141,7 +141,7 @@ used.  The above example is thus equivalent to this:
 .. click:example::
 
     @click.command()
-    @click.option('--item', nargs=2, type=click.Tuple([unicode, int]))
+    @click.option('--item', nargs=2, type=click.Tuple([str, int]))
     def putitem(item):
         click.echo('name=%s id=%d' % item)
 

@@ -9,7 +9,7 @@ from functools import update_wrapper
 from .types import convert_type, IntRange, BOOL
 from .utils import make_str, make_default_short_help, echo, get_os_args
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
-     MissingParameter
+     MissingParameter, Exit
 from .termui import prompt, confirm, style
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
@@ -182,7 +182,8 @@ class Context(object):
                               add some safety mapping on the right.
     :param resilient_parsing: if this flag is enabled then Click will
                               parse without any interactivity or callback
-                              invocation.  This is useful for implementing
+                              invocation.  Default values will also be
+                              ignored.  This is useful for implementing
                               things such as completion support.
     :param allow_extra_args: if this is set to `True` then extra arguments
                              at the end will not raise an error and will be
@@ -214,7 +215,7 @@ class Context(object):
                  resilient_parsing=False, allow_extra_args=None,
                  allow_interspersed_args=None,
                  ignore_unknown_options=None, help_option_names=None,
-                 token_normalize_func=None, color=None, ignore_default_values=False):
+                 token_normalize_func=None, color=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -312,14 +313,9 @@ class Context(object):
         self.token_normalize_func = token_normalize_func
 
         #: Indicates if resilient parsing is enabled.  In that case Click
-        #: will do its best to not cause any failures.
+        #: will do its best to not cause any failures and default values
+        #: will be ignored. Useful for completion.
         self.resilient_parsing = resilient_parsing
-
-        #: Indicates that default values should be ignored.
-        #: Useful for completion.
-
-        #: .. versionadded:: 7.0
-        self.ignore_default_values = ignore_default_values
 
         # If there is no envvar prefix yet, but the parent has one and
         # the command on this level has a name, we can expand the envvar
@@ -504,7 +500,7 @@ class Context(object):
 
     def exit(self, code=0):
         """Exits the application with a given exit code."""
-        sys.exit(code)
+        raise Exit(code)
 
     def get_usage(self):
         """Helper method to get formatted usage string for the current
@@ -720,6 +716,13 @@ class BaseCommand(object):
                     rv = self.invoke(ctx)
                     if not standalone_mode:
                         return rv
+                    # it's not safe to `ctx.exit(rv)` here!
+                    # note that `rv` may actually contain data like "1" which
+                    # has obvious effects
+                    # more subtle case: `rv=[None, None]` can come out of
+                    # chained commands which all returned `None` -- so it's not
+                    # even always obvious that `rv` indicates success/failure
+                    # by its truthiness/falsiness
                     ctx.exit()
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
@@ -734,6 +737,19 @@ class BaseCommand(object):
                     sys.exit(1)
                 else:
                     raise
+        except Exit as e:
+            if standalone_mode:
+                sys.exit(e.exit_code)
+            else:
+                # in non-standalone mode, return the exit code
+                # note that this is only reached if `self.invoke` above raises
+                # an Exit explicitly -- thus bypassing the check there which
+                # would return its result
+                # the results of non-standalone execution may therefore be
+                # somewhat ambiguous: if there are codepaths which lead to
+                # `ctx.exit(1)` and to `return 1`, the caller won't be able to
+                # tell the difference between the two
+                return e.exit_code
         except Abort:
             if not standalone_mode:
                 raise
@@ -784,6 +800,10 @@ class Command(BaseCommand):
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
         self.params = params or []
+        # if a form feed (page break) is found in the help text, truncate help
+        # text to the content preceding the first form feed
+        if help and '\f' in help:
+            help = help.split('\f', 1)[0]
         self.help = help
         self.epilog = epilog
         self.options_metavar = options_metavar
@@ -1415,7 +1435,7 @@ class Parameter(object):
     def full_process_value(self, ctx, value):
         value = self.process_value(ctx, value)
 
-        if value is None and not ctx.ignore_default_values:
+        if value is None and not ctx.resilient_parsing:
             value = self.get_default(ctx)
 
         if self.required and self.value_is_missing(value):

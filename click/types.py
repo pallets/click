@@ -126,17 +126,18 @@ class StringParamType(ParamType):
 
 
 class Choice(ParamType):
-    """The choice type allows a value to be checked against a fixed set of
-    supported values.  All of these values have to be strings.
+    """The choice type allows a value to be checked against a fixed set
+    of supported values. All of these values have to be strings.
 
-    You should only pass *choices* as list or tuple.  Other iterables (like
-    generators) may lead to surprising results.
+    You should only pass a list or tuple of choices. Other iterables
+    (like generators) may lead to surprising results.
 
     See :ref:`choice-opts` for an example.
 
-    :param case_sensitive: Set to false to make choices case insensitive.
-    Defaults to true.
+    :param case_sensitive: Set to false to make choices case
+        insensitive. Defaults to true.
     """
+
     name = 'choice'
 
     def __init__(self, choices, case_sensitive=True):
@@ -331,9 +332,12 @@ class File(ParamType):
     opened in binary mode or for writing.  The encoding parameter can be used
     to force a specific encoding.
 
-    The `lazy` flag controls if the file should be opened immediately or
-    upon first IO.  The default is to be non lazy for standard input and
-    output streams as well as files opened for reading, lazy otherwise.
+    The `lazy` flag controls if the file should be opened immediately or upon
+    first IO. The default is to be non-lazy for standard input and output
+    streams as well as files opened for reading, `lazy` otherwise. When opening a
+    file lazily for reading, it is still opened temporarily for validation, but
+    will not be held open until first IO. lazy is mainly useful when opening
+    for writing to avoid creating the file until it is needed.
 
     Starting with Click 2.0, files can also be opened atomically in which
     case all writes go into a separate file in the same folder and upon
