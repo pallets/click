@@ -84,6 +84,7 @@ Unreleased
 -   Use Python sorting order for ZSH completions. (`#1047`_, `#1059`_)
 -   Document that parameter names are lowercased by default. (`#1055`_)
 -   Subcommands that are named by the function now automatically have the underscore replaced with a dash. If you register a function named ``my_command`` it becomes ``my-command`` in the command line interface.
+-   Hide hidden commands and options from completion. (`#1058`_, `#1061`_)
 
 .. _#202: https://github.com/pallets/click/issues/202
 .. _#323: https://github.com/pallets/click/issues/323
@@ -193,7 +194,9 @@ Unreleased
 .. _#1027: https://github.com/pallets/click/pull/1027
 .. _#1047: https://github.com/pallets/click/pull/1047
 .. _#1055: https://github.com/pallets/click/pull/1055
+.. _#1058: https://github.com/pallets/click/pull/1058
 .. _#1059: https://github.com/pallets/click/pull/1059
+.. _#1061: https://github.com/pallets/click/pull/1061
 
 
 Version 6.7
