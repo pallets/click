@@ -23,6 +23,7 @@ Unreleased
 -   Non-standalone calls to ``Context.exit`` return the exit code, rather than calling ``sys.exit``. (`#533`_, `#667`_)
 -   Added ``FloatRange`` type. (`#538`_, `#553`_)
 -   Added support for bash completion of ``type=click.Choice`` for ``Options`` and ``Arguments``. (`#535`_)
+-   Only allow one positional arg for ``Argument`` parameter delcaration. (`#568`_, `#574`_, `#1014`_)
 -   Add ``case_sensitive=False`` as an option to Choice. (`#569`_)
 -   ``param_hint`` in errors now derived from param itself. (`#598`_, `#704`_, `#709`_)
 -   Add a test that ensures that when an argument is formatted into a usage error, its metavar is used, not its name. (`#612`_)
@@ -92,19 +93,21 @@ Unreleased
 .. _#487: https://github.com/pallets/click/pull/487
 .. _#500: https://github.com/pallets/click/pull/500
 .. _#514: https://github.com/pallets/click/issues/514
-.. _#533: https://github.com/pallets/click/issues/533
-.. _#535: https://github.com/pallets/click/pull/535
+.. _#533: https://github.com/pallets/click/pull/533
+.. _#535: https://github.com/pallets/click/issues/535
 .. _#538: https://github.com/pallets/click/pull/538
 .. _#553: https://github.com/pallets/click/pull/553
 .. _#557: https://github.com/pallets/click/pull/557
-.. _#569: https://github.com/pallets/click/pull/569
+.. _#568: https://github.com/pallets/click/issues/568
+.. _#569: https://github.com/pallets/click/issues/569
+.. _#574: https://github.com/pallets/click/issues/574
 .. _#598: https://github.com/pallets/click/issues/598
 .. _#612: https://github.com/pallets/click/pull/612
 .. _#616: https://github.com/pallets/click/issues/616
 .. _#650: https://github.com/pallets/click/pull/650
 .. _#651: https://github.com/pallets/click/issues/651
 .. _#664: https://github.com/pallets/click/pull/664
-.. _#667: https://github.com/pallets/click/pull/667
+.. _#667: https://github.com/pallets/click/issues/667
 .. _#675: https://github.com/pallets/click/pull/675
 .. _#684: https://github.com/pallets/click/pull/684
 .. _#703: https://github.com/pallets/click/issues/703
@@ -114,15 +117,15 @@ Unreleased
 .. _#710: https://github.com/pallets/click/pull/710
 .. _#719: https://github.com/pallets/click/issues/719
 .. _#725: https://github.com/pallets/click/issues/725
-.. _#728: https://github.com/pallets/click/issues/728
-.. _#739: https://github.com/pallets/click/issues/739
+.. _#728: https://github.com/pallets/click/pull/728
+.. _#739: https://github.com/pallets/click/pull/739
 .. _#741: https://github.com/pallets/click/issues/741
 .. _#744: https://github.com/pallets/click/issues/744
-.. _#754: https://github.com/pallets/click/pull/754
+.. _#754: https://github.com/pallets/click/issues/754
 .. _#755: https://github.com/pallets/click/pull/755
 .. _#773: https://github.com/pallets/click/pull/773
 .. _#774: https://github.com/pallets/click/pull/774
-.. _#790: https://github.com/pallets/click/pull/790
+.. _#790: https://github.com/pallets/click/issues/790
 .. _#793: https://github.com/pallets/click/issues/793
 .. _#794: https://github.com/pallets/click/pull/794
 .. _#795: https://github.com/pallets/click/issues/795
@@ -132,7 +135,7 @@ Unreleased
 .. _#807: https://github.com/pallets/click/pull/807
 .. _#809: https://github.com/pallets/click/pull/809
 .. _#842: https://github.com/pallets/click/pull/842
-.. _#862: https://github.com/pallets/click/pull/862
+.. _#862: https://github.com/pallets/click/issues/862
 .. _#863: https://github.com/pallets/click/pull/863
 .. _#865: https://github.com/pallets/click/pull/865
 .. _#866: https://github.com/pallets/click/issues/866
@@ -142,7 +145,7 @@ Unreleased
 .. _#874: https://github.com/pallets/click/pull/874
 .. _#877: https://github.com/pallets/click/pull/877
 .. _#878: https://github.com/pallets/click/pull/878
-.. _#880: https://github.com/pallets/click/issues/880
+.. _#880: https://github.com/pallets/click/pull/880
 .. _#883: https://github.com/pallets/click/pull/883
 .. _#887: https://github.com/pallets/click/pull/887
 .. _#889: https://github.com/pallets/click/pull/889
@@ -152,7 +155,7 @@ Unreleased
 .. _#929: https://github.com/pallets/click/pull/929
 .. _#935: https://github.com/pallets/click/pull/935
 .. _#949: https://github.com/pallets/click/issues/949
-.. _#954: https://github.com/pallets/click/issues/954
+.. _#954: https://github.com/pallets/click/pull/954
 .. _#962: https://github.com/pallets/click/pull/962
 .. _#965: https://github.com/pallets/click/pull/965
 .. _#976: https://github.com/pallets/click/pull/976
@@ -177,6 +180,7 @@ Unreleased
 .. _#1011: https://github.com/pallets/click/pull/1011
 .. _#1012: https://github.com/pallets/click/pull/1012
 .. _#1013: https://github.com/pallets/click/pull/1013
+.. _#1014: https://github.com/pallets/click/pull/1014
 .. _#1016: https://github.com/pallets/click/pull/1016
 .. _#1020: https://github.com/pallets/click/pull/1020
 .. _#1022: https://github.com/pallets/click/pull/1022
