@@ -81,6 +81,7 @@ Unreleased
 -   Fix formatting for short help. (`#1008`_)
 -   Document how ``auto_envar_prefix`` works with command groups. (`#1011`_)
 -   Don't add newlines by default for progress bars. (`#1013`_)
+-   Use Python sorting order for ZSH completions. (`#1047`_, `#1059`_)
 -   Document that parameter names are lowercased by default. (`#1055`_)
 -   Subcommands that are named by the function now automatically have the underscore replaced with a dash. If you register a function named ``my_command`` it becomes ``my-command`` in the command line interface.
 
@@ -190,7 +191,9 @@ Unreleased
 .. _#1020: https://github.com/pallets/click/pull/1020
 .. _#1022: https://github.com/pallets/click/pull/1022
 .. _#1027: https://github.com/pallets/click/pull/1027
+.. _#1047: https://github.com/pallets/click/pull/1047
 .. _#1055: https://github.com/pallets/click/pull/1055
+.. _#1059: https://github.com/pallets/click/pull/1059
 
 
 Version 6.7
