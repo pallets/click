@@ -1351,7 +1351,7 @@ class Parameter(object):
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
-        self.autocompletion =  autocompletion
+        self.autocompletion = autocompletion
 
     @property
     def human_readable_name(self):
@@ -1381,7 +1381,6 @@ class Parameter(object):
 
     def add_to_parser(self, parser, ctx):
         pass
-
 
     def consume_value(self, ctx, opts):
         value = opts.get(self.name)
@@ -1832,11 +1831,9 @@ class Argument(Parameter):
         if len(decls) == 1:
             name = arg = decls[0]
             name = name.replace('-', '_').lower()
-        elif len(decls) == 2:
-            name, arg = decls
         else:
-            raise TypeError('Arguments take exactly one or two '
-                            'parameter declarations, got %d' % len(decls))
+            raise TypeError('Arguments take exactly one '
+                            'parameter declaration, got %d' % len(decls))
         return name, [arg], []
 
     def get_usage_pieces(self, ctx):
