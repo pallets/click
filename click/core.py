@@ -182,7 +182,8 @@ class Context(object):
                               add some safety mapping on the right.
     :param resilient_parsing: if this flag is enabled then Click will
                               parse without any interactivity or callback
-                              invocation.  This is useful for implementing
+                              invocation.  Default values will also be
+                              ignored.  This is useful for implementing
                               things such as completion support.
     :param allow_extra_args: if this is set to `True` then extra arguments
                              at the end will not raise an error and will be
@@ -312,7 +313,8 @@ class Context(object):
         self.token_normalize_func = token_normalize_func
 
         #: Indicates if resilient parsing is enabled.  In that case Click
-        #: will do its best to not cause any failures.
+        #: will do its best to not cause any failures and default values
+        #: will be ignored. Useful for completion.
         self.resilient_parsing = resilient_parsing
 
         # If there is no envvar prefix yet, but the parent has one and
@@ -1177,7 +1179,7 @@ class MultiCommand(Command):
         # an option we want to kick off parsing again for arguments to
         # resolve things like --help which now should go to the main
         # place.
-        if cmd is None:
+        if cmd is None and not ctx.resilient_parsing:
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
             ctx.fail('No such command "%s".' % original_cmd_name)
@@ -1432,7 +1434,7 @@ class Parameter(object):
     def full_process_value(self, ctx, value):
         value = self.process_value(ctx, value)
 
-        if value is None:
+        if value is None and not ctx.resilient_parsing:
             value = self.get_default(ctx)
 
         if self.required and self.value_is_missing(value):

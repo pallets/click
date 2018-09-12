@@ -40,11 +40,11 @@ Unreleased
 -   Fix bug in test runner when calling ``sys.exit`` with ``None``. (`#739`_)
 -   Clarify documentation on command line options. (`#741`_, `#1003`_)
 -   Fix crash on Windows console. (`#744`_)
--   Fix bug that caused bash completion to give improper completions on chained commands when a required option/argument was being completed. (`#754`_, `#774`_, `#790`_, `#806`_)
+-   Fix bug that caused bash completion to give improper completions on chained commands. (`#754`_, `#774`_)
 -   Added support for dynamic bash completion from a user-supplied callback. (`#755`_)
 -   Added support for bash completions containing spaces. (`#773`_)
--   Fix option naming routine to match documentation. (`#793`_)
--   Use deterministic option name; can't rely on list sort. (`#793`_, `#794`_)
+-   Allow autocompletion function to determine whether or not to return completions that start with the incomplete argument. (`#790`_, `#806`_)
+-   Fix option naming routine to match documentation and be deterministic. (`#793`_, `#794`_)
 -   Fix path validation bug. (`#795`_, `#1020`_)
 -   Add test and documentation for ``Option`` naming: functionality. (`#799`_)
 -   Update doc to match arg name for ``path_type``. (`#801`_)
@@ -60,7 +60,9 @@ Unreleased
 -   When detecting a misconfigured locale, don't fail if the ``locale`` command fails. (`#880`_)
 -   Add ``case_sensitive=False`` as an option to ``Choice`` types. (`#887`_)
 -   Force stdout/stderr writable. This works around issues with badly patched standard streams like those from Jupyter. (`#918`_)
+-   Fix completion of subcommand options after last argument (`#919`_, `#930`_)
 -   ``_AtomicFile`` now uses the ``realpath`` of the original filename so that chaning the working directory does not affect it. (`#920`_)
+-   Fix incorrect completions when defaults are present (`#925`_, `#930`_)
 -   Add copy option attrs so that custom classes can be re-used. (`#926`_, `#994`_)
 -   "x" and "a" file modes now use stdout when file is ``"-"``. (`#929`_)
 -   Fix missing comma in ``__all__`` list. (`#935`_)
@@ -150,9 +152,12 @@ Unreleased
 .. _#887: https://github.com/pallets/click/pull/887
 .. _#889: https://github.com/pallets/click/pull/889
 .. _#918: https://github.com/pallets/click/pull/918
+.. _#919: https://github.com/pallets/click/issues/919
 .. _#920: https://github.com/pallets/click/pull/920
+.. _#925: https://github.com/pallets/click/issues/925
 .. _#926: https://github.com/pallets/click/issues/926
 .. _#929: https://github.com/pallets/click/pull/929
+.. _#930: https://github.com/pallets/click/pull/930
 .. _#935: https://github.com/pallets/click/pull/935
 .. _#949: https://github.com/pallets/click/issues/949
 .. _#954: https://github.com/pallets/click/pull/954
