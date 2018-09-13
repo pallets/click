@@ -210,14 +210,14 @@ def _get_text_stdin(buffer_stream):
 
 def _get_text_stdout(buffer_stream):
     text_stream = _NonClosingTextIOWrapper(
-        _WindowsConsoleWriter(STDOUT_HANDLE),
+        io.BufferedWriter(_WindowsConsoleWriter(STDOUT_HANDLE)),
         'utf-16-le', 'strict', line_buffering=True)
     return ConsoleStream(text_stream, buffer_stream)
 
 
 def _get_text_stderr(buffer_stream):
     text_stream = _NonClosingTextIOWrapper(
-        _WindowsConsoleWriter(STDERR_HANDLE),
+        io.BufferedWriter(_WindowsConsoleWriter(STDERR_HANDLE)),
         'utf-16-le', 'strict', line_buffering=True)
     return ConsoleStream(text_stream, buffer_stream)
 
