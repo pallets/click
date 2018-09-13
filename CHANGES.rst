@@ -51,6 +51,7 @@ Unreleased
 -   Update doc to match arg name for ``path_type``. (`#801`_)
 -   Raw strings added so correct escaping occurs. (`#807`_)
 -   Add bool conversion for "t" and "f". (`#842`_)
+-   ``NoSuchOption`` errors take ``ctx`` so that ``--help`` hint gets printed in error output. (`#860`_)
 -   Fixed the behavior of Click error messages with regards to unicode on 2.x and 3.x. Message is now always unicode and the str and unicode special methods work as you expect on that platform. (`#862`_)
 -   Progress bar now uses stderr by default. (`#863`_)
 -   Add support for auto-completion documentation. (`#866`_, `#869`_)
@@ -142,6 +143,7 @@ Unreleased
 .. _#807: https://github.com/pallets/click/pull/807
 .. _#809: https://github.com/pallets/click/pull/809
 .. _#842: https://github.com/pallets/click/pull/842
+.. _#860: https://github.com/pallets/click/issues/860
 .. _#862: https://github.com/pallets/click/issues/862
 .. _#863: https://github.com/pallets/click/pull/863
 .. _#865: https://github.com/pallets/click/pull/865
