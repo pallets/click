@@ -50,6 +50,7 @@ Unreleased
 -   Add test and documentation for ``Option`` naming: functionality. (`#799`_)
 -   Update doc to match arg name for ``path_type``. (`#801`_)
 -   Raw strings added so correct escaping occurs. (`#807`_)
+-   Fix 16k character limit of ``click.echo`` on Windows. (`#816`_, `#819`_)
 -   Add bool conversion for "t" and "f". (`#842`_)
 -   ``NoSuchOption`` errors take ``ctx`` so that ``--help`` hint gets printed in error output. (`#860`_)
 -   Fixed the behavior of Click error messages with regards to unicode on 2.x and 3.x. Message is now always unicode and the str and unicode special methods work as you expect on that platform. (`#862`_)
@@ -142,6 +143,8 @@ Unreleased
 .. _#806: https://github.com/pallets/click/pull/806
 .. _#807: https://github.com/pallets/click/pull/807
 .. _#809: https://github.com/pallets/click/pull/809
+.. _#816: https://github.com/pallets/click/pull/816
+.. _#819: https://github.com/pallets/click/pull/819
 .. _#842: https://github.com/pallets/click/pull/842
 .. _#860: https://github.com/pallets/click/issues/860
 .. _#862: https://github.com/pallets/click/issues/862
