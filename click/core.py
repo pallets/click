@@ -327,7 +327,7 @@ class Context(object):
                 auto_envvar_prefix = '%s_%s' % (parent.auto_envvar_prefix,
                                            self.info_name.upper())
         else:
-            self.auto_envvar_prefix = auto_envvar_prefix.upper()
+            auto_envvar_prefix = auto_envvar_prefix.upper()
         self.auto_envvar_prefix = auto_envvar_prefix
 
         if color is None and parent is not None:
