@@ -1252,6 +1252,54 @@ class Group(MultiCommand):
         return sorted(self.commands)
 
 
+class SubCommandsGroup(Group):
+    """
+    Group extension which distinguish between direct commands and groups. Groups
+    are then displayed in help as 'Sub-Commands'.
+    """
+
+    SUB_COMMANDS_SECTION_TITLE = 'Sub-Commands'
+
+    def __init__(self, *args, **kwargs):
+        self.subcommands = {}
+        super().__init__(*args, **kwargs)
+
+    def group(self, *args, **kwargs):
+        def decorator(f):
+            cmd = super(SubCommandsGroup, self).group(*args, **kwargs)(f)
+            self.subcommands[cmd.name] = cmd
+            return cmd
+
+        return decorator
+
+    def format_subcommands(self, ctx, formatter):
+        rows = []
+        for subcommand in self.list_subcommands(ctx):
+            cmd = self.get_command(ctx, subcommand)
+            # What is this, the tool lied about a command.  Ignore it
+            if cmd is None:
+                continue
+
+            help = cmd.short_help or ''
+            rows.append((subcommand, help))
+
+        if rows:
+            with formatter.section(self.SUB_COMMANDS_SECTION_TITLE):
+                formatter.write_dl(rows)
+
+    def format_commands(self, ctx, formatter):
+        self.format_subcommands(ctx, formatter)
+        super().format_commands(ctx, formatter)
+
+    def list_subcommands(self, ctx):
+        return sorted(self.subcommands)
+
+    def list_commands(self, ctx):
+        return sorted(
+            {k: v for k, v in self.commands.items() if k not in self.subcommands}
+        )
+
+
 class CommandCollection(MultiCommand):
     """A command collection is a multi command that merges multiple multi
     commands together into one.  This is a straightforward implementation
