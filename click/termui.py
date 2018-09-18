@@ -557,6 +557,10 @@ def getchar(echo=False):
     Note that this will always read from the terminal, even if something
     is piped into the standard input.
 
+    Note for Windows: in rare cases when typing non-ASCII characters, this
+    function might wait for a second character and then return both at once.
+    This is because certain Unicode characters look like special-key markers.
+
     .. versionadded:: 2.0
 
     :param echo: if set to `True`, the character read will also show up on

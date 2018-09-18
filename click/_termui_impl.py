@@ -529,7 +529,9 @@ def open_url(url, wait=False, locate=False):
 def _translate_ch_to_exc(ch):
     if ch == '\x03':
         raise KeyboardInterrupt()
-    if ch == '\x04':
+    if ch == '\x04' and not WIN:  # Unix-like, Ctrl+D
+        raise EOFError()
+    if ch == '\x1a' and WIN:      # Windows, Ctrl+Z
         raise EOFError()
 
 
@@ -541,16 +543,46 @@ if WIN:
         yield
 
     def getchar(echo):
-        rv = msvcrt.getch()
+        # The function `getch` will return a bytes object corresponding to
+        # the pressed character. Since Windows 10 build 1803, it will also
+        # return \x00 when called a second time after pressing a regular key.
+        #
+        # `getwch` does not share this probably-bugged behavior. Moreover, it
+        # returns a Unicode object by default, which is what we want.
+        #
+        # Either of these functions will return \x00 or \xe0 to indicate
+        # a special key, and you need to call the same function again to get
+        # the "rest" of the code. The fun part is that \u00e0 is
+        # "latin small letter a with grave", so if you type that on a French
+        # keyboard, you _also_ get a \xe0.
+        # E.g., consider the Up arrow. This returns \xe0 and then \x48. The
+        # resulting Unicode string reads as "a with grave" + "capital H".
+        # This is indistinguishable from when the user actually types
+        # "a with grave" and then "capital H".
+        #
+        # When \xe0 is returned, we assume it's part of a special-key sequence
+        # and call `getwch` again, but that means that when the user types
+        # the \u00e0 character, `getchar` doesn't return until a second
+        # character is typed.
+        # The alternative is returning immediately, but that would mess up
+        # cross-platform handling of arrow keys and others that start with
+        # \xe0. Another option is using `getch`, but then we can't reliably
+        # read non-ASCII characters, because return values of `getch` are
+        # limited to the current 8-bit codepage.
+        #
+        # Anyway, Click doesn't claim to do this Right(tm), and using `getwch`
+        # is doing the right thing in more situations than with `getch`.
         if echo:
-            msvcrt.putchar(rv)
+            func = msvcrt.getwche
+        else:
+            func = msvcrt.getwch
+
+        rv = func()
+        if rv in (u'\x00', u'\xe0'):
+            # \x00 and \xe0 are control characters that indicate special key,
+            # see above.
+            rv += func()
         _translate_ch_to_exc(rv)
-        if PY2:
-            enc = getattr(sys.stdin, 'encoding', None)
-            if enc is not None:
-                rv = rv.decode(enc, 'replace')
-            else:
-                rv = rv.decode('cp1252', 'replace')
         return rv
 else:
     import tty

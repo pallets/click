@@ -7,6 +7,7 @@ Version 7.0
 
 Unreleased
 
+-   ``click.getchar()`` now returns unicode in Python 3 on Windows, same as other platforms. (`#1108`_, `#1088`_, `#822`_, `#821`_, `#537`_)
 -   Drop support for Python 2.6 and 3.3. (`#976`_)
 -   Wrap ``click.Choice``'s missing message. (`#202`_, `#1000`_)
 -   Add native ZSH autocompletion support. (`#323`_, `#865`_)
