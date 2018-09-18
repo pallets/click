@@ -7,7 +7,6 @@ Version 7.0
 
 Unreleased
 
--   ``click.getchar()`` now returns unicode in Python 3 on Windows, same as other platforms. (`#1108`_, `#1088`_, `#822`_, `#821`_, `#537`_)
 -   Drop support for Python 2.6 and 3.3. (`#976`_)
 -   Wrap ``click.Choice``'s missing message. (`#202`_, `#1000`_)
 -   Add native ZSH autocompletion support. (`#323`_, `#865`_)
@@ -23,10 +22,13 @@ Unreleased
 -   Added the ability to hide commands and options from help. (`#500`_)
 -   Document that options can be ``required=True``. (`#514`_, `#1022`_)
 -   Non-standalone calls to ``Context.exit`` return the exit code, rather than calling ``sys.exit``. (`#533`_, `#667`_)
+-   ``click.getchar()`` now returns unicode in Python 3 on Windows, same as other platforms. (`#537`_, `#821`_, `#822`_, `#1088`_, `#1108`_)
 -   Added ``FloatRange`` type. (`#538`_, `#553`_)
 -   Added support for bash completion of ``type=click.Choice`` for ``Options`` and ``Arguments``. (`#535`_)
 -   Only allow one positional arg for ``Argument`` parameter delcaration. (`#568`_, `#574`_, `#1014`_)
 -   Add ``case_sensitive=False`` as an option to Choice. (`#569`_)
+-   ``click.getchar()`` correctly raises ``KeyboardInterrupt`` on "^C" and ``EOFError`` on "^D" on Linux. (`#583`_, `#1115`_)
+-   Fix encoding issue with ``click.getchar(echo=True)`` on Linux. (`#1115`_)
 -   ``param_hint`` in errors now derived from param itself. (`#598`_, `#704`_, `#709`_)
 -   Add a test that ensures that when an argument is formatted into a usage error, its metavar is used, not its name. (`#612`_)
 -   Allow setting ``prog_name`` as extra in ``CliRunner.invoke``. (`#616`_, `#999`_)
@@ -105,12 +107,14 @@ Unreleased
 .. _#514: https://github.com/pallets/click/issues/514
 .. _#533: https://github.com/pallets/click/pull/533
 .. _#535: https://github.com/pallets/click/issues/535
+.. _#537: https://github.com/pallets/click/issues/537
 .. _#538: https://github.com/pallets/click/pull/538
 .. _#553: https://github.com/pallets/click/pull/553
 .. _#557: https://github.com/pallets/click/pull/557
 .. _#568: https://github.com/pallets/click/issues/568
 .. _#569: https://github.com/pallets/click/issues/569
 .. _#574: https://github.com/pallets/click/issues/574
+.. _#583: https://github.com/pallets/click/issues/583
 .. _#598: https://github.com/pallets/click/issues/598
 .. _#612: https://github.com/pallets/click/pull/612
 .. _#616: https://github.com/pallets/click/issues/616
@@ -146,6 +150,8 @@ Unreleased
 .. _#809: https://github.com/pallets/click/pull/809
 .. _#816: https://github.com/pallets/click/pull/816
 .. _#819: https://github.com/pallets/click/pull/819
+.. _#821: https://github.com/pallets/click/issues/821
+.. _#822: https://github.com/pallets/click/issues/822
 .. _#842: https://github.com/pallets/click/pull/842
 .. _#860: https://github.com/pallets/click/issues/860
 .. _#862: https://github.com/pallets/click/issues/862
@@ -206,7 +212,10 @@ Unreleased
 .. _#1058: https://github.com/pallets/click/pull/1058
 .. _#1059: https://github.com/pallets/click/pull/1059
 .. _#1061: https://github.com/pallets/click/pull/1061
+.. _#1088: https://github.com/pallets/click/issues/1088
 .. _#1105: https://github.com/pallets/click/pull/1105
+.. _#1108: https://github.com/pallets/click/pull/1108
+.. _#1115: https://github.com/pallets/click/pull/1115
 
 
 Version 6.7
