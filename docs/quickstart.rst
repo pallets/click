@@ -227,6 +227,12 @@ script can instead be written like this:
     def dropdb():
         click.echo('Dropped the database')
 
+You would then invoke the :class:`Group` in your setuptools entry points or
+other invocations::
+
+    if __name__ == '__main__':
+        cli()
+
 Adding Parameters
 -----------------
 
