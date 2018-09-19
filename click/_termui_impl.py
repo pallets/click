@@ -527,11 +527,11 @@ def open_url(url, wait=False, locate=False):
 
 
 def _translate_ch_to_exc(ch):
-    if ch == '\x03':
+    if ch == u'\x03':
         raise KeyboardInterrupt()
-    if ch == '\x04' and not WIN:  # Unix-like, Ctrl+D
+    if ch == u'\x04' and not WIN:  # Unix-like, Ctrl+D
         raise EOFError()
-    if ch == '\x1a' and WIN:      # Windows, Ctrl+Z
+    if ch == u'\x1a' and WIN:      # Windows, Ctrl+Z
         raise EOFError()
 
 
@@ -612,7 +612,8 @@ else:
     def getchar(echo):
         with raw_terminal() as fd:
             ch = os.read(fd, 32)
+            ch = ch.decode(get_best_encoding(sys.stdin), 'replace')
             if echo and isatty(sys.stdout):
                 sys.stdout.write(ch)
             _translate_ch_to_exc(ch)
-            return ch.decode(get_best_encoding(sys.stdin), 'replace')
+            return ch
