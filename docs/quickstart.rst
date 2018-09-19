@@ -227,6 +227,14 @@ script can instead be written like this:
     def dropdb():
         click.echo('Dropped the database')
 
+When using :func:`group`, the block at the bottom should change to invoke the
+group command:
+
+.. click:example::
+
+    if __name__ == '__main__':
+        cli()
+
 Adding Parameters
 -----------------
 
