@@ -7,7 +7,8 @@ from itertools import repeat
 from functools import update_wrapper
 
 from .types import convert_type, IntRange, BOOL
-from .utils import make_str, make_default_short_help, echo, get_os_args
+from .utils import PacifyFlushWrapper, make_str, make_default_short_help, \
+     echo, get_os_args
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
      MissingParameter, Exit
 from .termui import prompt, confirm, style
@@ -734,6 +735,8 @@ class BaseCommand(object):
                 sys.exit(e.exit_code)
             except IOError as e:
                 if e.errno == errno.EPIPE:
+                    sys.stdout = PacifyFlushWrapper(sys.stdout)
+                    sys.stderr = PacifyFlushWrapper(sys.stderr)
                     sys.exit(1)
                 else:
                     raise

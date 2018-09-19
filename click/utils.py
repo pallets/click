@@ -414,3 +414,27 @@ def get_app_dir(app_name, roaming=True, force_posix=False):
     return os.path.join(
         os.environ.get('XDG_CONFIG_HOME', os.path.expanduser('~/.config')),
         _posixify(app_name))
+
+
+class PacifyFlushWrapper(object):
+    """This wrapper is used to catch and suppress BrokenPipeErrors resulting
+    from ``.flush()`` being called on broken pipe during the shutdown/final-GC
+    of the Python interpreter. Notably ``.flush()`` is always called on
+    ``sys.stdout`` and ``sys.stderr``. So as to have minimal impact on any
+    other cleanup code, and the case where the underlying file is not a broken
+    pipe, all calls and attributes are proxied.
+    """
+
+    def __init__(self, wrapped):
+        self.wrapped = wrapped
+
+    def flush(self):
+        try:
+            self.wrapped.flush()
+        except IOError as e:
+            import errno
+            if e.errno != errno.EPIPE:
+                raise
+
+    def __getattr__(self, attr):
+        return getattr(self.wrapped, attr)
