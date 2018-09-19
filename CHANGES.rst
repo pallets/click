@@ -7,7 +7,7 @@ Version 7.0
 
 Unreleased
 
--   Drop support for Python 2.6 and 3.3. (`#976`_)
+-   Drop support for Python 2.6 and 3.3. (`#967`_, `#976`_)
 -   Wrap ``click.Choice``'s missing message. (`#202`_, `#1000`_)
 -   Add native ZSH autocompletion support. (`#323`_, `#865`_)
 -   Document that ANSI color info isn't parsed from bytearrays in Python 2. (`#334`_)
@@ -21,22 +21,23 @@ Unreleased
 -   Show progressbar only if total execution time is visible. (`#487`_)
 -   Added the ability to hide commands and options from help. (`#500`_)
 -   Document that options can be ``required=True``. (`#514`_, `#1022`_)
--   Non-standalone calls to ``Context.exit`` return the exit code, rather than calling ``sys.exit``. (`#533`_, `#667`_)
--   ``click.getchar()`` now returns unicode in Python 3 on Windows, same as other platforms. (`#537`_, `#821`_, `#822`_, `#1088`_, `#1108`_)
+-   Non-standalone calls to ``Context.exit`` return the exit code, rather than calling ``sys.exit``. (`#533`_, `#667`_, `#1098`_)
+-   ``click.getchar()`` returns Unicode in Python 3 on Windows, consistent with other platforms. (`#537`_, `#821`_, `#822`_, `#1088`_, `#1108`_)
 -   Added ``FloatRange`` type. (`#538`_, `#553`_)
--   Added support for bash completion of ``type=click.Choice`` for ``Options`` and ``Arguments``. (`#535`_)
--   Only allow one positional arg for ``Argument`` parameter delcaration. (`#568`_, `#574`_, `#1014`_)
+-   Added support for bash completion of ``type=click.Choice`` for ``Options`` and ``Arguments``. (`#535`_, `#681`_)
+-   Only allow one positional arg for ``Argument`` parameter declaration. (`#568`_, `#574`_, `#1014`_)
 -   Add ``case_sensitive=False`` as an option to Choice. (`#569`_)
 -   ``click.getchar()`` correctly raises ``KeyboardInterrupt`` on "^C" and ``EOFError`` on "^D" on Linux. (`#583`_, `#1115`_)
 -   Fix encoding issue with ``click.getchar(echo=True)`` on Linux. (`#1115`_)
 -   ``param_hint`` in errors now derived from param itself. (`#598`_, `#704`_, `#709`_)
 -   Add a test that ensures that when an argument is formatted into a usage error, its metavar is used, not its name. (`#612`_)
 -   Allow setting ``prog_name`` as extra in ``CliRunner.invoke``. (`#616`_, `#999`_)
+-   Help text taken from docstrings truncates at the ``\f`` form feed character, useful for hiding Sphinx-style parameter documentation. (`#629`_, `#1091`_)
 -   ``launch`` now works properly under Cygwin. (`#650`_)
 -   Update progress after iteration. (`#651`_, `#706`_)
 -   ``CliRunner.invoke`` now may receive ``args`` as a string representing a Unix shell command. (`#664`_)
 -   Make ``Argument.make_metavar()`` default to type metavar. (`#675`_)
--   Add documentation for ``ignore_unkown_options``. (`#684`_)
+-   Add documentation for ``ignore_unknown_options``. (`#684`_)
 -   Add bright colors support for ``click.style`` and fix the reset option for parameters ``fg`` and ``bg``. (`#703`_, `#809`_)
 -   Add ``show_envvar`` for showing environment variables in help. (`#710`_)
 -   Avoid ``BrokenPipeError`` during interpreter shutdown when stdout or stderr is a closed pipe. (`#712`_, `#1106`_)
@@ -57,7 +58,7 @@ Unreleased
 -   Fix 16k character limit of ``click.echo`` on Windows. (`#816`_, `#819`_)
 -   Add bool conversion for "t" and "f". (`#842`_)
 -   ``NoSuchOption`` errors take ``ctx`` so that ``--help`` hint gets printed in error output. (`#860`_)
--   Fixed the behavior of Click error messages with regards to unicode on 2.x and 3.x. Message is now always unicode and the str and unicode special methods work as you expect on that platform. (`#862`_)
+-   Fixed the behavior of Click error messages with regards to Unicode on 2.x and 3.x. Message is now always Unicode and the str and Unicode special methods work as you expect on that platform. (`#862`_)
 -   Progress bar now uses stderr by default. (`#863`_)
 -   Add support for auto-completion documentation. (`#866`_, `#869`_)
 -   Allow ``CliRunner`` to separate stdout and stderr. (`#868`_)
@@ -68,7 +69,7 @@ Unreleased
 -   Add ``case_sensitive=False`` as an option to ``Choice`` types. (`#887`_)
 -   Force stdout/stderr writable. This works around issues with badly patched standard streams like those from Jupyter. (`#918`_)
 -   Fix completion of subcommand options after last argument (`#919`_, `#930`_)
--   ``_AtomicFile`` now uses the ``realpath`` of the original filename so that chaning the working directory does not affect it. (`#920`_)
+-   ``_AtomicFile`` now uses the ``realpath`` of the original filename so that changing the working directory does not affect it. (`#920`_)
 -   Fix incorrect completions when defaults are present (`#925`_, `#930`_)
 -   Add copy option attrs so that custom classes can be re-used. (`#926`_, `#994`_)
 -   "x" and "a" file modes now use stdout when file is ``"-"``. (`#929`_)
@@ -86,12 +87,13 @@ Unreleased
 -   Added deprecation flag to commands. (`#1005`_)
 -   Fixed issues where ``fd`` was undefined. (`#1007`_)
 -   Fix formatting for short help. (`#1008`_)
--   Document how ``auto_envar_prefix`` works with command groups. (`#1011`_)
+-   Document how ``auto_envvar_prefix`` works with command groups. (`#1011`_)
 -   Don't add newlines by default for progress bars. (`#1013`_)
 -   Use Python sorting order for ZSH completions. (`#1047`_, `#1059`_)
--   Document that parameter names are lowercased by default. (`#1055`_)
+-   Document that parameter names are converted to lowercase by default. (`#1055`_)
 -   Subcommands that are named by the function now automatically have the underscore replaced with a dash. If you register a function named ``my_command`` it becomes ``my-command`` in the command line interface.
 -   Hide hidden commands and options from completion. (`#1058`_, `#1061`_)
+-   Fix absolute import blocking Click from being vendored into a project on Windows. (`#1068`_, `#1069`_)
 -   Fix issue where a lowercase ``auto_envvar_prefix`` would not be converted to uppercase. (`#1105`_)
 
 .. _#202: https://github.com/pallets/click/issues/202
@@ -119,11 +121,13 @@ Unreleased
 .. _#598: https://github.com/pallets/click/issues/598
 .. _#612: https://github.com/pallets/click/pull/612
 .. _#616: https://github.com/pallets/click/issues/616
+.. _#629: https://github.com/pallets/click/pull/629
 .. _#650: https://github.com/pallets/click/pull/650
 .. _#651: https://github.com/pallets/click/issues/651
 .. _#664: https://github.com/pallets/click/pull/664
 .. _#667: https://github.com/pallets/click/issues/667
 .. _#675: https://github.com/pallets/click/pull/675
+.. _#681: https://github.com/pallets/click/pull/681
 .. _#684: https://github.com/pallets/click/pull/684
 .. _#703: https://github.com/pallets/click/issues/703
 .. _#704: https://github.com/pallets/click/issues/704
@@ -182,6 +186,7 @@ Unreleased
 .. _#954: https://github.com/pallets/click/pull/954
 .. _#962: https://github.com/pallets/click/pull/962
 .. _#965: https://github.com/pallets/click/pull/965
+.. _#967: https://github.com/pallets/click/pull/967
 .. _#976: https://github.com/pallets/click/pull/976
 .. _#990: https://github.com/pallets/click/pull/990
 .. _#991: https://github.com/pallets/click/pull/991
@@ -214,7 +219,11 @@ Unreleased
 .. _#1058: https://github.com/pallets/click/pull/1058
 .. _#1059: https://github.com/pallets/click/pull/1059
 .. _#1061: https://github.com/pallets/click/pull/1061
+.. _#1068: https://github.com/pallets/click/issues/1068
+.. _#1069: https://github.com/pallets/click/pull/1069
 .. _#1088: https://github.com/pallets/click/issues/1088
+.. _#1091: https://github.com/pallets/click/pull/1091
+.. _#1098: https://github.com/pallets/click/pull/1098
 .. _#1105: https://github.com/pallets/click/pull/1105
 .. _#1106: https://github.com/pallets/click/pull/1106
 .. _#1108: https://github.com/pallets/click/pull/1108
