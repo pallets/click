@@ -10,91 +10,145 @@ Unreleased
 -   Drop support for Python 2.6 and 3.3. (`#967`_, `#976`_)
 -   Wrap ``click.Choice``'s missing message. (`#202`_, `#1000`_)
 -   Add native ZSH autocompletion support. (`#323`_, `#865`_)
--   Document that ANSI color info isn't parsed from bytearrays in Python 2. (`#334`_)
--   Document byte-stripping behavior of ``CliRunner``. (`#334`_, `#1010`_)
+-   Document that ANSI color info isn't parsed from bytearrays in
+    Python 2. (`#334`_)
+-   Document byte-stripping behavior of ``CliRunner``. (`#334`_,
+    `#1010`_)
 -   Usage errors now hint at the ``--help`` option. (`#393`_, `#557`_)
 -   Implement streaming pager. (`#409`_, `#889`_)
 -   Extract bar formatting to its own method. (`#414`_)
--   Add ``DateTime`` type for converting input in given date time formats. (`#423`_)
--   ``secho``'s first argument can now be ``None``, like in ``echo``. (`#424`_)
--   Fixes a ``ZeroDivisionError`` in ``ProgressBar.make_step``, when the arg passed to the first call of ``ProgressBar.update`` is 0. (`#447`_, `#1012`_)
+-   Add ``DateTime`` type for converting input in given date time
+    formats. (`#423`_)
+-   ``secho``'s first argument can now be ``None``, like in ``echo``.
+    (`#424`_)
+-   Fixes a ``ZeroDivisionError`` in ``ProgressBar.make_step``, when the
+    arg passed to the first call of ``ProgressBar.update`` is 0.
+    (`#447`_, `#1012`_)
 -   Show progressbar only if total execution time is visible. (`#487`_)
 -   Added the ability to hide commands and options from help. (`#500`_)
 -   Document that options can be ``required=True``. (`#514`_, `#1022`_)
--   Non-standalone calls to ``Context.exit`` return the exit code, rather than calling ``sys.exit``. (`#533`_, `#667`_, `#1098`_)
--   ``click.getchar()`` returns Unicode in Python 3 on Windows, consistent with other platforms. (`#537`_, `#821`_, `#822`_, `#1088`_, `#1108`_)
+-   Non-standalone calls to ``Context.exit`` return the exit code,
+    rather than calling ``sys.exit``. (`#533`_, `#667`_, `#1098`_)
+-   ``click.getchar()`` returns Unicode in Python 3 on Windows,
+    consistent with other platforms. (`#537`_, `#821`_, `#822`_,
+    `#1088`_, `#1108`_)
 -   Added ``FloatRange`` type. (`#538`_, `#553`_)
--   Added support for bash completion of ``type=click.Choice`` for ``Options`` and ``Arguments``. (`#535`_, `#681`_)
--   Only allow one positional arg for ``Argument`` parameter declaration. (`#568`_, `#574`_, `#1014`_)
+-   Added support for bash completion of ``type=click.Choice`` for
+    ``Options`` and ``Arguments``. (`#535`_, `#681`_)
+-   Only allow one positional arg for ``Argument`` parameter
+    declaration. (`#568`_, `#574`_, `#1014`_)
 -   Add ``case_sensitive=False`` as an option to Choice. (`#569`_)
--   ``click.getchar()`` correctly raises ``KeyboardInterrupt`` on "^C" and ``EOFError`` on "^D" on Linux. (`#583`_, `#1115`_)
--   Fix encoding issue with ``click.getchar(echo=True)`` on Linux. (`#1115`_)
--   ``param_hint`` in errors now derived from param itself. (`#598`_, `#704`_, `#709`_)
--   Add a test that ensures that when an argument is formatted into a usage error, its metavar is used, not its name. (`#612`_)
--   Allow setting ``prog_name`` as extra in ``CliRunner.invoke``. (`#616`_, `#999`_)
--   Help text taken from docstrings truncates at the ``\f`` form feed character, useful for hiding Sphinx-style parameter documentation. (`#629`_, `#1091`_)
+-   ``click.getchar()`` correctly raises ``KeyboardInterrupt`` on "^C"
+    and ``EOFError`` on "^D" on Linux. (`#583`_, `#1115`_)
+-   Fix encoding issue with ``click.getchar(echo=True)`` on Linux.
+    (`#1115`_)
+-   ``param_hint`` in errors now derived from param itself. (`#598`_,
+    `#704`_, `#709`_)
+-   Add a test that ensures that when an argument is formatted into a
+    usage error, its metavar is used, not its name. (`#612`_)
+-   Allow setting ``prog_name`` as extra in ``CliRunner.invoke``.
+    (`#616`_, `#999`_)
+-   Help text taken from docstrings truncates at the ``\f`` form feed
+    character, useful for hiding Sphinx-style parameter documentation.
+    (`#629`_, `#1091`_)
 -   ``launch`` now works properly under Cygwin. (`#650`_)
 -   Update progress after iteration. (`#651`_, `#706`_)
--   ``CliRunner.invoke`` now may receive ``args`` as a string representing a Unix shell command. (`#664`_)
+-   ``CliRunner.invoke`` now may receive ``args`` as a string
+    representing a Unix shell command. (`#664`_)
 -   Make ``Argument.make_metavar()`` default to type metavar. (`#675`_)
 -   Add documentation for ``ignore_unknown_options``. (`#684`_)
--   Add bright colors support for ``click.style`` and fix the reset option for parameters ``fg`` and ``bg``. (`#703`_, `#809`_)
--   Add ``show_envvar`` for showing environment variables in help. (`#710`_)
--   Avoid ``BrokenPipeError`` during interpreter shutdown when stdout or stderr is a closed pipe. (`#712`_, `#1106`_)
+-   Add bright colors support for ``click.style`` and fix the reset
+    option for parameters ``fg`` and ``bg``. (`#703`_, `#809`_)
+-   Add ``show_envvar`` for showing environment variables in help.
+    (`#710`_)
+-   Avoid ``BrokenPipeError`` during interpreter shutdown when stdout or
+    stderr is a closed pipe. (`#712`_, `#1106`_)
 -   Document customizing option names. (`#725`_, `#1016`_)
--   Disable ``sys._getframes()`` on Python interpreters that don't support it. (`#728`_)
--   Fix bug in test runner when calling ``sys.exit`` with ``None``. (`#739`_)
+-   Disable ``sys._getframes()`` on Python interpreters that don't
+    support it. (`#728`_)
+-   Fix bug in test runner when calling ``sys.exit`` with ``None``.
+    (`#739`_)
 -   Clarify documentation on command line options. (`#741`_, `#1003`_)
 -   Fix crash on Windows console. (`#744`_)
--   Fix bug that caused bash completion to give improper completions on chained commands. (`#754`_, `#774`_)
--   Added support for dynamic bash completion from a user-supplied callback. (`#755`_)
+-   Fix bug that caused bash completion to give improper completions on
+    chained commands. (`#754`_, `#774`_)
+-   Added support for dynamic bash completion from a user-supplied
+    callback. (`#755`_)
 -   Added support for bash completions containing spaces. (`#773`_)
--   Allow autocompletion function to determine whether or not to return completions that start with the incomplete argument. (`#790`_, `#806`_)
--   Fix option naming routine to match documentation and be deterministic. (`#793`_, `#794`_)
+-   Allow autocompletion function to determine whether or not to return
+    completions that start with the incomplete argument. (`#790`_,
+    `#806`_)
+-   Fix option naming routine to match documentation and be
+    deterministic. (`#793`_, `#794`_)
 -   Fix path validation bug. (`#795`_, `#1020`_)
--   Add test and documentation for ``Option`` naming: functionality. (`#799`_)
+-   Add test and documentation for ``Option`` naming: functionality.
+    (`#799`_)
 -   Update doc to match arg name for ``path_type``. (`#801`_)
 -   Raw strings added so correct escaping occurs. (`#807`_)
--   Fix 16k character limit of ``click.echo`` on Windows. (`#816`_, `#819`_)
+-   Fix 16k character limit of ``click.echo`` on Windows. (`#816`_,
+    `#819`_)
 -   Add bool conversion for "t" and "f". (`#842`_)
--   ``NoSuchOption`` errors take ``ctx`` so that ``--help`` hint gets printed in error output. (`#860`_)
--   Fixed the behavior of Click error messages with regards to Unicode on 2.x and 3.x. Message is now always Unicode and the str and Unicode special methods work as you expect on that platform. (`#862`_)
+-   ``NoSuchOption`` errors take ``ctx`` so that ``--help`` hint gets
+    printed in error output. (`#860`_)
+-   Fixed the behavior of Click error messages with regards to Unicode
+    on 2.x and 3.x. Message is now always Unicode and the str and
+    Unicode special methods work as you expect on that platform.
+    (`#862`_)
 -   Progress bar now uses stderr by default. (`#863`_)
 -   Add support for auto-completion documentation. (`#866`_, `#869`_)
 -   Allow ``CliRunner`` to separate stdout and stderr. (`#868`_)
 -   Fix variable precedence. (`#873`_, `#874`_)
 -   Fix invalid escape sequences. (`#877`_)
 -   Fix ``ResourceWarning`` that occurs during some tests. (`#878`_)
--   When detecting a misconfigured locale, don't fail if the ``locale`` command fails. (`#880`_)
--   Add ``case_sensitive=False`` as an option to ``Choice`` types. (`#887`_)
--   Force stdout/stderr writable. This works around issues with badly patched standard streams like those from Jupyter. (`#918`_)
--   Fix completion of subcommand options after last argument (`#919`_, `#930`_)
--   ``_AtomicFile`` now uses the ``realpath`` of the original filename so that changing the working directory does not affect it. (`#920`_)
--   Fix incorrect completions when defaults are present (`#925`_, `#930`_)
--   Add copy option attrs so that custom classes can be re-used. (`#926`_, `#994`_)
--   "x" and "a" file modes now use stdout when file is ``"-"``. (`#929`_)
+-   When detecting a misconfigured locale, don't fail if the ``locale``
+    command fails. (`#880`_)
+-   Add ``case_sensitive=False`` as an option to ``Choice`` types.
+    (`#887`_)
+-   Force stdout/stderr writable. This works around issues with badly
+    patched standard streams like those from Jupyter. (`#918`_)
+-   Fix completion of subcommand options after last argument (`#919`_,
+    `#930`_)
+-   ``_AtomicFile`` now uses the ``realpath`` of the original filename
+    so that changing the working directory does not affect it.
+    (`#920`_)
+-   Fix incorrect completions when defaults are present (`#925`_,
+    `#930`_)
+-   Add copy option attrs so that custom classes can be re-used.
+    (`#926`_, `#994`_)
+-   "x" and "a" file modes now use stdout when file is ``"-"``.
+    (`#929`_)
 -   Fix missing comma in ``__all__`` list. (`#935`_)
 -   Clarify how parameters are named. (`#949`_, `#1009`_)
 -   Stdout is now automatically set to non blocking. (`#954`_)
 -   Do not set options twice. (`#962`_)
 -   Move ``fcntl`` import. (`#965`_)
 -   Fix Google App Engine ``ImportError``. (`#995`_)
--   Better handling of help text for dynamic default option values. (`#996`_)
--   Fix ``get_winter_size()`` so it correctly returns ``(0,0)``. (`#997`_)
+-   Better handling of help text for dynamic default option values.
+    (`#996`_)
+-   Fix ``get_winter_size()`` so it correctly returns ``(0,0)``.
+    (`#997`_)
 -   Add test case checking for custom param type. (`#1001`_)
 -   Allow short width to address cmd formatting. (`#1002`_)
 -   Add details about Python version support. (`#1004`_)
 -   Added deprecation flag to commands. (`#1005`_)
 -   Fixed issues where ``fd`` was undefined. (`#1007`_)
 -   Fix formatting for short help. (`#1008`_)
--   Document how ``auto_envvar_prefix`` works with command groups. (`#1011`_)
+-   Document how ``auto_envvar_prefix`` works with command groups.
+    (`#1011`_)
 -   Don't add newlines by default for progress bars. (`#1013`_)
 -   Use Python sorting order for ZSH completions. (`#1047`_, `#1059`_)
--   Document that parameter names are converted to lowercase by default. (`#1055`_)
--   Subcommands that are named by the function now automatically have the underscore replaced with a dash. If you register a function named ``my_command`` it becomes ``my-command`` in the command line interface.
--   Hide hidden commands and options from completion. (`#1058`_, `#1061`_)
--   Fix absolute import blocking Click from being vendored into a project on Windows. (`#1068`_, `#1069`_)
--   Fix issue where a lowercase ``auto_envvar_prefix`` would not be converted to uppercase. (`#1105`_)
+-   Document that parameter names are converted to lowercase by default.
+    (`#1055`_)
+-   Subcommands that are named by the function now automatically have
+    the underscore replaced with a dash. If you register a function
+    named ``my_command`` it becomes ``my-command`` in the command line
+    interface.
+-   Hide hidden commands and options from completion. (`#1058`_,
+    `#1061`_)
+-   Fix absolute import blocking Click from being vendored into a
+    project on Windows. (`#1068`_, `#1069`_)
+-   Fix issue where a lowercase ``auto_envvar_prefix`` would not be
+    converted to uppercase. (`#1105`_)
 
 .. _#202: https://github.com/pallets/click/issues/202
 .. _#323: https://github.com/pallets/click/issues/323
