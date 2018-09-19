@@ -39,6 +39,7 @@ Unreleased
 -   Add documentation for ``ignore_unkown_options``. (`#684`_)
 -   Add bright colors support for ``click.style`` and fix the reset option for parameters ``fg`` and ``bg``. (`#703`_, `#809`_)
 -   Add ``show_envvar`` for showing environment variables in help. (`#710`_)
+-   Avoid ``BrokenPipeError`` during interpreter shutdown when stdout or stderr is a closed pipe. (`#712`_, `#1106`_)
 -   Document customizing option names. (`#725`_, `#1016`_)
 -   Disable ``sys._getframes()`` on Python interpreters that don't support it. (`#728`_)
 -   Fix bug in test runner when calling ``sys.exit`` with ``None``. (`#739`_)
@@ -129,6 +130,7 @@ Unreleased
 .. _#706: https://github.com/pallets/click/pull/706
 .. _#709: https://github.com/pallets/click/pull/709
 .. _#710: https://github.com/pallets/click/pull/710
+.. _#712: https://github.com/pallets/click/pull/712
 .. _#719: https://github.com/pallets/click/issues/719
 .. _#725: https://github.com/pallets/click/issues/725
 .. _#728: https://github.com/pallets/click/pull/728
@@ -214,6 +216,7 @@ Unreleased
 .. _#1061: https://github.com/pallets/click/pull/1061
 .. _#1088: https://github.com/pallets/click/issues/1088
 .. _#1105: https://github.com/pallets/click/pull/1105
+.. _#1106: https://github.com/pallets/click/pull/1106
 .. _#1108: https://github.com/pallets/click/pull/1108
 .. _#1115: https://github.com/pallets/click/pull/1115
 
