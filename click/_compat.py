@@ -224,9 +224,11 @@ if PY2:
         return set_binary_mode(sys.stdin)
 
     def get_binary_stdout():
+        _wrap_std_stream('stdout')
         return set_binary_mode(sys.stdout)
 
     def get_binary_stderr():
+        _wrap_std_stream('stderr')
         return set_binary_mode(sys.stderr)
 
     def get_text_stdin(encoding=None, errors=None):
@@ -237,6 +239,7 @@ if PY2:
                                  force_readable=True)
 
     def get_text_stdout(encoding=None, errors=None):
+        _wrap_std_stream('stdout')
         rv = _get_windows_console_stream(sys.stdout, encoding, errors)
         if rv is not None:
             return rv
@@ -244,6 +247,7 @@ if PY2:
                                  force_writable=True)
 
     def get_text_stderr(encoding=None, errors=None):
+        _wrap_std_stream('stderr')
         rv = _get_windows_console_stream(sys.stderr, encoding, errors)
         if rv is not None:
             return rv
@@ -582,7 +586,7 @@ if WIN:
     # Windows has a smaller terminal
     DEFAULT_COLUMNS = 79
 
-    from ._winconsole import _get_windows_console_stream
+    from ._winconsole import _get_windows_console_stream, _wrap_std_stream
 
     def _get_argv_encoding():
         import locale
@@ -644,6 +648,7 @@ else:
         return getattr(sys.stdin, 'encoding', None) or get_filesystem_encoding()
 
     _get_windows_console_stream = lambda *x: None
+    _wrap_std_stream = lambda *x: None
 
 
 def term_len(x):
