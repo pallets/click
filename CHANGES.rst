@@ -87,6 +87,8 @@ Unreleased
 -   Raw strings added so correct escaping occurs. (`#807`_)
 -   Fix 16k character limit of ``click.echo`` on Windows. (`#816`_,
     `#819`_)
+-   Overcome 64k character limit when writing to binary stream on
+    Windows 7. (`#825`_, `#830`_)
 -   Add bool conversion for "t" and "f". (`#842`_)
 -   ``NoSuchOption`` errors take ``ctx`` so that ``--help`` hint gets
     printed in error output. (`#860`_)
@@ -212,6 +214,8 @@ Unreleased
 .. _#819: https://github.com/pallets/click/pull/819
 .. _#821: https://github.com/pallets/click/issues/821
 .. _#822: https://github.com/pallets/click/issues/822
+.. _#825: https://github.com/pallets/click/issues/825
+.. _#830: https://github.com/pallets/click/pull/830
 .. _#842: https://github.com/pallets/click/pull/842
 .. _#860: https://github.com/pallets/click/issues/860
 .. _#862: https://github.com/pallets/click/issues/862
