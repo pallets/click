@@ -59,14 +59,21 @@ This hackery is used on both Python 2 and Python 3 as neither version of
 Python has native support for cmd.exe with unicode characters.  There are
 some limitations you need to be aware of:
 
-*   this unicode support is limited to ``click.echo``, ``click.prompt`` as
+*   This unicode support is limited to ``click.echo``, ``click.prompt`` as
     well as ``click.get_text_stream``.
-*   depending on if unicode values or byte strings are passed the control
+*   Depending on if unicode values or byte strings are passed the control
     flow goes completely different places internally which can have some
     odd artifacts if data partially ends up being buffered.  Click
     attempts to protect against that by manually always flushing but if
     you are mixing and matching different string types to ``stdout`` or
     ``stderr`` you will need to manually flush.
+*   The raw output stream is set to binary mode, which is a global
+    operation on Windows, so ``print`` calls will be affected. Prefer
+    ``click.echo`` over ``print``.
+*   On Windows 7 and below, there is a limitation where at most 64k
+    characters can be written in one call in binary mode. In this
+    situation, ``sys.stdout`` and ``sys.stderr`` are replaced with
+    wrappers that work around the limitation.
 
 Another important thing to note is that the Windows console's default
 fonts do not support a lot of characters which means that you are mostly
