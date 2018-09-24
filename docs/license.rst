@@ -10,4 +10,5 @@ of the software without written consent.
 License Text
 ------------
 
-.. include:: ../LICENSE
+.. include:: ../LICENSE.rst
+

@@ -3,9 +3,9 @@ environment:
     TOXENV: py,codecov
 
   matrix:
-    - PYTHON: C:\Python36-x64
+    - PYTHON: C:\Python37-x64
     - PYTHON: C:\Python27-x64
-    - PYTHON: C:\Python36
+    - PYTHON: C:\Python37
     - PYTHON: C:\Python27
 
 init:
@@ -22,7 +22,7 @@ test_script:
 branches:
   only:
     - master
-    - /^.*-maintenance$/
+    - /^.*\.x$/
 
 cache:
   - '%LOCALAPPDATA%\pip\Cache'

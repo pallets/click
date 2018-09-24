@@ -1,2 +1,2 @@
-Sphinx~=1.7.7
+Sphinx~=1.8.0
 Pallets-Sphinx-Themes~=1.1.0
