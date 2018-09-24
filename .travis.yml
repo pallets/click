@@ -1,21 +1,19 @@
 os: linux
 sudo: false
 language: python
+python:
+  - "3.6"
+  - "3.5"
+  - "3.4"
+  - "2.7"
+  - "nightly"
+  - "pypy3"
+  - "pypy"
+env: TOXENV=py,codecov
 
 matrix:
   include:
-    - python: 3.6
-      env: TOXENV=py,codecov
-    - python: 3.5
-      env: TOXENV=py,codecov
-    - python: 3.4
-      env: TOXENV=py,codecov
-    - python: 2.7
-      env: TOXENV=py,codecov
-    - python: pypy3
-      env: TOXENV=py,codecov
-    - python: nightly
-      env: TOXENV=py
+    - env: TOXENV=docs-html
     - os: osx
       language: generic
       env: TOXENV=py3,py2,codecov
@@ -25,8 +23,9 @@ matrix:
           - $HOME/Library/Caches/Homebrew
           - $HOME/Library/Caches/pip
   allow_failures:
-    - python: pypy3
     - python: nightly
+    - python: pypy3
+    - python: pypy
     - os: osx
   fast_finish: true
 
@@ -50,7 +49,7 @@ cache:
 branches:
   only:
     - master
-    - /^.*-maintenance/
+    - /^.*\.x$/
 
 notifications:
   email: false

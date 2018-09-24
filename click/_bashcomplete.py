@@ -1,4 +1,3 @@
-import collections
 import copy
 import os
 import re
@@ -7,6 +6,11 @@ from .utils import echo
 from .parser import split_arg_string
 from .core import MultiCommand, Option, Argument
 from .types import Choice
+
+try:
+    from collections import abc
+except ImportError:
+    import collections as abc
 
 WORDBREAK = '='
 
@@ -159,7 +163,7 @@ def is_incomplete_argument(current_params, cmd_param):
         return True
     if cmd_param.nargs == -1:
         return True
-    if isinstance(current_param_values, collections.Iterable) \
+    if isinstance(current_param_values, abc.Iterable) \
             and cmd_param.nargs > 1 and len(current_param_values) < cmd_param.nargs:
         return True
     return False

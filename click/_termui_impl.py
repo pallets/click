@@ -1,14 +1,16 @@
+# -*- coding: utf-8 -*-
 """
-    click._termui_impl
-    ~~~~~~~~~~~~~~~~~~
+click._termui_impl
+~~~~~~~~~~~~~~~~~~
 
-    This module contains implementations for the termui module.  To keep the
-    import time of Click down, some infrequently used functionality is placed
-    in this module and only imported as needed.
+This module contains implementations for the termui module. To keep the
+import time of Click down, some infrequently used functionality is
+placed in this module and only imported as needed.
 
-    :copyright: (c) 2014 by Armin Ronacher.
-    :license: BSD, see LICENSE for more details.
+:copyright: © 2014 by the Pallets team.
+:license: BSD, see LICENSE.rst for more details.
 """
+
 import os
 import sys
 import time

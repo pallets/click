@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-    click.parser
-    ~~~~~~~~~~~~
+click.parser
+~~~~~~~~~~~~
 
-    This module started out as largely a copy paste from the stdlib's
-    optparse module with the features removed that we do not need from
-    optparse because we implement them in Click on a higher level (for
-    instance type handling, help formatting and a lot more).
+This module started out as largely a copy paste from the stdlib's
+optparse module with the features removed that we do not need from
+optparse because we implement them in Click on a higher level (for
+instance type handling, help formatting and a lot more).
 
-    The plan is to remove more and more from here over time.
+The plan is to remove more and more from here over time.
 
-    The reason this is a different module and not optparse from the stdlib
-    is that there are differences in 2.x and 3.x about the error messages
-    generated and optparse in the stdlib uses gettext for no good reason
-    and might cause us issues.
+The reason this is a different module and not optparse from the stdlib
+is that there are differences in 2.x and 3.x about the error messages
+generated and optparse in the stdlib uses gettext for no good reason
+and might cause us issues.
 """
+
 import re
 from collections import deque
 from .exceptions import UsageError, NoSuchOption, BadOptionUsage, \
