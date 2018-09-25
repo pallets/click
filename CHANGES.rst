@@ -5,7 +5,7 @@ Click Changelog
 Version 7.0
 -----------
 
-Unreleased
+Released 2018-09-25
 
 -   Drop support for Python 2.6 and 3.3. (`#967`_, `#976`_)
 -   Wrap ``click.Choice``'s missing message. (`#202`_, `#1000`_)
