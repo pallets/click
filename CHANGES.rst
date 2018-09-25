@@ -2,6 +2,12 @@ Click Changelog
 ===============
 
 
+Version 7.1
+-----------
+
+Unreleased
+
+
 Version 7.0
 -----------
 
