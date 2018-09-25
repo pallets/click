@@ -1,6 +1,11 @@
 Click Changelog
 ===============
 
+Version 8.0
+-----------
+
+Unreleased
+
 
 Version 7.1
 -----------
