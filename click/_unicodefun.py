@@ -43,7 +43,7 @@ def _check_for_unicode_literals():
                  'because it can introduce subtle bugs in your '
                  'code.  You should instead use explicit u"" literals '
                  'for your unicode strings.  For more information see '
-                 'http://click.pocoo.org/python3/'),
+                 'https://click.palletsprojects.com/python3/'),
          stacklevel=bad_frame)
 
 
@@ -117,7 +117,9 @@ def _verify_python3_env():
                 'is not supported'
             ) % bad_locale
 
-    raise RuntimeError('Click will abort further execution because Python 3 '
-                       'was configured to use ASCII as encoding for the '
-                       'environment.  Consult http://click.pocoo.org/python3/ '
-                       'for mitigation steps.' + extra)
+    raise RuntimeError(
+        'Click will abort further execution because Python 3 was'
+        ' configured to use ASCII as encoding for the environment.'
+        ' Consult https://click.palletsprojects.com/en/7.x/python3/ for'
+        ' mitigation steps.' + extra
+    )

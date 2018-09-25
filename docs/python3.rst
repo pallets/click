@@ -120,7 +120,7 @@ If you see something like this error in Python 3::
       ...
     RuntimeError: Click will abort further execution because Python 3 was
       configured to use ASCII as encoding for the environment. Either switch
-      to Python 2 or consult http://click.pocoo.org/python3/ for
+      to Python 2 or consult the Python 3 section of the docs for
       mitigation steps.
 
 You are dealing with an environment where Python 3 thinks you are

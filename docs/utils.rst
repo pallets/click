@@ -245,8 +245,8 @@ select the provided file.
 
 Example usage::
 
-    click.launch('http://click.pocoo.org/')
-    click.launch('/my/downloaded/file.txt', locate=True)
+    click.launch("https://click.palletsprojects.com/")
+    click.launch("/my/downloaded/file.txt", locate=True)
 
 
 Printing Filenames

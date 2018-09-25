@@ -524,7 +524,7 @@ def launch(url, wait=False, locate=False):
 
     Examples::
 
-        click.launch('http://click.pocoo.org/')
+        click.launch('https://click.palletsprojects.com/')
         click.launch('/my/downloaded/file', locate=True)
 
     .. versionadded:: 2.0
