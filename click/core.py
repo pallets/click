@@ -186,7 +186,7 @@ class Context(object):
                                    processing.
     :param help_option_names: optionally a list of strings that define how
                               the default help parameter is named.  The
-                              default is ``['--help']``.
+                              default is ``['-h, --help']``.
     :param token_normalize_func: an optional function that is used to
                                  normalize tokens (options, choices,
                                  etc.).  This for instance can be used to
@@ -289,7 +289,7 @@ class Context(object):
             if parent is not None:
                 help_option_names = parent.help_option_names
             else:
-                help_option_names = ['--help']
+                help_option_names = ['-h, --help']
 
         #: The names for the help options.
         self.help_option_names = help_option_names
@@ -748,7 +748,7 @@ class Command(BaseCommand):
                    help page after everything else.
     :param short_help: the short help to use for this command.  This is
                        shown on the command listing of the parent command.
-    :param add_help_option: by default each command registers a ``--help``
+    :param add_help_option: by default each command registers a ``-h, --help``
                             option.  This can be disabled by this parameter.
     :param hidden: hide this command from help outputs.
     """
@@ -917,7 +917,7 @@ class MultiCommand(Command):
                             provided.  This option is enabled by default if
                             `invoke_without_command` is disabled or disabled
                             if it's enabled.  If enabled this will add
-                            ``--help`` as argument if no arguments are
+                            ``-h, --help`` as argument if no arguments are
                             passed.
     :param subcommand_metavar: the string that is used in the documentation
                                to indicate the subcommand place.
@@ -1121,7 +1121,7 @@ class MultiCommand(Command):
         # to the user that it was not provided.  However, there is
         # something else we should do: if the first argument looks like
         # an option we want to kick off parsing again for arguments to
-        # resolve things like --help which now should go to the main
+        # resolve things like -h, --help which now should go to the main
         # place.
         if cmd is None:
             if split_opt(cmd_name)[0]:

@@ -300,7 +300,7 @@ def help_option(*param_decls, **attrs):
         attrs.setdefault('help', 'Show this message and exit.')
         attrs.setdefault('is_eager', True)
         attrs['callback'] = callback
-        return option(*(param_decls or ('--help',)), **attrs)(f)
+        return option(*(param_decls or ('-h, --help',)), **attrs)(f)
     return decorator
 
 
