@@ -27,12 +27,12 @@ Example::
     import click
     from click.testing import CliRunner
 
-    def test_hello_world():
-        @click.command()
-        @click.argument('name')
-        def hello(name):
-            click.echo('Hello %s!' % name)
+    @click.command()
+    @click.argument('name')
+    def hello(name):
+        click.echo('Hello %s!' % name)
 
+    def test_hello_world():
         runner = CliRunner()
         result = runner.invoke(hello, ['Peter'])
         assert result.exit_code == 0
@@ -44,17 +44,17 @@ Example::
 
     import click
     from click.testing import CliRunner
-    
+
+    @click.group()
+    @click.option('--debug/--no-debug', default=False)
+    def cli(debug):
+        click.echo('Debug mode is %s' % ('on' if debug else 'off'))
+
+    @cli.command()
+    def sync():
+        click.echo('Syncing')
+
     def test_sync():
-        @click.group()
-        @click.option('--debug/--no-debug', default=False)
-        def cli(debug):
-            click.echo('Debug mode is %s' % ('on' if debug else 'off')) 
-    
-        @cli.command()
-        def sync():
-            click.echo('Syncing')
-    
         runner = CliRunner()
         result = runner.invoke(cli, ['--debug', 'sync'])
         assert result.exit_code == 0
@@ -78,12 +78,12 @@ Example::
     import click
     from click.testing import CliRunner
 
-    def test_cat():
-        @click.command()
-        @click.argument('f', type=click.File())
-        def cat(f):
-            click.echo(f.read())
+    @click.command()
+    @click.argument('f', type=click.File())
+    def cat(f):
+        click.echo(f.read())
 
+    def test_cat():
         runner = CliRunner()
         with runner.isolated_filesystem():
             with open('hello.txt', 'w') as f:
@@ -102,14 +102,14 @@ stream (stdin).  This is very useful for testing prompts, for instance::
     import click
     from click.testing import CliRunner
 
-    def test_prompts():
-        @click.command()
-        @click.option('--foo', prompt=True)
-        def test(foo):
-            click.echo('foo=%s' % foo)
+    @click.command()
+    @click.option('--foo', prompt=True)
+    def prompt(foo):
+        click.echo('foo=%s' % foo)
 
+    def test_prompts():
         runner = CliRunner()
-        result = runner.invoke(test, input='wau wau\n')
+        result = runner.invoke(prompt, input='wau wau\n')
         assert not result.exception
         assert result.output == 'Foo: wau wau\nfoo=wau wau\n'
 
