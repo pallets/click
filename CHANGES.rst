@@ -18,6 +18,8 @@ Unreleased
 -   Fix ``OSError`` when running in MSYS2. :issue:`1338`
 -   Fix ``OSError`` when redirecting to ``NUL`` stream on Windows.
     :issue:`1065`
+-   Fix memory leak when parsing Unicode arguments on Windows.
+    :issue:`1136`
 -   Fix error in new AppEngine environments. :issue:`1462`
 -   Always return one of the passed choices for ``click.Choice``
     :issue:`1277`, :pr:`1318`
