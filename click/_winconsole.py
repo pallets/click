@@ -24,7 +24,7 @@ try:
     PyBuffer_Release = pythonapi.PyBuffer_Release
 except ImportError:
     pythonapi = None
-from ctypes.wintypes import LPWSTR, LPCWSTR, HANDLE
+from ctypes.wintypes import DWORD, LPWSTR, LPCWSTR, HANDLE
 
 
 c_ssize_p = POINTER(c_ssize_t)
@@ -33,6 +33,7 @@ kernel32 = windll.kernel32
 GetStdHandle = kernel32.GetStdHandle
 ReadConsoleW = kernel32.ReadConsoleW
 WriteConsoleW = kernel32.WriteConsoleW
+GetConsoleMode = kernel32.GetConsoleMode
 GetLastError = kernel32.GetLastError
 GetCommandLineW = WINFUNCTYPE(LPWSTR)(
     ('GetCommandLineW', windll.kernel32))
@@ -287,11 +288,24 @@ _stream_factories = {
 }
 
 
+def _is_console(f):
+    if not hasattr(f, 'fileno'):
+        return False
+
+    try:
+        fileno = f.fileno()
+    except OSError:
+        return False
+
+    handle = msvcrt.get_osfhandle(fileno)
+    return bool(GetConsoleMode(handle, byref(DWORD())))
+
+
 def _get_windows_console_stream(f, encoding, errors):
     if get_buffer is not None and \
        encoding in ('utf-16-le', None) \
        and errors in ('strict', None) and \
-       hasattr(f, 'isatty') and f.isatty():
+       _is_console(f):
         func = _stream_factories.get(f.fileno())
         if func is not None:
             if not PY2:
