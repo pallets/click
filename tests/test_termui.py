@@ -76,17 +76,16 @@ def test_progressbar_length_hint(runner, monkeypatch):
 
 def test_progressbar_hidden(runner, monkeypatch):
     fake_clock = FakeClock()
-    label = "whatever"
 
     @click.command()
     def cli():
-        with _create_progress(label=label) as progress:
+        with _create_progress(label="working") as progress:
             for _ in progress:
                 fake_clock.advance_time()
 
     monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
-    assert runner.invoke(cli, []).output == ""
+    assert runner.invoke(cli, []).output == "working\n"
 
 
 @pytest.mark.parametrize("avg, expected", [([], 0.0), ([1, 4], 2.5)])

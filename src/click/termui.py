@@ -381,14 +381,18 @@ def progressbar(
     :param info_sep: the separator between multiple info items (eta etc.)
     :param width: the width of the progress bar in characters, 0 means full
                   terminal width
-    :param file: the file to write to.  If this is not a terminal then
-                 only the label is printed.
+    :param file: The file to write to. If this is not a terminal then
+        only the label is printed.
     :param color: controls if the terminal supports ANSI colors or not.  The
                   default is autodetection.  This is only needed if ANSI
                   codes are included anywhere in the progress bar output
                   which is not the case by default.
     :param update_min_steps: Render only when this many updates have
         completed. This allows tuning for very fast iterators.
+
+    .. versionchanged:: 8.0
+        Labels are echoed if the output is not a TTY. Reverts a change
+        in 7.0 that removed all output.
 
     .. versionadded:: 8.0
        Added the ``update_min_steps`` parameter.
