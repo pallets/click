@@ -52,6 +52,20 @@ What does it look like? Here is an example of a simple Click program:
     if __name__ == '__main__':
         hello()
 
+Lets check for help to know about command line arguments:
+
+.. code-block:: text
+
+    $ python hello.py --help
+    Usage: hello.py [OPTIONS]
+      
+      Simple program that greets NAME for a total of COUNT times.
+      
+    Options:
+      --count INTEGER  Number of greetings.
+      --name TEXT      The person to greet.
+      --help           Show this message and exit.
+
 And what it looks like when run:
 
 .. code-block:: text
@@ -61,6 +75,8 @@ And what it looks like when run:
     Hello, Click!
     Hello, Click!
     Hello, Click!
+
+Since "count" is having a default value, it becomes optional. To modifiy such optional "count" value, it is as "--count=3" in commandline arguments.
 
 
 Donate
