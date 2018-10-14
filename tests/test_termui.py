@@ -257,6 +257,13 @@ def test_secho(runner):
         assert bytes == b""
 
 
+def test_secho_non_text(runner):
+    with runner.isolation() as outstreams:
+        click.secho(Exception("spam"), nl=False)
+        bytes = outstreams[0].getvalue()
+        assert bytes == b"spam"
+
+
 def test_progressbar_yields_all_items(runner):
     with click.progressbar(range(3)) as progress:
         assert len(list(progress)) == 3

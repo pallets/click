@@ -482,11 +482,6 @@ def style(
     * ``bright_white``
     * ``reset`` (reset the color code only)
 
-    .. versionadded:: 2.0
-
-    .. versionadded:: 7.0
-       Added support for bright colors.
-
     :param text: the string to style with ansi codes.
     :param fg: if provided this will become the foreground color.
     :param bg: if provided this will become the background color.
@@ -501,7 +496,18 @@ def style(
     :param reset: by default a reset-all code is added at the end of the
                   string which means that styles do not carry over.  This
                   can be disabled to compose styles.
+
+    .. versionchanged:: 8.0
+        A non-string ``message`` is converted to a string.
+
+    .. versionchanged:: 7.0
+        Added support for bright colors.
+
+    .. versionadded:: 2.0
     """
+    if not isinstance(text, str):
+        text = str(text)
+
     bits = []
     if fg:
         try:
@@ -550,6 +556,9 @@ def secho(message=None, file=None, nl=True, err=False, color=None, **styles):
 
     All keyword arguments are forwarded to the underlying functions
     depending on which one they go with.
+
+    .. versionchanged:: 8.0
+        A non-string ``message`` is converted to a string.
 
     .. versionadded:: 2.0
     """

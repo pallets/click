@@ -39,6 +39,8 @@ Unreleased
     :issue:`1475`
 -   Help for boolean flags with ``show_default=True`` shows the flag
     name instead of ``True`` or ``False``. :issue:`1538`
+-   Non-string objects passed to ``style()`` and ``secho()`` will be
+    converted to string. :pr:`1146`
 
 
 Version 7.1.2
