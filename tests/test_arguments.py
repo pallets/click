@@ -3,6 +3,11 @@ import pytest
 import click
 from click._compat import PY2
 
+try:
+    import pathlib
+except ImportError:
+    pathlib = None
+
 
 def test_nargs_star(runner):
     @click.command()
@@ -115,6 +120,29 @@ def test_path_args(runner):
 
     result = runner.invoke(foo, ['-'])
     assert result.output == '-\n'
+    assert result.exit_code == 0
+
+
+def test_path_args_with_converter(runner):
+    @click.command()
+    @click.argument('input', type=click.Path(dir_okay=False, allow_dash=True, converter=list))
+    def foo(input):
+        click.echo(input)
+
+    result = runner.invoke(foo, ['-'])
+    assert result.output == "['-']\n"
+    assert result.exit_code == 0
+
+
+@pytest.mark.skipif(pathlib is None, reason='pathlib not available')
+def test_path_args_with_pathlib(runner):
+    @click.command()
+    @click.argument('input', type=click.Path(dir_okay=False, allow_dash=True, converter=pathlib.Path))
+    def foo(input):
+        click.echo(repr(input))
+
+    result = runner.invoke(foo, ['-'])
+    assert result.output == "{}\n".format(repr(pathlib.Path('-')))
     assert result.exit_code == 0
 
 

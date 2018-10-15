@@ -489,7 +489,7 @@ class Path(ParamType):
 
     def __init__(self, exists=False, file_okay=True, dir_okay=True,
                  writable=False, readable=True, resolve_path=False,
-                 allow_dash=False, path_type=None):
+                 allow_dash=False, path_type=None, converter=None):
         self.exists = exists
         self.file_okay = file_okay
         self.dir_okay = dir_okay
@@ -498,6 +498,7 @@ class Path(ParamType):
         self.resolve_path = resolve_path
         self.allow_dash = allow_dash
         self.type = path_type
+        self.converter = converter
 
         if self.file_okay and not self.dir_okay:
             self.name = 'file'
@@ -557,7 +558,12 @@ class Path(ParamType):
                     filename_to_ui(value)
                 ), param, ctx)
 
-        return self.coerce_path_result(rv)
+        coerced = self.coerce_path_result(rv)
+
+        if self.converter is not None:
+            coerced = self.converter(coerced)
+
+        return coerced
 
 
 class Tuple(CompositeParamType):
