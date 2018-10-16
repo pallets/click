@@ -131,6 +131,9 @@ handles this ambiguity.  Not only will it return either bytes or Unicode
 depending on what makes more sense, but it will also be able to do some
 basic checks for you such as existence checks.
 
+If you would like to receive a different form from :class:`Path` such as
+`pathlib.Path` you can pass it to the `converter` parameter.
+
 Example:
 
 .. click:example::
