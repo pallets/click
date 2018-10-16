@@ -484,6 +484,11 @@ class Path(ParamType):
                       means the return value will be either bytes or
                       unicode depending on what makes most sense given the
                       input data Click deals with.
+    :param converter: optionally a callable to convert the otherwise final
+                      result of the parameter.  For example passing
+                      `converter=pathlib.Path` will result in a `pathlib.Path`
+                      object being passed to the command rather than the normal
+                      `str`.
     """
     envvar_list_splitter = os.path.pathsep
 
