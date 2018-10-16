@@ -462,14 +462,15 @@ def test_aliases_for_flags(runner):
     result = runner.invoke(cli_alt, ['-w'])
     assert result.output == 'True\n'
 
+
 @pytest.mark.parametrize('option_args,expected', [
     (['--aggressive', '--all', '-a'], 'aggressive'),
-    (['--first', '--second', '--third', '-a', '-b', '-c'], 'first'),
-    (['--apple', '--banana', '--cantaloupe', '-a', '-b', '-c'], 'apple'),
+    (['--first', '--second', '--third', '-a', '-b', '-c'], 'second'),
+    (['--apple', '--banana', '--cantaloupe', '-a', '-b', '-c'], 'cantaloupe'),
     (['--cantaloupe', '--banana', '--apple', '-c', '-b', '-a'], 'cantaloupe'),
     (['-a', '-b', '-c'], 'a'),
     (['-c', '-b', '-a'], 'c'),
-    (['-a', '--apple', '-b', '--banana', '-c', '--cantaloupe'], 'apple'),
+    (['-a', '--apple', '-b', '--banana', '-c', '--cantaloupe'], 'cantaloupe'),
     (['-c', '-a', '--cantaloupe', '-b', '--banana', '--apple'], 'cantaloupe'),
     (['--from', '-f', '_from'], '_from'),
     (['--return', '-r', '_ret'], '_ret'),
