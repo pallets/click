@@ -39,7 +39,7 @@ The most basic option is a value option.  These options accept one
 argument which is a value.  If no type is provided, the type of the default
 value is used.  If no default value is provided, the type is assumed to be
 :data:`STRING`.  Unless a name is explicitly specified, the name of the
-parameter is the first long option defined; otherwise the first short one is
+parameter is the longest option defined; otherwise the first short one is
 used. By default, options are not required, however to make an option required,
 simply pass in `required=True` as an argument to the decorator.
 
