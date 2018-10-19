@@ -6,6 +6,11 @@ Version 8.0
 
 Unreleased
 
+-   Add ``converter`` parameter to ``click.Path``. (`#405`_, `#1148`_)
+
+.. _#202: https://github.com/pallets/click/issues/405
+.. _#323: https://github.com/pallets/click/pull/1148
+
 
 Version 7.1
 -----------
