@@ -7,6 +7,11 @@ Version 7.1
 
 Unreleased
 
+-   Revert to using longest option for variable name.  (`#1140`_, `#1149`_)
+
+.. _#1140: https://github.com/pallets/click/issues/1140
+.. _#1149: https://github.com/pallets/click/pull/1149
+
 
 Version 7.0
 -----------
