@@ -15,7 +15,7 @@ def get_current_context(silent=False):
 
     .. versionadded:: 5.0
 
-    :param silent: is set to `True` the return value is `None` if no context
+    :param silent: if set to `True` the return value is `None` if no context
                    is available.  The default behavior is to raise a
                    :exc:`RuntimeError`.
     """
