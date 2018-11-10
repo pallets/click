@@ -785,6 +785,10 @@ class Command(BaseCommand):
                        shown on the command listing of the parent command.
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
+    :param no_args_is_help: this controls what happens if no arguments are
+                            provided.  This option is disabled by default.
+                            If enabled this will add ``--help`` as argument
+                            if no arguments are passed
     :param hidden: hide this command from help outputs.
 
     :param deprecated: issues a message indicating that
@@ -794,7 +798,7 @@ class Command(BaseCommand):
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
                  options_metavar='[OPTIONS]', add_help_option=True,
-                 hidden=False, deprecated=False):
+                 no_args_is_help=False, hidden=False, deprecated=False):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -812,6 +816,7 @@ class Command(BaseCommand):
         self.options_metavar = options_metavar
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
 
@@ -932,6 +937,10 @@ class Command(BaseCommand):
                 formatter.write_text(self.epilog)
 
     def parse_args(self, ctx, args):
+        if not args and self.no_args_is_help and not ctx.resilient_parsing:
+            echo(ctx.get_help(), color=ctx.color)
+            ctx.exit()
+
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
 
