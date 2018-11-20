@@ -436,7 +436,7 @@ class Editor(object):
         import tempfile
 
         text = text or ''
-        binary_data = type(text) is bytes
+        binary_data = type(text) in [bytes, bytearray]
 
         if not binary_data and text and not text.endswith('\n'):
             text += '\n'
