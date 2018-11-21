@@ -443,7 +443,7 @@ def style(text, fg=None, bg=None, bold=None, dim=None, underline=None,
         bits.append('\033[%dm' % (5 if blink else 25))
     if reverse is not None:
         bits.append('\033[%dm' % (7 if reverse else 27))
-    bits.append(text)
+    bits.append(str(text))
     if reset:
         bits.append(_ansi_reset_all)
     return ''.join(bits)
