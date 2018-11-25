@@ -142,7 +142,7 @@ class Choice(ParamType):
     name = 'choice'
 
     def __init__(self, choices, case_sensitive=True):
-        self.choices = choices
+        self.choices = list(choices)
         self.case_sensitive = case_sensitive
 
     def get_metavar(self, param):
