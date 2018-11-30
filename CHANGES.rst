@@ -7,6 +7,9 @@ Version 7.1
 
 Unreleased
 
+- Add ``no_args_is_help`` option to ``click.Command``, defaults to False (`#1167`_)
+
+.. _#1167: https://github.com/pallets/click/pull/1167
 
 Version 7.0
 -----------
