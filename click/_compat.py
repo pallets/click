@@ -628,7 +628,7 @@ if WIN:
             def _safe_write(s):
                 try:
                     return _write(s)
-                except:
+                except Exception:
                     ansi_wrapper.reset_all()
                     raise
 

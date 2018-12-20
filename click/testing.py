@@ -107,7 +107,6 @@ class Result(object):
         return self.stderr_bytes.decode(self.runner.charset, 'replace') \
             .replace('\r\n', '\n')
 
-
     def __repr__(self):
         return '<%s %s>' % (
             type(self).__name__,

@@ -326,7 +326,7 @@ class Context(object):
                and parent.auto_envvar_prefix is not None and \
                self.info_name is not None:
                 auto_envvar_prefix = '%s_%s' % (parent.auto_envvar_prefix,
-                                           self.info_name.upper())
+                                                self.info_name.upper())
         else:
             auto_envvar_prefix = auto_envvar_prefix.upper()
         self.auto_envvar_prefix = auto_envvar_prefix
@@ -1046,6 +1046,7 @@ class MultiCommand(Command):
             if old_callback is None or replace:
                 self.result_callback = f
                 return f
+
             def function(__value, *args, **kwargs):
                 return f(old_callback(__value, *args, **kwargs),
                          *args, **kwargs)
@@ -1707,10 +1708,10 @@ class Option(Parameter):
             envvar = self.envvar
             if envvar is None:
                 if self.allow_from_autoenv and \
-                    ctx.auto_envvar_prefix is not None:
+                      ctx.auto_envvar_prefix is not None:
                     envvar = '%s_%s' % (ctx.auto_envvar_prefix, self.name.upper())
             if envvar is not None:
-              extra.append('env var: %s' % (
+                extra.append('env var: %s' % (
                            ', '.join('%s' % d for d in envvar)
                            if isinstance(envvar, (list, tuple))
                            else envvar, ))
