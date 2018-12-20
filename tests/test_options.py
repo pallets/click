@@ -174,6 +174,7 @@ def test_multiple_default_type(runner):
                            'two --arg2 4 four'.split())
     assert not result.exception
 
+
 def test_dynamic_default_help_unset(runner):
     @click.command()
     @click.option('--username', prompt=True,
@@ -187,6 +188,7 @@ def test_dynamic_default_help_unset(runner):
     assert '--username' in result.output
     assert 'lambda' not in result.output
     assert '(dynamic)' in result.output
+
 
 def test_dynamic_default_help_text(runner):
     @click.command()
@@ -376,6 +378,7 @@ def test_multiline_help(runner):
     assert '              i am' in out
     assert '              multiline' in out
 
+
 def test_argument_custom_class(runner):
     class CustomArgument(click.Argument):
         def get_default(self, ctx):
@@ -461,6 +464,7 @@ def test_aliases_for_flags(runner):
     assert result.output == 'False\n'
     result = runner.invoke(cli_alt, ['-w'])
     assert result.output == 'True\n'
+
 
 @pytest.mark.parametrize('option_args,expected', [
     (['--aggressive', '--all', '-a'], 'aggressive'),

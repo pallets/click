@@ -93,6 +93,7 @@ def test_long_chain():
         pass
 
     COLORS = ['red', 'green', 'blue']
+
     def get_colors(ctx, args, incomplete):
         for c in COLORS:
             if c.startswith(incomplete):
@@ -105,6 +106,7 @@ def test_long_chain():
 
     CSUB_OPT_CHOICES = ['foo', 'bar']
     CSUB_CHOICES = ['bar', 'baz']
+
     @bsub.command('csub')
     @click.option('--csub-opt', type=click.Choice(CSUB_OPT_CHOICES))
     @click.option('--csub', type=click.Choice(CSUB_CHOICES))
@@ -291,8 +293,8 @@ def test_variadic_argument_complete():
 
     entrypoint.add_command(subcommand)
 
-    assert choices_without_help(entrypoint, ['subcommand', '--opt'], '') == _complete(0,0,0)
-    assert choices_without_help(entrypoint, ['subcommand', 'whatever', '--opt'], '') == _complete(0,0,0)
+    assert choices_without_help(entrypoint, ['subcommand', '--opt'], '') == _complete(0, 0, 0)
+    assert choices_without_help(entrypoint, ['subcommand', 'whatever', '--opt'], '') == _complete(0, 0, 0)
     assert choices_without_help(entrypoint, ['subcommand', 'whatever', '--opt', 'abc'], '') == []
 
 
@@ -325,18 +327,16 @@ def test_long_chain_choice():
     assert choices_with_help(cli, ['sub', 'subarg1'], '') == [('bsub', 'bsub help'), ('csub', '')]
     assert choices_without_help(cli, ['sub'], '') == ['subarg1', 'subarg2']
     assert choices_without_help(cli, ['sub', '--sub-opt'], '') == ['subopt1', 'subopt2']
-    assert choices_without_help(cli, ['sub', '--sub-opt', 'subopt1'], '') == \
-           ['subarg1', 'subarg2']
+    assert choices_without_help(cli, ['sub', '--sub-opt', 'subopt1'], '') == ['subarg1', 'subarg2']
     assert choices_without_help(cli,
                                 ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub'], '-') == ['--bsub-opt']
     assert choices_without_help(cli,
                                 ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub'], '') == ['bsubarg1', 'bsubarg2']
     assert choices_without_help(cli,
-                                ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt'], '') == \
-           ['bsubopt1', 'bsubopt2']
-    assert choices_without_help(cli,
-                                ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt', 'bsubopt1', 'bsubarg1'],
-                                '') == ['bbsubarg1', 'bbsubarg2']
+                                ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub', '--bsub-opt'], '') == ['bsubopt1',
+                                                                                                          'bsubopt2']
+    assert choices_without_help(cli, ['sub', '--sub-opt', 'subopt1', 'subarg1', 'bsub',
+                                      '--bsub-opt', 'bsubopt1', 'bsubarg1'], '') == ['bbsubarg1', 'bbsubarg2']
     assert choices_without_help(cli,
                                 ['sub', '--sub-opt', 'subopt1', 'subarg1', 'csub'],
                                 '') == ['dsub']

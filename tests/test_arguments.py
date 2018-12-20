@@ -132,7 +132,7 @@ def test_file_atomics(runner):
         with open('foo.txt', 'wb') as f:
             f.write(b'OLD\n')
         result = runner.invoke(inout, ['foo.txt'], input='Hey!',
-        catch_exceptions=False)
+                               catch_exceptions=False)
         assert result.output == ''
         assert result.exit_code == 0
         with open('foo.txt', 'rb') as f:

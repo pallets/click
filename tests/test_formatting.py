@@ -249,6 +249,7 @@ def test_formatting_usage_custom_help(runner):
         'Error: Missing argument "ARG".'
     ]
 
+
 def test_formatting_custom_type_metavar(runner):
     class MyType(click.ParamType):
         def get_metavar(self, param):
