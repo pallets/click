@@ -120,6 +120,8 @@ class MissingParameter(BadParameter):
 
     def __init__(self, message=None, ctx=None, param=None,
                  param_hint=None, param_type=None):
+        if message is None:
+            message = 'missing argument: "%s"' %param.human_readable_name
         BadParameter.__init__(self, message, ctx, param, param_hint)
         self.param_type = param_type
 
