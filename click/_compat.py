@@ -570,11 +570,23 @@ def strip_ansi(value):
     return _ansi_re.sub('', value)
 
 
+def _is_jupyter_kernel_output(stream):
+    if WIN:
+        # TODO: Couldn't test on Windows, should't try to support until
+        # someone tests the details wrt colorama.
+        return
+
+    while isinstance(stream, (_FixupStream, _NonClosingTextIOWrapper)):
+        stream = stream._stream
+
+    return stream.__class__.__module__.startswith("ipykernel.")
+
+
 def should_strip_ansi(stream=None, color=None):
     if color is None:
         if stream is None:
             stream = sys.stdin
-        return not isatty(stream)
+        return not isatty(stream) and not _is_jupyter_kernel_output(stream)
     return not color
 
 
