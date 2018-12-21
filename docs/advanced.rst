@@ -406,3 +406,77 @@ method can be used to find this out.
     println()
     invoke(cli, prog_name='cli', args=[])
     println()
+
+
+Managing Resources
+------------------
+
+It can be useful to open a resource in a group, to be made available to
+subcommands. Many types of resources need to be closed or otherwise
+cleaned up after use. The standard way to do this in Python is by using
+a context manager with the ``with`` statement.
+
+For example, the ``Repo`` class from :doc:`complex` might actually be
+defined as a context manager:
+
+.. code-block:: python
+
+    class Repo:
+        def __init__(self, home=None):
+            self.home = os.path.abspath(home or ".")
+            self.db = None
+
+        def __enter__(self):
+            path = os.path.join(self.home, "repo.db")
+            self.db = open_database(path)
+
+        def __exit__(self, exc_type, exc_value, tb):
+            self.db.close()
+
+Ordinarily, it would be used with the ``with`` statement:
+
+.. code-block:: python
+
+    with Repo() as repo:
+        repo.db.query(...)
+
+However, a ``with`` block in a group would exit and close the database
+before it could be used by a subcommand.
+
+Instead, use the context's :meth:`~click.Context.with_resource` method
+to enter the context manager and return the resource. When the group and
+any subcommands finish, the context's resources are cleaned up.
+
+.. code-block:: python
+
+    @click.group()
+    @click.option("--repo-home", default=".repo")
+    @click.pass_context
+    def cli(ctx, repo_home):
+        ctx.obj = ctx.with_resource(Repo(repo_home))
+
+    @cli.command()
+    @click.pass_obj
+    def log(obj):
+        # obj is the repo opened in the cli group
+        for entry in obj.db.query(...):
+            click.echo(entry)
+
+If the resource isn't a context manager, usually it can be wrapped in
+one using something from :mod:`contextlib`. If that's not possible, use
+the context's :meth:`~click.Context.call_on_close` method to register a
+cleanup function.
+
+.. code-block:: python
+
+    @click.group()
+    @click.option("--name", default="repo.db")
+    @click.pass_context
+    def cli(ctx, repo_home):
+        ctx.obj = db = open_db(repo_home)
+
+        @ctx.call_on_close
+        def close_db():
+            db.record_use()
+            db.save()
+            db.close()

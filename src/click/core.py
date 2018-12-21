@@ -3,6 +3,7 @@ import inspect
 import os
 import sys
 from contextlib import contextmanager
+from contextlib import ExitStack
 from functools import update_wrapper
 from itertools import repeat
 
@@ -401,6 +402,7 @@ class Context:
         self._close_callbacks = []
         self._depth = 0
         self._source_by_paramname = {}
+        self._exit_stack = ExitStack()
 
     def __enter__(self):
         self._depth += 1
@@ -493,23 +495,55 @@ class Context:
             width=self.terminal_width, max_width=self.max_content_width
         )
 
-    def call_on_close(self, f):
-        """This decorator remembers a function as callback that should be
-        executed when the context tears down.  This is most useful to bind
-        resource handling to the script execution.  For instance, file objects
-        opened by the :class:`File` type will register their close callbacks
-        here.
+    def with_resource(self, context_manager):
+        """Register a resource as if it were used in a ``with``
+        statement. The resource will be cleaned up when the context is
+        popped.
 
-        :param f: the function to execute on teardown.
+        Uses :meth:`contextlib.ExitStack.enter_context`. It calls the
+        resource's ``__enter__()`` method and returns the result. When
+        the context is popped, it closes the stack, which calls the
+        resource's ``__exit__()`` method.
+
+        To register a cleanup function for something that isn't a
+        context manager, use :meth:`call_on_close`. Or use something
+        from :mod:`contextlib` to turn it into a context manager first.
+
+        .. code-block:: python
+
+            @click.group()
+            @click.option("--name")
+            @click.pass_context
+            def cli(ctx):
+                ctx.obj = ctx.with_resource(connect_db(name))
+
+        :param context_manager: The context manager to enter.
+        :return: Whatever ``context_manager.__enter__()`` returns.
+
+        .. versionadded:: 8.0
         """
-        self._close_callbacks.append(f)
-        return f
+        return self._exit_stack.enter_context(context_manager)
+
+    def call_on_close(self, f):
+        """Register a function to be called when the context tears down.
+
+        This can be used to close resources opened during the script
+        execution. Resources that support Python's context manager
+        protocol which would be used in a ``with`` statement should be
+        registered with :meth:`with_resource` instead.
+
+        :param f: The function to execute on teardown.
+        """
+        return self._exit_stack.callback(f)
 
     def close(self):
-        """Invokes all close callbacks."""
-        for cb in self._close_callbacks:
-            cb()
-        self._close_callbacks = []
+        """Invoke all close callbacks registered with
+        :meth:`call_on_close`, and exit all context managers entered
+        with :meth:`with_resource`.
+        """
+        self._exit_stack.close()
+        # In case the context is reused, create a new exit stack.
+        self._exit_stack = ExitStack()
 
     @property
     def command_path(self):

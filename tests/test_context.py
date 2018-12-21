@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 import pytest
 
 import click
@@ -210,6 +212,22 @@ def test_close_before_pop(runner):
     assert not result.exception
     assert result.output == "aha!\n"
     assert called == [True]
+
+
+def test_with_resource():
+    @contextmanager
+    def manager():
+        val = [1]
+        yield val
+        val[0] = 0
+
+    ctx = click.Context(click.Command("test"))
+
+    with ctx.scope():
+        rv = ctx.with_resource(manager())
+        assert rv[0] == 1
+
+    assert rv == [0]
 
 
 def test_make_pass_decorator_args(runner):

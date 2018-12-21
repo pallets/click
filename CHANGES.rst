@@ -60,6 +60,11 @@ Unreleased
     -   Core objects use ``super()`` consistently for better support of
         subclassing.
 
+-   Use ``Context.with_resource()`` to manage resources that would
+    normally be used in a ``with`` statement, allowing them to be used
+    across subcommands and callbacks, then cleaned up when the context
+    ends. :pr:`1191`
+
 
 Version 7.1.2
 -------------
