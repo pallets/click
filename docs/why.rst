@@ -22,7 +22,7 @@ There are many alternatives to Click and you can have a look at them if
 you enjoy them better.  The obvious ones are ``optparse`` and ``argparse``
 from the standard library.
 
-Click is actually implements its own parsing of arguments and does not use
+Click actually implements its own parsing of arguments and does not use
 ``optparse`` or ``argparse`` following the ``optparse`` parsing behavior.
 The reason it's not based on ``argparse`` is that ``argparse`` does not
 allow proper nesting of commands by design and has some deficiencies when
