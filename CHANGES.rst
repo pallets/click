@@ -31,6 +31,9 @@ Unreleased
     progress bar instance. :issue:`1125`
 -   ``open_file`` with ``atomic=True`` retains permissions of existing
     files and respects the current umask for new files. :issue:`1376`
+-   When using the test ``CliRunner`` with ``mix_stderr=False``, if
+    ``result.stderr`` is empty it will not raise a ``ValueError``.
+    :issue:`1193`
 
 
 Version 7.0
