@@ -1,7 +1,7 @@
 import os
 import sys
 
-from .globals import resolve_color_default
+from .context import resolve_color_default
 
 from ._compat import text_type, open_stream, get_filesystem_encoding, \
     get_streerror, string_types, PY2, binary_streams, text_streams, \

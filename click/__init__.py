@@ -17,7 +17,7 @@ from .core import Context, BaseCommand, Command, MultiCommand, Group, \
      CommandCollection, Parameter, Option, Argument
 
 # Globals
-from .globals import get_context
+from .context import get_context
 
 # Decorators
 from .decorators import pass_context, pass_obj, make_pass_decorator, \

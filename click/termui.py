@@ -9,7 +9,7 @@ from ._compat import raw_input, text_type, string_types, \
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type, Choice, Path
-from .globals import resolve_color_default
+from .context import resolve_color_default
 
 
 # The prompt functions to use.  The doc tools currently override these

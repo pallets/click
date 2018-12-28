@@ -6,7 +6,7 @@ from functools import update_wrapper
 from ._compat import iteritems
 from ._unicodefun import _check_for_unicode_literals
 from .utils import echo
-from .globals import get_context
+from .context import get_context
 
 
 def pass_context(f):

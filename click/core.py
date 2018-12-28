@@ -14,7 +14,7 @@ from .exceptions import ClickException, UsageError, BadParameter, Abort, \
 from .termui import prompt, confirm, style
 from .formatting import HelpFormatter, join_options
 from .parser import OptionParser, split_opt
-from .globals import push_context, pop_context
+from .context import push_context, pop_context
 
 from ._compat import PY2, isidentifier, iteritems, string_types
 from ._unicodefun import _check_for_unicode_literals, _verify_python3_env
