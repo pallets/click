@@ -354,7 +354,7 @@ class Context(object):
     @contextmanager
     def scope(self, cleanup=True):
         """This helper method can be used with the context object to promote
-        it to the current thread local (see :func:`get_current_context`).
+        it to the current thread local (see :func:`get_context`).
         The default behavior of this is to invoke the cleanup functions which
         can be disabled by setting `cleanup` to `False`.  The cleanup
         functions are typically used for things such as closing file handles.
@@ -365,12 +365,12 @@ class Context(object):
         Example usage::
 
             with ctx.scope():
-                assert get_current_context() is ctx
+                assert get_context() is ctx
 
         This is equivalent::
 
             with ctx:
-                assert get_current_context() is ctx
+                assert get_context() is ctx
 
         .. versionadded:: 5.0
 
@@ -407,11 +407,11 @@ class Context(object):
             LANG_KEY = __name__ + '.lang'
 
             def set_language(value):
-                ctx = get_current_context()
+                ctx = get_context()
                 ctx.meta[LANG_KEY] = value
 
             def get_language():
-                return get_current_context().meta.get(LANG_KEY, 'en_US')
+                return get_context().meta.get(LANG_KEY, 'en_US')
 
         .. versionadded:: 5.0
         """

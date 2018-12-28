@@ -116,23 +116,23 @@ def test_global_context_object(runner):
     @click.command()
     @click.pass_context
     def cli(ctx):
-        assert click.get_current_context() is ctx
+        assert click.get_context() is ctx
         ctx.obj = 'FOOBAR'
-        assert click.get_current_context().obj == 'FOOBAR'
+        assert click.get_context().obj == 'FOOBAR'
 
-    assert click.get_current_context(silent=True) is None
+    assert click.get_context(silent=True) is None
     runner.invoke(cli, [], catch_exceptions=False)
-    assert click.get_current_context(silent=True) is None
+    assert click.get_context(silent=True) is None
 
 
 def test_context_meta(runner):
     LANG_KEY = __name__ + '.lang'
 
     def set_language(value):
-        click.get_current_context().meta[LANG_KEY] = value
+        click.get_context().meta[LANG_KEY] = value
 
     def get_language():
-        return click.get_current_context().meta.get(LANG_KEY, 'en_US')
+        return click.get_context().meta.get(LANG_KEY, 'en_US')
 
     @click.command()
     @click.pass_context
@@ -196,7 +196,7 @@ def test_close_before_pop(runner):
 
         @ctx.call_on_close
         def foo():
-            assert click.get_current_context().obj == 'test'
+            assert click.get_context().obj == 'test'
             called.append(True)
         click.echo('aha!')
 

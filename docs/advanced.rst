@@ -347,7 +347,7 @@ Global Context Access
 
 Starting with Click 5.0 it is possible to access the current context from
 anywhere within the same thread through the use of the
-:func:`get_current_context` function which returns it.  This is primarily
+:func:`get_context` function which returns it.  This is primarily
 useful for accessing the context bound object as well as some flags that
 are stored on it to customize the runtime behavior.  For instance the
 :func:`echo` function does this to infer the default value of the `color`
@@ -356,7 +356,7 @@ flag.
 Example usage::
 
     def get_current_command_name():
-        return click.get_current_context().info_name
+        return click.get_context().info_name
 
 It should be noted that this only works within the current thread.  If you
 spawn additional threads then those threads will not have the ability to

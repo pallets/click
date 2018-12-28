@@ -6,7 +6,7 @@ import pytest
 def debug():
     click.echo('%s=%s' % (
         sys._getframe(1).f_code.co_name,
-        '|'.join(click.get_current_context().args),
+        '|'.join(click.get_context().args),
     ))
 
 

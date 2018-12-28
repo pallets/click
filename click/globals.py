@@ -4,7 +4,7 @@ from threading import local
 _local = local()
 
 
-def get_current_context(silent=False):
+def get_context(silent=False):
     """Returns the current click context.  This can be used as a way to
     access the current context object from anywhere.  This is a more implicit
     alternative to the :func:`pass_context` decorator.  This function is
@@ -43,6 +43,6 @@ def resolve_color_default(color=None):
     """
     if color is not None:
         return color
-    ctx = get_current_context(silent=True)
+    ctx = get_context(silent=True)
     if ctx is not None:
         return ctx.color

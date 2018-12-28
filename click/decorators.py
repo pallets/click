@@ -6,7 +6,7 @@ from functools import update_wrapper
 from ._compat import iteritems
 from ._unicodefun import _check_for_unicode_literals
 from .utils import echo
-from .globals import get_current_context
+from .globals import get_context
 
 
 def pass_context(f):
@@ -14,7 +14,7 @@ def pass_context(f):
     object as first argument.
     """
     def new_func(*args, **kwargs):
-        return f(get_current_context(), *args, **kwargs)
+        return f(get_context(), *args, **kwargs)
     return update_wrapper(new_func, f)
 
 
@@ -24,7 +24,7 @@ def pass_obj(f):
     represents the state of a nested system.
     """
     def new_func(*args, **kwargs):
-        return f(get_current_context().obj, *args, **kwargs)
+        return f(get_context().obj, *args, **kwargs)
     return update_wrapper(new_func, f)
 
 
@@ -52,7 +52,7 @@ def make_pass_decorator(object_type, ensure=False):
     """
     def decorator(f):
         def new_func(*args, **kwargs):
-            ctx = get_current_context()
+            ctx = get_context()
             if ensure:
                 obj = ctx.ensure_object(object_type)
             else:
