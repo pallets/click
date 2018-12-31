@@ -155,7 +155,6 @@ class _FixupStream(object):
 
 if PY2:
     text_type = unicode
-    bytes = str
     raw_input = raw_input
     string_types = (str, unicode)
     int_types = (int, long)
