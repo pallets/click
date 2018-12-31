@@ -10,8 +10,10 @@ Support questions
 Please, don't use the issue tracker for this. Check whether the
 ``#pocoo`` IRC channel on Freenode can help with your issue. If your problem
 is not strictly Click-specific, ``#python`` on Freenode is generally more
-active.  `StackOverflow <https://stackoverflow.com/questions/tagged/python-click>`_ is also worth
-considering. Use tag `python-click` for new question or search. 
+active.  Also try searching or asking on `Stack Overflow`_ with the
+``python-click`` tag. 
+
+.. _Stack Overflow: https://stackoverflow.com/questions/tagged/python-click?sort=votes
 
 Reporting issues
 ================
