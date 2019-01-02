@@ -199,6 +199,7 @@ implements two commands for managing databases:
 
     cli.add_command(initdb)
     cli.add_command(dropdb)
+    cli()
 
 As you can see, the :func:`group` decorator works like the :func:`command`
 decorator, but creates a :class:`Group` object instead which can be given
