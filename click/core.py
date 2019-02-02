@@ -1086,12 +1086,25 @@ class MultiCommand(Command):
             echo(ctx.get_help(), color=ctx.color)
             ctx.exit()
 
-        rest = Command.parse_args(self, ctx, args)
+        parser = self.make_parser(ctx)
+        cmds = {c: self.get_command(ctx, c) for c in self.list_commands(ctx)}
+        opts, args, param_order = parser.parse_args(args=args, cmds=cmds)
+
+        for param in iter_params_for_processing(param_order, self.get_params(ctx)):
+            value, args = param.handle_parse_result(ctx, opts, args)
+
+        if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
+            ctx.fail('Got unexpected extra argument%s (%s)'
+                     % (len(args) != 1 and 's' or '',
+                        ' '.join(map(make_str, args))))
+
         if self.chain:
-            ctx.protected_args = rest
+            ctx.protected_args = args
             ctx.args = []
-        elif rest:
-            ctx.protected_args, ctx.args = rest[:1], rest[1:]
+        elif args:
+            ctx.protected_args, ctx.args = args[:1], args[1:]
+        else:
+            ctx.args = args
 
         return ctx.args
 

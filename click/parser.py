@@ -187,6 +187,7 @@ class ParsingState(object):
         self.largs = []
         self.rargs = rargs
         self.order = []
+        self.lcmdparsers = []
 
 
 class OptionParser(object):
@@ -256,7 +257,7 @@ class OptionParser(object):
             obj = dest
         self._args.append(Argument(dest=dest, nargs=nargs, obj=obj))
 
-    def parse_args(self, args):
+    def parse_args(self, args, cmds=None):
         """Parses positional arguments and returns ``(values, args, order)``
         for the parsed options and arguments as well as the leftover
         arguments if there are any.  The order is a list of objects as they
@@ -265,7 +266,7 @@ class OptionParser(object):
         """
         state = ParsingState(args)
         try:
-            self._process_args_for_options(state)
+            self._process_args_for_options(state, cmds)
             self._process_args_for_args(state)
         except UsageError:
             if self.ctx is None or not self.ctx.resilient_parsing:
@@ -282,21 +283,47 @@ class OptionParser(object):
         state.largs = args
         state.rargs = []
 
-    def _process_args_for_options(self, state):
+    def _process_args_for_options(self, state, cmds):
+        # If there is a command in state.rargs, then we should
+        # defer unknown options to after that command
+        # we should process interspersed options unless they
+        # have been overridden by a previously seen command
+        nextcmd = None
+        if cmds:
+            for arg in state.rargs:
+                if arg == '--':
+                    break
+                elif arg in cmds:
+                    nextcmd = arg
+                    self.ignore_unknown_options = True
+                    self.allow_interspersed_args = True
+                    break
+
         while state.rargs:
             arg = state.rargs.pop(0)
             arglen = len(arg)
             # Double dashes always handled explicitly regardless of what
             # prefixes are valid.
             if arg == '--':
-                return
+                break
             elif arg[:1] in self._opt_prefixes and arglen > 1:
                 self._process_opts(arg, state)
             elif self.allow_interspersed_args:
                 state.largs.append(arg)
+                if arg in cmds:
+                    state.lcmdparsers.append(cmds[arg].make_parser(self.ctx))
             else:
                 state.rargs.insert(0, arg)
-                return
+                break
+
+        if nextcmd and len(state.largs):
+            # move deferred options to just after the next command
+            icmd = state.largs.index(nextcmd)
+            if icmd > 0:
+                largs = state.largs[:icmd]
+                cmd = state.largs[icmd]
+                rargs = state.largs[icmd + 1:]
+                state.largs = [cmd] + largs + rargs
 
         # Say this is the original argument list:
         # [arg0, arg1, ..., arg(i-1), arg(i), arg(i+1), ..., arg(N-1)]
@@ -319,6 +346,10 @@ class OptionParser(object):
         # not a very interesting subset!
 
     def _match_long_opt(self, opt, explicit_value, state):
+        if any(opt in p._long_opt for p in state.lcmdparsers):
+            state.largs.append(opt)
+            return
+
         if opt not in self._long_opt:
             possibilities = [word for word in self._long_opt
                              if word.startswith(opt)]
@@ -352,18 +383,21 @@ class OptionParser(object):
 
     def _match_short_opt(self, arg, state):
         stop = False
-        i = 1
         prefix = arg[0]
-        unknown_options = []
+        forwarded_options = []
 
-        for ch in arg[1:]:
+        for i, ch in enumerate(arg[1:], start=1):
             opt = normalize_opt(prefix + ch, self.ctx)
+
+            if any(opt in p._short_opt for p in state.lcmdparsers):
+                forwarded_options.append(ch)
+                continue
+
             option = self._short_opt.get(opt)
-            i += 1
 
             if not option:
                 if self.ignore_unknown_options:
-                    unknown_options.append(ch)
+                    forwarded_options.append(ch)
                     continue
                 raise NoSuchOption(opt, ctx=self.ctx)
             if option.takes_value:
@@ -390,12 +424,8 @@ class OptionParser(object):
             if stop:
                 break
 
-        # If we got any unknown options we re-combinate the string of the
-        # remaining options and re-attach the prefix, then report that
-        # to the state as new larg.  This way there is basic combinatorics
-        # that can be achieved while still ignoring unknown arguments.
-        if self.ignore_unknown_options and unknown_options:
-            state.largs.append(prefix + ''.join(unknown_options))
+        if forwarded_options:
+            state.largs.append(prefix + ''.join(forwarded_options))
 
     def _process_opts(self, arg, state):
         explicit_value = None
