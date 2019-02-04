@@ -363,7 +363,7 @@ class OptionParser(object):
         prefix = arg[0]
         forwarded_options = []
 
-        for i, ch in enumerate(arg[1:], start=1):
+        for i, ch in enumerate(arg[1:], start=2):
             opt = normalize_opt(prefix + ch, self.ctx)
 
             # Interspersed options should be processed unless they have been

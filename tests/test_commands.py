@@ -257,6 +257,28 @@ def test_unprocessed_options(runner):
     ]
 
 
+def test_deferred_options(runner):
+    @click.group(context_settings=dict(
+        allow_interspersed_args=True,
+        defer_unknown_options=True,
+    ))
+    @click.option('--verbose', '-v', count=True)
+    def cli(verbose):
+        click.echo('Verbosity: %s' % verbose)
+
+    @cli.command()
+    @click.option('--quiet', '-q', count=True)
+    def conf(quiet):
+        print('Quietude: %s' % quiet)
+
+    result = runner.invoke(cli, ['-vq', 'conf', '-vq'])
+    assert not result.exception, result.output
+    assert result.output.splitlines() == [
+        'Verbosity: 2',
+        'Quietude: 2',
+    ]
+
+
 def test_deprecated_in_help_messages(runner):
     @click.command(deprecated=True)
     def cmd_with_help():
