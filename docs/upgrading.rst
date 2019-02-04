@@ -6,6 +6,12 @@ this is not entirely possible.  In case we need to break backwards
 compatibility this document gives you information about how to upgrade or
 handle backwards compatibility properly.
 
+.. _upgrade-to-7.0:
+
+Upgrading to 7.0
+----------------
+Click 7.0 changed the default behaviour of subcommands. Subcommands that are named by the function now automatically have the underscore replaced with a dash. So now, if you register a function named `my_command` it becomes `my-command` in the command line interface by default. Thus, you can still use underscores by specifying the command names explicitly or use a `Command` subclass that doesn't have the new behavior.
+
 .. _upgrade-to-3.2:
 
 Upgrading to 3.2
