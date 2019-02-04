@@ -284,10 +284,8 @@ class OptionParser(object):
         state.rargs = []
 
     def _process_args_for_options(self, state, cmds):
-        # If there is a command in state.rargs, then we should
-        # defer unknown options to after that command
-        # we should process interspersed options unless they
-        # have been overridden by a previously seen command
+        # If cmds are given and if there is a command in state.rargs, then
+        # unknown options should be deferred/moved to after that command.
         nextcmd = None
         if cmds:
             for arg in state.rargs:
@@ -296,7 +294,6 @@ class OptionParser(object):
                 elif arg in cmds:
                     nextcmd = arg
                     self.ignore_unknown_options = True
-                    self.allow_interspersed_args = True
                     break
 
         while state.rargs:
@@ -310,7 +307,7 @@ class OptionParser(object):
                 self._process_opts(arg, state)
             elif self.allow_interspersed_args:
                 state.largs.append(arg)
-                if arg in cmds:
+                if cmds and arg in cmds:
                     state.lcmdparsers.append(cmds[arg].make_parser(self.ctx))
             else:
                 state.rargs.insert(0, arg)
@@ -318,34 +315,14 @@ class OptionParser(object):
 
         if nextcmd and len(state.largs):
             # move deferred options to just after the next command
+            # i.e. bring the next command to the front of largs
             icmd = state.largs.index(nextcmd)
             if icmd > 0:
-                largs = state.largs[:icmd]
-                cmd = state.largs[icmd]
-                rargs = state.largs[icmd + 1:]
-                state.largs = [cmd] + largs + rargs
-
-        # Say this is the original argument list:
-        # [arg0, arg1, ..., arg(i-1), arg(i), arg(i+1), ..., arg(N-1)]
-        #                            ^
-        # (we are about to process arg(i)).
-        #
-        # Then rargs is [arg(i), ..., arg(N-1)] and largs is a *subset* of
-        # [arg0, ..., arg(i-1)] (any options and their arguments will have
-        # been removed from largs).
-        #
-        # The while loop will usually consume 1 or more arguments per pass.
-        # If it consumes 1 (eg. arg is an option that takes no arguments),
-        # then after _process_arg() is done the situation is:
-        #
-        #   largs = subset of [arg0, ..., arg(i)]
-        #   rargs = [arg(i+1), ..., arg(N-1)]
-        #
-        # If allow_interspersed_args is false, largs will always be
-        # *empty* -- still a subset of [arg0, ..., arg(i-1)], but
-        # not a very interesting subset!
+                state.largs.insert(0, state.largs.pop(icmd))
 
     def _match_long_opt(self, opt, explicit_value, state):
+        # Interspersed options should be processed unless they have been
+        # overridden by a previously seen command (lcmdparsers).
         if any(opt in p._long_opt for p in state.lcmdparsers):
             state.largs.append(opt)
             return
@@ -389,6 +366,8 @@ class OptionParser(object):
         for i, ch in enumerate(arg[1:], start=1):
             opt = normalize_opt(prefix + ch, self.ctx)
 
+            # Interspersed options should be processed unless they have been
+            # overridden by a previously seen command (lcmdparsers).
             if any(opt in p._short_opt for p in state.lcmdparsers):
                 forwarded_options.append(ch)
                 continue

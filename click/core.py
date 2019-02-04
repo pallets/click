@@ -196,6 +196,9 @@ class Context(object):
     :param ignore_unknown_options: instructs click to ignore options it does
                                    not know and keeps them for later
                                    processing.
+    :param defer_unknown_options: defer unknown options to subcommands, known
+                                  options will be deferred only if a subcommand
+                                  has overridden it.
     :param help_option_names: optionally a list of strings that define how
                               the default help parameter is named.  The
                               default is ``['--help']``.
@@ -215,8 +218,9 @@ class Context(object):
                  terminal_width=None, max_content_width=None,
                  resilient_parsing=False, allow_extra_args=None,
                  allow_interspersed_args=None,
-                 ignore_unknown_options=None, help_option_names=None,
-                 token_normalize_func=None, color=None):
+                 ignore_unknown_options=None, defer_unknown_options=False,
+                 help_option_names=None, token_normalize_func=None,
+                 color=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -296,6 +300,19 @@ class Context(object):
         #:
         #: .. versionadded:: 4.0
         self.ignore_unknown_options = ignore_unknown_options
+
+        if defer_unknown_options is None:
+            defer_unknown_options = command.defer_unknown_options
+        #: Defers unknown options to subcommands, known options will be
+        #: deferred only if a subcommand has overridden it. This allows for
+        #: options to be specified before the subcommand that will process it.
+        #: Used in combination with ``allow_interspersed_args = True``, this
+        #: will create a loose-ordering on all options. The command that wins
+        #: will be the last one on the left or the first one on the right that
+        #: knows how to process the given option.
+        #:
+        #: .. versionadded:: 8.0
+        self.defer_unknown_options = defer_unknown_options
 
         if help_option_names is None:
             if parent is not None:
@@ -981,6 +998,7 @@ class MultiCommand(Command):
     """
     allow_extra_args = True
     allow_interspersed_args = False
+    defer_unkown_options = False
 
     def __init__(self, name=None, invoke_without_command=False,
                  no_args_is_help=None, subcommand_metavar=None,
@@ -1087,7 +1105,10 @@ class MultiCommand(Command):
             ctx.exit()
 
         parser = self.make_parser(ctx)
-        cmds = {c: self.get_command(ctx, c) for c in self.list_commands(ctx)}
+        if self.defer_unkown_options:
+            cmds = {c: self.get_command(ctx, c) for c in self.list_commands(ctx)}
+        else:
+            cmds = None
         opts, args, param_order = parser.parse_args(args=args, cmds=cmds)
 
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
