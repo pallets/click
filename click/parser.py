@@ -218,9 +218,14 @@ class OptionParser(object):
         #: second mode where it will ignore it and continue processing
         #: after shifting all the unknown options into the resulting args.
         self.ignore_unknown_options = False
+        #: Defers unknown options until a command is found that can handle
+        #: it. Last one to the left wins, or if still none are found
+        #: and ignore_unknown_options is True, first one to the right wins.
+        self.defer_unknown_options = False
         if ctx is not None:
             self.allow_interspersed_args = ctx.allow_interspersed_args
             self.ignore_unknown_options = ctx.ignore_unknown_options
+            self.defer_unknown_options = ctx.defer_unknown_options
         self._short_opt = {}
         self._long_opt = {}
         self._opt_prefixes = set(['-', '--'])
@@ -431,6 +436,7 @@ class OptionParser(object):
             # error.
             if arg[:2] not in self._opt_prefixes:
                 return self._match_short_opt(arg, state)
-            if not self.ignore_unknown_options:
+            if not (self.ignore_unknown_options or
+                    self.defer_unknown_options):
                 raise
             state.largs.append(arg)

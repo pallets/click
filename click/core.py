@@ -998,7 +998,6 @@ class MultiCommand(Command):
     """
     allow_extra_args = True
     allow_interspersed_args = False
-    defer_unkown_options = False
 
     def __init__(self, name=None, invoke_without_command=False,
                  no_args_is_help=None, subcommand_metavar=None,
@@ -1105,7 +1104,7 @@ class MultiCommand(Command):
             ctx.exit()
 
         parser = self.make_parser(ctx)
-        if self.defer_unkown_options:
+        if ctx.defer_unknown_options:
             cmds = {c: self.get_command(ctx, c) for c in self.list_commands(ctx)}
         else:
             cmds = None
