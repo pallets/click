@@ -318,12 +318,14 @@ class OptionParser(object):
                 state.rargs.insert(0, arg)
                 break
 
-        if nextcmd and len(state.largs):
+        try:
             # move deferred options to just after the next command
             # i.e. bring the next command to the front of largs
             icmd = state.largs.index(nextcmd)
             if icmd > 0:
                 state.largs.insert(0, state.largs.pop(icmd))
+        except ValueError:
+            pass
 
     def _match_long_opt(self, opt, explicit_value, state):
         # Interspersed options should be processed unless they have been
