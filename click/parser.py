@@ -219,8 +219,8 @@ class OptionParser(object):
         #: after shifting all the unknown options into the resulting args.
         self.ignore_unknown_options = False
         #: Defers unknown options until a command is found that can handle
-        #: it. Last one to the left wins, or if still none are found
-        #: and ignore_unknown_options is True, first one to the right wins.
+        #: it. Last one to the left wins, or if still none are found,
+        #: the first one to the right wins.
         self.defer_unknown_options = False
         if ctx is not None:
             self.allow_interspersed_args = ctx.allow_interspersed_args
@@ -318,14 +318,12 @@ class OptionParser(object):
                 state.rargs.insert(0, arg)
                 break
 
-        try:
+        if nextcmd and self.allow_interspersed_args:
             # move deferred options to just after the next command
             # i.e. bring the next command to the front of largs
             icmd = state.largs.index(nextcmd)
             if icmd > 0:
                 state.largs.insert(0, state.largs.pop(icmd))
-        except ValueError:
-            pass
 
     def _match_long_opt(self, opt, explicit_value, state):
         # Interspersed options should be processed unless they have been
@@ -438,7 +436,6 @@ class OptionParser(object):
             # error.
             if arg[:2] not in self._opt_prefixes:
                 return self._match_short_opt(arg, state)
-            if not (self.ignore_unknown_options or
-                    self.defer_unknown_options):
+            if not self.ignore_unknown_options:
                 raise
             state.largs.append(arg)
