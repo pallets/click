@@ -258,24 +258,50 @@ def test_unprocessed_options(runner):
 
 
 def test_deferred_options(runner):
-    @click.group(context_settings=dict(
+    loose_ordering = dict(
         allow_interspersed_args=True,
         defer_unknown_options=True,
-    ))
-    @click.option('--verbose', '-v', count=True)
-    def cli(verbose):
-        click.echo('Verbosity: %s' % verbose)
+    )
 
-    @cli.command()
-    @click.option('--quiet', '-q', count=True)
-    def conf(quiet):
-        print('Quietude: %s' % quiet)
+    @click.group(context_settings=loose_ordering)
+    @click.option('--aa', '-a', count=True)
+    def cli(aa):
+        click.echo(f'cli a: {aa}')
 
-    result = runner.invoke(cli, ['-vq', 'conf', '-vq'])
+    @cli.group(context_settings=loose_ordering)
+    @click.option('--bb', '-b', count=True)
+    @click.option('--cc', '-c', count=True)
+    def cmd(bb, cc):
+        click.echo(f'cmd b: {bb}')
+        click.echo(f'cmd c: {cc}')
+
+    @cmd.command()
+    @click.option('--cc', '-c', count=True)
+    @click.option('--dd', '-d', count=True)
+    def subcmd(cc, dd):
+        click.echo(f'subcmd c: {cc}')
+        click.echo(f'subcmd d: {dd}')
+
+    result = runner.invoke(cli, ['-abcd', 'cmd', '-abcd', 'subcmd', '-abcd'])
     assert not result.exception, result.output
     assert result.output.splitlines() == [
-        'Verbosity: 2',
-        'Quietude: 2',
+        'cli a: 3',
+        'cmd b: 3',
+        'cmd c: 2',
+        'subcmd c: 1',
+        'subcmd d: 3',
+    ]
+
+    result = runner.invoke(cli, ['--aa', '--bb', '--cc', '--dd',
+                                 'cmd', '--aa', '--bb', '--cc', '--dd',
+                                 'subcmd', '--aa', '--bb', '--cc', '--dd'])
+    assert not result.exception, result.output
+    assert result.output.splitlines() == [
+        'cli a: 3',
+        'cmd b: 3',
+        'cmd c: 2',
+        'subcmd c: 1',
+        'subcmd d: 3',
     ]
 
 
