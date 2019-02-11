@@ -297,3 +297,19 @@ def test_truncating_docstring(runner):
         'Options:',
         '  --help  Show this message and exit.',
     ]
+
+
+def test_global_show_default(runner):
+    @click.command(context_settings=dict(show_default=True))
+    @click.option("-f", "in_file", default="out.txt", help="Output file name")
+    def cli():
+        pass
+
+    result = runner.invoke(cli, ['--help'],)
+    assert result.output.splitlines() == [
+        'Usage: cli [OPTIONS]',
+        '',
+        'Options:',
+        '  -f TEXT  Output file name  [default: out.txt]',
+        '  --help   Show this message and exit.  [default: False]'
+    ]
