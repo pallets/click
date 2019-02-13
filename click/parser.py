@@ -155,6 +155,9 @@ class Option(object):
         state.order.append(self.obj)
 
     def get_value_from_state(self, state, opt_name, explicit_value):
+        if getattr(self.obj, 'explicit_only', False):
+            return explicit_value
+
         # At this point it's safe to modify rargs by injecting the
         # explicit value, because no exception is raised in this
         # branch.  This means that the inserted value will be fully

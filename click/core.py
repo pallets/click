@@ -1532,17 +1532,24 @@ class Option(Parameter):
                                parameter will be pulled from an environment
                                variable in case a prefix is defined on the
                                context.
+    :param explicit_only: if `nargs` is 1, then when this option is set to
+                          `True`, only explicit arguments for it will be used
+                          -- i.e. those not separated by a whitespace, e.g.
+                          "-fbar" or "--foo=bar". If the option is provided
+                          without an explicit value, `None` will be used.
     :param help: the help string.
     :param hidden: hide this option from help outputs.
     """
     param_type_name = 'option'
+    _EXPLICIT_NONE = object()
+
 
     def __init__(self, param_decls=None, show_default=False,
                  prompt=False, confirmation_prompt=False,
                  hide_input=False, is_flag=None, flag_value=None,
                  multiple=False, count=False, allow_from_autoenv=True,
                  type=None, help=None, hidden=False, show_choices=True,
-                 show_envvar=False, **attrs):
+                 show_envvar=False, explicit_only=False, **attrs):
         default_is_missing = attrs.get('default', _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
 
@@ -1556,6 +1563,7 @@ class Option(Parameter):
         self.confirmation_prompt = confirmation_prompt
         self.hide_input = hide_input
         self.hidden = hidden
+        self.explicit_only = explicit_only
 
         # Flags
         if is_flag is None:
@@ -1603,6 +1611,13 @@ class Option(Parameter):
                and self.prompt is not None:
                 raise TypeError('Hidden input does not work with boolean '
                                 'flag prompts.')
+            if self.explicit_only:
+                if self.multiple:
+                    raise TypeError('Options cannot be explicit_only and '
+                                    'multiple at the same time.')
+                if self.nargs != 1:
+                    raise TypeError('Options cannot be explicit_only and have '
+                                    'nargs != 1 at the same time.')
             if self.count:
                 if self.multiple:
                     raise TypeError('Options cannot be multiple and count '
@@ -1784,10 +1799,18 @@ class Option(Parameter):
         return rv
 
     def full_process_value(self, ctx, value):
+        if value is self._EXPLICIT_NONE:
+            return None
         if value is None and self.prompt is not None \
            and not ctx.resilient_parsing:
             return self.prompt_for_value(ctx)
         return Parameter.full_process_value(self, ctx, value)
+
+    def consume_value(self, ctx, opts):
+        if self.explicit_only and self.name in opts:
+            value = opts[self.name]
+            return self._EXPLICIT_NONE if value is None else value
+        return Parameter.consume_value(self, ctx, opts)
 
 
 class Argument(Parameter):

@@ -462,6 +462,65 @@ def test_aliases_for_flags(runner):
     result = runner.invoke(cli_alt, ['-w'])
     assert result.output == 'True\n'
 
+
+def test_explicit_only(runner):
+    @click.command()
+    @click.option('-o', '--opt', explicit_only=True, default='default')
+    @click.argument('args', nargs=-1)
+    def cmd(opt, args):
+        if opt is None:
+            click.echo('opt is None')
+        else:
+            click.echo('opt = %s' % opt)
+        click.echo('args = %s' % '|'.join(args))
+
+    result = runner.invoke(cmd, ['a', 'b', 'c'])
+    assert not result.exception
+    assert result.output == 'opt = default\nargs = a|b|c\n'
+
+    result = runner.invoke(cmd, ['-o', 'a', 'b', 'c'])
+    assert not result.exception
+    assert result.output == 'opt is None\nargs = a|b|c\n'
+
+    result = runner.invoke(cmd, ['-oyes', 'a', 'b', 'c'])
+    assert not result.exception
+    assert result.output == 'opt = yes\nargs = a|b|c\n'
+
+    result = runner.invoke(cmd, ['--opt', 'a', 'b', 'c'])
+    assert not result.exception
+    assert result.output == 'opt is None\nargs = a|b|c\n'
+
+    result = runner.invoke(cmd, ['--opt=yes', 'a', 'b', 'c'])
+    assert not result.exception
+    assert result.output == 'opt = yes\nargs = a|b|c\n'
+
+
+def test_explicit_only_nargs():
+    try:
+        @click.command()
+        @click.option('-o', '--opt', explicit_only=True, nargs=2)
+        @click.argument('args', nargs=-1)
+        def cmd(opt, args):
+            pass
+    except TypeError as e:
+        assert 'Options cannot be explicit_only and have nargs != 1' in str(e)
+    else:
+        assert False, 'Expected a type error because of an invalid option.'
+
+
+def test_explicit_only_multiple():
+    try:
+        @click.command()
+        @click.option('-o', '--opt', explicit_only=True, multiple=True)
+        @click.argument('args', nargs=-1)
+        def cmd(opt, args):
+            pass
+    except TypeError as e:
+        assert 'Options cannot be explicit_only and multiple' in str(e)
+    else:
+        assert False, 'Expected a type error because of an invalid option.'
+
+
 @pytest.mark.parametrize('option_args,expected', [
     (['--aggressive', '--all', '-a'], 'aggressive'),
     (['--first', '--second', '--third', '-a', '-b', '-c'], 'first'),
