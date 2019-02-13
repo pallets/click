@@ -73,12 +73,6 @@ def _unpack_args(args, nargs_spec):
     return tuple(rv), list(args)
 
 
-def _error_opt_args(nargs, opt):
-    if nargs == 1:
-        raise BadOptionUsage(opt, '%s option requires an argument' % opt)
-    raise BadOptionUsage(opt, '%s option requires %d arguments' % (opt, nargs))
-
-
 def split_opt(opt):
     first = opt[:1]
     if first.isalnum():
@@ -159,6 +153,29 @@ class Option(object):
         else:
             raise ValueError('unknown action %r' % self.action)
         state.order.append(self.obj)
+
+    def get_value_from_state(self, state, opt_name, explicit_value):
+        # At this point it's safe to modify rargs by injecting the
+        # explicit value, because no exception is raised in this
+        # branch.  This means that the inserted value will be fully
+        # consumed.
+        if explicit_value is not None:
+            state.rargs.insert(0, explicit_value)
+
+        if self.nargs == 1:
+            if not state.rargs:
+                raise BadOptionUsage(
+                    opt_name,
+                    '%s option requires an argument' % opt_name)
+            return state.rargs.pop(0)
+        elif len(state.rargs) < self.nargs:
+            raise BadOptionUsage(
+                opt_name,
+                '%s option requires %d arguments' % (opt_name, self.nargs))
+        else:
+            value = tuple(state.rargs[:self.nargs])
+            del state.rargs[:self.nargs]
+            return value
 
 
 class Argument(object):
@@ -326,21 +343,7 @@ class OptionParser(object):
 
         option = self._long_opt[opt]
         if option.takes_value:
-            # At this point it's safe to modify rargs by injecting the
-            # explicit value, because no exception is raised in this
-            # branch.  This means that the inserted value will be fully
-            # consumed.
-            if explicit_value is not None:
-                state.rargs.insert(0, explicit_value)
-
-            nargs = option.nargs
-            if len(state.rargs) < nargs:
-                _error_opt_args(nargs, opt)
-            elif nargs == 1:
-                value = state.rargs.pop(0)
-            else:
-                value = tuple(state.rargs[:nargs])
-                del state.rargs[:nargs]
+            value = option.get_value_from_state(state, opt, explicit_value)
 
         elif explicit_value is not None:
             raise BadOptionUsage(opt, '%s option does not take a value' % opt)
@@ -369,18 +372,12 @@ class OptionParser(object):
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
                 # next arg, and stop consuming characters of arg.
+                explicit_value = None
                 if i < len(arg):
-                    state.rargs.insert(0, arg[i:])
+                    explicit_value = arg[i:]
                     stop = True
 
-                nargs = option.nargs
-                if len(state.rargs) < nargs:
-                    _error_opt_args(nargs, opt)
-                elif nargs == 1:
-                    value = state.rargs.pop(0)
-                else:
-                    value = tuple(state.rargs[:nargs])
-                    del state.rargs[:nargs]
+                value = option.get_value_from_state(state, opt, explicit_value)
 
             else:
                 value = None
