@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 import uuid
+from subprocess import check_output
+from textwrap import dedent
+
 import click
 
 
@@ -534,3 +538,24 @@ def test_hidden_group(runner):
     assert result.exit_code == 0
     assert 'subgroup' not in result.output
     assert 'nope' not in result.output
+
+
+def test_crcrlf_in_popen_output(tmpdir):
+    p = tmpdir.mkdir('testdir').join('testfile.py')
+    p.write(dedent("""
+        import click
+
+        @click.command()
+        @click.option('--foo', help='bar')
+        def cli(foo):
+            click.echo(foo)
+
+        if __name__ == '__main__':
+            cli()
+    """))
+
+    filename = os.path.join(p.dirname, p.basename)
+    output = check_output([sys.executable, filename, '--help'])
+
+    # This assert fails only in win+py27
+    assert '\r\r\n' not in output.decode('utf-8')
