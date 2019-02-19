@@ -151,6 +151,21 @@ And what it does:
         println()
         invoke(touch, args=['missing.txt'])
 
+If you preffer some object oriented API for filesystem paths you can use the
+``path_type`` argument to the :class:`Path` type to pass a class that
+implements this API.
+
+Example:
+
+.. click:example::
+
+    import pathlib
+
+    @click.command()
+    @click.argument('f', type=click.Path(exists=True, path_type=pathlib.Path))
+    def touch(f):
+        click.echo(f.resolve())
+
 
 File Opening Safety
 -------------------

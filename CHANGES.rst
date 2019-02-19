@@ -12,6 +12,9 @@ Version 7.1
 
 Unreleased
 
+-   ``Path``'s argument ``path_type`` can accept a callable now
+    (``path_type``=``pathlib.Path`` for example . (`#405`_)
+
 
 Version 7.0
 -----------
@@ -167,6 +170,7 @@ Released 2018-09-25
 .. _#323: https://github.com/pallets/click/issues/323
 .. _#334: https://github.com/pallets/click/issues/334
 .. _#393: https://github.com/pallets/click/issues/393
+.. _#405: https://github.com/pallets/click/issues/405
 .. _#409: https://github.com/pallets/click/issues/409
 .. _#414: https://github.com/pallets/click/pull/414
 .. _#423: https://github.com/pallets/click/pull/423
