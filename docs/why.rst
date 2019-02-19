@@ -33,7 +33,7 @@ your way.  It's not overly flexible either.  Currently, for instance, it
 does not allow you to customize the help pages too much. This is intentional
 because Click is designed to allow you to nest command line utilities.  The
 idea is that you can have a system that works together with another system by
-tacking two Click instances together and they will continue working as they
+taking two Click instances together and they will continue working as they
 should.
 
 Too much customizability would break this promise.
@@ -101,7 +101,7 @@ following:
 -   Click has a strong understanding of what types are and can give the user
     consistent error messages if something goes wrong.  A subcommand
     written by a different developer will not suddenly die with a
-    different error messsage because it's manually handled.
+    different error message because it's manually handled.
 -   Click has enough meta information available for its whole program
     that it can evolve over time to improve the user experience without
     forcing developers to adjust their programs.  For instance, if Click
@@ -125,7 +125,7 @@ reasons for this.  The biggest one is that too much configurability makes
 it hard to achieve a consistent command line experience.
 
 The best example for this is optparse's ``callback`` functionality for
-accepting arbitrary number of arguments.  Due to syntactical ambiguities
+accepting an arbitrary number of arguments.  Due to syntactical ambiguities
 on the command line, there is no way to implement fully variadic arguments.
 There are always tradeoffs that need to be made and in case of
 ``argparse`` these tradeoffs have been critical enough, that a system like
