@@ -3,6 +3,11 @@ import pytest
 import click
 from click._compat import PY2
 
+if PY2:
+    import pathlib2 as pathlib
+else:
+    import pathlib
+
 
 def test_nargs_star(runner):
     @click.command()
@@ -115,6 +120,41 @@ def test_path_args(runner):
 
     result = runner.invoke(foo, ['-'])
     assert result.output == '-\n'
+    assert result.exit_code == 0
+
+
+def test_path_args_invalid_path_type(runner):
+    for path_type in [1, object()]:
+        @click.command()
+        @click.argument('input', type=click.Path(path_type=path_type))
+        def foo(input):
+            pass
+
+        result = runner.invoke(foo, ['/tmp'])
+        assert result.exit_code == 2
+
+
+def test_path_args_factory(runner):
+    @click.command()
+    @click.argument('input', type=click.Path(path_type=pathlib.Path))
+    def foo(input):
+        assert isinstance(input, pathlib.Path)
+        click.echo(input.as_posix())
+
+    result = runner.invoke(foo, ['/tmp'])
+    assert result.output == '/tmp\n'
+    assert result.exit_code == 0
+
+
+def test_path_args_factory_str(runner):
+    @click.command()
+    @click.argument('input', type=click.Path(path_type=str))
+    def foo(input):
+        assert isinstance(input, str)
+        click.echo(input)
+
+    result = runner.invoke(foo, ['/tmp'])
+    assert result.output == '/tmp\n'
     assert result.exit_code == 0
 
 

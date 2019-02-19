@@ -2,7 +2,7 @@ import os
 import stat
 from datetime import datetime
 
-from ._compat import open_stream, text_type, filename_to_ui, \
+from ._compat import open_stream, text_type, is_bytes, filename_to_ui, \
     get_filesystem_encoding, get_streerror, _get_argv_encoding, PY2
 from .exceptions import BadParameter
 from .utils import safecall, LazyFile
@@ -480,10 +480,11 @@ class Path(ParamType):
     :param allow_dash: If this is set to `True`, a single dash to indicate
                        standard streams is permitted.
     :param path_type: optionally a string type that should be used to
-                      represent the path.  The default is `None` which
-                      means the return value will be either bytes or
-                      unicode depending on what makes most sense given the
-                      input data Click deals with.
+                      represent the path or a callable that converts path name
+                      to the desirable type (for example pathlib.Path).
+                      The default is `None` which means the return value will
+                      be either bytes or unicode depending on what makes most
+                      sense given the input data Click deals with.
     """
     envvar_list_splitter = os.path.pathsep
 
@@ -509,12 +510,17 @@ class Path(ParamType):
             self.name = 'path'
             self.path_type = 'Path'
 
-    def coerce_path_result(self, rv):
-        if self.type is not None and not isinstance(rv, self.type):
-            if self.type is text_type:
-                rv = rv.decode(get_filesystem_encoding())
-            else:
-                rv = rv.encode(get_filesystem_encoding())
+    def coerce_path_result(self, rv, param, ctx):
+        if self.type is text_type and not isinstance(rv, self.type):
+            rv = rv.decode(get_filesystem_encoding())
+        elif is_bytes(self.type) and not isinstance(rv, self.type):
+            rv = rv.encode(get_filesystem_encoding())
+        elif callable(self.type):
+            rv = self.type(rv)
+        elif self.type is not None:
+            self.fail('path_type "%s" is not text, bytes or callable.' % (
+                self.path_type,
+            ), param, ctx)
         return rv
 
     def convert(self, value, param, ctx):
@@ -530,7 +536,7 @@ class Path(ParamType):
                 st = os.stat(rv)
             except OSError:
                 if not self.exists:
-                    return self.coerce_path_result(rv)
+                    return self.coerce_path_result(rv, param, ctx)
                 self.fail('%s "%s" does not exist.' % (
                     self.path_type,
                     filename_to_ui(value)
@@ -557,7 +563,7 @@ class Path(ParamType):
                     filename_to_ui(value)
                 ), param, ctx)
 
-        return self.coerce_path_result(rv)
+        return self.coerce_path_result(rv, param, ctx)
 
 
 class Tuple(CompositeParamType):
