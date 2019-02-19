@@ -33,7 +33,7 @@ your way.  It's not overly flexible either.  Currently, for instance, it
 does not allow you to customize the help pages too much. This is intentional
 because Click is designed to allow you to nest command line utilities.  The
 idea is that you can have a system that works together with another system by
-taking two Click instances together and they will continue working as they
+tacking two Click instances together and they will continue working as they
 should.
 
 Too much customizability would break this promise.
