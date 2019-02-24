@@ -43,7 +43,7 @@ Introduction
 To bundle your script with setuptools, all you need is the script in a
 Python package and a ``setup.py`` file.
 
-Imagine this directory structure::
+Imagine this directory structure:
 
 .. code-block:: text
 
