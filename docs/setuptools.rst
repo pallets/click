@@ -126,14 +126,15 @@ These would be the modified contents of ``setup.py``::
 
     setup(
         name='yourpackage',
-        version='0.1',
+        version='0.1.0',
         packages=find_packages(),
         include_package_data=True,
         install_requires=[
             'Click',
         ],
-        entry_points='''
-            [console_scripts]
-            yourscript=yourpackage.scripts.yourscript:cli
-        ''',
+        entry_points={
+            'console_scripts': [
+                'yourscript = yourpackage.scripts.yourscript:cli',
+            ],
+        },
     )
