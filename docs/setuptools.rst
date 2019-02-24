@@ -45,6 +45,8 @@ Python package and a ``setup.py`` file.
 
 Imagine this directory structure::
 
+.. code-block:: text
+
     yourscript.py
     setup.py
 
@@ -59,21 +61,24 @@ Contents of ``yourscript.py``:
         """Example script."""
         click.echo('Hello World!')
 
-Contents of ``setup.py``::
+Contents of ``setup.py``:
+
+.. code-block:: python
 
     from setuptools import setup
 
     setup(
         name='yourscript',
-        version='0.1',
+        version='0.1.0',
         py_modules=['yourscript'],
         install_requires=[
             'Click',
         ],
-        entry_points='''
-            [console_scripts]
-            yourscript=yourscript:cli
-        ''',
+        entry_points={
+            'console_scripts': [
+                'yourscript = yourscript:cli',
+            ],
+        },
     )
 
 The magic is in the ``entry_points`` parameter.  Below
@@ -88,7 +93,9 @@ Testing The Script
 ------------------
 
 To test the script, you can make a new virtualenv and then install your
-package::
+package:
+
+.. code-block:: console
 
     $ virtualenv venv
     $ . venv/bin/activate
@@ -105,22 +112,28 @@ Scripts in Packages
 
 If your script is growing and you want to switch over to your script being
 contained in a Python package the changes necessary are minimal.  Let's
-assume your directory structure changed to this::
+assume your directory structure changed to this:
 
-    yourpackage/
-        __init__.py
-        main.py
-        utils.py
-        scripts/
+.. code-block:: text
+
+    project/
+        yourpackage/
             __init__.py
-            yourscript.py
+            main.py
+            utils.py
+            scripts/
+                __init__.py
+                yourscript.py
+        setup.py
 
 In this case instead of using ``py_modules`` in your ``setup.py`` file you
 can use ``packages`` and the automatic package finding support of
 setuptools.  In addition to that it's also recommended to include other
 package data.
 
-These would be the modified contents of ``setup.py``::
+These would be the modified contents of ``setup.py``:
+
+.. code-block:: python
 
     from setuptools import setup, find_packages
 
