@@ -208,6 +208,9 @@ class Context(object):
                   codes are used in texts that Click prints which is by
                   default not the case.  This for instance would affect
                   help output.
+    :param show_default: if True, shows defaults for all options.
+                    Even if an option is later created with show_default=False,
+                    this command-level setting overrides it.
     """
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
@@ -216,7 +219,7 @@ class Context(object):
                  resilient_parsing=False, allow_extra_args=None,
                  allow_interspersed_args=None,
                  ignore_unknown_options=None, help_option_names=None,
-                 token_normalize_func=None, color=None):
+                 token_normalize_func=None, color=None, show_default=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -336,6 +339,8 @@ class Context(object):
 
         #: Controls if styling output is wanted or not.
         self.color = color
+
+        self.show_default = show_default
 
         self._close_callbacks = []
         self._depth = 0
@@ -1723,7 +1728,8 @@ class Option(Parameter):
                            ', '.join('%s' % d for d in envvar)
                            if isinstance(envvar, (list, tuple))
                            else envvar, ))
-        if self.default is not None and self.show_default:
+        if self.default is not None and \
+            (self.show_default or ctx.show_default):
             if isinstance(self.show_default, string_types):
                 default_string = '({})'.format(self.show_default)
             elif isinstance(self.default, (list, tuple)):
