@@ -1,14 +1,14 @@
-os: linux
-sudo: false
+dist: xenial
 language: python
 python:
+  - "3.7"
   - "3.6"
   - "3.5"
   - "3.4"
   - "2.7"
   - "nightly"
-  - "pypy3"
-  - "pypy"
+  - "pypy3.5-6.0"
+  - "pypy2.7-6.0"
 env: TOXENV=py,codecov
 
 matrix:
@@ -24,8 +24,8 @@ matrix:
           - $HOME/Library/Caches/pip
   allow_failures:
     - python: nightly
-    - python: pypy3
-    - python: pypy
+    - python: pypy3.5-6.0
+    - python: pypy2.7-6.0
     - os: osx
   fast_finish: true
 
