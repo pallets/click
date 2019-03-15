@@ -776,6 +776,8 @@ class Command(BaseCommand):
 
     .. versionchanged:: 2.0
        Added the `context_settings` parameter.
+    .. versionchanged:: 7.1
+       Added the `no_args_is_help` parameter.
 
     :param name: the name of the command to use unless a group overrides it.
     :param context_settings: an optional dictionary with defaults that are
