@@ -237,6 +237,8 @@ def get_choices(cli, prog_name, args, incomplete):
     if ctx is None:
         return []
 
+    has_double_dash = "--" in all_args
+
     # In newer versions of bash long opts with '='s are partitioned, but it's easier to parse
     # without the '='
     if start_of_option(incomplete) and WORDBREAK in incomplete:
@@ -247,7 +249,7 @@ def get_choices(cli, prog_name, args, incomplete):
         incomplete = ''
 
     completions = []
-    if start_of_option(incomplete):
+    if not has_double_dash and start_of_option(incomplete):
         # completions for partial options
         for param in ctx.command.params:
             if isinstance(param, Option) and not param.hidden:
