@@ -44,6 +44,8 @@ Unreleased
     interpreter. :issue:`1139`
 -   Fix how default values for file-type options are shown during
     prompts. :issue:`914`
+-   Fix environment variable automatic generation for commands
+    containing ``-``. :issue:`1253`
 
 
 Version 7.0

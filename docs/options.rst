@@ -593,8 +593,8 @@ environment variables which is supported for options only.  To enable this
 feature, the ``auto_envvar_prefix`` parameter needs to be passed to the
 script that is invoked.  Each command and parameter is then added as an
 uppercase underscore-separated variable.  If you have a subcommand
-called ``foo`` taking an option called ``bar`` and the prefix is
-``MY_TOOL``, then the variable is ``MY_TOOL_FOO_BAR``.
+called ``run`` taking an option called ``reload`` and the prefix is
+``WEB``, then the variable is ``WEB_RUN_RELOAD``.
 
 Example usage:
 
@@ -615,8 +615,11 @@ And from the command line:
     invoke(greet, env={'GREETER_USERNAME': 'john'},
            auto_envvar_prefix='GREETER')
 
-When using ``auto_envvar_prefix`` with command groups, the command name needs
-to be included in the environment variable, between the prefix and the parameter name, *i.e.* *PREFIX_COMMAND_VARIABLE*.
+When using ``auto_envvar_prefix`` with command groups, the command name
+needs to be included in the environment variable, between the prefix and
+the parameter name, *i.e.* ``PREFIX_COMMAND_VARIABLE``. If you have a
+subcommand called ``run-server`` taking an option called ``host`` and
+the prefix is ``WEB``, then the variable is ``WEB_RUN_SERVER_HOST``.
 
 Example:
 
