@@ -7,10 +7,10 @@ Version 8.0
 Unreleased
 
 
--   Add ``coerce_case`` for ``click.Choice``. (`#1277`_, `#???`_)
+-   Add ``coerce_case`` for ``click.Choice``. (`#1277`_, `#1278`_)
 
 .. _#1277: https://github.com/pallets/click/issues/1277
-.. _#???: https://github.com/pallets/click/pull/???
+.. _#1278: https://github.com/pallets/click/pull/1278
 
 
 Version 7.1
