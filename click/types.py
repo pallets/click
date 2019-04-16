@@ -137,13 +137,16 @@ class Choice(ParamType):
 
     :param case_sensitive: Set to false to make choices case
         insensitive. Defaults to true.
+    :param coerce_case: Resulting values are exactly as passed to `choices`
+        rather than as collected from the command line.  Defaults to false.
     """
 
     name = 'choice'
 
-    def __init__(self, choices, case_sensitive=True):
+    def __init__(self, choices, case_sensitive=True, coerce_case=False):
         self.choices = choices
         self.case_sensitive = case_sensitive
+        self.coerce_case = coerce_case
 
     def get_metavar(self, param):
         return '[%s]' % '|'.join(self.choices)
@@ -173,8 +176,12 @@ class Choice(ParamType):
             normed_value = normed_value.lower()
             normed_choices = [choice.lower() for choice in normed_choices]
 
-        if normed_value in normed_choices:
-            return normed_value
+        for normed_choice, choice in zip(normed_choices, self.choices):
+            if normed_value == normed_choice:
+                if self.coerce_case:
+                    return choice
+
+                return normed_value
 
         self.fail('invalid choice: %s. (choose from %s)' %
                   (value, ', '.join(self.choices)), param, ctx)
