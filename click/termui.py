@@ -46,7 +46,8 @@ def hidden_prompt_func(prompt):
 def _build_prompt(text, suffix, show_default=False, default=None, show_choices=True, type=None):
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
-        prompt += ' (' + ", ".join(map(str, type.choices)) + ')'
+        prompt += ' (' + ", ".join(map(str, type.choices.values())) + ')' if not type.show_index else \
+                  ' (' + ", ".join(['%s:%s'%(idx,ch) for idx,ch in type.choices.items()]) + ')' 
     if default is not None and show_default:
         prompt = '%s [%s]' % (prompt, default)
     return prompt + suffix

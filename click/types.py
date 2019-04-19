@@ -141,46 +141,66 @@ class Choice(ParamType):
 
     name = 'choice'
 
-    def __init__(self, choices, case_sensitive=True):
-        self.choices = choices
+    def __init__(self, choices, case_sensitive=True, show_index=False):
         self.case_sensitive = case_sensitive
+        self.show_index = show_index
+        self.choices = { i:choice for i, choice in enumerate(choices)}
 
     def get_metavar(self, param):
-        return '[%s]' % '|'.join(self.choices)
+        return '[%s]' % '|'.join(self.choices.values())
 
     def get_missing_message(self, param):
-        return 'Choose from:\n\t%s.' % ',\n\t'.join(self.choices)
+        if self.show_index:
+            return 'Choose from:\n\t%s.' % ',\n\t'.join(['%s.%s'%(idx,ch) for idx,ch in self.choices.items()])
+        else:
+            return 'Choose from:\n\t%s.' % ',\n\t'.join(self.choices.values())
 
     def convert(self, value, param, ctx):
         # Exact match
-        if value in self.choices:
-            return value
+        if self.show_index:
+            try:
+                idx = int(value)
+            except:
+                self.fail('invaid index choice: %s. Please input integer type!' % (value))
 
-        # Match through normalization and case sensitivity
-        # first do token_normalize_func, then lowercase
-        # preserve original `value` to produce an accurate message in
-        # `self.fail`
-        normed_value = value
-        normed_choices = self.choices
+            if idx in list(self.choices.keys()):
+                return self.choices[idx]
+            
+            self.fail('invalid choice: %s. (choose from %s)' %
+                      (value, ', '.join(map(str, self.choices.keys()))), param, ctx)
+        else:
+            if value in self.choices.values():
+                return value
 
-        if ctx is not None and \
-           ctx.token_normalize_func is not None:
-            normed_value = ctx.token_normalize_func(value)
-            normed_choices = [ctx.token_normalize_func(choice) for choice in
-                              self.choices]
+            # Match through normalization and case sensitivity
+            # first do token_normalize_func, then lowercase
+            # preserve original `value` to produce an accurate message in
+            # `self.fail`
+            normed_value = value
+            normed_choices = self.choices.values()
 
-        if not self.case_sensitive:
-            normed_value = normed_value.lower()
-            normed_choices = [choice.lower() for choice in normed_choices]
+            if ctx is not None and \
+            ctx.token_normalize_func is not None:
+                normed_value = ctx.token_normalize_func(value)
+                normed_choices = [ctx.token_normalize_func(choice) for choice in
+                                  self.choices.values()]
 
-        if normed_value in normed_choices:
-            return normed_value
+            if not self.case_sensitive:
+                normed_value = normed_value.lower()
+                normed_choices = [choice.lower() for choice in normed_choices]
 
-        self.fail('invalid choice: %s. (choose from %s)' %
-                  (value, ', '.join(self.choices)), param, ctx)
+            if normed_value in normed_choices:
+                return normed_value
+
+            self.fail('invalid choice: %s. (choose from %s)' %
+                      (value, ', '.join(self.choices.values())), param, ctx)
 
     def __repr__(self):
-        return 'Choice(%r)' % list(self.choices)
+        if not self.show_index:
+            return 'Choice(%r)' % list(self.choices.values())
+        else:
+            return 'Choice(%r)' % ['{}.{}'.format(idx,ch) for idx, ch in self.choices.items()]
+
 
 
 class DateTime(ParamType):
