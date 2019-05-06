@@ -832,6 +832,9 @@ class Command(BaseCommand):
         self.hidden = hidden
         self.deprecated = deprecated
 
+    def __repr__(self):
+        return '<%s %s>' % (self.__class__.__name__, self.name)
+
     def get_usage(self, ctx):
         """Formats the usage line into a string and returns it.
 
