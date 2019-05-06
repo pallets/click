@@ -436,17 +436,20 @@ class Editor(object):
         import tempfile
 
         text = text or ''
-        if text and not text.endswith('\n'):
+        binary_data = type(text) in [bytes, bytearray]
+
+        if not binary_data and text and not text.endswith('\n'):
             text += '\n'
 
         fd, name = tempfile.mkstemp(prefix='editor-', suffix=self.extension)
         try:
-            if WIN:
-                encoding = 'utf-8-sig'
-                text = text.replace('\n', '\r\n')
-            else:
-                encoding = 'utf-8'
-            text = text.encode(encoding)
+            if not binary_data:
+                if WIN:
+                    encoding = 'utf-8-sig'
+                    text = text.replace('\n', '\r\n')
+                else:
+                    encoding = 'utf-8'
+                text = text.encode(encoding)
 
             f = os.fdopen(fd, 'wb')
             f.write(text)
@@ -464,7 +467,10 @@ class Editor(object):
                 rv = f.read()
             finally:
                 f.close()
-            return rv.decode('utf-8-sig').replace('\r\n', '\n')
+            if binary_data:
+                return rv
+            else:
+                return rv.decode('utf-8-sig').replace('\r\n', '\n')
         finally:
             os.unlink(name)
 

@@ -32,12 +32,7 @@ install separate copies of Python, but it does provide a clever way to
 keep different project environments isolated.  Let's see how virtualenv
 works.
 
-If you are on Mac OS X or Linux, chances are that one of the following two
-commands will work for you::
-
-    $ sudo easy_install virtualenv
-
-or even better::
+If you are on Mac OS X or Linux::
 
     $ sudo pip install virtualenv
 
