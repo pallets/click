@@ -36,6 +36,8 @@ Unreleased
     :issue:`1193`
 -   Remove the unused ``mix_stderr`` parameter from
     ``CliRunner.invoke``. :issue:`1435`
+-   Fix ``TypeError`` raised when using bool flags and specifying
+    ``type=bool``. :issue:`1287`
 
 
 Version 7.0
