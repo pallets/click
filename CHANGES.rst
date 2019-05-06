@@ -40,6 +40,8 @@ Unreleased
     ``type=bool``. :issue:`1287`
 -   Newlines in option help text are replaced with spaces before
     re-wrapping to avoid uneven line breaks. :issue:`834`
+-   ``MissingParameter`` exceptions are printable in the Python
+    interpreter. :issue:`1139`
 
 
 Version 7.0
