@@ -89,3 +89,4 @@ Links
     *   Windows: https://ci.appveyor.com/project/pallets/click
 
 *   Test coverage: https://codecov.io/gh/pallets/click
+*   Official chat: https://discord.gg/t6rrQZH
