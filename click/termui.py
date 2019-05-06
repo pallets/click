@@ -272,10 +272,16 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
     will not be rendered if the file is not a terminal.
 
     The context manager creates the progress bar.  When the context
-    manager is entered the progress bar is already displayed.  With every
+    manager is entered the progress bar is already created.  With every
     iteration over the progress bar, the iterable passed to the bar is
     advanced and the bar is updated.  When the context manager exits,
     a newline is printed and the progress bar is finalized on screen.
+
+    Note: The progress bar is currently designed for use cases where the
+    total progress can be expected to take at least several seconds.
+    Because of this, the ProgressBar class object won't display
+    progress that is considered too fast, and progress where the time
+    between steps is less than a second.
 
     No printing must happen or the progress bar will be unintentionally
     destroyed.
