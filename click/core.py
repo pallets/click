@@ -771,6 +771,8 @@ class Command(BaseCommand):
 
     .. versionchanged:: 2.0
        Added the `context_settings` parameter.
+    .. versionchanged:: 8.0
+       Added repr showing the command name
 
     :param name: the name of the command to use unless a group overrides it.
     :param context_settings: an optional dictionary with defaults that are
@@ -814,6 +816,9 @@ class Command(BaseCommand):
         self.add_help_option = add_help_option
         self.hidden = hidden
         self.deprecated = deprecated
+
+    def __repr__(self):
+        return '<%s %s>' % (self.__class__.__name__, self.name)
 
     def get_usage(self, ctx):
         formatter = ctx.make_formatter()
