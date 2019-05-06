@@ -290,6 +290,13 @@ def test_open_file(runner):
                 click.echo(f.read())
             click.echo('meep')
 
+        @click.command()
+        @click.argument('filename')
+        def cli_ignore_errors(filename):
+            with click.open_file(filename, errors="ignore") as f:
+                click.echo(f.read())
+            click.echo('meep')
+
         result = runner.invoke(cli, ['hello.txt'])
         assert result.exception is None
         assert result.output == 'Cool stuff\nmeep\n'
@@ -297,6 +304,59 @@ def test_open_file(runner):
         result = runner.invoke(cli, ['-'], input='foobar')
         assert result.exception is None
         assert result.output == 'foobar\nmeep\n'
+
+        # Test that invalid unicode does not throw an exception when we ignore errors,
+        # but does throw an exception when we don't
+        random_input = os.urandom(64)
+        result = runner.invoke(cli_ignore_errors, ['-'], input=random_input)
+        assert result.exception is None
+
+        result = runner.invoke(cli, ['-'], input=random_input)
+        assert isinstance(result.exception, UnicodeDecodeError)
+
+
+def test_click_open_file_respects_ignore(runner):
+    file_name = "hello_world.txt"
+
+    with runner.isolated_filesystem():
+        with open(file_name, "w") as f:
+            f.write("Hello world!")
+
+        click_wrapper = click.utils.open_file(file_name, encoding="UTF-8", errors="ignore")
+        assert click_wrapper.errors == "ignore"
+
+
+@pytest.mark.parametrize("ignore", [
+    True,
+    False
+])
+def test_click_open_file_ignore_invalid_utf8(ignore, runner):
+    file_name = "invalid_utf8.txt"
+
+    with runner.isolated_filesystem():
+        with open(file_name, "wb") as f:
+            f.write(b'\xe2\x28\xa1')
+
+        open_kwargs = {"encoding": "UTF-8"}
+
+        if ignore:
+            # Here we ignore invalid UTF-8, so we should not throw an exception
+            open_kwargs["errors"] = "ignore"
+            click.utils.open_file(file_name, **open_kwargs).read()
+        else:
+            # Here we are not ignoring invalid UTF-8, so we expect a UnicodeDecodeError
+            with pytest.raises(UnicodeDecodeError):
+                click.utils.open_file(file_name, **open_kwargs).read()
+
+
+def test_click_open_file_ignore_no_encoding_provided(runner):
+    file_name = "random_input.bin"
+
+    with runner.isolated_filesystem():
+        with open(file_name, "wb") as f:
+            f.write(os.urandom(64))
+
+        click.utils.open_file(file_name, errors="ignore").read()
 
 
 @pytest.mark.skipif(WIN, reason='os.chmod() is not fully supported on Windows.')

@@ -483,9 +483,15 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
 
     # Non-atomic writes directly go out through the regular open functions.
     if not atomic:
-        if encoding is None:
-            return open(filename, mode), True
-        return io.open(filename, mode, encoding=encoding, errors=errors), True
+        open_kwargs = {}
+
+        if encoding is not None:
+            open_kwargs['encoding'] = encoding
+
+        if errors is not None:
+            open_kwargs['errors'] = errors
+
+        return codecs.open(filename, mode, **open_kwargs), True
 
     # Some usability stuff for atomic writes
     if 'a' in mode:
