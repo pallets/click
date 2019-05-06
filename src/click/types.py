@@ -1,4 +1,5 @@
 import os
+import operator
 import stat
 from datetime import datetime
 
@@ -339,17 +340,18 @@ class FloatRange(FloatParamType):
     """A parameter that works similar to :data:`click.FLOAT` but restricts
     the value to fit into a range.  The default behavior is to fail if the
     value falls outside the range, but it can also be silently clamped
-    between the two edges.
+    between the two edges. The exclusive argument permits open intervals.
 
     See :ref:`ranges` for an example.
     """
 
     name = "float range"
 
-    def __init__(self, min=None, max=None, clamp=False):
+    def __init__(self, min=None, max=None, clamp=False, exclusive=False):
         self.min = min
         self.max = max
         self.clamp = clamp
+        self.exclusive = exclusive
 
     def convert(self, value, param, ctx):
         rv = super().convert(value, param, ctx)
@@ -359,11 +361,14 @@ class FloatRange(FloatParamType):
                 return self.min
             if self.max is not None and rv > self.max:
                 return self.max
+        less_than = operator.le if self.exclusive else operator.lt
+        greater_than = operator.ge  if self.exclusive else operator.gt
+
         if (
             self.min is not None
-            and rv < self.min
+            and less_than(rv, self.min)
             or self.max is not None
-            and rv > self.max
+            and greater_than(rv, self.max)
         ):
             if self.min is None:
                 self.fail(

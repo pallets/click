@@ -481,6 +481,24 @@ def test_float_range_option(runner):
     assert not result.exception
     assert result.output == "0\n"
 
+    @click.command()
+    @click.option('--x', type=click.FloatRange(0, 5, exclusive=True))
+    def exclude(x):
+        click.echo(x)
+
+    result = runner.invoke(exclude, ['--x=4.99'])
+    assert not result.exception
+    assert result.output == '4.99\n'
+
+    result = runner.invoke(exclude, ['--x=5.0'])
+    assert result.exit_code == 2
+    assert 'Invalid value for "--x": 5.0 is not in the valid range of 0 to 5.\n' \
+        in result.output
+
+    result = runner.invoke(exclude, ['--x=-3e8'])
+    assert result.exit_code == 2
+    assert 'Invalid value for "--x": -300000000.0 is not in the valid range of 0 to 5.\n' \
+        in result.output
 
 def test_required_option(runner):
     @click.command()

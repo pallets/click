@@ -20,6 +20,7 @@ Unreleased
     is not shown in the error message. :issue:`1460`
 -   An ``IntRange`` option shows the accepted range in its help text.
     :issue:`1525`
+-   ``FloatRange`` min and max can be exclusive. :issue:`1100`
 -   An option defined with duplicate flag names (``"--foo/--foo"``)
     raises a ``ValueError``. :issue:`1465`
 -   ``echo()`` will not fail when using pytest's ``capsys`` fixture on
