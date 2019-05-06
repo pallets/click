@@ -113,6 +113,17 @@ def test_multiple_required(runner):
     assert 'Error: Missing option "-m" / "--message".' in result.output
 
 
+def test_empty_envvar(runner):
+    @click.command()
+    @click.option('--mypath', type=click.Path(exists=True), envvar='MYPATH')
+    def cli(mypath):
+        click.echo('mypath: %s' % mypath)
+
+    result = runner.invoke(cli, [], env={'MYPATH': ''})
+    assert result.exit_code == 0
+    assert result.output == 'mypath: None\n'
+
+
 def test_multiple_envvar(runner):
     @click.command()
     @click.option('--arg', multiple=True)

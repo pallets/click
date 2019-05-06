@@ -1323,12 +1323,6 @@ class Parameter(object):
 
     Some settings are supported by both options and arguments.
 
-    .. versionchanged:: 2.0
-       Changed signature for parameter callback to also be passed the
-       parameter.  In Click 2.0, the old callback format will still work,
-       but it will raise a warning to give you change to migrate the
-       code easier.
-
     :param param_decls: the parameter declarations for this option or
                         argument.  This is a list of flags or argument
                         names.
@@ -1356,6 +1350,16 @@ class Parameter(object):
                      order of processing.
     :param envvar: a string or list of strings that are environment variables
                    that should be checked.
+
+    .. versionchanged:: 7.1
+        Empty environment variables are ignored rather than taking the
+        empty string value. This makes it possible for scripts to clear
+        variables if they can't unset them.
+
+    .. versionchanged:: 2.0
+        Changed signature for parameter callback to also be passed the
+        parameter. The old callback format will still work, but it will
+        raise a warning to give you a chance to migrate the code easier.
     """
     param_type_name = 'parameter'
 
@@ -1483,7 +1487,10 @@ class Parameter(object):
                 if rv is not None:
                     return rv
         else:
-            return os.environ.get(self.envvar)
+            rv = os.environ.get(self.envvar)
+
+            if rv != "":
+                return rv
 
     def value_from_envvar(self, ctx):
         rv = self.resolve_envvar_value(ctx)

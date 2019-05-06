@@ -25,7 +25,8 @@ Unreleased
     False :pr:`1167`
 -   Add ``show_defaults`` parameter to ``Context`` to enable showing
     defaults globally. :issue:`1018`
-
+-   Handle ``env MYPATH=''`` as though the option were not passed.
+    :issue:`1196`
 
 Version 7.0
 -----------
