@@ -382,6 +382,10 @@ What it looks like:
 
     invoke(hello, input=['John'])
 
+It is advised that prompt not be used in conjunction with the multiple
+flag set to True. Instead, prompt in the function interactively.
+
+
 Password Prompts
 ----------------
 
