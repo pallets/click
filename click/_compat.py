@@ -156,6 +156,7 @@ class _FixupStream(object):
 
 if PY2:
     text_type = unicode
+    file_type = file
     raw_input = raw_input
     string_types = (str, unicode)
     int_types = (int, long)
@@ -261,6 +262,7 @@ if PY2:
 else:
     import io
     text_type = str
+    file_type = io.TextIOWrapper
     raw_input = input
     string_types = (str,)
     int_types = (int,)

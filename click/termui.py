@@ -5,7 +5,7 @@ import inspect
 import itertools
 
 from ._compat import raw_input, text_type, string_types, \
-     isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
+    isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN, file_type
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type, Choice, Path
@@ -48,8 +48,14 @@ def _build_prompt(text, suffix, show_default=False, default=None, show_choices=T
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += ' (' + ", ".join(map(str, type.choices)) + ')'
     if default is not None and show_default:
-        prompt = '%s [%s]' % (prompt, default)
+        prompt = '%s [%s]' % (prompt, _format_default(default))
     return prompt + suffix
+
+
+def _format_default(default):
+    if isinstance(default, file_type):
+        default = default.name
+    return default
 
 
 def prompt(text, default=None, hide_input=False, confirmation_prompt=False,
