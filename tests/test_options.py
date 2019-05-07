@@ -372,9 +372,7 @@ def test_multiline_help(runner):
     result = runner.invoke(cmd, ['--help'])
     assert result.exit_code == 0
     out = result.output.splitlines()
-    assert '  --foo TEXT  hello' in out
-    assert '              i am' in out
-    assert '              multiline' in out
+    assert '  --foo TEXT  hello  i am  multiline' in out
 
 def test_argument_custom_class(runner):
     class CustomArgument(click.Argument):

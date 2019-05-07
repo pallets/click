@@ -6,6 +6,9 @@ Version 8.0
 
 Unreleased
 
+-   Make option format replace newlines with spaces. (`#834`_)
+
+.. _#834: https://github.com/pallets/click/issues/834
 
 Version 7.1
 -----------

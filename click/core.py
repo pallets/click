@@ -918,7 +918,8 @@ class Command(BaseCommand):
         for param in self.get_params(ctx):
             rv = param.get_help_record(ctx)
             if rv is not None:
-                opts.append(rv)
+                part_a, part_b = rv
+                opts.append((part_a, part_b.replace('\n', ' ')))
 
         if opts:
             with formatter.section('Options'):
