@@ -169,6 +169,15 @@ And on the command line:
 
     invoke(commit, args=['-m', 'foo', '-m', 'bar'])
 
+When passing a ``default`` with ``multiple=True``, the default value
+must be a list or tuple, otherwise it will be interpreted as a list of
+single characters.
+
+.. code-block:: python
+
+    @click.option("--format", multiple=True, default=["json"])
+
+
 Counting
 --------
 
@@ -341,13 +350,15 @@ What it looks like:
     println()
     invoke(digest, args=['--help'])
 
-.. note::
+Only pass the choices as list or tuple. Other iterables (like
+generators) may lead to unexpected results.
 
-    You should only pass the choices as list or tuple.  Other iterables (like
-    generators) may lead to surprising results.
+Choices work with options that have ``multiple=True``. If a ``default``
+value is given with ``multiple=True``, it should be a list or tuple of
+valid choices.
 
-    Choices should be unique after considering the effects of
-    ``case_sensitive`` and any specified token normalization function.
+Choices should be unique after considering the effects of
+``case_sensitive`` and any specified token normalization function.
 
 .. versionchanged:: 7.1
     The resulting value from an option will always be on the of the
