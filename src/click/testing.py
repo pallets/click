@@ -62,7 +62,14 @@ class Result:
     """Holds the captured result of an invoked CLI script."""
 
     def __init__(
-        self, runner, stdout_bytes, stderr_bytes, exit_code, exception, exc_info=None
+        self,
+        runner,
+        stdout_bytes,
+        stderr_bytes,
+        return_value,
+        exit_code,
+        exception,
+        exc_info=None,
     ):
         #: The runner that created the result
         self.runner = runner
@@ -70,6 +77,10 @@ class Result:
         self.stdout_bytes = stdout_bytes
         #: The standard error as bytes, or None if not available
         self.stderr_bytes = stderr_bytes
+        #: The value returned from the invoked command.
+        #:
+        #: .. versionadded:: 8.0
+        self.return_value = return_value
         #: The exit code as integer.
         self.exit_code = exit_code
         #: The exception that happened if one did.
@@ -269,16 +280,6 @@ class CliRunner:
 
         This returns a :class:`Result` object.
 
-        .. versionadded:: 3.0
-           The ``catch_exceptions`` parameter was added.
-
-        .. versionchanged:: 3.0
-           The result object now has an `exc_info` attribute with the
-           traceback if available.
-
-        .. versionadded:: 4.0
-           The ``color`` parameter was added.
-
         :param cli: the command to invoke
         :param args: the arguments to invoke. It may be given as an iterable
                      or a string. When given as string it will be interpreted
@@ -291,9 +292,24 @@ class CliRunner:
         :param extra: the keyword arguments to pass to :meth:`main`.
         :param color: whether the output should contain color codes. The
                       application can still override this explicitly.
+
+        .. versionchanged:: 8.0
+            The result object has the ``return_value`` attribute with
+            the value returned from the invoked command.
+
+        .. versionchanged:: 4.0
+            Added the ``color`` parameter.
+
+        .. versionchanged:: 3.0
+            Added the ``catch_exceptions`` parameter.
+
+        .. versionchanged:: 3.0
+            The result object has the ``exc_info`` attribute with the
+            traceback if available.
         """
         exc_info = None
         with self.isolation(input=input, env=env, color=color) as outstreams:
+            return_value = None
             exception = None
             exit_code = 0
 
@@ -306,7 +322,7 @@ class CliRunner:
                 prog_name = self.get_default_prog_name(cli)
 
             try:
-                cli.main(args=args or (), prog_name=prog_name, **extra)
+                return_value = cli.main(args=args or (), prog_name=prog_name, **extra)
             except SystemExit as e:
                 exc_info = sys.exc_info()
                 exit_code = e.code
@@ -339,6 +355,7 @@ class CliRunner:
             runner=self,
             stdout_bytes=stdout,
             stderr_bytes=stderr,
+            return_value=return_value,
             exit_code=exit_code,
             exception=exception,
             exc_info=exc_info,
