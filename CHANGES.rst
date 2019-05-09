@@ -6,6 +6,10 @@ Version 8.0
 
 Unreleased
 
+-   Preventing prompts without tty from echoing their outputs. (`#906`_)
+
+.. _#906: https://github.com/pallets/click/issues/906
+
 
 Version 7.1
 -----------

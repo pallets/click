@@ -1,5 +1,10 @@
+import getpass
+import pytest
 import click
 import time
+import sys
+
+import click._termui_impl
 
 
 class FakeClock(object):
@@ -128,3 +133,23 @@ def test_progressbar_update(runner, monkeypatch):
     assert ' 50%  00:00:02' in lines[1]
     assert ' 75%  00:00:01' in lines[2]
     assert '100%          ' in lines[3]
+
+
+@pytest.mark.parametrize('prompt, user_input', [('Password', 'querty  ')])
+def test_hidden_prompt_isatty(runner, monkeypatch, capsys, prompt, user_input):
+    monkeypatch.setattr(click.termui, 'isatty', lambda _: True)
+    monkeypatch.setattr(getpass, 'getpass', lambda _: user_input)
+    assert click.prompt(prompt, hide_input=True) == user_input
+
+    out, err = capsys.readouterr()
+    assert out == prompt + ': '
+
+
+@pytest.mark.parametrize('prompt, user_input', [('Password', 'password  ')])
+def test_hidden_prompt_without_tty(runner, monkeypatch, capsys, prompt, user_input):
+    monkeypatch.setattr(click.termui, 'isatty', lambda _: False)
+    monkeypatch.setattr(sys.stdin, 'readline', lambda: user_input)
+    assert click.prompt(prompt, hide_input=True) == user_input.rstrip()
+
+    out, err = capsys.readouterr()
+    assert out == prompt + ': '

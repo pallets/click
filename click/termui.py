@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import sys
 import struct
@@ -5,7 +6,7 @@ import inspect
 import itertools
 
 from ._compat import raw_input, text_type, string_types, \
-     isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
+    isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type, Choice, Path
@@ -39,8 +40,13 @@ _ansi_reset_all = '\033[0m'
 
 
 def hidden_prompt_func(prompt):
-    import getpass
-    return getpass.getpass(prompt)
+    if isatty(sys.stdin):
+        import getpass
+        p = getpass.getpass(prompt)
+    else:
+        print(prompt, end=""),
+        p = sys.stdin.readline().rstrip()
+    return p
 
 
 def _build_prompt(text, suffix, show_default=False, default=None, show_choices=True, type=None):
