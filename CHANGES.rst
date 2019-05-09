@@ -11,11 +11,13 @@ Unreleased
 - Fix link in ``unicode_literals`` error message. (`#1151`_)
 - Add support for colored output on UNIX Jupyter notebooks. (`#1185`_)
 - Remove unused compat shim for ``bytes``. (`#1195`_)
+- Expand unit testing around termui, especially getchar (Windows). (`#1116`_)
 
 .. _#1167: https://github.com/pallets/click/pull/1167
 .. _#1151: https://github.com/pallets/click/pull/1151
 .. _#1185: https://github.com/pallets/click/issues/1185
 .. _#1195: https://github.com/pallets/click/pull/1195
+.. _#1116: https://github.com/pallets/click/issues/1116
 
 Version 7.0
 -----------
