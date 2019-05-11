@@ -13,12 +13,16 @@ Unreleased
 - Remove unused compat shim for ``bytes``. (`#1195`_)
 - Expand unit testing around termui, especially getchar (Windows). (`#1116`_)
 -   Fix output on Windows Python 2.7 built with MSVC 14. #1342
+- Always return of of the passed choices for ``click.Choice`` (`#1277`, `#1318`)
 
 .. _#1167: https://github.com/pallets/click/pull/1167
 .. _#1151: https://github.com/pallets/click/pull/1151
 .. _#1185: https://github.com/pallets/click/issues/1185
 .. _#1195: https://github.com/pallets/click/pull/1195
 .. _#1116: https://github.com/pallets/click/issues/1116
+.. _#1277: https://github.com/pallets/click/issues/1277
+.. _#1318: https://github.com/pallets/click/pull/1318
+
 
 Version 7.0
 -----------
