@@ -335,12 +335,15 @@ def test_case_insensitive_choice(runner):
 
     result = runner.invoke(cmd, ['--foo', 'apple'])
     assert result.exit_code == 0
+    assert result.output == 'Apple\n'
 
     result = runner.invoke(cmd, ['--foo', 'oRANGe'])
     assert result.exit_code == 0
+    assert result.output == 'Orange\n'
 
     result = runner.invoke(cmd, ['--foo', 'Apple'])
     assert result.exit_code == 0
+    assert result.output == 'Apple\n'
 
     @click.command()
     @click.option('--foo', type=click.Choice(['Orange', 'Apple']))
@@ -355,6 +358,18 @@ def test_case_insensitive_choice(runner):
 
     result = runner.invoke(cmd2, ['--foo', 'Apple'])
     assert result.exit_code == 0
+
+
+def test_case_insensitive_choice_returned_exactly(runner):
+    @click.command()
+    @click.option('--foo', type=click.Choice(
+        ['Orange', 'Apple'], case_sensitive=False))
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd, ['--foo', 'apple'])
+    assert result.exit_code == 0
+    assert result.output == 'Apple\n'
 
 
 def test_multiline_help(runner):

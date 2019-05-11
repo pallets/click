@@ -20,7 +20,7 @@ def test_choice_normalization(runner):
     @click.command(context_settings=CONTEXT_SETTINGS)
     @click.option('--choice', type=click.Choice(['Foo', 'Bar']))
     def cli(choice):
-        click.echo('Foo')
+        click.echo(choice)
 
     result = runner.invoke(cli, ['--CHOICE', 'FOO'])
     assert result.output == 'Foo\n'
