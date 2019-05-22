@@ -6,6 +6,11 @@ Version 8.0
 
 Unreleased
 
+-   Adds a repr to Command, showing the command name for friendlier debugging. (`#1267`_, `#1295`_)
+
+.. _#1267: https://github.com/pallets/click/issues/1267
+.. _#1295: https://github.com/pallets/click/pull/1295
+
 
 Version 7.1
 -----------

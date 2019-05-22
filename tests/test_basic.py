@@ -23,6 +23,24 @@ def test_basic_functionality(runner):
     assert result.exit_code == 0
 
 
+def test_repr():
+    @click.command()
+    def command():
+        pass
+
+    @click.group()
+    def group():
+        pass
+
+    @group.command()
+    def subcommand():
+        pass
+
+    assert repr(command) == '<Command command>'
+    assert repr(group) == '<Group group>'
+    assert repr(subcommand) == '<Command subcommand>'
+
+
 def test_return_values():
     @click.command()
     def cli():
