@@ -258,7 +258,6 @@ if PY2:
             value = value.decode(get_filesystem_encoding(), 'replace')
         return value
 else:
-    import io
     text_type = str
     raw_input = input
     string_types = (str,)

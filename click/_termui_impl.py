@@ -16,7 +16,7 @@ import sys
 import time
 import math
 import contextlib
-from ._compat import _default_text_stdout, range_type, PY2, isatty, \
+from ._compat import _default_text_stdout, range_type, isatty, \
      open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
      CYGWIN
 from .utils import echo
