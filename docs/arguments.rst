@@ -8,8 +8,8 @@ Arguments
 Arguments work similarly to :ref:`options <options>` but are positional.
 They also only support a subset of the features of options due to their
 syntactical nature. Click will also not attempt to document arguments for
-you and wants you to document them manually in order to avoid ugly help
-pages.
+you and wants you to :ref:`document them manually <documenting-arguments>`
+in order to avoid ugly help pages.
 
 Basic Arguments
 ---------------
@@ -25,6 +25,7 @@ Example:
     @click.command()
     @click.argument('filename')
     def touch(filename):
+        """Print FILENAME."""
         click.echo(filename)
 
 And what it looks like:
@@ -52,6 +53,7 @@ Example:
     @click.argument('src', nargs=-1)
     @click.argument('dst', nargs=1)
     def copy(src, dst):
+        """Move file SRC to DST."""
         for fn in src:
             click.echo('move %s to folder %s' % (fn, dst))
 
@@ -101,6 +103,7 @@ Example:
     @click.argument('input', type=click.File('rb'))
     @click.argument('output', type=click.File('wb'))
     def inout(input, output):
+        """Copy contents of INPUT to OUTPUT."""
         while True:
             chunk = input.read(1024)
             if not chunk:
@@ -136,9 +139,10 @@ Example:
 .. click:example::
 
     @click.command()
-    @click.argument('f', type=click.Path(exists=True))
-    def touch(f):
-        click.echo(click.format_filename(f))
+    @click.argument('filename', type=click.Path(exists=True))
+    def touch(filename):
+        """Print FILENAME if the file exists."""
+        click.echo(click.format_filename(filename))
 
 And what it does:
 
@@ -199,6 +203,7 @@ Example usage:
     @click.command()
     @click.argument('src', envvar='SRC', type=click.File('r'))
     def echo(src):
+        """Print value of SRC environment variable."""
         click.echo(src.read())
 
 And from the command line:
@@ -235,6 +240,7 @@ Example usage:
     @click.command()
     @click.argument('files', nargs=-1, type=click.Path())
     def touch(files):
+        """Print all FILES file names."""
         for filename in files:
             click.echo(filename)
 
@@ -252,6 +258,7 @@ True to avoid checking unknown options:
     @click.command(context_settings={"ignore_unknown_options": True})
     @click.argument('files', nargs=-1, type=click.Path())
     def touch(files):
+        """Print all FILES file names."""
         for filename in files:
             click.echo(filename)
 
