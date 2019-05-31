@@ -239,6 +239,50 @@ def test_progressbar_update(runner, monkeypatch):
     assert '100%          ' in lines[3]
 
 
+def test_progressbar_item_show_func(runner, monkeypatch):
+    fake_clock = FakeClock()
+
+    @click.command()
+    def cli():
+        with click.progressbar(range(4), item_show_func=lambda x: "Custom {}".format(x)) as progress:
+            for _ in progress:
+                fake_clock.advance_time()
+                print("")
+
+    monkeypatch.setattr(time, 'time', fake_clock.time)
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+    output = runner.invoke(cli, []).output
+
+    lines = [line for line in output.split('\n') if '[' in line]
+
+    assert 'Custom 0' in lines[0]
+    assert 'Custom 1' in lines[1]
+    assert 'Custom 2' in lines[2]
+    assert 'Custom None' in lines[3]
+
+
+def test_progressbar_update_with_item_show_func(runner, monkeypatch):
+    fake_clock = FakeClock()
+
+    @click.command()
+    def cli():
+        with click.progressbar(length=6, item_show_func=lambda x: "Custom {}".format(x)) as progress:
+            while not progress.finished:
+                fake_clock.advance_time()
+                progress.update(2, progress.pos)
+                print("")
+
+    monkeypatch.setattr(time, 'time', fake_clock.time)
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+    output = runner.invoke(cli, []).output
+
+    lines = [line for line in output.split('\n') if '[' in line]
+
+    assert 'Custom 0' in lines[0]
+    assert 'Custom 2' in lines[1]
+    assert 'Custom 4' in lines[2]
+
+
 @pytest.mark.parametrize(
     'key_char', (u'h', u'H', u'é', u'À', u' ', u'字', u'àH', u'àR')
 )

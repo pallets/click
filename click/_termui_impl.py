@@ -260,8 +260,21 @@ class ProgressBar(object):
 
         self.eta_known = self.length_known
 
-    def update(self, n_steps):
+    def update(self, n_steps, current_item=None):
+        """Update the progress bar by advancing a specified number of
+        steps, and optionally set the ``current_item`` for this new
+        position.
+
+        :param n_steps: Number of steps to advance.
+        :param current_item: Optional item to set as ``current_item``
+            for the updated position.
+
+        .. versionadded:: 8.0
+            Added the ``current_item`` optional parameter.
+        """
         self.make_step(n_steps)
+        if current_item is not None:
+            self.current_item = current_item
         self.render_progress()
 
     def finish(self):

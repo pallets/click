@@ -8,11 +8,16 @@ Unreleased
 
 -   Adds a repr to Command, showing the command name for friendlier debugging. (`#1267`_, `#1295`_)
 -   Add support for distinguishing the source of a command line parameter. (`#1264`_, `#1329`_)
+-   Add an optional parameter to ``ProgressBar.update`` to set the
+    ``current_item``. (`#1226`_, `#1332`_)
 
 .. _#1267: https://github.com/pallets/click/issues/1267
 .. _#1295: https://github.com/pallets/click/pull/1295
 .. _#1264: https://github.com/pallets/click/issues/1264
 .. _#1329: https://github.com/pallets/click/pull/1329
+.. _#1226: https://github.com/pallets/click/issues/1226
+.. _#1332: https://github.com/pallets/click/pull/1332
+
 
 Version 7.1
 -----------
