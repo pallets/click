@@ -129,6 +129,9 @@ integers::
                 elif value[:1] == '0':
                     return int(value, 8)
                 return int(value, 10)
+        except TypeError:
+            self.fail('expected string for int() conversion, got %s of type %s'
+                      % (value, type(value).__name__), param, ctx)
             except ValueError:
                 self.fail('%s is not a valid integer' % value, param, ctx)
 
