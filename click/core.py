@@ -132,7 +132,7 @@ def iter_params_for_processing(invocation_order, declaration_order):
 class ParameterSource(object):
     """
     This is an enum that indicates the source of a command line option,
-    which is one of the following: COMMANDLINE, ENVIRONMENT, DEFAULT.
+    which is one of the following: COMMANDLINE, ENVIRONMENT, DEFAULT, DEFAULT_MAP.
     The DEFAULT indicates that the default value in the decorator was used.
     This class should be converted to an enum when Python 2 support is
     dropped.
@@ -140,8 +140,9 @@ class ParameterSource(object):
     COMMANDLINE = "COMMANDLINE"
     ENVIRONMENT = "ENVIRONMENT"
     DEFAULT = "DEFAULT"
-
-    VALUES = [COMMANDLINE, ENVIRONMENT, DEFAULT]
+    DEFAULT_MAP = "DEFAULT_MAP"
+    
+    VALUES = [COMMANDLINE, ENVIRONMENT, DEFAULT, DEFAULT_MAP]
     
     @classmethod
     def validate(clz, value):
@@ -1447,8 +1448,9 @@ class Parameter(object):
             source = ParameterSource.ENVIRONMENT
         if value is None:
             value = ctx.lookup_default(self.name)
-            source = ParameterSource.DEFAULT
-        ctx.set_parameter_source(self.name, source)
+            source = ParameterSource.DEFAULT_MAP
+        if value is not None:
+            ctx.set_parameter_source(self.name, source)
         return value
 
     def type_cast_value(self, ctx, value):
@@ -1495,6 +1497,8 @@ class Parameter(object):
 
         if value is None and not ctx.resilient_parsing:
             value = self.get_default(ctx)
+            if value is not None:
+                ctx.set_parameter_source(self.name, ParameterSource.DEFAULT)
 
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)

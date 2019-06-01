@@ -377,3 +377,30 @@ do.  However if you do use this for threading you need to be very careful
 as the vast majority of the context is not thread safe!  You are only
 allowed to read from the context, but not to perform any modifications on
 it.
+
+
+Detecting the Source of a Parameter
+-----------------------------------
+
+In some situations it's helpful to understand whether or not an option
+or parameter came from the command line, the environment, the default
+value, or the default_map. The :meth:`Context.get_parameter_source`
+method can be used to find this out.
+
+.. click:example::
+
+    @click.command()
+    @click.argument('port', nargs=1, default=8080, envvar="PORT")
+    @click.pass_context
+    def cli(ctx, port):
+        source = ctx.get_parameter_source("port")
+        click.echo("Port came from {}".format(source))
+
+.. click:run::
+
+    invoke(cli, prog_name='cli', args=['8080'])
+    println()
+    invoke(cli, prog_name='cli', args=[], env={"PORT": "8080"})
+    println()
+    invoke(cli, prog_name='cli', args=[])
+    println()
