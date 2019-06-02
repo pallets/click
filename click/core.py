@@ -369,7 +369,7 @@ class Context(object):
 
         self._close_callbacks = []
         self._depth = 0
-        self._parameter_sources = {}
+        self._sources_by_paramname = {}
         
     def __enter__(self):
         self._depth += 1
@@ -614,7 +614,7 @@ class Context(object):
                        should be a valid ParameterSource value
         """
         ParameterSource.validate(source)
-        self._parameter_sources[name] = source
+        self._sources_by_paramname[name] = source
 
     def get_parameter_source(self, name):
         """Get the source of a parameter.
@@ -630,7 +630,7 @@ class Context(object):
         :returns: the source
         :rtype: ParameterSource
         """
-        return self._parameter_sources[name]
+        return self._sources_by_paramname[name]
 
 
 class BaseCommand(object):
