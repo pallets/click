@@ -130,7 +130,7 @@ def iter_params_for_processing(invocation_order, declaration_order):
     return sorted(declaration_order, key=sort_key)
 
 class ParameterSource(object):
-    """This is an enum that indicates the source of a command line option.
+    """This is an enum that indicates the source of a command line parameter.
 
     The enum has one of the following values: COMMANDLINE,
     ENVIRONMENT, DEFAULT, DEFAULT_MAP.  The DEFAULT indicates that the
@@ -143,7 +143,7 @@ class ParameterSource(object):
     DEFAULT = "DEFAULT"
     DEFAULT_MAP = "DEFAULT_MAP"
     
-    VALUES = [COMMANDLINE, ENVIRONMENT, DEFAULT, DEFAULT_MAP]
+    VALUES = {COMMANDLINE, ENVIRONMENT, DEFAULT, DEFAULT_MAP}
     
     @classmethod
     def validate(clz, value):
@@ -157,7 +157,7 @@ class ParameterSource(object):
         """
         if value not in clz.VALUES:
             raise ValueError("Invalid ParameterSource value: '{}'. Valid "
-                             "values are: {}".format(",".join(VALUES)))
+                             "values are: {}".format(value, ",".join(clz.VALUES)))
 
 
 class Context(object):
@@ -617,7 +617,7 @@ class Context(object):
         self._parameter_sources[name] = source
 
     def get_parameter_source(self, name):
-        """Get the `source` of a parameter.
+        """Get the source of a parameter.
 
         This indicates the location from which the value of the
         parameter was obtained.  This can be useful for determining
@@ -630,7 +630,7 @@ class Context(object):
         :returns: the source
         :rtype: ParameterSource
         """
-        return self._parameter_sources.get(name)
+        return self._parameter_sources[name]
 
 
 class BaseCommand(object):

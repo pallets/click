@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
-
+import pytest
 
 def test_ensure_context_objects(runner):
     class Foo(object):
@@ -300,6 +300,7 @@ def test_parameter_source_environment(runner):
         
     assert runner.invoke(cli, [], prog_name="test_parameter_source_environment", env={"TEST_OPTION": "1"}, auto_envvar_prefix="TEST").exit_code == 1
 
+
 def test_parameter_source_environment_variable_specified(runner):
     @click.command()
     @click.pass_context
@@ -309,3 +310,8 @@ def test_parameter_source_environment_variable_specified(runner):
         sys.exit(1)
         
     assert runner.invoke(cli, [], prog_name="test_parameter_source_environment", env={"NAME": "1"}).exit_code == 1
+
+
+def test_validate_parameter_source():
+    with pytest.raises(ValueError):
+        click.ParameterSource.validate("DEFAUL")
