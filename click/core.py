@@ -130,13 +130,14 @@ def iter_params_for_processing(invocation_order, declaration_order):
     return sorted(declaration_order, key=sort_key)
 
 class ParameterSource(object):
+    """This is an enum that indicates the source of a command line option.
+
+    The enum has one of the following values: COMMANDLINE,
+    ENVIRONMENT, DEFAULT, DEFAULT_MAP.  The DEFAULT indicates that the
+    default value in the decorator was used.  This class should be
+    converted to an enum when Python 2 support is dropped.
     """
-    This is an enum that indicates the source of a command line option,
-    which is one of the following: COMMANDLINE, ENVIRONMENT, DEFAULT, DEFAULT_MAP.
-    The DEFAULT indicates that the default value in the decorator was used.
-    This class should be converted to an enum when Python 2 support is
-    dropped.
-    """
+
     COMMANDLINE = "COMMANDLINE"
     ENVIRONMENT = "ENVIRONMENT"
     DEFAULT = "DEFAULT"
@@ -146,6 +147,14 @@ class ParameterSource(object):
     
     @classmethod
     def validate(clz, value):
+        """Validate that the specified value is a valid enum.
+
+        This method will raise a ValueError if the value is
+        not a valid enum.
+
+        :param clz: ParameterSource.class
+        :param value: the string value to verify
+        """
         if value not in clz.VALUES:
             raise ValueError("Invalid ParameterSource value: '{}'. Valid "
                              "values are: {}".format(",".join(VALUES)))
@@ -595,31 +604,34 @@ class Context(object):
         return self.invoke(cmd, **kwargs)
 
     def set_parameter_source(self, name, source):
-        """Sets the `source` of a parameter. This indicates the 
-        location from which the value of the parameter was obtained.
+        """Set the source of a parameter.
+
+        This indicates the location from which the value of the
+        parameter was obtained.
 
         :param name: the name of the command line parameter
-        :param source: the source of the the command line parameter,
-                       which should be a valid ParameterSource value
+        :param source: the source of the command line parameter, which
+                       should be a valid ParameterSource value
         """
         ParameterSource.validate(source)
         self._parameter_sources[name] = source
 
     def get_parameter_source(self, name):
-        """Get the `source` of a parameter. This indicates the 
-        location from which the value of the parameter was obtained.
-        This can be useful for determining when a user specified
-        an option on the command line that is the same as the default.
-        In that case, the source would be ParameterSource.COMMANDLINE,
-        even though the value of the parameter was equivalent to the
-        default.
+        """Get the `source` of a parameter.
+
+        This indicates the location from which the value of the
+        parameter was obtained.  This can be useful for determining
+        when a user specified an option on the command line that is
+        the same as the default.  In that case, the source would be
+        ParameterSource.COMMANDLINE, even though the value of the
+        parameter was equivalent to the default.
 
         :param name: the name of the command line parameter
         :returns: the source
         :rtype: ParameterSource
         """
         return self._parameter_sources.get(name)
-    
+
 
 class BaseCommand(object):
     """The base command implements the minimal API contract of commands.
