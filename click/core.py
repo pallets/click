@@ -146,18 +146,17 @@ class ParameterSource(object):
     VALUES = {COMMANDLINE, ENVIRONMENT, DEFAULT, DEFAULT_MAP}
     
     @classmethod
-    def validate(clz, value):
+    def validate(cls, value):
         """Validate that the specified value is a valid enum.
 
         This method will raise a ValueError if the value is
         not a valid enum.
 
-        :param clz: ParameterSource.class
         :param value: the string value to verify
         """
-        if value not in clz.VALUES:
+        if value not in cls.VALUES:
             raise ValueError("Invalid ParameterSource value: '{}'. Valid "
-                             "values are: {}".format(value, ",".join(clz.VALUES)))
+                             "values are: {}".format(value, ",".join(cls.VALUES)))
 
 
 class Context(object):
@@ -369,7 +368,7 @@ class Context(object):
 
         self._close_callbacks = []
         self._depth = 0
-        self._sources_by_paramname = {}
+        self._source_by_paramname = {}
         
     def __enter__(self):
         self._depth += 1
@@ -614,7 +613,7 @@ class Context(object):
                        should be a valid ParameterSource value
         """
         ParameterSource.validate(source)
-        self._sources_by_paramname[name] = source
+        self._source_by_paramname[name] = source
 
     def get_parameter_source(self, name):
         """Get the source of a parameter.
@@ -630,7 +629,7 @@ class Context(object):
         :returns: the source
         :rtype: ParameterSource
         """
-        return self._sources_by_paramname[name]
+        return self._source_by_paramname[name]
 
 
 class BaseCommand(object):

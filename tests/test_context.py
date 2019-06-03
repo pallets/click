@@ -314,4 +314,4 @@ def test_parameter_source_environment_variable_specified(runner):
 
 def test_validate_parameter_source():
     with pytest.raises(ValueError):
-        click.ParameterSource.validate("DEFAUL")
+        click.ParameterSource.validate("NOT_A_VALID_PARAMETER_SOURCE")
