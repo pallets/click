@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import click
-
+import pytest
 
 def test_ensure_context_objects(runner):
     class Foo(object):
@@ -256,3 +256,62 @@ def test_exit_not_standalone():
         ctx.exit(0)
 
     assert cli.main([], 'test_exit_not_standalone', standalone_mode=False) == 0
+
+def test_parameter_source_default():
+    @click.command()
+    @click.pass_context
+    @click.option("-o", "--option", default=1)
+    def cli(ctx, option):
+        assert ctx.get_parameter_source("option") == click.ParameterSource.DEFAULT
+        ctx.exit(1)
+
+    assert cli.main([], "test_parameter_source_default", standalone_mode=False) == 1
+
+def test_parameter_source_default_map():
+    @click.command()
+    @click.pass_context
+    @click.option("-o", "--option", default=1)
+    def cli(ctx, option):
+        assert ctx.get_parameter_source("option") == click.ParameterSource.DEFAULT_MAP
+        ctx.exit(1)
+
+    assert cli.main([], "test_parameter_source_default", standalone_mode=False, default_map={ "option": 1}) == 1
+    
+
+def test_parameter_source_commandline():
+    @click.command()
+    @click.pass_context
+    @click.option("-o", "--option", default=1)
+    def cli(ctx, option):
+        assert ctx.get_parameter_source("option") == click.ParameterSource.COMMANDLINE
+        ctx.exit(1)
+        
+    assert cli.main(["-o", "1"], "test_parameter_source_commandline", standalone_mode=False) == 1
+    assert cli.main(["--option", "1"], "test_parameter_source_default", standalone_mode=False) == 1
+
+
+def test_parameter_source_environment(runner):
+    @click.command()
+    @click.pass_context
+    @click.option("-o", "--option", default=1)
+    def cli(ctx, option):
+        assert ctx.get_parameter_source("option") == click.ParameterSource.ENVIRONMENT
+        sys.exit(1)
+        
+    assert runner.invoke(cli, [], prog_name="test_parameter_source_environment", env={"TEST_OPTION": "1"}, auto_envvar_prefix="TEST").exit_code == 1
+
+
+def test_parameter_source_environment_variable_specified(runner):
+    @click.command()
+    @click.pass_context
+    @click.option("-o", "--option", default=1, envvar="NAME")
+    def cli(ctx, option):
+        assert ctx.get_parameter_source("option") == click.ParameterSource.ENVIRONMENT
+        sys.exit(1)
+        
+    assert runner.invoke(cli, [], prog_name="test_parameter_source_environment", env={"NAME": "1"}).exit_code == 1
+
+
+def test_validate_parameter_source():
+    with pytest.raises(ValueError):
+        click.ParameterSource.validate("NOT_A_VALID_PARAMETER_SOURCE")
