@@ -1381,7 +1381,8 @@ class Parameter(object):
     :param nargs: the number of arguments to match.  If not ``1`` the return
                   value is a tuple instead of single value.  The default for
                   nargs is ``1`` (except if the type is a tuple, then it's
-                  the arity of the tuple).
+                  the arity of the tuple). If ``nargs=-1``, all remaining
+                  parameters are collected.
     :param metavar: how the value is represented in the help page.
     :param expose_value: if this is `True` then the value is passed onwards
                          to the command callback and stored on the context,
