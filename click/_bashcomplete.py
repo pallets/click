@@ -39,10 +39,14 @@ COMPLETION_SCRIPT_BASH = '''
 '''
 
 COMPLETION_SCRIPT_ZSH = '''
+#compdef %(script_names)s
+
 %(complete_func)s() {
     local -a completions
     local -a completions_with_descriptions
     local -a response
+    (( ! $+commands[%(script_names)s] )) && return 1
+
     response=("${(@f)$( env COMP_WORDS=\"${words[*]}\" \\
                         COMP_CWORD=$((CURRENT-1)) \\
                         %(autocomplete_var)s=\"complete_zsh\" \\
