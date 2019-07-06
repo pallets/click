@@ -130,7 +130,7 @@ def start_of_option(param_str):
 def is_incomplete_option(all_args, cmd_param):
     """
     :param all_args: the full original list of args supplied
-    :param cmd_param: the current command paramter
+    :param cmd_param: the current command parameter
     :return: whether or not the last option declaration (i.e. starts "-" or "--") is incomplete and
     corresponds to this cmd_param. In other words whether this cmd_param option can still accept
     values

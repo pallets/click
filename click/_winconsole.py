@@ -6,7 +6,7 @@
 # There are some general differences in regards to how this works
 # compared to the original patches as we do not need to patch
 # the entire interpreter but just work in our little world of
-# echo and prmopt.
+# echo and prompt.
 
 import io
 import os

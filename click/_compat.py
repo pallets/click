@@ -306,7 +306,7 @@ else:
 
     def _find_binary_writer(stream):
         # We need to figure out if the given stream is already binary.
-        # This can happen because the official docs recommend detatching
+        # This can happen because the official docs recommend detaching
         # the streams to get binary streams.  Some code might do this, so
         # we need to deal with this case explicitly.
         if _is_binary_writer(stream, False):
