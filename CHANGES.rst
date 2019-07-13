@@ -178,6 +178,8 @@ Unreleased
     is not a TTY. :issue:`1138`
 -   Progress bar output is shown even if execution time is less than 0.5
     seconds. :issue:`1648`
+-   Progress bar ``item_show_func`` shows the current item, not the
+    previous item. :issue:`1353`
 
 
 Version 7.1.2

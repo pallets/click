@@ -366,10 +366,10 @@ def progressbar(
                          `False` if not.
     :param show_pos: enables or disables the absolute position display.  The
                      default is `False`.
-    :param item_show_func: a function called with the current item which
-                           can return a string to show the current item
-                           next to the progress bar.  Note that the current
-                           item can be `None`!
+    :param item_show_func: A function called with the current item which
+        can return a string to show next to the progress bar. If the
+        function returns ``None`` nothing is shown. The current item can
+        be ``None``, such as when entering and exiting the bar.
     :param fill_char: the character to use to show the filled part of the
                       progress bar.
     :param empty_char: the character to use to show the non-filled part of
@@ -392,6 +392,9 @@ def progressbar(
 
     .. versionchanged:: 8.0
         Output is shown even if execution time is less than 0.5 seconds.
+
+    .. versionchanged:: 8.0
+        ``item_show_func`` shows the current item, not the previous one.
 
     .. versionchanged:: 8.0
         Labels are echoed if the output is not a TTY. Reverts a change
