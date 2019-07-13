@@ -73,6 +73,8 @@ Unreleased
 -   Required arguments with the ``Choice`` type show the choices in
     curly braces to indicate that one is required (``{a|b|c}``).
     :issue:`1272`
+-   If only a name is passed to ``option()``, Click suggests renaming it
+    to ``--name``. :pr:`1355`
 
 
 Version 7.1.2
