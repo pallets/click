@@ -6,7 +6,7 @@ with io.open("README.rst", "rt", encoding="utf8") as f:
     readme = f.read()
 
 with io.open("click/__init__.py", "rt", encoding="utf8") as f:
-    version = re.search(r"__version__ = \'(.*?)\'", f.read()).group(1)
+    version = re.search(r"__version__ = '(.*?)'", f.read()).group(1)
 
 setup(
     name="click",
@@ -17,10 +17,10 @@ setup(
         "Code": "https://github.com/pallets/click",
         "Issue tracker": "https://github.com/pallets/click/issues",
     },
-    license="BSD",
+    license="BSD-3-Clause",
     author="Armin Ronacher",
     author_email="armin.ronacher@active-4.com",
-    maintainer="Pallets Team",
+    maintainer="Pallets",
     maintainer_email="contact@palletsprojects.com",
     description="Composable command line interface toolkit",
     long_description=readme,
