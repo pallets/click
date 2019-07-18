@@ -81,7 +81,7 @@ class Py_buffer(ctypes.Structure):
 
 
 # On PyPy we cannot get buffers so our ability to operate here is
-# serverly limited.
+# severely limited.
 if pythonapi is None:
     get_buffer = None
 else:
