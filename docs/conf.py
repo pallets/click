@@ -10,8 +10,9 @@ release, version = get_version("Click", version_length=1)
 # General --------------------------------------------------------------
 
 master_doc = "index"
-extensions = ["sphinx.ext.autodoc", "sphinx.ext.intersphinx", "pallets_sphinx_themes"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.intersphinx", "sphinx.ext.autosectionlabel", "pallets_sphinx_themes"]
 intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
+autosectionlabel_prefix_document = True
 
 # HTML -----------------------------------------------------------------
 
