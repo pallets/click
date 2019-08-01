@@ -24,7 +24,7 @@ try:
     PyBuffer_Release = pythonapi.PyBuffer_Release
 except ImportError:
     pythonapi = None
-from ctypes.wintypes import LPWSTR, LPCWSTR
+from ctypes.wintypes import LPWSTR, LPCWSTR, HANDLE
 
 
 c_ssize_p = POINTER(c_ssize_t)
@@ -123,7 +123,7 @@ class _WindowsConsoleReader(_WindowsConsoleRawIOBase):
         code_units_to_be_read = bytes_to_be_read // 2
         code_units_read = c_ulong()
 
-        rv = ReadConsoleW(self.handle, buffer, code_units_to_be_read,
+        rv = ReadConsoleW(HANDLE(self.handle), buffer, code_units_to_be_read,
                           byref(code_units_read), None)
         if GetLastError() == ERROR_OPERATION_ABORTED:
             # wait for KeyboardInterrupt
@@ -156,7 +156,7 @@ class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
                                        MAX_BYTES_WRITTEN) // 2
         code_units_written = c_ulong()
 
-        WriteConsoleW(self.handle, buf, code_units_to_be_written,
+        WriteConsoleW(HANDLE(self.handle), buf, code_units_to_be_written,
                       byref(code_units_written), None)
         bytes_written = 2 * code_units_written.value
 
