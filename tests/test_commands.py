@@ -68,6 +68,16 @@ def test_auto_shorthelp(runner):
         result.output) is not None
 
 
+def test_no_args_is_help(runner):
+    @click.command(no_args_is_help=True)
+    def cli():
+        pass
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0
+    assert 'Show this message and exit.' in result.output
+
+
 def test_default_maps(runner):
     @click.group()
     def cli():

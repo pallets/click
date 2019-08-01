@@ -1,0 +1,61 @@
+trigger:
+  - master
+  - "*.x"
+
+variables:
+  vmImage: ubuntu-latest
+  python.version: "3.7"
+  TOXENV: py,coverage-ci
+  hasTestResults: true
+
+strategy:
+  matrix:
+    Python 3.7 Linux:
+      vmImage: ubuntu-latest
+    Python 3.7 Windows:
+      vmImage: windows-latest
+    Python 3.7 Mac:
+      vmImage: macos-latest
+    PyPy 3 Linux:
+      python.version: pypy3
+    Python 3.6 Linux:
+      python.version: 3.6
+    Python 3.5 Linux:
+      python.version: 3.5
+    Python 2.7 Linux:
+      python.version: 2.7
+    Python 2.7 Windows:
+      python.version: 2.7
+      vmImage: windows-latest
+    Docs:
+      TOXENV: docs
+      hasTestResults: false
+
+pool:
+  vmImage: $(vmImage)
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: "$(python.version)"
+    displayName: Use Python $(python.version)
+
+  - script: pip --disable-pip-version-check install -U tox
+    displayName: Install tox
+
+  - script: tox -s false -- --junit-xml=test-results.xml
+    displayName: Run tox
+
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFiles: test-results.xml
+      testRunTitle: $(Agent.JobName)
+    condition: eq(variables['hasTestResults'], 'true')
+    displayName: Publish test results
+
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      codeCoverageTool: Cobertura
+      summaryFileLocation: coverage.xml
+    condition: eq(variables['hasTestResults'], 'true')
+    displayName: Publish coverage results

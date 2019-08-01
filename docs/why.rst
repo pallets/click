@@ -125,7 +125,7 @@ reasons for this.  The biggest one is that too much configurability makes
 it hard to achieve a consistent command line experience.
 
 The best example for this is optparse's ``callback`` functionality for
-accepting arbitrary number of arguments.  Due to syntactical ambiguities
+accepting an arbitrary number of arguments.  Due to syntactical ambiguities
 on the command line, there is no way to implement fully variadic arguments.
 There are always tradeoffs that need to be made and in case of
 ``argparse`` these tradeoffs have been critical enough, that a system like

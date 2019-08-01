@@ -39,6 +39,9 @@ Submitting patches
 
 - For docs and bug fixes: Submit against the latest maintenance branch instead of master!
 
+- Non docs or text related changes need an entry in ``CHANGES.rst``,
+  and ``.. versionadded`` or ``.. versionchanged`` markers in the docs.
+
 Running the testsuite
 ---------------------
 

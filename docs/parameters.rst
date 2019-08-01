@@ -110,30 +110,40 @@ Implementing Custom Types
 -------------------------
 
 To implement a custom type, you need to subclass the :class:`ParamType`
-class.  Types can be invoked with or without context and parameter object,
-which is why they need to be able to deal with this.
+class. Override the :meth:`~ParamType.convert` method to convert the
+value from a string to the correct type.
 
 The following code implements an integer type that accepts hex and octal
 numbers in addition to normal integers, and converts them into regular
-integers::
+integers.
+
+.. code-block:: python
 
     import click
 
     class BasedIntParamType(click.ParamType):
-        name = 'integer'
+        name = "integer"
 
         def convert(self, value, param, ctx):
             try:
-                if value[:2].lower() == '0x':
+                if value[:2].lower() == "0x":
                     return int(value[2:], 16)
-                elif value[:1] == '0':
+                elif value[:1] == "0":
                     return int(value, 8)
                 return int(value, 10)
+            except TypeError:
+                self.fail(
+                    "expected string for int() conversion, got "
+                    f"{value!r} of type {type(value).__name__}",
+                    param,
+                    ctx,
+                )
             except ValueError:
-                self.fail('%s is not a valid integer' % value, param, ctx)
+                self.fail(f"{value!r} is not a valid integer", param, ctx)
 
     BASED_INT = BasedIntParamType()
 
-As you can see, a subclass needs to implement the :meth:`ParamType.convert`
-method and optionally provide the :attr:`ParamType.name` attribute.  The
-latter can be used for documentation purposes.
+The :attr:`~ParamType.name` attribute is optional and is used for
+documentation. Call :meth:`~ParamType.fail` if conversion fails. The
+``param`` and ``ctx`` arguments may be ``None`` in some cases such as
+prompts.

@@ -237,6 +237,9 @@ class Context(object):
                   codes are used in texts that Click prints which is by
                   default not the case.  This for instance would affect
                   help output.
+    :param show_default: if True, shows defaults for all options.
+                    Even if an option is later created with show_default=False,
+                    this command-level setting overrides it.
     """
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
@@ -245,7 +248,7 @@ class Context(object):
                  resilient_parsing=False, allow_extra_args=None,
                  allow_interspersed_args=None,
                  ignore_unknown_options=None, help_option_names=None,
-                 token_normalize_func=None, color=None):
+                 token_normalize_func=None, color=None, show_default=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -365,6 +368,8 @@ class Context(object):
 
         #: Controls if styling output is wanted or not.
         self.color = color
+
+        self.show_default = show_default
 
         self._close_callbacks = []
         self._depth = 0
@@ -832,6 +837,8 @@ class Command(BaseCommand):
        Added the `context_settings` parameter.
     .. versionchanged:: 8.0
        Added repr showing the command name
+    .. versionchanged:: 7.1
+       Added the `no_args_is_help` parameter.
 
     :param name: the name of the command to use unless a group overrides it.
     :param context_settings: an optional dictionary with defaults that are
@@ -846,6 +853,10 @@ class Command(BaseCommand):
                        shown on the command listing of the parent command.
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
+    :param no_args_is_help: this controls what happens if no arguments are
+                            provided.  This option is disabled by default.
+                            If enabled this will add ``--help`` as argument
+                            if no arguments are passed
     :param hidden: hide this command from help outputs.
 
     :param deprecated: issues a message indicating that
@@ -855,7 +866,7 @@ class Command(BaseCommand):
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
                  options_metavar='[OPTIONS]', add_help_option=True,
-                 hidden=False, deprecated=False):
+                 no_args_is_help=False, hidden=False, deprecated=False):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -873,6 +884,7 @@ class Command(BaseCommand):
         self.options_metavar = options_metavar
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
 
@@ -996,6 +1008,10 @@ class Command(BaseCommand):
                 formatter.write_text(self.epilog)
 
     def parse_args(self, ctx, args):
+        if not args and self.no_args_is_help and not ctx.resilient_parsing:
+            echo(ctx.get_help(), color=ctx.color)
+            ctx.exit()
+
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
 
@@ -1786,7 +1802,8 @@ class Option(Parameter):
                            ', '.join('%s' % d for d in envvar)
                            if isinstance(envvar, (list, tuple))
                            else envvar, ))
-        if self.default is not None and self.show_default:
+        if self.default is not None and \
+            (self.show_default or ctx.show_default):
             if isinstance(self.show_default, string_types):
                 default_string = '({})'.format(self.show_default)
             elif isinstance(self.default, (list, tuple)):
