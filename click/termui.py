@@ -302,6 +302,20 @@ def progressbar(iterable=None, length=None, label=None, show_eta=True,
                 process_chunk(chunk)
                 bar.update(chunks.bytes)
 
+    The ``update()`` method also takes an optional value specifying the
+    ``current_item`` at the new position. This is useful when used
+    together with ``item_show_func`` to customize the output for each
+    manual step::
+
+        with click.progressbar(
+            length=total_size,
+            label='Unzipping archive',
+            item_show_func=lambda a: a.filename
+        ) as bar:
+            for archive in zip_file:
+                archive.extract()
+                bar.update(archive.size, archive)
+
     .. versionadded:: 2.0
 
     .. versionadded:: 4.0
