@@ -39,7 +39,7 @@ What does it look like? Here is an example of a simple Click program:
 .. code-block:: python
 
     import click
-    
+
     @click.command()
     @click.option("--count", default=1, help="Number of greetings.")
     @click.option("--name", prompt="Your name",
@@ -48,7 +48,7 @@ What does it look like? Here is an example of a simple Click program:
         """Simple program that greets NAME for a total of COUNT times."""
         for _ in range(count):
             click.echo("Hello, %s!" % name)
-    
+
     if __name__ == '__main__':
         hello()
 
@@ -83,10 +83,5 @@ Links
 *   Releases: https://pypi.org/project/click/
 *   Code: https://github.com/pallets/click
 *   Issue tracker: https://github.com/pallets/click/issues
-*   Test status:
-
-    *   Linux, Mac: https://travis-ci.org/pallets/click
-    *   Windows: https://ci.appveyor.com/project/pallets/click
-
-*   Test coverage: https://codecov.io/gh/pallets/click
+*   Test status: https://dev.azure.com/pallets/click/_build
 *   Official chat: https://discord.gg/t6rrQZH

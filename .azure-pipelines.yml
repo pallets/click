@@ -32,7 +32,7 @@ strategy:
       hasTestResults: false
 
 pool:
-  vmImage: $(image)
+  vmImage: $(vmImage)
 
 steps:
   - task: UsePythonVersion@0
