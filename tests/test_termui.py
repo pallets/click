@@ -239,7 +239,9 @@ def test_progressbar_update(runner, monkeypatch):
     assert '100%          ' in lines[3]
 
 
-@pytest.mark.parametrize('key_char', ['h', 'H', 'é', 'À', ' ', '字', 'àH', 'àR'])
+@pytest.mark.parametrize(
+    'key_char', (u'h', u'H', u'é', u'À', u' ', u'字', u'àH', u'àR')
+)
 @pytest.mark.parametrize('echo', [True, False])
 @pytest.mark.skipif(not WIN, reason='Tests user-input using the msvcrt module.')
 def test_getchar_windows(runner, monkeypatch, key_char, echo):
