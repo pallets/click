@@ -32,10 +32,54 @@ And what it looks like:
 
     invoke(hello, args=['--help'])
 
-Arguments cannot be documented this way.  This is to follow the general
-convention of Unix tools of using arguments for only the most necessary
-things and to document them in the introduction text by referring to them
-by name.
+
+.. _documenting-arguments:
+
+Documenting Arguments
+~~~~~~~~~~~~~~~~~~~~~
+
+:func:`click.argument` does not take a ``help`` parameter. This is to
+follow the general convention of Unix tools of using arguments for only
+the most necessary things, and to document them in the command help text
+by referring to them by name.
+
+You might prefer to reference the argument in the description:
+
+.. click:example::
+
+    @click.command()
+    @click.argument('filename')
+    def touch(filename):
+        """Print FILENAME."""
+        click.echo(filename)
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(touch, args=['--help'])
+
+Or you might prefer to explicitly provide a description of the argument:
+
+.. click:example::
+
+    @click.command()
+    @click.argument('filename')
+    def touch(filename):
+        """Print FILENAME.
+
+        FILENAME is the name of the file to check.
+        """
+        click.echo(filename)
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(touch, args=['--help'])
+
+For more examples, see the examples in :doc:`/arguments`.
+
 
 Preventing Rewrapping
 ---------------------

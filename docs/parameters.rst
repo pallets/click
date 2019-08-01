@@ -23,8 +23,8 @@ available for options:
 *   act as flags (boolean or otherwise)
 *   option values can be pulled from environment variables, arguments can not
 *   options are fully documented in the help page, arguments are not
-    (this is intentional as arguments might be too specific to be
-    automatically documented)
+    (:ref:`this is intentional <documenting-arguments>` as arguments
+    might be too specific to be automatically documented)
 
 On the other hand arguments, unlike options, can accept an arbitrary number
 of arguments.  Options can strictly ever only accept a fixed number of
