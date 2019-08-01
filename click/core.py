@@ -892,6 +892,10 @@ class Command(BaseCommand):
         return '<%s %s>' % (self.__class__.__name__, self.name)
 
     def get_usage(self, ctx):
+        """Formats the usage line into a string and returns it.
+
+        Calls :meth:`format_usage` internally.
+        """
         formatter = ctx.make_formatter()
         self.format_usage(ctx, formatter)
         return formatter.getvalue().rstrip('\n')
@@ -904,7 +908,10 @@ class Command(BaseCommand):
         return rv
 
     def format_usage(self, ctx, formatter):
-        """Writes the usage line into the formatter."""
+        """Writes the usage line into the formatter.
+
+        This is a low-level method called by :meth:`get_usage`.
+        """
         pieces = self.collect_usage_pieces(ctx)
         formatter.write_usage(ctx.command_path, ' '.join(pieces))
 
@@ -948,8 +955,9 @@ class Command(BaseCommand):
         return parser
 
     def get_help(self, ctx):
-        """Formats the help into a string and returns it.  This creates a
-        formatter and will call into the following formatting methods:
+        """Formats the help into a string and returns it.
+
+        Calls :meth:`format_help` internally.
         """
         formatter = ctx.make_formatter()
         self.format_help(ctx, formatter)
@@ -962,7 +970,9 @@ class Command(BaseCommand):
     def format_help(self, ctx, formatter):
         """Writes the help into the formatter if it exists.
 
-        This calls into the following methods:
+        This is a low-level method called by :meth:`get_help`.
+
+        This calls the following methods:
 
         -   :meth:`format_usage`
         -   :meth:`format_help_text`

@@ -31,6 +31,7 @@ Unreleased
 - Add support for colored output on UNIX Jupyter notebooks. (`#1185`_)
 - Remove unused compat shim for ``bytes``. (`#1195`_)
 - Expand unit testing around termui, especially getchar (Windows). (`#1116`_)
+-   Fix output on Windows Python 2.7 built with MSVC 14. #1342
 
 .. _#1167: https://github.com/pallets/click/pull/1167
 .. _#1151: https://github.com/pallets/click/pull/1151

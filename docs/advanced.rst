@@ -12,9 +12,11 @@ Click.  This page should give some insight into what can be accomplished.
 Command Aliases
 ---------------
 
-Many tools support aliases for commands.  For instance, you can configure
-``git`` to accept ``git ci`` as alias for ``git commit``.  Other tools
-also support auto-discovery for aliases by automatically shortening them.
+Many tools support aliases for commands (see `Command alias example
+<https://github.com/pallets/click/tree/master/examples/aliases>`_).
+For instance, you can configure ``git`` to accept ``git ci`` as alias for
+``git commit``.  Other tools also support auto-discovery for aliases by
+automatically shortening them.
 
 Click does not support this out of the box, but it's very easy to customize
 the :class:`Group` or any other :class:`MultiCommand` to provide this
