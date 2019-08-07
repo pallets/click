@@ -235,7 +235,7 @@ class DateTime(ParamType):
 
         self.fail(
             'invalid datetime format: {}. (choose from {})\nTried:\n{}'.format(
-                value, ', '.join(self.formats), "\n".join(tries)))
+                value, ', '.join(self.formats), "\n".join(formatted)))
 
     def __repr__(self):
         return 'DateTime'
