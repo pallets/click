@@ -217,20 +217,25 @@ class DateTime(ParamType):
 
     def _try_to_convert_date(self, value, format):
         try:
-            return datetime.strptime(value, format)
-        except ValueError:
-            return None
+            return datetime.strptime(value, format), None
+        except ValueError as err:
+            return None, err
 
     def convert(self, value, param, ctx):
+        errors = []
         # Exact match
         for format in self.formats:
-            dtime = self._try_to_convert_date(value, format)
-            if dtime:
+            dtime, err = self._try_to_convert_date(value, format)
+            if err:
+                errors.append((format, err))
+            else:
                 return dtime
 
+        formatted = ["%25s => %s" % (format, err) for (format, err) in errors]
+
         self.fail(
-            'invalid datetime format: {}. (choose from {})'.format(
-                value, ', '.join(self.formats)))
+            'invalid datetime format: {}. (choose from {})\nTried:\n{}'.format(
+                value, ', '.join(self.formats), "\n".join(tries)))
 
     def __repr__(self):
         return 'DateTime'
