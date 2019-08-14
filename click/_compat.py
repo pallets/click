@@ -481,7 +481,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
 
     # Non-atomic writes directly go out through the regular open functions.
     if not atomic:
-        if encoding is not None or 'b' not in mode:
+        if encoding is not None or ('b' not in mode and not PY2):
             return io.open(filename, mode, encoding=encoding, errors=errors), True
         return open(filename, mode), True
 
