@@ -482,7 +482,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     # Non-atomic writes directly go out through the regular open functions.
     if not atomic:
         if encoding is None:
-            return open(filename, mode), True
+            return open(filename, mode, errors=errors), True
         return io.open(filename, mode, encoding=encoding, errors=errors), True
 
     # Some usability stuff for atomic writes
@@ -509,7 +509,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     if encoding is not None:
         f = io.open(fd, mode, encoding=encoding, errors=errors)
     else:
-        f = os.fdopen(fd, mode)
+        f = os.fdopen(fd, mode, errors=errors)
 
     return _AtomicFile(f, tmp_filename, os.path.realpath(filename)), True
 
