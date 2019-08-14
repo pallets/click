@@ -481,9 +481,9 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
 
     # Non-atomic writes directly go out through the regular open functions.
     if not atomic:
-        if encoding is None:
-            return open(filename, mode, errors=errors), True
-        return io.open(filename, mode, encoding=encoding, errors=errors), True
+        if encoding is not None or 'b' not in mode:
+            return io.open(filename, mode, encoding=encoding, errors=errors), True
+        return open(filename, mode), True
 
     # Some usability stuff for atomic writes
     if 'a' in mode:
@@ -506,10 +506,10 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     fd, tmp_filename = tempfile.mkstemp(dir=os.path.dirname(filename),
                                         prefix='.__atomic-write')
 
-    if encoding is not None:
+    if encoding is not None or 'b' not in mode:
         f = io.open(fd, mode, encoding=encoding, errors=errors)
     else:
-        f = os.fdopen(fd, mode, errors=errors)
+        f = os.fdopen(fd, mode)
 
     return _AtomicFile(f, tmp_filename, os.path.realpath(filename)), True
 
