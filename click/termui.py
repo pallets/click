@@ -52,6 +52,22 @@ def _build_prompt(text, suffix, show_default=False, default=None, show_choices=T
     return prompt + suffix
 
 
+def _get_user_confirmation():
+    ret = ''
+    while 1:
+        c = getchar()
+        if c == '\r':
+            break
+        elif c in ('\x08', '\x7f') and len(ret) != 0:
+            echo("\b \b", nl=False)
+            ret = ret[:-1]
+        else:
+            ret += c
+            echo(c, nl=False)
+    echo('', nl=True)
+    return ret
+
+
 def prompt(text, default=None, hide_input=False, confirmation_prompt=False,
            type=None, value_proc=None, prompt_suffix=': ', show_default=True,
            err=False, show_choices=True):
@@ -164,7 +180,7 @@ def confirm(text, default=False, abort=False, prompt_suffix=': ',
             # Write the prompt separately so that we get nice
             # coloring through colorama on Windows
             echo(prompt, nl=False, err=err)
-            value = visible_prompt_func('').lower().strip()
+            value = _get_user_confirmation().lower().strip()
         except (KeyboardInterrupt, EOFError):
             raise Abort()
         if value in ('y', 'yes'):
