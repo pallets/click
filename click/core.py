@@ -1,6 +1,7 @@
 import errno
 import inspect
 import os
+import stat
 import sys
 from contextlib import contextmanager
 from itertools import repeat
@@ -8,7 +9,7 @@ from functools import update_wrapper
 
 from .types import convert_type, IntRange, BOOL
 from .utils import PacifyFlushWrapper, make_str, make_default_short_help, \
-     echo, get_os_args
+     echo, get_os_args, get_text_stream
 from .exceptions import ClickException, UsageError, BadParameter, Abort, \
      MissingParameter, Exit
 from .termui import prompt, confirm, style
@@ -697,6 +698,10 @@ class BaseCommand(object):
         :param extra: extra keyword arguments forwarded to the context
                       constructor.
         """
+        if stat.S_ISFIFO(os.fstat(0).st_mode):
+            piped_args = get_text_stream('stdin').read().strip()
+            if piped_args:
+                args += piped_args.split(' ')
         for key, value in iteritems(self.context_settings):
             if key not in extra:
                 extra[key] = value
