@@ -90,7 +90,7 @@ def test_filename_formatting():
             == u'foo\ufffd.txt'
 
 
-def test_prompts(runner):
+def test_prompts(runner, monkeypatch):
     @click.command()
     def test():
         if click.confirm('Foo'):
@@ -126,6 +126,61 @@ def test_prompts(runner):
     assert result.output == 'Foo [Y/n]: \nyes!\n'
 
     result = runner.invoke(test_no, input='n\n')
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: n\nno :(\n'
+
+    @click.command()
+    @click.argument("arg1", required=True)
+    def test_args_confirm(arg1):
+        if click.confirm('Foo', default=True):
+            click.echo(arg1)
+        else:
+            click.echo('no :(')
+
+    result = runner.invoke(test_args_confirm, input='y\n', args=["test_age"])
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: y\ntest_age\n'
+
+    result = runner.invoke(test_args_confirm, input='\n', args=["test_age"])
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: \ntest_age\n'
+
+    result = runner.invoke(test_args_confirm, input='n\n', args=["test_age"])
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: n\nno :(\n'
+
+    @click.command()
+    @click.argument("arg1", required=True)
+    def test_args_pipe_confirm(arg1):
+        if click.confirm('Foo', default=True):
+            click.echo(arg1)
+        else:
+            click.echo('no :(')
+
+    class MockedStream(object):
+        def __init__(self, *args, **kwargs):
+            pass
+
+        @staticmethod
+        def read(*args, **kwargs):
+            return MockedStream.stdin
+
+        @staticmethod
+        def prompt(*args, **kwargs):
+            click.echo(MockedStream.user_prompt, nl=False)
+            return MockedStream.user_prompt
+
+    MockedStream.stdin = "test_age"
+    MockedStream.user_prompt = "y\n"
+    monkeypatch.setattr('stat.S_ISFIFO', lambda x: True)
+    monkeypatch.setattr("click.core.get_text_stream", MockedStream)
+
+    result = runner.invoke(test_args_confirm, prompt_func=MockedStream.prompt)
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: y\ntest_age\n'
+
+    MockedStream.user_prompt = "n\n"
+    result = runner.invoke(test_args_confirm, prompt_func=MockedStream.prompt)
     assert not result.exception
     assert result.output == 'Foo [Y/n]: n\nno :(\n'
 

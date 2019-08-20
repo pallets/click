@@ -160,7 +160,7 @@ class CliRunner(object):
         return rv
 
     @contextlib.contextmanager
-    def isolation(self, input=None, env=None, color=False):
+    def isolation(self, input=None, env=None, color=False, prompt_func=None):
         """A context manager that sets up the isolation for invoking of a
         command line tool.  This sets up stdin with the given input data
         and `os.environ` with the overrides from the given dictionary.
@@ -237,12 +237,13 @@ class CliRunner(object):
             if color is None:
                 return not default_color
             return not color
-
+        if not prompt_func:
+            prompt_func = visible_input
         old_visible_prompt_func = clickpkg.termui.visible_prompt_func
         old_hidden_prompt_func = clickpkg.termui.hidden_prompt_func
         old__getchar_func = clickpkg.termui._getchar
         old_should_strip_ansi = clickpkg.utils.should_strip_ansi
-        clickpkg.termui.visible_prompt_func = visible_input
+        clickpkg.termui.visible_prompt_func = prompt_func
         clickpkg.termui.hidden_prompt_func = hidden_input
         clickpkg.termui._getchar = _getchar
         clickpkg.utils.should_strip_ansi = should_strip_ansi
@@ -278,7 +279,7 @@ class CliRunner(object):
             clickpkg.formatting.FORCED_WIDTH = old_forced_width
 
     def invoke(self, cli, args=None, input=None, env=None,
-               catch_exceptions=True, color=False, mix_stderr=False, **extra):
+               catch_exceptions=True, color=False, mix_stderr=False, prompt_func=None, **extra):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
         arguments are passed to the :meth:`~clickpkg.Command.main` function of
@@ -310,7 +311,7 @@ class CliRunner(object):
                       application can still override this explicitly.
         """
         exc_info = None
-        with self.isolation(input=input, env=env, color=color) as outstreams:
+        with self.isolation(input=input, env=env, color=color, prompt_func=prompt_func) as outstreams:
             exception = None
             exit_code = 0
 
