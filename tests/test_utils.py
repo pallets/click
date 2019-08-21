@@ -273,7 +273,7 @@ def test_echo_color_flag(monkeypatch, capfd):
     assert out == text + '\n'
 
 
-@pytest.mark.skipif(WIN, reason='Test too complex to make work windows.')
+#@pytest.mark.skipif(WIN, reason='Test too complex to make work windows.')
 def test_echo_writing_to_standard_error(capfd, monkeypatch):
     def emulate_input(text):
         """Emulate keyboard input."""
