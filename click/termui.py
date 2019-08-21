@@ -15,6 +15,7 @@ from .globals import resolve_color_default
 # The prompt functions to use.  The doc tools currently override these
 # functions to customize how they work.
 visible_prompt_func = raw_input
+console_open = open
 
 _ansi_colors = {
     'black': 30,
@@ -166,9 +167,9 @@ def confirm(text, default=False, abort=False, prompt_suffix=': ',
             echo(prompt, nl=False, err=err)
             old_stdin = sys.stdin
             if WIN:
-                sys.stdin = open("CON:")
+                sys.stdin = console_open("CON:")
             else:
-                sys.stdin = open("/dev/tty")
+                sys.stdin = console_open("/dev/tty")
             value = visible_prompt_func().lower().strip()
             sys.stdin = old_stdin
         except (KeyboardInterrupt, EOFError):

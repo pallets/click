@@ -174,6 +174,7 @@ def test_prompts(runner, monkeypatch):
     MockedStream.user_prompt = "y\n"
     monkeypatch.setattr('stat.S_ISFIFO', lambda x: True)
     monkeypatch.setattr("click.core.get_text_stream", MockedStream)
+    monkeypatch.setattr("click.termui.console_open", lambda x: sys.stdin)
 
     result = runner.invoke(test_args_confirm, prompt_func=MockedStream.prompt)
     assert not result.exception
