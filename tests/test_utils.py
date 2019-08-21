@@ -262,7 +262,7 @@ def test_echo_color_flag(monkeypatch, capfd):
     assert out == text + '\n'
 
 
-@pytest.mark.skipif(WIN, reason='Test too complex to make work windows.')
+#@pytest.mark.skipif(WIN, reason='Test too complex to make work windows.')
 def test_echo_writing_to_standard_error(capfd, monkeypatch):
     def emulate_input(text):
         """Emulate keyboard input."""
@@ -271,6 +271,25 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
         else:
             from io import StringIO
         monkeypatch.setattr(sys, 'stdin', StringIO(text))
+
+    class MockedStream(object):
+        def __init__(self, *args, **kwargs):
+            pass
+
+        @staticmethod
+        def read(*args, **kwargs):
+            return MockedStream.stdin
+
+        @staticmethod
+        def prompt(*args, **kwargs):
+            click.echo(MockedStream.user_prompt, nl=False)
+            return MockedStream.user_prompt
+
+    MockedStream.stdin = "test_age"
+    MockedStream.user_prompt = "y\n"
+    monkeypatch.setattr('stat.S_ISFIFO', lambda x: True)
+    monkeypatch.setattr("click.core.get_text_stream", MockedStream)
+    monkeypatch.setattr("click.termui.console_open", lambda x: sys.stdin)
 
     click.echo('Echo to standard output')
     out, err = capfd.readouterr()
