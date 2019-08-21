@@ -91,71 +91,6 @@ def test_filename_formatting():
 
 
 def test_prompts(runner, monkeypatch):
-    @click.command()
-    def test():
-        if click.confirm('Foo'):
-            click.echo('yes!')
-        else:
-            click.echo('no :(')
-
-    result = runner.invoke(test, input='y\n')
-    assert not result.exception
-    assert result.output == 'Foo [y/N]: y\nyes!\n'
-
-    result = runner.invoke(test, input='\n')
-    assert not result.exception
-    assert result.output == 'Foo [y/N]: \nno :(\n'
-
-    result = runner.invoke(test, input='n\n')
-    assert not result.exception
-    assert result.output == 'Foo [y/N]: n\nno :(\n'
-
-    @click.command()
-    def test_no():
-        if click.confirm('Foo', default=True):
-            click.echo('yes!')
-        else:
-            click.echo('no :(')
-
-    result = runner.invoke(test_no, input='y\n')
-    assert not result.exception
-    assert result.output == 'Foo [Y/n]: y\nyes!\n'
-
-    result = runner.invoke(test_no, input='\n')
-    assert not result.exception
-    assert result.output == 'Foo [Y/n]: \nyes!\n'
-
-    result = runner.invoke(test_no, input='n\n')
-    assert not result.exception
-    assert result.output == 'Foo [Y/n]: n\nno :(\n'
-
-    @click.command()
-    @click.argument("arg1", required=True)
-    def test_args_confirm(arg1):
-        if click.confirm('Foo', default=True):
-            click.echo(arg1)
-        else:
-            click.echo('no :(')
-
-    result = runner.invoke(test_args_confirm, input='y\n', args=["test_age"])
-    assert not result.exception
-    assert result.output == 'Foo [Y/n]: y\ntest_age\n'
-
-    result = runner.invoke(test_args_confirm, input='\n', args=["test_age"])
-    assert not result.exception
-    assert result.output == 'Foo [Y/n]: \ntest_age\n'
-
-    result = runner.invoke(test_args_confirm, input='n\n', args=["test_age"])
-    assert not result.exception
-    assert result.output == 'Foo [Y/n]: n\nno :(\n'
-
-    @click.command()
-    @click.argument("arg1", required=True)
-    def test_args_pipe_confirm(arg1):
-        if click.confirm('Foo', default=True):
-            click.echo(arg1)
-        else:
-            click.echo('no :(')
 
     class MockedStream(object):
         def __init__(self, *args, **kwargs):
@@ -170,12 +105,88 @@ def test_prompts(runner, monkeypatch):
             click.echo(MockedStream.user_prompt, nl=False)
             return MockedStream.user_prompt
 
-    MockedStream.stdin = "test_age"
-    MockedStream.user_prompt = "y\n"
     monkeypatch.setattr('stat.S_ISFIFO', lambda x: True)
     monkeypatch.setattr("click.core.get_text_stream", MockedStream)
     monkeypatch.setattr("click.termui.console_open", lambda x: sys.stdin)
+    MockedStream.stdin = ""
 
+    @click.command()
+    def test():
+        if click.confirm('Foo'):
+            click.echo('yes!')
+        else:
+            click.echo('no :(')
+
+    MockedStream.user_prompt = "y\n"
+    result = runner.invoke(test, prompt_func=MockedStream.prompt)
+    assert not result.exception
+    assert result.output == 'Foo [y/N]: y\nyes!\n'
+
+    MockedStream.user_prompt = "\n"
+    result = runner.invoke(test, prompt_func=MockedStream.prompt)
+    assert not result.exception
+    assert result.output == 'Foo [y/N]: \nno :(\n'
+
+    MockedStream.user_prompt = "n\n"
+    result = runner.invoke(test, prompt_func=MockedStream.prompt)
+    assert not result.exception
+    assert result.output == 'Foo [y/N]: n\nno :(\n'
+
+    @click.command()
+    def test_no():
+        if click.confirm('Foo', default=True):
+            click.echo('yes!')
+        else:
+            click.echo('no :(')
+
+    MockedStream.user_prompt = "y\n"
+    result = runner.invoke(test_no, prompt_func=MockedStream.prompt)
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: y\nyes!\n'
+
+    MockedStream.user_prompt = "\n"
+    result = runner.invoke(test_no, prompt_func=MockedStream.prompt)
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: \nyes!\n'
+
+    MockedStream.user_prompt = "n\n"
+    result = runner.invoke(test_no, prompt_func=MockedStream.prompt)
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: n\nno :(\n'
+
+    @click.command()
+    @click.argument("arg1", required=True)
+    def test_args_confirm(arg1):
+        if click.confirm('Foo', default=True):
+            click.echo(arg1)
+        else:
+            click.echo('no :(')
+
+    MockedStream.user_prompt = "y\n"
+    result = runner.invoke(test_args_confirm, prompt_func=MockedStream.prompt, args=["test_age"])
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: y\ntest_age\n'
+
+    MockedStream.user_prompt = "\n"
+    result = runner.invoke(test_args_confirm, prompt_func=MockedStream.prompt, args=["test_age"])
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: \ntest_age\n'
+
+    MockedStream.user_prompt = "n\n"
+    result = runner.invoke(test_args_confirm, prompt_func=MockedStream.prompt, args=["test_age"])
+    assert not result.exception
+    assert result.output == 'Foo [Y/n]: n\nno :(\n'
+
+    @click.command()
+    @click.argument("arg1", required=True)
+    def test_args_pipe_confirm(arg1):
+        if click.confirm('Foo', default=True):
+            click.echo(arg1)
+        else:
+            click.echo('no :(')
+
+    MockedStream.stdin = "test_age"
+    MockedStream.user_prompt = "y\n"
     result = runner.invoke(test_args_confirm, prompt_func=MockedStream.prompt)
     assert not result.exception
     assert result.output == 'Foo [Y/n]: y\ntest_age\n'
@@ -271,6 +282,25 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
         else:
             from io import StringIO
         monkeypatch.setattr(sys, 'stdin', StringIO(text))
+
+    class MockedStream(object):
+        def __init__(self, *args, **kwargs):
+            pass
+
+        @staticmethod
+        def read(*args, **kwargs):
+            return MockedStream.stdin
+
+        @staticmethod
+        def prompt(*args, **kwargs):
+            click.echo(MockedStream.user_prompt, nl=False)
+            return MockedStream.user_prompt
+
+    MockedStream.stdin = "test_age"
+    MockedStream.user_prompt = "y\n"
+    monkeypatch.setattr('stat.S_ISFIFO', lambda x: True)
+    monkeypatch.setattr("click.core.get_text_stream", MockedStream)
+    monkeypatch.setattr("click.termui.console_open", lambda x: sys.stdin)
 
     click.echo('Echo to standard output')
     out, err = capfd.readouterr()
