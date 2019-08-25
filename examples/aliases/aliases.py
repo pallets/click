@@ -41,7 +41,7 @@ class AliasedGroup(click.Group):
         # will create the config object is missing.
         cfg = ctx.ensure_object(Config)
 
-        # Step three: lookup an explicit command alias in the config
+        # Step three: look up an explicit command alias in the config
         if cmd_name in cfg.aliases:
             actual_cmd = cfg.aliases[cmd_name]
             return click.Group.get_command(self, ctx, actual_cmd)
