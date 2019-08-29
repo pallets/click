@@ -1,6 +1,7 @@
 import re
 import io
 import os
+import stat
 import sys
 import codecs
 from weakref import WeakKeyDictionary
@@ -32,6 +33,12 @@ def _make_text_stream(stream, encoding, errors,
                                     line_buffering=True,
                                     force_readable=force_readable,
                                     force_writable=force_writable)
+
+def _get_current_umask():
+    """Get current umask."""
+    umask = os.umask(0)
+    os.umask(umask)
+    return umask
 
 
 def is_ascii_encoding(encoding):
@@ -512,7 +519,19 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     else:
         f = os.fdopen(fd, mode)
 
-    return _AtomicFile(f, tmp_filename, os.path.realpath(filename)), True
+    real_filename = os.path.realpath(filename)
+
+    # Get permissions to set on the target file. If the target file already
+    # exists, retain its current permissions. If the target file will be
+    # created, respect the permissions from the current umask.
+    permissions = None
+    if not WIN:
+        try:
+            permissions = stat.S_IMODE(os.stat(real_filename).st_mode)
+        except OSError:
+            permissions = 0o666 & ~_get_current_umask()
+
+    return _AtomicFile(f, tmp_filename, real_filename, permissions), True
 
 
 # Used in a destructor call, needs extra protection from interpreter cleanup.
@@ -526,10 +545,11 @@ else:
 
 class _AtomicFile(object):
 
-    def __init__(self, f, tmp_filename, real_filename):
+    def __init__(self, f, tmp_filename, real_filename, permissions):
         self._f = f
         self._tmp_filename = tmp_filename
         self._real_filename = real_filename
+        self._permissions = permissions
         self.closed = False
 
     @property
@@ -546,6 +566,8 @@ class _AtomicFile(object):
             except OSError:
                 pass
         _replace(self._tmp_filename, self._real_filename)
+        if self._permissions is not None:
+            os.chmod(self._real_filename, self._permissions)
         self.closed = True
 
     def __getattr__(self, name):

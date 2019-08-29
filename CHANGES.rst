@@ -13,12 +13,15 @@ Unreleased
 - Remove unused compat shim for ``bytes``. (`#1195`_)
 - Expand unit testing around termui, especially getchar (Windows). (`#1116`_)
 -   Fix output on Windows Python 2.7 built with MSVC 14. #1342
+- ``open_file`` with ``atomic=True`` retains permissions of existing files and
+  respects the current umask for new files. (`#1376`_)
 
 .. _#1167: https://github.com/pallets/click/pull/1167
 .. _#1151: https://github.com/pallets/click/pull/1151
 .. _#1185: https://github.com/pallets/click/issues/1185
 .. _#1195: https://github.com/pallets/click/pull/1195
 .. _#1116: https://github.com/pallets/click/issues/1116
+.. _#1376: https://github.com/pallets/click/issues/1376
 
 Version 7.0
 -----------
