@@ -406,3 +406,22 @@ method can be used to find this out.
     println()
     invoke(cli, prog_name='cli', args=[])
     println()
+
+Shared options
+--------------
+
+Click has a deliberate design decision about [Shared options](https://github.com/pallets/click/issues/108), it's not allowed. But we can define a decorator to make common parameters:
+
+    def common_params(func):
+        @click.option('--foo')
+        @click.option('--bar')
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+
+    @click.command()
+    @common_params
+    @click.option('--baz')
+    def cli(foo, bar, baz):
+        print(foo, bar, baz)
