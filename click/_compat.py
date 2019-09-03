@@ -528,7 +528,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     if not WIN:
         try:
             permissions = stat.S_IMODE(os.stat(real_filename).st_mode)
-        except OSError:
+        except (OSError, IOError):
             permissions = 0o666 & ~_get_current_umask()
 
     return _AtomicFile(f, tmp_filename, real_filename, permissions), True
