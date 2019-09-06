@@ -440,10 +440,18 @@ defaults.
 This is useful if you plug in some commands from another package but
 you're not satisfied with the defaults.
 
-The default map can be nested arbitrarily for each subcommand and
-provided when the script is invoked.  Alternatively, it can also be
-overridden at any point by commands.  For instance, a top-level command could
-load the defaults from a configuration file.
+The default map can be nested arbitrarily for each subcommand:
+
+.. code-block:: python
+
+    default_map = {
+        "debug": True,  # default for a top level option
+        "runserver": {"port": 5000}  # default for a subcommand
+    }
+
+The default map can be provided when the script is invoked, or
+overridden at any point by commands. For instance, a top-level command
+could load the defaults from a configuration file.
 
 Example usage:
 
