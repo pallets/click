@@ -2,12 +2,14 @@ import re
 import io
 import os
 import sys
+import sysconfig
 import codecs
 from weakref import WeakKeyDictionary
 
 
 PY2 = sys.version_info[0] == 2
 CYGWIN = sys.platform.startswith('cygwin')
+MSYS2 = sysconfig.get_platform().startswith('mingw')
 # Determine local App Engine environment, per Google's own suggestion
 APP_ENGINE = ('APPENGINE_RUNTIME' in os.environ and
               'Development/' in os.environ['SERVER_SOFTWARE'])
@@ -593,7 +595,7 @@ def should_strip_ansi(stream=None, color=None):
 # If we're on Windows, we provide transparent integration through
 # colorama.  This will make ANSI colors through the echo function
 # work automatically.
-if WIN:
+if WIN and not MSYS2:
     # Windows has a smaller terminal
     DEFAULT_COLUMNS = 79
 
