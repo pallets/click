@@ -16,6 +16,7 @@ Unreleased
 -   Fix output on Windows Python 2.7 built with MSVC 14. :pr:`1342`
 -   Always return of of the passed choices for ``click.Choice``
     :issue:`1277`, :pr:`1318`
+-   Fix ``OSError`` when running in MSYS2. :issue:`1338`
 
 
 Version 7.0

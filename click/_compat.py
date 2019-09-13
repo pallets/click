@@ -8,10 +8,11 @@ from weakref import WeakKeyDictionary
 
 PY2 = sys.version_info[0] == 2
 CYGWIN = sys.platform.startswith('cygwin')
+MSYS2 = sys.platform.startswith('win') and ('GCC' in sys.version)
 # Determine local App Engine environment, per Google's own suggestion
 APP_ENGINE = ('APPENGINE_RUNTIME' in os.environ and
               'Development/' in os.environ['SERVER_SOFTWARE'])
-WIN = sys.platform.startswith('win') and not APP_ENGINE
+WIN = sys.platform.startswith('win') and not APP_ENGINE and not MSYS2
 DEFAULT_COLUMNS = 80
 
 
