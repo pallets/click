@@ -142,7 +142,10 @@ class Choice(ParamType):
     name = 'choice'
 
     def __init__(self, choices, case_sensitive=True):
-        self.choices = choices
+        # assures we have a list of strings or integers to avoid join failure
+        self.choices = [
+            str(s) if not isinstance(s, (int, str)) else s
+            for s in choices]
         self.case_sensitive = case_sensitive
 
     def get_metavar(self, param):
