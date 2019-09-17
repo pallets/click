@@ -12,9 +12,11 @@ Click.  This page should give some insight into what can be accomplished.
 Command Aliases
 ---------------
 
-Many tools support aliases for commands.  For instance, you can configure
-``git`` to accept ``git ci`` as alias for ``git commit``.  Other tools
-also support auto-discovery for aliases by automatically shortening them.
+Many tools support aliases for commands (see `Command alias example
+<https://github.com/pallets/click/tree/master/examples/aliases>`_).
+For instance, you can configure ``git`` to accept ``git ci`` as alias for
+``git commit``.  Other tools also support auto-discovery for aliases by
+automatically shortening them.
 
 Click does not support this out of the box, but it's very easy to customize
 the :class:`Group` or any other :class:`MultiCommand` to provide this
@@ -377,3 +379,30 @@ do.  However if you do use this for threading you need to be very careful
 as the vast majority of the context is not thread safe!  You are only
 allowed to read from the context, but not to perform any modifications on
 it.
+
+
+Detecting the Source of a Parameter
+-----------------------------------
+
+In some situations it's helpful to understand whether or not an option
+or parameter came from the command line, the environment, the default
+value, or the default_map. The :meth:`Context.get_parameter_source`
+method can be used to find this out.
+
+.. click:example::
+
+    @click.command()
+    @click.argument('port', nargs=1, default=8080, envvar="PORT")
+    @click.pass_context
+    def cli(ctx, port):
+        source = ctx.get_parameter_source("port")
+        click.echo("Port came from {}".format(source))
+
+.. click:run::
+
+    invoke(cli, prog_name='cli', args=['8080'])
+    println()
+    invoke(cli, prog_name='cli', args=[], env={"PORT": "8080"})
+    println()
+    invoke(cli, prog_name='cli', args=[])
+    println()

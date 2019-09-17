@@ -43,7 +43,7 @@ def _check_for_unicode_literals():
                  'because it can introduce subtle bugs in your '
                  'code.  You should instead use explicit u"" literals '
                  'for your unicode strings.  For more information see '
-                 'https://click.palletsprojects.com/python3/'),
+                 'https://click.palletsprojects.com/en/7.x/python3/'),
          stacklevel=bad_frame)
 
 

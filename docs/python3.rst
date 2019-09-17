@@ -8,9 +8,6 @@ it suffers from the Unicode text model in Python 3.  All examples in the
 documentation were written so that they could run on both Python 2.x and
 Python 3.4 or higher.
 
-At the moment, it is strongly recommended to use Python 2 for Click
-utilities unless Python 3 is a hard requirement.
-
 .. _python3-limitations:
 
 Python 3 Limitations
@@ -158,6 +155,11 @@ Python 3 bug tracker:
 *   `LC_CTYPE=C:  pydoc leaves terminal in an unusable state
     <http://bugs.python.org/issue21398>`_ (this is relevant to Click
     because the pager support is provided by the stdlib pydoc module)
+
+Note (Python 3.7 onwards): Even though your locale may not be properly
+configured, Python 3.7 Click will not raise the above exception because Python
+3.7 programs are better at choosing default locales.  This doesn't change the
+general issue that your locale may be misconfigured.
 
 Unicode Literals
 ----------------

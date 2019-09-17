@@ -129,6 +129,35 @@ def iter_params_for_processing(invocation_order, declaration_order):
 
     return sorted(declaration_order, key=sort_key)
 
+class ParameterSource(object):
+    """This is an enum that indicates the source of a command line parameter.
+
+    The enum has one of the following values: COMMANDLINE,
+    ENVIRONMENT, DEFAULT, DEFAULT_MAP.  The DEFAULT indicates that the
+    default value in the decorator was used.  This class should be
+    converted to an enum when Python 2 support is dropped.
+    """
+
+    COMMANDLINE = "COMMANDLINE"
+    ENVIRONMENT = "ENVIRONMENT"
+    DEFAULT = "DEFAULT"
+    DEFAULT_MAP = "DEFAULT_MAP"
+    
+    VALUES = {COMMANDLINE, ENVIRONMENT, DEFAULT, DEFAULT_MAP}
+    
+    @classmethod
+    def validate(cls, value):
+        """Validate that the specified value is a valid enum.
+
+        This method will raise a ValueError if the value is
+        not a valid enum.
+
+        :param value: the string value to verify
+        """
+        if value not in cls.VALUES:
+            raise ValueError("Invalid ParameterSource value: '{}'. Valid "
+                             "values are: {}".format(value, ",".join(cls.VALUES)))
+
 
 class Context(object):
     """The context is a special internal object that holds state relevant
@@ -208,6 +237,9 @@ class Context(object):
                   codes are used in texts that Click prints which is by
                   default not the case.  This for instance would affect
                   help output.
+    :param show_default: if True, shows defaults for all options.
+                    Even if an option is later created with show_default=False,
+                    this command-level setting overrides it.
     """
 
     def __init__(self, command, parent=None, info_name=None, obj=None,
@@ -216,7 +248,7 @@ class Context(object):
                  resilient_parsing=False, allow_extra_args=None,
                  allow_interspersed_args=None,
                  ignore_unknown_options=None, help_option_names=None,
-                 token_normalize_func=None, color=None):
+                 token_normalize_func=None, color=None, show_default=None):
         #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
@@ -337,9 +369,12 @@ class Context(object):
         #: Controls if styling output is wanted or not.
         self.color = color
 
+        self.show_default = show_default
+
         self._close_callbacks = []
         self._depth = 0
-
+        self._source_by_paramname = {}
+        
     def __enter__(self):
         self._depth += 1
         push_context(self)
@@ -572,6 +607,35 @@ class Context(object):
 
         return self.invoke(cmd, **kwargs)
 
+    def set_parameter_source(self, name, source):
+        """Set the source of a parameter.
+
+        This indicates the location from which the value of the
+        parameter was obtained.
+
+        :param name: the name of the command line parameter
+        :param source: the source of the command line parameter, which
+                       should be a valid ParameterSource value
+        """
+        ParameterSource.validate(source)
+        self._source_by_paramname[name] = source
+
+    def get_parameter_source(self, name):
+        """Get the source of a parameter.
+
+        This indicates the location from which the value of the
+        parameter was obtained.  This can be useful for determining
+        when a user specified an option on the command line that is
+        the same as the default.  In that case, the source would be
+        ParameterSource.COMMANDLINE, even though the value of the
+        parameter was equivalent to the default.
+
+        :param name: the name of the command line parameter
+        :returns: the source
+        :rtype: ParameterSource
+        """
+        return self._source_by_paramname[name]
+
 
 class BaseCommand(object):
     """The base command implements the minimal API contract of commands.
@@ -771,6 +835,10 @@ class Command(BaseCommand):
 
     .. versionchanged:: 2.0
        Added the `context_settings` parameter.
+    .. versionchanged:: 8.0
+       Added repr showing the command name
+    .. versionchanged:: 7.1
+       Added the `no_args_is_help` parameter.
 
     :param name: the name of the command to use unless a group overrides it.
     :param context_settings: an optional dictionary with defaults that are
@@ -785,6 +853,10 @@ class Command(BaseCommand):
                        shown on the command listing of the parent command.
     :param add_help_option: by default each command registers a ``--help``
                             option.  This can be disabled by this parameter.
+    :param no_args_is_help: this controls what happens if no arguments are
+                            provided.  This option is disabled by default.
+                            If enabled this will add ``--help`` as argument
+                            if no arguments are passed
     :param hidden: hide this command from help outputs.
 
     :param deprecated: issues a message indicating that
@@ -794,7 +866,7 @@ class Command(BaseCommand):
     def __init__(self, name, context_settings=None, callback=None,
                  params=None, help=None, epilog=None, short_help=None,
                  options_metavar='[OPTIONS]', add_help_option=True,
-                 hidden=False, deprecated=False):
+                 no_args_is_help=False, hidden=False, deprecated=False):
         BaseCommand.__init__(self, name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -812,10 +884,18 @@ class Command(BaseCommand):
         self.options_metavar = options_metavar
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
 
+    def __repr__(self):
+        return '<%s %s>' % (self.__class__.__name__, self.name)
+
     def get_usage(self, ctx):
+        """Formats the usage line into a string and returns it.
+
+        Calls :meth:`format_usage` internally.
+        """
         formatter = ctx.make_formatter()
         self.format_usage(ctx, formatter)
         return formatter.getvalue().rstrip('\n')
@@ -828,7 +908,10 @@ class Command(BaseCommand):
         return rv
 
     def format_usage(self, ctx, formatter):
-        """Writes the usage line into the formatter."""
+        """Writes the usage line into the formatter.
+
+        This is a low-level method called by :meth:`get_usage`.
+        """
         pieces = self.collect_usage_pieces(ctx)
         formatter.write_usage(ctx.command_path, ' '.join(pieces))
 
@@ -872,8 +955,9 @@ class Command(BaseCommand):
         return parser
 
     def get_help(self, ctx):
-        """Formats the help into a string and returns it.  This creates a
-        formatter and will call into the following formatting methods:
+        """Formats the help into a string and returns it.
+
+        Calls :meth:`format_help` internally.
         """
         formatter = ctx.make_formatter()
         self.format_help(ctx, formatter)
@@ -886,7 +970,9 @@ class Command(BaseCommand):
     def format_help(self, ctx, formatter):
         """Writes the help into the formatter if it exists.
 
-        This calls into the following methods:
+        This is a low-level method called by :meth:`get_help`.
+
+        This calls the following methods:
 
         -   :meth:`format_usage`
         -   :meth:`format_help_text`
@@ -932,6 +1018,10 @@ class Command(BaseCommand):
                 formatter.write_text(self.epilog)
 
     def parse_args(self, ctx, args):
+        if not args and self.no_args_is_help and not ctx.resilient_parsing:
+            echo(ctx.get_help(), color=ctx.color)
+            ctx.exit()
+
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
 
@@ -1317,7 +1407,8 @@ class Parameter(object):
     :param nargs: the number of arguments to match.  If not ``1`` the return
                   value is a tuple instead of single value.  The default for
                   nargs is ``1`` (except if the type is a tuple, then it's
-                  the arity of the tuple).
+                  the arity of the tuple). If ``nargs=-1``, all remaining
+                  parameters are collected.
     :param metavar: how the value is represented in the help page.
     :param expose_value: if this is `True` then the value is passed onwards
                          to the command callback and stored on the context,
@@ -1389,10 +1480,15 @@ class Parameter(object):
 
     def consume_value(self, ctx, opts):
         value = opts.get(self.name)
+        source = ParameterSource.COMMANDLINE
         if value is None:
             value = self.value_from_envvar(ctx)
+            source = ParameterSource.ENVIRONMENT
         if value is None:
             value = ctx.lookup_default(self.name)
+            source = ParameterSource.DEFAULT_MAP
+        if value is not None:
+            ctx.set_parameter_source(self.name, source)
         return value
 
     def type_cast_value(self, ctx, value):
@@ -1439,6 +1535,8 @@ class Parameter(object):
 
         if value is None and not ctx.resilient_parsing:
             value = self.get_default(ctx)
+            if value is not None:
+                ctx.set_parameter_source(self.name, ParameterSource.DEFAULT)
 
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)
@@ -1714,7 +1812,8 @@ class Option(Parameter):
                            ', '.join('%s' % d for d in envvar)
                            if isinstance(envvar, (list, tuple))
                            else envvar, ))
-        if self.default is not None and self.show_default:
+        if self.default is not None and \
+            (self.show_default or ctx.show_default):
             if isinstance(self.show_default, string_types):
                 default_string = '({})'.format(self.show_default)
             elif isinstance(self.default, (list, tuple)):

@@ -27,7 +27,7 @@ when an inner command runs:
     def cli(debug):
         click.echo('Debug mode is %s' % ('on' if debug else 'off'))
 
-    @cli.command()
+    @cli.command()  # @cli, not @click!
     def sync():
         click.echo('Syncing')
 
@@ -287,7 +287,7 @@ Multi Command Chaining
 Sometimes it is useful to be allowed to invoke more than one subcommand in
 one go.  For instance if you have installed a setuptools package before
 you might be familiar with the ``setup.py sdist bdist_wheel upload``
-command chain which invokes ``dist`` before ``bdist_wheel`` before
+command chain which invokes ``sdist`` before ``bdist_wheel`` before
 ``upload``.  Starting with Click 3.0 this is very simple to implement.
 All you have to do is to pass ``chain=True`` to your multicommand:
 

@@ -6,8 +6,20 @@ Version 8.0
 
 Unreleased
 
+-   Fix autoloading for ZSH completion and add error handling. (`#1348`_ )
+-   Adds a repr to Command, showing the command name for friendlier debugging. (`#1267`_, `#1295`_)
+-   Add support for distinguishing the source of a command line parameter. (`#1264`_, `#1329`_)
+-   Add an optional parameter to ``ProgressBar.update`` to set the
+    ``current_item``. (`#1226`_, `#1332`_)
 -   Add ``converter`` parameter to ``click.Path``. (`#405`_, `#1148`_)
 
+.. _#1267: https://github.com/pallets/click/issues/1267
+.. _#1295: https://github.com/pallets/click/pull/1295
+.. _#1264: https://github.com/pallets/click/issues/1264
+.. _#1329: https://github.com/pallets/click/pull/1329
+.. _#1226: https://github.com/pallets/click/issues/1226
+.. _#1348: https://github.com/pallets/click/pull/1348
+.. _#1332: https://github.com/pallets/click/pull/1332
 .. _#405: https://github.com/pallets/click/issues/405
 .. _#1148: https://github.com/pallets/click/pull/1148
 
@@ -17,6 +29,18 @@ Version 7.1
 
 Unreleased
 
+- Add ``no_args_is_help`` option to ``click.Command``, defaults to False (`#1167`_)
+- Fix link in ``unicode_literals`` error message. (`#1151`_)
+- Add support for colored output on UNIX Jupyter notebooks. (`#1185`_)
+- Remove unused compat shim for ``bytes``. (`#1195`_)
+- Expand unit testing around termui, especially getchar (Windows). (`#1116`_)
+-   Fix output on Windows Python 2.7 built with MSVC 14. #1342
+
+.. _#1167: https://github.com/pallets/click/pull/1167
+.. _#1151: https://github.com/pallets/click/pull/1151
+.. _#1185: https://github.com/pallets/click/issues/1185
+.. _#1195: https://github.com/pallets/click/pull/1195
+.. _#1116: https://github.com/pallets/click/issues/1116
 
 Version 7.0
 -----------
@@ -507,7 +531,7 @@ Version 3.0
 
 (codename "clonk clonk", released on August 12th 2014)
 
-- formatter now no longer attempts to accomodate for terminals
+- formatter now no longer attempts to accommodate for terminals
   smaller than 50 characters.  If that happens it just assumes
   a minimal width.
 - added a way to not swallow exceptions in the test system.
@@ -516,7 +540,7 @@ Version 3.0
 - the CLI runner's result object now has a traceback attached.
 - improved automatic short help detection to work better with
   dots that do not terminate sentences.
-- when definining options without actual valid option strings
+- when defining options without actual valid option strings
   now, Click will give an error message instead of silently
   passing.  This should catch situations where users wanted to
   created arguments instead of options.

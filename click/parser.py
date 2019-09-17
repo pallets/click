@@ -16,6 +16,11 @@ generated and optparse in the stdlib uses gettext for no good reason
 and might cause us issues.
 """
 
+# This code uses parts of optparse written by Gregory P. Ward and
+# maintained by the Python Software Foundation.
+# Copyright 2001-2006 Gregory P. Ward
+# Copyright 2002-2006 Python Software Foundation
+
 import re
 from collections import deque
 from .exceptions import UsageError, NoSuchOption, BadOptionUsage, \

@@ -39,10 +39,14 @@ COMPLETION_SCRIPT_BASH = '''
 '''
 
 COMPLETION_SCRIPT_ZSH = '''
+#compdef %(script_names)s
+
 %(complete_func)s() {
     local -a completions
     local -a completions_with_descriptions
     local -a response
+    (( ! $+commands[%(script_names)s] )) && return 1
+
     response=("${(@f)$( env COMP_WORDS=\"${words[*]}\" \\
                         COMP_CWORD=$((CURRENT-1)) \\
                         %(autocomplete_var)s=\"complete_zsh\" \\
@@ -130,7 +134,7 @@ def start_of_option(param_str):
 def is_incomplete_option(all_args, cmd_param):
     """
     :param all_args: the full original list of args supplied
-    :param cmd_param: the current command paramter
+    :param cmd_param: the current command parameter
     :return: whether or not the last option declaration (i.e. starts "-" or "--") is incomplete and
     corresponds to this cmd_param. In other words whether this cmd_param option can still accept
     values

@@ -6,7 +6,7 @@ import click
 CONTEXT_SETTINGS = dict(auto_envvar_prefix='COMPLEX')
 
 
-class Context(object):
+class Environment(object):
 
     def __init__(self):
         self.verbose = False
@@ -24,7 +24,7 @@ class Context(object):
             self.log(msg, *args)
 
 
-pass_context = click.make_pass_decorator(Context, ensure=True)
+pass_environment = click.make_pass_decorator(Environment, ensure=True)
 cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                           'commands'))
 
@@ -57,7 +57,7 @@ class ComplexCLI(click.MultiCommand):
               help='Changes the folder to operate on.')
 @click.option('-v', '--verbose', is_flag=True,
               help='Enables verbose mode.')
-@pass_context
+@pass_environment
 def cli(ctx, verbose, home):
     """A complex command line interface."""
     ctx.verbose = verbose

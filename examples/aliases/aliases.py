@@ -14,6 +14,9 @@ class Config(object):
         self.path = os.getcwd()
         self.aliases = {}
 
+    def add_alias(self, alias, cmd):
+        self.aliases.update({alias: cmd})
+
     def read_config(self, filename):
         parser = configparser.RawConfigParser()
         parser.read([filename])
@@ -21,6 +24,14 @@ class Config(object):
             self.aliases.update(parser.items('aliases'))
         except configparser.NoSectionError:
             pass
+
+    def write_config(self, filename):
+        parser = configparser.RawConfigParser()
+        parser.add_section('aliases')
+        for key, value in self.aliases.items():
+            parser.set('aliases', key, value)
+        with open(filename, 'wb') as file:
+            parser.write(file)
 
 
 pass_config = click.make_pass_decorator(Config, ensure=True)
@@ -41,7 +52,7 @@ class AliasedGroup(click.Group):
         # will create the config object is missing.
         cfg = ctx.ensure_object(Config)
 
-        # Step three: lookup an explicit command aliase in the config
+        # Step three: look up an explicit command alias in the config
         if cmd_name in cfg.aliases:
             actual_cmd = cfg.aliases[cmd_name]
             return click.Group.get_command(self, ctx, actual_cmd)
@@ -109,3 +120,16 @@ def commit():
 def status(config):
     """Shows the status."""
     click.echo('Status for %s' % config.path)
+
+
+@cli.command()
+@pass_config
+@click.argument("alias_", metavar='ALIAS', type=click.STRING)
+@click.argument("cmd", type=click.STRING)
+@click.option('--config_file', type=click.Path(exists=True, dir_okay=False),
+              default="aliases.ini")
+def alias(config, alias_, cmd, config_file):
+    """Adds an alias to the specified configuration file."""
+    config.add_alias(alias_, cmd)
+    config.write_config(config_file)
+    click.echo('Added %s as alias for %s' % (alias_, cmd))

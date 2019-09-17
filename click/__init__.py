@@ -14,7 +14,7 @@ composable.
 
 # Core classes
 from .core import Context, BaseCommand, Command, MultiCommand, Group, \
-     CommandCollection, Parameter, Option, Argument
+     CommandCollection, Parameter, Option, Argument, ParameterSource
 
 # Globals
 from .globals import get_current_context

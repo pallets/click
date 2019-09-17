@@ -16,7 +16,7 @@ import sys
 import time
 import math
 import contextlib
-from ._compat import _default_text_stdout, range_type, PY2, isatty, \
+from ._compat import _default_text_stdout, range_type, isatty, \
      open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
      CYGWIN
 from .utils import echo
@@ -260,8 +260,21 @@ class ProgressBar(object):
 
         self.eta_known = self.length_known
 
-    def update(self, n_steps):
+    def update(self, n_steps, current_item=None):
+        """Update the progress bar by advancing a specified number of
+        steps, and optionally set the ``current_item`` for this new
+        position.
+
+        :param n_steps: Number of steps to advance.
+        :param current_item: Optional item to set as ``current_item``
+            for the updated position.
+
+        .. versionadded:: 8.0
+            Added the ``current_item`` optional parameter.
+        """
         self.make_step(n_steps)
+        if current_item is not None:
+            self.current_item = current_item
         self.render_progress()
 
     def finish(self):
@@ -436,17 +449,20 @@ class Editor(object):
         import tempfile
 
         text = text or ''
-        if text and not text.endswith('\n'):
+        binary_data = type(text) in [bytes, bytearray]
+
+        if not binary_data and text and not text.endswith('\n'):
             text += '\n'
 
         fd, name = tempfile.mkstemp(prefix='editor-', suffix=self.extension)
         try:
-            if WIN:
-                encoding = 'utf-8-sig'
-                text = text.replace('\n', '\r\n')
-            else:
-                encoding = 'utf-8'
-            text = text.encode(encoding)
+            if not binary_data:
+                if WIN:
+                    encoding = 'utf-8-sig'
+                    text = text.replace('\n', '\r\n')
+                else:
+                    encoding = 'utf-8'
+                text = text.encode(encoding)
 
             f = os.fdopen(fd, 'wb')
             f.write(text)
@@ -464,7 +480,10 @@ class Editor(object):
                 rv = f.read()
             finally:
                 f.close()
-            return rv.decode('utf-8-sig').replace('\r\n', '\n')
+            if binary_data:
+                return rv
+            else:
+                return rv.decode('utf-8-sig').replace('\r\n', '\n')
         finally:
             os.unlink(name)
 
