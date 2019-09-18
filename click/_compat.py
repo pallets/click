@@ -34,12 +34,6 @@ def _make_text_stream(stream, encoding, errors,
                                     force_readable=force_readable,
                                     force_writable=force_writable)
 
-def _get_current_umask():
-    """Get current umask."""
-    umask = os.umask(0)
-    os.umask(umask)
-    return umask
-
 
 def is_ascii_encoding(encoding):
     """Checks if a given encoding is ascii."""
@@ -510,9 +504,15 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     # as a proxy in the same folder and then using the fdopen
     # functionality to wrap it in a Python file.  Then we wrap it in an
     # atomic file that moves the file over on close.
-    import tempfile
-    fd, tmp_filename = tempfile.mkstemp(dir=os.path.dirname(filename),
-                                        prefix='.__atomic-write')
+    #
+    # The vendored tempfile modules are modified to respect the current umask when
+    # creating the file.
+    if PY2:
+        from . import _tempfile27 as _tempfile
+    else:
+        from . import _tempfile36 as _tempfile
+    fd, tmp_filename = _tempfile.mkstemp(dir=os.path.dirname(filename),
+                                         prefix='.__atomic-write')
 
     if encoding is not None:
         f = io.open(fd, mode, encoding=encoding, errors=errors)
@@ -529,7 +529,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
         try:
             permissions = stat.S_IMODE(os.stat(real_filename).st_mode)
         except (OSError, IOError):
-            permissions = 0o666 & ~_get_current_umask()
+            pass
 
     return _AtomicFile(f, tmp_filename, real_filename, permissions), True
 

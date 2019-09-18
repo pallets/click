@@ -7,7 +7,7 @@ import pytest
 import click
 import click.utils
 import click._termui_impl
-from click._compat import WIN, PY2, _get_current_umask
+from click._compat import WIN, PY2
 
 
 def test_echo(runner):
@@ -309,7 +309,7 @@ def test_open_file_atomic_permissions_existing_file(runner, permissions):
         assert stat.S_IMODE(os.stat('existing.txt').st_mode) == permissions
 
 
-@pytest.mark.skipif(WIN, reason='os.chmod() is not fully supported on Windows.')
+@pytest.mark.skipif(WIN, reason='os.stat() is not fully supported on Windows.')
 def test_open_file_atomic_permissions_new_file(runner):
     with runner.isolated_filesystem():
         @click.command()
@@ -317,10 +317,15 @@ def test_open_file_atomic_permissions_new_file(runner):
         def cli(filename):
             click.open_file(filename, 'w', atomic=True).close()
 
-        umask = _get_current_umask()
+        # Create a test file to get the expected permissions for new files
+        # according to the current umask.
+        with open('test.txt', 'w'):
+            pass
+        permissions = stat.S_IMODE(os.stat('test.txt').st_mode)
+
         result = runner.invoke(cli, ['new.txt'])
         assert result.exception is None
-        assert stat.S_IMODE(os.stat('new.txt').st_mode) == (0o666 & ~umask)
+        assert stat.S_IMODE(os.stat('new.txt').st_mode) == permissions
 
 
 @pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
