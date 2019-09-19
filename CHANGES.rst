@@ -29,6 +29,8 @@ Unreleased
     :issue:`1196`
 -   It is once again possible to call ``next(bar)`` on an active
     progress bar instance. :issue:`1125`
+-   ``open_file`` with ``atomic=True`` retains permissions of existing
+    files and respects the current umask for new files. :issue:`1376`
 
 
 Version 7.0
