@@ -39,6 +39,11 @@ passed 3 keyword arguments:
 - ``incomplete`` - The partial word that is being completed, as a string.  May
   be an empty string ``''`` if no characters have been entered yet.
 
+The returned strings should have spaces appended to them in the case that
+they cannot be further completed, omitting the space allows the completion
+to be invoked multiple times, which can be useful for completing path-like
+strings by searching a database or filesystem.
+
 Here is an example of using a callback function to generate dynamic suggestions:
 
 .. click:example::
@@ -46,7 +51,7 @@ Here is an example of using a callback function to generate dynamic suggestions:
     import os
 
     def get_env_vars(ctx, args, incomplete):
-        return [k for k in os.environ.keys() if incomplete in k]
+        return [k + ' ' for k in os.environ.keys() if incomplete in k]
 
     @click.command()
     @click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
@@ -127,5 +132,3 @@ For zsh:
 And then you would put this into your .bashrc or .zshrc instead::
 
     . /path/to/foo-bar-complete.sh
-
-

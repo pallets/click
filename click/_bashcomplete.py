@@ -5,7 +5,6 @@ import re
 from .utils import echo
 from .parser import split_arg_string
 from .core import MultiCommand, Option, Argument
-from .types import Choice
 
 try:
     from collections import abc
@@ -29,8 +28,9 @@ COMPLETION_SCRIPT_BASH = '''
     local BASH_VERSION_ARR=(${BASH_VERSION//./ })
     # Only BASH version 4.4 and later have the nosort option.
     if [ ${BASH_VERSION_ARR[0]} -gt 4 ] || ([ ${BASH_VERSION_ARR[0]} -eq 4 ] && [ ${BASH_VERSION_ARR[1]} -ge 4 ]); then
-        COMPLETION_OPTIONS="-o nosort"
+        COMPLETION_OPTIONS="-o nosort "
     fi
+    COMPLETION_OPTIONS=$COMPLETION_OPTIONS"-o nospace"
 
     complete $COMPLETION_OPTIONS -F %(complete_func)s %(script_names)s
 }
@@ -182,16 +182,16 @@ def get_user_autocompletions(ctx, args, incomplete, cmd_param):
     :return: all the possible user-specified completions for the param
     """
     results = []
-    if isinstance(cmd_param.type, Choice):
-        # Choices don't support descriptions.
-        results = [(c, None)
-                   for c in cmd_param.type.choices if str(c).startswith(incomplete)]
-    elif cmd_param.autocompletion is not None:
-        dynamic_completions = cmd_param.autocompletion(ctx=ctx,
-                                                       args=args,
-                                                       incomplete=incomplete)
-        results = [c if isinstance(c, tuple) else (c, None)
-                   for c in dynamic_completions]
+    if cmd_param.autocompletion is not None:
+        completions = cmd_param.autocompletion(
+            ctx=ctx,
+            args=args,
+            incomplete=incomplete
+        )
+    else:
+        completions = cmd_param.type.completions(incomplete)
+
+    results = [c if isinstance(c, tuple) else (c, None) for c in completions]
     return results
 
 
@@ -212,7 +212,11 @@ def add_subcommand_completions(ctx, incomplete, completions_out):
     # Add subcommand completions.
     if isinstance(ctx.command, MultiCommand):
         completions_out.extend(
-            [(c.name, c.get_short_help_str()) for c in get_visible_commands_starting_with(ctx, incomplete)])
+            [
+                (c.name + " ", c.get_short_help_str())
+                for c in get_visible_commands_starting_with(ctx, incomplete)
+            ]
+        )
 
     # Walk up the context list and add any other completion possibilities from chained commands
     while ctx.parent is not None:
@@ -220,7 +224,9 @@ def add_subcommand_completions(ctx, incomplete, completions_out):
         if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
             remaining_commands = [c for c in get_visible_commands_starting_with(ctx, incomplete)
                                   if c.name not in ctx.protected_args]
-            completions_out.extend([(c.name, c.get_short_help_str()) for c in remaining_commands])
+            completions_out.extend(
+                [(c.name + " ", c.get_short_help_str()) for c in remaining_commands]
+            )
 
 
 def get_choices(cli, prog_name, args, incomplete):
@@ -251,7 +257,7 @@ def get_choices(cli, prog_name, args, incomplete):
         # completions for partial options
         for param in ctx.command.params:
             if isinstance(param, Option) and not param.hidden:
-                param_opts = [param_opt for param_opt in param.opts +
+                param_opts = [param_opt + " " for param_opt in param.opts +
                               param.secondary_opts if param_opt not in all_args or param.multiple]
                 completions.extend([(o, param.help) for o in param_opts if o.startswith(incomplete)])
         return completions

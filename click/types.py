@@ -68,6 +68,22 @@ class ParamType(object):
         """Helper method to fail with an invalid value message."""
         raise BadParameter(message, ctx=ctx, param=param)
 
+    def completions(self, incomplete):
+        """Report possible completions for this parameter.
+
+        This takes the currently incomplete word for this parameter,
+        which may be an empty string if no characters have been entered yet.
+
+        This method should return a list of words that are suitable completions
+        for the parameter.
+
+        Suggested completions which cannot be completed further, should
+        be completed with a space appended. This allows support for
+        partial path like completions which may be searched in a database
+        or filesystem.
+        """
+        return []
+
 
 class CompositeParamType(ParamType):
     is_composite = True
@@ -178,6 +194,9 @@ class Choice(ParamType):
 
         self.fail('invalid choice: %s. (choose from %s)' %
                   (value, ', '.join(self.choices)), param, ctx)
+
+    def completions(self, incomplete):
+        return [c + " " for c in self.choices if c.startswith(incomplete)]
 
     def __repr__(self):
         return 'Choice(%r)' % list(self.choices)
@@ -354,6 +373,9 @@ class BoolParamType(ParamType):
             return False
         self.fail('%s is not a valid boolean' % value, param, ctx)
 
+    def completions(self, incomplete):
+        return ["yes ", "no "]
+
     def __repr__(self):
         return 'BOOL'
 
@@ -372,6 +394,43 @@ class UUIDParameterType(ParamType):
 
     def __repr__(self):
         return 'UUID'
+
+
+def _complete_path(path_type, incomplete):
+    """Helper method for implementing the completions() method
+    for File and Path parameter types.
+    """
+
+    # Try listing the files in the relative or absolute path
+    # specified in `incomplete` minus the last path component,
+    # otherwise list files starting from the current working directory.
+    dirname = os.path.dirname(incomplete)
+    base_path = dirname or '.'
+
+    entries = []
+    try:
+        entries = [os.path.join(dirname, e) for e in os.listdir(base_path)]
+    except OSError:
+        # If for any reason the os reports an error from os.listdir(), just
+        # ignore this and avoid a stack trace
+        pass
+
+    # Only keep completions that match the provided partial completion.
+    entries = [entry for entry in entries if entry.startswith(incomplete)]
+
+    # If we're searching for a directory, keep only directories.
+    entries = [
+        entry for entry in entries
+        if path_type != "Directory" or os.path.isdir(entry)
+    ]
+
+    # Append a slash for directories, or a space for files.
+    entries = [
+        entry + (os.path.sep if os.path.isdir(entry) else " ")
+        for entry in entries
+    ]
+
+    return sorted(entries)
 
 
 class File(ParamType):
@@ -453,6 +512,9 @@ class File(ParamType):
                 filename_to_ui(value),
                 get_streerror(e),
             ), param, ctx)
+
+    def completions(self, incomplete):
+        return _complete_path("File", incomplete)
 
 
 class Path(ParamType):
@@ -558,6 +620,9 @@ class Path(ParamType):
                 ), param, ctx)
 
         return self.coerce_path_result(rv)
+
+    def completions(self, incomplete):
+        return _complete_path(self.path_type, incomplete)
 
 
 class Tuple(CompositeParamType):

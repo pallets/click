@@ -11,7 +11,7 @@ def get_env_vars(ctx, args, incomplete):
     # Completions returned as strings do not have a description displayed.
     for key in os.environ.keys():
         if incomplete in key:
-            yield key
+            yield key + ' '
 
 
 @cli.command(help='A command to print environment variables')
@@ -33,7 +33,11 @@ def list_users(ctx, args, incomplete):
              ('alice', 'baker'),
              ('jerry', 'candlestick maker')]
     # Ths will allow completion matches based on matches within the description string too!
-    return [user for user in users if incomplete in user[0] or incomplete in user[1]]
+    return [
+        user + ' '
+        for user in users
+        if incomplete in user[0] or incomplete in user[1]
+    ]
 
 
 @group.command(help='Choose a user')
