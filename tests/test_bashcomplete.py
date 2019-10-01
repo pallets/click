@@ -535,6 +535,6 @@ def test_files_only():
             ("dira" + os.path.sep, None),
             ("dirb" + os.path.sep, None),
         ]
-        assert list(get_choices(cli, "lol", ["--path"], "dirb/")) == [
+        assert list(get_choices(cli, "lol", ["--path"], "dirb" + os.path.sep)) == [
             (os.path.join("dirb", "file.txt") + " ", None)
         ]
