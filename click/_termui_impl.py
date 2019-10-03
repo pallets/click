@@ -11,6 +11,7 @@ placed in this module and only imported as needed.
 :license: BSD, see LICENSE.rst for more details.
 """
 
+from io import StringIO
 import os
 import sys
 import time
@@ -21,6 +22,7 @@ from ._compat import _default_text_stdout, range_type, isatty, \
      CYGWIN
 from .utils import echo
 from .exceptions import ClickException
+from multiprocessing import Event, Process
 
 
 if os.name == 'nt':
@@ -49,6 +51,45 @@ def _length_hint(obj):
            hint < 0:
             return None
         return hint
+
+
+class LoadingBar(object):
+
+    @staticmethod
+    def _displayer(msg, interval, width, fill_char, stop_event):
+        bar = ' ' * width
+        bars = []
+        for i in range(width):
+            bars.append(bar[:i] + fill_char + bar[i+1:])
+        bars += list(reversed(bars[1:-1]))
+        n = len(bars)
+        i = 0
+        while True:
+            if stop_event.is_set():
+                sys.stdout.write('\n')
+                return
+            sys.stdout.write('\r{} [{}]'.format(msg, bars[i]))
+            sys.stdout.flush()
+            i = (i + 1) % n
+            time.sleep(interval)
+
+    def __init__(self, msg='Loading', interval=.5, width=7, fill_char='.'):
+        self.original_stdout = sys.stdout
+        self.dummy_stdout = StringIO()
+        self.stop_event = Event()
+        self.displayer = Process(
+            target=self._displayer,
+            args=(msg, interval, width, fill_char, self.stop_event))
+
+    def __enter__(self):
+        sys.stdout = self.dummy_stdout
+        self.displayer.start()
+
+    def __exit__(self, exc_type, exc_value, tb):
+        self.stop_event.set()
+        self.displayer.join()
+        sys.stdout = self.original_stdout
+        self.dummy_stdout.close()
 
 
 class ProgressBar(object):

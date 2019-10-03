@@ -258,6 +258,29 @@ def echo_via_pager(text_or_generator, color=None):
     return pager(itertools.chain(text_generator, "\n"), color)
 
 
+def loadingbar(msg='Loading', interval=.5, width=7, fill_char='.'):
+    """This function creates a context manager that when entered, begins
+    displaying an animated loading bar while some code runs.
+    The loading bar will be dismissed when 'with-block' for the context
+    manager exits.
+
+    Example usage::
+
+        with loadingbar():
+            some_indeterminite_length_task()
+
+        with loadingbar(msg='Downloading', width=9, interval=.25, fill_char='#'):
+            some_indeterminite_length_task()
+
+    :param msg: The text to display near the bar.
+    :param interval: The interval in seconds at which the animation will update.
+    :param width: The width in characters of the loading animation.
+    :param fill_char: The character to use in the loading bar.
+    """
+    from ._termui_impl import LoadingBar
+    return LoadingBar(msg=msg, interval=interval, width=width, fill_char=fill_char)
+
+
 def progressbar(iterable=None, length=None, label=None, show_eta=True,
                 show_percent=None, show_pos=False,
                 item_show_func=None, fill_char='#', empty_char='-',
