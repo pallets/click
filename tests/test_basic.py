@@ -80,6 +80,30 @@ def test_basic_group(runner):
     assert "SUBCOMMAND EXECUTED" in result.output
 
 
+def test_group_commands_dict(runner):
+    """A Group can be built with a dict of commands."""
+
+    @click.command()
+    def sub():
+        click.echo("sub", nl=False)
+
+    cli = click.Group(commands={"other": sub})
+    result = runner.invoke(cli, ["other"])
+    assert result.output == "sub"
+
+
+def test_group_from_list(runner):
+    """A Group can be built with a list of commands."""
+
+    @click.command()
+    def sub():
+        click.echo("sub", nl=False)
+
+    cli = click.Group(commands=[sub])
+    result = runner.invoke(cli, ["sub"])
+    assert result.output == "sub"
+
+
 def test_basic_option(runner):
     @click.command()
     @click.option("--foo", default="no value")
