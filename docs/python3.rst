@@ -147,13 +147,13 @@ curious about the reasons for this, you can join the discussions in the
 Python 3 bug tracker:
 
 *   `ASCII is a bad filesystem default encoding
-    <http://bugs.python.org/issue13643#msg149941>`_
+    <https://bugs.python.org/issue13643#msg149941>`_
 *   `Use surrogateescape as default error handler
-    <http://bugs.python.org/issue19977>`_
+    <https://bugs.python.org/issue19977>`_
 *   `Python 3 raises Unicode errors in the C locale
-    <http://bugs.python.org/issue19846>`_
+    <https://bugs.python.org/issue19846>`_
 *   `LC_CTYPE=C:  pydoc leaves terminal in an unusable state
-    <http://bugs.python.org/issue21398>`_ (this is relevant to Click
+    <https://bugs.python.org/issue21398>`_ (this is relevant to Click
     because the pager support is provided by the stdlib pydoc module)
 
 Note (Python 3.7 onwards): Even though your locale may not be properly

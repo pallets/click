@@ -46,7 +46,7 @@ If you are on Windows (or none of the above methods worked) you must install
 Once you have it installed, run the ``pip`` command from above, but without
 the `sudo` prefix.
 
-.. _installing pip: https://pip.readthedocs.io/en/latest/installing.html
+.. _installing pip: https://pip.readthedocs.io/en/latest/installing/
 
 Once you have virtualenv installed, just fire up a shell and create
 your own environment.  I usually create a project folder and a `venv`
