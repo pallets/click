@@ -1,3 +1,4 @@
-.. currentmodule:: click
+Changelog
+=========
 
 .. include:: ../CHANGES.rst
