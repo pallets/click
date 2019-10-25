@@ -422,10 +422,12 @@ def tempdir(chdir=False):
     if chdir:
         os.chdir(temp)
 
-    yield temp
+    try:
+        yield temp
 
-    os.chdir(cwd)
-    shutil.rmtree(temp)
+    finally:
+        os.chdir(cwd)
+        shutil.rmtree(temp)
 
 
 def test_absolute_path():
