@@ -61,11 +61,11 @@ COMPLETION_SCRIPT_ZSH = '''
     done
 
     if [ -n "$completions_with_descriptions" ]; then
-        _describe -V unsorted completions_with_descriptions -U -Q
+        _describe -V unsorted completions_with_descriptions -U
     fi
 
     if [ -n "$completions" ]; then
-        compadd -U -V unsorted -Q -a completions
+        compadd -U -V unsorted -a completions
     fi
     compstate[insert]="automenu"
 }
