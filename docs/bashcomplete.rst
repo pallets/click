@@ -13,7 +13,7 @@ Limitations
 Bash completion is only available if a script has been installed properly,
 and not executed through the ``python`` command.  For information about
 how to do that, see :ref:`setuptools-integration`.  Click currently
-only supports completion for Bash and Zsh.
+only supports completion for Bash, Zsh and Fish.
 
 What it Completes
 -----------------
@@ -55,10 +55,10 @@ Here is an example of using a callback function to generate dynamic suggestions:
         click.echo('Value: %s' % os.environ[envvar])
 
 
-Completion help strings (ZSH only)
-----------------------------------
+Completion help strings (ZSH/fish only)
+---------------------------------------
 
-ZSH supports showing documentation strings for completions. These are taken
+ZSH and fish support showing documentation strings for completions. These are taken
 from the help parameters of options and subcommands. For dynamically generated
 completions a help string can be provided by returning a tuple instead of a
 string. The first element of the tuple is the completion and the second is the
@@ -128,4 +128,6 @@ And then you would put this into your .bashrc or .zshrc instead::
 
     . /path/to/foo-bar-complete.sh
 
+Or for fish, you can just add the file to the completions directory:
 
+    _FOO_BAR_COMPLETE=source_fish foo-bar > ~/.config/fish/completions/foo-bar-complete.fish
