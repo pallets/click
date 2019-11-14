@@ -84,7 +84,7 @@ File System Isolation
 
 For basic command line tools that want to operate with the file system, the
 :meth:`CliRunner.isolated_filesystem` method comes in useful which sets up
-an empty folder and changes the current working directory to:
+an empty folder and changes the current working directory to it:
 
 .. code-block:: python
    :caption: cat.py
