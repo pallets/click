@@ -59,6 +59,9 @@ For subcommand testing, a subcommand name must be specified in the `args` parame
    @cli.command()
    def sync():
       click.echo('Syncing')
+   
+   # make sure subcommand been added to cli.
+   cli.add_command(sync)
 
 .. code-block:: python
    :caption: test_sync.py
