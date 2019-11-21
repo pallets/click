@@ -77,6 +77,8 @@ Unreleased
     to ``--name``. :pr:`1355`
 -   A context's ``show_default`` parameter defaults to the value from
     the parent context. :issue:`1565`
+-   ``click.style()`` can output 256 and RGB color codes. Most modern
+    terminals support these codes. :pr:`1429`
 
 
 Version 7.1.2
