@@ -172,21 +172,29 @@ def confirm(
     If the user aborts the input by sending a interrupt signal this
     function will catch it and raise a :exc:`Abort` exception.
 
-    .. versionadded:: 4.0
-       Added the `err` parameter.
-
     :param text: the question to ask.
-    :param default: the default for the prompt.
+    :param default: The default value to use when no input is given. If
+        ``None``, repeat until input is given.
     :param abort: if this is set to `True` a negative answer aborts the
                   exception by raising :exc:`Abort`.
     :param prompt_suffix: a suffix that should be added to the prompt.
     :param show_default: shows or hides the default value in the prompt.
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``, the same as with echo.
+
+    .. versionchanged:: 8.0
+        Repeat until input is given if ``default`` is ``None``.
+
+    .. versionadded:: 4.0
+        Added the ``err`` parameter.
     """
     prompt = _build_prompt(
-        text, prompt_suffix, show_default, "Y/n" if default else "y/N"
+        text,
+        prompt_suffix,
+        show_default,
+        "y/n" if default is None else ("Y/n" if default else "y/N"),
     )
+
     while 1:
         try:
             # Write the prompt separately so that we get nice
@@ -199,7 +207,7 @@ def confirm(
             rv = True
         elif value in ("n", "no"):
             rv = False
-        elif value == "":
+        elif default is not None and value == "":
             rv = default
         else:
             echo("Error: invalid input", err=err)
