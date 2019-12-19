@@ -48,7 +48,7 @@ def test_return_values():
 
     with cli.make_context('foo', []) as ctx:
         rv = cli.invoke(ctx)
-        assert rv is 42
+        assert rv == 42
 
 
 def test_basic_group(runner):
