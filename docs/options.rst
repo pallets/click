@@ -149,7 +149,7 @@ Multiple Options
 ----------------
 
 Similarly to ``nargs``, there is also the case of wanting to support a
-parameter being provided multiple times to and have all values recorded --
+parameter being provided multiple times and have all the values recorded --
 not just the last one.  For instance, ``git commit -m foo -m bar`` would
 record two lines for the commit message: ``foo`` and ``bar``. This can be
 accomplished with the ``multiple`` flag:
