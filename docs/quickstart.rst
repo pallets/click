@@ -39,7 +39,7 @@ commands will work for you::
 
 or even better::
 
-    $ sudo pip install virtualenv
+    $ pip install virtualenv --user
 
 One of these will probably install virtualenv on your system.  Maybe it's even
 in your package manager.  If you use Ubuntu, try::
