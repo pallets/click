@@ -400,6 +400,8 @@ def _complete_path(path_type, incomplete):
     """Helper method for implementing the completions() method
     for File and Path parameter types.
     """
+    # Resolve shell variables and user/home shortcuts.
+    incomplete = os.path.expandvars(os.path.expanduser(incomplete))
 
     # Try listing the files in the relative or absolute path
     # specified in `incomplete` minus the last path component,
