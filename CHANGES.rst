@@ -1,25 +1,19 @@
-Click Changelog
-===============
+.. currentmodule:: click
 
 Version 8.0
 -----------
 
 Unreleased
 
--   Fix autoloading for ZSH completion and add error handling. (`#1348`_ )
--   Adds a repr to Command, showing the command name for friendlier debugging. (`#1267`_, `#1295`_)
--   Add support for distinguishing the source of a command line parameter. (`#1264`_, `#1329`_)
+-   Fix autoloading for ZSH completion and add error handling.
+    :pr:`1348`
+-   Adds a repr to Command, showing the command name for friendlier
+    debugging. :issue:`1267`, :pr:`1295`
+-   Add support for distinguishing the source of a command line
+    parameter. :issue:`1264`, :pr:`1329`
 -   Add an optional parameter to ``ProgressBar.update`` to set the
-    ``current_item``. (`#1226`_, `#1332`_)
+    ``current_item``. :issue:`1226`, :pr:`1332`
 -   Add ``converter`` parameter to ``click.Path``. (`#405`_, `#1148`_)
-
-.. _#1267: https://github.com/pallets/click/issues/1267
-.. _#1295: https://github.com/pallets/click/pull/1295
-.. _#1264: https://github.com/pallets/click/issues/1264
-.. _#1329: https://github.com/pallets/click/pull/1329
-.. _#1226: https://github.com/pallets/click/issues/1226
-.. _#1348: https://github.com/pallets/click/pull/1348
-.. _#1332: https://github.com/pallets/click/pull/1332
 .. _#405: https://github.com/pallets/click/issues/405
 .. _#1148: https://github.com/pallets/click/pull/1148
 
@@ -29,647 +23,560 @@ Version 7.1
 
 Unreleased
 
-- Add ``no_args_is_help`` option to ``click.Command``, defaults to False (`#1167`_)
-- Fix link in ``unicode_literals`` error message. (`#1151`_)
-- Add support for colored output on UNIX Jupyter notebooks. (`#1185`_)
-- Remove unused compat shim for ``bytes``. (`#1195`_)
-- Expand unit testing around termui, especially getchar (Windows). (`#1116`_)
--   Fix output on Windows Python 2.7 built with MSVC 14. #1342
+-   Add ``no_args_is_help`` option to ``click.Command``, defaults to
+    False :pr:`1167`
+-   Fix link in ``unicode_literals`` error message. :pr:`1151`
+-   Add support for colored output on UNIX Jupyter notebooks.
+    :issue:`1185`
+-   Remove unused compat shim for ``bytes``. :pr:`1195`
+-   Expand unit testing around termui, especially getchar (Windows).
+    :issue:`1116`
+-   Fix output on Windows Python 2.7 built with MSVC 14. :pr:`1342`
+-   Always return of of the passed choices for ``click.Choice``
+    :issue:`1277`, :pr:`1318`
+-   Fix ``OSError`` when running in MSYS2. :issue:`1338`
 
-.. _#1167: https://github.com/pallets/click/pull/1167
-.. _#1151: https://github.com/pallets/click/pull/1151
-.. _#1185: https://github.com/pallets/click/issues/1185
-.. _#1195: https://github.com/pallets/click/pull/1195
-.. _#1116: https://github.com/pallets/click/issues/1116
 
 Version 7.0
 -----------
 
 Released 2018-09-25
 
--   Drop support for Python 2.6 and 3.3. (`#967`_, `#976`_)
--   Wrap ``click.Choice``'s missing message. (`#202`_, `#1000`_)
--   Add native ZSH autocompletion support. (`#323`_, `#865`_)
--   Document that ANSI color info isn't parsed from bytearrays in
-    Python 2. (`#334`_)
--   Document byte-stripping behavior of ``CliRunner``. (`#334`_,
-    `#1010`_)
--   Usage errors now hint at the ``--help`` option. (`#393`_, `#557`_)
--   Implement streaming pager. (`#409`_, `#889`_)
--   Extract bar formatting to its own method. (`#414`_)
+-   Drop support for Python 2.6 and 3.3. :pr:`967, 976`
+-   Wrap ``click.Choice``'s missing message. :issue:`202`, :pr:`1000`
+-   Add native ZSH autocompletion support. :issue:`323`, :pr:`865`
+-   Document that ANSI color info isn't parsed from bytearrays in Python
+    2. :issue:`334`
+-   Document byte-stripping behavior of ``CliRunner``. :issue:`334`,
+    :pr:`1010`
+-   Usage errors now hint at the ``--help`` option. :issue:`393`,
+    :pr:`557`
+-   Implement streaming pager. :issue:`409`, :pr:`889`
+-   Extract bar formatting to its own method. :pr:`414`
 -   Add ``DateTime`` type for converting input in given date time
-    formats. (`#423`_)
+    formats. :pr:`423`
 -   ``secho``'s first argument can now be ``None``, like in ``echo``.
-    (`#424`_)
+    :pr:`424`
 -   Fixes a ``ZeroDivisionError`` in ``ProgressBar.make_step``, when the
     arg passed to the first call of ``ProgressBar.update`` is 0.
-    (`#447`_, `#1012`_)
--   Show progressbar only if total execution time is visible. (`#487`_)
--   Added the ability to hide commands and options from help. (`#500`_)
--   Document that options can be ``required=True``. (`#514`_, `#1022`_)
+    :issue:`447`, :pr:`1012`
+-   Show progressbar only if total execution time is visible. :pr:`487`
+-   Added the ability to hide commands and options from help. :pr:`500`
+-   Document that options can be ``required=True``. :issue:`514`,
+    :pr:`1022`
 -   Non-standalone calls to ``Context.exit`` return the exit code,
-    rather than calling ``sys.exit``. (`#533`_, `#667`_, `#1098`_)
+    rather than calling ``sys.exit``. :issue:`667`, :pr:`533, 1098`
 -   ``click.getchar()`` returns Unicode in Python 3 on Windows,
-    consistent with other platforms. (`#537`_, `#821`_, `#822`_,
-    `#1088`_, `#1108`_)
--   Added ``FloatRange`` type. (`#538`_, `#553`_)
+    consistent with other platforms. :issue:`537, 821, 822, 1088`,
+    :pr:`1108`
+-   Added ``FloatRange`` type. :pr:`538, 553`
 -   Added support for bash completion of ``type=click.Choice`` for
-    ``Options`` and ``Arguments``. (`#535`_, `#681`_)
+    ``Options`` and ``Arguments``. :issue:`535`, :pr:`681`
 -   Only allow one positional arg for ``Argument`` parameter
-    declaration. (`#568`_, `#574`_, `#1014`_)
--   Add ``case_sensitive=False`` as an option to Choice. (`#569`_)
+    declaration. :issue:`568, 574`, :pr:`1014`
+-   Add ``case_sensitive=False`` as an option to Choice. :issue:`569`
 -   ``click.getchar()`` correctly raises ``KeyboardInterrupt`` on "^C"
-    and ``EOFError`` on "^D" on Linux. (`#583`_, `#1115`_)
+    and ``EOFError`` on "^D" on Linux. :issue:`583`, :pr:`1115`
 -   Fix encoding issue with ``click.getchar(echo=True)`` on Linux.
-    (`#1115`_)
--   ``param_hint`` in errors now derived from param itself. (`#598`_,
-    `#704`_, `#709`_)
+    :pr:`1115`
+-   ``param_hint`` in errors now derived from param itself.
+    :issue:`598, 704`, :pr:`709`
 -   Add a test that ensures that when an argument is formatted into a
-    usage error, its metavar is used, not its name. (`#612`_)
+    usage error, its metavar is used, not its name. :pr:`612`
 -   Allow setting ``prog_name`` as extra in ``CliRunner.invoke``.
-    (`#616`_, `#999`_)
+    :issue:`616`, :pr:`999`
 -   Help text taken from docstrings truncates at the ``\f`` form feed
     character, useful for hiding Sphinx-style parameter documentation.
-    (`#629`_, `#1091`_)
--   ``launch`` now works properly under Cygwin. (`#650`_)
--   Update progress after iteration. (`#651`_, `#706`_)
+    :pr:`629, 1091`
+-   ``launch`` now works properly under Cygwin. :pr:`650`
+-   Update progress after iteration. :issue:`651`, :pr:`706`
 -   ``CliRunner.invoke`` now may receive ``args`` as a string
-    representing a Unix shell command. (`#664`_)
--   Make ``Argument.make_metavar()`` default to type metavar. (`#675`_)
--   Add documentation for ``ignore_unknown_options``. (`#684`_)
+    representing a Unix shell command. :pr:`664`
+-   Make ``Argument.make_metavar()`` default to type metavar. :pr:`675`
+-   Add documentation for ``ignore_unknown_options``. :pr:`684`
 -   Add bright colors support for ``click.style`` and fix the reset
-    option for parameters ``fg`` and ``bg``. (`#703`_, `#809`_)
+    option for parameters ``fg`` and ``bg``. :issue:`703`, :pr:`809`
 -   Add ``show_envvar`` for showing environment variables in help.
-    (`#710`_)
+    :pr:`710`
 -   Avoid ``BrokenPipeError`` during interpreter shutdown when stdout or
-    stderr is a closed pipe. (`#712`_, `#1106`_)
--   Document customizing option names. (`#725`_, `#1016`_)
+    stderr is a closed pipe. :issue:`712`, :pr:`1106`
+-   Document customizing option names. :issue:`725`, :pr:`1016`
 -   Disable ``sys._getframes()`` on Python interpreters that don't
-    support it. (`#728`_)
+    support it. :pr:`728`
 -   Fix bug in test runner when calling ``sys.exit`` with ``None``.
-    (`#739`_)
--   Clarify documentation on command line options. (`#741`_, `#1003`_)
--   Fix crash on Windows console. (`#744`_)
+    :pr:`739`
+-   Clarify documentation on command line options. :issue:`741`,
+    :pr:`1003`
+-   Fix crash on Windows console. :issue:`744`
 -   Fix bug that caused bash completion to give improper completions on
-    chained commands. (`#754`_, `#774`_)
+    chained commands. :issue:`754`, :pr:`774`
 -   Added support for dynamic bash completion from a user-supplied
-    callback. (`#755`_)
--   Added support for bash completions containing spaces. (`#773`_)
+    callback. :pr:`755`
+-   Added support for bash completions containing spaces. :pr:`773`
 -   Allow autocompletion function to determine whether or not to return
-    completions that start with the incomplete argument. (`#790`_,
-    `#806`_)
+    completions that start with the incomplete argument. :issue:`790`,
+    :pr:`806`
 -   Fix option naming routine to match documentation and be
-    deterministic. (`#793`_, `#794`_)
--   Fix path validation bug. (`#795`_, `#1020`_)
+    deterministic. :issue:`793`, :pr:`794`
+-   Fix path validation bug. :issue:`795`, :pr:`1020`
 -   Add test and documentation for ``Option`` naming: functionality.
-    (`#799`_)
--   Update doc to match arg name for ``path_type``. (`#801`_)
--   Raw strings added so correct escaping occurs. (`#807`_)
--   Fix 16k character limit of ``click.echo`` on Windows. (`#816`_,
-    `#819`_)
+    :pr:`799`
+-   Update doc to match arg name for ``path_type``. :pr:`801`
+-   Raw strings added so correct escaping occurs. :pr:`807`
+-   Fix 16k character limit of ``click.echo`` on Windows. :issue:`816`,
+    :pr:`819`
 -   Overcome 64k character limit when writing to binary stream on
-    Windows 7. (`#825`_, `#830`_)
--   Add bool conversion for "t" and "f". (`#842`_)
+    Windows 7. :issue:`825`, :pr:`830`
+-   Add bool conversion for "t" and "f". :pr:`842`
 -   ``NoSuchOption`` errors take ``ctx`` so that ``--help`` hint gets
-    printed in error output. (`#860`_)
+    printed in error output. :pr:`860`
 -   Fixed the behavior of Click error messages with regards to Unicode
     on 2.x and 3.x. Message is now always Unicode and the str and
     Unicode special methods work as you expect on that platform.
-    (`#862`_)
--   Progress bar now uses stderr by default. (`#863`_)
--   Add support for auto-completion documentation. (`#866`_, `#869`_)
--   Allow ``CliRunner`` to separate stdout and stderr. (`#868`_)
--   Fix variable precedence. (`#873`_, `#874`_)
--   Fix invalid escape sequences. (`#877`_)
--   Fix ``ResourceWarning`` that occurs during some tests. (`#878`_)
+    :issue:`862`
+-   Progress bar now uses stderr by default. :pr:`863`
+-   Add support for auto-completion documentation. :issue:`866`,
+    :pr:`869`
+-   Allow ``CliRunner`` to separate stdout and stderr. :pr:`868`
+-   Fix variable precedence. :issue:`873`, :pr:`874`
+-   Fix invalid escape sequences. :pr:`877`
+-   Fix ``ResourceWarning`` that occurs during some tests. :pr:`878`
 -   When detecting a misconfigured locale, don't fail if the ``locale``
-    command fails. (`#880`_)
+    command fails. :pr:`880`
 -   Add ``case_sensitive=False`` as an option to ``Choice`` types.
-    (`#887`_)
+    :pr:`887`
 -   Force stdout/stderr writable. This works around issues with badly
-    patched standard streams like those from Jupyter. (`#918`_)
--   Fix completion of subcommand options after last argument (`#919`_,
-    `#930`_)
+    patched standard streams like those from Jupyter. :pr:`918`
+-   Fix completion of subcommand options after last argument
+    :issue:`919`, :pr:`930`
 -   ``_AtomicFile`` now uses the ``realpath`` of the original filename
-    so that changing the working directory does not affect it.
-    (`#920`_)
--   Fix incorrect completions when defaults are present (`#925`_,
-    `#930`_)
+    so that changing the working directory does not affect it. :pr:`920`
+-   Fix incorrect completions when defaults are present :issue:`925`,
+    :pr:`930`
 -   Add copy option attrs so that custom classes can be re-used.
-    (`#926`_, `#994`_)
+    :issue:`926`, :pr:`994`
 -   "x" and "a" file modes now use stdout when file is ``"-"``.
-    (`#929`_)
--   Fix missing comma in ``__all__`` list. (`#935`_)
--   Clarify how parameters are named. (`#949`_, `#1009`_)
--   Stdout is now automatically set to non blocking. (`#954`_)
--   Do not set options twice. (`#962`_)
--   Move ``fcntl`` import. (`#965`_)
--   Fix Google App Engine ``ImportError``. (`#995`_)
+    :pr:`929`
+-   Fix missing comma in ``__all__`` list. :pr:`935`
+-   Clarify how parameters are named. :issue:`949`, :pr:`1009`
+-   Stdout is now automatically set to non blocking. :pr:`954`
+-   Do not set options twice. :pr:`962`
+-   Move ``fcntl`` import. :pr:`965`
+-   Fix Google App Engine ``ImportError``. :pr:`995`
 -   Better handling of help text for dynamic default option values.
-    (`#996`_)
+    :pr:`996`
 -   Fix ``get_winter_size()`` so it correctly returns ``(0,0)``.
-    (`#997`_)
--   Add test case checking for custom param type. (`#1001`_)
--   Allow short width to address cmd formatting. (`#1002`_)
--   Add details about Python version support. (`#1004`_)
--   Added deprecation flag to commands. (`#1005`_)
--   Fixed issues where ``fd`` was undefined. (`#1007`_)
--   Fix formatting for short help. (`#1008`_)
+    :pr:`997`
+-   Add test case checking for custom param type. :pr:`1001`
+-   Allow short width to address cmd formatting. :pr:`1002`
+-   Add details about Python version support. :pr:`1004`
+-   Added deprecation flag to commands. :pr:`1005`
+-   Fixed issues where ``fd`` was undefined. :pr:`1007`
+-   Fix formatting for short help. :pr:`1008`
 -   Document how ``auto_envvar_prefix`` works with command groups.
-    (`#1011`_)
--   Don't add newlines by default for progress bars. (`#1013`_)
--   Use Python sorting order for ZSH completions. (`#1047`_, `#1059`_)
+    :pr:`1011`
+-   Don't add newlines by default for progress bars. :pr:`1013`
+-   Use Python sorting order for ZSH completions. :issue:`1047`,
+    :pr:`1059`
 -   Document that parameter names are converted to lowercase by default.
-    (`#1055`_)
+    :pr:`1055`
 -   Subcommands that are named by the function now automatically have
     the underscore replaced with a dash. If you register a function
     named ``my_command`` it becomes ``my-command`` in the command line
     interface.
--   Hide hidden commands and options from completion. (`#1058`_,
-    `#1061`_)
+-   Hide hidden commands and options from completion. :issue:`1058`,
+    :pr:`1061`
 -   Fix absolute import blocking Click from being vendored into a
-    project on Windows. (`#1068`_, `#1069`_)
+    project on Windows. :issue:`1068`, :pr:`1069`
 -   Fix issue where a lowercase ``auto_envvar_prefix`` would not be
-    converted to uppercase. (`#1105`_)
-
-.. _#202: https://github.com/pallets/click/issues/202
-.. _#323: https://github.com/pallets/click/issues/323
-.. _#334: https://github.com/pallets/click/issues/334
-.. _#393: https://github.com/pallets/click/issues/393
-.. _#409: https://github.com/pallets/click/issues/409
-.. _#414: https://github.com/pallets/click/pull/414
-.. _#423: https://github.com/pallets/click/pull/423
-.. _#424: https://github.com/pallets/click/pull/424
-.. _#447: https://github.com/pallets/click/issues/447
-.. _#487: https://github.com/pallets/click/pull/487
-.. _#500: https://github.com/pallets/click/pull/500
-.. _#514: https://github.com/pallets/click/issues/514
-.. _#533: https://github.com/pallets/click/pull/533
-.. _#535: https://github.com/pallets/click/issues/535
-.. _#537: https://github.com/pallets/click/issues/537
-.. _#538: https://github.com/pallets/click/pull/538
-.. _#553: https://github.com/pallets/click/pull/553
-.. _#557: https://github.com/pallets/click/pull/557
-.. _#568: https://github.com/pallets/click/issues/568
-.. _#569: https://github.com/pallets/click/issues/569
-.. _#574: https://github.com/pallets/click/issues/574
-.. _#583: https://github.com/pallets/click/issues/583
-.. _#598: https://github.com/pallets/click/issues/598
-.. _#612: https://github.com/pallets/click/pull/612
-.. _#616: https://github.com/pallets/click/issues/616
-.. _#629: https://github.com/pallets/click/pull/629
-.. _#650: https://github.com/pallets/click/pull/650
-.. _#651: https://github.com/pallets/click/issues/651
-.. _#664: https://github.com/pallets/click/pull/664
-.. _#667: https://github.com/pallets/click/issues/667
-.. _#675: https://github.com/pallets/click/pull/675
-.. _#681: https://github.com/pallets/click/pull/681
-.. _#684: https://github.com/pallets/click/pull/684
-.. _#703: https://github.com/pallets/click/issues/703
-.. _#704: https://github.com/pallets/click/issues/704
-.. _#706: https://github.com/pallets/click/pull/706
-.. _#709: https://github.com/pallets/click/pull/709
-.. _#710: https://github.com/pallets/click/pull/710
-.. _#712: https://github.com/pallets/click/pull/712
-.. _#719: https://github.com/pallets/click/issues/719
-.. _#725: https://github.com/pallets/click/issues/725
-.. _#728: https://github.com/pallets/click/pull/728
-.. _#739: https://github.com/pallets/click/pull/739
-.. _#741: https://github.com/pallets/click/issues/741
-.. _#744: https://github.com/pallets/click/issues/744
-.. _#754: https://github.com/pallets/click/issues/754
-.. _#755: https://github.com/pallets/click/pull/755
-.. _#773: https://github.com/pallets/click/pull/773
-.. _#774: https://github.com/pallets/click/pull/774
-.. _#790: https://github.com/pallets/click/issues/790
-.. _#793: https://github.com/pallets/click/issues/793
-.. _#794: https://github.com/pallets/click/pull/794
-.. _#795: https://github.com/pallets/click/issues/795
-.. _#799: https://github.com/pallets/click/pull/799
-.. _#801: https://github.com/pallets/click/pull/801
-.. _#806: https://github.com/pallets/click/pull/806
-.. _#807: https://github.com/pallets/click/pull/807
-.. _#809: https://github.com/pallets/click/pull/809
-.. _#816: https://github.com/pallets/click/pull/816
-.. _#819: https://github.com/pallets/click/pull/819
-.. _#821: https://github.com/pallets/click/issues/821
-.. _#822: https://github.com/pallets/click/issues/822
-.. _#825: https://github.com/pallets/click/issues/825
-.. _#830: https://github.com/pallets/click/pull/830
-.. _#842: https://github.com/pallets/click/pull/842
-.. _#860: https://github.com/pallets/click/issues/860
-.. _#862: https://github.com/pallets/click/issues/862
-.. _#863: https://github.com/pallets/click/pull/863
-.. _#865: https://github.com/pallets/click/pull/865
-.. _#866: https://github.com/pallets/click/issues/866
-.. _#868: https://github.com/pallets/click/pull/868
-.. _#869: https://github.com/pallets/click/pull/869
-.. _#873: https://github.com/pallets/click/issues/873
-.. _#874: https://github.com/pallets/click/pull/874
-.. _#877: https://github.com/pallets/click/pull/877
-.. _#878: https://github.com/pallets/click/pull/878
-.. _#880: https://github.com/pallets/click/pull/880
-.. _#883: https://github.com/pallets/click/pull/883
-.. _#887: https://github.com/pallets/click/pull/887
-.. _#889: https://github.com/pallets/click/pull/889
-.. _#918: https://github.com/pallets/click/pull/918
-.. _#919: https://github.com/pallets/click/issues/919
-.. _#920: https://github.com/pallets/click/pull/920
-.. _#925: https://github.com/pallets/click/issues/925
-.. _#926: https://github.com/pallets/click/issues/926
-.. _#929: https://github.com/pallets/click/pull/929
-.. _#930: https://github.com/pallets/click/pull/930
-.. _#935: https://github.com/pallets/click/pull/935
-.. _#949: https://github.com/pallets/click/issues/949
-.. _#954: https://github.com/pallets/click/pull/954
-.. _#962: https://github.com/pallets/click/pull/962
-.. _#965: https://github.com/pallets/click/pull/965
-.. _#967: https://github.com/pallets/click/pull/967
-.. _#976: https://github.com/pallets/click/pull/976
-.. _#990: https://github.com/pallets/click/pull/990
-.. _#991: https://github.com/pallets/click/pull/991
-.. _#993: https://github.com/pallets/click/pull/993
-.. _#994: https://github.com/pallets/click/pull/994
-.. _#995: https://github.com/pallets/click/pull/995
-.. _#996: https://github.com/pallets/click/pull/996
-.. _#997: https://github.com/pallets/click/pull/997
-.. _#999: https://github.com/pallets/click/pull/999
-.. _#1000: https://github.com/pallets/click/pull/1000
-.. _#1001: https://github.com/pallets/click/pull/1001
-.. _#1002: https://github.com/pallets/click/pull/1002
-.. _#1003: https://github.com/pallets/click/pull/1003
-.. _#1004: https://github.com/pallets/click/pull/1004
-.. _#1005: https://github.com/pallets/click/pull/1005
-.. _#1007: https://github.com/pallets/click/pull/1007
-.. _#1008: https://github.com/pallets/click/pull/1008
-.. _#1009: https://github.com/pallets/click/pull/1009
-.. _#1010: https://github.com/pallets/click/pull/1010
-.. _#1011: https://github.com/pallets/click/pull/1011
-.. _#1012: https://github.com/pallets/click/pull/1012
-.. _#1013: https://github.com/pallets/click/pull/1013
-.. _#1014: https://github.com/pallets/click/pull/1014
-.. _#1016: https://github.com/pallets/click/pull/1016
-.. _#1020: https://github.com/pallets/click/pull/1020
-.. _#1022: https://github.com/pallets/click/pull/1022
-.. _#1027: https://github.com/pallets/click/pull/1027
-.. _#1047: https://github.com/pallets/click/pull/1047
-.. _#1055: https://github.com/pallets/click/pull/1055
-.. _#1058: https://github.com/pallets/click/pull/1058
-.. _#1059: https://github.com/pallets/click/pull/1059
-.. _#1061: https://github.com/pallets/click/pull/1061
-.. _#1068: https://github.com/pallets/click/issues/1068
-.. _#1069: https://github.com/pallets/click/pull/1069
-.. _#1088: https://github.com/pallets/click/issues/1088
-.. _#1091: https://github.com/pallets/click/pull/1091
-.. _#1098: https://github.com/pallets/click/pull/1098
-.. _#1105: https://github.com/pallets/click/pull/1105
-.. _#1106: https://github.com/pallets/click/pull/1106
-.. _#1108: https://github.com/pallets/click/pull/1108
-.. _#1115: https://github.com/pallets/click/pull/1115
+    converted to uppercase. :pr:`1105`
 
 
 Version 6.7
 -----------
 
-(bugfix release; released on January 6th 2017)
+Released 2017-01-06
 
-- Make ``click.progressbar`` work with ``codecs.open`` files. See #637.
-- Fix bug in bash completion with nested subcommands. See #639.
-- Fix test runner not saving caller env correctly. See #644.
-- Fix handling of SIGPIPE. See #626
-- Deal with broken Windows environments such as Google App Engine's. See #711.
+-   Make ``click.progressbar`` work with ``codecs.open`` files.
+    :pr:`637`
+-   Fix bug in bash completion with nested subcommands. :pr:`639`
+-   Fix test runner not saving caller env correctly. :pr:`644`
+-   Fix handling of SIGPIPE. :pr:`62`
+-   Deal with broken Windows environments such as Google App Engine's.
+    :issue:`711`
+
 
 Version 6.6
 -----------
 
-(bugfix release; released on April 4th 2016)
+Released 2016-04-04
 
-- Fix bug in ``click.Path`` where it would crash when passed a ``-``. See #551.
+-   Fix bug in ``click.Path`` where it would crash when passed a ``-``.
+    :issue:`551`
+
 
 Version 6.4
 -----------
 
-(bugfix release; released on March 24th 2016)
+Released 2016-03-24
 
-- Fix bug in bash completion where click would discard one or more trailing
-  arguments. See #471.
+-   Fix bug in bash completion where click would discard one or more
+    trailing arguments. :issue:`471`
+
 
 Version 6.3
 -----------
 
-(bugfix release; released on February 22 2016)
+Released 2016-02-22
 
-- Fix argument checks for interpreter invoke with ``-m`` and ``-c``
-  on Windows.
-- Fixed a bug that cased locale detection to error out on Python 3.
+-   Fix argument checks for interpreter invoke with ``-m`` and ``-c`` on
+    Windows.
+-   Fixed a bug that cased locale detection to error out on Python 3.
+
 
 Version 6.2
 -----------
 
-(bugfix release, released on November 27th 2015)
+Released 2015-11-27
 
-- Correct fix for hidden progress bars.
+-   Correct fix for hidden progress bars.
+
 
 Version 6.1
 -----------
 
-(bugfix release, released on November 27th 2015)
+Released 2015-11-27
 
-- Resolved an issue with invisible progress bars no longer rendering.
-- Disable chain commands with subcommands as they were inherently broken.
-- Fix ``MissingParameter`` not working without parameters passed.
+-   Resolved an issue with invisible progress bars no longer rendering.
+-   Disable chain commands with subcommands as they were inherently
+    broken.
+-   Fix ``MissingParameter`` not working without parameters passed.
+
 
 Version 6.0
 -----------
 
-(codename "pow pow", released on November 24th 2015)
+Released 2015-11-24, codename "pow pow"
 
-- Optimized the progressbar rendering to not render when it did not
-  actually change.
-- Explicitly disallow ``nargs=-1`` with a set default.
-- The context is now closed before it's popped from the stack.
-- Added support for short aliases for the false flag on toggles.
-- Click will now attempt to aid you with debugging locale errors
-  better by listing with the help of the OS what locales are
-  available.
-- Click used to return byte strings on Python 2 in some unit-testing
-  situations.  This has been fixed to correctly return unicode strings
-  now.
-- For Windows users on Python 2, Click will now handle Unicode more
-  correctly handle Unicode coming in from the system.  This also has
-  the disappointing side effect that filenames will now be always
-  unicode by default in the ``Path`` type which means that this can
-  introduce small bugs for code not aware of this.
-- Added a ``type`` parameter to ``Path`` to force a specific string type
-  on the value.
-- For users running Python on Windows the ``echo`` and ``prompt`` functions
-  now work with full unicode functionality in the Python windows console
-  by emulating an output stream.  This also applies to getting the
-  virtual output and input streams via ``click.get_text_stream(...)``.
-- Unittests now always force a certain virtual terminal width.
-- Added support for allowing dashes to indicate standard streams to the
-  ``Path`` type.
-- Multi commands in chain mode no longer propagate arguments left over
-  from parsing to the callbacks.  It's also now disallowed through an
-  exception when optional arguments are attached to multi commands if chain
-  mode is enabled.
-- Relaxed restriction that disallowed chained commands to have other
-  chained commands as child commands.
-- Arguments with positive nargs can now have defaults implemented.
-  Previously this configuration would often result in slightly unexpected
-  values be returned.
+-   Optimized the progressbar rendering to not render when it did not
+    actually change.
+-   Explicitly disallow ``nargs=-1`` with a set default.
+-   The context is now closed before it's popped from the stack.
+-   Added support for short aliases for the false flag on toggles.
+-   Click will now attempt to aid you with debugging locale errors
+    better by listing with the help of the OS what locales are
+    available.
+-   Click used to return byte strings on Python 2 in some unit-testing
+    situations. This has been fixed to correctly return unicode strings
+    now.
+-   For Windows users on Python 2, Click will now handle Unicode more
+    correctly handle Unicode coming in from the system. This also has
+    the disappointing side effect that filenames will now be always
+    unicode by default in the ``Path`` type which means that this can
+    introduce small bugs for code not aware of this.
+-   Added a ``type`` parameter to ``Path`` to force a specific string
+    type on the value.
+-   For users running Python on Windows the ``echo`` and ``prompt``
+    functions now work with full unicode functionality in the Python
+    windows console by emulating an output stream. This also applies to
+    getting the virtual output and input streams via
+    ``click.get_text_stream(...)``.
+-   Unittests now always force a certain virtual terminal width.
+-   Added support for allowing dashes to indicate standard streams to
+    the ``Path`` type.
+-   Multi commands in chain mode no longer propagate arguments left over
+    from parsing to the callbacks. It's also now disallowed through an
+    exception when optional arguments are attached to multi commands if
+    chain mode is enabled.
+-   Relaxed restriction that disallowed chained commands to have other
+    chained commands as child commands.
+-   Arguments with positive nargs can now have defaults implemented.
+    Previously this configuration would often result in slightly
+    unexpected values be returned.
+
 
 Version 5.1
 -----------
 
-(bugfix release, released on 17th August 2015)
+Released 2015-08-17
 
-- Fix a bug in ``pass_obj`` that would accidentally pass the context too.
+-   Fix a bug in ``pass_obj`` that would accidentally pass the context
+    too.
+
 
 Version 5.0
 -----------
 
-(codename "tok tok", released on 16th August 2015)
+Released 2015-08-16, codename "tok tok"
 
-- Removed various deprecated functionality.
-- Atomic files now only accept the ``w`` mode.
-- Change the usage part of help output for very long commands to wrap
-  their arguments onto the next line, indented by 4 spaces.
-- Fix a bug where return code and error messages were incorrect when
-  using ``CliRunner``.
-- added ``get_current_context``.
-- added a ``meta`` dictionary to the context which is shared across the
-  linked list of contexts to allow click utilities to place state there.
-- introduced ``Context.scope``.
-- The ``echo`` function is now threadsafe: It calls the ``write`` method of the
-  underlying object only once.
-- ``prompt(hide_input=True)`` now prints a newline on ``^C``.
-- Click will now warn if users are using ``unicode_literals``.
-- Click will now ignore the ``PAGER`` environment variable if it is empty or
-  contains only whitespace.
-- The ``click-contrib`` GitHub organization was created.
+-   Removed various deprecated functionality.
+-   Atomic files now only accept the ``w`` mode.
+-   Change the usage part of help output for very long commands to wrap
+    their arguments onto the next line, indented by 4 spaces.
+-   Fix a bug where return code and error messages were incorrect when
+    using ``CliRunner``.
+-   Added ``get_current_context``.
+-   Added a ``meta`` dictionary to the context which is shared across
+    the linked list of contexts to allow click utilities to place state
+    there.
+-   Introduced ``Context.scope``.
+-   The ``echo`` function is now threadsafe: It calls the ``write``
+    method of the underlying object only once.
+-   ``prompt(hide_input=True)`` now prints a newline on ``^C``.
+-   Click will now warn if users are using ``unicode_literals``.
+-   Click will now ignore the ``PAGER`` environment variable if it is
+    empty or contains only whitespace.
+-   The ``click-contrib`` GitHub organization was created.
+
 
 Version 4.1
 -----------
 
-(bugfix release, released on July 14th 2015)
+Released 2015-07-14
 
-- Fix a bug where error messages would include a trailing ``None`` string.
-- Fix a bug where Click would crash on docstrings with trailing newlines.
-- Support streams with encoding set to ``None`` on Python 3 by barfing with
-  a better error.
-- Handle ^C in less-pager properly.
-- Handle return value of ``None`` from ``sys.getfilesystemencoding``
-- Fix crash when writing to unicode files with ``click.echo``.
-- Fix type inference with multiple options.
+-   Fix a bug where error messages would include a trailing ``None``
+    string.
+-   Fix a bug where Click would crash on docstrings with trailing
+    newlines.
+-   Support streams with encoding set to ``None`` on Python 3 by barfing
+    with a better error.
+-   Handle ^C in less-pager properly.
+-   Handle return value of ``None`` from ``sys.getfilesystemencoding``
+-   Fix crash when writing to unicode files with ``click.echo``.
+-   Fix type inference with multiple options.
+
 
 Version 4.0
 -----------
 
-(codename "zoom zoom", released on March 31st 2015)
+Released 2015-03-31, codename "zoom zoom"
 
-- Added ``color`` parameters to lots of interfaces that directly or indirectly
-  call into echoing.  This previously was always autodetection (with the
-  exception of the ``echo_via_pager`` function).  Now you can forcefully
-  enable or disable it, overriding the auto detection of Click.
-- Added an ``UNPROCESSED`` type which does not perform any type changes which
-  simplifies text handling on 2.x / 3.x in some special advanced usecases.
-- Added ``NoSuchOption`` and ``BadOptionUsage`` exceptions for more generic
-  handling of errors.
-- Added support for handling of unprocessed options which can be useful in
-  situations where arguments are forwarded to underlying tools.
-- Added ``max_content_width`` parameter to the context which can be used to
-  change the maximum width of help output.  By default Click will not format
-  content for more than 80 characters width.
-- Added support for writing prompts to stderr.
-- Fix a bug when showing the default for multiple arguments.
-- Added support for custom subclasses to ``option`` and ``argument``.
-- Fix bug in ``clear()`` on Windows when colorama is installed.
-- Reject ``nargs=-1`` for options properly.  Options cannot be variadic.
-- Fixed an issue with bash completion not working properly for commands with
-  non ASCII characters or dashes.
-- Added a way to manually update the progressbar.
-- Changed the formatting of missing arguments.  Previously the internal
-  argument name was shown in error messages, now the metavar is shown if
-  passed.  In case an automated metavar is selected, it's stripped of
-  extra formatting first.
+-   Added ``color`` parameters to lots of interfaces that directly or
+    indirectly call into echoing. This previously was always
+    autodetection (with the exception of the ``echo_via_pager``
+    function). Now you can forcefully enable or disable it, overriding
+    the auto detection of Click.
+-   Added an ``UNPROCESSED`` type which does not perform any type
+    changes which simplifies text handling on 2.x / 3.x in some special
+    advanced usecases.
+-   Added ``NoSuchOption`` and ``BadOptionUsage`` exceptions for more
+    generic handling of errors.
+-   Added support for handling of unprocessed options which can be
+    useful in situations where arguments are forwarded to underlying
+    tools.
+-   Added ``max_content_width`` parameter to the context which can be
+    used to change the maximum width of help output. By default Click
+    will not format content for more than 80 characters width.
+-   Added support for writing prompts to stderr.
+-   Fix a bug when showing the default for multiple arguments.
+-   Added support for custom subclasses to ``option`` and ``argument``.
+-   Fix bug in ``clear()`` on Windows when colorama is installed.
+-   Reject ``nargs=-1`` for options properly. Options cannot be
+    variadic.
+-   Fixed an issue with bash completion not working properly for
+    commands with non ASCII characters or dashes.
+-   Added a way to manually update the progressbar.
+-   Changed the formatting of missing arguments. Previously the internal
+    argument name was shown in error messages, now the metavar is shown
+    if passed. In case an automated metavar is selected, it's stripped
+    of extra formatting first.
+
 
 Version 3.3
 -----------
 
-(bugfix release, released on September 8th 2014)
+Released 2014-09-08
 
-- Fixed an issue with error reporting on Python 3 for invalid forwarding
-  of commands.
+-   Fixed an issue with error reporting on Python 3 for invalid
+    forwarding of commands.
+
 
 Version 3.2
 -----------
 
-(bugfix release, released on August 22nd 2014)
+Released 2014-08-22
 
-- Added missing ``err`` parameter forwarding to the ``secho`` function.
-- Fixed default parameters not being handled properly by the context
-  invoke method.  This is a backwards incompatible change if the function
-  was used improperly.  See :ref:`upgrade-to-3.2` for more information.
-- Removed the `invoked_subcommands` attribute largely.  It is not possible
-  to provide it to work error free due to how the parsing works so this
-  API has been deprecated.  See :ref:`upgrade-to-3.2` for more information.
-- Restored the functionality of `invoked_subcommand` which was broken as
-  a regression in 3.1.
+-   Added missing ``err`` parameter forwarding to the ``secho``
+    function.
+-   Fixed default parameters not being handled properly by the context
+    invoke method. This is a backwards incompatible change if the
+    function was used improperly. See :ref:`upgrade-to-3.2` for more
+    information.
+-   Removed the ``invoked_subcommands`` attribute largely. It is not
+    possible to provide it to work error free due to how the parsing
+    works so this API has been deprecated. See :ref:`upgrade-to-3.2` for
+    more information.
+-   Restored the functionality of ``invoked_subcommand`` which was
+    broken as a regression in 3.1.
+
 
 Version 3.1
 -----------
 
-(bugfix release, released on August 13th 2014)
+Released 2014-08-13
 
-- Fixed a regression that caused contexts of subcommands to be
-  created before the parent command was invoked which was a
-  regression from earlier Click versions.
+-   Fixed a regression that caused contexts of subcommands to be created
+    before the parent command was invoked which was a regression from
+    earlier Click versions.
+
 
 Version 3.0
 -----------
 
-(codename "clonk clonk", released on August 12th 2014)
+Released 2014-08-12, codename "clonk clonk"
 
-- formatter now no longer attempts to accommodate for terminals
-  smaller than 50 characters.  If that happens it just assumes
-  a minimal width.
-- added a way to not swallow exceptions in the test system.
-- added better support for colors with pagers and ways to
-  override the autodetection.
-- the CLI runner's result object now has a traceback attached.
-- improved automatic short help detection to work better with
-  dots that do not terminate sentences.
-- when defining options without actual valid option strings
-  now, Click will give an error message instead of silently
-  passing.  This should catch situations where users wanted to
-  created arguments instead of options.
-- Restructured Click internally to support vendoring.
-- Added support for multi command chaining.
-- Added support for defaults on options with ``multiple`` and
-  options and arguments with ``nargs != 1``.
-- label passed to ``progressbar`` is no longer rendered with
-  whitespace stripped.
-- added a way to disable the standalone mode of the ``main``
-  method on a Click command to be able to handle errors better.
-- added support for returning values from command callbacks.
-- added simplifications for printing to stderr from ``echo``.
-- added result callbacks for groups.
-- entering a context multiple times defers the cleanup until
-  the last exit occurs.
-- added ``open_file``.
+-   Formatter now no longer attempts to accommodate for terminals
+    smaller than 50 characters. If that happens it just assumes a
+    minimal width.
+-   Added a way to not swallow exceptions in the test system.
+-   Added better support for colors with pagers and ways to override the
+    autodetection.
+-   The CLI runner's result object now has a traceback attached.
+-   Improved automatic short help detection to work better with dots
+    that do not terminate sentences.
+-   When defining options without actual valid option strings now,
+    Click will give an error message instead of silently passing. This
+    should catch situations where users wanted to created arguments
+    instead of options.
+-   Restructured Click internally to support vendoring.
+-   Added support for multi command chaining.
+-   Added support for defaults on options with ``multiple`` and options
+    and arguments with ``nargs != 1``.
+-   Label passed to ``progressbar`` is no longer rendered with
+    whitespace stripped.
+-   Added a way to disable the standalone mode of the ``main`` method on
+    a Click command to be able to handle errors better.
+-   Added support for returning values from command callbacks.
+-   Added simplifications for printing to stderr from ``echo``.
+-   Added result callbacks for groups.
+-   Entering a context multiple times defers the cleanup until the last
+    exit occurs.
+-   Added ``open_file``.
+
 
 Version 2.6
 -----------
 
-(bugfix release, released on August 11th 2014)
+Released 2014-08-11
 
-- Fixed an issue where the wrapped streams on Python 3 would be reporting
-  incorrect values for seekable.
+-   Fixed an issue where the wrapped streams on Python 3 would be
+    reporting incorrect values for seekable.
+
 
 Version 2.5
 -----------
 
-(bugfix release, released on July 28th 2014)
+Released 2014-07-28
 
-- Fixed a bug with text wrapping on Python 3.
+-   Fixed a bug with text wrapping on Python 3.
+
 
 Version 2.4
 -----------
 
-(bugfix release, released on July 4th 2014)
+Released 2014-07-04
 
-- Corrected a bug in the change of the help option in 2.3.
+-   Corrected a bug in the change of the help option in 2.3.
+
 
 Version 2.3
 -----------
 
-(bugfix release, released on July 3rd 2014)
+Released 2014-07-03
 
-- Fixed an incorrectly formatted help record for count options.
-- Add support for ansi code stripping on Windows if colorama
-  is not available.
-- restored the Click 1.0 handling of the help parameter for certain
-  edge cases.
+-   Fixed an incorrectly formatted help record for count options.
+-   Add support for ansi code stripping on Windows if colorama is not
+    available.
+-   Restored the Click 1.0 handling of the help parameter for certain
+    edge cases.
+
 
 Version 2.2
 -----------
 
-(bugfix release, released on June 26th 2014)
+Released 2014-06-26
 
-- fixed tty detection on PyPy.
-- fixed an issue that progress bars were not rendered when the
-  context manager was entered.
+-   Fixed tty detection on PyPy.
+-   Fixed an issue that progress bars were not rendered when the context
+    manager was entered.
+
 
 Version 2.1
 -----------
 
-(bugfix release, released on June 14th 2014)
+Released 2014-06-14
 
-- fixed the :func:`launch` function on windows.
-- improved the colorama support on windows to try hard to not
-  screw up the console if the application is interrupted.
-- fixed windows terminals incorrectly being reported to be 80
-  characters wide instead of 79
-- use colorama win32 bindings if available to get the correct
-  dimensions of a windows terminal.
-- fixed an issue with custom function types on Python 3.
-- fixed an issue with unknown options being incorrectly reported
-  in error messages.
+-   Fixed the :func:`launch` function on windows.
+-   Improved the colorama support on windows to try hard to not screw up
+    the console if the application is interrupted.
+-   Fixed windows terminals incorrectly being reported to be 80
+    characters wide instead of 79
+-   Use colorama win32 bindings if available to get the correct
+    dimensions of a windows terminal.
+-   Fixed an issue with custom function types on Python 3.
+-   Fixed an issue with unknown options being incorrectly reported in
+    error messages.
+
 
 Version 2.0
 -----------
 
-(codename "tap tap tap", released on June 6th 2014)
+Released 2014-06-06, codename "tap tap tap"
 
-- added support for opening stdin/stdout on Windows in
-  binary mode correctly.
-- added support for atomic writes to files by going through
-  a temporary file.
-- introduced :exc:`BadParameter` which can be used to easily perform
-  custom validation with the same error messages as in the type system.
-- added :func:`progressbar`; a function to show progress bars.
-- added :func:`get_app_dir`; a function to calculate the home folder
-  for configs.
-- Added transparent handling for ANSI codes into the :func:`echo`
-  function through ``colorama``.
-- Added :func:`clear` function.
-- Breaking change: parameter callbacks now get the parameter object
-  passed as second argument.  There is legacy support for old callbacks
-  which will warn but still execute the script.
-- Added :func:`style`, :func:`unstyle` and :func:`secho` for ANSI
-  styles.
-- Added an :func:`edit` function that invokes the default editor.
-- Added an :func:`launch` function that launches browsers and applications.
-- nargs of -1 for arguments can now be forced to be a single item through
-  the required flag.  It defaults to not required.
-- setting a default for arguments now implicitly makes it non required.
-- changed "yN" / "Yn" to "y/N" and "Y/n" in confirmation prompts.
-- added basic support for bash completion.
-- added :func:`getchar` to fetch a single character from the terminal.
-- errors now go to stderr as intended.
-- fixed various issues with more exotic parameter formats like DOS/Windows
-  style arguments.
-- added :func:`pause` which works similar to the Windows ``pause`` cmd
-  built-in but becomes an automatic noop if the application is not run
-  through a terminal.
-- added a bit of extra information about missing choice parameters.
-- changed how the help function is implemented to allow global overriding
-  of the help option.
-- added support for token normalization to implement case insensitive handling.
-- added support for providing defaults for context settings.
+-   Added support for opening stdin/stdout on Windows in binary mode
+    correctly.
+-   Added support for atomic writes to files by going through a
+    temporary file.
+-   Introduced :exc:`BadParameter` which can be used to easily perform
+    custom validation with the same error messages as in the type
+    system.
+-   Added :func:`progressbar`; a function to show progress bars.
+-   Added :func:`get_app_dir`; a function to calculate the home folder
+    for configs.
+-   Added transparent handling for ANSI codes into the :func:`echo`
+    function through ``colorama``.
+-   Added :func:`clear` function.
+-   Breaking change: parameter callbacks now get the parameter object
+    passed as second argument. There is legacy support for old callbacks
+    which will warn but still execute the script.
+-   Added :func:`style`, :func:`unstyle` and :func:`secho` for ANSI
+    styles.
+-   Added an :func:`edit` function that invokes the default editor.
+-   Added an :func:`launch` function that launches browsers and
+    applications.
+-   Nargs of -1 for arguments can now be forced to be a single item
+    through the required flag. It defaults to not required.
+-   Setting a default for arguments now implicitly makes it non
+    required.
+-   Changed "yN" / "Yn" to "y/N" and "Y/n" in confirmation prompts.
+-   Added basic support for bash completion.
+-   Added :func:`getchar` to fetch a single character from the terminal.
+-   Errors now go to stderr as intended.
+-   Fixed various issues with more exotic parameter formats like
+    DOS/Windows style arguments.
+-   Added :func:`pause` which works similar to the Windows ``pause`` cmd
+    built-in but becomes an automatic noop if the application is not run
+    through a terminal.
+-   Added a bit of extra information about missing choice parameters.
+-   Changed how the help function is implemented to allow global
+    overriding of the help option.
+-   Added support for token normalization to implement case insensitive
+    handling.
+-   Added support for providing defaults for context settings.
+
 
 Version 1.1
 -----------
 
-(bugfix release, released on May 23rd 2014)
+Released 2014-05-23
 
-- fixed a bug that caused text files in Python 2 to not accept
-  native strings.
+-   Fixed a bug that caused text files in Python 2 to not accept native
+    strings.
+
 
 Version 1.0
 -----------
 
-(no codename, released on May 21st 2014)
+Released 2014-05-21
 
-- Initial release.
+-   Initial release.

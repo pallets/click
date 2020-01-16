@@ -38,7 +38,7 @@ should.
 
 Too much customizability would break this promise.
 
-Click was written to support the `Flask <http://flask.pocoo.org/>`_
+Click was written to support the `Flask <https://palletsprojects.com/p/flask/>`_
 microframework ecosystem because no tool could provide it with the
 functionality it needed.
 

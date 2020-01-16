@@ -133,6 +133,10 @@ class Choice(ParamType):
     You should only pass a list or tuple of choices. Other iterables
     (like generators) may lead to surprising results.
 
+    The resulting value will always be one of the originally passed choices
+    regardless of ``case_sensitive`` or any ``ctx.token_normalize_func``
+    being specified.
+
     See :ref:`choice-opts` for an example.
 
     :param case_sensitive: Set to false to make choices case
@@ -152,29 +156,34 @@ class Choice(ParamType):
         return 'Choose from:\n\t%s.' % ',\n\t'.join(self.choices)
 
     def convert(self, value, param, ctx):
-        # Exact match
-        if value in self.choices:
-            return value
-
         # Match through normalization and case sensitivity
         # first do token_normalize_func, then lowercase
         # preserve original `value` to produce an accurate message in
         # `self.fail`
         normed_value = value
-        normed_choices = self.choices
+        normed_choices = {choice: choice for choice in self.choices}
 
-        if ctx is not None and \
-           ctx.token_normalize_func is not None:
+        if ctx is not None and ctx.token_normalize_func is not None:
             normed_value = ctx.token_normalize_func(value)
-            normed_choices = [ctx.token_normalize_func(choice) for choice in
-                              self.choices]
+            normed_choices = {
+                ctx.token_normalize_func(normed_choice): original
+                for normed_choice, original in normed_choices.items()
+            }
 
         if not self.case_sensitive:
-            normed_value = normed_value.lower()
-            normed_choices = [choice.lower() for choice in normed_choices]
+            if PY2:
+                lower = str.lower
+            else:
+                lower = str.casefold
+
+            normed_value = lower(normed_value)
+            normed_choices = {
+                lower(normed_choice): original
+                for normed_choice, original in normed_choices.items()
+            }
 
         if normed_value in normed_choices:
-            return normed_value
+            return normed_choices[normed_value]
 
         self.fail('invalid choice: %s. (choose from %s)' %
                   (value, ', '.join(self.choices)), param, ctx)
