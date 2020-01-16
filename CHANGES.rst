@@ -14,6 +14,7 @@ Unreleased
 -   Add an optional parameter to ``ProgressBar.update`` to set the
     ``current_item``. :issue:`1226`, :pr:`1332`
 -   Add ``converter`` parameter to :class:`click.Path`. (`#405`_, `#1148`_)
+
 .. _#405: https://github.com/pallets/click/issues/405
 .. _#1148: https://github.com/pallets/click/pull/1148
 
