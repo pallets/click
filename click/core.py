@@ -154,6 +154,9 @@ class Context(object):
        Added the `color`, `ignore_unknown_options`, and
        `max_content_width` parameters.
 
+    .. versionadded:: 7.1
+       Added the `show_default` parameter.
+
     :param command: the command class for this context.
     :param parent: the parent context.
     :param info_name: the info name for this invocation.  Generally this
