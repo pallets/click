@@ -17,6 +17,7 @@ Unreleased
 -   Always return of of the passed choices for ``click.Choice``
     :issue:`1277`, :pr:`1318`
 -   Fix ``OSError`` when running in MSYS2. :issue:`1338`
+-   Fix error in new AppEngine environments. :issue:`1462`
 
 
 Version 7.0
