@@ -44,6 +44,8 @@ Unreleased
     interpreter. :issue:`1139`
 -   Fix how default values for file-type options are shown during
     prompts. :issue:`914`
+-   Consider ``sensible-editor`` when determining the editor to use for
+    ``click.edit()``. :pr:`1469`
 
 
 Version 7.0
