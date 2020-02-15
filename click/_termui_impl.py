@@ -427,7 +427,7 @@ class Editor(object):
                 return rv
         if WIN:
             return 'notepad'
-        for editor in 'vim', 'nano':
+        for editor in 'sensible-editor', 'vim', 'nano':
             if os.system('which %s >/dev/null 2>&1' % editor) == 0:
                 return editor
         return 'vi'

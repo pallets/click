@@ -51,6 +51,8 @@ Unreleased
     :issue:`834, 1066, 1397`
 -   Option help text that is wrapped adds an extra newline at the end to
     distinguish it from the next option. :issue:`1075`
+-   Consider ``sensible-editor`` when determining the editor to use for
+    ``click.edit()``. :pr:`1469`
 
 
 Version 7.0
