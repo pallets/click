@@ -317,7 +317,8 @@ When using multi command chaining you can only have one command (the last)
 use ``nargs=-1`` on an argument.  It is also not possible to nest multi
 commands below chained multicommands.  Other than that there are no
 restrictions on how they work.  They can accept options and arguments as
-normal.
+normal. The order between options and arguments is limited for chained
+commands. Currently only ``--options argument`` order is allowed.
 
 Another note: the :attr:`Context.invoked_subcommand` attribute is a bit
 useless for multi commands as it will give ``'*'`` as value if more than
