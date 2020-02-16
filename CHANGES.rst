@@ -9,6 +9,8 @@ Unreleased
 -   Fix link in ``unicode_literals`` error message. :pr:`1151`
 -   Add support for colored output on UNIX Jupyter notebooks.
     :issue:`1185`
+-   Operations that strip ANSI controls will strip the cursor hide/show
+    sequences. :issue:`1216`
 -   Remove unused compat shim for ``bytes``. :pr:`1195`
 -   Expand testing around termui, especially getchar on Windows.
     :issue:`1116`
