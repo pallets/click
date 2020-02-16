@@ -6,8 +6,6 @@ Version 7.1
 Unreleased
 
 -   Fix PyPI package name, "click" is lowercase again.
--   Add ``no_args_is_help`` option to ``click.Command``, defaults to
-    False :pr:`1167`
 -   Fix link in ``unicode_literals`` error message. :pr:`1151`
 -   Add support for colored output on UNIX Jupyter notebooks.
     :issue:`1185`
@@ -15,13 +13,16 @@ Unreleased
 -   Expand testing around termui, especially getchar on Windows.
     :issue:`1116`
 -   Fix output on Windows Python 2.7 built with MSVC 14. :pr:`1342`
+-   Fix ``OSError`` when running in MSYS2. :issue:`1338`
+-   Fix ``OSError`` when redirecting to ``NUL`` stream on Windows.
+    :issue:`1065`
+-   Fix error in new AppEngine environments. :issue:`1462`
 -   Always return one of the passed choices for ``click.Choice``
     :issue:`1277`, :pr:`1318`
--   Fix ``OSError`` when running in MSYS2. :issue:`1338`
--   Fix error in new AppEngine environments. :issue:`1462`
+-   Add ``no_args_is_help`` option to ``click.Command``, defaults to
+    False :pr:`1167`
 -   Add ``show_defaults`` parameter to ``Context`` to enable showing
     defaults globally. :issue:`1018`
-
 
 
 Version 7.0
