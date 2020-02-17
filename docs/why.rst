@@ -45,25 +45,24 @@ looking at the :ref:`complex-guide` chapter.
 Why not Argparse?
 -----------------
 
-Click is internally based on ``optparse`` instead of ``argparse``.  This
+Click is internally based on ``optparse`` instead of ``argparse``. This
 is an implementation detail that a user does not have to be concerned
-with.  The reason Click is not using argparse is it has some
-problematic behaviors that make handling arbitrary command line interfaces
-hard:
+with. Click is not based on argparse because it has some behaviors that
+make handling arbitrary command line interfaces hard:
 
-*   argparse has built-in magic behavior to guess if something is an
-    argument or an option.  This behavior becomes a problem when dealing with
-    incomplete command lines; the parsers behaviour becomes unpredictable
-    without full knowledge of a command line.  This goes against Click's
+*   argparse has built-in behavior to guess if something is an
+    argument or an option. This becomes a problem when dealing with
+    incomplete command lines; the behaviour becomes unpredictable
+    without full knowledge of a command line. This goes against Click's
     ambitions of dispatching to subparsers.
-*   argparse currently does not support disabling of interspersed
-    arguments.  Without this feature, it's not possible to safely implement
-    Click's nested parsing nature.
+*   argparse does not support disabling interspersed arguments. Without
+    this feature, it's not possible to safely implement Click's nested
+    parsing.
 
 Why not Docopt etc.?
 --------------------
 
-Docopt, and many tools like, it are cool in how they work, but very few of
+Docopt, and many tools like it, are cool in how they work, but very few of
 these tools deal with nesting of commands and composability in a way like
 Click.  To the best of the developer's knowledge, Click is the first
 Python library that aims to create a level of composability of applications
