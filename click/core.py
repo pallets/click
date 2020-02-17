@@ -1606,7 +1606,7 @@ class Option(Parameter):
         self.is_flag = is_flag
         self.flag_value = flag_value
         if self.is_flag and isinstance(self.flag_value, bool) \
-           and type is None:
+           and type in [None, bool]:
             self.type = BOOL
             self.is_bool_flag = True
         else:
@@ -1770,7 +1770,7 @@ class Option(Parameter):
         return ((any_prefix_is_slash and '; ' or ' / ').join(rv), help)
 
     def get_default(self, ctx):
-        # If we're a non boolean flag out default is more complex because
+        # If we're a non boolean flag our default is more complex because
         # we need to look at all flags in the same group to figure out
         # if we're the the default one in which case we return the flag
         # value as default.
