@@ -279,23 +279,17 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
 
 
 def test_open_file(runner):
+    @click.command()
+    @click.argument('filename')
+    def cli(filename):
+        with click.open_file(filename) as f:
+            click.echo(f.read())
+
+        click.echo('meep')
+
     with runner.isolated_filesystem():
         with open('hello.txt', 'w') as f:
             f.write('Cool stuff')
-
-        @click.command()
-        @click.argument('filename')
-        def cli(filename):
-            with click.open_file(filename) as f:
-                click.echo(f.read())
-            click.echo('meep')
-
-        @click.command()
-        @click.argument('filename')
-        def cli_ignore_errors(filename):
-            with click.open_file(filename, errors="ignore") as f:
-                click.echo(f.read())
-            click.echo('meep')
 
         result = runner.invoke(cli, ['hello.txt'])
         assert result.exception is None
@@ -305,58 +299,43 @@ def test_open_file(runner):
         assert result.exception is None
         assert result.output == 'foobar\nmeep\n'
 
-        # Test that invalid unicode does not throw an exception when we ignore errors,
-        # but does throw an exception when we don't
-        random_input = os.urandom(64)
-        result = runner.invoke(cli_ignore_errors, ['-'], input=random_input)
-        assert result.exception is None
 
-        result = runner.invoke(cli, ['-'], input=random_input)
-        assert isinstance(result.exception, UnicodeDecodeError)
+def test_open_file_ignore_errors_stdin(runner):
+    @click.command()
+    @click.argument("filename")
+    def cli(filename):
+        with click.open_file(filename, errors="ignore") as f:
+            click.echo(f.read())
+
+    result = runner.invoke(cli, ["-"], input=os.urandom(16))
+    assert result.exception is None
 
 
-def test_click_open_file_respects_ignore(runner):
-    file_name = "hello_world.txt"
-
+def test_open_file_respects_ignore(runner):
     with runner.isolated_filesystem():
-        with open(file_name, "w") as f:
+        with open("test.txt", "w") as f:
             f.write("Hello world!")
 
-        click_wrapper = click.utils.open_file(file_name, encoding="UTF-8", errors="ignore")
-        assert click_wrapper.errors == "ignore"
+        with click.open_file("test.txt", encoding="utf8", errors="ignore") as f:
+            assert f.errors == "ignore"
 
 
-@pytest.mark.parametrize("ignore", [
-    True,
-    False
-])
-def test_click_open_file_ignore_invalid_utf8(ignore, runner):
-    file_name = "invalid_utf8.txt"
-
+def test_open_file_ignore_invalid_utf8(runner):
     with runner.isolated_filesystem():
-        with open(file_name, "wb") as f:
-            f.write(b'\xe2\x28\xa1')
+        with open("test.txt", "wb") as f:
+            f.write(b"\xe2\x28\xa1")
 
-        open_kwargs = {"encoding": "UTF-8"}
-
-        if ignore:
-            # Here we ignore invalid UTF-8, so we should not throw an exception
-            open_kwargs["errors"] = "ignore"
-            click.utils.open_file(file_name, **open_kwargs).read()
-        else:
-            # Here we are not ignoring invalid UTF-8, so we expect a UnicodeDecodeError
-            with pytest.raises(UnicodeDecodeError):
-                click.utils.open_file(file_name, **open_kwargs).read()
+        with click.open_file("test.txt", encoding="utf8", errors="ignore") as f:
+            f.read()
 
 
-def test_click_open_file_ignore_no_encoding_provided(runner):
-    file_name = "random_input.bin"
-
+def test_open_file_ignore_no_encoding(runner):
     with runner.isolated_filesystem():
-        with open(file_name, "wb") as f:
-            f.write(os.urandom(64))
+        with open("test.bin", "wb") as f:
+            f.write(os.urandom(16))
 
-        click.utils.open_file(file_name, errors="ignore").read()
+        with click.open_file("test.bin", errors="ignore") as f:
+            f.read()
 
 
 @pytest.mark.skipif(WIN, reason='os.chmod() is not fully supported on Windows.')
@@ -401,21 +380,19 @@ def test_open_file_atomic_permissions_new_file(runner):
         assert stat.S_IMODE(os.stat('new.txt').st_mode) == permissions
 
 
-@pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
 def test_iter_keepopenfile(tmpdir):
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
-    p.write(os.linesep.join(expected))
+    p.write("\n".join(expected))
     with p.open() as f:
         for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
             assert e_line == a_line.strip()
 
 
-@pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
 def test_iter_lazyfile(tmpdir):
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
-    p.write(os.linesep.join(expected))
+    p.write("\n".join(expected))
     with p.open() as f:
         with click.utils.LazyFile(f.name) as lf:
             for e_line, a_line in zip(expected, lf):

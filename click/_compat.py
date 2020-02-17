@@ -329,80 +329,88 @@ else:
         # but this at least will force Click to recover somehow.
         return is_ascii_encoding(getattr(stream, 'encoding', None) or 'ascii')
 
+    def _is_compat_stream_attr(stream, attr, value):
+        """A stream attribute is compatible if it is equal to the
+        desired value or the desired value is unset and the attribute
+        has a value.
+        """
+        stream_value = getattr(stream, attr, None)
+        return stream_value == value or (value is None and stream_value is not None)
+
     def _is_compatible_text_stream(stream, encoding, errors):
-        stream_encoding = getattr(stream, 'encoding', None)
-        stream_errors = getattr(stream, 'errors', None)
+        """Check if a stream's encoding and errors attributes are
+        compatible with the desired values.
+        """
+        return (
+            _is_compat_stream_attr(stream, "encoding", encoding)
+            and _is_compat_stream_attr(stream, "errors", errors)
+        )
 
-        # Perfect match.
-        if stream_encoding == encoding and stream_errors == errors:
-            return True
-
-        # Otherwise, it's only a compatible stream if we did not ask for
-        # an encoding.
-        if encoding is None:
-            return stream_encoding is not None
-
-        return False
-
-    def _force_correct_text_reader(text_reader, encoding, errors,
-                                   force_readable=False):
-        if _is_binary_reader(text_reader, False):
-            binary_reader = text_reader
+    def _force_correct_text_stream(
+        text_stream,
+        encoding,
+        errors,
+        is_binary,
+        find_binary,
+        force_readable=False,
+        force_writable=False,
+    ):
+        if is_binary(text_stream, False):
+            binary_reader = text_stream
         else:
-            # If there is no target encoding set, we need to verify that the
-            # reader is not actually misconfigured.
-            if encoding is None and not _stream_is_misconfigured(text_reader):
-                return text_reader
+            # If the stream looks compatible, and won't default to a
+            # misconfigured ascii encoding, return it as-is.
+            if (
+                _is_compatible_text_stream(text_stream, encoding, errors)
+                and not (
+                    encoding is None
+                    and _stream_is_misconfigured(text_stream)
+                )
+            ):
+                return text_stream
 
-            if _is_compatible_text_stream(text_reader, encoding, errors):
-                return text_reader
+            # Otherwise, get the underlying binary reader.
+            binary_reader = find_binary(text_stream)
 
-            # If the reader has no encoding, we try to find the underlying
-            # binary reader for it.  If that fails because the environment is
-            # misconfigured, we silently go with the same reader because this
-            # is too common to happen.  In that case, mojibake is better than
-            # exceptions.
-            binary_reader = _find_binary_reader(text_reader)
+            # If that's not possible, silently use the original reader
+            # and get mojibake instead of exceptions.
             if binary_reader is None:
-                return text_reader
+                return text_stream
 
-        # At this point, we default the errors to replace instead of strict
-        # because nobody handles those errors anyways and at this point
-        # we're so fundamentally fucked that nothing can repair it.
+        # Default errors to replace instead of strict in order to get
+        # something that works.
         if errors is None:
-            errors = 'replace'
-        return _make_text_stream(binary_reader, encoding, errors,
-                                 force_readable=force_readable)
+            errors = "replace"
 
-    def _force_correct_text_writer(text_writer, encoding, errors,
-                                   force_writable=False):
-        if _is_binary_writer(text_writer, False):
-            binary_writer = text_writer
-        else:
-            # If there is no target encoding set, we need to verify that the
-            # writer is not actually misconfigured.
-            if encoding is None and not _stream_is_misconfigured(text_writer):
-                return text_writer
+        # Wrap the binary stream in a text stream with the correct
+        # encoding parameters.
+        return _make_text_stream(
+            binary_reader,
+            encoding,
+            errors,
+            force_readable=force_readable,
+            force_writable=force_writable,
+        )
 
-            if _is_compatible_text_stream(text_writer, encoding, errors):
-                return text_writer
+    def _force_correct_text_reader(text_reader, encoding, errors, force_readable=False):
+        return _force_correct_text_stream(
+            text_reader,
+            encoding,
+            errors,
+            _is_binary_reader,
+            _find_binary_reader,
+            force_readable=force_readable,
+        )
 
-            # If the writer has no encoding, we try to find the underlying
-            # binary writer for it.  If that fails because the environment is
-            # misconfigured, we silently go with the same writer because this
-            # is too common to happen.  In that case, mojibake is better than
-            # exceptions.
-            binary_writer = _find_binary_writer(text_writer)
-            if binary_writer is None:
-                return text_writer
-
-        # At this point, we default the errors to replace instead of strict
-        # because nobody handles those errors anyways and at this point
-        # we're so fundamentally fucked that nothing can repair it.
-        if errors is None:
-            errors = 'replace'
-        return _make_text_stream(binary_writer, encoding, errors,
-                                 force_writable=force_writable)
+    def _force_correct_text_writer(text_writer, encoding, errors, force_writable=False):
+        return _force_correct_text_stream(
+            text_writer,
+            encoding,
+            errors,
+            _is_binary_writer,
+            _find_binary_writer,
+            force_writable=force_writable,
+        )
 
     def get_binary_stdin():
         reader = _find_binary_reader(sys.stdin)
@@ -468,30 +476,45 @@ def get_streerror(e, default=None):
     return msg
 
 
-def open_stream(filename, mode='r', encoding=None, errors='strict',
-                atomic=False):
+def _wrap_io_open(file, mode, encoding, errors):
+    """On Python 2, :func:`io.open` returns a text file wrapper that
+    requires passing ``unicode`` to ``write``. Need to open the file in
+    binary mode then wrap it in a subclass that can write ``str`` and
+    ``unicode``.
+
+    Also handles not passing ``encoding`` and ``errors`` in binary mode.
+    """
+    binary = "b" in mode
+
+    if binary:
+        kwargs = {}
+    else:
+        kwargs = {"encoding": encoding, "errors": errors}
+
+    if not PY2 or binary:
+        return io.open(file, mode, **kwargs)
+
+    f = io.open(file, "b" + mode.replace("t", ""))
+    return _make_text_stream(f, **kwargs)
+
+
+def open_stream(filename, mode='r', encoding=None, errors='strict', atomic=False):
+    binary = "b" in mode
+
     # Standard streams first.  These are simple because they don't need
     # special handling for the atomic flag.  It's entirely ignored.
     if filename == '-':
         if any(m in mode for m in ['w', 'a', 'x']):
-            if 'b' in mode:
+            if binary:
                 return get_binary_stdout(), False
             return get_text_stdout(encoding=encoding, errors=errors), False
-        if 'b' in mode:
+        if binary:
             return get_binary_stdin(), False
         return get_text_stdin(encoding=encoding, errors=errors), False
 
     # Non-atomic writes directly go out through the regular open functions.
     if not atomic:
-        open_kwargs = {}
-
-        if encoding is not None:
-            open_kwargs['encoding'] = encoding
-
-        if errors is not None:
-            open_kwargs['errors'] = errors
-
-        return codecs.open(filename, mode, **open_kwargs), True
+        return _wrap_io_open(filename, mode, encoding, errors), True
 
     # Some usability stuff for atomic writes
     if 'a' in mode:
@@ -519,7 +542,8 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
         perm = None
 
     flags = os.O_RDWR | os.O_CREAT | os.O_EXCL
-    if 'b' in mode:
+
+    if binary:
         flags |= getattr(os, 'O_BINARY', 0)
 
     while True:
@@ -534,8 +558,8 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
             if e.errno == errno.EEXIST or (
                 os.name == "nt"
                 and e.errno == errno.EACCES
-                and os.path.isdir(dir)
-                and os.access(dir, os.W_OK)
+                and os.path.isdir(e.filename)
+                and os.access(e.filename, os.W_OK)
             ):
                 continue
             raise
@@ -543,11 +567,7 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     if perm is not None:
         os.chmod(tmp_filename, perm)  # in case perm includes bits in umask
 
-    if encoding is not None:
-        f = io.open(fd, mode, encoding=encoding, errors=errors)
-    else:
-        f = os.fdopen(fd, mode)
-
+    f = _wrap_io_open(fd, mode, encoding, errors)
     return _AtomicFile(f, tmp_filename, os.path.realpath(filename)), True
 
 
