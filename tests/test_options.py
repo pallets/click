@@ -321,6 +321,15 @@ def test_legacy_options(runner):
     assert result.output == '23\n'
 
 
+def test_missing_option_string_cast():
+    ctx = click.Context(click.Command(""))
+
+    with pytest.raises(click.MissingParameter) as excinfo:
+        click.Option(['-a'], required=True).full_process_value(ctx, None)
+
+    assert str(excinfo.value) == "missing parameter: a"
+
+
 def test_missing_choice(runner):
     @click.command()
     @click.option('--foo', type=click.Choice(['foo', 'bar']),
