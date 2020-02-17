@@ -504,9 +504,38 @@ def open_stream(filename, mode='r', encoding=None, errors='strict',
     # as a proxy in the same folder and then using the fdopen
     # functionality to wrap it in a Python file.  Then we wrap it in an
     # atomic file that moves the file over on close.
-    import tempfile
-    fd, tmp_filename = tempfile.mkstemp(dir=os.path.dirname(filename),
-                                        prefix='.__atomic-write')
+    import errno
+    import random
+
+    try:
+        perm = os.stat(filename).st_mode
+    except OSError:
+        perm = None
+
+    flags = os.O_RDWR | os.O_CREAT | os.O_EXCL
+    if 'b' in mode:
+        flags |= getattr(os, 'O_BINARY', 0)
+
+    while True:
+        tmp_filename = os.path.join(
+            os.path.dirname(filename),
+            '.__atomic-write%08x' % (random.randrange(1 << 32),),
+        )
+        try:
+            fd = os.open(tmp_filename, flags, 0o666 if perm is None else perm)
+            break
+        except OSError as e:
+            if e.errno == errno.EEXIST or (
+                os.name == "nt"
+                and e.errno == errno.EACCES
+                and os.path.isdir(dir)
+                and os.access(dir, os.W_OK)
+            ):
+                continue
+            raise
+
+    if perm is not None:
+        os.chmod(tmp_filename, perm)  # in case perm includes bits in umask
 
     if encoding is not None:
         f = io.open(fd, mode, encoding=encoding, errors=errors)
