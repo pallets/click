@@ -34,6 +34,8 @@ Unreleased
 -   When using the test ``CliRunner`` with ``mix_stderr=False``, if
     ``result.stderr`` is empty it will not raise a ``ValueError``.
     :issue:`1193`
+-   Remove the unused ``mix_stderr`` parameter from
+    ``CliRunner.invoke``. :issue:`1435`
 
 
 Version 7.0

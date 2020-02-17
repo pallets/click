@@ -278,7 +278,7 @@ class CliRunner(object):
             clickpkg.formatting.FORCED_WIDTH = old_forced_width
 
     def invoke(self, cli, args=None, input=None, env=None,
-               catch_exceptions=True, color=False, mix_stderr=False, **extra):
+               catch_exceptions=True, color=False, **extra):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
         arguments are passed to the :meth:`~clickpkg.Command.main` function of
