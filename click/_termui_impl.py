@@ -108,6 +108,17 @@ class ProgressBar(object):
         self.render_progress()
         return self.generator()
 
+    def __next__(self):
+        # Iteration is defined in terms of a generator function,
+        # returned by iter(self); use that to define next(). This works
+        # because `self.iter` is an iterable consumed by that generator,
+        # so it is re-entry safe. Calling `next(self.generator())`
+        # twice works and does "what you want".
+        return next(iter(self))
+
+    # Python 2 compat
+    next = __next__
+
     def is_fast(self):
         return time.time() - self.start <= self.short_limit
 
@@ -270,11 +281,17 @@ class ProgressBar(object):
         self.finished = True
 
     def generator(self):
+        """Return a generator which yields the items added to the bar
+        during construction, and updates the progress bar *after* the
+        yielded block returns.
         """
-        Returns a generator which yields the items added to the bar during
-        construction, and updates the progress bar *after* the yielded block
-        returns.
-        """
+        # WARNING: the iterator interface for `ProgressBar` relies on
+        # this and only works because this is a simple generator which
+        # doesn't create or manage additional state. If this function
+        # changes, the impact should be evaluated both against
+        # `iter(bar)` and `next(bar)`. `next()` in particular may call
+        # `self.generator()` repeatedly, and this must remain safe in
+        # order for that interface to work.
         if not self.entered:
             raise RuntimeError('You need to use progress bars in a with block.')
 

@@ -27,6 +27,9 @@ Unreleased
     defaults globally. :issue:`1018`
 -   Handle ``env MYPATH=''`` as though the option were not passed.
     :issue:`1196`
+-   It is once again possible to call ``next(bar)`` on an active
+    progress bar instance. :issue:`1125`
+
 
 Version 7.0
 -----------

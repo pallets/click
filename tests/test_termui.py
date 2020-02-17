@@ -185,6 +185,26 @@ def test_progressbar_iter_outside_with_exceptions(runner):
         assert False, 'Expected an exception because of abort-related inputs.'
 
 
+def test_progressbar_is_iterator(runner, monkeypatch):
+    fake_clock = FakeClock()
+
+    @click.command()
+    def cli():
+        with click.progressbar(range(10), label='test') as progress:
+            while True:
+                try:
+                    next(progress)
+                    fake_clock.advance_time()
+                except StopIteration:
+                    break
+
+    monkeypatch.setattr(time, 'time', fake_clock.time)
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+
+    result = runner.invoke(cli, [])
+    assert result.exception is None
+
+
 def test_choices_list_in_prompt(runner, monkeypatch):
     @click.command()
     @click.option('-g', type=click.Choice(['none', 'day', 'week', 'month']),

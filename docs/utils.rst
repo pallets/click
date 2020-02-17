@@ -389,6 +389,16 @@ but you know the length, you can explicitly provide it::
         for user in bar:
             modify_the_user(user)
 
+Note that :func:`progressbar` updates the bar *after* each iteration of the
+loop. So code like this will render correctly::
+
+    import time
+
+    with click.progressbar([1, 2, 3]) as bar:
+        for x in bar:
+            print('sleep({})...'.format(x))
+            time.sleep(x)
+
 Another useful feature is to associate a label with the progress bar which
 will be shown preceding the progress bar::
 
