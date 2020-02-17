@@ -38,6 +38,8 @@ Unreleased
     ``CliRunner.invoke``. :issue:`1435`
 -   Fix ``TypeError`` raised when using bool flags and specifying
     ``type=bool``. :issue:`1287`
+-   Newlines in option help text are replaced with spaces before
+    re-wrapping to avoid uneven line breaks. :issue:`834`
 
 
 Version 7.0
