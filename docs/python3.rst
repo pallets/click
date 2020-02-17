@@ -120,6 +120,12 @@ If you see something like this error in Python 3::
       to Python 2 or consult the Python 3 section of the docs for
       mitigation steps.
 
+.. note::
+
+    In Python 3.7 and later you will no longer get a ``RuntimeError`` in
+    many cases thanks to :pep:`538` and :pep:`540`, which changed the
+    default assumption in unconfigured environments.
+
 You are dealing with an environment where Python 3 thinks you are
 restricted to ASCII data.  The solution to these problems is different
 depending on which locale your computer is running in.
