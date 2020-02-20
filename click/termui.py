@@ -1,3 +1,4 @@
+import io
 import os
 import sys
 import struct
@@ -5,11 +6,12 @@ import inspect
 import itertools
 
 from ._compat import raw_input, text_type, string_types, \
-    isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN, file_type
+    isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
 from .utils import echo
 from .exceptions import Abort, UsageError
 from .types import convert_type, Choice, Path
 from .globals import resolve_color_default
+from .utils import LazyFile
 
 
 # The prompt functions to use.  The doc tools currently override these
@@ -53,8 +55,9 @@ def _build_prompt(text, suffix, show_default=False, default=None, show_choices=T
 
 
 def _format_default(default):
-    if isinstance(default, file_type):
-        default = default.name
+    if isinstance(default, (io.IOBase, LazyFile)) and hasattr(default, "name"):
+        return default.name
+
     return default
 
 

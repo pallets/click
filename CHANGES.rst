@@ -42,7 +42,8 @@ Unreleased
     re-wrapping to avoid uneven line breaks. :issue:`834`
 -   ``MissingParameter`` exceptions are printable in the Python
     interpreter. :issue:`1139`
--   File option prompting now displays path only. :issue:`914`
+-   Fix how default values for file-type options are shown during
+    prompts. :issue:`914`
 
 
 Version 7.0

@@ -3,7 +3,6 @@ import pytest
 
 import click
 import time
-import os
 
 import click._termui_impl
 from click._compat import WIN
@@ -226,16 +225,22 @@ def test_choices_list_in_prompt(runner, monkeypatch):
     assert '(none, day, week, month)' not in result.output
 
 
-def test_default_prompt_format(runner):
-    path_default = os.path.join(os.path.dirname(__file__), "static/config.json")
-
+@pytest.mark.parametrize(
+    "file_kwargs",
+    [
+        {"mode": "rt"},
+        {"mode": "rb"},
+        {"lazy": True},
+    ]
+)
+def test_file_prompt_default_format(runner, file_kwargs):
     @click.command()
-    @click.option('-f', default=path_default, prompt='file', type=click.File('r'))
-    def cli_with_text_io_wrapper_default(f):
-        pass
+    @click.option("-f", default=__file__, prompt="file", type=click.File(**file_kwargs))
+    def cli(f):
+        click.echo(f.name)
 
-    result = runner.invoke(cli_with_text_io_wrapper_default, [])
-    assert result.output == 'file [%s]: \n' % path_default
+    result = runner.invoke(cli)
+    assert result.output == "file [{0}]: \n{0}\n".format(__file__)
 
 
 def test_secho(runner):
