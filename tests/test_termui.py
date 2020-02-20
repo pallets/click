@@ -225,6 +225,24 @@ def test_choices_list_in_prompt(runner, monkeypatch):
     assert '(none, day, week, month)' not in result.output
 
 
+@pytest.mark.parametrize(
+    "file_kwargs",
+    [
+        {"mode": "rt"},
+        {"mode": "rb"},
+        {"lazy": True},
+    ]
+)
+def test_file_prompt_default_format(runner, file_kwargs):
+    @click.command()
+    @click.option("-f", default=__file__, prompt="file", type=click.File(**file_kwargs))
+    def cli(f):
+        click.echo(f.name)
+
+    result = runner.invoke(cli)
+    assert result.output == "file [{0}]: \n{0}\n".format(__file__)
+
+
 def test_secho(runner):
     with runner.isolation() as outstreams:
         click.secho(None, nl=False)
