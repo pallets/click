@@ -79,7 +79,7 @@ class Result(object):
         self.runner = runner
         #: The standard output as bytes.
         self.stdout_bytes = stdout_bytes
-        #: The standard error as bytes, or False(y) if not available
+        #: The standard error as bytes, or None if not available
         self.stderr_bytes = stderr_bytes
         #: The exit code as integer.
         self.exit_code = exit_code
@@ -102,7 +102,7 @@ class Result(object):
     @property
     def stderr(self):
         """The standard error as unicode string."""
-        if not self.stderr_bytes:
+        if self.stderr_bytes is None:
             raise ValueError("stderr not separately captured")
         return self.stderr_bytes.decode(self.runner.charset, 'replace') \
             .replace('\r\n', '\n')
@@ -278,7 +278,7 @@ class CliRunner(object):
             clickpkg.formatting.FORCED_WIDTH = old_forced_width
 
     def invoke(self, cli, args=None, input=None, env=None,
-               catch_exceptions=True, color=False, mix_stderr=False, **extra):
+               catch_exceptions=True, color=False, **extra):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
         arguments are passed to the :meth:`~clickpkg.Command.main` function of
@@ -347,7 +347,10 @@ class CliRunner(object):
             finally:
                 sys.stdout.flush()
                 stdout = outstreams[0].getvalue()
-                stderr = outstreams[1] and outstreams[1].getvalue()
+                if self.mix_stderr:
+                    stderr = None
+                else:
+                    stderr = outstreams[1].getvalue()
 
         return Result(runner=self,
                       stdout_bytes=stdout,

@@ -34,7 +34,7 @@ works.
 
 If you are on Mac OS X or Linux::
 
-    $ sudo pip install virtualenv
+    $ pip install virtualenv --user
 
 One of these will probably install virtualenv on your system.  Maybe it's even
 in your package manager.  If you use Ubuntu, try::

@@ -113,6 +113,17 @@ def test_multiple_required(runner):
     assert 'Error: Missing option "-m" / "--message".' in result.output
 
 
+def test_empty_envvar(runner):
+    @click.command()
+    @click.option('--mypath', type=click.Path(exists=True), envvar='MYPATH')
+    def cli(mypath):
+        click.echo('mypath: %s' % mypath)
+
+    result = runner.invoke(cli, [], env={'MYPATH': ''})
+    assert result.exit_code == 0
+    assert result.output == 'mypath: None\n'
+
+
 def test_multiple_envvar(runner):
     @click.command()
     @click.option('--arg', multiple=True)
@@ -310,6 +321,15 @@ def test_legacy_options(runner):
     assert result.output == '23\n'
 
 
+def test_missing_option_string_cast():
+    ctx = click.Context(click.Command(""))
+
+    with pytest.raises(click.MissingParameter) as excinfo:
+        click.Option(['-a'], required=True).full_process_value(ctx, None)
+
+    assert str(excinfo.value) == "missing parameter: a"
+
+
 def test_missing_choice(runner):
     @click.command()
     @click.option('--foo', type=click.Choice(['foo', 'bar']),
@@ -387,9 +407,7 @@ def test_multiline_help(runner):
     result = runner.invoke(cmd, ['--help'])
     assert result.exit_code == 0
     out = result.output.splitlines()
-    assert '  --foo TEXT  hello' in out
-    assert '              i am' in out
-    assert '              multiline' in out
+    assert '  --foo TEXT  hello  i am  multiline' in out
 
 def test_argument_custom_class(runner):
     class CustomArgument(click.Argument):
@@ -450,6 +468,16 @@ def test_option_custom_class_reusable(runner):
         result = runner.invoke(cmd, ['--help'])
         assert 'I am a help text' in result.output
         assert 'you wont see me' not in result.output
+
+
+def test_bool_flag_with_type(runner):
+    @click.command()
+    @click.option('--shout/--no-shout', default=False, type=bool)
+    def cmd(shout):
+        pass
+
+    result = runner.invoke(cmd)
+    assert not result.exception
 
 
 def test_aliases_for_flags(runner):

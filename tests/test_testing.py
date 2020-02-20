@@ -257,6 +257,18 @@ def test_stderr():
     with pytest.raises(ValueError):
         result_mix.stderr
 
+    @click.command()
+    def cli_empty_stderr():
+        click.echo("stdout")
+
+    runner = CliRunner(mix_stderr=False)
+
+    result = runner.invoke(cli_empty_stderr)
+
+    assert result.output == 'stdout\n'
+    assert result.stdout == 'stdout\n'
+    assert result.stderr == ''
+
 
 @pytest.mark.parametrize('args, expected_output', [
     (None, 'bar\n'),

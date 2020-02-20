@@ -94,9 +94,9 @@ def command(name=None, cls=None, **attrs):
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as parameters to the command.
 
-    The name of the command defaults to the name of the function.  If you
-    want to change that, you can pass the intended name as the first
-    argument.
+    The name of the command defaults to the name of the function with
+    underscores replaced by dashes.  If you want to change that, you can
+    pass the intended name as the first argument.
 
     All keyword arguments are forwarded to the underlying command class.
 
