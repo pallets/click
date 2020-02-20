@@ -279,16 +279,17 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
 
 
 def test_open_file(runner):
+    @click.command()
+    @click.argument('filename')
+    def cli(filename):
+        with click.open_file(filename) as f:
+            click.echo(f.read())
+
+        click.echo('meep')
+
     with runner.isolated_filesystem():
         with open('hello.txt', 'w') as f:
             f.write('Cool stuff')
-
-        @click.command()
-        @click.argument('filename')
-        def cli(filename):
-            with click.open_file(filename) as f:
-                click.echo(f.read())
-            click.echo('meep')
 
         result = runner.invoke(cli, ['hello.txt'])
         assert result.exception is None
@@ -297,6 +298,44 @@ def test_open_file(runner):
         result = runner.invoke(cli, ['-'], input='foobar')
         assert result.exception is None
         assert result.output == 'foobar\nmeep\n'
+
+
+def test_open_file_ignore_errors_stdin(runner):
+    @click.command()
+    @click.argument("filename")
+    def cli(filename):
+        with click.open_file(filename, errors="ignore") as f:
+            click.echo(f.read())
+
+    result = runner.invoke(cli, ["-"], input=os.urandom(16))
+    assert result.exception is None
+
+
+def test_open_file_respects_ignore(runner):
+    with runner.isolated_filesystem():
+        with open("test.txt", "w") as f:
+            f.write("Hello world!")
+
+        with click.open_file("test.txt", encoding="utf8", errors="ignore") as f:
+            assert f.errors == "ignore"
+
+
+def test_open_file_ignore_invalid_utf8(runner):
+    with runner.isolated_filesystem():
+        with open("test.txt", "wb") as f:
+            f.write(b"\xe2\x28\xa1")
+
+        with click.open_file("test.txt", encoding="utf8", errors="ignore") as f:
+            f.read()
+
+
+def test_open_file_ignore_no_encoding(runner):
+    with runner.isolated_filesystem():
+        with open("test.bin", "wb") as f:
+            f.write(os.urandom(16))
+
+        with click.open_file("test.bin", errors="ignore") as f:
+            f.read()
 
 
 @pytest.mark.skipif(WIN, reason='os.chmod() is not fully supported on Windows.')
@@ -341,21 +380,19 @@ def test_open_file_atomic_permissions_new_file(runner):
         assert stat.S_IMODE(os.stat('new.txt').st_mode) == permissions
 
 
-@pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
 def test_iter_keepopenfile(tmpdir):
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
-    p.write(os.linesep.join(expected))
+    p.write("\n".join(expected))
     with p.open() as f:
         for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
             assert e_line == a_line.strip()
 
 
-@pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
 def test_iter_lazyfile(tmpdir):
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
-    p.write(os.linesep.join(expected))
+    p.write("\n".join(expected))
     with p.open() as f:
         with click.utils.LazyFile(f.name) as lf:
             for e_line, a_line in zip(expected, lf):
