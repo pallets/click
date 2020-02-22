@@ -257,37 +257,40 @@ def test_exit_not_standalone():
 
     assert cli.main([], 'test_exit_not_standalone', standalone_mode=False) == 0
 
-def test_parameter_source_default():
+
+def test_parameter_source_default(runner):
     @click.command()
     @click.pass_context
     @click.option("-o", "--option", default=1)
     def cli(ctx, option):
-        assert ctx.get_parameter_source("option") == click.ParameterSource.DEFAULT
-        ctx.exit(1)
+        click.echo(ctx.get_parameter_source("option"))
 
-    assert cli.main([], "test_parameter_source_default", standalone_mode=False) == 1
+    rv = runner.invoke(cli)
+    assert rv.output.rstrip() == click.ParameterSource.DEFAULT
 
-def test_parameter_source_default_map():
+
+def test_parameter_source_default_map(runner):
     @click.command()
     @click.pass_context
     @click.option("-o", "--option", default=1)
     def cli(ctx, option):
-        assert ctx.get_parameter_source("option") == click.ParameterSource.DEFAULT_MAP
-        ctx.exit(1)
+        click.echo(ctx.get_parameter_source("option"))
 
-    assert cli.main([], "test_parameter_source_default", standalone_mode=False, default_map={ "option": 1}) == 1
+    rv = runner.invoke(cli, default_map={"option": 1})
+    assert rv.output.rstrip() == click.ParameterSource.DEFAULT_MAP
     
 
-def test_parameter_source_commandline():
+def test_parameter_source_commandline(runner):
     @click.command()
     @click.pass_context
     @click.option("-o", "--option", default=1)
     def cli(ctx, option):
-        assert ctx.get_parameter_source("option") == click.ParameterSource.COMMANDLINE
-        ctx.exit(1)
-        
-    assert cli.main(["-o", "1"], "test_parameter_source_commandline", standalone_mode=False) == 1
-    assert cli.main(["--option", "1"], "test_parameter_source_default", standalone_mode=False) == 1
+        click.echo(ctx.get_parameter_source("option"))
+
+    rv = runner.invoke(cli, ["-o", "1"])
+    assert rv.output.rstrip() == click.ParameterSource.COMMANDLINE
+    rv = runner.invoke(cli, ["--option", "1"])
+    assert rv.output.rstrip() == click.ParameterSource.COMMANDLINE
 
 
 def test_parameter_source_environment(runner):
@@ -295,10 +298,10 @@ def test_parameter_source_environment(runner):
     @click.pass_context
     @click.option("-o", "--option", default=1)
     def cli(ctx, option):
-        assert ctx.get_parameter_source("option") == click.ParameterSource.ENVIRONMENT
-        sys.exit(1)
-        
-    assert runner.invoke(cli, [], prog_name="test_parameter_source_environment", env={"TEST_OPTION": "1"}, auto_envvar_prefix="TEST").exit_code == 1
+        click.echo(ctx.get_parameter_source("option"))
+
+    rv = runner.invoke(cli, auto_envvar_prefix="TEST", env={"TEST_OPTION": "1"})
+    assert rv.output.rstrip() == click.ParameterSource.ENVIRONMENT
 
 
 def test_parameter_source_environment_variable_specified(runner):
@@ -306,10 +309,10 @@ def test_parameter_source_environment_variable_specified(runner):
     @click.pass_context
     @click.option("-o", "--option", default=1, envvar="NAME")
     def cli(ctx, option):
-        assert ctx.get_parameter_source("option") == click.ParameterSource.ENVIRONMENT
-        sys.exit(1)
+        click.echo(ctx.get_parameter_source("option"))
         
-    assert runner.invoke(cli, [], prog_name="test_parameter_source_environment", env={"NAME": "1"}).exit_code == 1
+    rv = runner.invoke(cli, env={"NAME": "1"})
+    assert rv.output.rstrip() == click.ParameterSource.ENVIRONMENT
 
 
 def test_validate_parameter_source():
