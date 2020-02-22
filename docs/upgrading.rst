@@ -10,7 +10,32 @@ handle backwards compatibility properly.
 
 Upgrading to 7.0
 ----------------
-Click 7.0 changed the default behaviour of subcommands. Subcommands that are named by the function now automatically have the underscore replaced with a dash. So now, if you register a function named `my_command` it becomes `my-command` in the command line interface by default. Thus, you can still use underscores by specifying the command names explicitly or use a `Command` subclass that doesn't have the new behavior.
+
+Commands that take their name from the decorated function now replace
+underscores with dashes. For example, the Python function ``run_server``
+will get the command name ``run-server`` now. There are a few options
+to address this:
+
+-   To continue with the new behavior, pin your dependency to
+    ``Click>=7`` and update any documentation to use dashes.
+-   To keep existing behavior, add an explicit command name with
+    underscores, like ``@click.command("run_server")``.
+-   To try a name with dashes if the name with underscores was not
+    found, pass a ``token_normalize_func`` to the context:
+
+    .. code-block:: python
+
+        def normalize(name):
+            return name.replace("_", "-")
+
+        @click.group(context_settings={"token_normalize_func": normalize})
+        def group():
+            ...
+
+        @group.command()
+        def run_server():
+            ...
+
 
 .. _upgrade-to-3.2:
 
