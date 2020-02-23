@@ -49,6 +49,8 @@ Unreleased
 -   Option help text replaces newlines with spaces when rewrapping, but
     preserves paragraph breaks, fixing multiline formatting.
     :issue:`834, 1066, 1397`
+-   Option help text that is wrapped adds an extra newline at the end to
+    distinguish it from the next option. :issue:`1075`
 
 
 Version 7.0

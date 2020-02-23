@@ -206,6 +206,10 @@ class HelpFormatter(object):
 
                 for line in lines[1:]:
                     self.write('%*s%s\n' % (first_col + self.current_indent, '', line))
+
+                if len(lines) > 1:
+                    # separate long help from next option
+                    self.write("\n")
             else:
                 self.write('\n')
 

@@ -313,3 +313,39 @@ def test_global_show_default(runner):
         '  -f TEXT  Output file name  [default: out.txt]',
         '  --help   Show this message and exit.  [default: False]'
     ]
+
+
+def test_formatting_usage_multiline_option_padding(runner):
+    @click.command('foo')
+    @click.option('--bar', help='This help message will be padded if it wraps.')
+    def cli():
+        pass
+
+    result = runner.invoke(cli, '--help', terminal_width=45)
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'Usage: foo [OPTIONS]',
+        '',
+        'Options:',
+        '  --bar TEXT  This help message will be',
+        '              padded if it wraps.',
+        '',
+        '  --help      Show this message and exit.'
+    ]
+
+
+def test_formatting_usage_no_option_padding(runner):
+    @click.command('foo')
+    @click.option('--bar', help='This help message will be padded if it wraps.')
+    def cli():
+        pass
+
+    result = runner.invoke(cli, '--help', terminal_width=80)
+    assert not result.exception
+    assert result.output.splitlines() == [
+        'Usage: foo [OPTIONS]',
+        '',
+        'Options:',
+        '  --bar TEXT  This help message will be padded if it wraps.',
+        '  --help      Show this message and exit.'
+    ]
