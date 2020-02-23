@@ -46,6 +46,9 @@ Unreleased
     prompts. :issue:`914`
 -   Fix environment variable automatic generation for commands
     containing ``-``. :issue:`1253`
+-   Option help text replaces newlines with spaces when rewrapping, but
+    preserves paragraph breaks, fixing multiline formatting.
+    :issue:`834, 1066, 1397`
 
 
 Version 7.0
