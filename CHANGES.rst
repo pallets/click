@@ -59,6 +59,13 @@ Unreleased
     interpreter. :issue:`1139`
 -   Fix how default values for file-type options are shown during
     prompts. :issue:`914`
+-   Fix environment variable automatic generation for commands
+    containing ``-``. :issue:`1253`
+-   Option help text replaces newlines with spaces when rewrapping, but
+    preserves paragraph breaks, fixing multiline formatting.
+    :issue:`834, 1066, 1397`
+-   Option help text that is wrapped adds an extra newline at the end to
+    distinguish it from the next option. :issue:`1075`
 -   Consider ``sensible-editor`` when determining the editor to use for
     ``click.edit()``. :pr:`1469`
 

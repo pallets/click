@@ -273,6 +273,22 @@ def test_show_envvar_auto_prefix(runner):
     assert 'TEST_ARG1' in result.output
 
 
+def test_show_envvar_auto_prefix_dash_in_command(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    @click.option('--baz', show_envvar=True)
+    def foo_bar(baz):
+        pass
+
+    result = runner.invoke(cli, ['foo-bar', '--help'],
+                           auto_envvar_prefix='TEST')
+    assert not result.exception
+    assert 'TEST_FOO_BAR_BAZ' in result.output
+
+
 def test_custom_validation(runner):
     def validate_pos_int(ctx, param, value):
         if value < 0:
@@ -392,22 +408,30 @@ def test_case_insensitive_choice_returned_exactly(runner):
     assert result.output == 'Apple\n'
 
 
-def test_multiline_help(runner):
+def test_option_help_preserve_paragraphs(runner):
     @click.command()
-    @click.option('--foo', help="""
-        hello
+    @click.option(
+        "-C",
+        "--config",
+        type=click.Path(),
+        help="""Configuration file to use.
+        
+        If not given, the environment variable CONFIG_FILE is consulted
+        and used if set. If neither are given, a default configuration
+        file is loaded.""",
+    )
+    def cmd(config):
+        pass
 
-        i am
-
-        multiline
-    """)
-    def cmd(foo):
-        click.echo(foo)
-
-    result = runner.invoke(cmd, ['--help'])
+    result = runner.invoke(cmd, ['--help'], )
     assert result.exit_code == 0
-    out = result.output.splitlines()
-    assert '  --foo TEXT  hello  i am  multiline' in out
+    assert (
+        "  -C, --config PATH  Configuration file to use.\n"
+        "{i}\n"
+        "{i}If not given, the environment variable CONFIG_FILE is\n"
+        "{i}consulted and used if set. If neither are given, a default\n"
+        "{i}configuration file is loaded.".format(i=" " * 21)
+    ) in result.output
 
 def test_argument_custom_class(runner):
     class CustomArgument(click.Argument):

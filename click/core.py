@@ -364,6 +364,8 @@ class Context(object):
                                            self.info_name.upper())
         else:
             auto_envvar_prefix = auto_envvar_prefix.upper()
+        if auto_envvar_prefix is not None:
+            auto_envvar_prefix = auto_envvar_prefix.replace("-", "_")
         self.auto_envvar_prefix = auto_envvar_prefix
 
         if color is None and parent is not None:
@@ -1007,8 +1009,7 @@ class Command(BaseCommand):
         for param in self.get_params(ctx):
             rv = param.get_help_record(ctx)
             if rv is not None:
-                part_a, part_b = rv
-                opts.append((part_a, part_b.replace('\n', ' ')))
+                opts.append(rv)
 
         if opts:
             with formatter.section('Options'):
