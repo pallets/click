@@ -32,7 +32,7 @@ click.echo(json.dumps(rv))
 ALLOWED_IMPORTS = set([
     'weakref', 'os', 'struct', 'collections', 'sys', 'contextlib',
     'functools', 'stat', 're', 'codecs', 'inspect', 'itertools', 'io',
-    'threading', 'colorama', 'errno', 'fcntl', 'datetime'
+    'threading', 'colorama', 'errno', 'fcntl', 'datetime', 'shutil'
 ])
 
 if WIN:

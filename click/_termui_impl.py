@@ -18,7 +18,7 @@ import math
 import contextlib
 from ._compat import _default_text_stdout, range_type, isatty, \
      open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
-     CYGWIN
+     CYGWIN, which
 from .utils import echo
 from .exceptions import ClickException
 
@@ -333,15 +333,15 @@ def pager(generator, color=None):
     if os.environ.get('TERM') in ('dumb', 'emacs'):
         return _nullpager(stdout, generator, color)
     if WIN or sys.platform.startswith('os2'):
-        return _tempfilepager(generator, 'more <', color)
-    if hasattr(os, 'system') and os.system('(less) 2>/dev/null') == 0:
+        return _pipetempfilepager(generator, 'more', color)
+    if which('less') is not None:
         return _pipepager(generator, 'less', color)
 
     import tempfile
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
-        if hasattr(os, 'system') and os.system('more "%s"' % filename) == 0:
+        if which('more') is not None:
             return _pipepager(generator, 'more', color)
         return _nullpager(stdout, generator, color)
     finally:
@@ -399,6 +399,7 @@ def _pipepager(generator, cmd, color):
 
 def _tempfilepager(generator, cmd, color):
     """Page through text by invoking a program on a temporary file."""
+    import subprocess
     import tempfile
     filename = tempfile.mktemp()
     # TODO: This never terminates if the passed generator never terminates.
@@ -409,7 +410,35 @@ def _tempfilepager(generator, cmd, color):
     with open_stream(filename, 'wb')[0] as f:
         f.write(text.encode(encoding))
     try:
-        os.system(cmd + ' "' + filename + '"')
+        subprocess.call([cmd, filename])
+    except OSError:
+        # Command not found
+        pass
+    finally:
+        os.unlink(filename)
+
+
+def _pipetempfilepager(generator, cmd, color):
+    """
+    Page through text by invoking a program with a temporary file redirected
+    as input.
+    """
+    import subprocess
+    import tempfile
+    filename = tempfile.mktemp()
+    # TODO: This never terminates if the passed generator never terminates.
+    text = "".join(generator)
+    if not color:
+        text = strip_ansi(text)
+    encoding = get_best_encoding(sys.stdout)
+    with open_stream(filename, 'wb')[0] as f:
+        f.write(text.encode(encoding))
+    try:
+        with open_stream(filename, 'rb')[0] as f:
+            subprocess.call([cmd], stdin=f)
+    except OSError:
+        # Command not found
+        pass
     finally:
         os.unlink(filename)
 
@@ -441,7 +470,7 @@ class Editor(object):
         if WIN:
             return 'notepad'
         for editor in 'sensible-editor', 'vim', 'nano':
-            if os.system('which %s >/dev/null 2>&1' % editor) == 0:
+            if which(editor) is not None:
                 return editor
         return 'vi'
 
@@ -532,20 +561,32 @@ def open_url(url, wait=False, locate=False):
     elif WIN:
         if locate:
             url = _unquote_file(url)
-            args = 'explorer /select,"%s"' % _unquote_file(
-                url.replace('"', ''))
+            args = ['explorer', '/select,%s' % _unquote_file(url)]
         else:
-            args = 'start %s "" "%s"' % (
-                wait and '/WAIT' or '', url.replace('"', ''))
-        return os.system(args)
+            args = ['start']
+            if wait:
+                args.append('/WAIT')
+            args.append('')
+            args.append(url)
+        try:
+            return subprocess.call(args)
+        except OSError:
+            # Command not found
+            return 127
     elif CYGWIN:
         if locate:
             url = _unquote_file(url)
-            args = 'cygstart "%s"' % (os.path.dirname(url).replace('"', ''))
+            args = ['cygstart', os.path.dirname(url)]
         else:
-            args = 'cygstart %s "%s"' % (
-                wait and '-w' or '', url.replace('"', ''))
-        return os.system(args)
+            args = ['cygstart']
+            if wait:
+                args.append('-w')
+            args.append(url)
+        try:
+            return subprocess.call(args)
+        except OSError:
+            # Command not found
+            return 127
 
     try:
         if locate:

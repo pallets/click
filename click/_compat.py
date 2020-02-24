@@ -258,6 +258,17 @@ if PY2:
         if isinstance(value, bytes):
             value = value.decode(get_filesystem_encoding(), 'replace')
         return value
+
+    def which(cmd):
+        import subprocess
+        try:
+            path = subprocess.check_output(
+                ['which', cmd],
+                stderr=subprocess.STDOUT,
+            )
+        except subprocess.CalledProcessError:
+            return None
+        return path.strip()
 else:
     text_type = str
     raw_input = input
@@ -460,6 +471,8 @@ else:
             value = value.encode('utf-8', 'surrogateescape') \
                 .decode('utf-8', 'replace')
         return value
+
+    from shutil import which
 
 
 def get_streerror(e, default=None):
