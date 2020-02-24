@@ -57,7 +57,7 @@ Unreleased
     ``click.edit()``. :pr:`1469`
 -   Arguments to system calls such as the executable path passed to
     ``click.edit`` can contains spaces. :pr:`1470`
-
+-   Add ZSH completion autoloading and error handling. :issue:`1348`
 
 Version 7.0
 -----------
