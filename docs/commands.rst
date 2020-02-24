@@ -202,7 +202,7 @@ A custom multi command just needs to implement a list and load method:
         def list_commands(self, ctx):
             rv = []
             for filename in os.listdir(plugin_folder):
-                if filename.endswith('.py'):
+                if filename.endswith('.py') and filename != '__init__.py':
                     rv.append(filename[:-3])
             rv.sort()
             return rv
