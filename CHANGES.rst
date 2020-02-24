@@ -55,6 +55,8 @@ Unreleased
     distinguish it from the next option. :issue:`1075`
 -   Consider ``sensible-editor`` when determining the editor to use for
     ``click.edit()``. :pr:`1469`
+-   Arguments to system calls such as the executable path passed to
+    ``click.edit`` can contains spaces. :pr:`1470`
 
 
 Version 7.0

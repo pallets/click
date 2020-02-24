@@ -16,9 +16,9 @@ import sys
 import time
 import math
 import contextlib
-from ._compat import _default_text_stdout, range_type, PY2, isatty, \
-     open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
-     CYGWIN
+from ._compat import _default_text_stdout, range_type, isatty, \
+     open_stream, shlex_quote, strip_ansi, term_len, get_best_encoding, WIN, \
+     int_types, CYGWIN
 from .utils import echo
 from .exceptions import ClickException
 
@@ -328,7 +328,7 @@ def pager(generator, color=None):
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
-        if hasattr(os, 'system') and os.system('more "%s"' % filename) == 0:
+        if hasattr(os, 'system') and os.system("more %s" % shlex_quote(filename)) == 0:
             return _pipepager(generator, 'more', color)
         return _nullpager(stdout, generator, color)
     finally:
@@ -396,7 +396,7 @@ def _tempfilepager(generator, cmd, color):
     with open_stream(filename, 'wb')[0] as f:
         f.write(text.encode(encoding))
     try:
-        os.system(cmd + ' "' + filename + '"')
+        os.system("%s %s" % (shlex_quote(cmd), shlex_quote(filename)))
     finally:
         os.unlink(filename)
 
@@ -441,8 +441,11 @@ class Editor(object):
         else:
             environ = None
         try:
-            c = subprocess.Popen('%s "%s"' % (editor, filename),
-                                 env=environ, shell=True)
+            c = subprocess.Popen(
+                "%s %s" % (shlex_quote(editor), shlex_quote(filename)),
+                env=environ,
+                shell=True
+            )
             exit_code = c.wait()
             if exit_code != 0:
                 raise ClickException('%s: Editing failed!' % editor)
@@ -513,19 +516,16 @@ def open_url(url, wait=False, locate=False):
     elif WIN:
         if locate:
             url = _unquote_file(url)
-            args = 'explorer /select,"%s"' % _unquote_file(
-                url.replace('"', ''))
+            args = "explorer /select,%s" % (shlex_quote(url),)
         else:
-            args = 'start %s "" "%s"' % (
-                wait and '/WAIT' or '', url.replace('"', ''))
+            args = 'start %s "" %s' % ("/WAIT" if wait else "", shlex_quote(url))
         return os.system(args)
     elif CYGWIN:
         if locate:
             url = _unquote_file(url)
-            args = 'cygstart "%s"' % (os.path.dirname(url).replace('"', ''))
+            args = "cygstart %s" % (shlex_quote(os.path.dirname(url)),)
         else:
-            args = 'cygstart %s "%s"' % (
-                wait and '-w' or '', url.replace('"', ''))
+            args = "cygstart %s %s" % ("-w" if wait else "", shlex_quote(url))
         return os.system(args)
 
     try:
