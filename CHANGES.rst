@@ -33,6 +33,8 @@ Unreleased
 -   Fix ``OSError`` when running in MSYS2. :issue:`1338`
 -   Fix ``OSError`` when redirecting to ``NUL`` stream on Windows.
     :issue:`1065`
+-   Fix memory leak when parsing Unicode arguments on Windows.
+    :issue:`1136`
 -   Fix error in new AppEngine environments. :issue:`1462`
 -   Always return one of the passed choices for ``click.Choice``
     :issue:`1277`, :pr:`1318`
@@ -68,6 +70,8 @@ Unreleased
     distinguish it from the next option. :issue:`1075`
 -   Consider ``sensible-editor`` when determining the editor to use for
     ``click.edit()``. :pr:`1469`
+-   Arguments to system calls such as the executable path passed to
+    ``click.edit`` can contains spaces. :pr:`1470`
 
 
 Version 7.0
