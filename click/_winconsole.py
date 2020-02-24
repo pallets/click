@@ -17,7 +17,8 @@ import ctypes
 import msvcrt
 from ._compat import _NonClosingTextIOWrapper, text_type, PY2
 from ctypes import byref, POINTER, c_int, c_char, c_char_p, \
-     c_void_p, py_object, c_ssize_t, c_ulong, windll, WINFUNCTYPE
+     c_void_p, py_object, c_ssize_t, c_ulong, windll, WINFUNCTYPE, \
+     WinError
 try:
     from ctypes import pythonapi
     PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
@@ -40,6 +41,8 @@ GetCommandLineW = WINFUNCTYPE(LPWSTR)(
 CommandLineToArgvW = WINFUNCTYPE(
     POINTER(LPWSTR), LPCWSTR, POINTER(c_int))(
         ('CommandLineToArgvW', windll.shell32))
+LocalFree = WINFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p)(
+    ('LocalFree', windll.kernel32))
 
 
 STDIN_HANDLE = GetStdHandle(-10)
@@ -266,7 +269,13 @@ if PY2:
     def _get_windows_argv():
         argc = c_int(0)
         argv_unicode = CommandLineToArgvW(GetCommandLineW(), byref(argc))
-        argv = [argv_unicode[i] for i in range(0, argc.value)]
+        if not argv_unicode:
+            raise WinError()
+        try:
+            argv = [argv_unicode[i] for i in range(0, argc.value)]
+        finally:
+            LocalFree(argv_unicode)
+            del argv_unicode
 
         if not hasattr(sys, 'frozen'):
             argv = argv[1:]
