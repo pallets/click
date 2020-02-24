@@ -145,6 +145,8 @@ used.  The above example is thus equivalent to this:
     def putitem(item):
         click.echo('name=%s id=%d' % item)
 
+.. _multiple-options:
+
 Multiple Options
 ----------------
 
