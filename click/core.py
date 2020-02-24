@@ -622,6 +622,9 @@ class BaseCommand(object):
         #: an optional dictionary with defaults passed to the context.
         self.context_settings = context_settings
 
+    def __repr__(self):
+        return "<%s %s>" % (self.__class__.__name__, self.name)
+
     def get_usage(self, ctx):
         raise NotImplementedError('Base commands cannot get usage')
 
@@ -1392,6 +1395,9 @@ class Parameter(object):
         self.metavar = metavar
         self.envvar = envvar
         self.autocompletion = autocompletion
+
+    def __repr__(self):
+        return "<%s %s>" % (self.__class__.__name__, self.name)
 
     @property
     def human_readable_name(self):
