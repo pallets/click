@@ -88,7 +88,7 @@ script like this:
     @click.pass_context
     def cli(ctx, debug):
         # ensure that ctx.obj exists and is a dict (in case `cli()` is called
-        # by means other than the `if` block below
+        # by means other than the `if` block below)
         ctx.ensure_object(dict)
 
         ctx.obj['DEBUG'] = debug
@@ -202,7 +202,7 @@ A custom multi command just needs to implement a list and load method:
         def list_commands(self, ctx):
             rv = []
             for filename in os.listdir(plugin_folder):
-                if filename.endswith('.py'):
+                if filename.endswith('.py') and filename != '__init__.py':
                     rv.append(filename[:-3])
             rv.sort()
             return rv
@@ -317,7 +317,8 @@ When using multi command chaining you can only have one command (the last)
 use ``nargs=-1`` on an argument.  It is also not possible to nest multi
 commands below chained multicommands.  Other than that there are no
 restrictions on how they work.  They can accept options and arguments as
-normal.
+normal. The order between options and arguments is limited for chained
+commands. Currently only ``--options argument`` order is allowed.
 
 Another note: the :attr:`Context.invoked_subcommand` attribute is a bit
 useless for multi commands as it will give ``'*'`` as value if more than
@@ -439,10 +440,18 @@ defaults.
 This is useful if you plug in some commands from another package but
 you're not satisfied with the defaults.
 
-The default map can be nested arbitrarily for each subcommand and
-provided when the script is invoked.  Alternatively, it can also be
-overridden at any point by commands.  For instance, a top-level command could
-load the defaults from a configuration file.
+The default map can be nested arbitrarily for each subcommand:
+
+.. code-block:: python
+
+    default_map = {
+        "debug": True,  # default for a top level option
+        "runserver": {"port": 5000}  # default for a subcommand
+    }
+
+The default map can be provided when the script is invoked, or
+overridden at any point by commands. For instance, a top-level command
+could load the defaults from a configuration file.
 
 Example usage:
 

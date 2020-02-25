@@ -231,6 +231,15 @@ def test_missing_arg(runner):
     assert 'Missing argument "ARG".' in result.output
 
 
+def test_missing_argument_string_cast():
+    ctx = click.Context(click.Command(""))
+
+    with pytest.raises(click.MissingParameter) as excinfo:
+        click.Argument(["a"], required=True).full_process_value(ctx, None)
+
+    assert str(excinfo.value) == "missing parameter: a"
+
+
 def test_implicit_non_required(runner):
     @click.command()
     @click.argument('f', default='test')

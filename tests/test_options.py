@@ -113,6 +113,17 @@ def test_multiple_required(runner):
     assert 'Error: Missing option "-m" / "--message".' in result.output
 
 
+def test_empty_envvar(runner):
+    @click.command()
+    @click.option('--mypath', type=click.Path(exists=True), envvar='MYPATH')
+    def cli(mypath):
+        click.echo('mypath: %s' % mypath)
+
+    result = runner.invoke(cli, [], env={'MYPATH': ''})
+    assert result.exit_code == 0
+    assert result.output == 'mypath: None\n'
+
+
 def test_multiple_envvar(runner):
     @click.command()
     @click.option('--arg', multiple=True)
@@ -262,6 +273,22 @@ def test_show_envvar_auto_prefix(runner):
     assert 'TEST_ARG1' in result.output
 
 
+def test_show_envvar_auto_prefix_dash_in_command(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    @click.option('--baz', show_envvar=True)
+    def foo_bar(baz):
+        pass
+
+    result = runner.invoke(cli, ['foo-bar', '--help'],
+                           auto_envvar_prefix='TEST')
+    assert not result.exception
+    assert 'TEST_FOO_BAR_BAZ' in result.output
+
+
 def test_custom_validation(runner):
     def validate_pos_int(ctx, param, value):
         if value < 0:
@@ -308,6 +335,15 @@ def test_legacy_options(runner):
     assert result.output == '42\n'
     result = runner.invoke(cmd, ['-whatever=23'])
     assert result.output == '23\n'
+
+
+def test_missing_option_string_cast():
+    ctx = click.Context(click.Command(""))
+
+    with pytest.raises(click.MissingParameter) as excinfo:
+        click.Option(['-a'], required=True).full_process_value(ctx, None)
+
+    assert str(excinfo.value) == "missing parameter: a"
 
 
 def test_missing_choice(runner):
@@ -372,24 +408,30 @@ def test_case_insensitive_choice_returned_exactly(runner):
     assert result.output == 'Apple\n'
 
 
-def test_multiline_help(runner):
+def test_option_help_preserve_paragraphs(runner):
     @click.command()
-    @click.option('--foo', help="""
-        hello
+    @click.option(
+        "-C",
+        "--config",
+        type=click.Path(),
+        help="""Configuration file to use.
+        
+        If not given, the environment variable CONFIG_FILE is consulted
+        and used if set. If neither are given, a default configuration
+        file is loaded.""",
+    )
+    def cmd(config):
+        pass
 
-        i am
-
-        multiline
-    """)
-    def cmd(foo):
-        click.echo(foo)
-
-    result = runner.invoke(cmd, ['--help'])
+    result = runner.invoke(cmd, ['--help'], )
     assert result.exit_code == 0
-    out = result.output.splitlines()
-    assert '  --foo TEXT  hello' in out
-    assert '              i am' in out
-    assert '              multiline' in out
+    assert (
+        "  -C, --config PATH  Configuration file to use.\n"
+        "{i}\n"
+        "{i}If not given, the environment variable CONFIG_FILE is\n"
+        "{i}consulted and used if set. If neither are given, a default\n"
+        "{i}configuration file is loaded.".format(i=" " * 21)
+    ) in result.output
 
 def test_argument_custom_class(runner):
     class CustomArgument(click.Argument):
@@ -450,6 +492,16 @@ def test_option_custom_class_reusable(runner):
         result = runner.invoke(cmd, ['--help'])
         assert 'I am a help text' in result.output
         assert 'you wont see me' not in result.output
+
+
+def test_bool_flag_with_type(runner):
+    @click.command()
+    @click.option('--shout/--no-shout', default=False, type=bool)
+    def cmd(shout):
+        pass
+
+    result = runner.invoke(cmd)
+    assert not result.exception
 
 
 def test_aliases_for_flags(runner):

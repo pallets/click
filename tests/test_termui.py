@@ -185,6 +185,26 @@ def test_progressbar_iter_outside_with_exceptions(runner):
         assert False, 'Expected an exception because of abort-related inputs.'
 
 
+def test_progressbar_is_iterator(runner, monkeypatch):
+    fake_clock = FakeClock()
+
+    @click.command()
+    def cli():
+        with click.progressbar(range(10), label='test') as progress:
+            while True:
+                try:
+                    next(progress)
+                    fake_clock.advance_time()
+                except StopIteration:
+                    break
+
+    monkeypatch.setattr(time, 'time', fake_clock.time)
+    monkeypatch.setattr(click._termui_impl, 'isatty', lambda _: True)
+
+    result = runner.invoke(cli, [])
+    assert result.exception is None
+
+
 def test_choices_list_in_prompt(runner, monkeypatch):
     @click.command()
     @click.option('-g', type=click.Choice(['none', 'day', 'week', 'month']),
@@ -203,6 +223,24 @@ def test_choices_list_in_prompt(runner, monkeypatch):
 
     result = runner.invoke(cli_without_choices, [], input='none')
     assert '(none, day, week, month)' not in result.output
+
+
+@pytest.mark.parametrize(
+    "file_kwargs",
+    [
+        {"mode": "rt"},
+        {"mode": "rb"},
+        {"lazy": True},
+    ]
+)
+def test_file_prompt_default_format(runner, file_kwargs):
+    @click.command()
+    @click.option("-f", default=__file__, prompt="file", type=click.File(**file_kwargs))
+    def cli(f):
+        click.echo(f.name)
+
+    result = runner.invoke(cli)
+    assert result.output == "file [{0}]: \n{0}\n".format(__file__)
 
 
 def test_secho(runner):

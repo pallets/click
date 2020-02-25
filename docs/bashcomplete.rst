@@ -18,10 +18,10 @@ only supports completion for Bash and Zsh.
 What it Completes
 -----------------
 
-Generally, the Bash completion support will complete subcommands, options
-and any option or argument values where the type is click.Choice.
-Subcommands and choices are always listed whereas options only if at
-least a dash has been provided.  Example::
+Generally, the Bash completion support will complete subcommands,
+options, and any option or argument values where the type is
+:class:`click.Choice`. Subcommands and choices are always listed whereas
+options are only listed if at least a dash has been provided. ::
 
     $ repo <TAB><TAB>
     clone    commit   copy     delete   setuser

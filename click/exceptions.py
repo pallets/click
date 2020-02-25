@@ -152,6 +152,19 @@ class MissingParameter(BadParameter):
             msg or '',
         )
 
+    def __str__(self):
+        if self.message is None:
+            param_name = self.param.name if self.param else None
+            return "missing parameter: {}".format(param_name)
+        else:
+            return self.message
+
+    if PY2:
+        __unicode__ = __str__
+
+        def __str__(self):
+            return self.__unicode__().encode("utf-8")
+
 
 class NoSuchOption(UsageError):
     """Raised if click attempted to handle an option that does not

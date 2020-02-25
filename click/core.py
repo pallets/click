@@ -183,6 +183,9 @@ class Context(object):
        Added the `color`, `ignore_unknown_options`, and
        `max_content_width` parameters.
 
+    .. versionadded:: 7.1
+       Added the `show_default` parameter.
+
     :param command: the command class for this context.
     :param parent: the parent context.
     :param info_name: the info name for this invocation.  Generally this
@@ -361,6 +364,8 @@ class Context(object):
                                            self.info_name.upper())
         else:
             auto_envvar_prefix = auto_envvar_prefix.upper()
+        if auto_envvar_prefix is not None:
+            auto_envvar_prefix = auto_envvar_prefix.replace("-", "_")
         self.auto_envvar_prefix = auto_envvar_prefix
 
         if color is None and parent is not None:
@@ -1384,12 +1389,6 @@ class Parameter(object):
 
     Some settings are supported by both options and arguments.
 
-    .. versionchanged:: 2.0
-       Changed signature for parameter callback to also be passed the
-       parameter.  In Click 2.0, the old callback format will still work,
-       but it will raise a warning to give you change to migrate the
-       code easier.
-
     :param param_decls: the parameter declarations for this option or
                         argument.  This is a list of flags or argument
                         names.
@@ -1418,6 +1417,16 @@ class Parameter(object):
                      order of processing.
     :param envvar: a string or list of strings that are environment variables
                    that should be checked.
+
+    .. versionchanged:: 7.1
+        Empty environment variables are ignored rather than taking the
+        empty string value. This makes it possible for scripts to clear
+        variables if they can't unset them.
+
+    .. versionchanged:: 2.0
+        Changed signature for parameter callback to also be passed the
+        parameter. The old callback format will still work, but it will
+        raise a warning to give you a chance to migrate the code easier.
     """
     param_type_name = 'parameter'
 
@@ -1552,7 +1561,10 @@ class Parameter(object):
                 if rv is not None:
                     return rv
         else:
-            return os.environ.get(self.envvar)
+            rv = os.environ.get(self.envvar)
+
+            if rv != "":
+                return rv
 
     def value_from_envvar(self, ctx):
         rv = self.resolve_envvar_value(ctx)
@@ -1668,7 +1680,7 @@ class Option(Parameter):
         self.is_flag = is_flag
         self.flag_value = flag_value
         if self.is_flag and isinstance(self.flag_value, bool) \
-           and type is None:
+           and type in [None, bool]:
             self.type = BOOL
             self.is_bool_flag = True
         else:
@@ -1832,7 +1844,7 @@ class Option(Parameter):
         return ((any_prefix_is_slash and '; ' or ' / ').join(rv), help)
 
     def get_default(self, ctx):
-        # If we're a non boolean flag out default is more complex because
+        # If we're a non boolean flag our default is more complex because
         # we need to look at all flags in the same group to figure out
         # if we're the the default one in which case we return the flag
         # value as default.

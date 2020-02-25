@@ -145,11 +145,13 @@ used.  The above example is thus equivalent to this:
     def putitem(item):
         click.echo('name=%s id=%d' % item)
 
+.. _multiple-options:
+
 Multiple Options
 ----------------
 
 Similarly to ``nargs``, there is also the case of wanting to support a
-parameter being provided multiple times to and have all values recorded --
+parameter being provided multiple times and have all the values recorded --
 not just the last one.  For instance, ``git commit -m foo -m bar`` would
 record two lines for the commit message: ``foo`` and ``bar``. This can be
 accomplished with the ``multiple`` flag:
@@ -168,6 +170,15 @@ And on the command line:
 .. click:run::
 
     invoke(commit, args=['-m', 'foo', '-m', 'bar'])
+
+When passing a ``default`` with ``multiple=True``, the default value
+must be a list or tuple, otherwise it will be interpreted as a list of
+single characters.
+
+.. code-block:: python
+
+    @click.option("--format", multiple=True, default=["json"])
+
 
 Counting
 --------
@@ -341,13 +352,15 @@ What it looks like:
     println()
     invoke(digest, args=['--help'])
 
-.. note::
+Only pass the choices as list or tuple. Other iterables (like
+generators) may lead to unexpected results.
 
-    You should only pass the choices as list or tuple.  Other iterables (like
-    generators) may lead to surprising results.
+Choices work with options that have ``multiple=True``. If a ``default``
+value is given with ``multiple=True``, it should be a list or tuple of
+valid choices.
 
-    Choices should be unique after considering the effects of
-    ``case_sensitive`` and any specified token normalization function.
+Choices should be unique after considering the effects of
+``case_sensitive`` and any specified token normalization function.
 
 .. versionchanged:: 7.1
     The resulting value from an option will always be on the of the
@@ -393,6 +406,10 @@ What it looks like:
 .. click:run::
 
     invoke(hello, input=['John'])
+
+It is advised that prompt not be used in conjunction with the multiple
+flag set to True. Instead, prompt in the function interactively.
+
 
 Password Prompts
 ----------------
@@ -578,8 +595,8 @@ environment variables which is supported for options only.  To enable this
 feature, the ``auto_envvar_prefix`` parameter needs to be passed to the
 script that is invoked.  Each command and parameter is then added as an
 uppercase underscore-separated variable.  If you have a subcommand
-called ``foo`` taking an option called ``bar`` and the prefix is
-``MY_TOOL``, then the variable is ``MY_TOOL_FOO_BAR``.
+called ``run`` taking an option called ``reload`` and the prefix is
+``WEB``, then the variable is ``WEB_RUN_RELOAD``.
 
 Example usage:
 
@@ -600,8 +617,11 @@ And from the command line:
     invoke(greet, env={'GREETER_USERNAME': 'john'},
            auto_envvar_prefix='GREETER')
 
-When using ``auto_envvar_prefix`` with command groups, the command name needs
-to be included in the environment variable, between the prefix and the parameter name, *i.e.* *PREFIX_COMMAND_VARIABLE*.
+When using ``auto_envvar_prefix`` with command groups, the command name
+needs to be included in the environment variable, between the prefix and
+the parameter name, *i.e.* ``PREFIX_COMMAND_VARIABLE``. If you have a
+subcommand called ``run-server`` taking an option called ``host`` and
+the prefix is ``WEB``, then the variable is ``WEB_RUN_SERVER_HOST``.
 
 Example:
 

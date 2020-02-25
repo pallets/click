@@ -17,14 +17,15 @@ import ctypes
 import msvcrt
 from ._compat import _NonClosingTextIOWrapper, text_type, PY2
 from ctypes import byref, POINTER, c_int, c_char, c_char_p, \
-     c_void_p, py_object, c_ssize_t, c_ulong, windll, WINFUNCTYPE
+     c_void_p, py_object, c_ssize_t, c_ulong, windll, WINFUNCTYPE, \
+     WinError
 try:
     from ctypes import pythonapi
     PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
     PyBuffer_Release = pythonapi.PyBuffer_Release
 except ImportError:
     pythonapi = None
-from ctypes.wintypes import LPWSTR, LPCWSTR, HANDLE
+from ctypes.wintypes import DWORD, LPWSTR, LPCWSTR, HANDLE
 
 
 c_ssize_p = POINTER(c_ssize_t)
@@ -33,12 +34,15 @@ kernel32 = windll.kernel32
 GetStdHandle = kernel32.GetStdHandle
 ReadConsoleW = kernel32.ReadConsoleW
 WriteConsoleW = kernel32.WriteConsoleW
+GetConsoleMode = kernel32.GetConsoleMode
 GetLastError = kernel32.GetLastError
 GetCommandLineW = WINFUNCTYPE(LPWSTR)(
     ('GetCommandLineW', windll.kernel32))
 CommandLineToArgvW = WINFUNCTYPE(
     POINTER(LPWSTR), LPCWSTR, POINTER(c_int))(
         ('CommandLineToArgvW', windll.shell32))
+LocalFree = WINFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p)(
+    ('LocalFree', windll.kernel32))
 
 
 STDIN_HANDLE = GetStdHandle(-10)
@@ -265,7 +269,13 @@ if PY2:
     def _get_windows_argv():
         argc = c_int(0)
         argv_unicode = CommandLineToArgvW(GetCommandLineW(), byref(argc))
-        argv = [argv_unicode[i] for i in range(0, argc.value)]
+        if not argv_unicode:
+            raise WinError()
+        try:
+            argv = [argv_unicode[i] for i in range(0, argc.value)]
+        finally:
+            LocalFree(argv_unicode)
+            del argv_unicode
 
         if not hasattr(sys, 'frozen'):
             argv = argv[1:]
@@ -287,11 +297,24 @@ _stream_factories = {
 }
 
 
+def _is_console(f):
+    if not hasattr(f, 'fileno'):
+        return False
+
+    try:
+        fileno = f.fileno()
+    except OSError:
+        return False
+
+    handle = msvcrt.get_osfhandle(fileno)
+    return bool(GetConsoleMode(handle, byref(DWORD())))
+
+
 def _get_windows_console_stream(f, encoding, errors):
     if get_buffer is not None and \
        encoding in ('utf-16-le', None) \
        and errors in ('strict', None) and \
-       hasattr(f, 'isatty') and f.isatty():
+       _is_console(f):
         func = _stream_factories.get(f.fileno())
         if func is not None:
             if not PY2:

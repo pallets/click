@@ -17,8 +17,8 @@ import time
 import math
 import contextlib
 from ._compat import _default_text_stdout, range_type, isatty, \
-     open_stream, strip_ansi, term_len, get_best_encoding, WIN, int_types, \
-     CYGWIN
+     open_stream, shlex_quote, strip_ansi, term_len, get_best_encoding, WIN, \
+     int_types, CYGWIN
 from .utils import echo
 from .exceptions import ClickException
 
@@ -107,6 +107,17 @@ class ProgressBar(object):
             raise RuntimeError('You need to use progress bars in a with block.')
         self.render_progress()
         return self.generator()
+
+    def __next__(self):
+        # Iteration is defined in terms of a generator function,
+        # returned by iter(self); use that to define next(). This works
+        # because `self.iter` is an iterable consumed by that generator,
+        # so it is re-entry safe. Calling `next(self.generator())`
+        # twice works and does "what you want".
+        return next(iter(self))
+
+    # Python 2 compat
+    next = __next__
 
     def is_fast(self):
         return time.time() - self.start <= self.short_limit
@@ -283,11 +294,17 @@ class ProgressBar(object):
         self.finished = True
 
     def generator(self):
+        """Return a generator which yields the items added to the bar
+        during construction, and updates the progress bar *after* the
+        yielded block returns.
         """
-        Returns a generator which yields the items added to the bar during
-        construction, and updates the progress bar *after* the yielded block
-        returns.
-        """
+        # WARNING: the iterator interface for `ProgressBar` relies on
+        # this and only works because this is a simple generator which
+        # doesn't create or manage additional state. If this function
+        # changes, the impact should be evaluated both against
+        # `iter(bar)` and `next(bar)`. `next()` in particular may call
+        # `self.generator()` repeatedly, and this must remain safe in
+        # order for that interface to work.
         if not self.entered:
             raise RuntimeError('You need to use progress bars in a with block.')
 
@@ -324,7 +341,7 @@ def pager(generator, color=None):
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
-        if hasattr(os, 'system') and os.system('more "%s"' % filename) == 0:
+        if hasattr(os, 'system') and os.system("more %s" % shlex_quote(filename)) == 0:
             return _pipepager(generator, 'more', color)
         return _nullpager(stdout, generator, color)
     finally:
@@ -392,7 +409,7 @@ def _tempfilepager(generator, cmd, color):
     with open_stream(filename, 'wb')[0] as f:
         f.write(text.encode(encoding))
     try:
-        os.system(cmd + ' "' + filename + '"')
+        os.system("%s %s" % (shlex_quote(cmd), shlex_quote(filename)))
     finally:
         os.unlink(filename)
 
@@ -423,7 +440,7 @@ class Editor(object):
                 return rv
         if WIN:
             return 'notepad'
-        for editor in 'vim', 'nano':
+        for editor in 'sensible-editor', 'vim', 'nano':
             if os.system('which %s >/dev/null 2>&1' % editor) == 0:
                 return editor
         return 'vi'
@@ -437,8 +454,11 @@ class Editor(object):
         else:
             environ = None
         try:
-            c = subprocess.Popen('%s "%s"' % (editor, filename),
-                                 env=environ, shell=True)
+            c = subprocess.Popen(
+                "%s %s" % (shlex_quote(editor), shlex_quote(filename)),
+                env=environ,
+                shell=True
+            )
             exit_code = c.wait()
             if exit_code != 0:
                 raise ClickException('%s: Editing failed!' % editor)
@@ -515,19 +535,16 @@ def open_url(url, wait=False, locate=False):
     elif WIN:
         if locate:
             url = _unquote_file(url)
-            args = 'explorer /select,"%s"' % _unquote_file(
-                url.replace('"', ''))
+            args = "explorer /select,%s" % (shlex_quote(url),)
         else:
-            args = 'start %s "" "%s"' % (
-                wait and '/WAIT' or '', url.replace('"', ''))
+            args = 'start %s "" %s' % ("/WAIT" if wait else "", shlex_quote(url))
         return os.system(args)
     elif CYGWIN:
         if locate:
             url = _unquote_file(url)
-            args = 'cygstart "%s"' % (os.path.dirname(url).replace('"', ''))
+            args = "cygstart %s" % (shlex_quote(os.path.dirname(url)),)
         else:
-            args = 'cygstart %s "%s"' % (
-                wait and '-w' or '', url.replace('"', ''))
+            args = "cygstart %s %s" % ("-w" if wait else "", shlex_quote(url))
         return os.system(args)
 
     try:

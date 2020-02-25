@@ -1,4 +1,5 @@
 import os
+import stat
 import sys
 
 import pytest
@@ -50,32 +51,45 @@ def test_echo_custom_file():
     assert f.getvalue() == u'hello\n'
 
 
-def test_styling():
-    examples = [
-        ('x', dict(fg='black'), '\x1b[30mx\x1b[0m'),
-        ('x', dict(fg='red'), '\x1b[31mx\x1b[0m'),
-        ('x', dict(fg='green'), '\x1b[32mx\x1b[0m'),
-        ('x', dict(fg='yellow'), '\x1b[33mx\x1b[0m'),
-        ('x', dict(fg='blue'), '\x1b[34mx\x1b[0m'),
-        ('x', dict(fg='magenta'), '\x1b[35mx\x1b[0m'),
-        ('x', dict(fg='cyan'), '\x1b[36mx\x1b[0m'),
-        ('x', dict(fg='white'), '\x1b[37mx\x1b[0m'),
-        ('x', dict(bg='black'), '\x1b[40mx\x1b[0m'),
-        ('x', dict(bg='red'), '\x1b[41mx\x1b[0m'),
-        ('x', dict(bg='green'), '\x1b[42mx\x1b[0m'),
-        ('x', dict(bg='yellow'), '\x1b[43mx\x1b[0m'),
-        ('x', dict(bg='blue'), '\x1b[44mx\x1b[0m'),
-        ('x', dict(bg='magenta'), '\x1b[45mx\x1b[0m'),
-        ('x', dict(bg='cyan'), '\x1b[46mx\x1b[0m'),
-        ('x', dict(bg='white'), '\x1b[47mx\x1b[0m'),
-        ('foo bar', dict(blink=True), '\x1b[5mfoo bar\x1b[0m'),
-        ('foo bar', dict(underline=True), '\x1b[4mfoo bar\x1b[0m'),
-        ('foo bar', dict(bold=True), '\x1b[1mfoo bar\x1b[0m'),
-        ('foo bar', dict(dim=True), '\x1b[2mfoo bar\x1b[0m'),
+@pytest.mark.parametrize(
+    ("styles", "ref"),
+    [
+        ({"fg": "black"}, "\x1b[30mx y\x1b[0m"),
+        ({"fg": "red"}, "\x1b[31mx y\x1b[0m"),
+        ({"fg": "green"}, "\x1b[32mx y\x1b[0m"),
+        ({"fg": "yellow"}, "\x1b[33mx y\x1b[0m"),
+        ({"fg": "blue"}, "\x1b[34mx y\x1b[0m"),
+        ({"fg": "magenta"}, "\x1b[35mx y\x1b[0m"),
+        ({"fg": "cyan"}, "\x1b[36mx y\x1b[0m"),
+        ({"fg": "white"}, "\x1b[37mx y\x1b[0m"),
+        ({"bg": "black"}, "\x1b[40mx y\x1b[0m"),
+        ({"bg": "red"}, "\x1b[41mx y\x1b[0m"),
+        ({"bg": "green"}, "\x1b[42mx y\x1b[0m"),
+        ({"bg": "yellow"}, "\x1b[43mx y\x1b[0m"),
+        ({"bg": "blue"}, "\x1b[44mx y\x1b[0m"),
+        ({"bg": "magenta"}, "\x1b[45mx y\x1b[0m"),
+        ({"bg": "cyan"}, "\x1b[46mx y\x1b[0m"),
+        ({"bg": "white"}, "\x1b[47mx y\x1b[0m"),
+        ({"blink": True}, "\x1b[5mx y\x1b[0m"),
+        ({"underline": True}, "\x1b[4mx y\x1b[0m"),
+        ({"bold": True}, "\x1b[1mx y\x1b[0m"),
+        ({"dim": True}, "\x1b[2mx y\x1b[0m"),
+    ],
+)
+def test_styling(styles, ref):
+    assert click.style("x y", **styles) == ref
+    assert click.unstyle(ref) == "x y"
+
+
+@pytest.mark.parametrize(
+    ("text", "expect"),
+    [
+        ("\x1b[?25lx y\x1b[?25h", "x y"),
     ]
-    for text, styles, ref in examples:
-        assert click.style(text, **styles) == ref
-        assert click.unstyle(ref) == text
+)
+def test_unstyle_other_ansi(text, expect):
+    assert click.unstyle(text) == expect
+
 
 
 def test_filename_formatting():
@@ -265,16 +279,17 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
 
 
 def test_open_file(runner):
+    @click.command()
+    @click.argument('filename')
+    def cli(filename):
+        with click.open_file(filename) as f:
+            click.echo(f.read())
+
+        click.echo('meep')
+
     with runner.isolated_filesystem():
         with open('hello.txt', 'w') as f:
             f.write('Cool stuff')
-
-        @click.command()
-        @click.argument('filename')
-        def cli(filename):
-            with click.open_file(filename) as f:
-                click.echo(f.read())
-            click.echo('meep')
 
         result = runner.invoke(cli, ['hello.txt'])
         assert result.exception is None
@@ -285,21 +300,99 @@ def test_open_file(runner):
         assert result.output == 'foobar\nmeep\n'
 
 
-@pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
+def test_open_file_ignore_errors_stdin(runner):
+    @click.command()
+    @click.argument("filename")
+    def cli(filename):
+        with click.open_file(filename, errors="ignore") as f:
+            click.echo(f.read())
+
+    result = runner.invoke(cli, ["-"], input=os.urandom(16))
+    assert result.exception is None
+
+
+def test_open_file_respects_ignore(runner):
+    with runner.isolated_filesystem():
+        with open("test.txt", "w") as f:
+            f.write("Hello world!")
+
+        with click.open_file("test.txt", encoding="utf8", errors="ignore") as f:
+            assert f.errors == "ignore"
+
+
+def test_open_file_ignore_invalid_utf8(runner):
+    with runner.isolated_filesystem():
+        with open("test.txt", "wb") as f:
+            f.write(b"\xe2\x28\xa1")
+
+        with click.open_file("test.txt", encoding="utf8", errors="ignore") as f:
+            f.read()
+
+
+def test_open_file_ignore_no_encoding(runner):
+    with runner.isolated_filesystem():
+        with open("test.bin", "wb") as f:
+            f.write(os.urandom(16))
+
+        with click.open_file("test.bin", errors="ignore") as f:
+            f.read()
+
+
+@pytest.mark.skipif(WIN, reason='os.chmod() is not fully supported on Windows.')
+@pytest.mark.parametrize('permissions', [
+    0o400,
+    0o444,
+    0o600,
+    0o644,
+ ])
+def test_open_file_atomic_permissions_existing_file(runner, permissions):
+    with runner.isolated_filesystem():
+        with open('existing.txt', 'w') as f:
+            f.write('content')
+        os.chmod('existing.txt', permissions)
+
+        @click.command()
+        @click.argument('filename')
+        def cli(filename):
+           click.open_file(filename, 'w', atomic=True).close()
+
+        result = runner.invoke(cli, ['existing.txt'])
+        assert result.exception is None
+        assert stat.S_IMODE(os.stat('existing.txt').st_mode) == permissions
+
+
+@pytest.mark.skipif(WIN, reason='os.stat() is not fully supported on Windows.')
+def test_open_file_atomic_permissions_new_file(runner):
+    with runner.isolated_filesystem():
+        @click.command()
+        @click.argument('filename')
+        def cli(filename):
+            click.open_file(filename, 'w', atomic=True).close()
+
+        # Create a test file to get the expected permissions for new files
+        # according to the current umask.
+        with open('test.txt', 'w'):
+            pass
+        permissions = stat.S_IMODE(os.stat('test.txt').st_mode)
+
+        result = runner.invoke(cli, ['new.txt'])
+        assert result.exception is None
+        assert stat.S_IMODE(os.stat('new.txt').st_mode) == permissions
+
+
 def test_iter_keepopenfile(tmpdir):
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
-    p.write(os.linesep.join(expected))
+    p.write("\n".join(expected))
     with p.open() as f:
         for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
             assert e_line == a_line.strip()
 
 
-@pytest.mark.xfail(WIN and not PY2, reason='God knows ...')
 def test_iter_lazyfile(tmpdir):
     expected = list(map(str, range(10)))
     p = tmpdir.mkdir('testdir').join('testfile')
-    p.write(os.linesep.join(expected))
+    p.write("\n".join(expected))
     with p.open() as f:
         with click.utils.LazyFile(f.name) as lf:
             for e_line, a_line in zip(expected, lf):
