@@ -62,6 +62,7 @@ Unreleased
     showing the name for friendlier debugging. :issue:`1267`
 -   Completion doesn't consider option names if a value starts with
     ``-`` after the ``--`` separator. :issue:`1247`
+-   ZSH Completion escapes special characters in values. :pr:`1418`
 
 
 Version 7.0
