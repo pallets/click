@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import pytest
+
 import click
 from click._bashcomplete import get_choices
 
@@ -407,3 +409,28 @@ def test_hidden():
     # If the user exactly types out the hidden command, complete its subcommands.
     assert choices_without_help(cli, ['hgroup'], '') == ['hgroupsub']
     assert choices_without_help(cli, ['hsub'], '--h') == ['--hname']
+
+
+@pytest.mark.parametrize(
+    ("args", "part", "expect"),
+    [
+        ([], "-", ["--opt"]),
+        (["value"], "--", ["--opt"]),
+        ([], "-o", []),
+        (["--opt"], "-o", []),
+        (["--"], "", ["name", "-o", "--opt", "--"]),
+        (["--"], "--o", ["--opt"]),
+    ],
+)
+def test_args_with_double_dash_complete(args, part, expect):
+    def _complete(ctx, args, incomplete):
+        values = ["name", "-o", "--opt", "--"]
+        return [x for x in values if x.startswith(incomplete)]
+
+    @click.command()
+    @click.option("--opt")
+    @click.argument("args", nargs=-1, autocompletion=_complete)
+    def cli(opt, args):
+        pass
+
+    assert choices_without_help(cli, args, part) == expect

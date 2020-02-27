@@ -60,6 +60,8 @@ Unreleased
 -   Add ZSH completion autoloading and error handling. :issue:`1348`
 -   Add a repr to ``Command``, ``Group``, ``Option``, and ``Argument``,
     showing the name for friendlier debugging. :issue:`1267`
+-   Completion doesn't consider option names if a value starts with
+    ``-`` after the ``--`` separator. :issue:`1247`
 
 
 Version 7.0
