@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-click.parser
-~~~~~~~~~~~~
-
 This module started out as largely a copy paste from the stdlib's
 optparse module with the features removed that we do not need from
 optparse because we implement them in Click on a higher level (for
@@ -14,6 +11,12 @@ The reason this is a different module and not optparse from the stdlib
 is that there are differences in 2.x and 3.x about the error messages
 generated and optparse in the stdlib uses gettext for no good reason
 and might cause us issues.
+
+Click uses parts of optparse written by Gregory P. Ward and maintained
+by the Python Software Foundation. This is limited to code in parser.py.
+
+Copyright 2001-2006 Gregory P. Ward. All rights reserved.
+Copyright 2002-2006 Python Software Foundation. All rights reserved.
 """
 
 import re
