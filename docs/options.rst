@@ -14,7 +14,8 @@ Name Your Options
 -----------------
 
 The naming rules can be found in :ref:`parameter_names`. In short, you
-can refer the option **implicitly** by the longest dash-prefixed argument:
+can refer the option **implicitly** by the dash-prefixed hierarchy. 
+Where two dashes comes before a single dash:
 
 .. click:example::
 

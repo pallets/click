@@ -91,18 +91,26 @@ dash as a long one.
 If a string is added without any dashes, it becomes the internal parameter name
 which is also used as variable name.
 
-If all names for a parameter contain dashes, the internal name is generated
-automatically by taking the longest argument and converting all dashes to
-underscores.
+If a string contains a single dash and a double dash, the double dash
+becomes the internal parameter name.
+
+If there are multiple strings that contain a single dash, the first string
+becomes the internal name. The same is true if all arguments begin with 
+double dashes.
+
+All dashes after the beginning first two dashes convert to underscores.
 
 The internal name is converted to lowercase.
 
 Examples:
 
 * For an option with ``('-f', '--foo-bar')``, the parameter name is `foo_bar`.
-* For an option with ``('-x',)``, the parameter is `x`.
+* For an option with ``('-x',)``, the parameter name is `x`.
 * For an option with ``('-f', '--filename', 'dest')``, the parameter name is  `dest`.
-* For an option with ``('--CamelCaseOption',)``, the parameter is `camelcaseoption`.
+* For an option with ``('--CamelCaseOption',)``, the parameter name is `camelcaseoption`.
+* For an option with ``('-f', '-foo-bar')``, the parameter name is `f`.
+* For an option with ``('--f', '--foo-bar')``, the parameter name is `f`.
+* For an option with ``('---f')``, the parameter name is `_f`.
 * For an arguments with ``(`foogle`)``, the parameter name is `foogle`. To
   provide a different human readable name for use in help text, see the section
   about :ref:`doc-meta-variables`.
