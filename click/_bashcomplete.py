@@ -77,17 +77,18 @@ COMPLETION_SCRIPT_FISH = '''
 complete --no-files --command %(script_names)s --arguments "(env %(autocomplete_var)s=complete_fish COMP_WORDS=(commandline -cp) COMP_CWORD=(commandline -t) %(script_names)s)"
 '''
 
+_completion_scripts = {
+    "bash": COMPLETION_SCRIPT_BASH,
+    "zsh": COMPLETION_SCRIPT_ZSH,
+    "fish": COMPLETION_SCRIPT_FISH,
+}
+
 _invalid_ident_char_re = re.compile(r'[^a-zA-Z0-9_]')
 
 
 def get_completion_script(prog_name, complete_var, shell):
     cf_name = _invalid_ident_char_re.sub('', prog_name.replace('-', '_'))
-    if shell == 'zsh':
-        script = COMPLETION_SCRIPT_ZSH
-    elif shell == 'fish':
-        script = COMPLETION_SCRIPT_FISH
-    else:
-        script = COMPLETION_SCRIPT_BASH
+    script = _completion_scripts.get(shell, COMPLETION_SCRIPT_BASH)
     return (script % {
         'complete_func': '_%s_completion' % cf_name,
         'script_names': prog_name,
@@ -292,19 +293,22 @@ def do_complete(cli, prog_name, include_descriptions):
     for item in get_choices(cli, prog_name, args, incomplete):
         echo(item[0])
         if include_descriptions:
-            # ZSH has trouble dealing with empty array parameters when returned from commands, so use a well defined character '_' to indicate no description is present.
+            # ZSH has trouble dealing with empty array parameters when
+            # returned from commands, use '_' to indicate no description
+            # is present.
             echo(item[1] if item[1] else '_')
 
     return True
 
 
 def do_complete_fish(cli, prog_name):
-    cwords = split_arg_string(os.environ['COMP_WORDS'])
-    incomplete = os.environ['COMP_CWORD']
+    cwords = split_arg_string(os.environ["COMP_WORDS"])
+    incomplete = os.environ["COMP_CWORD"]
     args = cwords[1:]
+
     for item in get_choices(cli, prog_name, args, incomplete):
         if item[1]:
-            echo("%(arg)s\t%(desc)s" % {'arg': item[0], 'desc': item[1]})
+            echo("%(arg)s\t%(desc)s" % {"arg": item[0], "desc": item[1]})
         else:
             echo(item[0])
 
@@ -312,17 +316,19 @@ def do_complete_fish(cli, prog_name):
 
 
 def bashcomplete(cli, prog_name, complete_var, complete_instr):
-    if complete_instr.startswith('source'):
-        if complete_instr == 'source_zsh':
-            shell = 'zsh'
-        elif complete_instr == 'source_fish':
-            shell = 'fish'
-        else:
-            shell = 'bash'
+    if "_" in complete_instr:
+        command, shell = complete_instr.split("_", 1)
+    else:
+        command = complete_instr
+        shell = "bash"
+
+    if command == "source":
         echo(get_completion_script(prog_name, complete_var, shell))
         return True
-    elif complete_instr == 'complete_fish':
-        return do_complete_fish(cli, prog_name)
-    elif complete_instr == 'complete' or complete_instr == 'complete_zsh':
-        return do_complete(cli, prog_name, complete_instr == 'complete_zsh')
+    elif command == "complete":
+        if shell == "fish":
+            return do_complete_fish(cli, prog_name)
+        elif shell in {"bash", "zsh"}:
+            return do_complete(cli, prog_name, shell == "zsh")
+
     return False
