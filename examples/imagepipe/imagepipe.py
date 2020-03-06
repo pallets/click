@@ -43,10 +43,13 @@ def processor(f):
     """Helper decorator to rewrite a function so that it returns another
     function from it.
     """
+
     def new_func(*args, **kwargs):
         def processor(stream):
             return f(stream, *args, **kwargs)
+
         return processor
+
     return update_wrapper(new_func, f)
 
 
@@ -54,12 +57,14 @@ def generator(f):
     """Similar to the :func:`processor` but passes through old values
     unchanged and does not pass through the values as parameter.
     """
+
     @processor
     def new_func(stream, *args, **kwargs):
         for item in stream:
             yield item
         for item in f(*args, **kwargs):
             yield item
+
     return update_wrapper(new_func, f)
 
 
@@ -68,9 +73,15 @@ def copy_filename(new, old):
     return new
 
 
-@cli.command('open')
-@click.option('-i', '--image', 'images', type=click.Path(),
-              multiple=True, help='The image file to open.')
+@cli.command("open")
+@click.option(
+    "-i",
+    "--image",
+    "images",
+    type=click.Path(),
+    multiple=True,
+    help="The image file to open.",
+)
 @generator
 def open_cmd(images):
     """Loads one or multiple images for processing.  The input parameter
@@ -79,9 +90,9 @@ def open_cmd(images):
     for image in images:
         try:
             click.echo('Opening "%s"' % image)
-            if image == '-':
+            if image == "-":
                 img = Image.open(click.get_binary_stdin())
-                img.filename = '-'
+                img.filename = "-"
             else:
                 img = Image.open(image)
             yield img
@@ -89,10 +100,14 @@ def open_cmd(images):
             click.echo('Could not open image "%s": %s' % (image, e), err=True)
 
 
-@cli.command('save')
-@click.option('--filename', default='processed-%04d.png', type=click.Path(),
-              help='The format for the filename.',
-              show_default=True)
+@cli.command("save")
+@click.option(
+    "--filename",
+    default="processed-%04d.png",
+    type=click.Path(),
+    help="The format for the filename.",
+    show_default=True,
+)
 @processor
 def save_cmd(images, filename):
     """Saves all processed images to a series of files."""
@@ -102,11 +117,10 @@ def save_cmd(images, filename):
             click.echo('Saving "%s" as "%s"' % (image.filename, fn))
             yield image.save(fn)
         except Exception as e:
-            click.echo('Could not save image "%s": %s' %
-                       (image.filename, e), err=True)
+            click.echo('Could not save image "%s": %s' % (image.filename, e), err=True)
 
 
-@cli.command('display')
+@cli.command("display")
 @processor
 def display_cmd(images):
     """Opens all images in an image viewer."""
@@ -116,9 +130,9 @@ def display_cmd(images):
         yield image
 
 
-@cli.command('resize')
-@click.option('-w', '--width', type=int, help='The new width of the image.')
-@click.option('-h', '--height', type=int, help='The new height of the image.')
+@cli.command("resize")
+@click.option("-w", "--width", type=int, help="The new width of the image.")
+@click.option("-h", "--height", type=int, help="The new height of the image.")
 @processor
 def resize_cmd(images, width, height):
     """Resizes an image by fitting it into the box without changing
@@ -131,9 +145,10 @@ def resize_cmd(images, width, height):
         yield image
 
 
-@cli.command('crop')
-@click.option('-b', '--border', type=int, help='Crop the image from all '
-              'sides by this amount.')
+@cli.command("crop")
+@click.option(
+    "-b", "--border", type=int, help="Crop the image from all sides by this amount."
+)
 @processor
 def crop_cmd(images, border):
     """Crops an image from all edges."""
@@ -153,11 +168,11 @@ def convert_rotation(ctx, param, value):
     if value is None:
         return
     value = value.lower()
-    if value in ('90', 'r', 'right'):
+    if value in ("90", "r", "right"):
         return (Image.ROTATE_90, 90)
-    if value in ('180', '-180'):
+    if value in ("180", "-180"):
         return (Image.ROTATE_180, 180)
-    if value in ('-90', '270', 'l', 'left'):
+    if value in ("-90", "270", "l", "left"):
         return (Image.ROTATE_270, 270)
     raise click.BadParameter('invalid rotation "%s"' % value)
 
@@ -166,18 +181,18 @@ def convert_flip(ctx, param, value):
     if value is None:
         return
     value = value.lower()
-    if value in ('lr', 'leftright'):
-        return (Image.FLIP_LEFT_RIGHT, 'left to right')
-    if value in ('tb', 'topbottom', 'upsidedown', 'ud'):
-        return (Image.FLIP_LEFT_RIGHT, 'top to bottom')
+    if value in ("lr", "leftright"):
+        return (Image.FLIP_LEFT_RIGHT, "left to right")
+    if value in ("tb", "topbottom", "upsidedown", "ud"):
+        return (Image.FLIP_LEFT_RIGHT, "top to bottom")
     raise click.BadParameter('invalid flip "%s"' % value)
 
 
-@cli.command('transpose')
-@click.option('-r', '--rotate', callback=convert_rotation,
-              help='Rotates the image (in degrees)')
-@click.option('-f', '--flip', callback=convert_flip,
-              help='Flips the image  [LR / TB]')
+@cli.command("transpose")
+@click.option(
+    "-r", "--rotate", callback=convert_rotation, help="Rotates the image (in degrees)"
+)
+@click.option("-f", "--flip", callback=convert_flip, help="Flips the image  [LR / TB]")
 @processor
 def transpose_cmd(images, rotate, flip):
     """Transposes an image by either rotating or flipping it."""
@@ -193,9 +208,8 @@ def transpose_cmd(images, rotate, flip):
         yield image
 
 
-@cli.command('blur')
-@click.option('-r', '--radius', default=2, show_default=True,
-              help='The blur radius.')
+@cli.command("blur")
+@click.option("-r", "--radius", default=2, show_default=True, help="The blur radius.")
 @processor
 def blur_cmd(images, radius):
     """Applies gaussian blur."""
@@ -205,21 +219,28 @@ def blur_cmd(images, radius):
         yield copy_filename(image.filter(blur), image)
 
 
-@cli.command('smoothen')
-@click.option('-i', '--iterations', default=1, show_default=True,
-              help='How many iterations of the smoothen filter to run.')
+@cli.command("smoothen")
+@click.option(
+    "-i",
+    "--iterations",
+    default=1,
+    show_default=True,
+    help="How many iterations of the smoothen filter to run.",
+)
 @processor
 def smoothen_cmd(images, iterations):
     """Applies a smoothening filter."""
     for image in images:
-        click.echo('Smoothening "%s" %d time%s' %
-                   (image.filename, iterations, iterations != 1 and 's' or '',))
+        click.echo(
+            'Smoothening "%s" %d time%s'
+            % (image.filename, iterations, iterations != 1 and "s" or "",)
+        )
         for x in xrange(iterations):
             image = copy_filename(image.filter(ImageFilter.BLUR), image)
         yield image
 
 
-@cli.command('emboss')
+@cli.command("emboss")
 @processor
 def emboss_cmd(images):
     """Embosses an image."""
@@ -228,9 +249,10 @@ def emboss_cmd(images):
         yield copy_filename(image.filter(ImageFilter.EMBOSS), image)
 
 
-@cli.command('sharpen')
-@click.option('-f', '--factor', default=2.0,
-              help='Sharpens the image.', show_default=True)
+@cli.command("sharpen")
+@click.option(
+    "-f", "--factor", default=2.0, help="Sharpens the image.", show_default=True
+)
 @processor
 def sharpen_cmd(images, factor):
     """Sharpens an image."""
@@ -240,9 +262,9 @@ def sharpen_cmd(images, factor):
         yield copy_filename(enhancer.enhance(max(1.0, factor)), image)
 
 
-@cli.command('paste')
-@click.option('-l', '--left', default=0, help='Offset from left.')
-@click.option('-r', '--right', default=0, help='Offset from right.')
+@cli.command("paste")
+@click.option("-l", "--left", default=0, help="Offset from left.")
+@click.option("-r", "--right", default=0, help="Offset from right.")
 @processor
 def paste_cmd(images, left, right):
     """Pastes the second image on the first image and leaves the rest
@@ -257,13 +279,12 @@ def paste_cmd(images, left, right):
             yield image
         return
 
-    click.echo('Paste "%s" on "%s"' %
-               (to_paste.filename, image.filename))
+    click.echo('Paste "%s" on "%s"' % (to_paste.filename, image.filename))
     mask = None
-    if to_paste.mode == 'RGBA' or 'transparency' in to_paste.info:
+    if to_paste.mode == "RGBA" or "transparency" in to_paste.info:
         mask = to_paste
     image.paste(to_paste, (left, right), mask)
-    image.filename += '+' + to_paste.filename
+    image.filename += "+" + to_paste.filename
     yield image
 
     for image in imageiter:

@@ -2,8 +2,8 @@ import click
 
 
 @click.command()
-@click.argument('input', type=click.File('rb'), nargs=-1)
-@click.argument('output', type=click.File('wb'))
+@click.argument("input", type=click.File("rb"), nargs=-1)
+@click.argument("output", type=click.File("wb"))
 def cli(input, output):
     """This script works similar to the Unix `cat` command but it writes
     into a specific file (which could be the standard output as denoted by

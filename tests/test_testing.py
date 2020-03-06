@@ -18,8 +18,8 @@ else:
 def test_runner():
     @click.command()
     def test():
-        i = click.get_binary_stream('stdin')
-        o = click.get_binary_stream('stdout')
+        i = click.get_binary_stream("stdin")
+        o = click.get_binary_stream("stdout")
         while 1:
             chunk = i.read(4096)
             if not chunk:
@@ -28,21 +28,21 @@ def test_runner():
             o.flush()
 
     runner = CliRunner()
-    result = runner.invoke(test, input='Hello World!\n')
+    result = runner.invoke(test, input="Hello World!\n")
     assert not result.exception
-    assert result.output == 'Hello World!\n'
+    assert result.output == "Hello World!\n"
 
     runner = CliRunner(echo_stdin=True)
-    result = runner.invoke(test, input='Hello World!\n')
+    result = runner.invoke(test, input="Hello World!\n")
     assert not result.exception
-    assert result.output == 'Hello World!\nHello World!\n'
+    assert result.output == "Hello World!\nHello World!\n"
 
 
 def test_runner_with_stream():
     @click.command()
     def test():
-        i = click.get_binary_stream('stdin')
-        o = click.get_binary_stream('stdout')
+        i = click.get_binary_stream("stdin")
+        o = click.get_binary_stream("stdout")
         while 1:
             chunk = i.read(4096)
             if not chunk:
@@ -51,36 +51,36 @@ def test_runner_with_stream():
             o.flush()
 
     runner = CliRunner()
-    result = runner.invoke(test, input=ReasonableBytesIO(b'Hello World!\n'))
+    result = runner.invoke(test, input=ReasonableBytesIO(b"Hello World!\n"))
     assert not result.exception
-    assert result.output == 'Hello World!\n'
+    assert result.output == "Hello World!\n"
 
     runner = CliRunner(echo_stdin=True)
-    result = runner.invoke(test, input=ReasonableBytesIO(b'Hello World!\n'))
+    result = runner.invoke(test, input=ReasonableBytesIO(b"Hello World!\n"))
     assert not result.exception
-    assert result.output == 'Hello World!\nHello World!\n'
+    assert result.output == "Hello World!\nHello World!\n"
 
 
 def test_prompts():
     @click.command()
-    @click.option('--foo', prompt=True)
+    @click.option("--foo", prompt=True)
     def test(foo):
-        click.echo('foo=%s' % foo)
+        click.echo("foo=%s" % foo)
 
     runner = CliRunner()
-    result = runner.invoke(test, input='wau wau\n')
+    result = runner.invoke(test, input="wau wau\n")
     assert not result.exception
-    assert result.output == 'Foo: wau wau\nfoo=wau wau\n'
+    assert result.output == "Foo: wau wau\nfoo=wau wau\n"
 
     @click.command()
-    @click.option('--foo', prompt=True, hide_input=True)
+    @click.option("--foo", prompt=True, hide_input=True)
     def test(foo):
-        click.echo('foo=%s' % foo)
+        click.echo("foo=%s" % foo)
 
     runner = CliRunner()
-    result = runner.invoke(test, input='wau wau\n')
+    result = runner.invoke(test, input="wau wau\n")
     assert not result.exception
-    assert result.output == 'Foo: \nfoo=wau wau\n'
+    assert result.output == "Foo: \nfoo=wau wau\n"
 
 
 def test_getchar():
@@ -89,9 +89,9 @@ def test_getchar():
         click.echo(click.getchar())
 
     runner = CliRunner()
-    result = runner.invoke(continue_it, input='y')
+    result = runner.invoke(continue_it, input="y")
     assert not result.exception
-    assert result.output == 'y\n'
+    assert result.output == "y\n"
 
 
 def test_catch_exceptions():
@@ -118,20 +118,20 @@ def test_catch_exceptions():
     assert result.exit_code == 1
 
 
-@pytest.mark.skipif(WIN, reason='Test does not make sense on Windows.')
+@pytest.mark.skipif(WIN, reason="Test does not make sense on Windows.")
 def test_with_color():
     @click.command()
     def cli():
-        click.secho('hello world', fg='blue')
+        click.secho("hello world", fg="blue")
 
     runner = CliRunner()
 
     result = runner.invoke(cli)
-    assert result.output == 'hello world\n'
+    assert result.output == "hello world\n"
     assert not result.exception
 
     result = runner.invoke(cli, color=True)
-    assert result.output == click.style('hello world', fg='blue') + '\n'
+    assert result.output == click.style("hello world", fg="blue") + "\n"
     assert not result.exception
 
 
@@ -143,93 +143,93 @@ def test_with_color_but_pause_not_blocking():
     runner = CliRunner()
     result = runner.invoke(cli, color=True)
     assert not result.exception
-    assert result.output == ''
+    assert result.output == ""
 
 
 def test_exit_code_and_output_from_sys_exit():
     # See issue #362
     @click.command()
     def cli_string():
-        click.echo('hello world')
-        sys.exit('error')
+        click.echo("hello world")
+        sys.exit("error")
 
     @click.command()
     @click.pass_context
     def cli_string_ctx_exit(ctx):
-        click.echo('hello world')
-        ctx.exit('error')
+        click.echo("hello world")
+        ctx.exit("error")
 
     @click.command()
     def cli_int():
-        click.echo('hello world')
+        click.echo("hello world")
         sys.exit(1)
 
     @click.command()
     @click.pass_context
     def cli_int_ctx_exit(ctx):
-        click.echo('hello world')
+        click.echo("hello world")
         ctx.exit(1)
 
     @click.command()
     def cli_float():
-        click.echo('hello world')
+        click.echo("hello world")
         sys.exit(1.0)
 
     @click.command()
     @click.pass_context
     def cli_float_ctx_exit(ctx):
-        click.echo('hello world')
+        click.echo("hello world")
         ctx.exit(1.0)
 
     @click.command()
     def cli_no_error():
-        click.echo('hello world')
+        click.echo("hello world")
 
     runner = CliRunner()
 
     result = runner.invoke(cli_string)
     assert result.exit_code == 1
-    assert result.output == 'hello world\nerror\n'
+    assert result.output == "hello world\nerror\n"
 
     result = runner.invoke(cli_string_ctx_exit)
     assert result.exit_code == 1
-    assert result.output == 'hello world\nerror\n'
+    assert result.output == "hello world\nerror\n"
 
     result = runner.invoke(cli_int)
     assert result.exit_code == 1
-    assert result.output == 'hello world\n'
+    assert result.output == "hello world\n"
 
     result = runner.invoke(cli_int_ctx_exit)
     assert result.exit_code == 1
-    assert result.output == 'hello world\n'
+    assert result.output == "hello world\n"
 
     result = runner.invoke(cli_float)
     assert result.exit_code == 1
-    assert result.output == 'hello world\n1.0\n'
+    assert result.output == "hello world\n1.0\n"
 
     result = runner.invoke(cli_float_ctx_exit)
     assert result.exit_code == 1
-    assert result.output == 'hello world\n1.0\n'
+    assert result.output == "hello world\n1.0\n"
 
     result = runner.invoke(cli_no_error)
     assert result.exit_code == 0
-    assert result.output == 'hello world\n'
+    assert result.output == "hello world\n"
 
 
 def test_env():
     @click.command()
     def cli_env():
-        click.echo('ENV=%s' % os.environ['TEST_CLICK_ENV'])
+        click.echo("ENV=%s" % os.environ["TEST_CLICK_ENV"])
 
     runner = CliRunner()
 
     env_orig = dict(os.environ)
     env = dict(env_orig)
-    assert 'TEST_CLICK_ENV' not in env
-    env['TEST_CLICK_ENV'] = 'some_value'
+    assert "TEST_CLICK_ENV" not in env
+    env["TEST_CLICK_ENV"] = "some_value"
     result = runner.invoke(cli_env, env=env)
     assert result.exit_code == 0
-    assert result.output == 'ENV=some_value\n'
+    assert result.output == "ENV=some_value\n"
 
     assert os.environ == env_orig
 
@@ -244,15 +244,15 @@ def test_stderr():
 
     result = runner.invoke(cli_stderr)
 
-    assert result.output == 'stdout\n'
-    assert result.stdout == 'stdout\n'
-    assert result.stderr == 'stderr\n'
+    assert result.output == "stdout\n"
+    assert result.stdout == "stdout\n"
+    assert result.stderr == "stderr\n"
 
     runner_mix = CliRunner(mix_stderr=True)
     result_mix = runner_mix.invoke(cli_stderr)
 
-    assert result_mix.output == 'stdout\nstderr\n'
-    assert result_mix.stdout == 'stdout\nstderr\n'
+    assert result_mix.output == "stdout\nstderr\n"
+    assert result_mix.stdout == "stdout\nstderr\n"
 
     with pytest.raises(ValueError):
         result_mix.stderr
@@ -265,22 +265,24 @@ def test_stderr():
 
     result = runner.invoke(cli_empty_stderr)
 
-    assert result.output == 'stdout\n'
-    assert result.stdout == 'stdout\n'
-    assert result.stderr == ''
+    assert result.output == "stdout\n"
+    assert result.stdout == "stdout\n"
+    assert result.stderr == ""
 
 
-@pytest.mark.parametrize('args, expected_output', [
-    (None, 'bar\n'),
-    ([], 'bar\n'),
-    ('', 'bar\n'),
-    (['--foo', 'one two'], 'one two\n'),
-    ('--foo "one two"', 'one two\n'),
-])
+@pytest.mark.parametrize(
+    "args, expected_output",
+    [
+        (None, "bar\n"),
+        ([], "bar\n"),
+        ("", "bar\n"),
+        (["--foo", "one two"], "one two\n"),
+        ('--foo "one two"', "one two\n"),
+    ],
+)
 def test_args(args, expected_output):
-
     @click.command()
-    @click.option('--foo', default='bar')
+    @click.option("--foo", default="bar")
     def cli_args(foo):
         click.echo(foo)
 
@@ -298,4 +300,4 @@ def test_setting_prog_name_in_extra():
     runner = CliRunner()
     result = runner.invoke(cli, prog_name="foobar")
     assert not result.exception
-    assert result.output == 'ok\n'
+    assert result.output == "ok\n"

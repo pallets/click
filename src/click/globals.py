@@ -19,15 +19,15 @@ def get_current_context(silent=False):
                    :exc:`RuntimeError`.
     """
     try:
-        return getattr(_local, 'stack')[-1]
+        return getattr(_local, "stack")[-1]
     except (AttributeError, IndexError):
         if not silent:
-            raise RuntimeError('There is no active click context.')
+            raise RuntimeError("There is no active click context.")
 
 
 def push_context(ctx):
     """Pushes a new context to the current stack."""
-    _local.__dict__.setdefault('stack', []).append(ctx)
+    _local.__dict__.setdefault("stack", []).append(ctx)
 
 
 def pop_context():

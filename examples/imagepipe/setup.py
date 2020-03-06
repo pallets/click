@@ -1,16 +1,13 @@
 from setuptools import setup
 
 setup(
-    name='click-example-imagepipe',
-    version='1.0',
-    py_modules=['imagepipe'],
+    name="click-example-imagepipe",
+    version="1.0",
+    py_modules=["imagepipe"],
     include_package_data=True,
-    install_requires=[
-        'click',
-        'pillow',
-    ],
-    entry_points='''
+    install_requires=["click", "pillow",],
+    entry_points="""
         [console_scripts]
         imagepipe=imagepipe:cli
-    ''',
+    """,
 )

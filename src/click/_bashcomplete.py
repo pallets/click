@@ -14,10 +14,10 @@ try:
 except ImportError:
     import collections as abc
 
-WORDBREAK = '='
+WORDBREAK = "="
 
 # Note, only BASH version 4.4 and later have the nosort option.
-COMPLETION_SCRIPT_BASH = '''
+COMPLETION_SCRIPT_BASH = """
 %(complete_func)s() {
     local IFS=$'\n'
     COMPREPLY=( $( env COMP_WORDS="${COMP_WORDS[*]}" \\
@@ -38,9 +38,9 @@ COMPLETION_SCRIPT_BASH = '''
 }
 
 %(complete_func)setup
-'''
+"""
 
-COMPLETION_SCRIPT_ZSH = '''
+COMPLETION_SCRIPT_ZSH = """
 #compdef %(script_names)s
 
 %(complete_func)s() {
@@ -73,11 +73,11 @@ COMPLETION_SCRIPT_ZSH = '''
 }
 
 compdef %(complete_func)s %(script_names)s
-'''
+"""
 
-COMPLETION_SCRIPT_FISH = '''
+COMPLETION_SCRIPT_FISH = """
 complete --no-files --command %(script_names)s --arguments "(env %(autocomplete_var)s=complete_fish COMP_WORDS=(commandline -cp) COMP_CWORD=(commandline -t) %(script_names)s)"
-'''
+"""
 
 _completion_scripts = {
     "bash": COMPLETION_SCRIPT_BASH,
@@ -85,17 +85,20 @@ _completion_scripts = {
     "fish": COMPLETION_SCRIPT_FISH,
 }
 
-_invalid_ident_char_re = re.compile(r'[^a-zA-Z0-9_]')
+_invalid_ident_char_re = re.compile(r"[^a-zA-Z0-9_]")
 
 
 def get_completion_script(prog_name, complete_var, shell):
-    cf_name = _invalid_ident_char_re.sub('', prog_name.replace('-', '_'))
+    cf_name = _invalid_ident_char_re.sub("", prog_name.replace("-", "_"))
     script = _completion_scripts.get(shell, COMPLETION_SCRIPT_BASH)
-    return (script % {
-        'complete_func': '_%s_completion' % cf_name,
-        'script_names': prog_name,
-        'autocomplete_var': complete_var,
-    }).strip() + ';'
+    return (
+        script
+        % {
+            "complete_func": "_%s_completion" % cf_name,
+            "script_names": prog_name,
+            "autocomplete_var": complete_var,
+        }
+    ).strip() + ";"
 
 
 def resolve_ctx(cli, prog_name, args):
@@ -114,8 +117,9 @@ def resolve_ctx(cli, prog_name, args):
                 cmd_name, cmd, args = ctx.command.resolve_command(ctx, args)
                 if cmd is None:
                     return ctx
-                ctx = cmd.make_context(cmd_name, args, parent=ctx,
-                                       resilient_parsing=True)
+                ctx = cmd.make_context(
+                    cmd_name, args, parent=ctx, resilient_parsing=True
+                )
                 args = ctx.protected_args + ctx.args
             else:
                 # Walk chained subcommand contexts saving the last one.
@@ -123,10 +127,14 @@ def resolve_ctx(cli, prog_name, args):
                     cmd_name, cmd, args = ctx.command.resolve_command(ctx, args)
                     if cmd is None:
                         return ctx
-                    sub_ctx = cmd.make_context(cmd_name, args, parent=ctx,
-                                               allow_extra_args=True,
-                                               allow_interspersed_args=False,
-                                               resilient_parsing=True)
+                    sub_ctx = cmd.make_context(
+                        cmd_name,
+                        args,
+                        parent=ctx,
+                        allow_extra_args=True,
+                        allow_interspersed_args=False,
+                        resilient_parsing=True,
+                    )
                     args = sub_ctx.args
                 ctx = sub_ctx
                 args = sub_ctx.protected_args + sub_ctx.args
@@ -140,7 +148,7 @@ def start_of_option(param_str):
     :param param_str: param_str to check
     :return: whether or not this is the start of an option declaration (i.e. starts "-" or "--")
     """
-    return param_str and param_str[:1] == '-'
+    return param_str and param_str[:1] == "-"
 
 
 def is_incomplete_option(all_args, cmd_param):
@@ -156,7 +164,9 @@ def is_incomplete_option(all_args, cmd_param):
     if cmd_param.is_flag:
         return False
     last_option = None
-    for index, arg_str in enumerate(reversed([arg for arg in all_args if arg != WORDBREAK])):
+    for index, arg_str in enumerate(
+        reversed([arg for arg in all_args if arg != WORDBREAK])
+    ):
         if index + 1 > cmd_param.nargs:
             break
         if start_of_option(arg_str):
@@ -179,8 +189,11 @@ def is_incomplete_argument(current_params, cmd_param):
         return True
     if cmd_param.nargs == -1:
         return True
-    if isinstance(current_param_values, abc.Iterable) \
-            and cmd_param.nargs > 1 and len(current_param_values) < cmd_param.nargs:
+    if (
+        isinstance(current_param_values, abc.Iterable)
+        and cmd_param.nargs > 1
+        and len(current_param_values) < cmd_param.nargs
+    ):
         return True
     return False
 
@@ -196,14 +209,16 @@ def get_user_autocompletions(ctx, args, incomplete, cmd_param):
     results = []
     if isinstance(cmd_param.type, Choice):
         # Choices don't support descriptions.
-        results = [(c, None)
-                   for c in cmd_param.type.choices if str(c).startswith(incomplete)]
+        results = [
+            (c, None) for c in cmd_param.type.choices if str(c).startswith(incomplete)
+        ]
     elif cmd_param.autocompletion is not None:
-        dynamic_completions = cmd_param.autocompletion(ctx=ctx,
-                                                       args=args,
-                                                       incomplete=incomplete)
-        results = [c if isinstance(c, tuple) else (c, None)
-                   for c in dynamic_completions]
+        dynamic_completions = cmd_param.autocompletion(
+            ctx=ctx, args=args, incomplete=incomplete
+        )
+        results = [
+            c if isinstance(c, tuple) else (c, None) for c in dynamic_completions
+        ]
     return results
 
 
@@ -224,15 +239,24 @@ def add_subcommand_completions(ctx, incomplete, completions_out):
     # Add subcommand completions.
     if isinstance(ctx.command, MultiCommand):
         completions_out.extend(
-            [(c.name, c.get_short_help_str()) for c in get_visible_commands_starting_with(ctx, incomplete)])
+            [
+                (c.name, c.get_short_help_str())
+                for c in get_visible_commands_starting_with(ctx, incomplete)
+            ]
+        )
 
     # Walk up the context list and add any other completion possibilities from chained commands
     while ctx.parent is not None:
         ctx = ctx.parent
         if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
-            remaining_commands = [c for c in get_visible_commands_starting_with(ctx, incomplete)
-                                  if c.name not in ctx.protected_args]
-            completions_out.extend([(c.name, c.get_short_help_str()) for c in remaining_commands])
+            remaining_commands = [
+                c
+                for c in get_visible_commands_starting_with(ctx, incomplete)
+                if c.name not in ctx.protected_args
+            ]
+            completions_out.extend(
+                [(c.name, c.get_short_help_str()) for c in remaining_commands]
+            )
 
 
 def get_choices(cli, prog_name, args, incomplete):
@@ -258,16 +282,21 @@ def get_choices(cli, prog_name, args, incomplete):
         all_args.append(partition_incomplete[0])
         incomplete = partition_incomplete[2]
     elif incomplete == WORDBREAK:
-        incomplete = ''
+        incomplete = ""
 
     completions = []
     if not has_double_dash and start_of_option(incomplete):
         # completions for partial options
         for param in ctx.command.params:
             if isinstance(param, Option) and not param.hidden:
-                param_opts = [param_opt for param_opt in param.opts +
-                              param.secondary_opts if param_opt not in all_args or param.multiple]
-                completions.extend([(o, param.help) for o in param_opts if o.startswith(incomplete)])
+                param_opts = [
+                    param_opt
+                    for param_opt in param.opts + param.secondary_opts
+                    if param_opt not in all_args or param.multiple
+                ]
+                completions.extend(
+                    [(o, param.help) for o in param_opts if o.startswith(incomplete)]
+                )
         return completions
     # completion for option values from user supplied values
     for param in ctx.command.params:
@@ -284,13 +313,13 @@ def get_choices(cli, prog_name, args, incomplete):
 
 
 def do_complete(cli, prog_name, include_descriptions):
-    cwords = split_arg_string(os.environ['COMP_WORDS'])
-    cword = int(os.environ['COMP_CWORD'])
+    cwords = split_arg_string(os.environ["COMP_WORDS"])
+    cword = int(os.environ["COMP_CWORD"])
     args = cwords[1:cword]
     try:
         incomplete = cwords[cword]
     except IndexError:
-        incomplete = ''
+        incomplete = ""
 
     for item in get_choices(cli, prog_name, args, incomplete):
         echo(item[0])
@@ -298,7 +327,7 @@ def do_complete(cli, prog_name, include_descriptions):
             # ZSH has trouble dealing with empty array parameters when
             # returned from commands, use '_' to indicate no description
             # is present.
-            echo(item[1] if item[1] else '_')
+            echo(item[1] if item[1] else "_")
 
     return True
 
