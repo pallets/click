@@ -5,15 +5,12 @@ import shutil
 import sys
 import tempfile
 
+from . import formatting
+from . import termui
+from . import utils
 from ._compat import iteritems
 from ._compat import PY2
 from ._compat import string_types
-
-# If someone wants to vendor click, we want to ensure the
-# correct package is discovered.  Ideally we could use a
-# relative import here but unfortunately Python does not
-# support that.
-clickpkg = sys.modules[__name__.rsplit(".", 1)[0]]
 
 
 if PY2:
@@ -183,8 +180,8 @@ class CliRunner(object):
         old_stdin = sys.stdin
         old_stdout = sys.stdout
         old_stderr = sys.stderr
-        old_forced_width = clickpkg.formatting.FORCED_WIDTH
-        clickpkg.formatting.FORCED_WIDTH = 80
+        old_forced_width = formatting.FORCED_WIDTH
+        formatting.FORCED_WIDTH = 80
 
         env = self.make_env(env)
 
@@ -237,14 +234,14 @@ class CliRunner(object):
                 return not default_color
             return not color
 
-        old_visible_prompt_func = clickpkg.termui.visible_prompt_func
-        old_hidden_prompt_func = clickpkg.termui.hidden_prompt_func
-        old__getchar_func = clickpkg.termui._getchar
-        old_should_strip_ansi = clickpkg.utils.should_strip_ansi
-        clickpkg.termui.visible_prompt_func = visible_input
-        clickpkg.termui.hidden_prompt_func = hidden_input
-        clickpkg.termui._getchar = _getchar
-        clickpkg.utils.should_strip_ansi = should_strip_ansi
+        old_visible_prompt_func = termui.visible_prompt_func
+        old_hidden_prompt_func = termui.hidden_prompt_func
+        old__getchar_func = termui._getchar
+        old_should_strip_ansi = utils.should_strip_ansi
+        termui.visible_prompt_func = visible_input
+        termui.hidden_prompt_func = hidden_input
+        termui._getchar = _getchar
+        utils.should_strip_ansi = should_strip_ansi
 
         old_env = {}
         try:
@@ -270,11 +267,11 @@ class CliRunner(object):
             sys.stdout = old_stdout
             sys.stderr = old_stderr
             sys.stdin = old_stdin
-            clickpkg.termui.visible_prompt_func = old_visible_prompt_func
-            clickpkg.termui.hidden_prompt_func = old_hidden_prompt_func
-            clickpkg.termui._getchar = old__getchar_func
-            clickpkg.utils.should_strip_ansi = old_should_strip_ansi
-            clickpkg.formatting.FORCED_WIDTH = old_forced_width
+            termui.visible_prompt_func = old_visible_prompt_func
+            termui.hidden_prompt_func = old_hidden_prompt_func
+            termui._getchar = old__getchar_func
+            utils.should_strip_ansi = old_should_strip_ansi
+            formatting.FORCED_WIDTH = old_forced_width
 
     def invoke(
         self,

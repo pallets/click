@@ -4,12 +4,6 @@ import sys
 
 from ._compat import PY2
 
-# If someone wants to vendor click, we want to ensure the
-# correct package is discovered.  Ideally we could use a
-# relative import here but unfortunately Python does not
-# support that.
-click = sys.modules[__name__.rsplit(".", 1)[0]]
-
 
 def _find_unicode_literals_frame():
     import __future__
@@ -32,7 +26,10 @@ def _find_unicode_literals_frame():
 def _check_for_unicode_literals():
     if not __debug__:
         return
-    if not PY2 or click.disable_unicode_literals_warning:
+
+    from . import disable_unicode_literals_warning
+
+    if not PY2 or disable_unicode_literals_warning:
         return
     bad_frame = _find_unicode_literals_frame()
     if bad_frame <= 0:
