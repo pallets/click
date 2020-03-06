@@ -83,37 +83,21 @@ fails with a `ValueError` is also supported, though discouraged.
 Parameter Names
 ---------------
 
-Parameters (both options and arguments) accept a number of positional arguments
-which are passed to the command function as parameters. Each string with a
-single dash is added as a short argument; each string starting with a double
-dash as a long one.
+Parameters (both options and arguments) have a name that will be used as
+the Python argument name when calling the decorated function with
+values.
 
-If a string is added without any dashes, it becomes the internal parameter name
-which is also used as variable name.
+Arguments take only one positional name. To provide a different name for
+use in help text, see :ref:`doc-meta-variables`.
 
-If a string contains a single dash and a double dash, the double dash
-becomes the internal parameter name.
+Options can have many names that may be prefixed with one or two dashes.
+Names with one dash are parsed as short options, names with two are
+parsed as long options. If a name is not prefixed, it is used as the
+Python argument name and not parsed as an option name. Otherwise, the
+first name with a two dash prefix is used, or the first with a one dash
+prefix if there are none with two. The prefix is removed and dashes are
+converted to underscores to get the Python argument name.
 
-If there are multiple strings that contain a single dash, the first string
-becomes the internal name. The same is true if all arguments begin with 
-double dashes.
-
-All dashes after the beginning first two dashes convert to underscores.
-
-The internal name is converted to lowercase.
-
-Examples:
-
-* For an option with ``('-f', '--foo-bar')``, the parameter name is `foo_bar`.
-* For an option with ``('-x',)``, the parameter name is `x`.
-* For an option with ``('-f', '--filename', 'dest')``, the parameter name is  `dest`.
-* For an option with ``('--CamelCaseOption',)``, the parameter name is `camelcaseoption`.
-* For an option with ``('-f', '-foo-bar')``, the parameter name is `f`.
-* For an option with ``('--f', '--foo-bar')``, the parameter name is `f`.
-* For an option with ``('---f')``, the parameter name is `_f`.
-* For an arguments with ``(`foogle`)``, the parameter name is `foogle`. To
-  provide a different human readable name for use in help text, see the section
-  about :ref:`doc-meta-variables`.
 
 Implementing Custom Types
 -------------------------
