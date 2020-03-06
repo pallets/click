@@ -1,12 +1,11 @@
-import sys
 import inspect
-
+import sys
 from functools import update_wrapper
 
 from ._compat import iteritems
 from ._unicodefun import _check_for_unicode_literals
-from .utils import echo
 from .globals import get_current_context
+from .utils import echo
 
 
 def pass_context(f):

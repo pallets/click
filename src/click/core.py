@@ -3,25 +3,40 @@ import inspect
 import os
 import sys
 from contextlib import contextmanager
-from itertools import repeat
 from functools import update_wrapper
+from itertools import repeat
 
-from .types import convert_type, IntRange, BOOL
-from .utils import PacifyFlushWrapper, make_str, make_default_short_help, \
-     echo, get_os_args
-from .exceptions import ClickException, UsageError, BadParameter, Abort, \
-     MissingParameter, Exit
-from .termui import prompt, confirm, style
-from .formatting import HelpFormatter, join_options
-from .parser import OptionParser, split_opt
-from .globals import push_context, pop_context
-
-from ._compat import PY2, isidentifier, iteritems, string_types
-from ._unicodefun import _check_for_unicode_literals, _verify_python3_env
-
+from ._compat import isidentifier
+from ._compat import iteritems
+from ._compat import PY2
+from ._compat import string_types
+from ._unicodefun import _check_for_unicode_literals
+from ._unicodefun import _verify_python3_env
+from .exceptions import Abort
+from .exceptions import BadParameter
+from .exceptions import ClickException
+from .exceptions import Exit
+from .exceptions import MissingParameter
+from .exceptions import UsageError
+from .formatting import HelpFormatter
+from .formatting import join_options
+from .globals import pop_context
+from .globals import push_context
+from .parser import OptionParser
+from .parser import split_opt
+from .termui import confirm
+from .termui import prompt
+from .termui import style
+from .types import BOOL
+from .types import convert_type
+from .types import IntRange
+from .utils import echo
+from .utils import get_os_args
+from .utils import make_default_short_help
+from .utils import make_str
+from .utils import PacifyFlushWrapper
 
 _missing = object()
-
 
 SUBCOMMAND_METAVAR = 'COMMAND [ARGS]...'
 SUBCOMMANDS_METAVAR = 'COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]...'

@@ -1,4 +1,5 @@
 import click
+
 try:
     from urllib import parse as urlparse
 except ImportError:

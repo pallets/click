@@ -1,6 +1,8 @@
-import click
 import pytest
-from click._compat import should_strip_ansi, WIN
+
+import click
+from click._compat import should_strip_ansi
+from click._compat import WIN
 
 
 def test_legacy_callbacks(runner):

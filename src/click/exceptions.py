@@ -1,4 +1,6 @@
-from ._compat import PY2, filename_to_ui, get_text_stderr
+from ._compat import filename_to_ui
+from ._compat import get_text_stderr
+from ._compat import PY2
 from .utils import echo
 
 

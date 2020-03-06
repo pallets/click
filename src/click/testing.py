@@ -1,12 +1,13 @@
-import os
-import sys
-import shutil
-import tempfile
 import contextlib
+import os
 import shlex
+import shutil
+import sys
+import tempfile
 
-from ._compat import iteritems, PY2, string_types
-
+from ._compat import iteritems
+from ._compat import PY2
+from ._compat import string_types
 
 # If someone wants to vendor click, we want to ensure the
 # correct package is discovered.  Ideally we could use a

@@ -1,6 +1,6 @@
-import sys
 import json
 import subprocess
+import sys
 
 from click._compat import WIN
 

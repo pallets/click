@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import re
 import os
-import click
+import re
+
 import pytest
 
+import click
 from click._compat import text_type
 
 

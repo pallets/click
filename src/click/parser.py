@@ -18,11 +18,13 @@ by the Python Software Foundation. This is limited to code in parser.py.
 Copyright 2001-2006 Gregory P. Ward. All rights reserved.
 Copyright 2002-2006 Python Software Foundation. All rights reserved.
 """
-
 import re
 from collections import deque
-from .exceptions import UsageError, NoSuchOption, BadOptionUsage, \
-     BadArgumentUsage
+
+from .exceptions import BadArgumentUsage
+from .exceptions import BadOptionUsage
+from .exceptions import NoSuchOption
+from .exceptions import UsageError
 
 
 def _unpack_args(args, nargs_spec):

@@ -1,19 +1,30 @@
 import os
 import sys
 
+from ._compat import _default_text_stderr
+from ._compat import _default_text_stdout
+from ._compat import auto_wrap_for_ansi
+from ._compat import binary_streams
+from ._compat import filename_to_ui
+from ._compat import get_filesystem_encoding
+from ._compat import get_streerror
+from ._compat import is_bytes
+from ._compat import open_stream
+from ._compat import PY2
+from ._compat import should_strip_ansi
+from ._compat import string_types
+from ._compat import strip_ansi
+from ._compat import text_streams
+from ._compat import text_type
+from ._compat import WIN
 from .globals import resolve_color_default
-
-from ._compat import text_type, open_stream, get_filesystem_encoding, \
-    get_streerror, string_types, PY2, binary_streams, text_streams, \
-    filename_to_ui, auto_wrap_for_ansi, strip_ansi, should_strip_ansi, \
-    _default_text_stdout, _default_text_stderr, is_bytes, WIN
 
 if not PY2:
     from ._compat import _find_binary_writer
 elif WIN:
-    from ._winconsole import _get_windows_argv, \
-         _hash_py_argv, _initial_argv_hash
-
+    from ._winconsole import _get_windows_argv
+    from ._winconsole import _hash_py_argv
+    from ._winconsole import _initial_argv_hash
 
 echo_native_types = string_types + (bytes, bytearray)
 

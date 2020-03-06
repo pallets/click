@@ -4,18 +4,25 @@ This module contains implementations for the termui module. To keep the
 import time of Click down, some infrequently used functionality is
 placed in this module and only imported as needed.
 """
-
+import contextlib
+import math
 import os
 import sys
 import time
-import math
-import contextlib
-from ._compat import _default_text_stdout, range_type, isatty, \
-     open_stream, shlex_quote, strip_ansi, term_len, get_best_encoding, WIN, \
-     int_types, CYGWIN
-from .utils import echo
-from .exceptions import ClickException
 
+from ._compat import _default_text_stdout
+from ._compat import CYGWIN
+from ._compat import get_best_encoding
+from ._compat import int_types
+from ._compat import isatty
+from ._compat import open_stream
+from ._compat import range_type
+from ._compat import shlex_quote
+from ._compat import strip_ansi
+from ._compat import term_len
+from ._compat import WIN
+from .exceptions import ClickException
+from .utils import echo
 
 if os.name == 'nt':
     BEFORE_BAR = '\r'

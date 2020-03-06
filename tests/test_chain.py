@@ -1,6 +1,8 @@
 import sys
-import click
+
 import pytest
+
+import click
 
 
 def debug():

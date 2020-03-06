@@ -1,10 +1,9 @@
-import re
+import codecs
 import io
 import os
+import re
 import sys
-import codecs
 from weakref import WeakKeyDictionary
-
 
 PY2 = sys.version_info[0] == 2
 CYGWIN = sys.platform.startswith('cygwin')

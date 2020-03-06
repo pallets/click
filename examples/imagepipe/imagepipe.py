@@ -1,6 +1,10 @@
-import click
 from functools import update_wrapper
-from PIL import Image, ImageFilter, ImageEnhance
+
+from PIL import Image
+from PIL import ImageEnhance
+from PIL import ImageFilter
+
+import click
 
 
 @click.group(chain=True)

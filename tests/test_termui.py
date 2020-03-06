@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-import pytest
-
-import click
 import time
+
+import pytest
 
 import click._termui_impl
 from click._compat import WIN

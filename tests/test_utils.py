@@ -4,10 +4,10 @@ import sys
 
 import pytest
 
-import click
-import click.utils
 import click._termui_impl
-from click._compat import WIN, PY2
+import click.utils
+from click._compat import PY2
+from click._compat import WIN
 
 
 def test_echo(runner):

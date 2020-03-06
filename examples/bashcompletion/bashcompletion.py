@@ -1,5 +1,6 @@
-import click
 import os
+
+import click
 
 
 @click.group()

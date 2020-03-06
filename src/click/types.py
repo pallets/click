@@ -2,10 +2,16 @@ import os
 import stat
 from datetime import datetime
 
-from ._compat import open_stream, text_type, filename_to_ui, \
-    get_filesystem_encoding, get_streerror, _get_argv_encoding, PY2
+from ._compat import _get_argv_encoding
+from ._compat import filename_to_ui
+from ._compat import get_filesystem_encoding
+from ._compat import get_streerror
+from ._compat import open_stream
+from ._compat import PY2
+from ._compat import text_type
 from .exceptions import BadParameter
-from .utils import safecall, LazyFile
+from .utils import LazyFile
+from .utils import safecall
 
 
 class ParamType(object):

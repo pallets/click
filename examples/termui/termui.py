@@ -1,13 +1,9 @@
 # coding: utf-8
-import click
 import math
-import time
 import random
+import time
 
-try:
-    range_type = xrange
-except NameError:
-    range_type = range
+import click
 
 
 @click.group()
@@ -28,7 +24,7 @@ def colordemo():
 def pager():
     """Demonstrates using the pager."""
     lines = []
-    for x in range_type(200):
+    for x in range(200):
         lines.append('%s. Hello World!' % click.style(str(x), fg='green'))
     click.echo_via_pager('\n'.join(lines))
 
@@ -38,7 +34,7 @@ def pager():
               help='The number of items to process.')
 def progress(count):
     """Demonstrates the progress bar."""
-    items = range_type(count)
+    items = range(count)
 
     def process_slowly(item):
         time.sleep(0.002 * random.random())

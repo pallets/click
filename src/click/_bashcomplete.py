@@ -2,10 +2,12 @@ import copy
 import os
 import re
 
-from .utils import echo
+from .core import Argument
+from .core import MultiCommand
+from .core import Option
 from .parser import split_arg_string
-from .core import MultiCommand, Option, Argument
 from .types import Choice
+from .utils import echo
 
 try:
     from collections import abc

@@ -2,11 +2,11 @@ import os
 import sys
 
 import pytest
+
 import click
-
+from click._compat import PY2
+from click._compat import WIN
 from click.testing import CliRunner
-
-from click._compat import PY2, WIN
 
 # Use the most reasonable io that users would use for the python version.
 if PY2:

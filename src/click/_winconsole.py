@@ -7,25 +7,41 @@
 # compared to the original patches as we do not need to patch
 # the entire interpreter but just work in our little world of
 # echo and prmopt.
-
+import ctypes
 import io
 import os
 import sys
-import zlib
 import time
-import ctypes
+import zlib
+from ctypes import byref
+from ctypes import c_char
+from ctypes import c_char_p
+from ctypes import c_int
+from ctypes import c_ssize_t
+from ctypes import c_ulong
+from ctypes import c_void_p
+from ctypes import POINTER
+from ctypes import py_object
+from ctypes import windll
+from ctypes import WinError
+from ctypes import WINFUNCTYPE
+from ctypes.wintypes import DWORD
+from ctypes.wintypes import HANDLE
+from ctypes.wintypes import LPCWSTR
+from ctypes.wintypes import LPWSTR
+
 import msvcrt
-from ._compat import _NonClosingTextIOWrapper, text_type, PY2
-from ctypes import byref, POINTER, c_int, c_char, c_char_p, \
-     c_void_p, py_object, c_ssize_t, c_ulong, windll, WINFUNCTYPE, \
-     WinError
+
+from ._compat import _NonClosingTextIOWrapper
+from ._compat import PY2
+from ._compat import text_type
+
 try:
     from ctypes import pythonapi
     PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
     PyBuffer_Release = pythonapi.PyBuffer_Release
 except ImportError:
     pythonapi = None
-from ctypes.wintypes import DWORD, LPWSTR, LPCWSTR, HANDLE
 
 
 c_ssize_p = POINTER(c_ssize_t)

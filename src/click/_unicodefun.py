@@ -1,9 +1,8 @@
+import codecs
 import os
 import sys
-import codecs
 
 from ._compat import PY2
-
 
 # If someone wants to vendor click, we want to ensure the
 # correct package is discovered.  Ideally we could use a

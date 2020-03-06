@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-import pytest
-import click
 import sys
-from click._compat import PY2, text_type
+
+import pytest
+
+import click
+from click._compat import PY2
+from click._compat import text_type
 
 
 def test_nargs_star(runner):

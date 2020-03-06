@@ -2,7 +2,6 @@
 import re
 
 import click
-import pytest
 
 
 def test_other_command_invoke(runner):

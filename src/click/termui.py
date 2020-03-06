@@ -1,18 +1,26 @@
-import io
-import os
-import sys
-import struct
 import inspect
+import io
 import itertools
+import os
+import struct
+import sys
 
-from ._compat import raw_input, text_type, string_types, \
-    isatty, strip_ansi, get_winterm_size, DEFAULT_COLUMNS, WIN
-from .utils import echo
-from .exceptions import Abort, UsageError
-from .types import convert_type, Choice, Path
+from ._compat import DEFAULT_COLUMNS
+from ._compat import get_winterm_size
+from ._compat import isatty
+from ._compat import raw_input
+from ._compat import string_types
+from ._compat import strip_ansi
+from ._compat import text_type
+from ._compat import WIN
+from .exceptions import Abort
+from .exceptions import UsageError
 from .globals import resolve_color_default
+from .types import Choice
+from .types import convert_type
+from .types import Path
+from .utils import echo
 from .utils import LazyFile
-
 
 # The prompt functions to use.  The doc tools currently override these
 # functions to customize how they work.
