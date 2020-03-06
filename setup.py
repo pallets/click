@@ -1,11 +1,13 @@
 import io
 import re
+
+from setuptools import find_packages
 from setuptools import setup
 
 with io.open("README.rst", "rt", encoding="utf8") as f:
     readme = f.read()
 
-with io.open("click/__init__.py", "rt", encoding="utf8") as f:
+with io.open("src/click/__init__.py", "rt", encoding="utf8") as f:
     version = re.search(r"__version__ = '(.*?)'", f.read()).group(1)
 
 setup(
@@ -22,7 +24,8 @@ setup(
     maintainer_email="contact@palletsprojects.com",
     description="Composable command line interface toolkit",
     long_description=readme,
-    packages=["click"],
+    packages=find_packages("src"),
+    package_dir={"": "src"},
     include_package_data=True,
     python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*",
     classifiers=[
