@@ -64,6 +64,8 @@ Unreleased
     ``-`` after the ``--`` separator. :issue:`1247`
 -   ZSH completion escapes special characters in values. :pr:`1418`
 -   Add completion support for Fish shell. :pr:`1423`
+-   Decoding bytes option values falls back to UTF-8 in more cases.
+    :pr:`1468`
 
 
 Version 7.0
