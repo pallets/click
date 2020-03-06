@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
 import click
-from click._compat import PY2
+import sys
+from click._compat import PY2, text_type
 
 
 def test_nargs_star(runner):
@@ -82,6 +83,26 @@ def test_nargs_err(runner):
     result = runner.invoke(copy, ['foo', 'bar'])
     assert result.exit_code == 2
     assert 'Got unexpected extra argument (bar)' in result.output
+
+
+def test_bytes_args(runner, monkeypatch):
+    @click.command()
+    @click.argument('arg')
+    def from_bytes(arg):
+        assert isinstance(arg, text_type), "UTF-8 encoded argument should be implicitly converted to Unicode"
+
+    # Simulate empty locale environment variables
+    if PY2:
+        monkeypatch.setattr(sys.stdin, 'encoding', 'ANSI_X3.4-1968')
+        monkeypatch.setattr(sys, 'getfilesystemencoding', lambda: 'ANSI_X3.4-1968')
+        monkeypatch.setattr(sys, 'getdefaultencoding', lambda: 'ascii')
+    else:
+        monkeypatch.setattr(sys.stdin, 'encoding', 'utf-8')
+        monkeypatch.setattr(sys, 'getfilesystemencoding', lambda: 'utf-8')
+        monkeypatch.setattr(sys, 'getdefaultencoding', lambda: 'utf-8')
+
+    runner.invoke(from_bytes, [u'Something outside of ASCII range: 林'.encode('UTF-8')],
+            catch_exceptions=False)
 
 
 def test_file_args(runner):
