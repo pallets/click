@@ -71,6 +71,15 @@ Unreleased
 -   Arguments to system calls such as the executable path passed to
     ``click.edit`` can contains spaces. :pr:`1470`
 -   Add ZSH completion autoloading and error handling. :issue:`1348`
+-   Add a repr to ``Command``, ``Group``, ``Option``, and ``Argument``,
+    showing the name for friendlier debugging. :issue:`1267`
+-   Completion doesn't consider option names if a value starts with
+    ``-`` after the ``--`` separator. :issue:`1247`
+-   ZSH completion escapes special characters in values. :pr:`1418`
+-   Add completion support for Fish shell. :pr:`1423`
+-   Decoding bytes option values falls back to UTF-8 in more cases.
+    :pr:`1468`
+
 
 Version 7.0
 -----------

@@ -119,6 +119,8 @@ class StringParamType(ParamType):
                         value = value.decode(fs_enc)
                     except UnicodeError:
                         value = value.decode('utf-8', 'replace')
+                else:
+                    value = value.decode('utf-8', 'replace')
             return value
         return value
 

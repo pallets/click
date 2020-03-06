@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-click
-~~~~~
-
 Click is a simple Python module inspired by the stdlib optparse to make
 writing command line scripts fun. Unlike other modules, it's based
 around a simple API that does not come with too much magic and is
 composable.
-
-:copyright: © 2014 by the Pallets team.
-:license: BSD, see LICENSE.rst for more details.
 """
 
 # Core classes

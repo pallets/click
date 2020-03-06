@@ -13,24 +13,44 @@ distinct from :ref:`positional arguments <arguments>`.
 Name Your Options
 -----------------
 
-The naming rules can be found in :ref:`parameter_names`. In short, you
-can refer the option **implicitly** by the longest dash-prefixed argument:
+Options have a name that will be used as the Python argument name when
+calling the decorated function. This can be inferred from the option
+names or given explicitly. Names are given as position arguments to the
+decorator.
 
-.. click:example::
+A name is chosen in the following order
+
+1.  If a name is not prefixed, it is used as the Python argument name
+    and not treated as an option name on the command line.
+2.  If there is at least one name prefixed with two dashes, the first
+    one given is used as the name.
+3.  The first name prefixed with one dash is used otherwise.
+
+To get the Python argument name, the chosen name is converted to lower
+case, up to two dashes are removed as the prefix, and other dashes are
+converted to underscores.
+
+.. code-block:: python
 
     @click.command()
     @click.option('-s', '--string-to-echo')
     def echo(string_to_echo):
         click.echo(string_to_echo)
 
-Or, **explicitly**, by giving one non-dash-prefixed argument:
-
-.. click:example::
+.. code-block:: python
 
     @click.command()
     @click.option('-s', '--string-to-echo', 'string')
     def echo(string):
         click.echo(string)
+
+-   ``"-f", "--foo-bar"``, the name is ``foo_bar``
+-   ``"-x"``, the name is ``x``
+-   ``"-f", "--filename", "dest"``, the name is  ``dest``
+-   ``"--CamelCase"``, the name is ``camelcase``
+-   ``"-f", "-fb"``, the name is ``f``
+-   ``"--f", "--foo-bar"``, the name is ``f``
+-   ``"---f"``, the name is ``_f``
 
 Basic Value Options
 -------------------

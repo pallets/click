@@ -24,17 +24,13 @@ Install and update using `pip`_:
 
 .. code-block:: text
 
-    $ pip install click
-
-Click supports Python 3.4 and newer, Python 2.7, and PyPy.
+    $ pip install -U click
 
 .. _pip: https://pip.pypa.io/en/stable/quickstart/
 
 
 A Simple Example
 ----------------
-
-What does it look like? Here is an example of a simple Click program:
 
 .. code-block:: python
 
@@ -51,8 +47,6 @@ What does it look like? Here is an example of a simple Click program:
 
     if __name__ == '__main__':
         hello()
-
-And what it looks like when run:
 
 .. code-block:: text
 
@@ -77,11 +71,10 @@ donate today`_.
 Links
 -----
 
-*   Website: https://palletsprojects.com/p/click/
-*   Documentation: https://click.palletsprojects.com/
-*   License: `BSD <https://github.com/pallets/click/blob/master/LICENSE.rst>`_
-*   Releases: https://pypi.org/project/click/
-*   Code: https://github.com/pallets/click
-*   Issue tracker: https://github.com/pallets/click/issues
-*   Test status: https://dev.azure.com/pallets/click/_build
-*   Official chat: https://discord.gg/t6rrQZH
+-   Website: https://palletsprojects.com/p/click/
+-   Documentation: https://click.palletsprojects.com/
+-   Releases: https://pypi.org/project/click/
+-   Code: https://github.com/pallets/click
+-   Issue tracker: https://github.com/pallets/click/issues
+-   Test status: https://dev.azure.com/pallets/click/_build
+-   Official chat: https://discord.gg/t6rrQZH

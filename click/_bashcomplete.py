@@ -61,11 +61,11 @@ COMPLETION_SCRIPT_ZSH = '''
     done
 
     if [ -n "$completions_with_descriptions" ]; then
-        _describe -V unsorted completions_with_descriptions -U -Q
+        _describe -V unsorted completions_with_descriptions -U
     fi
 
     if [ -n "$completions" ]; then
-        compadd -U -V unsorted -Q -a completions
+        compadd -U -V unsorted -a completions
     fi
     compstate[insert]="automenu"
 }
@@ -73,12 +73,22 @@ COMPLETION_SCRIPT_ZSH = '''
 compdef %(complete_func)s %(script_names)s
 '''
 
+COMPLETION_SCRIPT_FISH = '''
+complete --no-files --command %(script_names)s --arguments "(env %(autocomplete_var)s=complete_fish COMP_WORDS=(commandline -cp) COMP_CWORD=(commandline -t) %(script_names)s)"
+'''
+
+_completion_scripts = {
+    "bash": COMPLETION_SCRIPT_BASH,
+    "zsh": COMPLETION_SCRIPT_ZSH,
+    "fish": COMPLETION_SCRIPT_FISH,
+}
+
 _invalid_ident_char_re = re.compile(r'[^a-zA-Z0-9_]')
 
 
 def get_completion_script(prog_name, complete_var, shell):
     cf_name = _invalid_ident_char_re.sub('', prog_name.replace('-', '_'))
-    script = COMPLETION_SCRIPT_ZSH if shell == 'zsh' else COMPLETION_SCRIPT_BASH
+    script = _completion_scripts.get(shell, COMPLETION_SCRIPT_BASH)
     return (script % {
         'complete_func': '_%s_completion' % cf_name,
         'script_names': prog_name,
@@ -237,6 +247,8 @@ def get_choices(cli, prog_name, args, incomplete):
     if ctx is None:
         return []
 
+    has_double_dash = "--" in all_args
+
     # In newer versions of bash long opts with '='s are partitioned, but it's easier to parse
     # without the '='
     if start_of_option(incomplete) and WORDBREAK in incomplete:
@@ -247,7 +259,7 @@ def get_choices(cli, prog_name, args, incomplete):
         incomplete = ''
 
     completions = []
-    if start_of_option(incomplete):
+    if not has_double_dash and start_of_option(incomplete):
         # completions for partial options
         for param in ctx.command.params:
             if isinstance(param, Option) and not param.hidden:
@@ -281,17 +293,42 @@ def do_complete(cli, prog_name, include_descriptions):
     for item in get_choices(cli, prog_name, args, incomplete):
         echo(item[0])
         if include_descriptions:
-            # ZSH has trouble dealing with empty array parameters when returned from commands, so use a well defined character '_' to indicate no description is present.
+            # ZSH has trouble dealing with empty array parameters when
+            # returned from commands, use '_' to indicate no description
+            # is present.
             echo(item[1] if item[1] else '_')
 
     return True
 
 
+def do_complete_fish(cli, prog_name):
+    cwords = split_arg_string(os.environ["COMP_WORDS"])
+    incomplete = os.environ["COMP_CWORD"]
+    args = cwords[1:]
+
+    for item in get_choices(cli, prog_name, args, incomplete):
+        if item[1]:
+            echo("%(arg)s\t%(desc)s" % {"arg": item[0], "desc": item[1]})
+        else:
+            echo(item[0])
+
+    return True
+
+
 def bashcomplete(cli, prog_name, complete_var, complete_instr):
-    if complete_instr.startswith('source'):
-        shell = 'zsh' if complete_instr == 'source_zsh' else 'bash'
+    if "_" in complete_instr:
+        command, shell = complete_instr.split("_", 1)
+    else:
+        command = complete_instr
+        shell = "bash"
+
+    if command == "source":
         echo(get_completion_script(prog_name, complete_var, shell))
         return True
-    elif complete_instr == 'complete' or complete_instr == 'complete_zsh':
-        return do_complete(cli, prog_name, complete_instr == 'complete_zsh')
+    elif command == "complete":
+        if shell == "fish":
+            return do_complete_fish(cli, prog_name)
+        elif shell in {"bash", "zsh"}:
+            return do_complete(cli, prog_name, shell == "zsh")
+
     return False
