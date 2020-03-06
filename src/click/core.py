@@ -42,9 +42,7 @@ SUBCOMMAND_METAVAR = "COMMAND [ARGS]..."
 SUBCOMMANDS_METAVAR = "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."
 
 DEPRECATED_HELP_NOTICE = " (DEPRECATED)"
-DEPRECATED_INVOKE_NOTICE = (
-    "DeprecationWarning: " + "The command %(name)s is deprecated."
-)
+DEPRECATED_INVOKE_NOTICE = "DeprecationWarning: The command %(name)s is deprecated."
 
 
 def _maybe_show_deprecated_notice(cmd):
@@ -578,7 +576,7 @@ class Context(object):
         """
         return self.command.get_help(self)
 
-    def invoke(*args, **kwargs):
+    def invoke(*args, **kwargs):  # noqa: B902
         """Invokes a command callback in exactly the way it expects.  There
         are two ways to invoke this method:
 
@@ -618,7 +616,7 @@ class Context(object):
             with ctx:
                 return callback(*args, **kwargs)
 
-    def forward(*args, **kwargs):
+    def forward(*args, **kwargs):  # noqa: B902
         """Similar to :meth:`invoke` but fills in default keyword
         arguments from the current context if the other command expects
         it.  This cannot invoke callbacks directly, only other commands.
@@ -985,7 +983,9 @@ class Command(BaseCommand):
         return formatter.getvalue().rstrip("\n")
 
     def get_short_help_str(self, limit=45):
-        """Gets short help for the command or makes it by shortening the long help string."""
+        """Gets short help for the command or makes it by shortening the
+        long help string.
+        """
         return (
             self.short_help
             or self.help
@@ -1362,6 +1362,7 @@ class Group(MultiCommand):
         immediately registers the created command with this instance by
         calling into :meth:`add_command`.
         """
+        from .decorators import command
 
         def decorator(f):
             cmd = command(*args, **kwargs)(f)
@@ -1376,6 +1377,7 @@ class Group(MultiCommand):
         immediately registers the created command with this instance by
         calling into :meth:`add_command`.
         """
+        from .decorators import group
 
         def decorator(f):
             cmd = group(*args, **kwargs)(f)
@@ -2037,7 +2039,3 @@ class Argument(Parameter):
 
     def add_to_parser(self, parser, ctx):
         parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)
-
-
-# Circular dependency between decorators and core
-from .decorators import command, group

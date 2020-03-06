@@ -156,7 +156,7 @@ def prompt(
         try:
             result = value_proc(value)
         except UsageError as e:
-            echo("Error: %s" % e.message, err=err)
+            echo("Error: %s" % e.message, err=err)  # noqa: B306
             continue
         if not confirmation_prompt:
             return result

@@ -19,7 +19,7 @@ def get_current_context(silent=False):
                    :exc:`RuntimeError`.
     """
     try:
-        return getattr(_local, "stack")[-1]
+        return _local.stack[-1]
     except (AttributeError, IndexError):
         if not silent:
             raise RuntimeError("There is no active click context.")

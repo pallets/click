@@ -261,7 +261,7 @@ class IntParamType(ParamType):
     def convert(self, value, param, ctx):
         try:
             return int(value)
-        except (ValueError, UnicodeError):
+        except ValueError:
             self.fail("%s is not a valid integer" % value, param, ctx)
 
     def __repr__(self):
@@ -329,7 +329,7 @@ class FloatParamType(ParamType):
     def convert(self, value, param, ctx):
         try:
             return float(value)
-        except (UnicodeError, ValueError):
+        except ValueError:
             self.fail("%s is not a valid floating point value" % value, param, ctx)
 
     def __repr__(self):
@@ -418,7 +418,7 @@ class UUIDParameterType(ParamType):
             if PY2 and isinstance(value, text_type):
                 value = value.encode("ascii")
             return uuid.UUID(value)
-        except (UnicodeError, ValueError):
+        except ValueError:
             self.fail("%s is not a valid UUID value" % value, param, ctx)
 
     def __repr__(self):
@@ -502,7 +502,7 @@ class File(ParamType):
                 else:
                     ctx.call_on_close(safecall(f.flush))
             return f
-        except (IOError, OSError) as e:
+        except (IOError, OSError) as e:  # noqa: B014
             self.fail(
                 "Could not open file: %s: %s"
                 % (filename_to_ui(value), get_streerror(e),),

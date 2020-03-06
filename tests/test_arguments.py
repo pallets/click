@@ -25,17 +25,12 @@ def test_nargs_star(runner):
 
 
 def test_nargs_default(runner):
-    try:
+    with pytest.raises(TypeError, match="nargs=-1"):
 
         @click.command()
         @click.argument("src", nargs=-1, default=42)
         def copy(src):
             pass
-
-    except TypeError as e:
-        assert "nargs=-1" in str(e)
-    else:
-        assert False
 
 
 def test_nargs_tup(runner):

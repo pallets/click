@@ -30,7 +30,8 @@ COMPLETION_SCRIPT_BASH = """
     local COMPLETION_OPTIONS=""
     local BASH_VERSION_ARR=(${BASH_VERSION//./ })
     # Only BASH version 4.4 and later have the nosort option.
-    if [ ${BASH_VERSION_ARR[0]} -gt 4 ] || ([ ${BASH_VERSION_ARR[0]} -eq 4 ] && [ ${BASH_VERSION_ARR[1]} -ge 4 ]); then
+    if [ ${BASH_VERSION_ARR[0]} -gt 4 ] || ([ ${BASH_VERSION_ARR[0]} -eq 4 ] \
+&& [ ${BASH_VERSION_ARR[1]} -ge 4 ]); then
         COMPLETION_OPTIONS="-o nosort"
     fi
 
@@ -75,9 +76,12 @@ COMPLETION_SCRIPT_ZSH = """
 compdef %(complete_func)s %(script_names)s
 """
 
-COMPLETION_SCRIPT_FISH = """
-complete --no-files --command %(script_names)s --arguments "(env %(autocomplete_var)s=complete_fish COMP_WORDS=(commandline -cp) COMP_CWORD=(commandline -t) %(script_names)s)"
-"""
+COMPLETION_SCRIPT_FISH = (
+    "complete --no-files --command %(script_names)s --arguments"
+    ' "(env %(autocomplete_var)s=complete_fish'
+    " COMP_WORDS=(commandline -cp) COMP_CWORD=(commandline -t)"
+    ' %(script_names)s)"'
+)
 
 _completion_scripts = {
     "bash": COMPLETION_SCRIPT_BASH,
@@ -102,8 +106,9 @@ def get_completion_script(prog_name, complete_var, shell):
 
 
 def resolve_ctx(cli, prog_name, args):
-    """
-    Parse into a hierarchy of contexts. Contexts are connected through the parent variable.
+    """Parse into a hierarchy of contexts. Contexts are connected
+    through the parent variable.
+
     :param cli: command definition
     :param prog_name: the program that is running
     :param args: full list of args
@@ -146,7 +151,8 @@ def resolve_ctx(cli, prog_name, args):
 def start_of_option(param_str):
     """
     :param param_str: param_str to check
-    :return: whether or not this is the start of an option declaration (i.e. starts "-" or "--")
+    :return: whether or not this is the start of an option declaration
+        (i.e. starts "-" or "--")
     """
     return param_str and param_str[:1] == "-"
 
@@ -155,9 +161,10 @@ def is_incomplete_option(all_args, cmd_param):
     """
     :param all_args: the full original list of args supplied
     :param cmd_param: the current command paramter
-    :return: whether or not the last option declaration (i.e. starts "-" or "--") is incomplete and
-    corresponds to this cmd_param. In other words whether this cmd_param option can still accept
-    values
+    :return: whether or not the last option declaration (i.e. starts
+        "-" or "--") is incomplete and corresponds to this cmd_param. In
+        other words whether this cmd_param option can still accept
+        values
     """
     if not isinstance(cmd_param, Option):
         return False
@@ -177,10 +184,12 @@ def is_incomplete_option(all_args, cmd_param):
 
 def is_incomplete_argument(current_params, cmd_param):
     """
-    :param current_params: the current params and values for this argument as already entered
+    :param current_params: the current params and values for this
+        argument as already entered
     :param cmd_param: the current command parameter
-    :return: whether or not the last argument is incomplete and corresponds to this cmd_param. In
-    other words whether or not the this cmd_param argument can still accept values
+    :return: whether or not the last argument is incomplete and
+        corresponds to this cmd_param. In other words whether or not the
+        this cmd_param argument can still accept values
     """
     if not isinstance(cmd_param, Argument):
         return False
@@ -245,7 +254,8 @@ def add_subcommand_completions(ctx, incomplete, completions_out):
             ]
         )
 
-    # Walk up the context list and add any other completion possibilities from chained commands
+    # Walk up the context list and add any other completion
+    # possibilities from chained commands
     while ctx.parent is not None:
         ctx = ctx.parent
         if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
@@ -275,8 +285,8 @@ def get_choices(cli, prog_name, args, incomplete):
 
     has_double_dash = "--" in all_args
 
-    # In newer versions of bash long opts with '='s are partitioned, but it's easier to parse
-    # without the '='
+    # In newer versions of bash long opts with '='s are partitioned, but
+    # it's easier to parse without the '='
     if start_of_option(incomplete) and WORDBREAK in incomplete:
         partition_incomplete = incomplete.partition(WORDBREAK)
         all_args.append(partition_incomplete[0])

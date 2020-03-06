@@ -4,6 +4,10 @@ from functools import update_wrapper
 
 from ._compat import iteritems
 from ._unicodefun import _check_for_unicode_literals
+from .core import Argument
+from .core import Command
+from .core import Group
+from .core import Option
 from .globals import get_current_context
 from .utils import echo
 
@@ -283,13 +287,13 @@ def version_option(version=None, *param_decls, **attrs):
                 else:
                     for dist in pkg_resources.working_set:
                         scripts = dist.get_entry_map().get("console_scripts") or {}
-                        for script_name, entry_point in iteritems(scripts):
+                        for _, entry_point in iteritems(scripts):
                             if entry_point.module_name == module:
                                 ver = dist.version
                                 break
                 if ver is None:
                     raise RuntimeError("Could not determine version")
-            echo(message % {"prog": prog, "version": ver,}, color=ctx.color)
+            echo(message % {"prog": prog, "version": ver}, color=ctx.color)
             ctx.exit()
 
         attrs.setdefault("is_flag", True)
@@ -327,7 +331,3 @@ def help_option(*param_decls, **attrs):
         return option(*(param_decls or ("--help",)), **attrs)(f)
 
     return decorator
-
-
-# Circular dependencies between core and decorators
-from .core import Command, Group, Argument, Option

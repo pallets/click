@@ -25,31 +25,21 @@ def test_prefixes(runner):
 
 
 def test_invalid_option(runner):
-    try:
+    with pytest.raises(TypeError, match="name was passed"):
 
         @click.command()
         @click.option("foo")
         def cli(foo):
             pass
 
-    except TypeError as e:
-        assert "No options defined but a name was passed (foo)." in str(e)
-    else:
-        assert False, "Expected a type error because of an invalid option."
-
 
 def test_invalid_nargs(runner):
-    try:
+    with pytest.raises(TypeError, match="nargs < 0"):
 
         @click.command()
         @click.option("--foo", nargs=-1)
         def cli(foo):
             pass
-
-    except TypeError as e:
-        assert "Options cannot have nargs < 0" in str(e)
-    else:
-        assert False, "Expected a type error because of an invalid option."
 
 
 def test_nargs_tup_composite_mult(runner):
@@ -426,7 +416,7 @@ def test_option_help_preserve_paragraphs(runner):
         "--config",
         type=click.Path(),
         help="""Configuration file to use.
-        
+
         If not given, the environment variable CONFIG_FILE is consulted
         and used if set. If neither are given, a default configuration
         file is loaded.""",

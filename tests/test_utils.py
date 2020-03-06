@@ -6,7 +6,6 @@ import pytest
 
 import click._termui_impl
 import click.utils
-from click._compat import PY2
 from click._compat import WIN
 
 
@@ -84,7 +83,7 @@ def test_styling(styles, ref):
     assert click.unstyle(ref) == "x y"
 
 
-@pytest.mark.parametrize(("text", "expect"), [("\x1b[?25lx y\x1b[?25h", "x y"),])
+@pytest.mark.parametrize(("text", "expect"), [("\x1b[?25lx y\x1b[?25h", "x y")])
 def test_unstyle_other_ansi(text, expect):
     assert click.unstyle(text) == expect
 
@@ -340,7 +339,7 @@ def test_open_file_ignore_no_encoding(runner):
 
 
 @pytest.mark.skipif(WIN, reason="os.chmod() is not fully supported on Windows.")
-@pytest.mark.parametrize("permissions", [0o400, 0o444, 0o600, 0o644,])
+@pytest.mark.parametrize("permissions", [0o400, 0o444, 0o600, 0o644])
 def test_open_file_atomic_permissions_existing_file(runner, permissions):
     with runner.isolated_filesystem():
         with open("existing.txt", "w") as f:

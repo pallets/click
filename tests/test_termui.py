@@ -33,7 +33,7 @@ def test_progressbar_strip_regression(runner, monkeypatch):
     @click.command()
     def cli():
         with _create_progress(label=label) as progress:
-            for thing in progress:
+            for _ in progress:
                 fake_clock.advance_time()
 
     monkeypatch.setattr(time, "time", fake_clock.time)
@@ -65,7 +65,7 @@ def test_progressbar_length_hint(runner, monkeypatch):
     @click.command()
     def cli():
         with click.progressbar(Hinted(10), label="test") as progress:
-            for thing in progress:
+            for _ in progress:
                 fake_clock.advance_time()
 
     monkeypatch.setattr(time, "time", fake_clock.time)
@@ -81,7 +81,7 @@ def test_progressbar_hidden(runner, monkeypatch):
     @click.command()
     def cli():
         with _create_progress(label=label) as progress:
-            for thing in progress:
+            for _ in progress:
                 fake_clock.advance_time()
 
     monkeypatch.setattr(time, "time", fake_clock.time)
@@ -183,22 +183,14 @@ def test_progressbar_format_progress_line_with_show_func(runner, test_item):
 
 
 def test_progressbar_init_exceptions(runner):
-    try:
+    with pytest.raises(TypeError, match="iterable or length is required"):
         click.progressbar()
-    except TypeError as e:
-        assert str(e) == "iterable or length is required"
-    else:
-        assert False, "Expected an exception because unspecified arguments"
 
 
 def test_progressbar_iter_outside_with_exceptions(runner):
-    try:
+    with pytest.raises(RuntimeError, match="with block"):
         progress = click.progressbar(length=2)
         iter(progress)
-    except RuntimeError as e:
-        assert str(e) == "You need to use progress bars in a with block."
-    else:
-        assert False, "Expected an exception because of abort-related inputs."
 
 
 def test_progressbar_is_iterator(runner, monkeypatch):
@@ -247,7 +239,7 @@ def test_choices_list_in_prompt(runner, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "file_kwargs", [{"mode": "rt"}, {"mode": "rb"}, {"lazy": True},]
+    "file_kwargs", [{"mode": "rt"}, {"mode": "rb"}, {"lazy": True}]
 )
 def test_file_prompt_default_format(runner, file_kwargs):
     @click.command()
@@ -318,16 +310,17 @@ def test_getchar_special_key_windows(runner, monkeypatch, special_key_char, key_
     assert click.getchar() == special_key_char + key_char
 
 
-@pytest.mark.parametrize("key_char", [u"\x03", u"\x1a"])
+@pytest.mark.parametrize(
+    ("key_char", "exc"),
+    [
+        (u"\x03", KeyboardInterrupt),
+        (u"\x1a", EOFError),
+    ],
+)
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
-def test_getchar_windows_exceptions(runner, monkeypatch, key_char):
+def test_getchar_windows_exceptions(runner, monkeypatch, key_char, exc):
     monkeypatch.setattr(click._termui_impl.msvcrt, "getwch", lambda: key_char)
     monkeypatch.setattr(click.termui, "_getchar", None)
-    try:
+
+    with pytest.raises(exc):
         click.getchar()
-    except KeyboardInterrupt:
-        assert key_char == u"\x03"
-    except EOFError:
-        assert key_char == u"\x1a"
-    else:
-        assert False, "Expected an exception because of abort-specific inputs."

@@ -126,7 +126,7 @@ class LazyFile(object):
             rv, self.should_close = open_stream(
                 self.name, self.mode, self.encoding, self.errors, atomic=self.atomic
             )
-        except (IOError, OSError) as e:
+        except (IOError, OSError) as e:  # noqa: E402
             from .exceptions import FileError
 
             raise FileError(self.name, hint=get_streerror(e))

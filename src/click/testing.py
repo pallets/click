@@ -382,5 +382,5 @@ class CliRunner(object):
             os.chdir(cwd)
             try:
                 shutil.rmtree(t)
-            except (OSError, IOError):
+            except (OSError, IOError):  # noqa: B014
                 pass

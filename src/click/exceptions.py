@@ -248,5 +248,7 @@ class Exit(RuntimeError):
     :param code: the status code to exit with.
     """
 
+    __slots__ = ("exit_code",)
+
     def __init__(self, code=0):
         self.exit_code = code

@@ -31,7 +31,8 @@ def list_users(ctx, args, incomplete):
     # You can generate completions with descriptions by returning
     # tuples in the form (completion, description).
     users = [("bob", "butcher"), ("alice", "baker"), ("jerry", "candlestick maker")]
-    # Ths will allow completion matches based on matches within the description string too!
+    # Ths will allow completion matches based on matches within the
+    # description string too!
     return [user for user in users if incomplete in user[0] or incomplete in user[1]]
 
 

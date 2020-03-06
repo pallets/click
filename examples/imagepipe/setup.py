@@ -5,7 +5,7 @@ setup(
     version="1.0",
     py_modules=["imagepipe"],
     include_package_data=True,
-    install_requires=["click", "pillow",],
+    install_requires=["click", "pillow"],
     entry_points="""
         [console_scripts]
         imagepipe=imagepipe:cli

@@ -235,7 +235,7 @@ def smoothen_cmd(images, iterations):
             'Smoothening "%s" %d time%s'
             % (image.filename, iterations, iterations != 1 and "s" or "",)
         )
-        for x in xrange(iterations):
+        for _ in range(iterations):
             image = copy_filename(image.filter(ImageFilter.BLUR), image)
         yield image
 
