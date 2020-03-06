@@ -1748,7 +1748,7 @@ class Group(Command):
     def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
             echo(ctx.get_help(), color=ctx.color)
-            ctx.exit()
+            ctx.exit(code=1)
 
         rest = super().parse_args(ctx, args)
 
