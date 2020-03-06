@@ -712,9 +712,7 @@ class BaseCommand(object):
         and parses the arguments, then modifies the context as necessary.
         This is automatically invoked by :meth:`make_context`.
         """
-        raise NotImplementedError(
-            "Base commands do not know how to parse arguments."
-        )
+        raise NotImplementedError("Base commands do not know how to parse arguments.")
 
     def invoke(self, ctx):
         """Given a context, this invokes the command.  The default
@@ -1774,9 +1772,7 @@ class Option(Parameter):
             if not self.is_bool_flag and self.secondary_opts:
                 raise TypeError("Got secondary option for non boolean flag.")
             if self.is_bool_flag and self.hide_input and self.prompt is not None:
-                raise TypeError(
-                    "Hidden input does not work with boolean flag prompts."
-                )
+                raise TypeError("Hidden input does not work with boolean flag prompts.")
             if self.count:
                 if self.multiple:
                     raise TypeError(

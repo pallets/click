@@ -428,9 +428,7 @@ else:
     def get_binary_stdin():
         reader = _find_binary_reader(sys.stdin)
         if reader is None:
-            raise RuntimeError(
-                "Was not able to determine binary stream for sys.stdin."
-            )
+            raise RuntimeError("Was not able to determine binary stream for sys.stdin.")
         return reader
 
     def get_binary_stdout():
