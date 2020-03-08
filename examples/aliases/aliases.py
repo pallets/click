@@ -139,4 +139,4 @@ def alias(config, alias_, cmd, config_file):
     """Adds an alias to the specified configuration file."""
     config.add_alias(alias_, cmd)
     config.write_config(config_file)
-    click.echo("Added %s as alias for %s" % (alias_, cmd))
+    click.echo("Added {} as alias for {}".format(alias_, cmd))

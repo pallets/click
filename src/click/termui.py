@@ -61,7 +61,7 @@ def _build_prompt(
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += " (" + ", ".join(map(str, type.choices)) + ")"
     if default is not None and show_default:
-        prompt = "%s [%s]" % (prompt, _format_default(default))
+        prompt = "{} [{}]".format(prompt, _format_default(default))
     return prompt + suffix
 
 

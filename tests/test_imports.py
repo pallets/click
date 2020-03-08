@@ -29,30 +29,28 @@ import json
 click.echo(json.dumps(rv))
 """
 
-ALLOWED_IMPORTS = set(
-    [
-        "weakref",
-        "os",
-        "struct",
-        "collections",
-        "sys",
-        "contextlib",
-        "functools",
-        "stat",
-        "re",
-        "codecs",
-        "inspect",
-        "itertools",
-        "io",
-        "threading",
-        "colorama",
-        "errno",
-        "fcntl",
-        "datetime",
-        "pipes",
-        "shlex",
-    ]
-)
+ALLOWED_IMPORTS = {
+    "weakref",
+    "os",
+    "struct",
+    "collections",
+    "sys",
+    "contextlib",
+    "functools",
+    "stat",
+    "re",
+    "codecs",
+    "inspect",
+    "itertools",
+    "io",
+    "threading",
+    "colorama",
+    "errno",
+    "fcntl",
+    "datetime",
+    "pipes",
+    "shlex",
+}
 
 if WIN:
     ALLOWED_IMPORTS.update(["ctypes", "ctypes.wintypes", "msvcrt", "time", "zlib"])

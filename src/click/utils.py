@@ -113,7 +113,7 @@ class LazyFile(object):
     def __repr__(self):
         if self._f is not None:
             return repr(self._f)
-        return "<unopened file %r %s>" % (self.name, self.mode)
+        return "<unopened file {!r} {}>".format(self.name, self.mode)
 
     def open(self):
         """Opens the file if it's not yet open.  This call might fail with

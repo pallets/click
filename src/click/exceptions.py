@@ -64,9 +64,8 @@ class UsageError(ClickException):
         color = None
         hint = ""
         if self.cmd is not None and self.cmd.get_help_option(self.ctx) is not None:
-            hint = 'Try "%s %s" for help.\n' % (
-                self.ctx.command_path,
-                self.ctx.help_option_names[0],
+            hint = 'Try "{} {}" for help.\n'.format(
+                self.ctx.command_path, self.ctx.help_option_names[0],
             )
         if self.ctx is not None:
             color = self.ctx.color
@@ -106,7 +105,7 @@ class BadParameter(UsageError):
             return "Invalid value: %s" % self.message
         param_hint = _join_param_hints(param_hint)
 
-        return "Invalid value for %s: %s" % (param_hint, self.message)
+        return "Invalid value for {}: {}".format(param_hint, self.message)
 
 
 class MissingParameter(BadParameter):
@@ -149,7 +148,7 @@ class MissingParameter(BadParameter):
                 else:
                     msg = msg_extra
 
-        return "Missing %s%s%s%s" % (
+        return "Missing {}{}{}{}".format(
             param_type,
             param_hint and " %s" % param_hint or "",
             msg and ".  " or ".",
@@ -234,7 +233,7 @@ class FileError(ClickException):
         self.filename = filename
 
     def format_message(self):
-        return "Could not open file %s: %s" % (self.ui_filename, self.message)
+        return "Could not open file {}: {}".format(self.ui_filename, self.message)
 
 
 class Abort(RuntimeError):

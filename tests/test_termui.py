@@ -123,7 +123,7 @@ def test_progressbar_format_pos(runner, pos, length):
     with _create_progress(length, length_known=length != 0, pos=pos) as progress:
         result = progress.format_pos()
         if progress.length_known:
-            assert result == "%s/%s" % (pos, length)
+            assert result == "{}/{}".format(pos, length)
         else:
             assert result == str(pos)
 

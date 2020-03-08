@@ -108,9 +108,8 @@ class Result(object):
         )
 
     def __repr__(self):
-        return "<%s %s>" % (
-            type(self).__name__,
-            self.exception and repr(self.exception) or "okay",
+        return "<{} {}>".format(
+            type(self).__name__, self.exception and repr(self.exception) or "okay",
         )
 
 

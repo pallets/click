@@ -416,7 +416,7 @@ def _tempfilepager(generator, cmd, color):
     with open_stream(filename, "wb")[0] as f:
         f.write(text.encode(encoding))
     try:
-        os.system("%s %s" % (shlex_quote(cmd), shlex_quote(filename)))
+        os.system("{} {}".format(shlex_quote(cmd), shlex_quote(filename)))
     finally:
         os.unlink(filename)
 
@@ -461,7 +461,7 @@ class Editor(object):
             environ = None
         try:
             c = subprocess.Popen(
-                "%s %s" % (shlex_quote(editor), shlex_quote(filename)),
+                "{} {}".format(shlex_quote(editor), shlex_quote(filename)),
                 env=environ,
                 shell=True,
             )
@@ -469,7 +469,7 @@ class Editor(object):
             if exit_code != 0:
                 raise ClickException("%s: Editing failed!" % editor)
         except OSError as e:
-            raise ClickException("%s: Editing failed: %s" % (editor, e))
+            raise ClickException("{}: Editing failed: {}".format(editor, e))
 
     def edit(self, text):
         import tempfile
@@ -534,16 +534,16 @@ def open_url(url, wait=False, locate=False):
     elif WIN:
         if locate:
             url = _unquote_file(url)
-            args = "explorer /select,%s" % (shlex_quote(url),)
+            args = "explorer /select,{}".format(shlex_quote(url))
         else:
-            args = 'start %s "" %s' % ("/WAIT" if wait else "", shlex_quote(url))
+            args = 'start {} "" {}'.format("/WAIT" if wait else "", shlex_quote(url))
         return os.system(args)
     elif CYGWIN:
         if locate:
             url = _unquote_file(url)
-            args = "cygstart %s" % (shlex_quote(os.path.dirname(url)),)
+            args = "cygstart {}".format(shlex_quote(os.path.dirname(url)))
         else:
-            args = "cygstart %s %s" % ("-w" if wait else "", shlex_quote(url))
+            args = "cygstart {} {}".format("-w" if wait else "", shlex_quote(url))
         return os.system(args)
 
     try:

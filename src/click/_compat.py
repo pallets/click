@@ -565,7 +565,7 @@ def open_stream(filename, mode="r", encoding=None, errors="strict", atomic=False
     while True:
         tmp_filename = os.path.join(
             os.path.dirname(filename),
-            ".__atomic-write%08x" % (random.randrange(1 << 32),),
+            ".__atomic-write{:08x}".format(random.randrange(1 << 32)),
         )
         try:
             fd = os.open(tmp_filename, flags, 0o666 if perm is None else perm)

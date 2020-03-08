@@ -13,7 +13,7 @@ def test_prefixes(runner):
     @click.option("++foo", is_flag=True, help="das foo")
     @click.option("--bar", is_flag=True, help="das bar")
     def cli(foo, bar):
-        click.echo("foo=%s bar=%s" % (foo, bar))
+        click.echo("foo={} bar={}".format(foo, bar))
 
     result = runner.invoke(cli, ["++foo", "--bar"])
     assert not result.exception
@@ -90,7 +90,7 @@ def test_unknown_options(runner, unknown_flag):
 
     result = runner.invoke(cli, [unknown_flag])
     assert result.exception
-    assert "no such option: {0}".format(unknown_flag) in result.output
+    assert "no such option: {}".format(unknown_flag) in result.output
 
 
 def test_multiple_required(runner):

@@ -194,7 +194,9 @@ class Choice(ParamType):
             return normed_choices[normed_value]
 
         self.fail(
-            "invalid choice: %s. (choose from %s)" % (value, ", ".join(self.choices)),
+            "invalid choice: {}. (choose from {})".format(
+                value, ", ".join(self.choices)
+            ),
             param,
             ctx,
         )
@@ -299,7 +301,9 @@ class IntRange(IntParamType):
         ):
             if self.min is None:
                 self.fail(
-                    "%s is bigger than the maximum valid value %s." % (rv, self.max),
+                    "{} is bigger than the maximum valid value {}.".format(
+                        rv, self.max
+                    ),
                     param,
                     ctx,
                 )
@@ -320,7 +324,7 @@ class IntRange(IntParamType):
         return rv
 
     def __repr__(self):
-        return "IntRange(%r, %r)" % (self.min, self.max)
+        return "IntRange({!r}, {!r})".format(self.min, self.max)
 
 
 class FloatParamType(ParamType):
@@ -367,7 +371,9 @@ class FloatRange(FloatParamType):
         ):
             if self.min is None:
                 self.fail(
-                    "%s is bigger than the maximum valid value %s." % (rv, self.max),
+                    "{} is bigger than the maximum valid value {}.".format(
+                        rv, self.max
+                    ),
                     param,
                     ctx,
                 )
@@ -388,7 +394,7 @@ class FloatRange(FloatParamType):
         return rv
 
     def __repr__(self):
-        return "FloatRange(%r, %r)" % (self.min, self.max)
+        return "FloatRange({!r}, {!r})".format(self.min, self.max)
 
 
 class BoolParamType(ParamType):
@@ -597,20 +603,24 @@ class Path(ParamType):
                 if not self.exists:
                     return self.coerce_path_result(rv)
                 self.fail(
-                    '%s "%s" does not exist.' % (self.path_type, filename_to_ui(value)),
+                    '{} "{}" does not exist.'.format(
+                        self.path_type, filename_to_ui(value)
+                    ),
                     param,
                     ctx,
                 )
 
             if not self.file_okay and stat.S_ISREG(st.st_mode):
                 self.fail(
-                    '%s "%s" is a file.' % (self.path_type, filename_to_ui(value)),
+                    '{} "{}" is a file.'.format(self.path_type, filename_to_ui(value)),
                     param,
                     ctx,
                 )
             if not self.dir_okay and stat.S_ISDIR(st.st_mode):
                 self.fail(
-                    '%s "%s" is a directory.' % (self.path_type, filename_to_ui(value)),
+                    '{} "{}" is a directory.'.format(
+                        self.path_type, filename_to_ui(value)
+                    ),
                     param,
                     ctx,
                 )

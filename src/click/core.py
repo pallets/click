@@ -379,9 +379,8 @@ class Context(object):
                 and parent.auto_envvar_prefix is not None
                 and self.info_name is not None
             ):
-                auto_envvar_prefix = "%s_%s" % (
-                    parent.auto_envvar_prefix,
-                    self.info_name.upper(),
+                auto_envvar_prefix = "{}_{}".format(
+                    parent.auto_envvar_prefix, self.info_name.upper(),
                 )
         else:
             auto_envvar_prefix = auto_envvar_prefix.upper()
@@ -676,7 +675,7 @@ class BaseCommand(object):
         self.context_settings = context_settings
 
     def __repr__(self):
-        return "<%s %s>" % (self.__class__.__name__, self.name)
+        return "<{} {}>".format(self.__class__.__name__, self.name)
 
     def get_usage(self, ctx):
         raise NotImplementedError("Base commands cannot get usage")
@@ -1510,7 +1509,7 @@ class Parameter(object):
         self.autocompletion = autocompletion
 
     def __repr__(self):
-        return "<%s %s>" % (self.__class__.__name__, self.name)
+        return "<{} {}>".format(self.__class__.__name__, self.name)
 
     @property
     def human_readable_name(self):
@@ -1883,7 +1882,7 @@ class Option(Parameter):
             envvar = self.envvar
             if envvar is None:
                 if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
-                    envvar = "%s_%s" % (ctx.auto_envvar_prefix, self.name.upper())
+                    envvar = "{}_{}".format(ctx.auto_envvar_prefix, self.name.upper())
             if envvar is not None:
                 extra.append(
                     "env var: %s"
@@ -1907,7 +1906,7 @@ class Option(Parameter):
         if self.required:
             extra.append("required")
         if extra:
-            help = "%s[%s]" % (help and help + "  " or "", "; ".join(extra))
+            help = "{}[{}]".format(help and help + "  " or "", "; ".join(extra))
 
         return ((any_prefix_is_slash and "; " or " / ").join(rv), help)
 
@@ -1952,7 +1951,7 @@ class Option(Parameter):
         if rv is not None:
             return rv
         if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
-            envvar = "%s_%s" % (ctx.auto_envvar_prefix, self.name.upper())
+            envvar = "{}_{}".format(ctx.auto_envvar_prefix, self.name.upper())
             return os.environ.get(envvar)
 
     def value_from_envvar(self, ctx):

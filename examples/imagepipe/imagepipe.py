@@ -97,7 +97,7 @@ def open_cmd(images):
                 img = Image.open(image)
             yield img
         except Exception as e:
-            click.echo('Could not open image "%s": %s' % (image, e), err=True)
+            click.echo('Could not open image "{}": {}'.format(image, e), err=True)
 
 
 @cli.command("save")
@@ -114,10 +114,12 @@ def save_cmd(images, filename):
     for idx, image in enumerate(images):
         try:
             fn = filename % (idx + 1)
-            click.echo('Saving "%s" as "%s"' % (image.filename, fn))
+            click.echo('Saving "{}" as "{}"'.format(image.filename, fn))
             yield image.save(fn)
         except Exception as e:
-            click.echo('Could not save image "%s": %s' % (image.filename, e), err=True)
+            click.echo(
+                'Could not save image "{}": {}'.format(image.filename, e), err=True
+            )
 
 
 @cli.command("display")
@@ -203,7 +205,7 @@ def transpose_cmd(images, rotate, flip):
             image = copy_filename(image.transpose(mode), image)
         if flip is not None:
             mode, direction = flip
-            click.echo('Flip "%s" %s' % (image.filename, direction))
+            click.echo('Flip "{}" {}'.format(image.filename, direction))
             image = copy_filename(image.transpose(mode), image)
         yield image
 
@@ -257,7 +259,7 @@ def emboss_cmd(images):
 def sharpen_cmd(images, factor):
     """Sharpens an image."""
     for image in images:
-        click.echo('Sharpen "%s" by %f' % (image.filename, factor))
+        click.echo('Sharpen "{}" by {:f}'.format(image.filename, factor))
         enhancer = ImageEnhance.Sharpness(image)
         yield copy_filename(enhancer.enhance(max(1.0, factor)), image)
 
@@ -279,7 +281,7 @@ def paste_cmd(images, left, right):
             yield image
         return
 
-    click.echo('Paste "%s" on "%s"' % (to_paste.filename, image.filename))
+    click.echo('Paste "{}" on "{}"'.format(to_paste.filename, image.filename))
     mask = None
     if to_paste.mode == "RGBA" or "transparency" in to_paste.info:
         mask = to_paste
