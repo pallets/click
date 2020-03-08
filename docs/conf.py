@@ -47,6 +47,4 @@ html_show_sourcelink = False
 
 # LaTeX ----------------------------------------------------------------
 
-latex_documents = [
-    (master_doc, f"Click-{version}.tex", html_title, author, "manual")
-]
+latex_documents = [(master_doc, f"Click-{version}.tex", html_title, author, "manual")]

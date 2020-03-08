@@ -267,4 +267,3 @@ And from the command line:
 .. click:run::
 
     invoke(touch, ['-foo.txt', 'bar.txt'])
-
