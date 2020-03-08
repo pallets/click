@@ -11,7 +11,7 @@ Please, don't use the issue tracker for this. Check whether the
 ``#pocoo`` IRC channel on Freenode can help with your issue. If your problem
 is not strictly Click-specific, ``#python`` on Freenode is generally more
 active.  Also try searching or asking on `Stack Overflow`_ with the
-``python-click`` tag. 
+``python-click`` tag.
 
 .. _Stack Overflow: https://stackoverflow.com/questions/tagged/python-click?sort=votes
 

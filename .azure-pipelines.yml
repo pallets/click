@@ -30,6 +30,8 @@ strategy:
       python.version: '2.7'
     Docs:
       TOXENV: docs
+    Style:
+      TOXENV: style
 
 pool:
   vmImage: $(vmImage)
@@ -43,19 +45,5 @@ steps:
   - script: pip --disable-pip-version-check install -U tox
     displayName: Install tox
 
-  - script: tox -s false -- --junit-xml=test-results.xml
+  - script: tox
     displayName: Run tox
-
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: test-results.xml
-      testRunTitle: $(Agent.JobName)
-    condition: eq(variables['hasTestResults'], 'true')
-    displayName: Publish test results
-
-  - task: PublishCodeCoverageResults@1
-    inputs:
-      codeCoverageTool: Cobertura
-      summaryFileLocation: coverage.xml
-    condition: eq(variables['hasTestResults'], 'true')
-    displayName: Publish coverage results
