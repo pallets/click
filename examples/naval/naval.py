@@ -21,7 +21,7 @@ def ship():
 @click.argument("name")
 def ship_new(name):
     """Creates a new ship."""
-    click.echo("Created ship %s" % name)
+    click.echo("Created ship {}".format(name))
 
 
 @ship.command("move")

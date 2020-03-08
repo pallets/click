@@ -6,7 +6,7 @@ def test_basic_defaults(runner):
     @click.option("--foo", default=42, type=click.FLOAT)
     def cli(foo):
         assert type(foo) is float
-        click.echo("FOO:[%s]" % foo)
+        click.echo("FOO:[{}]".format(foo))
 
     result = runner.invoke(cli, [])
     assert not result.exception
@@ -23,10 +23,7 @@ def test_multiple_defaults(runner):
 
     result = runner.invoke(cli, [])
     assert not result.exception
-    assert result.output.splitlines() == [
-        "23.0",
-        "42.0",
-    ]
+    assert result.output.splitlines() == ["23.0", "42.0"]
 
 
 def test_nargs_plus_multiple(runner):
@@ -36,11 +33,8 @@ def test_nargs_plus_multiple(runner):
     )
     def cli(arg):
         for item in arg:
-            click.echo("<%d|%d>" % item)
+            click.echo("<{0[0]:d}|{0[1]:d}>".format(item))
 
     result = runner.invoke(cli, [])
     assert not result.exception
-    assert result.output.splitlines() == [
-        "<1|2>",
-        "<3|4>",
-    ]
+    assert result.output.splitlines() == ["<1|2>", "<3|4>"]

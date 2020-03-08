@@ -134,7 +134,7 @@ class HelpFormatter(object):
         :param args: whitespace separated list of arguments.
         :param prefix: the prefix for the first line.
         """
-        usage_prefix = "%*s%s " % (self.current_indent, prefix, prog)
+        usage_prefix = "{:>{w}}{} ".format(prefix, prog, w=self.current_indent)
         text_width = self.width - self.current_indent
 
         if text_width >= (term_len(usage_prefix) + 20):
@@ -163,7 +163,7 @@ class HelpFormatter(object):
 
     def write_heading(self, heading):
         """Writes a heading into the buffer."""
-        self.write("%*s%s:\n" % (self.current_indent, "", heading))
+        self.write("{:>{w}}{}:\n".format("", heading, w=self.current_indent))
 
     def write_paragraph(self):
         """Writes a paragraph into the buffer."""
@@ -204,7 +204,7 @@ class HelpFormatter(object):
         first_col = min(widths[0], col_max) + col_spacing
 
         for first, second in iter_rows(rows, len(widths)):
-            self.write("%*s%s" % (self.current_indent, "", first))
+            self.write("{:>{w}}{}".format("", first, w=self.current_indent))
             if not second:
                 self.write("\n")
                 continue
@@ -219,10 +219,14 @@ class HelpFormatter(object):
             lines = wrapped_text.splitlines()
 
             if lines:
-                self.write(lines[0] + "\n")
+                self.write("{}\n".format(lines[0]))
 
                 for line in lines[1:]:
-                    self.write("%*s%s\n" % (first_col + self.current_indent, "", line))
+                    self.write(
+                        "{:>{w}}{}\n".format(
+                            "", line, w=first_col + self.current_indent
+                        )
+                    )
 
                 if len(lines) > 1:
                     # separate long help from next option

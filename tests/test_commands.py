@@ -26,7 +26,7 @@ def test_other_command_forward(runner):
     @cli.command()
     @click.option("--count", default=1)
     def test(count):
-        click.echo("Count: %d" % count)
+        click.echo("Count: {:d}".format(count))
 
     @cli.command()
     @click.option("--count", default=1)
@@ -102,7 +102,7 @@ def test_group_with_args(runner):
     @click.group()
     @click.argument("obj")
     def cli(obj):
-        click.echo("obj=%s" % obj)
+        click.echo("obj={}".format(obj))
 
     @cli.command()
     def move():
@@ -211,7 +211,7 @@ def test_object_propagation(runner):
         @cli.command()
         @click.pass_context
         def sync(ctx):
-            click.echo("Debug is %s" % (ctx.obj["DEBUG"] and "on" or "off"))
+            click.echo("Debug is {}".format("on" if ctx.obj["DEBUG"] else "off"))
 
         result = runner.invoke(cli, ["sync"])
         assert result.exception is None
@@ -264,8 +264,8 @@ def test_unprocessed_options(runner):
     @click.argument("args", nargs=-1, type=click.UNPROCESSED)
     @click.option("--verbose", "-v", count=True)
     def cli(verbose, args):
-        click.echo("Verbosity: %s" % verbose)
-        click.echo("Args: %s" % "|".join(args))
+        click.echo("Verbosity: {}".format(verbose))
+        click.echo("Args: {}".format("|".join(args)))
 
     result = runner.invoke(cli, ["-foo", "-vvvvx", "--muhaha", "x", "y", "-x"])
     assert not result.exception

@@ -65,7 +65,7 @@ def test_prompts():
     @click.command()
     @click.option("--foo", prompt=True)
     def test(foo):
-        click.echo("foo=%s" % foo)
+        click.echo("foo={}".format(foo))
 
     runner = CliRunner()
     result = runner.invoke(test, input="wau wau\n")
@@ -75,7 +75,7 @@ def test_prompts():
     @click.command()
     @click.option("--foo", prompt=True, hide_input=True)
     def test(foo):
-        click.echo("foo=%s" % foo)
+        click.echo("foo={}".format(foo))
 
     runner = CliRunner()
     result = runner.invoke(test, input="wau wau\n")
@@ -131,7 +131,7 @@ def test_with_color():
     assert not result.exception
 
     result = runner.invoke(cli, color=True)
-    assert result.output == click.style("hello world", fg="blue") + "\n"
+    assert result.output == "{}\n".format(click.style("hello world", fg="blue"))
     assert not result.exception
 
 
@@ -219,7 +219,7 @@ def test_exit_code_and_output_from_sys_exit():
 def test_env():
     @click.command()
     def cli_env():
-        click.echo("ENV=%s" % os.environ["TEST_CLICK_ENV"])
+        click.echo("ENV={}".format(os.environ["TEST_CLICK_ENV"]))
 
     runner = CliRunner()
 

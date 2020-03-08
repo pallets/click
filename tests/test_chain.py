@@ -7,8 +7,9 @@ import click
 
 def debug():
     click.echo(
-        "%s=%s"
-        % (sys._getframe(1).f_code.co_name, "|".join(click.get_current_context().args),)
+        "{}={}".format(
+            sys._getframe(1).f_code.co_name, "|".join(click.get_current_context().args)
+        )
     )
 
 
@@ -76,19 +77,16 @@ def test_chaining_with_options(runner):
     @cli.command("sdist")
     @click.option("--format")
     def sdist(format):
-        click.echo("sdist called %s" % format)
+        click.echo("sdist called {}".format(format))
 
     @cli.command("bdist")
     @click.option("--format")
     def bdist(format):
-        click.echo("bdist called %s" % format)
+        click.echo("bdist called {}".format(format))
 
     result = runner.invoke(cli, ["bdist", "--format=1", "sdist", "--format=2"])
     assert not result.exception
-    assert result.output.splitlines() == [
-        "bdist called 1",
-        "sdist called 2",
-    ]
+    assert result.output.splitlines() == ["bdist called 1", "sdist called 2"]
 
 
 def test_chaining_with_arguments(runner):
@@ -99,19 +97,16 @@ def test_chaining_with_arguments(runner):
     @cli.command("sdist")
     @click.argument("format")
     def sdist(format):
-        click.echo("sdist called %s" % format)
+        click.echo("sdist called {}".format(format))
 
     @cli.command("bdist")
     @click.argument("format")
     def bdist(format):
-        click.echo("bdist called %s" % format)
+        click.echo("bdist called {}".format(format))
 
     result = runner.invoke(cli, ["bdist", "1", "sdist", "2"])
     assert not result.exception
-    assert result.output.splitlines() == [
-        "bdist called 1",
-        "sdist called 2",
-    ]
+    assert result.output.splitlines() == ["bdist called 1", "sdist called 2"]
 
 
 def test_pipeline(runner):
@@ -146,24 +141,15 @@ def test_pipeline(runner):
 
     result = runner.invoke(cli, ["-i", "-"], input="foo\nbar")
     assert not result.exception
-    assert result.output.splitlines() == [
-        "foo",
-        "bar",
-    ]
+    assert result.output.splitlines() == ["foo", "bar"]
 
     result = runner.invoke(cli, ["-i", "-", "strip"], input="foo \n bar")
     assert not result.exception
-    assert result.output.splitlines() == [
-        "foo",
-        "bar",
-    ]
+    assert result.output.splitlines() == ["foo", "bar"]
 
     result = runner.invoke(cli, ["-i", "-", "strip", "uppercase"], input="foo \n bar")
     assert not result.exception
-    assert result.output.splitlines() == [
-        "FOO",
-        "BAR",
-    ]
+    assert result.output.splitlines() == ["FOO", "BAR"]
 
 
 def test_args_and_chain(runner):
@@ -185,12 +171,7 @@ def test_args_and_chain(runner):
 
     result = runner.invoke(cli, ["a", "b", "c"])
     assert not result.exception
-    assert result.output.splitlines() == [
-        "cli=",
-        "a=",
-        "b=",
-        "c=",
-    ]
+    assert result.output.splitlines() == ["cli=", "a=", "b=", "c="]
 
 
 def test_multicommand_arg_behavior(runner):
@@ -211,7 +192,7 @@ def test_multicommand_arg_behavior(runner):
     @click.group(chain=True)
     @click.argument("arg")
     def cli(arg):
-        click.echo("cli:%s" % arg)
+        click.echo("cli:{}".format(arg))
 
     @cli.command()
     def a():
@@ -219,10 +200,7 @@ def test_multicommand_arg_behavior(runner):
 
     result = runner.invoke(cli, ["foo", "a"])
     assert not result.exception
-    assert result.output.splitlines() == [
-        "cli:foo",
-        "a",
-    ]
+    assert result.output.splitlines() == ["cli:foo", "a"]
 
 
 @pytest.mark.xfail
@@ -249,9 +227,4 @@ def test_multicommand_chaining(runner):
 
     result = runner.invoke(cli, ["l1a", "l2a", "l1b"])
     assert not result.exception
-    assert result.output.splitlines() == [
-        "cli=",
-        "l1a=",
-        "l2a=",
-        "l1b=",
-    ]
+    assert result.output.splitlines() == ["cli=", "l1a=", "l2a=", "l1b="]

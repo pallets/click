@@ -167,20 +167,19 @@ class ProgressBar(object):
             hours = t % 24
             t //= 24
             if t > 0:
-                days = t
-                return "%dd %02d:%02d:%02d" % (days, hours, minutes, seconds)
+                return "{}d {:02}:{:02}:{:02}".format(t, hours, minutes, seconds)
             else:
-                return "%02d:%02d:%02d" % (hours, minutes, seconds)
+                return "{:02}:{:02}:{:02}".format(hours, minutes, seconds)
         return ""
 
     def format_pos(self):
         pos = str(self.pos)
         if self.length_known:
-            pos += "/%s" % self.length
+            pos += "/{}".format(self.length)
         return pos
 
     def format_pct(self):
-        return ("% 4d%%" % int(self.pct * 100))[1:]
+        return "{: 4}%".format(int(self.pct * 100))[1:]
 
     def format_bar(self):
         if self.length_known:
@@ -347,7 +346,10 @@ def pager(generator, color=None):
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
-        if hasattr(os, "system") and os.system("more %s" % shlex_quote(filename)) == 0:
+        if (
+            hasattr(os, "system")
+            and os.system("more {}".format(shlex_quote(filename))) == 0
+        ):
             return _pipepager(generator, "more", color)
         return _nullpager(stdout, generator, color)
     finally:
@@ -366,7 +368,7 @@ def _pipepager(generator, cmd, color):
     # condition that
     cmd_detail = cmd.rsplit("/", 1)[-1].split()
     if color is None and cmd_detail[0] == "less":
-        less_flags = os.environ.get("LESS", "") + " ".join(cmd_detail[1:])
+        less_flags = "{}{}".format(os.environ.get("LESS", ""), " ".join(cmd_detail[1:]))
         if not less_flags:
             env["LESS"] = "-R"
             color = True
@@ -446,7 +448,7 @@ class Editor(object):
         if WIN:
             return "notepad"
         for editor in "sensible-editor", "vim", "nano":
-            if os.system("which %s >/dev/null 2>&1" % editor) == 0:
+            if os.system("which {} >/dev/null 2>&1".format(editor)) == 0:
                 return editor
         return "vi"
 
@@ -467,7 +469,7 @@ class Editor(object):
             )
             exit_code = c.wait()
             if exit_code != 0:
-                raise ClickException("%s: Editing failed!" % editor)
+                raise ClickException("{}: Editing failed!".format(editor))
         except OSError as e:
             raise ClickException("{}: Editing failed: {}".format(editor, e))
 

@@ -109,7 +109,7 @@ class Result(object):
 
     def __repr__(self):
         return "<{} {}>".format(
-            type(self).__name__, self.exception and repr(self.exception) or "okay",
+            type(self).__name__, repr(self.exception) if self.exception else "okay"
         )
 
 
@@ -210,12 +210,12 @@ class CliRunner(object):
         def visible_input(prompt=None):
             sys.stdout.write(prompt or "")
             val = input.readline().rstrip("\r\n")
-            sys.stdout.write(val + "\n")
+            sys.stdout.write("{}\n".format(val))
             sys.stdout.flush()
             return val
 
         def hidden_input(prompt=None):
-            sys.stdout.write((prompt or "") + "\n")
+            sys.stdout.write("{}\n".format(prompt or ""))
             sys.stdout.flush()
             return input.readline().rstrip("\r\n")
 

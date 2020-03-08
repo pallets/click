@@ -69,7 +69,7 @@ class AliasedGroup(click.Group):
             return None
         elif len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
-        ctx.fail("Too many matches: %s" % ", ".join(sorted(matches)))
+        ctx.fail("Too many matches: {}".format(", ".join(sorted(matches))))
 
 
 def read_config(ctx, param, value):
@@ -125,7 +125,7 @@ def commit():
 @pass_config
 def status(config):
     """Shows the status."""
-    click.echo("Status for %s" % config.path)
+    click.echo("Status for {}".format(config.path))
 
 
 @cli.command()
@@ -139,4 +139,4 @@ def alias(config, alias_, cmd, config_file):
     """Adds an alias to the specified configuration file."""
     config.add_alias(alias_, cmd)
     config.write_config(config_file)
-    click.echo("Added {} as alias for {}".format(alias_, cmd))
+    click.echo("Added '{}' as alias for '{}'".format(alias_, cmd))

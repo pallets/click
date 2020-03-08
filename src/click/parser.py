@@ -80,8 +80,8 @@ def _unpack_args(args, nargs_spec):
 
 def _error_opt_args(nargs, opt):
     if nargs == 1:
-        raise BadOptionUsage(opt, "%s option requires an argument" % opt)
-    raise BadOptionUsage(opt, "%s option requires %d arguments" % (opt, nargs))
+        raise BadOptionUsage(opt, "{} option requires an argument".format(opt))
+    raise BadOptionUsage(opt, "{} option requires {} arguments".format(opt, nargs))
 
 
 def split_opt(opt):
@@ -128,7 +128,7 @@ class Option(object):
         for opt in opts:
             prefix, value = split_opt(opt)
             if not prefix:
-                raise ValueError("Invalid start character for option (%s)" % opt)
+                raise ValueError("Invalid start character for option ({})".format(opt))
             self.prefixes.add(prefix[0])
             if len(prefix) == 1 and len(value) == 1:
                 self._short_opts.append(opt)
@@ -161,7 +161,7 @@ class Option(object):
         elif self.action == "count":
             state.opts[self.dest] = state.opts.get(self.dest, 0) + 1
         else:
-            raise ValueError("unknown action %r" % self.action)
+            raise ValueError("unknown action '{}'".format(self.action))
         state.order.append(self.obj)
 
 
@@ -178,7 +178,7 @@ class Argument(object):
                 value = None
             elif holes != 0:
                 raise BadArgumentUsage(
-                    "argument %s takes %d values" % (self.dest, self.nargs)
+                    "argument {} takes {} values".format(self.dest, self.nargs)
                 )
         state.opts[self.dest] = value
         state.order.append(self.obj)
@@ -344,7 +344,7 @@ class OptionParser(object):
                 del state.rargs[:nargs]
 
         elif explicit_value is not None:
-            raise BadOptionUsage(opt, "%s option does not take a value" % opt)
+            raise BadOptionUsage(opt, "{} option does not take a value".format(opt))
 
         else:
             value = None
@@ -396,7 +396,7 @@ class OptionParser(object):
         # to the state as new larg.  This way there is basic combinatorics
         # that can be achieved while still ignoring unknown arguments.
         if self.ignore_unknown_options and unknown_options:
-            state.largs.append(prefix + "".join(unknown_options))
+            state.largs.append("{}{}".format(prefix, "".join(unknown_options)))
 
     def _process_opts(self, arg, state):
         explicit_value = None

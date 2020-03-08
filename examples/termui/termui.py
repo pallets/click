@@ -16,8 +16,8 @@ def cli():
 def colordemo():
     """Demonstrates ANSI color support."""
     for color in "red", "green", "blue":
-        click.echo(click.style("I am colored %s" % color, fg=color))
-        click.echo(click.style("I am background colored %s" % color, bg=color))
+        click.echo(click.style("I am colored {}".format(color), fg=color))
+        click.echo(click.style("I am background colored {}".format(color), bg=color))
 
 
 @cli.command()
@@ -25,7 +25,7 @@ def pager():
     """Demonstrates using the pager."""
     lines = []
     for x in range(200):
-        lines.append("%s. Hello World!" % click.style(str(x), fg="green"))
+        lines.append("{}. Hello World!".format(click.style(str(x), fg="green")))
     click.echo_via_pager("\n".join(lines))
 
 
@@ -56,7 +56,7 @@ def progress(count):
 
     def show_item(item):
         if item is not None:
-            return "Item #%d" % item
+            return "Item #{}".format(item)
 
     with click.progressbar(
         filter(items),
@@ -119,13 +119,13 @@ def locate(url):
 def edit():
     """Opens an editor with some text in it."""
     MARKER = "# Everything below is ignored\n"
-    message = click.edit("\n\n" + MARKER)
+    message = click.edit("\n\n{}".format(MARKER))
     if message is not None:
         msg = message.split(MARKER, 1)[0].rstrip("\n")
         if not msg:
             click.echo("Empty message!")
         else:
-            click.echo("Message:\n" + msg)
+            click.echo("Message:\n{}".format(msg))
     else:
         click.echo("You did not enter anything!")
 

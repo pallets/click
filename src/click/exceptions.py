@@ -6,7 +6,7 @@ from .utils import echo
 
 def _join_param_hints(param_hint):
     if isinstance(param_hint, (tuple, list)):
-        return " / ".join('"%s"' % x for x in param_hint)
+        return " / ".join(repr(x) for x in param_hint)
     return param_hint
 
 
@@ -39,7 +39,7 @@ class ClickException(Exception):
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
-        echo("Error: %s" % self.format_message(), file=file)
+        echo("Error: {}".format(self.format_message(), file=file))
 
 
 class UsageError(ClickException):
@@ -56,7 +56,7 @@ class UsageError(ClickException):
     def __init__(self, message, ctx=None):
         ClickException.__init__(self, message)
         self.ctx = ctx
-        self.cmd = self.ctx and self.ctx.command or None
+        self.cmd = self.ctx.command if self.ctx else None
 
     def show(self, file=None):
         if file is None:
@@ -64,13 +64,13 @@ class UsageError(ClickException):
         color = None
         hint = ""
         if self.cmd is not None and self.cmd.get_help_option(self.ctx) is not None:
-            hint = 'Try "{} {}" for help.\n'.format(
-                self.ctx.command_path, self.ctx.help_option_names[0],
+            hint = "Try '{} {}' for help.\n".format(
+                self.ctx.command_path, self.ctx.help_option_names[0]
             )
         if self.ctx is not None:
             color = self.ctx.color
-            echo(self.ctx.get_usage() + "\n%s" % hint, file=file, color=color)
-        echo("Error: %s" % self.format_message(), file=file, color=color)
+            echo("{}\n{}".format(self.ctx.get_usage(), hint), file=file, color=color)
+        echo("Error: {}".format(self.format_message()), file=file, color=color)
 
 
 class BadParameter(UsageError):
@@ -102,7 +102,7 @@ class BadParameter(UsageError):
         elif self.param is not None:
             param_hint = self.param.get_error_hint(self.ctx)
         else:
-            return "Invalid value: %s" % self.message
+            return "Invalid value: {}".format(self.message)
         param_hint = _join_param_hints(param_hint)
 
         return "Invalid value for {}: {}".format(param_hint, self.message)
@@ -144,14 +144,14 @@ class MissingParameter(BadParameter):
             msg_extra = self.param.type.get_missing_message(self.param)
             if msg_extra:
                 if msg:
-                    msg += ".  " + msg_extra
+                    msg += ".  {}".format(msg_extra)
                 else:
                     msg = msg_extra
 
         return "Missing {}{}{}{}".format(
             param_type,
-            param_hint and " %s" % param_hint or "",
-            msg and ".  " or ".",
+            " {}".format(param_hint) if param_hint else "",
+            ".  " if msg else ".",
             msg or "",
         )
 
@@ -178,7 +178,7 @@ class NoSuchOption(UsageError):
 
     def __init__(self, option_name, message=None, possibilities=None, ctx=None):
         if message is None:
-            message = "no such option: %s" % option_name
+            message = "no such option: {}".format(option_name)
         UsageError.__init__(self, message, ctx)
         self.option_name = option_name
         self.possibilities = possibilities
@@ -187,10 +187,10 @@ class NoSuchOption(UsageError):
         bits = [self.message]
         if self.possibilities:
             if len(self.possibilities) == 1:
-                bits.append("Did you mean %s?" % self.possibilities[0])
+                bits.append("Did you mean {}?".format(self.possibilities[0]))
             else:
                 possibilities = sorted(self.possibilities)
-                bits.append("(Possible options: %s)" % ", ".join(possibilities))
+                bits.append("(Possible options: {})".format(", ".join(possibilities)))
         return "  ".join(bits)
 
 

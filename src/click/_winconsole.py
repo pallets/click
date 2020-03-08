@@ -155,7 +155,7 @@ class _WindowsConsoleReader(_WindowsConsoleRawIOBase):
             # wait for KeyboardInterrupt
             time.sleep(0.1)
         if not rv:
-            raise OSError("Windows error: %s" % GetLastError())
+            raise OSError("Windows error: {}".format(GetLastError()))
 
         if buffer[0] == EOF:
             return 0
@@ -172,7 +172,7 @@ class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
             return "ERROR_SUCCESS"
         elif errno == ERROR_NOT_ENOUGH_MEMORY:
             return "ERROR_NOT_ENOUGH_MEMORY"
-        return "Windows error %s" % errno
+        return "Windows error {}".format(errno)
 
     def write(self, b):
         bytes_to_be_written = len(b)

@@ -151,15 +151,15 @@ def test_formatting_usage_error(runner):
     @click.command()
     @click.argument("arg")
     def cmd(arg):
-        click.echo("arg:" + arg)
+        click.echo("arg:{}".format(arg))
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2
     assert result.output.splitlines() == [
         "Usage: cmd [OPTIONS] ARG",
-        'Try "cmd --help" for help.',
+        "Try 'cmd --help' for help.",
         "",
-        'Error: Missing argument "ARG".',
+        "Error: Missing argument 'ARG'.",
     ]
 
 
@@ -178,9 +178,9 @@ def test_formatting_usage_error_metavar_missing_arg(runner):
     assert result.exit_code == 2
     assert result.output.splitlines() == [
         "Usage: cmd [OPTIONS] metavar",
-        'Try "cmd --help" for help.',
+        "Try 'cmd --help' for help.",
         "",
-        'Error: Missing argument "metavar".',
+        "Error: Missing argument 'metavar'.",
     ]
 
 
@@ -194,9 +194,9 @@ def test_formatting_usage_error_metavar_bad_arg(runner):
     assert result.exit_code == 2
     assert result.output.splitlines() == [
         "Usage: cmd [OPTIONS] metavar",
-        'Try "cmd --help" for help.',
+        "Try 'cmd --help' for help.",
         "",
-        'Error: Invalid value for "metavar": 3.14 is not a valid integer',
+        "Error: Invalid value for 'metavar': 3.14 is not a valid integer",
     ]
 
 
@@ -208,15 +208,15 @@ def test_formatting_usage_error_nested(runner):
     @cmd.command()
     @click.argument("bar")
     def foo(bar):
-        click.echo("foo:" + bar)
+        click.echo("foo:{}".format(bar))
 
     result = runner.invoke(cmd, ["foo"])
     assert result.exit_code == 2
     assert result.output.splitlines() == [
         "Usage: cmd foo [OPTIONS] BAR",
-        'Try "cmd foo --help" for help.',
+        "Try 'cmd foo --help' for help.",
         "",
-        'Error: Missing argument "BAR".',
+        "Error: Missing argument 'BAR'.",
     ]
 
 
@@ -224,14 +224,14 @@ def test_formatting_usage_error_no_help(runner):
     @click.command(add_help_option=False)
     @click.argument("arg")
     def cmd(arg):
-        click.echo("arg:" + arg)
+        click.echo("arg:{}".format(arg))
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2
     assert result.output.splitlines() == [
         "Usage: cmd [OPTIONS] ARG",
         "",
-        'Error: Missing argument "ARG".',
+        "Error: Missing argument 'ARG'.",
     ]
 
 
@@ -239,15 +239,15 @@ def test_formatting_usage_custom_help(runner):
     @click.command(context_settings=dict(help_option_names=["--man"]))
     @click.argument("arg")
     def cmd(arg):
-        click.echo("arg:" + arg)
+        click.echo("arg:{}".format(arg))
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2
     assert result.output.splitlines() == [
         "Usage: cmd [OPTIONS] ARG",
-        'Try "cmd --man" for help.',
+        "Try 'cmd --man' for help.",
         "",
-        'Error: Missing argument "ARG".',
+        "Error: Missing argument 'ARG'.",
     ]
 
 

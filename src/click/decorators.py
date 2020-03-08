@@ -67,8 +67,8 @@ def make_pass_decorator(object_type, ensure=False):
                 obj = ctx.find_object(object_type)
             if obj is None:
                 raise RuntimeError(
-                    "Managed to invoke callback without a "
-                    "context object of type %r existing" % object_type.__name__
+                    "Managed to invoke callback without a context"
+                    " object of type '{}' existing".format(object_type.__name__)
                 )
             return ctx.invoke(f, obj, *args, **kwargs)
 

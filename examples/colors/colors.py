@@ -30,12 +30,14 @@ def cli():
     Give it a try!
     """
     for color in all_colors:
-        click.echo(click.style("I am colored %s" % color, fg=color))
-    for color in all_colors:
-        click.echo(click.style("I am colored %s and bold" % color, fg=color, bold=True))
+        click.echo(click.style("I am colored {}".format(color), fg=color))
     for color in all_colors:
         click.echo(
-            click.style("I am reverse colored %s" % color, fg=color, reverse=True)
+            click.style("I am colored {} and bold".format(color), fg=color, bold=True)
+        )
+    for color in all_colors:
+        click.echo(
+            click.style("I am reverse colored {}".format(color), fg=color, reverse=True)
         )
 
     click.echo(click.style("I am blinking", blink=True))

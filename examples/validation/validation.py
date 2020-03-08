@@ -20,8 +20,8 @@ class URL(click.ParamType):
             value = urlparse.urlparse(value)
             if value.scheme not in ("http", "https"):
                 self.fail(
-                    "invalid URL scheme (%s).  Only HTTP URLs are "
-                    "allowed" % value.scheme,
+                    "invalid URL scheme ({}).  Only HTTP URLs are"
+                    " allowed".format(value.scheme),
                     param,
                     ctx,
                 )
@@ -47,6 +47,6 @@ def cli(count, foo, url):
             'If a value is provided it needs to be the value "wat".',
             param_hint=["--foo"],
         )
-    click.echo("count: %s" % count)
-    click.echo("foo: %s" % foo)
-    click.echo("url: %s" % repr(url))
+    click.echo("count: {}".format(count))
+    click.echo("foo: {}".format(foo))
+    click.echo("url: {!r}".format(url))

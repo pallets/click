@@ -47,21 +47,18 @@ def test_nargs_tup_composite_mult(runner):
     @click.option("--item", type=(str, int), multiple=True)
     def copy(item):
         for item in item:
-            click.echo("name=%s id=%d" % item)
+            click.echo("name={0[0]} id={0[1]:d}".format(item))
 
     result = runner.invoke(copy, ["--item", "peter", "1", "--item", "max", "2"])
     assert not result.exception
-    assert result.output.splitlines() == [
-        "name=peter id=1",
-        "name=max id=2",
-    ]
+    assert result.output.splitlines() == ["name=peter id=1", "name=max id=2"]
 
 
 def test_counting(runner):
     @click.command()
     @click.option("-v", count=True, help="Verbosity", type=click.IntRange(0, 3))
     def cli(v):
-        click.echo("verbosity=%d" % v)
+        click.echo("verbosity={:d}".format(v))
 
     result = runner.invoke(cli, ["-vvv"])
     assert not result.exception
@@ -70,7 +67,7 @@ def test_counting(runner):
     result = runner.invoke(cli, ["-vvvv"])
     assert result.exception
     assert (
-        'Invalid value for "-v": 4 is not in the valid range of 0 to 3.'
+        "Invalid value for '-v': 4 is not in the valid range of 0 to 3."
         in result.output
     )
 
@@ -105,14 +102,14 @@ def test_multiple_required(runner):
 
     result = runner.invoke(cli, [])
     assert result.exception
-    assert 'Error: Missing option "-m" / "--message".' in result.output
+    assert "Error: Missing option '-m' / '--message'." in result.output
 
 
 def test_empty_envvar(runner):
     @click.command()
     @click.option("--mypath", type=click.Path(exists=True), envvar="MYPATH")
     def cli(mypath):
-        click.echo("mypath: %s" % mypath)
+        click.echo("mypath: {}".format(mypath))
 
     result = runner.invoke(cli, [], env={"MYPATH": ""})
     assert result.exit_code == 0
@@ -149,7 +146,7 @@ def test_multiple_envvar(runner):
         cmd,
         [],
         auto_envvar_prefix="TEST",
-        env={"TEST_ARG": "foo%sbar" % os.path.pathsep},
+        env={"TEST_ARG": "foo{}bar".format(os.path.pathsep)},
     )
     assert not result.exception
     assert result.output == "foo|bar\n"
@@ -306,7 +303,7 @@ def test_custom_validation(runner):
         click.echo(foo)
 
     result = runner.invoke(cmd, ["--foo", "-1"])
-    assert 'Invalid value for "--foo": Value needs to be positive' in result.output
+    assert "Invalid value for '--foo': Value needs to be positive" in result.output
 
     result = runner.invoke(cmd, ["--foo", "42"])
     assert result.output == "42\n"
@@ -359,7 +356,7 @@ def test_missing_choice(runner):
     result = runner.invoke(cmd)
     assert result.exit_code == 2
     error, separator, choices = result.output.partition("Choose from")
-    assert 'Error: Missing option "--foo". ' in error
+    assert "Error: Missing option '--foo'. " in error
     assert "Choose from" in separator
     assert "foo" in choices
     assert "bar" in choices

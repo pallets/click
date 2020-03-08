@@ -90,8 +90,8 @@ def test_get_context_objects_missing(runner):
     assert result.exception is not None
     assert isinstance(result.exception, RuntimeError)
     assert (
-        "Managed to invoke callback without a context object "
-        "of type 'Foo' existing" in str(result.exception)
+        "Managed to invoke callback without a context object of type"
+        " 'Foo' existing" in str(result.exception)
     )
 
 
@@ -129,7 +129,7 @@ def test_global_context_object(runner):
 
 
 def test_context_meta(runner):
-    LANG_KEY = __name__ + ".lang"
+    LANG_KEY = "{}.lang".format(__name__)
 
     def set_language(value):
         click.get_current_context().meta[LANG_KEY] = value

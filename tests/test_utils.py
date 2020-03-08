@@ -203,21 +203,21 @@ def test_echo_color_flag(monkeypatch, capfd):
 
     click.echo(styled_text, color=False)
     out, err = capfd.readouterr()
-    assert out == text + "\n"
+    assert out == "{}\n".format(text)
 
     click.echo(styled_text, color=True)
     out, err = capfd.readouterr()
-    assert out == styled_text + "\n"
+    assert out == "{}\n".format(styled_text)
 
     isatty = True
     click.echo(styled_text)
     out, err = capfd.readouterr()
-    assert out == styled_text + "\n"
+    assert out == "{}\n".format(styled_text)
 
     isatty = False
     click.echo(styled_text)
     out, err = capfd.readouterr()
-    assert out == text + "\n"
+    assert out == "{}\n".format(text)
 
 
 @pytest.mark.skipif(WIN, reason="Test too complex to make work windows.")

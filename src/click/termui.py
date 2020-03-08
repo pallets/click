@@ -59,7 +59,7 @@ def _build_prompt(
 ):
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
-        prompt += " (" + ", ".join(map(str, type.choices)) + ")"
+        prompt += " ({})".format(", ".join(map(str, type.choices)))
     if default is not None and show_default:
         prompt = "{} [{}]".format(prompt, _format_default(default))
     return prompt + suffix
@@ -121,7 +121,7 @@ def prompt(
     result = None
 
     def prompt_func(text):
-        f = hide_input and hidden_prompt_func or visible_prompt_func
+        f = hidden_prompt_func if hide_input else visible_prompt_func
         try:
             # Write the prompt separately so that we get nice
             # coloring through colorama on Windows
@@ -156,7 +156,7 @@ def prompt(
         try:
             result = value_proc(value)
         except UsageError as e:
-            echo("Error: %s" % e.message, err=err)  # noqa: B306
+            echo("Error: {}".format(e.message), err=err)  # noqa: B306
             continue
         if not confirmation_prompt:
             return result
@@ -190,7 +190,7 @@ def confirm(
                 ``stdout``, the same as with echo.
     """
     prompt = _build_prompt(
-        text, prompt_suffix, show_default, default and "Y/n" or "y/N"
+        text, prompt_suffix, show_default, "Y/n" if default else "y/N"
     )
     while 1:
         try:
@@ -495,24 +495,24 @@ def style(
     bits = []
     if fg:
         try:
-            bits.append("\033[%dm" % (_ansi_colors[fg]))
+            bits.append("\033[{}m".format(_ansi_colors[fg]))
         except KeyError:
-            raise TypeError("Unknown color %r" % fg)
+            raise TypeError("Unknown color '{}'".format(fg))
     if bg:
         try:
-            bits.append("\033[%dm" % (_ansi_colors[bg] + 10))
+            bits.append("\033[{}m".format(_ansi_colors[bg] + 10))
         except KeyError:
-            raise TypeError("Unknown color %r" % bg)
+            raise TypeError("Unknown color '{}'".format(bg))
     if bold is not None:
-        bits.append("\033[%dm" % (1 if bold else 22))
+        bits.append("\033[{}m".format(1 if bold else 22))
     if dim is not None:
-        bits.append("\033[%dm" % (2 if dim else 22))
+        bits.append("\033[{}m".format(2 if dim else 22))
     if underline is not None:
-        bits.append("\033[%dm" % (4 if underline else 24))
+        bits.append("\033[{}m".format(4 if underline else 24))
     if blink is not None:
-        bits.append("\033[%dm" % (5 if blink else 25))
+        bits.append("\033[{}m".format(5 if blink else 25))
     if reverse is not None:
-        bits.append("\033[%dm" % (7 if reverse else 27))
+        bits.append("\033[{}m".format(7 if reverse else 27))
     bits.append(text)
     if reset:
         bits.append(_ansi_reset_all)

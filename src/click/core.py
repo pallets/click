@@ -62,7 +62,7 @@ def fast_exit(code):
 def _bashcomplete(cmd, prog_name, complete_var=None):
     """Internal handler for the bash completion support."""
     if complete_var is None:
-        complete_var = "_%s_COMPLETE" % (prog_name.replace("-", "_")).upper()
+        complete_var = "_{}_COMPLETE".format(prog_name.replace("-", "_").upper())
     complete_instr = os.environ.get(complete_var)
     if not complete_instr:
         return
@@ -78,20 +78,18 @@ def _check_multicommand(base_command, cmd_name, cmd, register=False):
         return
     if register:
         hint = (
-            "It is not possible to add multi commands as children to "
-            "another multi command that is in chain mode"
+            "It is not possible to add multi commands as children to"
+            " another multi command that is in chain mode."
         )
     else:
         hint = (
-            "Found a multi command as subcommand to a multi command "
-            "that is in chain mode.  This is not supported"
+            "Found a multi command as subcommand to a multi command"
+            " that is in chain mode. This is not supported."
         )
     raise RuntimeError(
-        '%s.  Command "%s" is set to chain and "%s" was '
-        "added as subcommand but it in itself is a "
-        'multi command.  ("%s" is a %s within a chained '
-        '%s named "%s").'
-        % (
+        "{}. Command '{}' is set to chain and '{}' was added as"
+        " subcommand but it in itself is a multi command. ('{}' is a {}"
+        " within a chained {} named '{}').".format(
             hint,
             base_command.name,
             cmd_name,
@@ -117,9 +115,9 @@ def invoke_param_callback(callback, ctx, param, value):
 
         warn(
             Warning(
-                'Invoked legacy parameter callback "%s".  The new '
-                "signature for such callbacks starting with "
-                "click 2.0 is (ctx, param, value)." % callback
+                "Invoked legacy parameter callback '{}'. The new"
+                " signature for such callbacks starting with Click 2.0"
+                " is (ctx, param, value).".format(callback)
             ),
             stacklevel=3,
         )
@@ -129,9 +127,7 @@ def invoke_param_callback(callback, ctx, param, value):
 
 @contextmanager
 def augment_usage_errors(ctx, param=None):
-    """Context manager that attaches extra information to exceptions that
-    fly.
-    """
+    """Context manager that attaches extra information to exceptions."""
     try:
         yield
     except BadParameter as e:
@@ -380,7 +376,7 @@ class Context(object):
                 and self.info_name is not None
             ):
                 auto_envvar_prefix = "{}_{}".format(
-                    parent.auto_envvar_prefix, self.info_name.upper(),
+                    parent.auto_envvar_prefix, self.info_name.upper()
                 )
         else:
             auto_envvar_prefix = auto_envvar_prefix.upper()
@@ -463,7 +459,7 @@ class Context(object):
 
         Example usage::
 
-            LANG_KEY = __name__ + '.lang'
+            LANG_KEY = f'{__name__}.lang'
 
             def set_language(value):
                 ctx = get_current_context()
@@ -510,7 +506,7 @@ class Context(object):
         if self.info_name is not None:
             rv = self.info_name
         if self.parent is not None:
-            rv = self.parent.command_path + " " + rv
+            rv = "{} {}".format(self.parent.command_path, rv)
         return rv.lstrip()
 
     def find_root(self):
@@ -773,7 +769,9 @@ class BaseCommand(object):
             args = list(args)
 
         if prog_name is None:
-            prog_name = make_str(os.path.basename(sys.argv and sys.argv[0] or __file__))
+            prog_name = make_str(
+                os.path.basename(sys.argv[0] if sys.argv else __file__)
+            )
 
         # Hook for the Bash completion.  This only activates if the Bash
         # completion is actually enabled, otherwise this is quite a fast
@@ -1053,8 +1051,9 @@ class Command(BaseCommand):
 
         if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
             ctx.fail(
-                "Got unexpected extra argument%s (%s)"
-                % (len(args) != 1 and "s" or "", " ".join(map(make_str, args)))
+                "Got unexpected extra argument{} ({})".format(
+                    "s" if len(args) != 1 else "", " ".join(map(make_str, args))
+                )
             )
 
         ctx.args = args
@@ -1126,8 +1125,8 @@ class MultiCommand(Command):
             for param in self.params:
                 if isinstance(param, Argument) and not param.required:
                     raise RuntimeError(
-                        "Multi commands in chain mode cannot "
-                        "have optional arguments."
+                        "Multi commands in chain mode cannot have"
+                        " optional arguments."
                     )
 
     def collect_usage_pieces(self, ctx):
@@ -1267,7 +1266,7 @@ class MultiCommand(Command):
         # set to ``*`` to inform the command that subcommands are executed
         # but nothing else.
         with ctx:
-            ctx.invoked_subcommand = args and "*" or None
+            ctx.invoked_subcommand = "*" if args else None
             Command.invoke(self, ctx)
 
             # Otherwise we make every single context and invoke them in a
@@ -1314,7 +1313,7 @@ class MultiCommand(Command):
         if cmd is None and not ctx.resilient_parsing:
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
-            ctx.fail('No such command "%s".' % original_cmd_name)
+            ctx.fail("No such command '{}'.".format(original_cmd_name))
 
         return cmd_name, cmd, args[1:]
 
@@ -1556,10 +1555,9 @@ class Parameter(object):
         if self.type.is_composite:
             if self.nargs <= 1:
                 raise TypeError(
-                    "Attempted to invoke composite type "
-                    "but nargs has been set to %s.  This is "
-                    "not supported; nargs needs to be set to "
-                    "a fixed value > 1." % self.nargs
+                    "Attempted to invoke composite type but nargs has"
+                    " been set to {}. This is not supported; nargs"
+                    " needs to be set to a fixed value > 1.".format(self.nargs)
                 )
             if self.multiple:
                 return tuple(self.type(x or (), self, ctx) for x in value or ())
@@ -1652,7 +1650,7 @@ class Parameter(object):
         indicate which param caused the error.
         """
         hint_list = self.opts or [self.human_readable_name]
-        return " / ".join('"%s"' % x for x in hint_list)
+        return " / ".join(repr(x) for x in hint_list)
 
 
 class Option(Parameter):
@@ -1794,7 +1792,7 @@ class Option(Parameter):
                     raise TypeError("Name defined twice")
                 name = decl
             else:
-                split_char = decl[:1] == "/" and ";" or "/"
+                split_char = ";" if decl[:1] == "/" else "/"
                 if split_char in decl:
                     first, second = decl.split(split_char, 1)
                     first = first.rstrip()
@@ -1821,9 +1819,8 @@ class Option(Parameter):
 
         if not opts and not secondary_opts:
             raise TypeError(
-                "No options defined but a name was passed (%s). "
-                "Did you mean to declare an argument instead "
-                "of an option?" % name
+                "No options defined but a name was passed ({}). Did you"
+                " mean to declare an argument instead of an option?".format(name)
             )
 
         return name, opts, secondary_opts
@@ -1844,16 +1841,15 @@ class Option(Parameter):
 
         if self.is_flag:
             kwargs.pop("nargs", None)
+            action_const = "{}_const".format(action)
             if self.is_bool_flag and self.secondary_opts:
+                parser.add_option(self.opts, action=action_const, const=True, **kwargs)
                 parser.add_option(
-                    self.opts, action=action + "_const", const=True, **kwargs
-                )
-                parser.add_option(
-                    self.secondary_opts, action=action + "_const", const=False, **kwargs
+                    self.secondary_opts, action=action_const, const=False, **kwargs
                 )
             else:
                 parser.add_option(
-                    self.opts, action=action + "_const", const=self.flag_value, **kwargs
+                    self.opts, action=action_const, const=self.flag_value, **kwargs
                 )
         else:
             kwargs["action"] = action
@@ -1869,7 +1865,7 @@ class Option(Parameter):
             if any_slashes:
                 any_prefix_is_slash[:] = [True]
             if not self.is_flag and not self.count:
-                rv += " " + self.make_metavar()
+                rv += " {}".format(self.make_metavar())
             return rv
 
         rv = [_write_opts(self.opts)]
@@ -1885,18 +1881,17 @@ class Option(Parameter):
                     envvar = "{}_{}".format(ctx.auto_envvar_prefix, self.name.upper())
             if envvar is not None:
                 extra.append(
-                    "env var: %s"
-                    % (
-                        ", ".join("%s" % d for d in envvar)
+                    "env var: {}".format(
+                        ", ".join(str(d) for d in envvar)
                         if isinstance(envvar, (list, tuple))
-                        else envvar,
+                        else envvar
                     )
                 )
         if self.default is not None and (self.show_default or ctx.show_default):
             if isinstance(self.show_default, string_types):
                 default_string = "({})".format(self.show_default)
             elif isinstance(self.default, (list, tuple)):
-                default_string = ", ".join("%s" % d for d in self.default)
+                default_string = ", ".join(str(d) for d in self.default)
             elif inspect.isfunction(self.default):
                 default_string = "(dynamic)"
             else:
@@ -1906,9 +1901,11 @@ class Option(Parameter):
         if self.required:
             extra.append("required")
         if extra:
-            help = "{}[{}]".format(help and help + "  " or "", "; ".join(extra))
+            help = "{}[{}]".format(
+                "{}  ".format(help) if help else "", "; ".join(extra)
+            )
 
-        return ((any_prefix_is_slash and "; " or " / ").join(rv), help)
+        return ("; " if any_prefix_is_slash else " / ").join(rv), help
 
     def get_default(self, ctx):
         # If we're a non boolean flag our default is more complex because
@@ -2006,7 +2003,7 @@ class Argument(Parameter):
         if not var:
             var = self.name.upper()
         if not self.required:
-            var = "[%s]" % var
+            var = "[{}]".format(var)
         if self.nargs != 1:
             var += "..."
         return var
@@ -2021,8 +2018,8 @@ class Argument(Parameter):
             name = name.replace("-", "_").lower()
         else:
             raise TypeError(
-                "Arguments take exactly one "
-                "parameter declaration, got %d" % len(decls)
+                "Arguments take exactly one parameter declaration, got"
+                " {}".format(len(decls))
             )
         return name, [arg], []
 
@@ -2030,7 +2027,7 @@ class Argument(Parameter):
         return [self.make_metavar()]
 
     def get_error_hint(self, ctx):
-        return '"%s"' % self.make_metavar()
+        return repr(self.make_metavar())
 
     def add_to_parser(self, parser, ctx):
         parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)

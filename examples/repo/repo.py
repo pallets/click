@@ -17,7 +17,7 @@ class Repo(object):
             click.echo("  config[{}] = {}".format(key, value), file=sys.stderr)
 
     def __repr__(self):
-        return "<Repo %r>" % self.home
+        return "<Repo {}>".format(self.home)
 
 
 pass_repo = click.make_pass_decorator(Repo)
@@ -82,7 +82,7 @@ def clone(repo, src, dest, shallow, rev):
     repo.home = dest
     if shallow:
         click.echo("Making shallow checkout")
-    click.echo("Checking out revision %s" % rev)
+    click.echo("Checking out revision {}".format(rev))
 
 
 @cli.command()
@@ -93,7 +93,7 @@ def delete(repo):
 
     This will throw away the current repository.
     """
-    click.echo("Destroying repo %s" % repo.home)
+    click.echo("Destroying repo {}".format(repo.home))
     click.echo("Deleted!")
 
 
@@ -118,8 +118,8 @@ def setuser(repo, username, email, password):
     "--message",
     "-m",
     multiple=True,
-    help="The commit message.  If provided multiple times each "
-    "argument gets converted into a new line.",
+    help="The commit message.  If provided multiple times each"
+    " argument gets converted into a new line.",
 )
 @click.argument("files", nargs=-1, type=click.Path())
 @pass_repo
@@ -136,7 +136,7 @@ def commit(repo, files, message):
         marker = "# Files to be committed:"
         hint = ["", "", marker, "#"]
         for file in files:
-            hint.append("#   U %s" % file)
+            hint.append("#   U {}".format(file))
         message = click.edit("\n".join(hint))
         if message is None:
             click.echo("Aborted!")
@@ -148,7 +148,7 @@ def commit(repo, files, message):
     else:
         msg = "\n".join(message)
     click.echo("Files to be committed: {}".format(files))
-    click.echo("Commit message:\n" + msg)
+    click.echo("Commit message:\n{}".format(msg))
 
 
 @cli.command(short_help="Copies files.")

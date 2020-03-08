@@ -13,15 +13,12 @@ def test_nargs_star(runner):
     @click.argument("src", nargs=-1)
     @click.argument("dst")
     def copy(src, dst):
-        click.echo("src=%s" % "|".join(src))
-        click.echo("dst=%s" % dst)
+        click.echo("src={}".format("|".join(src)))
+        click.echo("dst={}".format(dst))
 
     result = runner.invoke(copy, ["foo.txt", "bar.txt", "dir"])
     assert not result.exception
-    assert result.output.splitlines() == [
-        "src=foo.txt|bar.txt",
-        "dst=dir",
-    ]
+    assert result.output.splitlines() == ["src=foo.txt|bar.txt", "dst=dir"]
 
 
 def test_nargs_default(runner):
@@ -38,15 +35,12 @@ def test_nargs_tup(runner):
     @click.argument("name", nargs=1)
     @click.argument("point", nargs=2, type=click.INT)
     def copy(name, point):
-        click.echo("name=%s" % name)
-        click.echo("point=%d/%d" % point)
+        click.echo("name={}".format(name))
+        click.echo("point={0[0]}/{0[1]}".format(point))
 
     result = runner.invoke(copy, ["peter", "1", "2"])
     assert not result.exception
-    assert result.output.splitlines() == [
-        "name=peter",
-        "point=1/2",
-    ]
+    assert result.output.splitlines() == ["name=peter", "point=1/2"]
 
 
 def test_nargs_tup_composite(runner):
@@ -62,13 +56,11 @@ def test_nargs_tup_composite(runner):
         @click.command()
         @click.argument("item", **opts)
         def copy(item):
-            click.echo("name=%s id=%d" % item)
+            click.echo("name={0[0]} id={0[1]:d}".format(item))
 
         result = runner.invoke(copy, ["peter", "1"])
         assert not result.exception
-        assert result.output.splitlines() == [
-            "name=peter id=1",
-        ]
+        assert result.output.splitlines() == ["name=peter id=1"]
 
 
 def test_nargs_err(runner):
@@ -203,7 +195,7 @@ def test_empty_nargs(runner):
     @click.command()
     @click.argument("arg", nargs=-1)
     def cmd(arg):
-        click.echo("arg:" + "|".join(arg))
+        click.echo("arg:{}".format("|".join(arg)))
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 0
@@ -212,22 +204,22 @@ def test_empty_nargs(runner):
     @click.command()
     @click.argument("arg", nargs=-1, required=True)
     def cmd2(arg):
-        click.echo("arg:" + "|".join(arg))
+        click.echo("arg:{}".format("|".join(arg)))
 
     result = runner.invoke(cmd2, [])
     assert result.exit_code == 2
-    assert 'Missing argument "ARG..."' in result.output
+    assert "Missing argument 'ARG...'" in result.output
 
 
 def test_missing_arg(runner):
     @click.command()
     @click.argument("arg")
     def cmd(arg):
-        click.echo("arg:" + arg)
+        click.echo("arg:{}".format(arg))
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2
-    assert 'Missing argument "ARG".' in result.output
+    assert "Missing argument 'ARG'." in result.output
 
 
 def test_missing_argument_string_cast():
@@ -260,18 +252,10 @@ def test_eat_options(runner):
         click.echo(f)
 
     result = runner.invoke(cmd, ["--", "-foo", "bar"])
-    assert result.output.splitlines() == [
-        "-foo",
-        "bar",
-        "",
-    ]
+    assert result.output.splitlines() == ["-foo", "bar", ""]
 
     result = runner.invoke(cmd, ["-f", "-x", "--", "-foo", "bar"])
-    assert result.output.splitlines() == [
-        "-foo",
-        "bar",
-        "-x",
-    ]
+    assert result.output.splitlines() == ["-foo", "bar", "-x"]
 
 
 def test_nargs_star_ordering(runner):
@@ -284,11 +268,7 @@ def test_nargs_star_ordering(runner):
             click.echo(arg)
 
     result = runner.invoke(cmd, ["a", "b", "c"])
-    assert result.output.splitlines() == [
-        PY2 and "(u'a',)" or "('a',)",
-        "b",
-        "c",
-    ]
+    assert result.output.splitlines() == ["(u'a',)" if PY2 else "('a',)", "b", "c"]
 
 
 def test_nargs_specified_plus_star_ordering(runner):
@@ -302,9 +282,9 @@ def test_nargs_specified_plus_star_ordering(runner):
 
     result = runner.invoke(cmd, ["a", "b", "c", "d", "e", "f"])
     assert result.output.splitlines() == [
-        PY2 and "(u'a', u'b', u'c')" or "('a', 'b', 'c')",
+        "(u'a', u'b', u'c')" if PY2 else "('a', 'b', 'c')",
         "d",
-        PY2 and "(u'e', u'f')" or "('e', 'f')",
+        "(u'e', u'f')" if PY2 else "('e', 'f')",
     ]
 
 

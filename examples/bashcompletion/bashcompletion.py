@@ -18,8 +18,8 @@ def get_env_vars(ctx, args, incomplete):
 @cli.command(help="A command to print environment variables")
 @click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
 def cmd1(envvar):
-    click.echo("Environment variable: %s" % envvar)
-    click.echo("Value: %s" % os.environ[envvar])
+    click.echo("Environment variable: {}".format(envvar))
+    click.echo("Value: {}".format(os.environ[envvar]))
 
 
 @click.group(help="A group that holds a subcommand")
@@ -39,7 +39,7 @@ def list_users(ctx, args, incomplete):
 @group.command(help="Choose a user")
 @click.argument("user", type=click.STRING, autocompletion=list_users)
 def subcmd(user):
-    click.echo("Chosen user is %s" % user)
+    click.echo("Chosen user is {}".format(user))
 
 
 cli.add_command(group)

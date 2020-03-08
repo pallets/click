@@ -65,7 +65,7 @@ def make_default_short_help(help, max_length=45):
     for word in words:
         if word[-1:] == ".":
             done = True
-        new_length = result and 1 + len(word) or len(word)
+        new_length = 1 + len(word) if result else len(word)
         if total_length + new_length > max_length:
             result.append("...")
             done = True
@@ -113,7 +113,7 @@ class LazyFile(object):
     def __repr__(self):
         if self._f is not None:
             return repr(self._f)
-        return "<unopened file {!r} {}>".format(self.name, self.mode)
+        return "<unopened file '{}' {}>".format(self.name, self.mode)
 
     def open(self):
         """Opens the file if it's not yet open.  This call might fail with
@@ -285,7 +285,7 @@ def get_binary_stream(name):
     """
     opener = binary_streams.get(name)
     if opener is None:
-        raise TypeError("Unknown standard stream %r" % name)
+        raise TypeError("Unknown standard stream '{}'".format(name))
     return opener()
 
 
@@ -302,7 +302,7 @@ def get_text_stream(name, encoding=None, errors="strict"):
     """
     opener = text_streams.get(name)
     if opener is None:
-        raise TypeError("Unknown standard stream %r" % name)
+        raise TypeError("Unknown standard stream '{}'".format(name))
     return opener(encoding, errors)
 
 
@@ -413,13 +413,13 @@ def get_app_dir(app_name, roaming=True, force_posix=False):
                         application support folder.
     """
     if WIN:
-        key = roaming and "APPDATA" or "LOCALAPPDATA"
+        key = "APPDATA" if roaming else "LOCALAPPDATA"
         folder = os.environ.get(key)
         if folder is None:
             folder = os.path.expanduser("~")
         return os.path.join(folder, app_name)
     if force_posix:
-        return os.path.join(os.path.expanduser("~/." + _posixify(app_name)))
+        return os.path.join(os.path.expanduser("~/.{}".format(_posixify(app_name))))
     if sys.platform == "darwin":
         return os.path.join(
             os.path.expanduser("~/Library/Application Support"), app_name
