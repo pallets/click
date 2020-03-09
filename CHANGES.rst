@@ -13,6 +13,15 @@ Unreleased
     ``current_item``. :issue:`1226`, :pr:`1332`
 
 
+Version 7.1.1
+-------------
+
+Released 2020-03-09
+
+-   Fix ``ClickException`` output going to stdout instead of stderr.
+    :issue:`1495`
+
+
 Version 7.1
 -----------
 

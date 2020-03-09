@@ -39,7 +39,7 @@ class ClickException(Exception):
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
-        echo("Error: {}".format(self.format_message(), file=file))
+        echo("Error: {}".format(self.format_message()), file=file)
 
 
 class UsageError(ClickException):
