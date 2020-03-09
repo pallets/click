@@ -3,7 +3,7 @@
 Version 7.1.1
 -------------
 
-Unreleased
+Released 2020-03-09
 
 -   Fix ``ClickException`` output going to stdout instead of stderr.
     :issue:`1495`
