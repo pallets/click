@@ -1,5 +1,14 @@
 .. currentmodule:: click
 
+Version 7.1.1
+-------------
+
+Unreleased
+
+-   Fix ``ClickException`` output going to stdout instead of stderr.
+    :issue:`1495`
+
+
 Version 7.1
 -----------
 
