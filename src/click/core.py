@@ -110,18 +110,16 @@ def invoke_param_callback(callback, ctx, param, value):
     args = getattr(code, "co_argcount", 3)
 
     if args < 3:
-        # This will become a warning in Click 3.0:
         from warnings import warn
 
         warn(
-            Warning(
-                "Invoked legacy parameter callback '{}'. The new"
-                " signature for such callbacks starting with Click 2.0"
-                " is (ctx, param, value).".format(callback)
-            ),
+            "Parameter callbacks take 3 args, (ctx, param, value). The"
+            " 2-arg style is deprecated and will be removed in 8.0.".format(callback),
+            DeprecationWarning,
             stacklevel=3,
         )
         return callback(ctx, value)
+
     return callback(ctx, param, value)
 
 
@@ -1440,8 +1438,7 @@ class Parameter(object):
                     without any arguments.
     :param callback: a callback that should be executed after the parameter
                      was matched.  This is called as ``fn(ctx, param,
-                     value)`` and needs to return the value.  Before Click
-                     2.0, the signature was ``(ctx, value)``.
+                     value)`` and needs to return the value.
     :param nargs: the number of arguments to match.  If not ``1`` the return
                   value is a tuple instead of single value.  The default for
                   nargs is ``1`` (except if the type is a tuple, then it's
