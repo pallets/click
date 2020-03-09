@@ -3,7 +3,7 @@
 Version 7.1
 -----------
 
-Unreleased
+Released 2020-03-09
 
 -   Fix PyPI package name, "click" is lowercase again.
 -   Fix link in ``unicode_literals`` error message. :pr:`1151`
