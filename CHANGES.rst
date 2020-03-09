@@ -66,6 +66,9 @@ Unreleased
 -   Add completion support for Fish shell. :pr:`1423`
 -   Decoding bytes option values falls back to UTF-8 in more cases.
     :pr:`1468`
+-   Make the warning about old 2-arg parameter callbacks a deprecation
+    warning, to be removed in 8.0. This has been a warning since Click
+    2.0. :pr:`1492`
 
 
 Version 7.0
