@@ -308,3 +308,14 @@ def test_command_standalone_mode_returns_value():
     assert result.output == "ok\n"
     assert result.return_value == "Hello, World!"
     assert result.exit_code == 0
+
+
+def test_file_stdin_attrs(runner):
+    @click.command()
+    @click.argument("f", type=click.File())
+    def cli(f):
+        click.echo(f.name)
+        click.echo(f.mode, nl=False)
+
+    result = runner.invoke(cli, ["-"])
+    assert result.output == "<stdin>\nr"

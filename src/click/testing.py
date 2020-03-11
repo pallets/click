@@ -40,6 +40,21 @@ class EchoingStdin:
         return repr(self._input)
 
 
+class _NamedTextIOWrapper(io.TextIOWrapper):
+    def __init__(self, buffer, name=None, mode=None, **kwargs):
+        super().__init__(buffer, **kwargs)
+        self._name = name
+        self._mode = mode
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def mode(self):
+        return self._mode
+
+
 def make_input_stream(input, charset):
     # Is already an input stream.
     if hasattr(input, "read"):
@@ -186,17 +201,20 @@ class CliRunner:
         if self.echo_stdin:
             input = EchoingStdin(input, bytes_output)
 
-        input = io.TextIOWrapper(input, encoding=self.charset)
-        sys.stdout = io.TextIOWrapper(bytes_output, encoding=self.charset)
-
-        if not self.mix_stderr:
-            bytes_error = io.BytesIO()
-            sys.stderr = io.TextIOWrapper(bytes_error, encoding=self.charset)
+        sys.stdin = input = _NamedTextIOWrapper(
+            input, encoding=self.charset, name="<stdin>", mode="r"
+        )
+        sys.stdout = _NamedTextIOWrapper(
+            bytes_output, encoding=self.charset, name="<stdout>", mode="w"
+        )
 
         if self.mix_stderr:
             sys.stderr = sys.stdout
-
-        sys.stdin = input
+        else:
+            bytes_error = io.BytesIO()
+            sys.stderr = _NamedTextIOWrapper(
+                bytes_error, encoding=self.charset, name="<stderr>", mode="w"
+            )
 
         def visible_input(prompt=None):
             sys.stdout.write(prompt or "")

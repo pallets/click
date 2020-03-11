@@ -79,6 +79,9 @@ Unreleased
     the parent context. :issue:`1565`
 -   ``click.style()`` can output 256 and RGB color codes. Most modern
     terminals support these codes. :pr:`1429`
+-   When using ``CliRunner.invoke()``, the replaced ``stdin`` file has
+    ``name`` and ``mode`` attributes. This lets ``File`` options with
+    the ``-`` value match non-testing behavior. :issue:`1064`
 
 
 Version 7.1.2
