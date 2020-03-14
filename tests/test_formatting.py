@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import pytest
 import click
 
 
@@ -351,3 +352,518 @@ def test_formatting_usage_no_option_padding(runner):
         "  --bar TEXT  This help message will be padded if it wraps.",
         "  --help      Show this message and exit.",
     ]
+
+
+TESTCASES_SUCCEEDING_WRAP_TEXT = [
+
+    # Test cases for succeeding wrap_text()
+    #
+    # Each list item is a testcase tuple with these items:
+    # * desc: Short testcase description.
+    # * args: Positional arguments for the tested function.
+    # * kwargs: Keyword arguments for the tested function.
+    # * exp_ret: expected return value of the tested function.
+
+    (
+        "Defaults of optional arguments",
+        [
+            'a b c d e f g h i j k l m n o p q r s t '  # 40
+            'u v w x y z 1 2 3 4 5 6 7 8 9 0 1 2 3 4 '  # 40
+            # width=78
+            # initial_indent=""
+            # subsequent_indent=""
+            # preserve_paragraphs=False
+        ],
+        dict(),
+        'a b c d e f g h i j k l m n o p q r s t '
+        'u v w x y z 1 2 3 4 5 6 7 8 9 0 1 2 3\n'
+        '4'
+    ),
+    (
+        "Order of positional arguments",
+        [
+            'a b c d e f g h j i k',  # text
+            20,  # width
+            '....',  # initial_indent
+            '----',  # subsequent_indent
+            False,  # preserve_paragraphs
+        ],
+        dict(),
+        '....a b c d e f g h\n'
+        '----j i k'
+    ),
+    (
+        "Names of keyword arguments",
+        [],
+        dict(
+            text='a b c d e f g h j i k',
+            width=20,
+            initial_indent='....',
+            subsequent_indent='----',
+            preserve_paragraphs=False,
+        ),
+        '....a b c d e f g h\n'
+        '----j i k'
+    ),
+    (
+        "Use of different indent strings, with preserve=False",
+        [],
+        dict(
+            text='a b c d e f g h i j k l m n o p q r s t ',
+            width=20,
+            initial_indent='....',
+            subsequent_indent='----',
+            preserve_paragraphs=False,
+        ),
+        '....a b c d e f g h\n'
+        '----i j k l m n o p\n'
+        '----q r s t'
+    ),
+    (
+        "Use of different indent strings, with preserve=True",
+        [],
+        dict(
+            text='a b c d e f g h i j k l m n o p q r s t ',
+            width=20,
+            initial_indent='....',
+            subsequent_indent='----',
+            preserve_paragraphs=True,
+        ),
+        '....a b c d e f g h\n'
+        '----i j k l m n o p\n'
+        '----q r s t'
+    ),
+    (
+        "One line that meets width exactly, with preserve=False",
+        [],
+        dict(
+            text='a b c d e',
+            width=9,
+            preserve_paragraphs=False,
+        ),
+        'a b c d e'
+    ),
+    (
+        "One line that meets width exactly, with preserve=True",
+        [],
+        dict(
+            text='a b c d e',
+            width=9,
+            preserve_paragraphs=True,
+        ),
+        'a b c d e'
+    ),
+    (
+        "One line that wraps at end of word, with preserve=False",
+        [],
+        dict(
+            text='a b c d e f g h i j',
+            width=9,
+            preserve_paragraphs=False,
+        ),
+        'a b c d e\n'
+        'f g h i j'
+    ),
+    (
+        "One line that wraps at end of word, with preserve=True",
+        [],
+        dict(
+            text='a b c d e f g h i j',
+            width=9,
+            preserve_paragraphs=True,
+        ),
+        'a b c d e\n'
+        'f g h i j'
+    ),
+    (
+        "Initial indent of 1 char, with preserve=False",
+        [],
+        dict(
+            text='a b c d e',
+            width=9,
+            initial_indent='.',
+            subsequent_indent='',
+            preserve_paragraphs=False,
+        ),
+        '.a b c d\n'
+        'e'
+    ),
+    (
+        "Initial indent of 1 char, with preserve=True",
+        [],
+        dict(
+            text='a b c d e',
+            width=9,
+            initial_indent='.',
+            subsequent_indent='',
+            preserve_paragraphs=True,
+        ),
+        '.a b c d\n'
+        'e'
+    ),
+    (
+        "Initial indent and subsequent indent of 1 char, with preserve=False",
+        [],
+        dict(
+            text='a b c d e f g h i',
+            width=9,
+            initial_indent='.',
+            subsequent_indent='-',
+            preserve_paragraphs=False,
+        ),
+        '.a b c d\n'
+        '-e f g h\n'
+        '-i'
+    ),
+    (
+        "Initial indent and subsequent indent of 1 char, with preserve=True",
+        [],
+        dict(
+            text='a b c d e f g h i',
+            width=9,
+            initial_indent='.',
+            subsequent_indent='-',
+            preserve_paragraphs=True,
+        ),
+        '.a b c d\n'
+        '-e f g h\n'
+        '-i'
+    ),
+    (
+        "Line with long second word that exactly fits the width, 2 indent, "
+        "with preserve=False",
+        [],
+        dict(
+            text='a longsecdword',
+            width=16,
+            initial_indent='..',
+            subsequent_indent='--',
+            preserve_paragraphs=False,
+        ),
+        '..a longsecdword'
+    ),
+    (
+        "Line with long second word that exactly fits the width, 2 indent, "
+        "with preserve=True",
+        [],
+        dict(
+            text='a longsecdword',
+            width=16,
+            initial_indent='..',
+            subsequent_indent='--',
+            preserve_paragraphs=True,
+        ),
+        '..a longsecdword'
+    ),
+    (
+        "Line with long second word that exceeds the width by 1, 2 indent, "
+        "with preserve=False",
+        [],
+        dict(
+            text='a longsecdword',
+            width=15,
+            initial_indent='..',
+            subsequent_indent='--',
+            preserve_paragraphs=False,
+        ),
+        '..a\n'
+        '--longsecdword'
+    ),
+    (
+        "Line with long second word that exceeds the width by 1, 2 indent, "
+        "with preserve=True",
+        [],
+        dict(
+            text='a longsecdword',
+            width=15,
+            initial_indent='..',
+            subsequent_indent='--',
+            preserve_paragraphs=True,
+        ),
+        '..a\n'
+        '--longsecdword'
+    ),
+    (
+        "Long second word that itself exactly fits the width, preserve=False",
+        [],
+        dict(
+            text='a longsecdword',
+            width=12,
+            preserve_paragraphs=False,
+        ),
+        'a\n'
+        'longsecdword'
+    ),
+    (
+        "Long second word that itself exactly fits the width, preserve=True",
+        [],
+        dict(
+            text='a longsecdword',
+            width=12,
+            preserve_paragraphs=True,
+        ),
+        'a\n'
+        'longsecdword'
+    ),
+    (
+        "Maintaining width overrules word breakage, preserve=False",
+        [],
+        dict(
+            text='a longsecdword',
+            width=11,
+            preserve_paragraphs=False,
+        ),
+        'a longsecdw\n'
+        'ord'
+    ),
+    (
+        "Maintaining width overrules word breakage, preserve=True",
+        [],
+        dict(
+            text='a longsecdword',
+            width=11,
+            preserve_paragraphs=True,
+        ),
+        'a longsecdw\n'
+        'ord'
+    ),
+    (
+        "Long width 400, preserve=False",
+        [],
+        dict(
+            text='abc ' * 200,
+            width=400,
+            preserve_paragraphs=False,
+        ),
+        ('abc ' * 99) + 'abc\n' + \
+        ('abc ' * 99) + 'abc'
+    ),
+    (
+        "Long width 400, preserve=True",
+        [],
+        dict(
+            text='abc ' * 200,
+            width=400,
+            preserve_paragraphs=True,
+        ),
+        ('abc ' * 99) + 'abc\n' + \
+        ('abc ' * 99) + 'abc'
+    ),
+    (
+        "Initial spaces on line are preserved, with preserve=False",
+        [],
+        dict(
+            text='   abd def ghi',
+            width=6,
+            preserve_paragraphs=False,
+        ),
+        '   abd\n'
+        'def\n'
+        'ghi'
+    ),
+    (
+        "Initial spaces on line are used as intial and subsequent indent, "
+        "with preserve=True",
+        [],
+        dict(
+            text='   abd def ghi',
+            width=6,
+            preserve_paragraphs=True,
+        ),
+        '   abd\n'
+        '   def\n'
+        '   ghi'
+    ),
+    (
+        "Trailing spaces get stripped, with preserve=False",
+        [],
+        dict(
+            text='abc def ghi   ',
+            width=6,
+            preserve_paragraphs=False,
+        ),
+        'abc\n'
+        'def\n'
+        'ghi'
+    ),
+    (
+        "Trailing spaces get stripped, with preserve=True",
+        [],
+        dict(
+            text='abc def ghi   ',
+            width=6,
+            preserve_paragraphs=True,
+        ),
+        'abc\n'
+        'def\n'
+        'ghi'
+    ),
+    (
+        "Spaces within line are preserved, with preserve=False",
+        [],
+        dict(
+            text=
+            'line   A1\n'
+            'line     A2\n',
+            width=12,
+            preserve_paragraphs=False,
+        ),
+        'line   A1\n'
+        'line     A2'
+    ),
+    (
+        "Spaces within line are preserved, with preserve=True",
+        [],
+        dict(
+            text=
+            'line   A1\n'
+            'line     A2\n',
+            width=12,
+            preserve_paragraphs=True,
+        ),
+        'line   A1\n'
+        'line     A2'
+    ),
+    (
+        "Two lines stay separate, with preserve=False",
+        [],
+        dict(
+            text=
+            'line A1\n'
+            'line A2\n',
+            width=12,
+            preserve_paragraphs=False,
+        ),
+        'line A1\n'
+        'line\n'  # TODO: Unmotivated line break, see issue #1502
+        'A2'
+    ),
+    (
+        "Two lines get combined and wrapped, with preserve=True",
+        [],
+        dict(
+            text=
+            'line A1\n'
+            'line A2\n',
+            width=12,
+            preserve_paragraphs=True,
+        ),
+        'line A1 line\n'
+        'A2'
+    ),
+    (
+        "Two paragraphs stay separate and don't get wrapped, "
+        "with preserve=False",
+        [],
+        dict(
+            text=
+            'line A1\n'
+            'line A2\n'
+            '\n'
+            'line B1\n'
+            'line B2\n',
+            width=12,
+            preserve_paragraphs=False,
+        ),
+        'line A1\n'
+        'line\n'  # TODO: Unmotivated line break, see issue #1502
+        'A2\n'
+        '\n'
+        'line B1\n'
+        'line B2'
+    ),
+    (
+        "Two paragraphs stay separate but get wrapped, with preserve=True",
+        [],
+        dict(
+            text=
+            'line A1\n'
+            'line A2\n'
+            '\n'
+            'line B1\n'
+            'line B2\n',
+            width=12,
+            preserve_paragraphs=True,
+        ),
+        'line A1 line\n'
+        'A2\n'
+        '\n'
+        'line B1 line\n'
+        'B2'
+    ),
+    (
+        "First paragraph with \\b does not get wrapped, second paragraph "
+        "without \\b gets wrapped, with preserve=True",
+        [],
+        dict(
+            text=
+            '\b\n'
+            'line A1\n'
+            'line A2\n'
+            '\n'
+            'line B1\n'
+            'line B2\n',
+            width=12,
+            preserve_paragraphs=True,
+        ),
+        'line A1\n'
+        'line A2\n'
+        '\n'
+        'line B1 line\n'
+        'B2'
+    ),
+    (
+        "Two paragraphs with different leading space get different indent, "
+        "with preserve=True",
+        [],
+        dict(
+            text=
+            '  line A1\n'
+            'line A2\n'
+            '\n'
+            '    line B1\n'
+            'line B2\n',
+            width=16,
+            preserve_paragraphs=True,
+        ),
+        '  line A1 line\n'
+        '  A2\n'
+        '\n'
+        '    line B1 line\n'
+        '    B2'
+    ),
+    (
+        "Two lines in a paragraph with different leading space get aligned to "
+        "indent of first line, with preserve=True",
+        [],
+        dict(
+            text=
+            '  line A1\n'
+            '    line A2\n'
+            '\n'
+            '    line B1\n'
+            '  line B2\n',
+            width=11,
+            preserve_paragraphs=True,
+        ),
+        '  line A1\n'
+        '  line A2\n'
+        '\n'
+        '    line B1\n'
+        '    line B2'
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "desc, args, kwargs, exp_ret",
+    TESTCASES_SUCCEEDING_WRAP_TEXT)
+def test_succeeding_wrap_text(desc, args, kwargs, exp_ret):
+    """
+    Test for succeeding wrap_text()
+    """
+
+    # The code to be tested
+    act_ret = click.wrap_text(*args, **kwargs)
+
+    assert act_ret == exp_ret
