@@ -559,6 +559,8 @@ def test_hidden_group(runner):
 
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
+    assert "subgroup" not in result.output
+    assert "nope" not in result.output
 
 
 def test_crcrlf_in_popen_output(tmpdir):
@@ -580,4 +582,3 @@ def test_crcrlf_in_popen_output(tmpdir):
 
     # This assert fails only in win+py27
     assert '\r\r\n' not in output.decode('utf-8')
-
