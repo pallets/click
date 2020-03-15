@@ -13,24 +13,44 @@ distinct from :ref:`positional arguments <arguments>`.
 Name Your Options
 -----------------
 
-The naming rules can be found in :ref:`parameter_names`. In short, you
-can refer the option **implicitly** by the longest dash-prefixed argument:
+Options have a name that will be used as the Python argument name when
+calling the decorated function. This can be inferred from the option
+names or given explicitly. Names are given as position arguments to the
+decorator.
 
-.. click:example::
+A name is chosen in the following order
+
+1.  If a name is not prefixed, it is used as the Python argument name
+    and not treated as an option name on the command line.
+2.  If there is at least one name prefixed with two dashes, the first
+    one given is used as the name.
+3.  The first name prefixed with one dash is used otherwise.
+
+To get the Python argument name, the chosen name is converted to lower
+case, up to two dashes are removed as the prefix, and other dashes are
+converted to underscores.
+
+.. code-block:: python
 
     @click.command()
     @click.option('-s', '--string-to-echo')
     def echo(string_to_echo):
         click.echo(string_to_echo)
 
-Or, **explicitly**, by giving one non-dash-prefixed argument:
-
-.. click:example::
+.. code-block:: python
 
     @click.command()
     @click.option('-s', '--string-to-echo', 'string')
     def echo(string):
         click.echo(string)
+
+-   ``"-f", "--foo-bar"``, the name is ``foo_bar``
+-   ``"-x"``, the name is ``x``
+-   ``"-f", "--filename", "dest"``, the name is  ``dest``
+-   ``"--CamelCase"``, the name is ``camelcase``
+-   ``"-f", "-fb"``, the name is ``f``
+-   ``"--f", "--foo-bar"``, the name is ``f``
+-   ``"---f"``, the name is ``_f``
 
 Basic Value Options
 -------------------
@@ -145,11 +165,13 @@ used.  The above example is thus equivalent to this:
     def putitem(item):
         click.echo('name=%s id=%d' % item)
 
+.. _multiple-options:
+
 Multiple Options
 ----------------
 
 Similarly to ``nargs``, there is also the case of wanting to support a
-parameter being provided multiple times to and have all values recorded --
+parameter being provided multiple times and have all the values recorded --
 not just the last one.  For instance, ``git commit -m foo -m bar`` would
 record two lines for the commit message: ``foo`` and ``bar``. This can be
 accomplished with the ``multiple`` flag:
@@ -168,6 +190,15 @@ And on the command line:
 .. click:run::
 
     invoke(commit, args=['-m', 'foo', '-m', 'bar'])
+
+When passing a ``default`` with ``multiple=True``, the default value
+must be a list or tuple, otherwise it will be interpreted as a list of
+single characters.
+
+.. code-block:: python
+
+    @click.option("--format", multiple=True, default=["json"])
+
 
 Counting
 --------
@@ -315,14 +346,17 @@ Choice Options
 
 Sometimes, you want to have a parameter be a choice of a list of values.
 In that case you can use :class:`Choice` type.  It can be instantiated
-with a list of valid values.
+with a list of valid values.  The originally passed choice will be returned,
+not the str passed on the command line.  Token normalization functions and
+``case_sensitive=False`` can cause the two to be different but still match.
 
 Example:
 
 .. click:example::
 
     @click.command()
-    @click.option('--hash-type', type=click.Choice(['md5', 'sha1']))
+    @click.option('--hash-type',
+                  type=click.Choice(['MD5', 'SHA1'], case_sensitive=False))
     def digest(hash_type):
         click.echo(hash_type)
 
@@ -330,16 +364,27 @@ What it looks like:
 
 .. click:run::
 
+    invoke(digest, args=['--hash-type=MD5'])
+    println()
     invoke(digest, args=['--hash-type=md5'])
     println()
     invoke(digest, args=['--hash-type=foo'])
     println()
     invoke(digest, args=['--help'])
 
-.. note::
+Only pass the choices as list or tuple. Other iterables (like
+generators) may lead to unexpected results.
 
-    You should only pass the choices as list or tuple.  Other iterables (like
-    generators) may lead to surprising results.
+Choices work with options that have ``multiple=True``. If a ``default``
+value is given with ``multiple=True``, it should be a list or tuple of
+valid choices.
+
+Choices should be unique after considering the effects of
+``case_sensitive`` and any specified token normalization function.
+
+.. versionchanged:: 7.1
+    The resulting value from an option will always be on the of the
+    originally passed choices regardless of ``case_sensitive``.
 
 .. _option-prompting:
 
@@ -381,6 +426,10 @@ What it looks like:
 .. click:run::
 
     invoke(hello, input=['John'])
+
+It is advised that prompt not be used in conjunction with the multiple
+flag set to True. Instead, prompt in the function interactively.
+
 
 Password Prompts
 ----------------
@@ -566,8 +615,8 @@ environment variables which is supported for options only.  To enable this
 feature, the ``auto_envvar_prefix`` parameter needs to be passed to the
 script that is invoked.  Each command and parameter is then added as an
 uppercase underscore-separated variable.  If you have a subcommand
-called ``foo`` taking an option called ``bar`` and the prefix is
-``MY_TOOL``, then the variable is ``MY_TOOL_FOO_BAR``.
+called ``run`` taking an option called ``reload`` and the prefix is
+``WEB``, then the variable is ``WEB_RUN_RELOAD``.
 
 Example usage:
 
@@ -588,8 +637,11 @@ And from the command line:
     invoke(greet, env={'GREETER_USERNAME': 'john'},
            auto_envvar_prefix='GREETER')
 
-When using ``auto_envvar_prefix`` with command groups, the command name needs
-to be included in the environment variable, between the prefix and the parameter name, *i.e.* *PREFIX_COMMAND_VARIABLE*.
+When using ``auto_envvar_prefix`` with command groups, the command name
+needs to be included in the environment variable, between the prefix and
+the parameter name, *i.e.* ``PREFIX_COMMAND_VARIABLE``. If you have a
+subcommand called ``run-server`` taking an option called ``host`` and
+the prefix is ``WEB``, then the variable is ``WEB_RUN_SERVER_HOST``.
 
 Example:
 

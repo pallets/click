@@ -1,47 +1,46 @@
-Bash Complete
-=============
+Shell Completion
+================
 
 .. versionadded:: 2.0
 
-As of Click 2.0, there is built-in support for Bash completion for
-any Click script.  There are certain restrictions on when this completion
-is available, but for the most part it should just work.
+Click can provide tab completion for commands, options, and choice
+values. Bash, Zsh, and Fish are supported
 
-Limitations
------------
+Completion is only available if a script is installed and invoked
+through an entry point, not through the ``python`` command. See
+:ref:`setuptools-integration`.
 
-Bash completion is only available if a script has been installed properly,
-and not executed through the ``python`` command.  For information about
-how to do that, see :ref:`setuptools-integration`.  Click currently
-only supports completion for Bash and Zsh.
 
 What it Completes
 -----------------
 
-Generally, the Bash completion support will complete subcommands, options
-and any option or argument values where the type is click.Choice.
-Subcommands and choices are always listed whereas options only if at
-least a dash has been provided.  Example::
+Generally, the shell completion support will complete commands,
+options, and any option or argument values where the type is
+:class:`click.Choice`. Options are only listed if at least a dash has
+been entered.
+
+.. code-block:: text
 
     $ repo <TAB><TAB>
     clone    commit   copy     delete   setuser
     $ repo clone -<TAB><TAB>
     --deep     --help     --rev      --shallow  -r
 
-Additionally, custom suggestions can be provided for arguments and options with
-the ``autocompletion`` parameter.  ``autocompletion`` should be a callback function
-that returns a list of strings. This is useful when the suggestions need to be
-dynamically generated at bash completion time. The callback function will be
-passed 3 keyword arguments:
+Custom completions can be provided for argument and option values by
+providing an ``autocompletion`` function that returns a list of strings.
+This is useful when the suggestions need to be dynamically generated
+completion time. The callback function will be passed 3 keyword
+arguments:
 
-- ``ctx`` - The current click context.
-- ``args`` - The list of arguments passed in.
-- ``incomplete`` - The partial word that is being completed, as a string.  May
-  be an empty string ``''`` if no characters have been entered yet.
+-   ``ctx`` - The current command context.
+-   ``args`` - The list of arguments passed in.
+-   ``incomplete`` - The partial word that is being completed. May
+    be an empty string if no characters have been entered yet.
 
-Here is an example of using a callback function to generate dynamic suggestions:
+Here is an example of using a callback function to generate dynamic
+suggestions:
 
-.. click:example::
+.. code-block:: python
 
     import os
 
@@ -55,25 +54,26 @@ Here is an example of using a callback function to generate dynamic suggestions:
         click.echo('Value: %s' % os.environ[envvar])
 
 
-Completion help strings (ZSH only)
-----------------------------------
+Completion help strings
+-----------------------
 
-ZSH supports showing documentation strings for completions. These are taken
-from the help parameters of options and subcommands. For dynamically generated
-completions a help string can be provided by returning a tuple instead of a
-string. The first element of the tuple is the completion and the second is the
-help string to display.
+ZSH and fish support showing documentation strings for completions.
+These are taken from the help parameters of options and subcommands. For
+dynamically generated completions a help string can be provided by
+returning a tuple instead of a string. The first element of the tuple is
+the completion and the second is the help string to display.
 
-Here is an example of using a callback function to generate dynamic suggestions with help strings:
+Here is an example of using a callback function to generate dynamic
+suggestions with help strings:
 
-.. click:example::
+.. code-block:: python
 
     import os
 
     def get_colors(ctx, args, incomplete):
-        colors = [('red', 'help string for the color red'),
-                  ('blue', 'help string for the color blue'),
-                  ('green', 'help string for the color green')]
+        colors = [('red', 'a warm color'),
+                  ('blue', 'a cool color'),
+                  ('green', 'the other starter color')]
         return [c for c in colors if incomplete in c[0]]
 
     @click.command()
@@ -85,47 +85,79 @@ Here is an example of using a callback function to generate dynamic suggestions 
 Activation
 ----------
 
-In order to activate Bash completion, you need to inform Bash that
-completion is available for your script, and how.  Any Click application
-automatically provides support for that.  The general way this works is
-through a magic environment variable called ``_<PROG_NAME>_COMPLETE``,
-where ``<PROG_NAME>`` is your application executable name in uppercase
-with dashes replaced by underscores.
+In order to activate shell completion, you need to inform your shell
+that completion is available for your script. Any Click application
+automatically provides support for that. If the program is executed with
+a special ``_<PROG_NAME>_COMPLETE`` variable, the completion mechanism
+is triggered instead of the normal command. ``<PROG_NAME>`` is the
+executable name in uppercase with dashes replaced by underscores.
 
-If your tool is called ``foo-bar``, then the magic variable is called
-``_FOO_BAR_COMPLETE``.  By exporting it with the ``source`` value it will
-spit out the activation script which can be trivially activated.
+If your tool is called ``foo-bar``, then the variable is called
+``_FOO_BAR_COMPLETE``. By exporting it with the ``source_{shell}``
+value it will output the activation script to evaluate.
 
-For instance, to enable Bash completion for your ``foo-bar`` script, this
-is what you would need to put into your ``.bashrc``::
+Here are examples for a ``foo-bar`` script.
 
-    eval "$(_FOO_BAR_COMPLETE=source foo-bar)"
+For Bash, add this to ``~/.bashrc``:
 
-For zsh users add this to your ``.zshrc``::
+.. code-block:: text
+
+    eval "$(_FOO_BAR_COMPLETE=source_bash foo-bar)"
+
+For Zsh, add this to ``~/.zshrc``:
+
+.. code-block:: text
 
     eval "$(_FOO_BAR_COMPLETE=source_zsh foo-bar)"
 
-From this point onwards, your script will have autocompletion enabled.
+For Fish, add this to ``~/.config/fish/completions/foo-bar.fish``:
+
+.. code-block:: text
+
+    eval (env _FOO_BAR_COMPLETE=source_fish foo-bar)
+
+Open a new shell to enable completion. Or run the ``eval`` command
+directly in your current shell to enable it temporarily.
+
 
 Activation Script
 -----------------
 
-The above activation example will always invoke your application on
-startup.  This might be slowing down the shell activation time
-significantly if you have many applications.  Alternatively, you could also
-ship a file with the contents of that, which is what Git and other systems
-are doing.
+The above ``eval`` examples will invoke your application every time a
+shell is started. This may slow down shell startup time significantly.
 
-This can be easily accomplished::
+Alternatively, export the generated completion code as a static script
+to be executed. You can ship this file with your builds; tools like Git
+do this. At least Zsh will also cache the results of completion files,
+but not ``eval`` scripts.
 
-    _FOO_BAR_COMPLETE=source foo-bar > foo-bar-complete.sh
+For Bash:
 
-For zsh:
+.. code-block:: text
+
+    _FOO_BAR_COMPLETE=source_bash foo-bar > foo-bar-complete.sh
+
+For Zsh:
+
+.. code-block:: text
 
     _FOO_BAR_COMPLETE=source_zsh foo-bar > foo-bar-complete.sh
 
-And then you would put this into your .bashrc or .zshrc instead::
+For Fish:
+
+.. code-block:: text
+
+    _FOO_BAR_COMPLETE=source_zsh foo-bar > foo-bar-complete.sh
+
+In ``.bashrc`` or ``.zshrc``, source the script instead of the ``eval``
+command:
+
+.. code-block:: text
 
     . /path/to/foo-bar-complete.sh
 
+For Fish, add the file to the completions directory:
 
+.. code-block:: text
+
+    _FOO_BAR_COMPLETE=source_fish foo-bar > ~/.config/fish/completions/foo-bar-complete.fish

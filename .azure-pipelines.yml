@@ -1,0 +1,49 @@
+trigger:
+  - master
+  - '*.x'
+
+variables:
+  vmImage: ubuntu-latest
+  python.version: '3.8'
+  TOXENV: py
+
+strategy:
+  matrix:
+    Python 3.8 Linux:
+      vmImage: ubuntu-latest
+    Python 3.8 Windows:
+      vmImage: windows-latest
+    Python 3.8 Mac:
+      vmImage: macos-latest
+    PyPy 3 Linux:
+      python.version: pypy3
+    Python 3.7 Linux:
+      python.version: '3.7'
+    Python 3.6 Linux:
+      python.version: '3.6'
+    Python 3.5 Linux:
+      python.version: '3.5'
+    Python 2.7 Linux:
+      python.version: '2.7'
+    Python 2.7 Windows:
+      vmImage: windows-latest
+      python.version: '2.7'
+    Docs:
+      TOXENV: docs
+    Style:
+      TOXENV: style
+
+pool:
+  vmImage: $(vmImage)
+
+steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: "$(python.version)"
+    displayName: Use Python $(python.version)
+
+  - script: pip --disable-pip-version-check install -U tox
+    displayName: Install tox
+
+  - script: tox
+    displayName: Run tox

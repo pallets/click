@@ -24,9 +24,7 @@ Install and update using `pip`_:
 
 .. code-block:: text
 
-    $ pip install click
-
-Click supports Python 3.4 and newer, Python 2.7, and PyPy.
+    $ pip install -U click
 
 .. _pip: https://pip.pypa.io/en/stable/quickstart/
 
@@ -34,25 +32,20 @@ Click supports Python 3.4 and newer, Python 2.7, and PyPy.
 A Simple Example
 ----------------
 
-What does it look like? Here is an example of a simple Click program:
-
 .. code-block:: python
 
     import click
-    
+
     @click.command()
     @click.option("--count", default=1, help="Number of greetings.")
-    @click.option("--name", prompt="Your name",
-                  help="The person to greet.")
+    @click.option("--name", prompt="Your name", help="The person to greet.")
     def hello(count, name):
         """Simple program that greets NAME for a total of COUNT times."""
         for _ in range(count):
-            click.echo("Hello, %s!" % name)
-    
+            click.echo(f"Hello, {name}!")
+
     if __name__ == '__main__':
         hello()
-
-And what it looks like when run:
 
 .. code-block:: text
 
@@ -77,15 +70,10 @@ donate today`_.
 Links
 -----
 
-*   Website: https://palletsprojects.com/p/click/
-*   Documentation: https://click.palletsprojects.com/
-*   License: `BSD <https://github.com/pallets/click/blob/master/LICENSE.rst>`_
-*   Releases: https://pypi.org/project/click/
-*   Code: https://github.com/pallets/click
-*   Issue tracker: https://github.com/pallets/click/issues
-*   Test status:
-
-    *   Linux, Mac: https://travis-ci.org/pallets/click
-    *   Windows: https://ci.appveyor.com/project/pallets/click
-
-*   Test coverage: https://codecov.io/gh/pallets/click
+-   Website: https://palletsprojects.com/p/click/
+-   Documentation: https://click.palletsprojects.com/
+-   Releases: https://pypi.org/project/click/
+-   Code: https://github.com/pallets/click
+-   Issue tracker: https://github.com/pallets/click/issues
+-   Test status: https://dev.azure.com/pallets/click/_build
+-   Official chat: https://discord.gg/t6rrQZH

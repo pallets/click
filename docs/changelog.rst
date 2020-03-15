@@ -1,3 +1,4 @@
-.. currentmodule:: click
+Changes
+=======
 
 .. include:: ../CHANGES.rst

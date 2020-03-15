@@ -6,24 +6,24 @@ CONTEXT_SETTINGS = dict(token_normalize_func=lambda x: x.lower())
 
 def test_option_normalization(runner):
     @click.command(context_settings=CONTEXT_SETTINGS)
-    @click.option('--foo')
-    @click.option('-x')
+    @click.option("--foo")
+    @click.option("-x")
     def cli(foo, x):
         click.echo(foo)
         click.echo(x)
 
-    result = runner.invoke(cli, ['--FOO', '42', '-X', 23])
-    assert result.output == '42\n23\n'
+    result = runner.invoke(cli, ["--FOO", "42", "-X", 23])
+    assert result.output == "42\n23\n"
 
 
 def test_choice_normalization(runner):
     @click.command(context_settings=CONTEXT_SETTINGS)
-    @click.option('--choice', type=click.Choice(['Foo', 'Bar']))
+    @click.option("--choice", type=click.Choice(["Foo", "Bar"]))
     def cli(choice):
-        click.echo('Foo')
+        click.echo(choice)
 
-    result = runner.invoke(cli, ['--CHOICE', 'FOO'])
-    assert result.output == 'Foo\n'
+    result = runner.invoke(cli, ["--CHOICE", "FOO"])
+    assert result.output == "Foo\n"
 
 
 def test_command_normalization(runner):
@@ -33,7 +33,7 @@ def test_command_normalization(runner):
 
     @cli.command()
     def foo():
-        click.echo('here!')
+        click.echo("here!")
 
-    result = runner.invoke(cli, ['FOO'])
-    assert result.output == 'here!\n'
+    result = runner.invoke(cli, ["FOO"])
+    assert result.output == "here!\n"

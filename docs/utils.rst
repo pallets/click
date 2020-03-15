@@ -33,7 +33,7 @@ suppressed by passing ``nl=False``::
 Last but not least :func:`echo` uses click's intelligent internal output
 streams to stdout and stderr which support unicode output on the Windows
 console.  This means for as long as you are using `click.echo` you can
-output unicode character (there are some limitations on the default font
+output unicode characters (there are some limitations on the default font
 with regards to which characters can be displayed).  This functionality is
 new in Click 6.0.
 
@@ -211,7 +211,7 @@ Click supports launching editors automatically through :func:`edit`.  This
 is very useful for asking users for multi-line input.  It will
 automatically open the user's defined editor or fall back to a sensible
 default.  If the user closes the editor without saving, the return value
-will be `None` otherwise the entered text.
+will be ``None``, otherwise the entered text.
 
 Example usage::
 
@@ -388,6 +388,16 @@ but you know the length, you can explicitly provide it::
                            length=number_of_users) as bar:
         for user in bar:
             modify_the_user(user)
+
+Note that :func:`progressbar` updates the bar *after* each iteration of the
+loop. So code like this will render correctly::
+
+    import time
+
+    with click.progressbar([1, 2, 3]) as bar:
+        for x in bar:
+            print('sleep({})...'.format(x))
+            time.sleep(x)
 
 Another useful feature is to associate a label with the progress bar which
 will be shown preceding the progress bar::
