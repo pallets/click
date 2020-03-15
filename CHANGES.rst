@@ -1,5 +1,10 @@
 .. currentmodule:: click
 
+Version 7.2
+-----------
+
+-   Include ``--help`` option in completion. :pr:`1504`
+
 Version 7.1.1
 -------------
 
