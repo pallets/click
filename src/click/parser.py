@@ -337,6 +337,8 @@ class OptionParser(object):
             # consumed.
             if explicit_value is not None:
                 state.rargs.insert(0, explicit_value)
+            elif option.const is not None:
+                state.rargs.insert(0, option.const)
 
             nargs = option.nargs
             if len(state.rargs) < nargs:
@@ -376,6 +378,9 @@ class OptionParser(object):
                 # next arg, and stop consuming characters of arg.
                 if i < len(arg):
                     state.rargs.insert(0, arg[i:])
+                    stop = True
+                elif option.const is not None:
+                    state.rargs.insert(0, option.const)
                     stop = True
 
                 nargs = option.nargs

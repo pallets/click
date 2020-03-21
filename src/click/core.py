@@ -1751,6 +1751,9 @@ class Option(Parameter):
     :param flag_value: which value should be used for this flag if it's
                        enabled.  This is set to a boolean automatically if
                        the option string contains a slash to mark two options.
+    :param flag_option: if this is set to `True`, then the flag can take an
+                        optional value. Use `flag_value` to define the default
+                        value.
     :param multiple: if this is set to `True` then the argument is accepted
                      multiple times and recorded.  This is similar to ``nargs``
                      in how it works but supports arbitrary number of
@@ -1775,6 +1778,7 @@ class Option(Parameter):
         hide_input=False,
         is_flag=None,
         flag_value=None,
+        flag_option=False,
         multiple=False,
         count=False,
         allow_from_autoenv=True,
@@ -1807,6 +1811,7 @@ class Option(Parameter):
                 is_flag = bool(self.secondary_opts)
         if is_flag and default_is_missing:
             self.default = False
+        self.flag_option = flag_option if is_flag and flag_value is not None else False
         if flag_value is None:
             flag_value = not self.default
         self.is_flag = is_flag
@@ -1919,6 +1924,10 @@ class Option(Parameter):
                 parser.add_option(
                     self.secondary_opts, action=action_const, const=False, **kwargs
                 )
+            elif self.flag_option:
+                parser.add_option(
+                    self.opts, action=action, const=self.flag_value, **kwargs
+                )
             else:
                 parser.add_option(
                     self.opts, action=action_const, const=self.flag_value, **kwargs
@@ -1933,6 +1942,11 @@ class Option(Parameter):
         any_prefix_is_slash = []
 
         def _write_opts(opts):
+            if self.flag_option:
+                opts = [
+                    "{}[{}{}]".format(o, "=" if len(o) > 2 else "", self.make_metavar())
+                    for o in opts
+                ]
             rv, any_slashes = join_options(opts)
             if any_slashes:
                 any_prefix_is_slash[:] = [True]

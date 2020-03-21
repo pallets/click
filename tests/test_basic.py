@@ -199,6 +199,49 @@ def test_boolean_option(runner):
         assert result.output == "{}\n".format(default)
 
 
+def test_flag_option(runner):
+    @click.command()
+    @click.option("-f", "--flag", flag_option=True, flag_value=0, type=int)
+    def cli(flag):
+        click.echo(flag)
+
+    result = runner.invoke(cli, ["-f"])
+    assert not result.exception, result.output
+    assert result.output == "0\n"
+    result = runner.invoke(cli, ["-f42"])
+    assert not result.exception
+    assert result.output == "42\n"
+    result = runner.invoke(cli, ["--flag"])
+    assert not result.exception
+    assert result.output == "0\n"
+    result = runner.invoke(cli, ["--flag=42"])
+    assert not result.exception
+    assert result.output == "42\n"
+    result = runner.invoke(cli, [])
+    assert not result.exception
+    assert result.output == "\n"
+
+    @click.command()
+    @click.option("-f", "--flag", flag_option=True, flag_value=0, type=int)
+    @click.argument("arg", default="arg")
+    def cli(flag, arg):
+        click.echo(flag)
+        click.echo(arg)
+
+    result = runner.invoke(cli, ["-f"])
+    assert not result.exception
+    assert result.output == "0\narg\n"
+    result = runner.invoke(cli, ["-f", "foo"])
+    assert not result.exception
+    assert result.output == "0\nfoo\n"
+    result = runner.invoke(cli, ["--flag", "bar"])
+    assert not result.exception
+    assert result.output == "0\nbar\n"
+    result = runner.invoke(cli, ["bar"])
+    assert not result.exception
+    assert result.output == "\nbar\n"
+
+
 def test_boolean_conversion(runner):
     for default in True, False:
 

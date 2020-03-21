@@ -339,6 +339,32 @@ And on the command line:
     invoke(info, args=['--lower'])
     invoke(info)
 
+Flag Options
+------------
+
+Alternatively, the flag options can be user provided by setting
+the ``flag_option=True`` parameter. The default value can be set via the
+``flag_value`` parameter.
+
+.. click:example::
+
+    @click.command()
+    @click.option('-S', '--gpg-sign',
+                  flag_option=True, flag_value="default GPG key",
+                  help="Sign the commit with GPG.", metavar='keyid')
+    def commit(gpg_sign):
+        if gpg_sign:
+            click.echo("sign with " + gpg_sign)
+        else:
+            click.echo("do not sign commit")
+
+.. click:run::
+
+    invoke(commit, args=['-S'])
+    invoke(commit, args=['--gpg-sign=other_key'])
+    invoke(commit)
+    invoke(commit, args=['--help'])
+
 .. _choice-opts:
 
 Choice Options
