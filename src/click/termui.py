@@ -16,7 +16,6 @@ from .exceptions import UsageError
 from .globals import resolve_color_default
 from .types import Choice
 from .types import convert_type
-from .types import Path
 from .utils import echo
 from .utils import LazyFile
 
@@ -146,11 +145,8 @@ def prompt(
             if value:
                 break
             elif default is not None:
-                if isinstance(value_proc, Path):
-                    # validate Path default value(exists, dir_okay etc.)
-                    value = default
-                    break
-                return default
+                value = default
+                break
         try:
             result = value_proc(value)
         except UsageError as e:
