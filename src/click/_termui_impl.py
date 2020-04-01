@@ -533,6 +533,7 @@ def open_url(url, wait=False, locate=False):
 
     def _unquote_file(url):
         import urllib
+
         if url.startswith("file://"):
             url = urllib.unquote(url[7:])
         return url
