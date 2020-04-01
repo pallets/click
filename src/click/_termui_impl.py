@@ -532,10 +532,8 @@ def open_url(url, wait=False, locate=False):
     import subprocess
 
     def _unquote_file(url):
-        try:
-            import urllib
-        except ImportError:
-            import urllib
+        import urllib
+
         if url.startswith("file://"):
             url = urllib.unquote(url[7:])
         return url
