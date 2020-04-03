@@ -606,9 +606,15 @@ class Tuple(CompositeParamType):
         return len(self.types)
 
     def convert(self, value, param, ctx):
+        # Hotfix for prompt input 
+        if isinstance(value, str):
+            value = value.strip().split(',')
+            if len(value) != len(self.types):
+                value = value.strip().split(' ')
+            
         if len(value) != len(self.types):
             raise TypeError('It would appear that nargs is set to conflict '
-                            'with the composite type arity.')
+                            'with the composite type arity: len({}) != len({})'.format(value, self.types))
         return tuple(ty(x, param, ctx) for ty, x in zip(self.types, value))
 
 
