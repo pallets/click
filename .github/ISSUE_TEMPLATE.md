@@ -1,5 +1,5 @@
 **This issue tracker is a tool to address bugs in Click itself.
-Please use the #pocoo IRC channel on freenode, the Discord server or 
+Please use the #pocoo IRC channel on freenode, the Discord server or
 Stack Overflow for general questions about using Flask or issues
 not related to Click.**
 

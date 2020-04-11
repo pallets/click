@@ -17,10 +17,19 @@ Unreleased
 .. _#1148: https://github.com/pallets/click/pull/1148
 
 
+Version 7.1.1
+-------------
+
+Released 2020-03-09
+
+-   Fix ``ClickException`` output going to stdout instead of stderr.
+    :issue:`1495`
+
+
 Version 7.1
 -----------
 
-Unreleased
+Released 2020-03-09
 
 -   Fix PyPI package name, "click" is lowercase again.
 -   Fix link in ``unicode_literals`` error message. :pr:`1151`
@@ -75,6 +84,18 @@ Unreleased
 -   Arguments to system calls such as the executable path passed to
     ``click.edit`` can contains spaces. :pr:`1470`
 -   Add ZSH completion autoloading and error handling. :issue:`1348`
+-   Add a repr to ``Command``, ``Group``, ``Option``, and ``Argument``,
+    showing the name for friendlier debugging. :issue:`1267`
+-   Completion doesn't consider option names if a value starts with
+    ``-`` after the ``--`` separator. :issue:`1247`
+-   ZSH completion escapes special characters in values. :pr:`1418`
+-   Add completion support for Fish shell. :pr:`1423`
+-   Decoding bytes option values falls back to UTF-8 in more cases.
+    :pr:`1468`
+-   Make the warning about old 2-arg parameter callbacks a deprecation
+    warning, to be removed in 8.0. This has been a warning since Click
+    2.0. :pr:`1492`
+
 
 Version 7.0
 -----------
