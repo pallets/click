@@ -383,7 +383,7 @@ Choices should be unique after considering the effects of
 ``case_sensitive`` and any specified token normalization function.
 
 .. versionchanged:: 7.1
-    The resulting value from an option will always be on the of the
+    The resulting value from an option will always be one of the
     originally passed choices regardless of ``case_sensitive``.
 
 .. _option-prompting:
