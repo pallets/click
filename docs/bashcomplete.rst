@@ -147,7 +147,7 @@ For Fish:
 
 .. code-block:: text
 
-    _FOO_BAR_COMPLETE=source_zsh foo-bar > foo-bar-complete.sh
+    _FOO_BAR_COMPLETE=source_fish foo-bar > foo-bar-complete.sh
 
 In ``.bashrc`` or ``.zshrc``, source the script instead of the ``eval``
 command:
@@ -156,8 +156,8 @@ command:
 
     . /path/to/foo-bar-complete.sh
 
-For Fish, add the file to the completions directory:
+For Fish, add the file to the `completions` directory:
 
 .. code-block:: text
 
-    _FOO_BAR_COMPLETE=source_fish foo-bar > ~/.config/fish/completions/foo-bar-complete.fish
+    cp /path/to/foo-bar-complete.sh ~/.config/fish/completions/
