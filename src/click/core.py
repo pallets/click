@@ -74,31 +74,8 @@ def _bashcomplete(cmd, prog_name, complete_var=None):
 
 
 def _check_multicommand(base_command, cmd_name, cmd, register=False):
-    if not base_command.chain or not isinstance(cmd, MultiCommand):
-        return
-    if register:
-        hint = (
-            "It is not possible to add multi commands as children to"
-            " another multi command that is in chain mode."
-        )
-    else:
-        hint = (
-            "Found a multi command as subcommand to a multi command"
-            " that is in chain mode. This is not supported."
-        )
-    raise RuntimeError(
-        "{}. Command '{}' is set to chain and '{}' was added as"
-        " subcommand but it in itself is a multi command. ('{}' is a {}"
-        " within a chained {} named '{}').".format(
-            hint,
-            base_command.name,
-            cmd_name,
-            cmd_name,
-            cmd.__class__.__name__,
-            base_command.__class__.__name__,
-            base_command.name,
-        )
-    )
+    """This check isn't neeed if there is no chain. """
+    return
 
 
 def batch(iterable, batch_size):
@@ -1149,10 +1126,6 @@ class MultiCommand(Command):
                             passed.
     :param subcommand_metavar: the string that is used in the documentation
                                to indicate the subcommand place.
-    :param chain: if this is set to `True` chaining of multiple subcommands
-                  is enabled.  This restricts the form of commands in that
-                  they cannot have optional arguments but it allows
-                  multiple commands to be chained together.
     :param result_callback: the result callback to attach to this multi
                             command.
     """
@@ -1166,7 +1139,6 @@ class MultiCommand(Command):
         invoke_without_command=False,
         no_args_is_help=None,
         subcommand_metavar=None,
-        chain=False,
         result_callback=None,
         **attrs
     ):
@@ -1176,23 +1148,11 @@ class MultiCommand(Command):
         self.no_args_is_help = no_args_is_help
         self.invoke_without_command = invoke_without_command
         if subcommand_metavar is None:
-            if chain:
-                subcommand_metavar = SUBCOMMANDS_METAVAR
-            else:
-                subcommand_metavar = SUBCOMMAND_METAVAR
+            subcommand_metavar = SUBCOMMAND_METAVAR
         self.subcommand_metavar = subcommand_metavar
-        self.chain = chain
         #: The result callback that is stored.  This can be set or
         #: overridden with the :func:`resultcallback` decorator.
         self.result_callback = result_callback
-
-        if self.chain:
-            for param in self.params:
-                if isinstance(param, Argument) and not param.required:
-                    raise RuntimeError(
-                        "Multi commands in chain mode cannot have"
-                        " optional arguments."
-                    )
 
     def collect_usage_pieces(self, ctx):
         rv = Command.collect_usage_pieces(self, ctx)
@@ -1277,10 +1237,7 @@ class MultiCommand(Command):
             ctx.exit()
 
         rest = Command.parse_args(self, ctx, args)
-        if self.chain:
-            ctx.protected_args = rest
-            ctx.args = []
-        elif rest:
+        if rest:
             ctx.protected_args, ctx.args = rest[:1], rest[1:]
 
         return ctx.args
@@ -1299,11 +1256,7 @@ class MultiCommand(Command):
             # return value of the result processor invoked with an empty
             # list (which means that no subcommand actually was executed).
             if self.invoke_without_command:
-                if not self.chain:
-                    return Command.invoke(self, ctx)
-                with ctx:
-                    Command.invoke(self, ctx)
-                    return _process_result([])
+                return Command.invoke(self, ctx)
             ctx.fail("Missing command.")
 
         # Fetch args back out
@@ -1314,47 +1267,15 @@ class MultiCommand(Command):
         # If we're not in chain mode, we only allow the invocation of a
         # single command but we also inform the current context about the
         # name of the command to invoke.
-        if not self.chain:
-            # Make sure the context is entered so we do not clean up
-            # resources until the result processor has worked.
-            with ctx:
-                cmd_name, cmd, args = self.resolve_command(ctx, args)
-                ctx.invoked_subcommand = cmd_name
-                Command.invoke(self, ctx)
-                sub_ctx = cmd.make_context(cmd_name, args, parent=ctx)
-                with sub_ctx:
-                    return _process_result(sub_ctx.command.invoke(sub_ctx))
-
-        # In chain mode we create the contexts step by step, but after the
-        # base command has been invoked.  Because at that point we do not
-        # know the subcommands yet, the invoked subcommand attribute is
-        # set to ``*`` to inform the command that subcommands are executed
-        # but nothing else.
+        # Make sure the context is entered so we do not clean up
+        # resources until the result processor has worked.
         with ctx:
-            ctx.invoked_subcommand = "*" if args else None
+            cmd_name, cmd, args = self.resolve_command(ctx, args)
+            ctx.invoked_subcommand = cmd_name
             Command.invoke(self, ctx)
-
-            # Otherwise we make every single context and invoke them in a
-            # chain.  In that case the return value to the result processor
-            # is the list of all invoked subcommand's results.
-            contexts = []
-            while args:
-                cmd_name, cmd, args = self.resolve_command(ctx, args)
-                sub_ctx = cmd.make_context(
-                    cmd_name,
-                    args,
-                    parent=ctx,
-                    allow_extra_args=True,
-                    allow_interspersed_args=False,
-                )
-                contexts.append(sub_ctx)
-                args, sub_ctx.args = sub_ctx.args, []
-
-            rv = []
-            for sub_ctx in contexts:
-                with sub_ctx:
-                    rv.append(sub_ctx.command.invoke(sub_ctx))
-            return _process_result(rv)
+            sub_ctx = cmd.make_context(cmd_name, args, parent=ctx)
+            with sub_ctx:
+                return _process_result(sub_ctx.command.invoke(sub_ctx))
 
     def resolve_command(self, ctx, args):
         cmd_name = make_str(args[0])
@@ -1474,8 +1395,6 @@ class CommandCollection(MultiCommand):
         for source in self.sources:
             rv = source.get_command(ctx, cmd_name)
             if rv is not None:
-                if self.chain:
-                    _check_multicommand(self, cmd_name, rv)
                 return rv
 
     def list_commands(self, ctx):

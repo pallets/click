@@ -118,31 +118,12 @@ def resolve_ctx(cli, prog_name, args):
     args = ctx.protected_args + ctx.args
     while args:
         if isinstance(ctx.command, MultiCommand):
-            if not ctx.command.chain:
-                cmd_name, cmd, args = ctx.command.resolve_command(ctx, args)
-                if cmd is None:
-                    return ctx
-                ctx = cmd.make_context(
-                    cmd_name, args, parent=ctx, resilient_parsing=True
-                )
-                args = ctx.protected_args + ctx.args
-            else:
-                # Walk chained subcommand contexts saving the last one.
-                while args:
-                    cmd_name, cmd, args = ctx.command.resolve_command(ctx, args)
-                    if cmd is None:
-                        return ctx
-                    sub_ctx = cmd.make_context(
-                        cmd_name,
-                        args,
-                        parent=ctx,
-                        allow_extra_args=True,
-                        allow_interspersed_args=False,
-                        resilient_parsing=True,
-                    )
-                    args = sub_ctx.args
-                ctx = sub_ctx
-                args = sub_ctx.protected_args + sub_ctx.args
+            cmd_name, cmd, args = ctx.command.resolve_command(ctx, args)
+            if cmd is None:
+                return ctx
+            ctx = cmd.make_context(cmd_name, args, parent=ctx, resilient_parsing=True)
+            args = ctx.protected_args + ctx.args
+
         else:
             break
     return ctx
@@ -253,20 +234,6 @@ def add_subcommand_completions(ctx, incomplete, completions_out):
                 for c in get_visible_commands_starting_with(ctx, incomplete)
             ]
         )
-
-    # Walk up the context list and add any other completion
-    # possibilities from chained commands
-    while ctx.parent is not None:
-        ctx = ctx.parent
-        if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
-            remaining_commands = [
-                c
-                for c in get_visible_commands_starting_with(ctx, incomplete)
-                if c.name not in ctx.protected_args
-            ]
-            completions_out.extend(
-                [(c.name, c.get_short_help_str()) for c in remaining_commands]
-            )
 
 
 def get_choices(cli, prog_name, args, incomplete):
