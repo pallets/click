@@ -518,3 +518,38 @@ def test_args_with_double_dash_complete(args, part, expect):
         pass
 
     assert choices_without_help(cli, args, part) == expect
+
+
+def test_subcommand_name():
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()  # use autodetected name
+    def asub():
+        pass
+
+    cli.add_command(asub, name="bsub")  # use manual name override
+
+    @click.command()  # autodetect name
+    def csub():
+        pass
+
+    cli.add_command(csub)  # use autodetected name
+    cli.add_command(csub, name="dsub")  # use manual name override
+
+    @cli.command(name="esub")  # manual name
+    def zsub():
+        pass
+
+    cli.add_command(zsub)  # use manual name
+    cli.add_command(zsub, name="fsub")  # use manual name override
+
+    assert choices_with_help(cli, [""], "") == [
+        ("asub", ""),
+        ("bsub", ""),
+        ("csub", ""),
+        ("dsub", ""),
+        ("esub", ""),
+        ("fsub", ""),
+    ]
