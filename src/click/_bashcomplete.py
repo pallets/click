@@ -233,11 +233,11 @@ def get_visible_commands_starting_with(ctx, starts_with):
     :starts_with: string that visible commands must start with.
     :return: all visible (not hidden) commands that start with starts_with.
     """
-    for c in ctx.command.list_commands(ctx):
-        if c.startswith(starts_with):
-            command = ctx.command.get_command(ctx, c)
+    for name in ctx.command.list_commands(ctx):
+        if name.startswith(starts_with):
+            command = ctx.command.get_command(ctx, name)
             if not command.hidden:
-                yield command
+                yield name, command
 
 
 def add_subcommand_completions(ctx, incomplete, completions_out):
@@ -245,8 +245,8 @@ def add_subcommand_completions(ctx, incomplete, completions_out):
     if isinstance(ctx.command, MultiCommand):
         completions_out.extend(
             [
-                (c.name, c.get_short_help_str())
-                for c in get_visible_commands_starting_with(ctx, incomplete)
+                (name, command.get_short_help_str())
+                for name, command in get_visible_commands_starting_with(ctx, incomplete)
             ]
         )
 
@@ -256,12 +256,15 @@ def add_subcommand_completions(ctx, incomplete, completions_out):
         ctx = ctx.parent
         if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
             remaining_commands = [
-                c
-                for c in get_visible_commands_starting_with(ctx, incomplete)
-                if c.name not in ctx.protected_args
+                (name, command)
+                for name, command in get_visible_commands_starting_with(ctx, incomplete)
+                if name not in ctx.protected_args
             ]
             completions_out.extend(
-                [(c.name, c.get_short_help_str()) for c in remaining_commands]
+                [
+                    (name, command.get_short_help_str())
+                    for name, command in remaining_commands
+                ]
             )
 
 
