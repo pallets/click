@@ -265,6 +265,10 @@ def version_option(version=None, *param_decls, **attrs):
     if version is None:
         if hasattr(sys, "_getframe"):
             module = sys._getframe(1).f_globals.get("__name__")
+            if module == "__main__":
+                package = sys._getframe(1).f_globals.get("__package__")
+                if package:
+                    module = ".".join((package, module))
         else:
             module = ""
 
