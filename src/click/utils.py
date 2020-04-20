@@ -265,11 +265,7 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
 
 
 def get_binary_stream(name):
-    """Returns a system stream for byte processing.  This essentially
-    returns the stream from the sys module with the given name but it
-    solves some compatibility issues between different Python versions.
-    Primarily this function is necessary for getting binary streams on
-    Python 3.
+    """Returns a system stream for byte processing.
 
     :param name: the name of the stream to open.  Valid names are ``'stdin'``,
                  ``'stdout'`` and ``'stderr'``
@@ -283,8 +279,8 @@ def get_binary_stream(name):
 def get_text_stream(name, encoding=None, errors="strict"):
     """Returns a system stream for text processing.  This usually returns
     a wrapped stream around a binary stream returned from
-    :func:`get_binary_stream` but it also can take shortcuts on Python 3
-    for already correctly configured streams.
+    :func:`get_binary_stream` but it also can take shortcuts for already
+    correctly configured streams.
 
     :param name: the name of the stream to open.  Valid names are ``'stdin'``,
                  ``'stdout'`` and ``'stderr'``

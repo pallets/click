@@ -2,8 +2,8 @@ import codecs
 import os
 
 
-def _verify_python3_env():
-    """Ensures that the environment is good for unicode on Python 3."""
+def _verify_python_env():
+    """Ensures that the environment is good for Unicode."""
     try:
         import locale
 
@@ -75,8 +75,8 @@ def _verify_python3_env():
             )
 
     raise RuntimeError(
-        "Click will abort further execution because Python 3 was"
+        "Click will abort further execution because Python was"
         " configured to use ASCII as encoding for the environment."
-        " Consult https://click.palletsprojects.com/python3/ for"
-        f" mitigation steps.{extra}"
+        " Consult https://click.palletsprojects.com/unicode-support/"
+        f" for mitigation steps.{extra}"
     )

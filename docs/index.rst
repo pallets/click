@@ -81,7 +81,7 @@ usage patterns.
    utils
    bashcomplete
    exceptions
-   python3
+   unicode-support
    wincmd
 
 API Reference
