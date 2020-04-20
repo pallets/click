@@ -105,24 +105,6 @@ def batch(iterable, batch_size):
     return list(zip(*repeat(iter(iterable), batch_size)))
 
 
-def invoke_param_callback(callback, ctx, param, value):
-    code = getattr(callback, "__code__", None)
-    args = getattr(code, "co_argcount", 3)
-
-    if args < 3:
-        from warnings import warn
-
-        warn(
-            "Parameter callbacks take 3 args, (ctx, param, value). The"
-            " 2-arg style is deprecated and will be removed in 8.0.".format(callback),
-            DeprecationWarning,
-            stacklevel=3,
-        )
-        return callback(ctx, value)
-
-    return callback(ctx, param, value)
-
-
 @contextmanager
 def augment_usage_errors(ctx, param=None):
     """Context manager that attaches extra information to exceptions."""
@@ -1702,7 +1684,7 @@ class Parameter(object):
                 value = None
             if self.callback is not None:
                 try:
-                    value = invoke_param_callback(self.callback, ctx, self, value)
+                    value = self.callback(ctx, self, value)
                 except Exception:
                     if not ctx.resilient_parsing:
                         raise
