@@ -386,8 +386,10 @@ Detecting the Source of a Parameter
 
 In some situations it's helpful to understand whether or not an option
 or parameter came from the command line, the environment, the default
-value, or the default_map. The :meth:`Context.get_parameter_source`
-method can be used to find this out.
+value, or :attr:`Context.default_map`. The
+:meth:`Context.get_parameter_source` method can be used to find this
+out. It will return a member of the :class:`~click.core.ParameterSource`
+enum.
 
 .. click:example::
 
@@ -396,7 +398,7 @@ method can be used to find this out.
     @click.pass_context
     def cli(ctx, port):
         source = ctx.get_parameter_source("port")
-        click.echo(f"Port came from {source}")
+        click.echo(f"Port came from {source.name}")
 
 .. click:run::
 

@@ -1,3 +1,4 @@
+import enum
 import errno
 import inspect
 import os
@@ -132,36 +133,25 @@ def iter_params_for_processing(invocation_order, declaration_order):
     return sorted(declaration_order, key=sort_key)
 
 
-class ParameterSource:
-    """This is an enum that indicates the source of a command line parameter.
+class ParameterSource(enum.Enum):
+    """This is an :class:`~enum.Enum` that indicates the source of a
+    parameter's value.
 
-    The enum has one of the following values: COMMANDLINE,
-    ENVIRONMENT, DEFAULT, DEFAULT_MAP.  The DEFAULT indicates that the
-    default value in the decorator was used.  This class should be
-    converted to an enum when Python 2 support is dropped.
+    Use :meth:`click.Context.get_parameter_source` to get the
+    source for a parameter by name.
+
+    .. versionchanged:: 8.0
+        Use :class:`~enum.Enum` and drop the ``validate`` method.
     """
 
-    COMMANDLINE = "COMMANDLINE"
-    ENVIRONMENT = "ENVIRONMENT"
-    DEFAULT = "DEFAULT"
-    DEFAULT_MAP = "DEFAULT_MAP"
-
-    VALUES = {COMMANDLINE, ENVIRONMENT, DEFAULT, DEFAULT_MAP}
-
-    @classmethod
-    def validate(cls, value):
-        """Validate that the specified value is a valid enum.
-
-        This method will raise a ValueError if the value is
-        not a valid enum.
-
-        :param value: the string value to verify
-        """
-        if value not in cls.VALUES:
-            raise ValueError(
-                f"Invalid ParameterSource value: {value!r}. Valid"
-                f" values are: {','.join(cls.VALUES)}"
-            )
+    COMMANDLINE = enum.auto()
+    """The value was provided by the command line args."""
+    ENVIRONMENT = enum.auto()
+    """The value was provided with an environment variable."""
+    DEFAULT = enum.auto()
+    """Used the default specified by the parameter."""
+    DEFAULT_MAP = enum.auto()
+    """Used a default provided by :attr:`Context.default_map`."""
 
 
 class Context:
@@ -417,7 +407,7 @@ class Context:
 
         self._close_callbacks = []
         self._depth = 0
-        self._source_by_paramname = {}
+        self._parameter_source = {}
         self._exit_stack = ExitStack()
 
     def to_info_dict(self):
@@ -728,33 +718,27 @@ class Context:
         return self.invoke(cmd, **kwargs)
 
     def set_parameter_source(self, name, source):
-        """Set the source of a parameter.
+        """Set the source of a parameter. This indicates the location
+        from which the value of the parameter was obtained.
 
-        This indicates the location from which the value of the
-        parameter was obtained.
-
-        :param name: the name of the command line parameter
-        :param source: the source of the command line parameter, which
-                       should be a valid ParameterSource value
+        :param name: The name of the parameter.
+        :param source: A member of :class:`~click.core.ParameterSource`.
         """
-        ParameterSource.validate(source)
-        self._source_by_paramname[name] = source
+        self._parameter_source[name] = source
 
     def get_parameter_source(self, name):
-        """Get the source of a parameter.
+        """Get the source of a parameter. This indicates the location
+        from which the value of the parameter was obtained.
 
-        This indicates the location from which the value of the
-        parameter was obtained.  This can be useful for determining
-        when a user specified an option on the command line that is
-        the same as the default.  In that case, the source would be
-        ParameterSource.COMMANDLINE, even though the value of the
-        parameter was equivalent to the default.
+        This can be useful for determining when a user specified a value
+        on the command line that is the same as the default value. It
+        will be :attr:`~click.core.ParameterSource.DEFAULT` only if the
+        value was actually taken from the default.
 
-        :param name: the name of the command line parameter
-        :returns: the source
+        :param name: The name of the parameter.
         :rtype: ParameterSource
         """
-        return self._source_by_paramname[name]
+        return self._parameter_source[name]
 
 
 class BaseCommand:
@@ -1933,14 +1917,18 @@ class Parameter:
     def consume_value(self, ctx, opts):
         value = opts.get(self.name)
         source = ParameterSource.COMMANDLINE
+
         if value is None:
             value = self.value_from_envvar(ctx)
             source = ParameterSource.ENVIRONMENT
+
         if value is None:
             value = ctx.lookup_default(self.name)
             source = ParameterSource.DEFAULT_MAP
+
         if value is not None:
             ctx.set_parameter_source(self.name, source)
+
         return value
 
     def type_cast_value(self, ctx, value):

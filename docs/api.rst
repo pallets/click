@@ -108,6 +108,11 @@ Context
 
 .. autofunction:: get_current_context
 
+.. autoclass:: click.core.ParameterSource
+    :members:
+    :member-order: bysource
+
+
 Types
 -----
 

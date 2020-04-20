@@ -110,6 +110,7 @@ Unreleased
 -   Extra context settings (``obj=...``, etc.) are passed on to the
     completion system. :issue:`942`
 -   Include ``--help`` option in completion. :pr:`1504`
+-   ``ParameterSource`` is an ``enum.Enum`` subclass. :issue:`1530`
 
 
 Version 7.1.2
