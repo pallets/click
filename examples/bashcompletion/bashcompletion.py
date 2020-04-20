@@ -19,7 +19,7 @@ def get_env_vars(ctx, args, incomplete):
 @click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
 def cmd1(envvar):
     click.echo(f"Environment variable: {envvar}")
-    click.echo("Value: {}".format(os.environ[envvar]))
+    click.echo(f"Value: {os.environ[envvar]}")
 
 
 @click.group(help="A group that holds a subcommand")

@@ -33,5 +33,5 @@ class TextWrapper(textwrap.TextWrapper):
             indent = self.initial_indent
             if idx > 0:
                 indent = self.subsequent_indent
-            rv.append(indent + line)
+            rv.append(f"{indent}{line}")
         return "\n".join(rv)

@@ -85,7 +85,7 @@ simply pass in `required=True` as an argument to the decorator.
     @click.option('--from', '-f', 'from_')
     @click.option('--to', '-t')
     def reserved_param_name(from_, to):
-        click.echo('from %s to %s' % (from_, to))
+        click.echo(f"from {from_} to {to}")
 
 And on the command line:
 
@@ -121,7 +121,8 @@ the ``nargs`` parameter.  The values are then stored as a tuple.
     @click.command()
     @click.option('--pos', nargs=2, type=float)
     def findme(pos):
-        click.echo('%s / %s' % pos)
+        a, b = pos
+        click.echo(f"{a} / {b}")
 
 And on the command line:
 
@@ -146,7 +147,8 @@ the tuple.  For this you can directly specify a tuple as type:
     @click.command()
     @click.option('--item', type=(str, int))
     def putitem(item):
-        click.echo('name=%s id=%d' % item)
+        name, id = item
+        click.echo(f"name={name} id={id}")
 
 And on the command line:
 
@@ -163,7 +165,8 @@ used.  The above example is thus equivalent to this:
     @click.command()
     @click.option('--item', nargs=2, type=click.Tuple([str, int]))
     def putitem(item):
-        click.echo('name=%s id=%d' % item)
+        name, id = item
+        click.echo(f"name={name} id={id}")
 
 .. _multiple-options:
 
@@ -212,7 +215,7 @@ for instance:
     @click.command()
     @click.option('-v', '--verbose', count=True)
     def log(verbose):
-        click.echo('Verbosity: %s' % verbose)
+        click.echo(f"Verbosity: {verbose}")
 
 And on the command line:
 
@@ -281,7 +284,7 @@ can alternatively split the parameters through ``;`` instead:
     @click.command()
     @click.option('/debug;/no-debug')
     def log(debug):
-        click.echo('debug=%s' % debug)
+        click.echo(f"debug={debug}")
 
     if __name__ == '__main__':
         log()
@@ -402,7 +405,7 @@ Example:
     @click.command()
     @click.option('--name', prompt=True)
     def hello(name):
-        click.echo('Hello %s!' % name)
+        click.echo(f"Hello {name}!")
 
 And what it looks like:
 
@@ -419,7 +422,7 @@ a different one:
     @click.command()
     @click.option('--name', prompt='Your name please')
     def hello(name):
-        click.echo('Hello %s!' % name)
+        click.echo(f"Hello {name}!")
 
 What it looks like:
 
@@ -443,7 +446,7 @@ useful for password input:
     @click.option('--password', prompt=True, hide_input=True,
                   confirmation_prompt=True)
     def encrypt(password):
-        click.echo('Encrypting password to %s' % password.encode('rot13'))
+        click.echo(f"Encrypting password to {password.encode('rot13')}")
 
 What it looks like:
 
@@ -459,7 +462,7 @@ replaced with the :func:`password_option` decorator:
     @click.command()
     @click.password_option()
     def encrypt(password):
-        click.echo('Encrypting password to %s' % password.encode('rot13'))
+        click.echo(f"Encrypting password to {password.encode('rot13')}")
 
 Dynamic Defaults for Prompts
 ----------------------------
@@ -625,7 +628,7 @@ Example usage:
     @click.command()
     @click.option('--username')
     def greet(username):
-        click.echo('Hello %s!' % username)
+        click.echo(f'Hello {username}!')
 
     if __name__ == '__main__':
         greet(auto_envvar_prefix='GREETER')
@@ -650,12 +653,12 @@ Example:
    @click.group()
    @click.option('--debug/--no-debug')
    def cli(debug):
-       click.echo('Debug mode is %s' % ('on' if debug else 'off'))
+       click.echo(f"Debug mode is {'on' if debug else 'off'}")
 
    @cli.command()
    @click.option('--username')
    def greet(username):
-       click.echo('Hello %s!' % username)
+       click.echo(f"Hello {username}!")
 
    if __name__ == '__main__':
        cli(auto_envvar_prefix='GREETER')
@@ -677,7 +680,7 @@ Example usage:
     @click.command()
     @click.option('--username', envvar='USERNAME')
     def greet(username):
-        click.echo('Hello %s!' % username)
+       click.echo(f"Hello {username}!")
 
     if __name__ == '__main__':
         greet()
@@ -726,7 +729,7 @@ And from the command line:
 .. click:run::
 
     import os
-    invoke(perform, env={'PATHS': './foo/bar%s./test' % os.path.pathsep})
+    invoke(perform, env={"PATHS": f"./foo/bar{os.path.pathsep}./test"})
 
 Other Prefix Characters
 -----------------------
@@ -742,7 +745,7 @@ POSIX semantics.  However in certain situations this can be useful:
     @click.command()
     @click.option('+w/-w')
     def chmod(w):
-        click.echo('writable=%s' % w)
+        click.echo(f"writable={w}")
 
     if __name__ == '__main__':
         chmod()
@@ -762,7 +765,7 @@ boolean flag you need to separate it with ``;`` instead of ``/``:
     @click.command()
     @click.option('/debug;/no-debug')
     def log(debug):
-        click.echo('debug=%s' % debug)
+        click.echo(f"debug={debug}")
 
     if __name__ == '__main__':
         log()
@@ -834,7 +837,8 @@ Example:
     @click.command()
     @click.option('--rolls', callback=validate_rolls, default='1d6')
     def roll(rolls):
-        click.echo('Rolling a %d-sided dice %d time(s)' % rolls)
+        sides, times = rolls
+        click.echo(f"Rolling a {sides}-sided dice {times} time(s)")
 
     if __name__ == '__main__':
         roll()

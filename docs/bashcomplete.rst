@@ -50,8 +50,8 @@ suggestions:
     @click.command()
     @click.argument("envvar", type=click.STRING, autocompletion=get_env_vars)
     def cmd1(envvar):
-        click.echo('Environment variable: %s' % envvar)
-        click.echo('Value: %s' % os.environ[envvar])
+        click.echo(f"Environment variable: {envvar}")
+        click.echo(f"Value: {os.environ[envvar]}")
 
 
 Completion help strings
@@ -79,7 +79,7 @@ suggestions with help strings:
     @click.command()
     @click.argument("color", type=click.STRING, autocompletion=get_colors)
     def cmd1(color):
-        click.echo('Chosen color is %s' % color)
+        click.echo(f"Chosen color is {color}")
 
 
 Activation

@@ -10,7 +10,7 @@ def test_nargs_star(runner):
     @click.argument("src", nargs=-1)
     @click.argument("dst")
     def copy(src, dst):
-        click.echo("src={}".format("|".join(src)))
+        click.echo(f"src={'|'.join(src)}")
         click.echo(f"dst={dst}")
 
     result = runner.invoke(copy, ["foo.txt", "bar.txt", "dir"])
@@ -33,7 +33,8 @@ def test_nargs_tup(runner):
     @click.argument("point", nargs=2, type=click.INT)
     def copy(name, point):
         click.echo(f"name={name}")
-        click.echo("point={0[0]}/{0[1]}".format(point))
+        x, y = point
+        click.echo(f"point={x}/{y}")
 
     result = runner.invoke(copy, ["peter", "1", "2"])
     assert not result.exception
@@ -53,7 +54,8 @@ def test_nargs_tup_composite(runner):
         @click.command()
         @click.argument("item", **opts)
         def copy(item):
-            click.echo("name={0[0]} id={0[1]:d}".format(item))
+            name, id = item
+            click.echo(f"name={name} id={id:d}")
 
         result = runner.invoke(copy, ["peter", "1"])
         assert not result.exception
@@ -187,7 +189,7 @@ def test_empty_nargs(runner):
     @click.command()
     @click.argument("arg", nargs=-1)
     def cmd(arg):
-        click.echo("arg:{}".format("|".join(arg)))
+        click.echo(f"arg:{'|'.join(arg)}")
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 0
@@ -196,7 +198,7 @@ def test_empty_nargs(runner):
     @click.command()
     @click.argument("arg", nargs=-1, required=True)
     def cmd2(arg):
-        click.echo("arg:{}".format("|".join(arg)))
+        click.echo(f"arg:{'|'.join(arg)}")
 
     result = runner.invoke(cmd2, [])
     assert result.exit_code == 2

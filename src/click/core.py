@@ -36,12 +36,12 @@ SUBCOMMAND_METAVAR = "COMMAND [ARGS]..."
 SUBCOMMANDS_METAVAR = "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."
 
 DEPRECATED_HELP_NOTICE = " (DEPRECATED)"
-DEPRECATED_INVOKE_NOTICE = "DeprecationWarning: The command %(name)s is deprecated."
+DEPRECATED_INVOKE_NOTICE = "DeprecationWarning: The command {name} is deprecated."
 
 
 def _maybe_show_deprecated_notice(cmd):
     if cmd.deprecated:
-        echo(style(DEPRECATED_INVOKE_NOTICE % {"name": cmd.name}, fg="red"), err=True)
+        echo(style(DEPRECATED_INVOKE_NOTICE.format(name=cmd.name), fg="red"), err=True)
 
 
 def fast_exit(code):
@@ -56,7 +56,7 @@ def fast_exit(code):
 def _bashcomplete(cmd, prog_name, complete_var=None):
     """Internal handler for the bash completion support."""
     if complete_var is None:
-        complete_var = "_{}_COMPLETE".format(prog_name.replace("-", "_").upper())
+        complete_var = f"_{prog_name}_COMPLETE".replace("-", "_").upper()
     complete_instr = os.environ.get(complete_var)
     if not complete_instr:
         return
@@ -81,17 +81,11 @@ def _check_multicommand(base_command, cmd_name, cmd, register=False):
             " that is in chain mode. This is not supported."
         )
     raise RuntimeError(
-        "{}. Command '{}' is set to chain and '{}' was added as"
-        " subcommand but it in itself is a multi command. ('{}' is a {}"
-        " within a chained {} named '{}').".format(
-            hint,
-            base_command.name,
-            cmd_name,
-            cmd_name,
-            cmd.__class__.__name__,
-            base_command.__class__.__name__,
-            base_command.name,
-        )
+        f"{hint}. Command {base_command.name!r} is set to chain and"
+        f" {cmd_name!r} was added as a subcommand but it in itself is a"
+        f" multi command. ({cmd_name!r} is a {type(cmd).__name__}"
+        f" within a chained {type(base_command).__name__} named"
+        f" {base_command.name!r})."
     )
 
 
@@ -159,8 +153,8 @@ class ParameterSource:
         """
         if value not in cls.VALUES:
             raise ValueError(
-                "Invalid ParameterSource value: '{}'. Valid "
-                "values are: {}".format(value, ",".join(cls.VALUES))
+                f"Invalid ParameterSource value: {value!r}. Valid"
+                f" values are: {','.join(cls.VALUES)}"
             )
 
 
@@ -381,8 +375,8 @@ class Context:
                 and parent.auto_envvar_prefix is not None
                 and self.info_name is not None
             ):
-                auto_envvar_prefix = "{}_{}".format(
-                    parent.auto_envvar_prefix, self.info_name.upper()
+                auto_envvar_prefix = (
+                    f"{parent.auto_envvar_prefix}_{self.info_name.upper()}"
                 )
         else:
             auto_envvar_prefix = auto_envvar_prefix.upper()
@@ -1088,9 +1082,9 @@ class Command(BaseCommand):
 
         if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
             ctx.fail(
-                "Got unexpected extra argument{} ({})".format(
-                    "s" if len(args) != 1 else "", " ".join(map(make_str, args))
-                )
+                "Got unexpected extra"
+                f" argument{'s' if len(args) != 1 else ''}"
+                f" ({' '.join(map(make_str, args))})"
             )
 
         ctx.args = args
@@ -1598,8 +1592,8 @@ class Parameter:
             if self.nargs <= 1:
                 raise TypeError(
                     "Attempted to invoke composite type but nargs has"
-                    " been set to {}. This is not supported; nargs"
-                    " needs to be set to a fixed value > 1.".format(self.nargs)
+                    f" been set to {self.nargs}. This is not supported;"
+                    " nargs needs to be set to a fixed value > 1."
                 )
             if self.multiple:
                 return tuple(self.type(x or (), self, ctx) for x in value or ())
@@ -1863,8 +1857,9 @@ class Option(Parameter):
 
         if not opts and not secondary_opts:
             raise TypeError(
-                "No options defined but a name was passed ({}). Did you"
-                " mean to declare an argument instead of an option?".format(name)
+                f"No options defined but a name was passed ({name})."
+                " Did you mean to declare an argument instead of an"
+                " option?"
             )
 
         return name, opts, secondary_opts
@@ -1924,13 +1919,12 @@ class Option(Parameter):
                 if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
                     envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
             if envvar is not None:
-                extra.append(
-                    "env var: {}".format(
-                        ", ".join(str(d) for d in envvar)
-                        if isinstance(envvar, (list, tuple))
-                        else envvar
-                    )
+                var_str = (
+                    ", ".join(str(d) for d in envvar)
+                    if isinstance(envvar, (list, tuple))
+                    else envvar
                 )
+                extra.append(f"env var: {var_str}")
         if self.default is not None and (self.show_default or ctx.show_default):
             if isinstance(self.show_default, str):
                 default_string = f"({self.show_default})"
@@ -1945,7 +1939,8 @@ class Option(Parameter):
         if self.required:
             extra.append("required")
         if extra:
-            help = "{}[{}]".format(f"{help}  " if help else "", "; ".join(extra))
+            extra_str = ";".join(extra)
+            help = f"{help}  [{extra_str}]" if help else f"[{extra_str}]"
 
         return ("; " if any_prefix_is_slash else " / ").join(rv), help
 
@@ -2061,7 +2056,7 @@ class Argument(Parameter):
         else:
             raise TypeError(
                 "Arguments take exactly one parameter declaration, got"
-                " {}".format(len(decls))
+                f" {len(decls)}."
             )
         return name, [arg], []
 

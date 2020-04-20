@@ -408,7 +408,7 @@ def get_app_dir(app_name, roaming=True, force_posix=False):
             folder = os.path.expanduser("~")
         return os.path.join(folder, app_name)
     if force_posix:
-        return os.path.join(os.path.expanduser("~/.{}".format(_posixify(app_name))))
+        return os.path.join(os.path.expanduser(f"~/.{_posixify(app_name)}"))
     if sys.platform == "darwin":
         return os.path.join(
             os.path.expanduser("~/Library/Application Support"), app_name

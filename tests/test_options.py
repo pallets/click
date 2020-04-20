@@ -44,8 +44,8 @@ def test_nargs_tup_composite_mult(runner):
     @click.command()
     @click.option("--item", type=(str, int), multiple=True)
     def copy(item):
-        for item in item:
-            click.echo("name={0[0]} id={0[1]:d}".format(item))
+        for name, id in item:
+            click.echo(f"name={name} id={id:d}")
 
     result = runner.invoke(copy, ["--item", "peter", "1", "--item", "max", "2"])
     assert not result.exception
@@ -421,12 +421,13 @@ def test_option_help_preserve_paragraphs(runner):
 
     result = runner.invoke(cmd, ["--help"],)
     assert result.exit_code == 0
+    i = " " * 21
     assert (
         "  -C, --config PATH  Configuration file to use.\n"
-        "{i}\n"
-        "{i}If not given, the environment variable CONFIG_FILE is\n"
-        "{i}consulted and used if set. If neither are given, a default\n"
-        "{i}configuration file is loaded.".format(i=" " * 21)
+        f"{i}\n"
+        f"{i}If not given, the environment variable CONFIG_FILE is\n"
+        f"{i}consulted and used if set. If neither are given, a default\n"
+        f"{i}configuration file is loaded."
     ) in result.output
 
 

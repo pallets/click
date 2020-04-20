@@ -112,15 +112,14 @@ Example:
 
     @click.command()
     def less():
-        click.echo_via_pager('\n'.join('Line %d' % idx
-                                       for idx in range(200)))
+        click.echo_via_pager("\n".join(f"Line {idx}" for idx in range(200)))
 
 If you want to use the pager for a lot of text, especially if generating everything in advance would take a lot of time, you can pass a generator (or generator function) instead of a string:
 
 .. click:example::
     def _generate_output():
         for idx in range(50000):
-            yield "Line %d\n" % idx
+            yield f"Line {idx}\n"
 
     @click.command()
     def less():
@@ -264,7 +263,7 @@ context of a full Unicode string.
 
 Example::
 
-    click.echo('Path: %s' % click.format_filename(b'foo.txt'))
+    click.echo(f"Path: {click.format_filename(b'foo.txt')}")
 
 
 Standard Streams
@@ -349,7 +348,7 @@ Example usage::
         rv = {}
         for section in parser.sections():
             for key, value in parser.items(section):
-                rv['%s.%s' % (section, key)] = value
+                rv[f"{section}.{key}"] = value
         return rv
 
 
@@ -396,7 +395,7 @@ loop. So code like this will render correctly::
 
     with click.progressbar([1, 2, 3]) as bar:
         for x in bar:
-            print('sleep({})...'.format(x))
+            print(f"sleep({x})...")
             time.sleep(x)
 
 Another useful feature is to associate a label with the progress bar which

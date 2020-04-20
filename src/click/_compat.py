@@ -64,7 +64,7 @@ class _NonClosingTextIOWrapper(io.TextIOWrapper):
         errors,
         force_readable=False,
         force_writable=False,
-        **extra
+        **extra,
     ):
         self._stream = stream = _FixupStream(stream, force_readable, force_writable)
         super().__init__(stream, encoding, errors, **extra)
@@ -415,7 +415,7 @@ def open_stream(filename, mode="r", encoding=None, errors="strict", atomic=False
     while True:
         tmp_filename = os.path.join(
             os.path.dirname(filename),
-            ".__atomic-write{:08x}".format(random.randrange(1 << 32)),
+            f".__atomic-write{random.randrange(1 << 32):08x}",
         )
         try:
             fd = os.open(tmp_filename, flags, 0o666 if perm is None else perm)

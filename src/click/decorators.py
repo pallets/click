@@ -66,7 +66,8 @@ def make_pass_decorator(object_type, ensure=False):
             if obj is None:
                 raise RuntimeError(
                     "Managed to invoke callback without a context"
-                    " object of type '{}' existing".format(object_type.__name__)
+                    f" object of type {object_type.__name__!r}"
+                    " existing."
                 )
             return ctx.invoke(f, obj, *args, **kwargs)
 
@@ -96,7 +97,7 @@ def _make_command(f, name, attrs, cls):
         name=name or f.__name__.lower().replace("_", "-"),
         callback=f,
         params=params,
-        **attrs
+        **attrs,
     )
 
 

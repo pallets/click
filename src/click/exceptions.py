@@ -53,8 +53,9 @@ class UsageError(ClickException):
         color = None
         hint = ""
         if self.cmd is not None and self.cmd.get_help_option(self.ctx) is not None:
-            hint = "Try '{} {}' for help.\n".format(
-                self.ctx.command_path, self.ctx.help_option_names[0]
+            hint = (
+                f"Try '{self.ctx.command_path}"
+                f" {self.ctx.help_option_names[0]}' for help.\n"
             )
         if self.ctx is not None:
             color = self.ctx.color
@@ -137,12 +138,8 @@ class MissingParameter(BadParameter):
                 else:
                     msg = msg_extra
 
-        return "Missing {}{}{}{}".format(
-            param_type,
-            f" {param_hint}" if param_hint else "",
-            ".  " if msg else ".",
-            msg or "",
-        )
+        hint_str = f" {param_hint}" if param_hint else ""
+        return f"Missing {param_type}{hint_str}.{' ' if msg else ''}{msg or ''}"
 
     def __str__(self):
         if self.message is None:
@@ -170,10 +167,10 @@ class NoSuchOption(UsageError):
         bits = [self.message]
         if self.possibilities:
             if len(self.possibilities) == 1:
-                bits.append("Did you mean {}?".format(self.possibilities[0]))
+                bits.append(f"Did you mean {self.possibilities[0]}?")
             else:
                 possibilities = sorted(self.possibilities)
-                bits.append("(Possible options: {})".format(", ".join(possibilities)))
+                bits.append(f"(Possible options: {', '.join(possibilities)})")
         return "  ".join(bits)
 
 

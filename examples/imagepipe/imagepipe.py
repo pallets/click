@@ -230,9 +230,8 @@ def smoothen_cmd(images, iterations):
     """Applies a smoothening filter."""
     for image in images:
         click.echo(
-            "Smoothening '{}' {} time{}".format(
-                image.filename, iterations, "s" if iterations != 1 else ""
-            )
+            f"Smoothening {image.filename!r} {iterations}"
+            f" time{'s' if iterations != 1 else ''}"
         )
         for _ in range(iterations):
             image = copy_filename(image.filter(ImageFilter.BLUR), image)

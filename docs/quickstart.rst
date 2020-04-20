@@ -240,7 +240,7 @@ To add parameters, use the :func:`option` and :func:`argument` decorators:
     @click.argument('name')
     def hello(count, name):
         for x in range(count):
-            click.echo('Hello %s!' % name)
+            click.echo(f"Hello {name}!")
 
 What it looks like:
 

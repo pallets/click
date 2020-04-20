@@ -99,9 +99,8 @@ class Result:
         )
 
     def __repr__(self):
-        return "<{} {}>".format(
-            type(self).__name__, repr(self.exception) if self.exception else "okay"
-        )
+        exc_str = repr(self.exception) if self.exception else "okay"
+        return f"<{type(self).__name__} {exc_str}>"
 
 
 class CliRunner:
@@ -196,7 +195,7 @@ class CliRunner:
             return val
 
         def hidden_input(prompt=None):
-            sys.stdout.write("{}\n".format(prompt or ""))
+            sys.stdout.write(f"{prompt or ''}\n")
             sys.stdout.flush()
             return input.readline().rstrip("\r\n")
 

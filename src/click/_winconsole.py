@@ -213,9 +213,7 @@ class ConsoleStream:
         return self.buffer.isatty()
 
     def __repr__(self):
-        return "<ConsoleStream name={!r} encoding={!r}>".format(
-            self.name, self.encoding
-        )
+        return f"<ConsoleStream name={self.name!r} encoding={self.encoding!r}>"
 
 
 class WindowsChunkedWriter:

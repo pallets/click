@@ -157,10 +157,11 @@ class Choice(ParamType):
         self.case_sensitive = case_sensitive
 
     def get_metavar(self, param):
-        return "[{}]".format("|".join(self.choices))
+        return f"[{'|'.join(self.choices)}]"
 
     def get_missing_message(self, param):
-        return "Choose from:\n\t{}.".format(",\n\t".join(self.choices))
+        choice_str = ",\n\t".join(self.choices)
+        return f"Choose from:\n\t{choice_str}"
 
     def convert(self, value, param, ctx):
         # Match through normalization and case sensitivity
@@ -188,15 +189,13 @@ class Choice(ParamType):
             return normed_choices[normed_value]
 
         self.fail(
-            "invalid choice: {}. (choose from {})".format(
-                value, ", ".join(self.choices)
-            ),
+            f"invalid choice: {value}. (choose from {', '.join(self.choices)})",
             param,
             ctx,
         )
 
     def __repr__(self):
-        return "Choice('{}')".format(list(self.choices))
+        return f"Choice({list(self.choices)})"
 
 
 class DateTime(ParamType):
@@ -226,7 +225,7 @@ class DateTime(ParamType):
         self.formats = formats or ["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]
 
     def get_metavar(self, param):
-        return "[{}]".format("|".join(self.formats))
+        return f"[{'|'.join(self.formats)}]"
 
     def _try_to_convert_date(self, value, format):
         try:
@@ -242,9 +241,7 @@ class DateTime(ParamType):
                 return dtime
 
         self.fail(
-            "invalid datetime format: {}. (choose from {})".format(
-                value, ", ".join(self.formats)
-            )
+            f"invalid datetime format: {value}. (choose from {', '.join(self.formats)})"
         )
 
     def __repr__(self):
@@ -295,25 +292,19 @@ class IntRange(IntParamType):
         ):
             if self.min is None:
                 self.fail(
-                    "{} is bigger than the maximum valid value {}.".format(
-                        rv, self.max
-                    ),
+                    f"{rv} is bigger than the maximum valid value {self.max}.",
                     param,
                     ctx,
                 )
             elif self.max is None:
                 self.fail(
-                    "{} is smaller than the minimum valid value {}.".format(
-                        rv, self.min
-                    ),
+                    f"{rv} is smaller than the minimum valid value {self.min}.",
                     param,
                     ctx,
                 )
             else:
                 self.fail(
-                    "{} is not in the valid range of {} to {}.".format(
-                        rv, self.min, self.max
-                    ),
+                    f"{rv} is not in the valid range of {self.min} to {self.max}.",
                     param,
                     ctx,
                 )
@@ -367,25 +358,19 @@ class FloatRange(FloatParamType):
         ):
             if self.min is None:
                 self.fail(
-                    "{} is bigger than the maximum valid value {}.".format(
-                        rv, self.max
-                    ),
+                    f"{rv} is bigger than the maximum valid value {self.max}.",
                     param,
                     ctx,
                 )
             elif self.max is None:
                 self.fail(
-                    "{} is smaller than the minimum valid value {}.".format(
-                        rv, self.min
-                    ),
+                    f"{rv} is smaller than the minimum valid value {self.min}.",
                     param,
                     ctx,
                 )
             else:
                 self.fail(
-                    "{} is not in the valid range of {} to {}.".format(
-                        rv, self.min, self.max
-                    ),
+                    f"{rv} is not in the valid range of {self.min} to {self.max}.",
                     param,
                     ctx,
                 )
@@ -506,9 +491,7 @@ class File(ParamType):
             return f
         except OSError as e:  # noqa: B014
             self.fail(
-                "Could not open file: {}: {}".format(
-                    filename_to_ui(value), get_strerror(e)
-                ),
+                f"Could not open file: {filename_to_ui(value)}: {get_strerror(e)}",
                 param,
                 ctx,
             )
@@ -600,40 +583,32 @@ class Path(ParamType):
                 if not self.exists:
                     return self.coerce_path_result(rv)
                 self.fail(
-                    "{} '{}' does not exist.".format(
-                        self.path_type, filename_to_ui(value)
-                    ),
+                    f"{self.path_type} {filename_to_ui(value)!r} does not exist.",
                     param,
                     ctx,
                 )
 
             if not self.file_okay and stat.S_ISREG(st.st_mode):
                 self.fail(
-                    "{} '{}' is a file.".format(self.path_type, filename_to_ui(value)),
+                    f"{self.path_type} {filename_to_ui(value)!r} is a file.",
                     param,
                     ctx,
                 )
             if not self.dir_okay and stat.S_ISDIR(st.st_mode):
                 self.fail(
-                    "{} '{}' is a directory.".format(
-                        self.path_type, filename_to_ui(value)
-                    ),
+                    f"{self.path_type} {filename_to_ui(value)!r} is a directory.",
                     param,
                     ctx,
                 )
             if self.writable and not os.access(value, os.W_OK):
                 self.fail(
-                    "{} '{}' is not writable.".format(
-                        self.path_type, filename_to_ui(value)
-                    ),
+                    f"{self.path_type} {filename_to_ui(value)!r} is not writable.",
                     param,
                     ctx,
                 )
             if self.readable and not os.access(value, os.R_OK):
                 self.fail(
-                    "{} '{}' is not readable.".format(
-                        self.path_type, filename_to_ui(value)
-                    ),
+                    f"{self.path_type} {filename_to_ui(value)!r} is not readable.",
                     param,
                     ctx,
                 )
@@ -660,7 +635,7 @@ class Tuple(CompositeParamType):
 
     @property
     def name(self):
-        return "<{}>".format(" ".join(ty.name for ty in self.types))
+        return f"<{' '.join(ty.name for ty in self.types)}>"
 
     @property
     def arity(self):

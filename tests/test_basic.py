@@ -108,7 +108,7 @@ def test_int_option(runner):
     @click.command()
     @click.option("--foo", default=42)
     def cli(foo):
-        click.echo("FOO:[{}]".format(foo * 2))
+        click.echo(f"FOO:[{foo * 2}]")
 
     result = runner.invoke(cli, [])
     assert not result.exception
@@ -192,7 +192,7 @@ def test_boolean_option(runner):
 
         result = runner.invoke(cli, ["--flag"])
         assert not result.exception
-        assert result.output == "{}\n".format(not default)
+        assert result.output == f"{not default}\n"
         result = runner.invoke(cli, [])
         assert not result.exception
         assert result.output == f"{default}\n"
@@ -307,8 +307,8 @@ def test_path_option(runner):
     @click.command()
     @click.option("-f", type=click.Path(exists=True))
     def showtype(f):
-        click.echo("is_file={}".format(os.path.isfile(f)))
-        click.echo("is_dir={}".format(os.path.isdir(f)))
+        click.echo(f"is_file={os.path.isfile(f)}")
+        click.echo(f"is_dir={os.path.isdir(f)}")
 
     with runner.isolated_filesystem():
         result = runner.invoke(showtype, ["-f", "xxx"])
@@ -321,7 +321,7 @@ def test_path_option(runner):
     @click.command()
     @click.option("-f", type=click.Path())
     def exists(f):
-        click.echo("exists={}".format(os.path.exists(f)))
+        click.echo(f"exists={os.path.exists(f)}")
 
     with runner.isolated_filesystem():
         result = runner.invoke(exists, ["-f", "xxx"])

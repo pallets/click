@@ -247,7 +247,7 @@ def test_file_prompt_default_format(runner, file_kwargs):
         click.echo(f.name)
 
     result = runner.invoke(cli)
-    assert result.output == "file [{0}]: \n{0}\n".format(__file__)
+    assert result.output == f"file [{__file__}]: \n{__file__}\n"
 
 
 def test_secho(runner):
@@ -354,7 +354,7 @@ def test_getchar_special_key_windows(runner, monkeypatch, special_key_char, key_
         click._termui_impl.msvcrt, "getwch", lambda: ordered_inputs.pop()
     )
     monkeypatch.setattr(click.termui, "_getchar", None)
-    assert click.getchar() == special_key_char + key_char
+    assert click.getchar() == f"{special_key_char}{key_char}"
 
 
 @pytest.mark.parametrize(

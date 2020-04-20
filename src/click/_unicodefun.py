@@ -55,9 +55,9 @@ def _verify_python3_env():
             )
         else:
             extra += (
-                "This system lists a couple of UTF-8 supporting locales"
-                " that you can pick from. The following suitable"
-                " locales were discovered: {}".format(", ".join(sorted(good_locales)))
+                "This system lists some UTF-8 supporting locales that"
+                " you can pick from. The following suitable locales"
+                f" were discovered: {', '.join(sorted(good_locales))}"
             )
 
         bad_locale = None
@@ -71,12 +71,12 @@ def _verify_python3_env():
                 "\n\nClick discovered that you exported a UTF-8 locale"
                 " but the locale system could not pick up from it"
                 " because it does not exist. The exported locale is"
-                " '{}' but it is not supported".format(bad_locale)
+                f" {bad_locale!r} but it is not supported"
             )
 
     raise RuntimeError(
         "Click will abort further execution because Python 3 was"
         " configured to use ASCII as encoding for the environment."
         " Consult https://click.palletsprojects.com/python3/ for"
-        " mitigation steps.{}".format(extra)
+        f" mitigation steps.{extra}"
     )

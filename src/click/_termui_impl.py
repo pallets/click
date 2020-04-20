@@ -173,7 +173,7 @@ class ProgressBar:
         return pos
 
     def format_pct(self):
-        return "{: 4}%".format(int(self.pct * 100))[1:]
+        return f"{int(self.pct * 100): 4}%"[1:]
 
     def format_bar(self):
         if self.length_known:
@@ -352,10 +352,7 @@ def pager(generator, color=None):
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
-        if (
-            hasattr(os, "system")
-            and os.system("more {}".format(shlex.quote(filename))) == 0
-        ):
+        if hasattr(os, "system") and os.system(f"more {shlex.quote(filename)}") == 0:
             return _pipepager(generator, "more", color)
         return _nullpager(stdout, generator, color)
     finally:
@@ -374,7 +371,7 @@ def _pipepager(generator, cmd, color):
     # condition that
     cmd_detail = cmd.rsplit("/", 1)[-1].split()
     if color is None and cmd_detail[0] == "less":
-        less_flags = "{}{}".format(os.environ.get("LESS", ""), " ".join(cmd_detail[1:]))
+        less_flags = f"{os.environ.get('LESS', '')}{' '.join(cmd_detail[1:])}"
         if not less_flags:
             env["LESS"] = "-R"
             color = True
@@ -424,7 +421,7 @@ def _tempfilepager(generator, cmd, color):
     with open_stream(filename, "wb")[0] as f:
         f.write(text.encode(encoding))
     try:
-        os.system("{} {}".format(shlex.quote(cmd), shlex.quote(filename)))
+        os.system(f"{shlex.quote(cmd)} {shlex.quote(filename)}")
     finally:
         os.unlink(filename)
 
@@ -469,7 +466,7 @@ class Editor:
             environ = None
         try:
             c = subprocess.Popen(
-                "{} {}".format(shlex.quote(editor), shlex.quote(filename)),
+                f"{shlex.quote(editor)} {shlex.quote(filename)}",
                 env=environ,
                 shell=True,
             )
@@ -546,16 +543,16 @@ def open_url(url, wait=False, locate=False):
     elif WIN:
         if locate:
             url = _unquote_file(url)
-            args = "explorer /select,{}".format(shlex.quote(url))
+            args = f"explorer /select,{shlex.quote(url)}"
         else:
-            args = 'start {} "" {}'.format("/WAIT" if wait else "", shlex.quote(url))
+            args = f"start {'/WAIT' if wait else ''} \"\" {shlex.quote(url)}"
         return os.system(args)
     elif CYGWIN:
         if locate:
             url = _unquote_file(url)
-            args = "cygstart {}".format(shlex.quote(os.path.dirname(url)))
+            args = f"cygstart {shlex.quote(os.path.dirname(url))}"
         else:
-            args = "cygstart {} {}".format("-w" if wait else "", shlex.quote(url))
+            args = f"cygstart {'-w' if wait else ''} {shlex.quote(url)}"
         return os.system(args)
 
     try:

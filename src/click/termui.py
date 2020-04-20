@@ -56,10 +56,10 @@ def _build_prompt(
 ):
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
-        prompt += " ({})".format(", ".join(map(str, type.choices)))
+        prompt += f" ({', '.join(map(str, type.choices))})"
     if default is not None and show_default:
-        prompt = "{} [{}]".format(prompt, _format_default(default))
-    return prompt + suffix
+        prompt = f"{prompt} [{_format_default(default)}]"
+    return f"{prompt}{suffix}"
 
 
 def _format_default(default):
@@ -502,24 +502,24 @@ def style(
     bits = []
     if fg:
         try:
-            bits.append("\033[{}m".format(_ansi_colors[fg]))
+            bits.append(f"\033[{_ansi_colors[fg]}m")
         except KeyError:
-            raise TypeError(f"Unknown color '{fg}'")
+            raise TypeError(f"Unknown color {fg!r}")
     if bg:
         try:
-            bits.append("\033[{}m".format(_ansi_colors[bg] + 10))
+            bits.append(f"\033[{_ansi_colors[bg] + 10}m")
         except KeyError:
-            raise TypeError(f"Unknown color '{bg}'")
+            raise TypeError(f"Unknown color {bg!r}")
     if bold is not None:
-        bits.append("\033[{}m".format(1 if bold else 22))
+        bits.append(f"\033[{1 if bold else 22}m")
     if dim is not None:
-        bits.append("\033[{}m".format(2 if dim else 22))
+        bits.append(f"\033[{2 if dim else 22}m")
     if underline is not None:
-        bits.append("\033[{}m".format(4 if underline else 24))
+        bits.append(f"\033[{4 if underline else 24}m")
     if blink is not None:
-        bits.append("\033[{}m".format(5 if blink else 25))
+        bits.append(f"\033[{5 if blink else 25}m")
     if reverse is not None:
-        bits.append("\033[{}m".format(7 if reverse else 27))
+        bits.append(f"\033[{7 if reverse else 27}m")
     bits.append(text)
     if reset:
         bits.append(_ansi_reset_all)

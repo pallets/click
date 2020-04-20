@@ -100,7 +100,7 @@ def normalize_opt(opt, ctx):
     if ctx is None or ctx.token_normalize_func is None:
         return opt
     prefix, opt = split_opt(opt)
-    return prefix + ctx.token_normalize_func(opt)
+    return f"{prefix}{ctx.token_normalize_func(opt)}"
 
 
 def split_arg_string(string):
@@ -361,7 +361,7 @@ class OptionParser:
         unknown_options = []
 
         for ch in arg[1:]:
-            opt = normalize_opt(prefix + ch, self.ctx)
+            opt = normalize_opt(f"{prefix}{ch}", self.ctx)
             option = self._short_opt.get(opt)
             i += 1
 
@@ -399,7 +399,7 @@ class OptionParser:
         # to the state as new larg.  This way there is basic combinatorics
         # that can be achieved while still ignoring unknown arguments.
         if self.ignore_unknown_options and unknown_options:
-            state.largs.append("{}{}".format(prefix, "".join(unknown_options)))
+            state.largs.append(f"{prefix}{''.join(unknown_options)}")
 
     def _process_opts(self, arg, state):
         explicit_value = None

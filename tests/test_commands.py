@@ -210,7 +210,7 @@ def test_object_propagation(runner):
         @cli.command()
         @click.pass_context
         def sync(ctx):
-            click.echo("Debug is {}".format("on" if ctx.obj["DEBUG"] else "off"))
+            click.echo(f"Debug is {'on' if ctx.obj['DEBUG'] else 'off'}")
 
         result = runner.invoke(cli, ["sync"])
         assert result.exception is None
@@ -264,7 +264,7 @@ def test_unprocessed_options(runner):
     @click.option("--verbose", "-v", count=True)
     def cli(verbose, args):
         click.echo(f"Verbosity: {verbose}")
-        click.echo("Args: {}".format("|".join(args)))
+        click.echo(f"Args: {'|'.join(args)}")
 
     result = runner.invoke(cli, ["-foo", "-vvvvx", "--muhaha", "x", "y", "-x"])
     assert not result.exception

@@ -7,9 +7,8 @@ import click
 
 def debug():
     click.echo(
-        "{}={}".format(
-            sys._getframe(1).f_code.co_name, "|".join(click.get_current_context().args)
-        )
+        f"{sys._getframe(1).f_code.co_name}"
+        f"={'|'.join(click.get_current_context().args)}"
     )
 
 

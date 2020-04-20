@@ -25,7 +25,7 @@ when an inner command runs:
     @click.group()
     @click.option('--debug/--no-debug', default=False)
     def cli(debug):
-        click.echo('Debug mode is %s' % ('on' if debug else 'off'))
+        click.echo(f"Debug mode is {'on' if debug else 'off'}")
 
     @cli.command()  # @cli, not @click!
     def sync():
@@ -96,7 +96,7 @@ script like this:
     @cli.command()
     @click.pass_context
     def sync(ctx):
-        click.echo('Debug is %s' % (ctx.obj['DEBUG'] and 'on' or 'off'))
+        click.echo(f"Debug is {'on' if ctx.obj['DEBUG'] else 'off'}")
 
     if __name__ == '__main__':
         cli(obj={})
@@ -166,7 +166,7 @@ Example:
         if ctx.invoked_subcommand is None:
             click.echo('I was invoked without subcommand')
         else:
-            click.echo('I am about to invoke %s' % ctx.invoked_subcommand)
+            click.echo(f"I am about to invoke {ctx.invoked_subcommand}")
 
     @cli.command()
     def sync():
@@ -466,7 +466,7 @@ Example usage:
     @cli.command()
     @click.option('--port', default=8000)
     def runserver(port):
-        click.echo('Serving on http://127.0.0.1:%d/' % port)
+        click.echo(f"Serving on http://127.0.0.1:{port}/")
 
     if __name__ == '__main__':
         cli(default_map={
@@ -512,7 +512,7 @@ This example does the same as the previous example:
     @cli.command()
     @click.option('--port', default=8000)
     def runserver(port):
-        click.echo('Serving on http://127.0.0.1:%d/' % port)
+        click.echo(f"Serving on http://127.0.0.1:{port}/")
 
     if __name__ == '__main__':
         cli()

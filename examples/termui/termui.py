@@ -24,7 +24,7 @@ def pager():
     """Demonstrates using the pager."""
     lines = []
     for x in range(200):
-        lines.append("{}. Hello World!".format(click.style(str(x), fg="green")))
+        lines.append(f"{click.style(str(x), fg='green')}. Hello World!")
     click.echo_via_pager("\n".join(lines))
 
 

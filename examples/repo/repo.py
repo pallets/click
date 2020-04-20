@@ -78,7 +78,7 @@ def clone(repo, src, dest, shallow, rev):
     """
     if dest is None:
         dest = posixpath.split(src)[-1] or "."
-    click.echo("Cloning repo {} to {}".format(src, os.path.abspath(dest)))
+    click.echo(f"Cloning repo {src} to {os.path.basename(dest)}")
     repo.home = dest
     if shallow:
         click.echo("Making shallow checkout")

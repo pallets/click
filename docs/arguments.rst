@@ -55,7 +55,7 @@ Example:
     def copy(src, dst):
         """Move file SRC to DST."""
         for fn in src:
-            click.echo('move %s to folder %s' % (fn, dst))
+            click.echo(f"move {fn} to folder {dst}")
 
 And what it looks like:
 

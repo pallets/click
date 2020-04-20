@@ -46,7 +46,7 @@ it would accept ``pus`` as an alias (so long as it was unique):
                 return None
             elif len(matches) == 1:
                 return click.Group.get_command(self, ctx, matches[0])
-            ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
+            ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
 
 And it can then be used like this:
 
@@ -92,7 +92,7 @@ it's good to know that the system works this way.
     @click.option('--url', callback=open_url)
     def cli(url, fp=None):
         if fp is not None:
-            click.echo('%s: %s' % (url, fp.code))
+            click.echo(f"{url}: {fp.code}")
 
 In this case the callback returns the URL unchanged but also passes a
 second ``fp`` value to the callback.  What's more recommended is to pass
@@ -116,7 +116,7 @@ the information in a wrapper however:
     @click.option('--url', callback=open_url)
     def cli(url):
         if url is not None:
-            click.echo('%s: %s' % (url.url, url.fp.code))
+            click.echo(f"{url.url}: {url.fp.code}")
 
 
 Token Normalization
@@ -140,7 +140,7 @@ function that converts the token to lowercase:
     @click.command(context_settings=CONTEXT_SETTINGS)
     @click.option('--name', default='Pete')
     def cli(name):
-        click.echo('Name: %s' % name)
+        click.echo(f"Name: {name}")
 
 And how it works on the command line:
 
@@ -171,7 +171,7 @@ Example:
     @cli.command()
     @click.option('--count', default=1)
     def test(count):
-        click.echo('Count: %d' % count)
+        click.echo(f'Count: {count}')
 
     @cli.command()
     @click.option('--count', default=1)
@@ -300,7 +300,7 @@ In the end you end up with something like this:
         """A fake wrapper around Python's timeit."""
         cmdline = ['echo', 'python', '-mtimeit'] + list(timeit_args)
         if verbose:
-            click.echo('Invoking: %s' % ' '.join(cmdline))
+            click.echo(f"Invoking: {' '.join(cmdline)}")
         call(cmdline)
 
 And what it looks like:
@@ -396,7 +396,7 @@ method can be used to find this out.
     @click.pass_context
     def cli(ctx, port):
         source = ctx.get_parameter_source("port")
-        click.echo("Port came from {}".format(source))
+        click.echo(f"Port came from {source}")
 
 .. click:run::
 

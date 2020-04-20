@@ -17,8 +17,7 @@ class URL(click.ParamType):
             value = urlparse.urlparse(value)
             if value.scheme not in ("http", "https"):
                 self.fail(
-                    "invalid URL scheme ({}).  Only HTTP URLs are"
-                    " allowed".format(value.scheme),
+                    f"invalid URL scheme ({value.scheme}). Only HTTP URLs are allowed",
                     param,
                     ctx,
                 )

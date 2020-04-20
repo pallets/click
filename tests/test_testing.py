@@ -125,7 +125,7 @@ def test_with_color():
     assert not result.exception
 
     result = runner.invoke(cli, color=True)
-    assert result.output == "{}\n".format(click.style("hello world", fg="blue"))
+    assert result.output == f"{click.style('hello world', fg='blue')}\n"
     assert not result.exception
 
 
@@ -213,7 +213,7 @@ def test_exit_code_and_output_from_sys_exit():
 def test_env():
     @click.command()
     def cli_env():
-        click.echo("ENV={}".format(os.environ["TEST_CLICK_ENV"]))
+        click.echo(f"ENV={os.environ['TEST_CLICK_ENV']}")
 
     runner = CliRunner()
 
