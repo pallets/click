@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import uuid
 
@@ -82,7 +81,7 @@ def test_basic_option(runner):
     @click.command()
     @click.option("--foo", default="no value")
     def cli(foo):
-        click.echo(u"FOO:[{}]".format(foo))
+        click.echo(f"FOO:[{foo}]")
 
     result = runner.invoke(cli, [])
     assert not result.exception
@@ -100,9 +99,9 @@ def test_basic_option(runner):
     assert not result.exception
     assert "FOO:[]" in result.output
 
-    result = runner.invoke(cli, [u"--foo=\N{SNOWMAN}"])
+    result = runner.invoke(cli, ["--foo=\N{SNOWMAN}"])
     assert not result.exception
-    assert u"FOO:[\N{SNOWMAN}]" in result.output
+    assert "FOO:[\N{SNOWMAN}]" in result.output
 
 
 def test_int_option(runner):
@@ -131,7 +130,7 @@ def test_uuid_option(runner):
     )
     def cli(u):
         assert type(u) is uuid.UUID
-        click.echo("U:[{}]".format(u))
+        click.echo(f"U:[{u}]")
 
     result = runner.invoke(cli, [])
     assert not result.exception
@@ -151,7 +150,7 @@ def test_float_option(runner):
     @click.option("--foo", default=42, type=click.FLOAT)
     def cli(foo):
         assert type(foo) is float
-        click.echo("FOO:[{}]".format(foo))
+        click.echo(f"FOO:[{foo}]")
 
     result = runner.invoke(cli, [])
     assert not result.exception
@@ -182,7 +181,7 @@ def test_boolean_option(runner):
         assert result.output == "False\n"
         result = runner.invoke(cli, [])
         assert not result.exception
-        assert result.output == "{}\n".format(default)
+        assert result.output == f"{default}\n"
 
     for default in True, False:
 
@@ -196,7 +195,7 @@ def test_boolean_option(runner):
         assert result.output == "{}\n".format(not default)
         result = runner.invoke(cli, [])
         assert not result.exception
-        assert result.output == "{}\n".format(default)
+        assert result.output == f"{default}\n"
 
 
 def test_boolean_conversion(runner):
@@ -219,7 +218,7 @@ def test_boolean_conversion(runner):
 
         result = runner.invoke(cli, [])
         assert not result.exception
-        assert result.output == "{}\n".format(default)
+        assert result.output == f"{default}\n"
 
 
 def test_file_option(runner):

@@ -91,7 +91,7 @@ def wrap_text(
     return "\n\n".join(rv)
 
 
-class HelpFormatter(object):
+class HelpFormatter:
     """This class helps with formatting text-based help pages.  It's
     usually just needed for very special internal cases, but it's also
     exposed so that developers can write their own fancy outputs.

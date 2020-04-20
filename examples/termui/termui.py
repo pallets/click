@@ -1,4 +1,3 @@
-# coding: utf-8
 import math
 import random
 import time
@@ -16,8 +15,8 @@ def cli():
 def colordemo():
     """Demonstrates ANSI color support."""
     for color in "red", "green", "blue":
-        click.echo(click.style("I am colored {}".format(color), fg=color))
-        click.echo(click.style("I am background colored {}".format(color), bg=color))
+        click.echo(click.style(f"I am colored {color}", fg=color))
+        click.echo(click.style(f"I am background colored {color}", bg=color))
 
 
 @cli.command()
@@ -56,7 +55,7 @@ def progress(count):
 
     def show_item(item):
         if item is not None:
-            return "Item #{}".format(item)
+            return f"Item #{item}"
 
     with click.progressbar(
         filter(items),
@@ -71,7 +70,7 @@ def progress(count):
         length=count,
         label="Counting",
         bar_template="%(label)s  %(bar)s | %(info)s",
-        fill_char=click.style(u"█", fg="cyan"),
+        fill_char=click.style("█", fg="cyan"),
         empty_char=" ",
     ) as bar:
         for item in bar:
@@ -94,7 +93,7 @@ def progress(count):
         length=count,
         show_percent=False,
         label="Slowing progress bar",
-        fill_char=click.style(u"█", fg="green"),
+        fill_char=click.style("█", fg="green"),
     ) as bar:
         for item in steps:
             time.sleep(item)
@@ -119,13 +118,13 @@ def locate(url):
 def edit():
     """Opens an editor with some text in it."""
     MARKER = "# Everything below is ignored\n"
-    message = click.edit("\n\n{}".format(MARKER))
+    message = click.edit(f"\n\n{MARKER}")
     if message is not None:
         msg = message.split(MARKER, 1)[0].rstrip("\n")
         if not msg:
             click.echo("Empty message!")
         else:
-            click.echo("Message:\n{}".format(msg))
+            click.echo(f"Message:\n{msg}")
     else:
         click.echo("You did not enter anything!")
 

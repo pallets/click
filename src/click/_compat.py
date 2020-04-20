@@ -80,7 +80,7 @@ class _NonClosingTextIOWrapper(io.TextIOWrapper):
         return self._stream.isatty()
 
 
-class _FixupStream(object):
+class _FixupStream:
     """The new io interface needs more from streams than streams
     traditionally implement.  As such, this fix-up code is necessary in
     some circumstances.
@@ -359,9 +359,9 @@ def get_strerror(e, default=None):
 def _wrap_io_open(file, mode, encoding, errors):
     """Handles not passing ``encoding`` and ``errors`` in binary mode."""
     if "b" in mode:
-        return io.open(file, mode)
+        return open(file, mode)
 
-    return io.open(file, mode, encoding=encoding, errors=errors)
+    return open(file, mode, encoding=encoding, errors=errors)
 
 
 def open_stream(filename, mode="r", encoding=None, errors="strict", atomic=False):
@@ -437,7 +437,7 @@ def open_stream(filename, mode="r", encoding=None, errors="strict", atomic=False
     return _AtomicFile(f, tmp_filename, os.path.realpath(filename)), True
 
 
-class _AtomicFile(object):
+class _AtomicFile:
     def __init__(self, f, tmp_filename, real_filename):
         self._f = f
         self._tmp_filename = tmp_filename

@@ -6,7 +6,7 @@ def test_basic_defaults(runner):
     @click.option("--foo", default=42, type=click.FLOAT)
     def cli(foo):
         assert type(foo) is float
-        click.echo("FOO:[{}]".format(foo))
+        click.echo(f"FOO:[{foo}]")
 
     result = runner.invoke(cli, [])
     assert not result.exception

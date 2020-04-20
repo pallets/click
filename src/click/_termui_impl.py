@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module contains implementations for the termui module. To keep the
 import time of Click down, some infrequently used functionality is
@@ -48,7 +47,7 @@ def _length_hint(obj):
         return hint
 
 
-class ProgressBar(object):
+class ProgressBar:
     def __init__(
         self,
         iterable,
@@ -162,15 +161,15 @@ class ProgressBar(object):
             hours = t % 24
             t //= 24
             if t > 0:
-                return "{}d {:02}:{:02}:{:02}".format(t, hours, minutes, seconds)
+                return f"{t}d {hours:02}:{minutes:02}:{seconds:02}"
             else:
-                return "{:02}:{:02}:{:02}".format(hours, minutes, seconds)
+                return f"{hours:02}:{minutes:02}:{seconds:02}"
         return ""
 
     def format_pos(self):
         pos = str(self.pos)
         if self.length_known:
-            pos += "/{}".format(self.length)
+            pos += f"/{self.length}"
         return pos
 
     def format_pct(self):
@@ -321,8 +320,7 @@ class ProgressBar(object):
             raise RuntimeError("You need to use progress bars in a with block.")
 
         if self.is_hidden:
-            for rv in self.iter:
-                yield rv
+            yield from self.iter
         else:
             for rv in self.iter:
                 self.current_item = rv
@@ -391,7 +389,7 @@ def _pipepager(generator, cmd, color):
                 text = strip_ansi(text)
 
             c.stdin.write(text.encode(encoding, "replace"))
-    except (IOError, KeyboardInterrupt):
+    except (OSError, KeyboardInterrupt):
         pass
     else:
         c.stdin.close()
@@ -439,7 +437,7 @@ def _nullpager(stream, generator, color):
         stream.write(text)
 
 
-class Editor(object):
+class Editor:
     def __init__(self, editor=None, env=None, require_save=True, extension=".txt"):
         self.editor = editor
         self.env = env
@@ -456,7 +454,7 @@ class Editor(object):
         if WIN:
             return "notepad"
         for editor in "sensible-editor", "vim", "nano":
-            if os.system("which {} >/dev/null 2>&1".format(editor)) == 0:
+            if os.system(f"which {editor} >/dev/null 2>&1") == 0:
                 return editor
         return "vi"
 
@@ -477,9 +475,9 @@ class Editor(object):
             )
             exit_code = c.wait()
             if exit_code != 0:
-                raise ClickException("{}: Editing failed!".format(editor))
+                raise ClickException(f"{editor}: Editing failed!")
         except OSError as e:
-            raise ClickException("{}: Editing failed: {}".format(editor, e))
+            raise ClickException(f"{editor}: Editing failed: {e}")
 
     def edit(self, text):
         import tempfile
@@ -579,11 +577,11 @@ def open_url(url, wait=False, locate=False):
 
 
 def _translate_ch_to_exc(ch):
-    if ch == u"\x03":
+    if ch == "\x03":
         raise KeyboardInterrupt()
-    if ch == u"\x04" and not WIN:  # Unix-like, Ctrl+D
+    if ch == "\x04" and not WIN:  # Unix-like, Ctrl+D
         raise EOFError()
-    if ch == u"\x1a" and WIN:  # Windows, Ctrl+Z
+    if ch == "\x1a" and WIN:  # Windows, Ctrl+Z
         raise EOFError()
 
 
@@ -630,7 +628,7 @@ if WIN:
             func = msvcrt.getwch
 
         rv = func()
-        if rv in (u"\x00", u"\xe0"):
+        if rv in ("\x00", "\xe0"):
             # \x00 and \xe0 are control characters that indicate special key,
             # see above.
             rv += func()

@@ -153,7 +153,7 @@ def prompt(
         try:
             result = value_proc(value)
         except UsageError as e:
-            echo("Error: {}".format(e.message), err=err)  # noqa: B306
+            echo(f"Error: {e.message}", err=err)  # noqa: B306
             continue
         if not confirmation_prompt:
             return result
@@ -504,12 +504,12 @@ def style(
         try:
             bits.append("\033[{}m".format(_ansi_colors[fg]))
         except KeyError:
-            raise TypeError("Unknown color '{}'".format(fg))
+            raise TypeError(f"Unknown color '{fg}'")
     if bg:
         try:
             bits.append("\033[{}m".format(_ansi_colors[bg] + 10))
         except KeyError:
-            raise TypeError("Unknown color '{}'".format(bg))
+            raise TypeError(f"Unknown color '{bg}'")
     if bold is not None:
         bits.append("\033[{}m".format(1 if bold else 22))
     if dim is not None:

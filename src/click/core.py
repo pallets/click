@@ -132,7 +132,7 @@ def iter_params_for_processing(invocation_order, declaration_order):
     return sorted(declaration_order, key=sort_key)
 
 
-class ParameterSource(object):
+class ParameterSource:
     """This is an enum that indicates the source of a command line parameter.
 
     The enum has one of the following values: COMMANDLINE,
@@ -164,7 +164,7 @@ class ParameterSource(object):
             )
 
 
-class Context(object):
+class Context:
     """The context is a special internal object that holds state relevant
     for the script execution at every single level.  It's normally invisible
     to commands unless they opt-in to getting access to it.
@@ -513,7 +513,7 @@ class Context(object):
         if self.info_name is not None:
             rv = self.info_name
         if self.parent is not None:
-            rv = "{} {}".format(self.parent.command_path, rv)
+            rv = f"{self.parent.command_path} {rv}"
         return rv.lstrip()
 
     def find_root(self):
@@ -666,7 +666,7 @@ class Context(object):
         return self._source_by_paramname[name]
 
 
-class BaseCommand(object):
+class BaseCommand:
     """The base command implements the minimal API contract of commands.
     Most code will never use this as it does not implement a lot of useful
     functionality but it can act as the direct subclass of alternative
@@ -707,7 +707,7 @@ class BaseCommand(object):
         self.context_settings = context_settings
 
     def __repr__(self):
-        return "<{} {}>".format(self.__class__.__name__, self.name)
+        return f"<{self.__class__.__name__} {self.name}>"
 
     def get_usage(self, ctx):
         raise NotImplementedError("Base commands cannot get usage")
@@ -757,7 +757,7 @@ class BaseCommand(object):
         prog_name=None,
         complete_var=None,
         standalone_mode=True,
-        **extra
+        **extra,
     ):
         """This is the way to invoke a script with all the bells and
         whistles as a command line application.  This will always terminate
@@ -832,7 +832,7 @@ class BaseCommand(object):
                     raise
                 e.show()
                 sys.exit(e.exit_code)
-            except IOError as e:
+            except OSError as e:
                 if e.errno == errno.EPIPE:
                     sys.stdout = PacifyFlushWrapper(sys.stdout)
                     sys.stderr = PacifyFlushWrapper(sys.stderr)
@@ -935,7 +935,7 @@ class Command(BaseCommand):
         self.deprecated = deprecated
 
     def __repr__(self):
-        return "<{} {}>".format(self.__class__.__name__, self.name)
+        return f"<{self.__class__.__name__} {self.name}>"
 
     def get_usage(self, ctx):
         """Formats the usage line into a string and returns it.
@@ -1140,7 +1140,7 @@ class MultiCommand(Command):
         subcommand_metavar=None,
         chain=False,
         result_callback=None,
-        **attrs
+        **attrs,
     ):
         Command.__init__(self, name, **attrs)
         if no_args_is_help is None:
@@ -1350,7 +1350,7 @@ class MultiCommand(Command):
         if cmd is None and not ctx.resilient_parsing:
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
-            ctx.fail("No such command '{}'.".format(original_cmd_name))
+            ctx.fail(f"No such command '{original_cmd_name}'.")
 
         return cmd_name, cmd, args[1:]
 
@@ -1457,7 +1457,7 @@ class CommandCollection(MultiCommand):
         return sorted(rv)
 
 
-class Parameter(object):
+class Parameter:
     r"""A parameter to a command comes in two versions: they are either
     :class:`Option`\s or :class:`Argument`\s.  Other subclasses are currently
     not supported by design as some of the internals for parsing are
@@ -1545,7 +1545,7 @@ class Parameter(object):
         self.autocompletion = autocompletion
 
     def __repr__(self):
-        return "<{} {}>".format(self.__class__.__name__, self.name)
+        return f"<{self.__class__.__name__} {self.name}>"
 
     @property
     def human_readable_name(self):
@@ -1755,7 +1755,7 @@ class Option(Parameter):
         hidden=False,
         show_choices=True,
         show_envvar=False,
-        **attrs
+        **attrs,
     ):
         default_is_missing = attrs.get("default", _missing) is _missing
         Parameter.__init__(self, param_decls, type=type, **attrs)
@@ -1885,7 +1885,7 @@ class Option(Parameter):
 
         if self.is_flag:
             kwargs.pop("nargs", None)
-            action_const = "{}_const".format(action)
+            action_const = f"{action}_const"
             if self.is_bool_flag and self.secondary_opts:
                 parser.add_option(self.opts, action=action_const, const=True, **kwargs)
                 parser.add_option(
@@ -1909,7 +1909,7 @@ class Option(Parameter):
             if any_slashes:
                 any_prefix_is_slash[:] = [True]
             if not self.is_flag and not self.count:
-                rv += " {}".format(self.make_metavar())
+                rv += f" {self.make_metavar()}"
             return rv
 
         rv = [_write_opts(self.opts)]
@@ -1922,7 +1922,7 @@ class Option(Parameter):
             envvar = self.envvar
             if envvar is None:
                 if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
-                    envvar = "{}_{}".format(ctx.auto_envvar_prefix, self.name.upper())
+                    envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
             if envvar is not None:
                 extra.append(
                     "env var: {}".format(
@@ -1933,21 +1933,19 @@ class Option(Parameter):
                 )
         if self.default is not None and (self.show_default or ctx.show_default):
             if isinstance(self.show_default, str):
-                default_string = "({})".format(self.show_default)
+                default_string = f"({self.show_default})"
             elif isinstance(self.default, (list, tuple)):
                 default_string = ", ".join(str(d) for d in self.default)
             elif inspect.isfunction(self.default):
                 default_string = "(dynamic)"
             else:
                 default_string = self.default
-            extra.append("default: {}".format(default_string))
+            extra.append(f"default: {default_string}")
 
         if self.required:
             extra.append("required")
         if extra:
-            help = "{}[{}]".format(
-                "{}  ".format(help) if help else "", "; ".join(extra)
-            )
+            help = "{}[{}]".format(f"{help}  " if help else "", "; ".join(extra))
 
         return ("; " if any_prefix_is_slash else " / ").join(rv), help
 
@@ -1992,7 +1990,7 @@ class Option(Parameter):
         if rv is not None:
             return rv
         if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
-            envvar = "{}_{}".format(ctx.auto_envvar_prefix, self.name.upper())
+            envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
             return os.environ.get(envvar)
 
     def value_from_envvar(self, ctx):
@@ -2047,7 +2045,7 @@ class Argument(Parameter):
         if not var:
             var = self.name.upper()
         if not self.required:
-            var = "[{}]".format(var)
+            var = f"[{var}]"
         if self.nargs != 1:
             var += "..."
         return var

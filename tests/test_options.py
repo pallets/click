@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import re
 
@@ -12,7 +11,7 @@ def test_prefixes(runner):
     @click.option("++foo", is_flag=True, help="das foo")
     @click.option("--bar", is_flag=True, help="das bar")
     def cli(foo, bar):
-        click.echo("foo={} bar={}".format(foo, bar))
+        click.echo(f"foo={foo} bar={bar}")
 
     result = runner.invoke(cli, ["++foo", "--bar"])
     assert not result.exception
@@ -57,7 +56,7 @@ def test_counting(runner):
     @click.command()
     @click.option("-v", count=True, help="Verbosity", type=click.IntRange(0, 3))
     def cli(v):
-        click.echo("verbosity={:d}".format(v))
+        click.echo(f"verbosity={v:d}")
 
     result = runner.invoke(cli, ["-vvv"])
     assert not result.exception
@@ -86,7 +85,7 @@ def test_unknown_options(runner, unknown_flag):
 
     result = runner.invoke(cli, [unknown_flag])
     assert result.exception
-    assert "no such option: {}".format(unknown_flag) in result.output
+    assert f"no such option: {unknown_flag}" in result.output
 
 
 def test_multiple_required(runner):
@@ -108,7 +107,7 @@ def test_empty_envvar(runner):
     @click.command()
     @click.option("--mypath", type=click.Path(exists=True), envvar="MYPATH")
     def cli(mypath):
-        click.echo("mypath: {}".format(mypath))
+        click.echo(f"mypath: {mypath}")
 
     result = runner.invoke(cli, [], env={"MYPATH": ""})
     assert result.exit_code == 0
@@ -145,7 +144,7 @@ def test_multiple_envvar(runner):
         cmd,
         [],
         auto_envvar_prefix="TEST",
-        env={"TEST_ARG": "foo{}bar".format(os.path.pathsep)},
+        env={"TEST_ARG": f"foo{os.path.pathsep}bar"},
     )
     assert not result.exception
     assert result.output == "foo|bar\n"

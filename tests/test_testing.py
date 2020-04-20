@@ -59,7 +59,7 @@ def test_prompts():
     @click.command()
     @click.option("--foo", prompt=True)
     def test(foo):
-        click.echo("foo={}".format(foo))
+        click.echo(f"foo={foo}")
 
     runner = CliRunner()
     result = runner.invoke(test, input="wau wau\n")
@@ -69,7 +69,7 @@ def test_prompts():
     @click.command()
     @click.option("--foo", prompt=True, hide_input=True)
     def test(foo):
-        click.echo("foo={}".format(foo))
+        click.echo(f"foo={foo}")
 
     runner = CliRunner()
     result = runner.invoke(test, input="wau wau\n")

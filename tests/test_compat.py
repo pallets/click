@@ -23,7 +23,7 @@ def test_zsh_func_name():
 
 @pytest.mark.xfail(WIN, reason="Jupyter not tested/supported on Windows")
 def test_is_jupyter_kernel_output():
-    class JupyterKernelFakeStream(object):
+    class JupyterKernelFakeStream:
         pass
 
     # implementation detail, aka cheapskate test

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys
 
 import pytest
@@ -12,7 +11,7 @@ def test_nargs_star(runner):
     @click.argument("dst")
     def copy(src, dst):
         click.echo("src={}".format("|".join(src)))
-        click.echo("dst={}".format(dst))
+        click.echo(f"dst={dst}")
 
     result = runner.invoke(copy, ["foo.txt", "bar.txt", "dir"])
     assert not result.exception
@@ -33,7 +32,7 @@ def test_nargs_tup(runner):
     @click.argument("name", nargs=1)
     @click.argument("point", nargs=2, type=click.INT)
     def copy(name, point):
-        click.echo("name={}".format(name))
+        click.echo(f"name={name}")
         click.echo("point={0[0]}/{0[1]}".format(point))
 
     result = runner.invoke(copy, ["peter", "1", "2"])
@@ -91,7 +90,7 @@ def test_bytes_args(runner, monkeypatch):
 
     runner.invoke(
         from_bytes,
-        [u"Something outside of ASCII range: 林".encode("UTF-8")],
+        ["Something outside of ASCII range: 林".encode()],
         catch_exceptions=False,
     )
 
@@ -208,7 +207,7 @@ def test_missing_arg(runner):
     @click.command()
     @click.argument("arg")
     def cmd(arg):
-        click.echo("arg:{}".format(arg))
+        click.echo(f"arg:{arg}")
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2

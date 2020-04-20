@@ -4,7 +4,7 @@ import os
 import click
 
 
-class Config(object):
+class Config:
     """The config in this example only holds aliases."""
 
     def __init__(self):
@@ -121,7 +121,7 @@ def commit():
 @pass_config
 def status(config):
     """Shows the status."""
-    click.echo("Status for {}".format(config.path))
+    click.echo(f"Status for {config.path}")
 
 
 @cli.command()
@@ -135,4 +135,4 @@ def alias(config, alias_, cmd, config_file):
     """Adds an alias to the specified configuration file."""
     config.add_alias(alias_, cmd)
     config.write_config(config_file)
-    click.echo("Added '{}' as alias for '{}'".format(alias_, cmd))
+    click.echo(f"Added '{alias_}' as alias for '{cmd}'")

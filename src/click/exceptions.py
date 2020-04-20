@@ -28,7 +28,7 @@ class ClickException(Exception):
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
-        echo("Error: {}".format(self.format_message()), file=file)
+        echo(f"Error: {self.format_message()}", file=file)
 
 
 class UsageError(ClickException):
@@ -58,8 +58,8 @@ class UsageError(ClickException):
             )
         if self.ctx is not None:
             color = self.ctx.color
-            echo("{}\n{}".format(self.ctx.get_usage(), hint), file=file, color=color)
-        echo("Error: {}".format(self.format_message()), file=file, color=color)
+            echo(f"{self.ctx.get_usage()}\n{hint}", file=file, color=color)
+        echo(f"Error: {self.format_message()}", file=file, color=color)
 
 
 class BadParameter(UsageError):
@@ -91,10 +91,10 @@ class BadParameter(UsageError):
         elif self.param is not None:
             param_hint = self.param.get_error_hint(self.ctx)
         else:
-            return "Invalid value: {}".format(self.message)
+            return f"Invalid value: {self.message}"
         param_hint = _join_param_hints(param_hint)
 
-        return "Invalid value for {}: {}".format(param_hint, self.message)
+        return f"Invalid value for {param_hint}: {self.message}"
 
 
 class MissingParameter(BadParameter):
@@ -133,13 +133,13 @@ class MissingParameter(BadParameter):
             msg_extra = self.param.type.get_missing_message(self.param)
             if msg_extra:
                 if msg:
-                    msg += ".  {}".format(msg_extra)
+                    msg += f".  {msg_extra}"
                 else:
                     msg = msg_extra
 
         return "Missing {}{}{}{}".format(
             param_type,
-            " {}".format(param_hint) if param_hint else "",
+            f" {param_hint}" if param_hint else "",
             ".  " if msg else ".",
             msg or "",
         )
@@ -147,7 +147,7 @@ class MissingParameter(BadParameter):
     def __str__(self):
         if self.message is None:
             param_name = self.param.name if self.param else None
-            return "missing parameter: {}".format(param_name)
+            return f"missing parameter: {param_name}"
         else:
             return self.message
 
@@ -161,7 +161,7 @@ class NoSuchOption(UsageError):
 
     def __init__(self, option_name, message=None, possibilities=None, ctx=None):
         if message is None:
-            message = "no such option: {}".format(option_name)
+            message = f"no such option: {option_name}"
         UsageError.__init__(self, message, ctx)
         self.option_name = option_name
         self.possibilities = possibilities
@@ -216,7 +216,7 @@ class FileError(ClickException):
         self.filename = filename
 
     def format_message(self):
-        return "Could not open file {}: {}".format(self.ui_filename, self.message)
+        return f"Could not open file {self.ui_filename}: {self.message}"
 
 
 class Abort(RuntimeError):

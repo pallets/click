@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import time
 
 import pytest
@@ -7,7 +6,7 @@ import click._termui_impl
 from click._compat import WIN
 
 
-class FakeClock(object):
+class FakeClock:
     def __init__(self):
         self.now = time.time()
 
@@ -42,7 +41,7 @@ def test_progressbar_strip_regression(runner, monkeypatch):
 
 
 def test_progressbar_length_hint(runner, monkeypatch):
-    class Hinted(object):
+    class Hinted:
         def __init__(self, n):
             self.items = list(range(n))
 
@@ -123,7 +122,7 @@ def test_progressbar_format_pos(runner, pos, length):
     with _create_progress(length, length_known=length != 0, pos=pos) as progress:
         result = progress.format_pos()
         if progress.length_known:
-            assert result == "{}/{}".format(pos, length)
+            assert result == f"{pos}/{length}"
         else:
             assert result == str(pos)
 
@@ -291,7 +290,7 @@ def test_progressbar_item_show_func(runner, monkeypatch):
     @click.command()
     def cli():
         with click.progressbar(
-            range(4), item_show_func=lambda x: "Custom {}".format(x)
+            range(4), item_show_func=lambda x: f"Custom {x}"
         ) as progress:
             for _ in progress:
                 fake_clock.advance_time()
@@ -315,7 +314,7 @@ def test_progressbar_update_with_item_show_func(runner, monkeypatch):
     @click.command()
     def cli():
         with click.progressbar(
-            length=6, item_show_func=lambda x: "Custom {}".format(x)
+            length=6, item_show_func=lambda x: f"Custom {x}"
         ) as progress:
             while not progress.finished:
                 fake_clock.advance_time()
@@ -333,7 +332,7 @@ def test_progressbar_update_with_item_show_func(runner, monkeypatch):
     assert "Custom 4" in lines[2]
 
 
-@pytest.mark.parametrize("key_char", (u"h", u"H", u"é", u"À", u" ", u"字", u"àH", u"àR"))
+@pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
 def test_getchar_windows(runner, monkeypatch, key_char, echo):
@@ -344,7 +343,7 @@ def test_getchar_windows(runner, monkeypatch, key_char, echo):
 
 
 @pytest.mark.parametrize(
-    "special_key_char, key_char", [(u"\x00", "a"), (u"\x00", "b"), (u"\xe0", "c")]
+    "special_key_char, key_char", [("\x00", "a"), ("\x00", "b"), ("\xe0", "c")]
 )
 @pytest.mark.skipif(
     not WIN, reason="Tests special character inputs using the msvcrt module."
@@ -359,7 +358,7 @@ def test_getchar_special_key_windows(runner, monkeypatch, special_key_char, key_
 
 
 @pytest.mark.parametrize(
-    ("key_char", "exc"), [(u"\x03", KeyboardInterrupt), (u"\x1a", EOFError)],
+    ("key_char", "exc"), [("\x03", KeyboardInterrupt), ("\x1a", EOFError)],
 )
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
 def test_getchar_windows_exceptions(runner, monkeypatch, key_char, exc):

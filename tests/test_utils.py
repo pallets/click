@@ -12,7 +12,7 @@ from click._compat import WIN
 
 def test_echo(runner):
     with runner.isolation() as outstreams:
-        click.echo(u"\N{SNOWMAN}")
+        click.echo("\N{SNOWMAN}")
         click.echo(b"\x44\x44")
         click.echo(42, nl=False)
         click.echo(b"a", nl=False)
@@ -38,8 +38,8 @@ def test_echo_custom_file():
     import io
 
     f = io.StringIO()
-    click.echo(u"hello", file=f)
-    assert f.getvalue() == u"hello\n"
+    click.echo("hello", file=f)
+    assert f.getvalue() == "hello\n"
 
 
 @pytest.mark.parametrize(
@@ -80,14 +80,12 @@ def test_unstyle_other_ansi(text, expect):
 def test_filename_formatting():
     assert click.format_filename(b"foo.txt") == "foo.txt"
     assert click.format_filename(b"/x/foo.txt") == "/x/foo.txt"
-    assert click.format_filename(u"/x/foo.txt") == "/x/foo.txt"
-    assert click.format_filename(u"/x/foo.txt", shorten=True) == "foo.txt"
+    assert click.format_filename("/x/foo.txt") == "/x/foo.txt"
+    assert click.format_filename("/x/foo.txt", shorten=True) == "foo.txt"
 
     # filesystem encoding on windows permits this.
     if not WIN:
-        assert (
-            click.format_filename(b"/x/foo\xff.txt", shorten=True) == u"foo\ufffd.txt"
-        )
+        assert click.format_filename(b"/x/foo\xff.txt", shorten=True) == "foo\ufffd.txt"
 
 
 def test_prompts(runner):
@@ -192,21 +190,21 @@ def test_echo_color_flag(monkeypatch, capfd):
 
     click.echo(styled_text, color=False)
     out, err = capfd.readouterr()
-    assert out == "{}\n".format(text)
+    assert out == f"{text}\n"
 
     click.echo(styled_text, color=True)
     out, err = capfd.readouterr()
-    assert out == "{}\n".format(styled_text)
+    assert out == f"{styled_text}\n"
 
     isatty = True
     click.echo(styled_text)
     out, err = capfd.readouterr()
-    assert out == "{}\n".format(styled_text)
+    assert out == f"{styled_text}\n"
 
     isatty = False
     click.echo(styled_text)
     out, err = capfd.readouterr()
-    assert out == "{}\n".format(text)
+    assert out == f"{text}\n"
 
 
 @pytest.mark.skipif(WIN, reason="Test too complex to make work windows.")

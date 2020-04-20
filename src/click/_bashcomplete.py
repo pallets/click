@@ -94,7 +94,7 @@ def get_completion_script(prog_name, complete_var, shell):
     return (
         script
         % {
-            "complete_func": "_{}_completion".format(cf_name),
+            "complete_func": f"_{cf_name}_completion",
             "script_names": prog_name,
             "autocomplete_var": complete_var,
         }

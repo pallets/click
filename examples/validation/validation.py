@@ -44,6 +44,6 @@ def cli(count, foo, url):
             'If a value is provided it needs to be the value "wat".',
             param_hint=["--foo"],
         )
-    click.echo("count: {}".format(count))
-    click.echo("foo: {}".format(foo))
-    click.echo("url: {!r}".format(url))
+    click.echo(f"count: {count}")
+    click.echo(f"foo: {foo}")
+    click.echo(f"url: {url!r}")

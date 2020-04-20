@@ -12,7 +12,7 @@ from .utils import LazyFile
 from .utils import safecall
 
 
-class ParamType(object):
+class ParamType:
     """Helper for converting values through types.  The following is
     necessary for a valid type:
 
@@ -258,7 +258,7 @@ class IntParamType(ParamType):
         try:
             return int(value)
         except ValueError:
-            self.fail("{} is not a valid integer".format(value), param, ctx)
+            self.fail(f"{value} is not a valid integer", param, ctx)
 
     def __repr__(self):
         return "INT"
@@ -320,7 +320,7 @@ class IntRange(IntParamType):
         return rv
 
     def __repr__(self):
-        return "IntRange({}, {})".format(self.min, self.max)
+        return f"IntRange({self.min}, {self.max})"
 
 
 class FloatParamType(ParamType):
@@ -330,9 +330,7 @@ class FloatParamType(ParamType):
         try:
             return float(value)
         except ValueError:
-            self.fail(
-                "{} is not a valid floating point value".format(value), param, ctx
-            )
+            self.fail(f"{value} is not a valid floating point value", param, ctx)
 
     def __repr__(self):
         return "FLOAT"
@@ -394,7 +392,7 @@ class FloatRange(FloatParamType):
         return rv
 
     def __repr__(self):
-        return "FloatRange({}, {})".format(self.min, self.max)
+        return f"FloatRange({self.min}, {self.max})"
 
 
 class BoolParamType(ParamType):
@@ -408,7 +406,7 @@ class BoolParamType(ParamType):
             return True
         elif value in ("false", "f", "0", "no", "n"):
             return False
-        self.fail("{} is not a valid boolean".format(value), param, ctx)
+        self.fail(f"{value} is not a valid boolean", param, ctx)
 
     def __repr__(self):
         return "BOOL"
@@ -423,7 +421,7 @@ class UUIDParameterType(ParamType):
         try:
             return uuid.UUID(value)
         except ValueError:
-            self.fail("{} is not a valid UUID value".format(value), param, ctx)
+            self.fail(f"{value} is not a valid UUID value", param, ctx)
 
     def __repr__(self):
         return "UUID"
@@ -506,7 +504,7 @@ class File(ParamType):
                 else:
                     ctx.call_on_close(safecall(f.flush))
             return f
-        except (IOError, OSError) as e:  # noqa: B014
+        except OSError as e:  # noqa: B014
             self.fail(
                 "Could not open file: {}: {}".format(
                     filename_to_ui(value), get_strerror(e)
@@ -713,7 +711,7 @@ def convert_type(ty, default=None):
         try:
             if issubclass(ty, ParamType):
                 raise AssertionError(
-                    "Attempted to use an uninstantiated parameter type ({}).".format(ty)
+                    f"Attempted to use an uninstantiated parameter type ({ty})."
                 )
         except TypeError:
             pass

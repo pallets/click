@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import pytest
 
 import click
@@ -6,7 +5,7 @@ from click.core import ParameterSource
 
 
 def test_ensure_context_objects(runner):
-    class Foo(object):
+    class Foo:
         def __init__(self):
             self.title = "default"
 
@@ -28,7 +27,7 @@ def test_ensure_context_objects(runner):
 
 
 def test_get_context_objects(runner):
-    class Foo(object):
+    class Foo:
         def __init__(self):
             self.title = "default"
 
@@ -51,7 +50,7 @@ def test_get_context_objects(runner):
 
 
 def test_get_context_objects_no_ensuring(runner):
-    class Foo(object):
+    class Foo:
         def __init__(self):
             self.title = "default"
 
@@ -74,7 +73,7 @@ def test_get_context_objects_no_ensuring(runner):
 
 
 def test_get_context_objects_missing(runner):
-    class Foo(object):
+    class Foo:
         pass
 
     pass_foo = click.make_pass_decorator(Foo)
@@ -132,7 +131,7 @@ def test_global_context_object(runner):
 
 
 def test_context_meta(runner):
-    LANG_KEY = "{}.lang".format(__name__)
+    LANG_KEY = f"{__name__}.lang"
 
     def set_language(value):
         click.get_current_context().meta[LANG_KEY] = value
@@ -219,7 +218,7 @@ def test_make_pass_decorator_args(runner):
     invocation order.
     """
 
-    class Foo(object):
+    class Foo:
         title = "foocmd"
 
     pass_foo = click.make_pass_decorator(Foo)

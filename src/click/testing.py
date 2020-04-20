@@ -12,7 +12,7 @@ from . import utils
 from ._compat import _find_binary_reader
 
 
-class EchoingStdin(object):
+class EchoingStdin:
     def __init__(self, input, output):
         self._input = input
         self._output = output
@@ -58,7 +58,7 @@ def make_input_stream(input, charset):
     return io.BytesIO(input)
 
 
-class Result(object):
+class Result:
     """Holds the captured result of an invoked CLI script."""
 
     def __init__(
@@ -104,7 +104,7 @@ class Result(object):
         )
 
 
-class CliRunner(object):
+class CliRunner:
     """The CLI runner provides functionality to invoke a Click command line
     script for unittesting purposes in a isolated environment.  This only
     works in single-threaded systems without any concurrency as it changes the
@@ -191,7 +191,7 @@ class CliRunner(object):
         def visible_input(prompt=None):
             sys.stdout.write(prompt or "")
             val = input.readline().rstrip("\r\n")
-            sys.stdout.write("{}\n".format(val))
+            sys.stdout.write(f"{val}\n")
             sys.stdout.flush()
             return val
 
@@ -261,7 +261,7 @@ class CliRunner(object):
         env=None,
         catch_exceptions=True,
         color=False,
-        **extra
+        **extra,
     ):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
@@ -359,5 +359,5 @@ class CliRunner(object):
             os.chdir(cwd)
             try:
                 shutil.rmtree(t)
-            except (OSError, IOError):  # noqa: B014
+            except OSError:  # noqa: B014
                 pass

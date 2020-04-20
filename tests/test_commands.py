@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import re
 
 import click
@@ -26,7 +25,7 @@ def test_other_command_forward(runner):
     @cli.command()
     @click.option("--count", default=1)
     def test(count):
-        click.echo("Count: {:d}".format(count))
+        click.echo(f"Count: {count:d}")
 
     @cli.command()
     @click.option("--count", default=1)
@@ -102,7 +101,7 @@ def test_group_with_args(runner):
     @click.group()
     @click.argument("obj")
     def cli(obj):
-        click.echo("obj={}".format(obj))
+        click.echo(f"obj={obj}")
 
     @cli.command()
     def move():
@@ -264,7 +263,7 @@ def test_unprocessed_options(runner):
     @click.argument("args", nargs=-1, type=click.UNPROCESSED)
     @click.option("--verbose", "-v", count=True)
     def cli(verbose, args):
-        click.echo("Verbosity: {}".format(verbose))
+        click.echo(f"Verbosity: {verbose}")
         click.echo("Args: {}".format("|".join(args)))
 
     result = runner.invoke(cli, ["-foo", "-vvvvx", "--muhaha", "x", "y", "-x"])

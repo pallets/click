@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This module is based on the excellent work by Adam Bartoš who
 # provided a lot of what went into the implementation here in
 # the discussion to issue1602 in the Python bug tracker.
@@ -146,7 +145,7 @@ class _WindowsConsoleReader(_WindowsConsoleRawIOBase):
             # wait for KeyboardInterrupt
             time.sleep(0.1)
         if not rv:
-            raise OSError("Windows error: {}".format(GetLastError()))
+            raise OSError(f"Windows error: {GetLastError()}")
 
         if buffer[0] == EOF:
             return 0
@@ -163,7 +162,7 @@ class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
             return "ERROR_SUCCESS"
         elif errno == ERROR_NOT_ENOUGH_MEMORY:
             return "ERROR_NOT_ENOUGH_MEMORY"
-        return "Windows error {}".format(errno)
+        return f"Windows error {errno}"
 
     def write(self, b):
         bytes_to_be_written = len(b)
@@ -185,7 +184,7 @@ class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
         return bytes_written
 
 
-class ConsoleStream(object):
+class ConsoleStream:
     def __init__(self, text_stream, byte_stream):
         self._text_stream = text_stream
         self.buffer = byte_stream
@@ -219,7 +218,7 @@ class ConsoleStream(object):
         )
 
 
-class WindowsChunkedWriter(object):
+class WindowsChunkedWriter:
     """
     Wraps a stream (such as stdout), acting as a transparent proxy for all
     attribute access apart from method 'write()' which we wrap to write in

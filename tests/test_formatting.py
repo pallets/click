@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import click
 
 
@@ -151,7 +150,7 @@ def test_formatting_usage_error(runner):
     @click.command()
     @click.argument("arg")
     def cmd(arg):
-        click.echo("arg:{}".format(arg))
+        click.echo(f"arg:{arg}")
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2
@@ -208,7 +207,7 @@ def test_formatting_usage_error_nested(runner):
     @cmd.command()
     @click.argument("bar")
     def foo(bar):
-        click.echo("foo:{}".format(bar))
+        click.echo(f"foo:{bar}")
 
     result = runner.invoke(cmd, ["foo"])
     assert result.exit_code == 2
@@ -224,7 +223,7 @@ def test_formatting_usage_error_no_help(runner):
     @click.command(add_help_option=False)
     @click.argument("arg")
     def cmd(arg):
-        click.echo("arg:{}".format(arg))
+        click.echo(f"arg:{arg}")
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2
@@ -239,7 +238,7 @@ def test_formatting_usage_custom_help(runner):
     @click.command(context_settings=dict(help_option_names=["--man"]))
     @click.argument("arg")
     def cmd(arg):
-        click.echo("arg:{}".format(arg))
+        click.echo(f"arg:{arg}")
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2

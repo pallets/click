@@ -7,7 +7,7 @@ import click
 CONTEXT_SETTINGS = dict(auto_envvar_prefix="COMPLEX")
 
 
-class Environment(object):
+class Environment:
     def __init__(self):
         self.verbose = False
         self.home = os.getcwd()
@@ -39,9 +39,7 @@ class ComplexCLI(click.MultiCommand):
 
     def get_command(self, ctx, name):
         try:
-            mod = __import__(
-                "complex.commands.cmd_{}".format(name), None, None, ["cli"]
-            )
+            mod = __import__(f"complex.commands.cmd_{name}", None, None, ["cli"])
         except ImportError:
             return
         return mod.cli

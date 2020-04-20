@@ -72,7 +72,7 @@ def make_default_short_help(help, max_length=45):
     return "".join(result)
 
 
-class LazyFile(object):
+class LazyFile:
     """A lazy file works like a regular file but it does not fully open
     the file but it does perform some basic checks early to see if the
     filename parameter does make sense.  This is useful for safely opening
@@ -105,7 +105,7 @@ class LazyFile(object):
     def __repr__(self):
         if self._f is not None:
             return repr(self._f)
-        return "<unopened file '{}' {}>".format(self.name, self.mode)
+        return f"<unopened file '{self.name}' {self.mode}>"
 
     def open(self):
         """Opens the file if it's not yet open.  This call might fail with
@@ -118,7 +118,7 @@ class LazyFile(object):
             rv, self.should_close = open_stream(
                 self.name, self.mode, self.encoding, self.errors, atomic=self.atomic
             )
-        except (IOError, OSError) as e:  # noqa: E402
+        except OSError as e:  # noqa: E402
             from .exceptions import FileError
 
             raise FileError(self.name, hint=get_strerror(e))
@@ -148,7 +148,7 @@ class LazyFile(object):
         return iter(self._f)
 
 
-class KeepOpenFile(object):
+class KeepOpenFile:
     def __init__(self, file):
         self._file = file
 
@@ -226,9 +226,9 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
         message = str(message)
 
     if nl:
-        message = message or u""
+        message = message or ""
         if isinstance(message, str):
-            message += u"\n"
+            message += "\n"
         else:
             message += b"\n"
 
@@ -276,7 +276,7 @@ def get_binary_stream(name):
     """
     opener = binary_streams.get(name)
     if opener is None:
-        raise TypeError("Unknown standard stream '{}'".format(name))
+        raise TypeError(f"Unknown standard stream '{name}'")
     return opener()
 
 
@@ -293,7 +293,7 @@ def get_text_stream(name, encoding=None, errors="strict"):
     """
     opener = text_streams.get(name)
     if opener is None:
-        raise TypeError("Unknown standard stream '{}'".format(name))
+        raise TypeError(f"Unknown standard stream '{name}'")
     return opener(encoding, errors)
 
 
@@ -419,7 +419,7 @@ def get_app_dir(app_name, roaming=True, force_posix=False):
     )
 
 
-class PacifyFlushWrapper(object):
+class PacifyFlushWrapper:
     """This wrapper is used to catch and suppress BrokenPipeErrors resulting
     from ``.flush()`` being called on broken pipe during the shutdown/final-GC
     of the Python interpreter. Notably ``.flush()`` is always called on
@@ -434,7 +434,7 @@ class PacifyFlushWrapper(object):
     def flush(self):
         try:
             self.wrapped.flush()
-        except IOError as e:
+        except OSError as e:
             import errno
 
             if e.errno != errno.EPIPE:
