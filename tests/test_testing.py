@@ -1,18 +1,12 @@
 import os
 import sys
+from io import BytesIO
 
 import pytest
 
 import click
-from click._compat import PY2
 from click._compat import WIN
 from click.testing import CliRunner
-
-# Use the most reasonable io that users would use for the python version.
-if PY2:
-    from cStringIO import StringIO as ReasonableBytesIO
-else:
-    from io import BytesIO as ReasonableBytesIO
 
 
 def test_runner():
@@ -51,12 +45,12 @@ def test_runner_with_stream():
             o.flush()
 
     runner = CliRunner()
-    result = runner.invoke(test, input=ReasonableBytesIO(b"Hello World!\n"))
+    result = runner.invoke(test, input=BytesIO(b"Hello World!\n"))
     assert not result.exception
     assert result.output == "Hello World!\n"
 
     runner = CliRunner(echo_stdin=True)
-    result = runner.invoke(test, input=ReasonableBytesIO(b"Hello World!\n"))
+    result = runner.invoke(test, input=BytesIO(b"Hello World!\n"))
     assert not result.exception
     assert result.output == "Hello World!\nHello World!\n"
 

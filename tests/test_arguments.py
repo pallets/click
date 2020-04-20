@@ -4,8 +4,6 @@ import sys
 import pytest
 
 import click
-from click._compat import PY2
-from click._compat import text_type
 
 
 def test_nargs_star(runner):
@@ -83,18 +81,13 @@ def test_bytes_args(runner, monkeypatch):
     @click.argument("arg")
     def from_bytes(arg):
         assert isinstance(
-            arg, text_type
+            arg, str
         ), "UTF-8 encoded argument should be implicitly converted to Unicode"
 
     # Simulate empty locale environment variables
-    if PY2:
-        monkeypatch.setattr(sys.stdin, "encoding", "ANSI_X3.4-1968")
-        monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "ANSI_X3.4-1968")
-        monkeypatch.setattr(sys, "getdefaultencoding", lambda: "ascii")
-    else:
-        monkeypatch.setattr(sys.stdin, "encoding", "utf-8")
-        monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "utf-8")
-        monkeypatch.setattr(sys, "getdefaultencoding", lambda: "utf-8")
+    monkeypatch.setattr(sys.stdin, "encoding", "utf-8")
+    monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "utf-8")
+    monkeypatch.setattr(sys, "getdefaultencoding", lambda: "utf-8")
 
     runner.invoke(
         from_bytes,
@@ -268,7 +261,7 @@ def test_nargs_star_ordering(runner):
             click.echo(arg)
 
     result = runner.invoke(cmd, ["a", "b", "c"])
-    assert result.output.splitlines() == ["(u'a',)" if PY2 else "('a',)", "b", "c"]
+    assert result.output.splitlines() == ["('a',)", "b", "c"]
 
 
 def test_nargs_specified_plus_star_ordering(runner):
@@ -281,11 +274,7 @@ def test_nargs_specified_plus_star_ordering(runner):
             click.echo(arg)
 
     result = runner.invoke(cmd, ["a", "b", "c", "d", "e", "f"])
-    assert result.output.splitlines() == [
-        "(u'a', u'b', u'c')" if PY2 else "('a', 'b', 'c')",
-        "d",
-        "(u'e', u'f')" if PY2 else "('e', 'f')",
-    ]
+    assert result.output.splitlines() == ["('a', 'b', 'c')", "d", "('e', 'f')"]
 
 
 def test_defaults_for_nargs(runner):

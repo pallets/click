@@ -7,17 +7,15 @@ placed in this module and only imported as needed.
 import contextlib
 import math
 import os
+import shlex
 import sys
 import time
 
 from ._compat import _default_text_stdout
 from ._compat import CYGWIN
 from ._compat import get_best_encoding
-from ._compat import int_types
 from ._compat import isatty
 from ._compat import open_stream
-from ._compat import range_type
-from ._compat import shlex_quote
 from ._compat import strip_ansi
 from ._compat import term_len
 from ._compat import WIN
@@ -45,7 +43,7 @@ def _length_hint(obj):
             hint = get_hint(obj)
         except TypeError:
             return None
-        if hint is NotImplemented or not isinstance(hint, int_types) or hint < 0:
+        if hint is NotImplemented or not isinstance(hint, int) or hint < 0:
             return None
         return hint
 
@@ -89,7 +87,7 @@ class ProgressBar(object):
         if iterable is None:
             if length is None:
                 raise TypeError("iterable or length is required")
-            iterable = range_type(length)
+            iterable = range(length)
         self.iter = iter(iterable)
         self.length = length
         self.length_known = length is not None
@@ -361,7 +359,7 @@ def pager(generator, color=None):
     try:
         if (
             hasattr(os, "system")
-            and os.system("more {}".format(shlex_quote(filename))) == 0
+            and os.system("more {}".format(shlex.quote(filename))) == 0
         ):
             return _pipepager(generator, "more", color)
         return _nullpager(stdout, generator, color)
@@ -431,7 +429,7 @@ def _tempfilepager(generator, cmd, color):
     with open_stream(filename, "wb")[0] as f:
         f.write(text.encode(encoding))
     try:
-        os.system("{} {}".format(shlex_quote(cmd), shlex_quote(filename)))
+        os.system("{} {}".format(shlex.quote(cmd), shlex.quote(filename)))
     finally:
         os.unlink(filename)
 
@@ -476,7 +474,7 @@ class Editor(object):
             environ = None
         try:
             c = subprocess.Popen(
-                "{} {}".format(shlex_quote(editor), shlex_quote(filename)),
+                "{} {}".format(shlex.quote(editor), shlex.quote(filename)),
                 env=environ,
                 shell=True,
             )
@@ -553,16 +551,16 @@ def open_url(url, wait=False, locate=False):
     elif WIN:
         if locate:
             url = _unquote_file(url)
-            args = "explorer /select,{}".format(shlex_quote(url))
+            args = "explorer /select,{}".format(shlex.quote(url))
         else:
-            args = 'start {} "" {}'.format("/WAIT" if wait else "", shlex_quote(url))
+            args = 'start {} "" {}'.format("/WAIT" if wait else "", shlex.quote(url))
         return os.system(args)
     elif CYGWIN:
         if locate:
             url = _unquote_file(url)
-            args = "cygstart {}".format(shlex_quote(os.path.dirname(url)))
+            args = "cygstart {}".format(shlex.quote(os.path.dirname(url)))
         else:
-            args = "cygstart {} {}".format("-w" if wait else "", shlex_quote(url))
+            args = "cygstart {} {}".format("-w" if wait else "", shlex.quote(url))
         return os.system(args)
 
     try:

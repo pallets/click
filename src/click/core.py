@@ -6,11 +6,6 @@ from contextlib import contextmanager
 from functools import update_wrapper
 from itertools import repeat
 
-from ._compat import isidentifier
-from ._compat import iteritems
-from ._compat import PY2
-from ._compat import string_types
-from ._unicodefun import _check_for_unicode_literals
 from ._unicodefun import _verify_python3_env
 from .exceptions import Abort
 from .exceptions import BadParameter
@@ -31,7 +26,6 @@ from .types import BOOL
 from .types import convert_type
 from .types import IntRange
 from .utils import echo
-from .utils import get_os_args
 from .utils import make_default_short_help
 from .utils import make_str
 from .utils import PacifyFlushWrapper
@@ -736,7 +730,7 @@ class BaseCommand(object):
         :param extra: extra keyword arguments forwarded to the context
                       constructor.
         """
-        for key, value in iteritems(self.context_settings):
+        for key, value in self.context_settings.items():
             if key not in extra:
                 extra[key] = value
         ctx = Context(self, info_name=info_name, parent=parent, **extra)
@@ -797,16 +791,12 @@ class BaseCommand(object):
         :param extra: extra keyword arguments are forwarded to the context
                       constructor.  See :class:`Context` for more information.
         """
-        # If we are in Python 3, we will verify that the environment is
-        # sane at this point or reject further execution to avoid a
-        # broken script.
-        if not PY2:
-            _verify_python3_env()
-        else:
-            _check_for_unicode_literals()
+        # Verify that the environment is configured correctly, or reject
+        # further execution to avoid a broken script.
+        _verify_python3_env()
 
         if args is None:
-            args = get_os_args()
+            args = sys.argv[1:]
         else:
             args = list(args)
 
@@ -1841,7 +1831,7 @@ class Option(Parameter):
         possible_names = []
 
         for decl in decls:
-            if isidentifier(decl):
+            if decl.isidentifier():
                 if name is not None:
                     raise TypeError("Name defined twice")
                 name = decl
@@ -1863,7 +1853,7 @@ class Option(Parameter):
         if name is None and possible_names:
             possible_names.sort(key=lambda x: -len(x[0]))  # group long options first
             name = possible_names[0][1].replace("-", "_").lower()
-            if not isidentifier(name):
+            if not name.isidentifier():
                 name = None
 
         if name is None:
@@ -1942,7 +1932,7 @@ class Option(Parameter):
                     )
                 )
         if self.default is not None and (self.show_default or ctx.show_default):
-            if isinstance(self.show_default, string_types):
+            if isinstance(self.show_default, str):
                 default_string = "({})".format(self.show_default)
             elif isinstance(self.default, (list, tuple)):
                 default_string = ", ".join(str(d) for d in self.default)

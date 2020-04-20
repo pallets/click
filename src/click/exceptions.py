@@ -1,6 +1,5 @@
 from ._compat import filename_to_ui
 from ._compat import get_text_stderr
-from ._compat import PY2
 from .utils import echo
 
 
@@ -13,15 +12,11 @@ def _join_param_hints(param_hint):
 class ClickException(Exception):
     """An exception that Click can handle and show to the user."""
 
-    #: The exit code for this exception
+    #: The exit code for this exception.
     exit_code = 1
 
     def __init__(self, message):
-        ctor_msg = message
-        if PY2:
-            if ctor_msg is not None:
-                ctor_msg = ctor_msg.encode("utf-8")
-        Exception.__init__(self, ctor_msg)
+        super().__init__(message)
         self.message = message
 
     def format_message(self):
@@ -29,12 +24,6 @@ class ClickException(Exception):
 
     def __str__(self):
         return self.message
-
-    if PY2:
-        __unicode__ = __str__
-
-        def __str__(self):
-            return self.message.encode("utf-8")
 
     def show(self, file=None):
         if file is None:
@@ -161,12 +150,6 @@ class MissingParameter(BadParameter):
             return "missing parameter: {}".format(param_name)
         else:
             return self.message
-
-    if PY2:
-        __unicode__ = __str__
-
-        def __str__(self):
-            return self.__unicode__().encode("utf-8")
 
 
 class NoSuchOption(UsageError):

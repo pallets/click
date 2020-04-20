@@ -72,8 +72,4 @@ from .utils import get_os_args
 from .utils import get_text_stream
 from .utils import open_file
 
-# Controls if click should emit the warning about the use of unicode
-# literals.
-disable_unicode_literals_warning = False
-
-__version__ = "8.0.dev"
+__version__ = "8.0.0.dev"

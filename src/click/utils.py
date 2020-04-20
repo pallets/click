@@ -3,30 +3,22 @@ import sys
 
 from ._compat import _default_text_stderr
 from ._compat import _default_text_stdout
+from ._compat import _find_binary_writer
 from ._compat import auto_wrap_for_ansi
 from ._compat import binary_streams
 from ._compat import filename_to_ui
 from ._compat import get_filesystem_encoding
-from ._compat import get_streerror
+from ._compat import get_strerror
 from ._compat import is_bytes
 from ._compat import open_stream
-from ._compat import PY2
 from ._compat import should_strip_ansi
-from ._compat import string_types
 from ._compat import strip_ansi
 from ._compat import text_streams
-from ._compat import text_type
 from ._compat import WIN
 from .globals import resolve_color_default
 
-if not PY2:
-    from ._compat import _find_binary_writer
-elif WIN:
-    from ._winconsole import _get_windows_argv
-    from ._winconsole import _hash_py_argv
-    from ._winconsole import _initial_argv_hash
 
-echo_native_types = string_types + (bytes, bytearray)
+echo_native_types = (str, bytes, bytearray)
 
 
 def _posixify(name):
@@ -52,7 +44,7 @@ def make_str(value):
             return value.decode(get_filesystem_encoding())
         except UnicodeError:
             return value.decode("utf-8", "replace")
-    return text_type(value)
+    return str(value)
 
 
 def make_default_short_help(help, max_length=45):
@@ -129,7 +121,7 @@ class LazyFile(object):
         except (IOError, OSError) as e:  # noqa: E402
             from .exceptions import FileError
 
-            raise FileError(self.name, hint=get_streerror(e))
+            raise FileError(self.name, hint=get_strerror(e))
         self._f = rv
         return rv
 
@@ -231,11 +223,11 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
 
     # Convert non bytes/text into the native string type.
     if message is not None and not isinstance(message, echo_native_types):
-        message = text_type(message)
+        message = str(message)
 
     if nl:
         message = message or u""
-        if isinstance(message, text_type):
+        if isinstance(message, str):
             message += u"\n"
         else:
             message += b"\n"
@@ -245,7 +237,7 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
     # message in there.  This is done separately so that most stream
     # types will work as you would expect.  Eg: you can write to StringIO
     # for other cases.
-    if message and not PY2 and is_bytes(message):
+    if message and is_bytes(message):
         binary_file = _find_binary_writer(file)
         if binary_file is not None:
             file.flush()
@@ -340,23 +332,21 @@ def open_file(
 
 
 def get_os_args():
-    """This returns the argument part of sys.argv in the most appropriate
-    form for processing.  What this means is that this return value is in
-    a format that works for Click to process but does not necessarily
-    correspond well to what's actually standard for the interpreter.
+    """Returns the argument part of ``sys.argv``, removing the first
+    value which is the name of the script.
 
-    On most environments the return value is ``sys.argv[:1]`` unchanged.
-    However if you are on Windows and running Python 2 the return value
-    will actually be a list of unicode strings instead because the
-    default behavior on that platform otherwise will not be able to
-    carry all possible values that sys.argv can have.
-
-    .. versionadded:: 6.0
+    .. deprecated:: 8.0
+        Will be removed in 8.1. Access ``sys.argv[1:]`` directly
+        instead.
     """
-    # We can only extract the unicode argv if sys.argv has not been
-    # changed since the startup of the application.
-    if PY2 and WIN and _initial_argv_hash == _hash_py_argv():
-        return _get_windows_argv()
+    import warnings
+
+    warnings.warn(
+        "'get_os_args' is deprecated and will be removed in 8.1. Access"
+        " 'sys.argv[1:]' directly instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return sys.argv[1:]
 
 

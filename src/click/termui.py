@@ -8,10 +8,7 @@ import sys
 from ._compat import DEFAULT_COLUMNS
 from ._compat import get_winterm_size
 from ._compat import isatty
-from ._compat import raw_input
-from ._compat import string_types
 from ._compat import strip_ansi
-from ._compat import text_type
 from ._compat import WIN
 from .exceptions import Abort
 from .exceptions import UsageError
@@ -24,7 +21,7 @@ from .utils import LazyFile
 
 # The prompt functions to use.  The doc tools currently override these
 # functions to customize how they work.
-visible_prompt_func = raw_input
+visible_prompt_func = input
 
 _ansi_colors = {
     "black": 30,
@@ -278,13 +275,13 @@ def echo_via_pager(text_or_generator, color=None):
 
     if inspect.isgeneratorfunction(text_or_generator):
         i = text_or_generator()
-    elif isinstance(text_or_generator, string_types):
+    elif isinstance(text_or_generator, str):
         i = [text_or_generator]
     else:
         i = iter(text_or_generator)
 
     # convert every element of i to a text type if necessary
-    text_generator = (el if isinstance(el, string_types) else text_type(el) for el in i)
+    text_generator = (el if isinstance(el, str) else str(el) for el in i)
 
     from ._termui_impl import pager
 

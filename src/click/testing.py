@@ -1,4 +1,5 @@
 import contextlib
+import io
 import os
 import shlex
 import shutil
@@ -8,16 +9,7 @@ import tempfile
 from . import formatting
 from . import termui
 from . import utils
-from ._compat import iteritems
-from ._compat import PY2
-from ._compat import string_types
-
-
-if PY2:
-    from cStringIO import StringIO
-else:
-    import io
-    from ._compat import _find_binary_reader
+from ._compat import _find_binary_reader
 
 
 class EchoingStdin(object):
@@ -51,19 +43,18 @@ class EchoingStdin(object):
 def make_input_stream(input, charset):
     # Is already an input stream.
     if hasattr(input, "read"):
-        if PY2:
-            return input
         rv = _find_binary_reader(input)
+
         if rv is not None:
             return rv
+
         raise TypeError("Could not find binary reader for input stream.")
 
     if input is None:
         input = b""
     elif not isinstance(input, bytes):
         input = input.encode(charset)
-    if PY2:
-        return StringIO(input)
+
     return io.BytesIO(input)
 
 
@@ -184,23 +175,17 @@ class CliRunner(object):
 
         env = self.make_env(env)
 
-        if PY2:
-            bytes_output = StringIO()
-            if self.echo_stdin:
-                input = EchoingStdin(input, bytes_output)
-            sys.stdout = bytes_output
-            if not self.mix_stderr:
-                bytes_error = StringIO()
-                sys.stderr = bytes_error
-        else:
-            bytes_output = io.BytesIO()
-            if self.echo_stdin:
-                input = EchoingStdin(input, bytes_output)
-            input = io.TextIOWrapper(input, encoding=self.charset)
-            sys.stdout = io.TextIOWrapper(bytes_output, encoding=self.charset)
-            if not self.mix_stderr:
-                bytes_error = io.BytesIO()
-                sys.stderr = io.TextIOWrapper(bytes_error, encoding=self.charset)
+        bytes_output = io.BytesIO()
+
+        if self.echo_stdin:
+            input = EchoingStdin(input, bytes_output)
+
+        input = io.TextIOWrapper(input, encoding=self.charset)
+        sys.stdout = io.TextIOWrapper(bytes_output, encoding=self.charset)
+
+        if not self.mix_stderr:
+            bytes_error = io.BytesIO()
+            sys.stderr = io.TextIOWrapper(bytes_error, encoding=self.charset)
 
         if self.mix_stderr:
             sys.stderr = sys.stdout
@@ -244,7 +229,7 @@ class CliRunner(object):
 
         old_env = {}
         try:
-            for key, value in iteritems(env):
+            for key, value in env.items():
                 old_env[key] = os.environ.get(key)
                 if value is None:
                     try:
@@ -255,7 +240,7 @@ class CliRunner(object):
                     os.environ[key] = value
             yield (bytes_output, not self.mix_stderr and bytes_error)
         finally:
-            for key, value in iteritems(old_env):
+            for key, value in old_env.items():
                 if value is None:
                     try:
                         del os.environ[key]
@@ -317,7 +302,7 @@ class CliRunner(object):
             exception = None
             exit_code = 0
 
-            if isinstance(args, string_types):
+            if isinstance(args, str):
                 args = shlex.split(args)
 
             try:

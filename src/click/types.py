@@ -5,10 +5,8 @@ from datetime import datetime
 from ._compat import _get_argv_encoding
 from ._compat import filename_to_ui
 from ._compat import get_filesystem_encoding
-from ._compat import get_streerror
+from ._compat import get_strerror
 from ._compat import open_stream
-from ._compat import PY2
-from ._compat import text_type
 from .exceptions import BadParameter
 from .utils import LazyFile
 from .utils import safecall
@@ -94,9 +92,10 @@ class FuncParamType(ParamType):
             return self.func(value)
         except ValueError:
             try:
-                value = text_type(value)
+                value = str(value)
             except UnicodeError:
-                value = str(value).decode("utf-8", "replace")
+                value = value.decode("utf-8", "replace")
+
             self.fail(value, param, ctx)
 
 
@@ -179,14 +178,9 @@ class Choice(ParamType):
             }
 
         if not self.case_sensitive:
-            if PY2:
-                lower = str.lower
-            else:
-                lower = str.casefold
-
-            normed_value = lower(normed_value)
+            normed_value = normed_value.casefold()
             normed_choices = {
-                lower(normed_choice): original
+                normed_choice.casefold(): original
                 for normed_choice, original in normed_choices.items()
             }
 
@@ -427,8 +421,6 @@ class UUIDParameterType(ParamType):
         import uuid
 
         try:
-            if PY2 and isinstance(value, text_type):
-                value = value.encode("ascii")
             return uuid.UUID(value)
         except ValueError:
             self.fail("{} is not a valid UUID value".format(value), param, ctx)
@@ -517,7 +509,7 @@ class File(ParamType):
         except (IOError, OSError) as e:  # noqa: B014
             self.fail(
                 "Could not open file: {}: {}".format(
-                    filename_to_ui(value), get_streerror(e)
+                    filename_to_ui(value), get_strerror(e)
                 ),
                 param,
                 ctx,
@@ -589,7 +581,7 @@ class Path(ParamType):
 
     def coerce_path_result(self, rv):
         if self.type is not None and not isinstance(rv, self.type):
-            if self.type is text_type:
+            if self.type is str:
                 rv = rv.decode(get_filesystem_encoding())
             else:
                 rv = rv.encode(get_filesystem_encoding())
@@ -701,7 +693,7 @@ def convert_type(ty, default=None):
         return Tuple(ty)
     if isinstance(ty, ParamType):
         return ty
-    if ty is text_type or ty is str or ty is None:
+    if ty is str or ty is None:
         return STRING
     if ty is int:
         return INT
