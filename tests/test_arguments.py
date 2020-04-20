@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
 import sys
 
 import pytest
 
 import click
-from click._compat import PY2
-from click._compat import text_type
 
 
 def test_nargs_star(runner):
@@ -13,8 +10,8 @@ def test_nargs_star(runner):
     @click.argument("src", nargs=-1)
     @click.argument("dst")
     def copy(src, dst):
-        click.echo("src={}".format("|".join(src)))
-        click.echo("dst={}".format(dst))
+        click.echo(f"src={'|'.join(src)}")
+        click.echo(f"dst={dst}")
 
     result = runner.invoke(copy, ["foo.txt", "bar.txt", "dir"])
     assert not result.exception
@@ -35,8 +32,9 @@ def test_nargs_tup(runner):
     @click.argument("name", nargs=1)
     @click.argument("point", nargs=2, type=click.INT)
     def copy(name, point):
-        click.echo("name={}".format(name))
-        click.echo("point={0[0]}/{0[1]}".format(point))
+        click.echo(f"name={name}")
+        x, y = point
+        click.echo(f"point={x}/{y}")
 
     result = runner.invoke(copy, ["peter", "1", "2"])
     assert not result.exception
@@ -56,7 +54,8 @@ def test_nargs_tup_composite(runner):
         @click.command()
         @click.argument("item", **opts)
         def copy(item):
-            click.echo("name={0[0]} id={0[1]:d}".format(item))
+            name, id = item
+            click.echo(f"name={name} id={id:d}")
 
         result = runner.invoke(copy, ["peter", "1"])
         assert not result.exception
@@ -83,22 +82,17 @@ def test_bytes_args(runner, monkeypatch):
     @click.argument("arg")
     def from_bytes(arg):
         assert isinstance(
-            arg, text_type
+            arg, str
         ), "UTF-8 encoded argument should be implicitly converted to Unicode"
 
     # Simulate empty locale environment variables
-    if PY2:
-        monkeypatch.setattr(sys.stdin, "encoding", "ANSI_X3.4-1968")
-        monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "ANSI_X3.4-1968")
-        monkeypatch.setattr(sys, "getdefaultencoding", lambda: "ascii")
-    else:
-        monkeypatch.setattr(sys.stdin, "encoding", "utf-8")
-        monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "utf-8")
-        monkeypatch.setattr(sys, "getdefaultencoding", lambda: "utf-8")
+    monkeypatch.setattr(sys.stdin, "encoding", "utf-8")
+    monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "utf-8")
+    monkeypatch.setattr(sys, "getdefaultencoding", lambda: "utf-8")
 
     runner.invoke(
         from_bytes,
-        [u"Something outside of ASCII range: 林".encode("UTF-8")],
+        ["Something outside of ASCII range: 林".encode()],
         catch_exceptions=False,
     )
 
@@ -195,7 +189,7 @@ def test_empty_nargs(runner):
     @click.command()
     @click.argument("arg", nargs=-1)
     def cmd(arg):
-        click.echo("arg:{}".format("|".join(arg)))
+        click.echo(f"arg:{'|'.join(arg)}")
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 0
@@ -204,7 +198,7 @@ def test_empty_nargs(runner):
     @click.command()
     @click.argument("arg", nargs=-1, required=True)
     def cmd2(arg):
-        click.echo("arg:{}".format("|".join(arg)))
+        click.echo(f"arg:{'|'.join(arg)}")
 
     result = runner.invoke(cmd2, [])
     assert result.exit_code == 2
@@ -215,7 +209,7 @@ def test_missing_arg(runner):
     @click.command()
     @click.argument("arg")
     def cmd(arg):
-        click.echo("arg:{}".format(arg))
+        click.echo(f"arg:{arg}")
 
     result = runner.invoke(cmd, [])
     assert result.exit_code == 2
@@ -268,7 +262,7 @@ def test_nargs_star_ordering(runner):
             click.echo(arg)
 
     result = runner.invoke(cmd, ["a", "b", "c"])
-    assert result.output.splitlines() == ["(u'a',)" if PY2 else "('a',)", "b", "c"]
+    assert result.output.splitlines() == ["('a',)", "b", "c"]
 
 
 def test_nargs_specified_plus_star_ordering(runner):
@@ -281,11 +275,7 @@ def test_nargs_specified_plus_star_ordering(runner):
             click.echo(arg)
 
     result = runner.invoke(cmd, ["a", "b", "c", "d", "e", "f"])
-    assert result.output.splitlines() == [
-        "(u'a', u'b', u'c')" if PY2 else "('a', 'b', 'c')",
-        "d",
-        "(u'e', u'f')" if PY2 else "('e', 'f')",
-    ]
+    assert result.output.splitlines() == ["('a', 'b', 'c')", "d", "('e', 'f')"]
 
 
 def test_defaults_for_nargs(runner):

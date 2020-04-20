@@ -1,10 +1,11 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.1.0
+    rev: v2.2.0
     hooks:
       - id: pyupgrade
+        args: ["--py36-plus"]
   - repo: https://github.com/asottile/reorder_python_imports
-    rev: v2.0.0
+    rev: v2.2.0
     hooks:
       - id: reorder-python-imports
         args: ["--application-directories", "src"]

@@ -8,10 +8,7 @@ import sys
 from ._compat import DEFAULT_COLUMNS
 from ._compat import get_winterm_size
 from ._compat import isatty
-from ._compat import raw_input
-from ._compat import string_types
 from ._compat import strip_ansi
-from ._compat import text_type
 from ._compat import WIN
 from .exceptions import Abort
 from .exceptions import UsageError
@@ -24,7 +21,7 @@ from .utils import LazyFile
 
 # The prompt functions to use.  The doc tools currently override these
 # functions to customize how they work.
-visible_prompt_func = raw_input
+visible_prompt_func = input
 
 _ansi_colors = {
     "black": 30,
@@ -59,10 +56,10 @@ def _build_prompt(
 ):
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
-        prompt += " ({})".format(", ".join(map(str, type.choices)))
+        prompt += f" ({', '.join(map(str, type.choices))})"
     if default is not None and show_default:
-        prompt = "{} [{}]".format(prompt, _format_default(default))
-    return prompt + suffix
+        prompt = f"{prompt} [{_format_default(default)}]"
+    return f"{prompt}{suffix}"
 
 
 def _format_default(default):
@@ -156,7 +153,7 @@ def prompt(
         try:
             result = value_proc(value)
         except UsageError as e:
-            echo("Error: {}".format(e.message), err=err)  # noqa: B306
+            echo(f"Error: {e.message}", err=err)  # noqa: B306
             continue
         if not confirmation_prompt:
             return result
@@ -219,14 +216,10 @@ def get_terminal_size():
     """Returns the current size of the terminal as tuple in the form
     ``(width, height)`` in columns and rows.
     """
-    # If shutil has get_terminal_size() (Python 3.3 and later) use that
-    if sys.version_info >= (3, 3):
-        import shutil
+    import shutil
 
-        shutil_get_terminal_size = getattr(shutil, "get_terminal_size", None)
-        if shutil_get_terminal_size:
-            sz = shutil_get_terminal_size()
-            return sz.columns, sz.lines
+    if hasattr(shutil, "get_terminal_size"):
+        return shutil.get_terminal_size()
 
     # We provide a sensible default for get_winterm_size() when being invoked
     # inside a subprocess. Without this, it would not provide a useful input.
@@ -278,13 +271,13 @@ def echo_via_pager(text_or_generator, color=None):
 
     if inspect.isgeneratorfunction(text_or_generator):
         i = text_or_generator()
-    elif isinstance(text_or_generator, string_types):
+    elif isinstance(text_or_generator, str):
         i = [text_or_generator]
     else:
         i = iter(text_or_generator)
 
     # convert every element of i to a text type if necessary
-    text_generator = (el if isinstance(el, string_types) else text_type(el) for el in i)
+    text_generator = (el if isinstance(el, str) else str(el) for el in i)
 
     from ._termui_impl import pager
 
@@ -509,24 +502,24 @@ def style(
     bits = []
     if fg:
         try:
-            bits.append("\033[{}m".format(_ansi_colors[fg]))
+            bits.append(f"\033[{_ansi_colors[fg]}m")
         except KeyError:
-            raise TypeError("Unknown color '{}'".format(fg))
+            raise TypeError(f"Unknown color {fg!r}")
     if bg:
         try:
-            bits.append("\033[{}m".format(_ansi_colors[bg] + 10))
+            bits.append(f"\033[{_ansi_colors[bg] + 10}m")
         except KeyError:
-            raise TypeError("Unknown color '{}'".format(bg))
+            raise TypeError(f"Unknown color {bg!r}")
     if bold is not None:
-        bits.append("\033[{}m".format(1 if bold else 22))
+        bits.append(f"\033[{1 if bold else 22}m")
     if dim is not None:
-        bits.append("\033[{}m".format(2 if dim else 22))
+        bits.append(f"\033[{2 if dim else 22}m")
     if underline is not None:
-        bits.append("\033[{}m".format(4 if underline else 24))
+        bits.append(f"\033[{4 if underline else 24}m")
     if blink is not None:
-        bits.append("\033[{}m".format(5 if blink else 25))
+        bits.append(f"\033[{5 if blink else 25}m")
     if reverse is not None:
-        bits.append("\033[{}m".format(7 if reverse else 27))
+        bits.append(f"\033[{7 if reverse else 27}m")
     bits.append(text)
     if reset:
         bits.append(_ansi_reset_all)

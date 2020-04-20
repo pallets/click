@@ -1,14 +1,10 @@
+import configparser
 import os
 
 import click
 
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
 
-
-class Config(object):
+class Config:
     """The config in this example only holds aliases."""
 
     def __init__(self):
@@ -69,7 +65,7 @@ class AliasedGroup(click.Group):
             return None
         elif len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
-        ctx.fail("Too many matches: {}".format(", ".join(sorted(matches))))
+        ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
 
 
 def read_config(ctx, param, value):
@@ -125,7 +121,7 @@ def commit():
 @pass_config
 def status(config):
     """Shows the status."""
-    click.echo("Status for {}".format(config.path))
+    click.echo(f"Status for {config.path}")
 
 
 @cli.command()
@@ -139,4 +135,4 @@ def alias(config, alias_, cmd, config_file):
     """Adds an alias to the specified configuration file."""
     config.add_alias(alias_, cmd)
     config.write_config(config_file)
-    click.echo("Added '{}' as alias for '{}'".format(alias_, cmd))
+    click.echo(f"Added '{alias_}' as alias for '{cmd}'")

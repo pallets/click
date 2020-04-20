@@ -13,9 +13,7 @@ Printing to Stdout
 
 The most obvious helper is the :func:`echo` function, which in many ways
 works like the Python ``print`` statement or function.  The main difference is
-that it works the same in Python 2 and 3, it intelligently detects
-misconfigured output streams, and it will never fail (except in Python 3; for
-more information see :ref:`python3-limitations`).
+that it works the same in many different terminal environments.
 
 Example::
 
@@ -23,10 +21,8 @@ Example::
 
     click.echo('Hello World!')
 
-Most importantly, it can print both Unicode and binary data, unlike the
-built-in ``print`` function in Python 3, which cannot output any bytes.  It
-will, however, emit a trailing newline by default, which needs to be
-suppressed by passing ``nl=False``::
+It can output both text and binary data. It will emit a trailing newline
+by default, which needs to be suppressed by passing ``nl=False``::
 
     click.echo(b'\xe2\x98\x83', nl=False)
 
@@ -34,19 +30,17 @@ Last but not least :func:`echo` uses click's intelligent internal output
 streams to stdout and stderr which support unicode output on the Windows
 console.  This means for as long as you are using `click.echo` you can
 output unicode characters (there are some limitations on the default font
-with regards to which characters can be displayed).  This functionality is
-new in Click 6.0.
+with regards to which characters can be displayed).
 
 .. versionadded:: 6.0
 
-Click now emulates output streams on Windows to support unicode to the
+Click emulates output streams on Windows to support unicode to the
 Windows console through separate APIs.  For more information see
 :doc:`wincmd`.
 
 .. versionadded:: 3.0
 
-Starting with Click 3.0 you can also easily print to standard error by
-passing ``err=True``::
+You can also easily print to standard error by passing ``err=True``::
 
     click.echo('Hello World!', err=True)
 
@@ -58,11 +52,10 @@ ANSI Colors
 
 .. versionadded:: 2.0
 
-Starting with Click 2.0, the :func:`echo` function gained extra
-functionality to deal with ANSI colors and styles.  Note that on Windows,
-this functionality is only available if `colorama`_ is installed.  If it
-is installed, then ANSI codes are intelligently handled. Note that in Python
-2, the echo function doesn't parse color code information from bytearrays.
+The :func:`echo` function gained extra functionality to deal with ANSI
+colors and styles.  Note that on Windows, this functionality is only
+available if `colorama`_ is installed.  If it is installed, then ANSI
+codes are intelligently handled.
 
 Primarily this means that:
 
@@ -112,15 +105,14 @@ Example:
 
     @click.command()
     def less():
-        click.echo_via_pager('\n'.join('Line %d' % idx
-                                       for idx in range(200)))
+        click.echo_via_pager("\n".join(f"Line {idx}" for idx in range(200)))
 
 If you want to use the pager for a lot of text, especially if generating everything in advance would take a lot of time, you can pass a generator (or generator function) instead of a string:
 
 .. click:example::
     def _generate_output():
         for idx in range(50000):
-            yield "Line %d\n" % idx
+            yield f"Line {idx}\n"
 
     @click.command()
     def less():
@@ -253,9 +245,7 @@ Printing Filenames
 ------------------
 
 Because filenames might not be Unicode, formatting them can be a bit
-tricky.  Generally, this is easier in Python 2 than on 3, as you can just
-write the bytes to stdout with the ``print`` function, but in Python 3, you
-will always need to operate in Unicode.
+tricky.
 
 The way this works with click is through the :func:`format_filename`
 function.  It does a best-effort conversion of the filename to Unicode and
@@ -264,7 +254,7 @@ context of a full Unicode string.
 
 Example::
 
-    click.echo('Path: %s' % click.format_filename(b'foo.txt'))
+    click.echo(f"Path: {click.format_filename(b'foo.txt')}")
 
 
 Standard Streams
@@ -281,8 +271,7 @@ Because of this, click provides the :func:`get_binary_stream` and
 different Python versions and for a wide variety of terminal configurations.
 
 The end result is that these functions will always return a functional
-stream object (except in very odd cases in Python 3; see
-:ref:`python3-limitations`).
+stream object (except in very odd cases; see :doc:`/unicode-support`).
 
 Example::
 
@@ -349,7 +338,7 @@ Example usage::
         rv = {}
         for section in parser.sections():
             for key, value in parser.items(section):
-                rv['%s.%s' % (section, key)] = value
+                rv[f"{section}.{key}"] = value
         return rv
 
 
@@ -396,7 +385,7 @@ loop. So code like this will render correctly::
 
     with click.progressbar([1, 2, 3]) as bar:
         for x in bar:
-            print('sleep({})...'.format(x))
+            print(f"sleep({x})...")
             time.sleep(x)
 
 Another useful feature is to associate a label with the progress bar which

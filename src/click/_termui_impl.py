@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module contains implementations for the termui module. To keep the
 import time of Click down, some infrequently used functionality is
@@ -7,17 +6,15 @@ placed in this module and only imported as needed.
 import contextlib
 import math
 import os
+import shlex
 import sys
 import time
 
 from ._compat import _default_text_stdout
 from ._compat import CYGWIN
 from ._compat import get_best_encoding
-from ._compat import int_types
 from ._compat import isatty
 from ._compat import open_stream
-from ._compat import range_type
-from ._compat import shlex_quote
 from ._compat import strip_ansi
 from ._compat import term_len
 from ._compat import WIN
@@ -45,12 +42,12 @@ def _length_hint(obj):
             hint = get_hint(obj)
         except TypeError:
             return None
-        if hint is NotImplemented or not isinstance(hint, int_types) or hint < 0:
+        if hint is NotImplemented or not isinstance(hint, int) or hint < 0:
             return None
         return hint
 
 
-class ProgressBar(object):
+class ProgressBar:
     def __init__(
         self,
         iterable,
@@ -89,7 +86,7 @@ class ProgressBar(object):
         if iterable is None:
             if length is None:
                 raise TypeError("iterable or length is required")
-            iterable = range_type(length)
+            iterable = range(length)
         self.iter = iter(iterable)
         self.length = length
         self.length_known = length is not None
@@ -126,9 +123,6 @@ class ProgressBar(object):
         # so it is re-entry safe. Calling `next(self.generator())`
         # twice works and does "what you want".
         return next(iter(self))
-
-    # Python 2 compat
-    next = __next__
 
     def is_fast(self):
         return time.time() - self.start <= self.short_limit
@@ -167,19 +161,19 @@ class ProgressBar(object):
             hours = t % 24
             t //= 24
             if t > 0:
-                return "{}d {:02}:{:02}:{:02}".format(t, hours, minutes, seconds)
+                return f"{t}d {hours:02}:{minutes:02}:{seconds:02}"
             else:
-                return "{:02}:{:02}:{:02}".format(hours, minutes, seconds)
+                return f"{hours:02}:{minutes:02}:{seconds:02}"
         return ""
 
     def format_pos(self):
         pos = str(self.pos)
         if self.length_known:
-            pos += "/{}".format(self.length)
+            pos += f"/{self.length}"
         return pos
 
     def format_pct(self):
-        return "{: 4}%".format(int(self.pct * 100))[1:]
+        return f"{int(self.pct * 100): 4}%"[1:]
 
     def format_bar(self):
         if self.length_known:
@@ -326,8 +320,7 @@ class ProgressBar(object):
             raise RuntimeError("You need to use progress bars in a with block.")
 
         if self.is_hidden:
-            for rv in self.iter:
-                yield rv
+            yield from self.iter
         else:
             for rv in self.iter:
                 self.current_item = rv
@@ -359,10 +352,7 @@ def pager(generator, color=None):
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
-        if (
-            hasattr(os, "system")
-            and os.system("more {}".format(shlex_quote(filename))) == 0
-        ):
+        if hasattr(os, "system") and os.system(f"more {shlex.quote(filename)}") == 0:
             return _pipepager(generator, "more", color)
         return _nullpager(stdout, generator, color)
     finally:
@@ -381,7 +371,7 @@ def _pipepager(generator, cmd, color):
     # condition that
     cmd_detail = cmd.rsplit("/", 1)[-1].split()
     if color is None and cmd_detail[0] == "less":
-        less_flags = "{}{}".format(os.environ.get("LESS", ""), " ".join(cmd_detail[1:]))
+        less_flags = f"{os.environ.get('LESS', '')}{' '.join(cmd_detail[1:])}"
         if not less_flags:
             env["LESS"] = "-R"
             color = True
@@ -396,7 +386,7 @@ def _pipepager(generator, cmd, color):
                 text = strip_ansi(text)
 
             c.stdin.write(text.encode(encoding, "replace"))
-    except (IOError, KeyboardInterrupt):
+    except (OSError, KeyboardInterrupt):
         pass
     else:
         c.stdin.close()
@@ -431,7 +421,7 @@ def _tempfilepager(generator, cmd, color):
     with open_stream(filename, "wb")[0] as f:
         f.write(text.encode(encoding))
     try:
-        os.system("{} {}".format(shlex_quote(cmd), shlex_quote(filename)))
+        os.system(f"{shlex.quote(cmd)} {shlex.quote(filename)}")
     finally:
         os.unlink(filename)
 
@@ -444,7 +434,7 @@ def _nullpager(stream, generator, color):
         stream.write(text)
 
 
-class Editor(object):
+class Editor:
     def __init__(self, editor=None, env=None, require_save=True, extension=".txt"):
         self.editor = editor
         self.env = env
@@ -461,7 +451,7 @@ class Editor(object):
         if WIN:
             return "notepad"
         for editor in "sensible-editor", "vim", "nano":
-            if os.system("which {} >/dev/null 2>&1".format(editor)) == 0:
+            if os.system(f"which {editor} >/dev/null 2>&1") == 0:
                 return editor
         return "vi"
 
@@ -476,15 +466,15 @@ class Editor(object):
             environ = None
         try:
             c = subprocess.Popen(
-                "{} {}".format(shlex_quote(editor), shlex_quote(filename)),
+                f"{shlex.quote(editor)} {shlex.quote(filename)}",
                 env=environ,
                 shell=True,
             )
             exit_code = c.wait()
             if exit_code != 0:
-                raise ClickException("{}: Editing failed!".format(editor))
+                raise ClickException(f"{editor}: Editing failed!")
         except OSError as e:
-            raise ClickException("{}: Editing failed: {}".format(editor, e))
+            raise ClickException(f"{editor}: Editing failed: {e}")
 
     def edit(self, text):
         import tempfile
@@ -553,16 +543,16 @@ def open_url(url, wait=False, locate=False):
     elif WIN:
         if locate:
             url = _unquote_file(url)
-            args = "explorer /select,{}".format(shlex_quote(url))
+            args = f"explorer /select,{shlex.quote(url)}"
         else:
-            args = 'start {} "" {}'.format("/WAIT" if wait else "", shlex_quote(url))
+            args = f"start {'/WAIT' if wait else ''} \"\" {shlex.quote(url)}"
         return os.system(args)
     elif CYGWIN:
         if locate:
             url = _unquote_file(url)
-            args = "cygstart {}".format(shlex_quote(os.path.dirname(url)))
+            args = f"cygstart {shlex.quote(os.path.dirname(url))}"
         else:
-            args = "cygstart {} {}".format("-w" if wait else "", shlex_quote(url))
+            args = f"cygstart {'-w' if wait else ''} {shlex.quote(url)}"
         return os.system(args)
 
     try:
@@ -584,11 +574,11 @@ def open_url(url, wait=False, locate=False):
 
 
 def _translate_ch_to_exc(ch):
-    if ch == u"\x03":
+    if ch == "\x03":
         raise KeyboardInterrupt()
-    if ch == u"\x04" and not WIN:  # Unix-like, Ctrl+D
+    if ch == "\x04" and not WIN:  # Unix-like, Ctrl+D
         raise EOFError()
-    if ch == u"\x1a" and WIN:  # Windows, Ctrl+Z
+    if ch == "\x1a" and WIN:  # Windows, Ctrl+Z
         raise EOFError()
 
 
@@ -635,7 +625,7 @@ if WIN:
             func = msvcrt.getwch
 
         rv = func()
-        if rv in (u"\x00", u"\xe0"):
+        if rv in ("\x00", "\xe0"):
             # \x00 and \xe0 are control characters that indicate special key,
             # see above.
             rv += func()

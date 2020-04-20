@@ -5,7 +5,7 @@ import sys
 import click
 
 
-class Repo(object):
+class Repo:
     def __init__(self, home):
         self.home = home
         self.config = {}
@@ -14,10 +14,10 @@ class Repo(object):
     def set_config(self, key, value):
         self.config[key] = value
         if self.verbose:
-            click.echo("  config[{}] = {}".format(key, value), file=sys.stderr)
+            click.echo(f"  config[{key}] = {value}", file=sys.stderr)
 
     def __repr__(self):
-        return "<Repo {}>".format(self.home)
+        return f"<Repo {self.home}>"
 
 
 pass_repo = click.make_pass_decorator(Repo)
@@ -78,11 +78,11 @@ def clone(repo, src, dest, shallow, rev):
     """
     if dest is None:
         dest = posixpath.split(src)[-1] or "."
-    click.echo("Cloning repo {} to {}".format(src, os.path.abspath(dest)))
+    click.echo(f"Cloning repo {src} to {os.path.basename(dest)}")
     repo.home = dest
     if shallow:
         click.echo("Making shallow checkout")
-    click.echo("Checking out revision {}".format(rev))
+    click.echo(f"Checking out revision {rev}")
 
 
 @cli.command()
@@ -93,7 +93,7 @@ def delete(repo):
 
     This will throw away the current repository.
     """
-    click.echo("Destroying repo {}".format(repo.home))
+    click.echo(f"Destroying repo {repo.home}")
     click.echo("Deleted!")
 
 
@@ -136,7 +136,7 @@ def commit(repo, files, message):
         marker = "# Files to be committed:"
         hint = ["", "", marker, "#"]
         for file in files:
-            hint.append("#   U {}".format(file))
+            hint.append(f"#   U {file}")
         message = click.edit("\n".join(hint))
         if message is None:
             click.echo("Aborted!")
@@ -147,8 +147,8 @@ def commit(repo, files, message):
             return
     else:
         msg = "\n".join(message)
-    click.echo("Files to be committed: {}".format(files))
-    click.echo("Commit message:\n{}".format(msg))
+    click.echo(f"Files to be committed: {files}")
+    click.echo(f"Commit message:\n{msg}")
 
 
 @cli.command(short_help="Copies files.")
@@ -163,4 +163,4 @@ def copy(repo, src, dst, force):
     files from SRC to DST.
     """
     for fn in src:
-        click.echo("Copy from {} -> {}".format(fn, dst))
+        click.echo(f"Copy from {fn} -> {dst}")

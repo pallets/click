@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # This module is based on the excellent work by Adam Bartoš who
 # provided a lot of what went into the implementation here in
 # the discussion to issue1602 in the Python bug tracker.
@@ -9,10 +8,7 @@
 # echo and prompt.
 import ctypes
 import io
-import os
-import sys
 import time
-import zlib
 from ctypes import byref
 from ctypes import c_char
 from ctypes import c_char_p
@@ -23,7 +19,6 @@ from ctypes import c_void_p
 from ctypes import POINTER
 from ctypes import py_object
 from ctypes import windll
-from ctypes import WinError
 from ctypes import WINFUNCTYPE
 from ctypes.wintypes import DWORD
 from ctypes.wintypes import HANDLE
@@ -33,16 +28,14 @@ from ctypes.wintypes import LPWSTR
 import msvcrt
 
 from ._compat import _NonClosingTextIOWrapper
-from ._compat import PY2
-from ._compat import text_type
 
 try:
     from ctypes import pythonapi
-
-    PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
-    PyBuffer_Release = pythonapi.PyBuffer_Release
 except ImportError:
     pythonapi = None
+else:
+    PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
+    PyBuffer_Release = pythonapi.PyBuffer_Release
 
 
 c_ssize_p = POINTER(c_ssize_t)
@@ -96,9 +89,6 @@ class Py_buffer(ctypes.Structure):
         ("suboffsets", c_ssize_p),
         ("internal", c_void_p),
     ]
-
-    if PY2:
-        _fields_.insert(-1, ("smalltable", c_ssize_t * 2))
 
 
 # On PyPy we cannot get buffers so our ability to operate here is
@@ -155,7 +145,7 @@ class _WindowsConsoleReader(_WindowsConsoleRawIOBase):
             # wait for KeyboardInterrupt
             time.sleep(0.1)
         if not rv:
-            raise OSError("Windows error: {}".format(GetLastError()))
+            raise OSError(f"Windows error: {GetLastError()}")
 
         if buffer[0] == EOF:
             return 0
@@ -172,7 +162,7 @@ class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
             return "ERROR_SUCCESS"
         elif errno == ERROR_NOT_ENOUGH_MEMORY:
             return "ERROR_NOT_ENOUGH_MEMORY"
-        return "Windows error {}".format(errno)
+        return f"Windows error {errno}"
 
     def write(self, b):
         bytes_to_be_written = len(b)
@@ -194,7 +184,7 @@ class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
         return bytes_written
 
 
-class ConsoleStream(object):
+class ConsoleStream:
     def __init__(self, text_stream, byte_stream):
         self._text_stream = text_stream
         self.buffer = byte_stream
@@ -204,7 +194,7 @@ class ConsoleStream(object):
         return self.buffer.name
 
     def write(self, x):
-        if isinstance(x, text_type):
+        if isinstance(x, str):
             return self._text_stream.write(x)
         try:
             self.flush()
@@ -223,12 +213,10 @@ class ConsoleStream(object):
         return self.buffer.isatty()
 
     def __repr__(self):
-        return "<ConsoleStream name={!r} encoding={!r}>".format(
-            self.name, self.encoding
-        )
+        return f"<ConsoleStream name={self.name!r} encoding={self.encoding!r}>"
 
 
-class WindowsChunkedWriter(object):
+class WindowsChunkedWriter:
     """
     Wraps a stream (such as stdout), acting as a transparent proxy for all
     attribute access apart from method 'write()' which we wrap to write in
@@ -251,20 +239,6 @@ class WindowsChunkedWriter(object):
             to_write = min(total_to_write - written, MAX_BYTES_WRITTEN)
             self.__wrapped.write(text[written : written + to_write])
             written += to_write
-
-
-_wrapped_std_streams = set()
-
-
-def _wrap_std_stream(name):
-    # Python 2 & Windows 7 and below
-    if (
-        PY2
-        and sys.getwindowsversion()[:2] <= (6, 1)
-        and name not in _wrapped_std_streams
-    ):
-        setattr(sys, name, WindowsChunkedWriter(getattr(sys, name)))
-        _wrapped_std_streams.add(name)
 
 
 def _get_text_stdin(buffer_stream):
@@ -297,37 +271,6 @@ def _get_text_stderr(buffer_stream):
     return ConsoleStream(text_stream, buffer_stream)
 
 
-if PY2:
-
-    def _hash_py_argv():
-        return zlib.crc32("\x00".join(sys.argv[1:]))
-
-    _initial_argv_hash = _hash_py_argv()
-
-    def _get_windows_argv():
-        argc = c_int(0)
-        argv_unicode = CommandLineToArgvW(GetCommandLineW(), byref(argc))
-        if not argv_unicode:
-            raise WinError()
-        try:
-            argv = [argv_unicode[i] for i in range(0, argc.value)]
-        finally:
-            LocalFree(argv_unicode)
-            del argv_unicode
-
-        if not hasattr(sys, "frozen"):
-            argv = argv[1:]
-            while len(argv) > 0:
-                arg = argv[0]
-                if not arg.startswith("-") or arg == "-":
-                    break
-                argv = argv[1:]
-                if arg.startswith(("-c", "-m")):
-                    break
-
-        return argv[1:]
-
-
 _stream_factories = {
     0: _get_text_stdin,
     1: _get_text_stdout,
@@ -351,20 +294,15 @@ def _is_console(f):
 def _get_windows_console_stream(f, encoding, errors):
     if (
         get_buffer is not None
-        and encoding in ("utf-16-le", None)
-        and errors in ("strict", None)
+        and encoding in {"utf-16-le", None}
+        and errors in {"strict", None}
         and _is_console(f)
     ):
         func = _stream_factories.get(f.fileno())
         if func is not None:
-            if not PY2:
-                f = getattr(f, "buffer", None)
-                if f is None:
-                    return None
-            else:
-                # If we are on Python 2 we need to set the stream that we
-                # deal with to binary mode as otherwise the exercise if a
-                # bit moot.  The same problems apply as for
-                # get_binary_stdin and friends from _compat.
-                msvcrt.setmode(f.fileno(), os.O_BINARY)
+            f = getattr(f, "buffer", None)
+
+            if f is None:
+                return None
+
             return func(f)

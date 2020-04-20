@@ -1,4 +1,5 @@
 import contextlib
+import io
 import os
 import shlex
 import shutil
@@ -8,19 +9,10 @@ import tempfile
 from . import formatting
 from . import termui
 from . import utils
-from ._compat import iteritems
-from ._compat import PY2
-from ._compat import string_types
+from ._compat import _find_binary_reader
 
 
-if PY2:
-    from cStringIO import StringIO
-else:
-    import io
-    from ._compat import _find_binary_reader
-
-
-class EchoingStdin(object):
+class EchoingStdin:
     def __init__(self, input, output):
         self._input = input
         self._output = output
@@ -51,23 +43,22 @@ class EchoingStdin(object):
 def make_input_stream(input, charset):
     # Is already an input stream.
     if hasattr(input, "read"):
-        if PY2:
-            return input
         rv = _find_binary_reader(input)
+
         if rv is not None:
             return rv
+
         raise TypeError("Could not find binary reader for input stream.")
 
     if input is None:
         input = b""
     elif not isinstance(input, bytes):
         input = input.encode(charset)
-    if PY2:
-        return StringIO(input)
+
     return io.BytesIO(input)
 
 
-class Result(object):
+class Result:
     """Holds the captured result of an invoked CLI script."""
 
     def __init__(
@@ -108,20 +99,17 @@ class Result(object):
         )
 
     def __repr__(self):
-        return "<{} {}>".format(
-            type(self).__name__, repr(self.exception) if self.exception else "okay"
-        )
+        exc_str = repr(self.exception) if self.exception else "okay"
+        return f"<{type(self).__name__} {exc_str}>"
 
 
-class CliRunner(object):
+class CliRunner:
     """The CLI runner provides functionality to invoke a Click command line
     script for unittesting purposes in a isolated environment.  This only
     works in single-threaded systems without any concurrency as it changes the
     global interpreter state.
 
-    :param charset: the character set for the input and output data.  This is
-                    UTF-8 by default and should not be changed currently as
-                    the reporting to Click only works in Python 2 properly.
+    :param charset: the character set for the input and output data.
     :param env: a dictionary with environment variables for overriding.
     :param echo_stdin: if this is set to `True`, then reading from stdin writes
                        to stdout.  This is useful for showing examples in
@@ -134,9 +122,7 @@ class CliRunner(object):
                        independently
     """
 
-    def __init__(self, charset=None, env=None, echo_stdin=False, mix_stderr=True):
-        if charset is None:
-            charset = "utf-8"
+    def __init__(self, charset="utf-8", env=None, echo_stdin=False, mix_stderr=True):
         self.charset = charset
         self.env = env or {}
         self.echo_stdin = echo_stdin
@@ -184,23 +170,17 @@ class CliRunner(object):
 
         env = self.make_env(env)
 
-        if PY2:
-            bytes_output = StringIO()
-            if self.echo_stdin:
-                input = EchoingStdin(input, bytes_output)
-            sys.stdout = bytes_output
-            if not self.mix_stderr:
-                bytes_error = StringIO()
-                sys.stderr = bytes_error
-        else:
-            bytes_output = io.BytesIO()
-            if self.echo_stdin:
-                input = EchoingStdin(input, bytes_output)
-            input = io.TextIOWrapper(input, encoding=self.charset)
-            sys.stdout = io.TextIOWrapper(bytes_output, encoding=self.charset)
-            if not self.mix_stderr:
-                bytes_error = io.BytesIO()
-                sys.stderr = io.TextIOWrapper(bytes_error, encoding=self.charset)
+        bytes_output = io.BytesIO()
+
+        if self.echo_stdin:
+            input = EchoingStdin(input, bytes_output)
+
+        input = io.TextIOWrapper(input, encoding=self.charset)
+        sys.stdout = io.TextIOWrapper(bytes_output, encoding=self.charset)
+
+        if not self.mix_stderr:
+            bytes_error = io.BytesIO()
+            sys.stderr = io.TextIOWrapper(bytes_error, encoding=self.charset)
 
         if self.mix_stderr:
             sys.stderr = sys.stdout
@@ -210,12 +190,12 @@ class CliRunner(object):
         def visible_input(prompt=None):
             sys.stdout.write(prompt or "")
             val = input.readline().rstrip("\r\n")
-            sys.stdout.write("{}\n".format(val))
+            sys.stdout.write(f"{val}\n")
             sys.stdout.flush()
             return val
 
         def hidden_input(prompt=None):
-            sys.stdout.write("{}\n".format(prompt or ""))
+            sys.stdout.write(f"{prompt or ''}\n")
             sys.stdout.flush()
             return input.readline().rstrip("\r\n")
 
@@ -244,7 +224,7 @@ class CliRunner(object):
 
         old_env = {}
         try:
-            for key, value in iteritems(env):
+            for key, value in env.items():
                 old_env[key] = os.environ.get(key)
                 if value is None:
                     try:
@@ -255,7 +235,7 @@ class CliRunner(object):
                     os.environ[key] = value
             yield (bytes_output, not self.mix_stderr and bytes_error)
         finally:
-            for key, value in iteritems(old_env):
+            for key, value in old_env.items():
                 if value is None:
                     try:
                         del os.environ[key]
@@ -280,7 +260,7 @@ class CliRunner(object):
         env=None,
         catch_exceptions=True,
         color=False,
-        **extra
+        **extra,
     ):
         """Invokes a command in an isolated environment.  The arguments are
         forwarded directly to the command line script, the `extra` keyword
@@ -317,7 +297,7 @@ class CliRunner(object):
             exception = None
             exit_code = 0
 
-            if isinstance(args, string_types):
+            if isinstance(args, str):
                 args = shlex.split(args)
 
             try:
@@ -378,5 +358,5 @@ class CliRunner(object):
             os.chdir(cwd)
             try:
                 shutil.rmtree(t)
-            except (OSError, IOError):  # noqa: B014
+            except OSError:  # noqa: B014
                 pass

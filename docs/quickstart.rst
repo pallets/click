@@ -157,7 +157,7 @@ Echoing
 
 Why does this example use :func:`echo` instead of the regular
 :func:`print` function?  The answer to this question is that Click
-attempts to support both Python 2 and Python 3 the same way and to be very
+attempts to support different environments consistently and to be very
 robust even when the environment is misconfigured.  Click wants to be
 functional at least on a basic level even if everything is completely
 broken.
@@ -169,9 +169,7 @@ correction in case the terminal is misconfigured instead of dying with an
 As an added benefit, starting with Click 2.0, the echo function also
 has good support for ANSI colors.  It will automatically strip ANSI codes
 if the output stream is a file and if colorama is supported, ANSI colors
-will also work on Windows. Note that in Python 2, the :func:`echo` function
-does not parse color code information from bytearrays. See :ref:`ansi-colors`
-for more information.
+will also work on Windows. See :ref:`ansi-colors`.
 
 If you don't need this, you can also use the `print()` construct /
 function.
@@ -240,7 +238,7 @@ To add parameters, use the :func:`option` and :func:`argument` decorators:
     @click.argument('name')
     def hello(count, name):
         for x in range(count):
-            click.echo('Hello %s!' % name)
+            click.echo(f"Hello {name}!")
 
 What it looks like:
 

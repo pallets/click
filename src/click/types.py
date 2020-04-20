@@ -5,16 +5,14 @@ from datetime import datetime
 from ._compat import _get_argv_encoding
 from ._compat import filename_to_ui
 from ._compat import get_filesystem_encoding
-from ._compat import get_streerror
+from ._compat import get_strerror
 from ._compat import open_stream
-from ._compat import PY2
-from ._compat import text_type
 from .exceptions import BadParameter
 from .utils import LazyFile
 from .utils import safecall
 
 
-class ParamType(object):
+class ParamType:
     """Helper for converting values through types.  The following is
     necessary for a valid type:
 
@@ -94,9 +92,10 @@ class FuncParamType(ParamType):
             return self.func(value)
         except ValueError:
             try:
-                value = text_type(value)
+                value = str(value)
             except UnicodeError:
-                value = str(value).decode("utf-8", "replace")
+                value = value.decode("utf-8", "replace")
+
             self.fail(value, param, ctx)
 
 
@@ -158,10 +157,11 @@ class Choice(ParamType):
         self.case_sensitive = case_sensitive
 
     def get_metavar(self, param):
-        return "[{}]".format("|".join(self.choices))
+        return f"[{'|'.join(self.choices)}]"
 
     def get_missing_message(self, param):
-        return "Choose from:\n\t{}.".format(",\n\t".join(self.choices))
+        choice_str = ",\n\t".join(self.choices)
+        return f"Choose from:\n\t{choice_str}"
 
     def convert(self, value, param, ctx):
         # Match through normalization and case sensitivity
@@ -179,14 +179,9 @@ class Choice(ParamType):
             }
 
         if not self.case_sensitive:
-            if PY2:
-                lower = str.lower
-            else:
-                lower = str.casefold
-
-            normed_value = lower(normed_value)
+            normed_value = normed_value.casefold()
             normed_choices = {
-                lower(normed_choice): original
+                normed_choice.casefold(): original
                 for normed_choice, original in normed_choices.items()
             }
 
@@ -194,15 +189,13 @@ class Choice(ParamType):
             return normed_choices[normed_value]
 
         self.fail(
-            "invalid choice: {}. (choose from {})".format(
-                value, ", ".join(self.choices)
-            ),
+            f"invalid choice: {value}. (choose from {', '.join(self.choices)})",
             param,
             ctx,
         )
 
     def __repr__(self):
-        return "Choice('{}')".format(list(self.choices))
+        return f"Choice({list(self.choices)})"
 
 
 class DateTime(ParamType):
@@ -232,7 +225,7 @@ class DateTime(ParamType):
         self.formats = formats or ["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]
 
     def get_metavar(self, param):
-        return "[{}]".format("|".join(self.formats))
+        return f"[{'|'.join(self.formats)}]"
 
     def _try_to_convert_date(self, value, format):
         try:
@@ -248,9 +241,7 @@ class DateTime(ParamType):
                 return dtime
 
         self.fail(
-            "invalid datetime format: {}. (choose from {})".format(
-                value, ", ".join(self.formats)
-            )
+            f"invalid datetime format: {value}. (choose from {', '.join(self.formats)})"
         )
 
     def __repr__(self):
@@ -264,7 +255,7 @@ class IntParamType(ParamType):
         try:
             return int(value)
         except ValueError:
-            self.fail("{} is not a valid integer".format(value), param, ctx)
+            self.fail(f"{value} is not a valid integer", param, ctx)
 
     def __repr__(self):
         return "INT"
@@ -301,32 +292,26 @@ class IntRange(IntParamType):
         ):
             if self.min is None:
                 self.fail(
-                    "{} is bigger than the maximum valid value {}.".format(
-                        rv, self.max
-                    ),
+                    f"{rv} is bigger than the maximum valid value {self.max}.",
                     param,
                     ctx,
                 )
             elif self.max is None:
                 self.fail(
-                    "{} is smaller than the minimum valid value {}.".format(
-                        rv, self.min
-                    ),
+                    f"{rv} is smaller than the minimum valid value {self.min}.",
                     param,
                     ctx,
                 )
             else:
                 self.fail(
-                    "{} is not in the valid range of {} to {}.".format(
-                        rv, self.min, self.max
-                    ),
+                    f"{rv} is not in the valid range of {self.min} to {self.max}.",
                     param,
                     ctx,
                 )
         return rv
 
     def __repr__(self):
-        return "IntRange({}, {})".format(self.min, self.max)
+        return f"IntRange({self.min}, {self.max})"
 
 
 class FloatParamType(ParamType):
@@ -336,9 +321,7 @@ class FloatParamType(ParamType):
         try:
             return float(value)
         except ValueError:
-            self.fail(
-                "{} is not a valid floating point value".format(value), param, ctx
-            )
+            self.fail(f"{value} is not a valid floating point value", param, ctx)
 
     def __repr__(self):
         return "FLOAT"
@@ -375,32 +358,26 @@ class FloatRange(FloatParamType):
         ):
             if self.min is None:
                 self.fail(
-                    "{} is bigger than the maximum valid value {}.".format(
-                        rv, self.max
-                    ),
+                    f"{rv} is bigger than the maximum valid value {self.max}.",
                     param,
                     ctx,
                 )
             elif self.max is None:
                 self.fail(
-                    "{} is smaller than the minimum valid value {}.".format(
-                        rv, self.min
-                    ),
+                    f"{rv} is smaller than the minimum valid value {self.min}.",
                     param,
                     ctx,
                 )
             else:
                 self.fail(
-                    "{} is not in the valid range of {} to {}.".format(
-                        rv, self.min, self.max
-                    ),
+                    f"{rv} is not in the valid range of {self.min} to {self.max}.",
                     param,
                     ctx,
                 )
         return rv
 
     def __repr__(self):
-        return "FloatRange({}, {})".format(self.min, self.max)
+        return f"FloatRange({self.min}, {self.max})"
 
 
 class BoolParamType(ParamType):
@@ -414,7 +391,7 @@ class BoolParamType(ParamType):
             return True
         elif value in ("false", "f", "0", "no", "n"):
             return False
-        self.fail("{} is not a valid boolean".format(value), param, ctx)
+        self.fail(f"{value} is not a valid boolean", param, ctx)
 
     def __repr__(self):
         return "BOOL"
@@ -427,11 +404,9 @@ class UUIDParameterType(ParamType):
         import uuid
 
         try:
-            if PY2 and isinstance(value, text_type):
-                value = value.encode("ascii")
             return uuid.UUID(value)
         except ValueError:
-            self.fail("{} is not a valid UUID value".format(value), param, ctx)
+            self.fail(f"{value} is not a valid UUID value", param, ctx)
 
     def __repr__(self):
         return "UUID"
@@ -514,11 +489,9 @@ class File(ParamType):
                 else:
                     ctx.call_on_close(safecall(f.flush))
             return f
-        except (IOError, OSError) as e:  # noqa: B014
+        except OSError as e:  # noqa: B014
             self.fail(
-                "Could not open file: {}: {}".format(
-                    filename_to_ui(value), get_streerror(e)
-                ),
+                f"Could not open file: {filename_to_ui(value)}: {get_strerror(e)}",
                 param,
                 ctx,
             )
@@ -589,7 +562,7 @@ class Path(ParamType):
 
     def coerce_path_result(self, rv):
         if self.type is not None and not isinstance(rv, self.type):
-            if self.type is text_type:
+            if self.type is str:
                 rv = rv.decode(get_filesystem_encoding())
             else:
                 rv = rv.encode(get_filesystem_encoding())
@@ -610,40 +583,32 @@ class Path(ParamType):
                 if not self.exists:
                     return self.coerce_path_result(rv)
                 self.fail(
-                    "{} '{}' does not exist.".format(
-                        self.path_type, filename_to_ui(value)
-                    ),
+                    f"{self.path_type} {filename_to_ui(value)!r} does not exist.",
                     param,
                     ctx,
                 )
 
             if not self.file_okay and stat.S_ISREG(st.st_mode):
                 self.fail(
-                    "{} '{}' is a file.".format(self.path_type, filename_to_ui(value)),
+                    f"{self.path_type} {filename_to_ui(value)!r} is a file.",
                     param,
                     ctx,
                 )
             if not self.dir_okay and stat.S_ISDIR(st.st_mode):
                 self.fail(
-                    "{} '{}' is a directory.".format(
-                        self.path_type, filename_to_ui(value)
-                    ),
+                    f"{self.path_type} {filename_to_ui(value)!r} is a directory.",
                     param,
                     ctx,
                 )
             if self.writable and not os.access(value, os.W_OK):
                 self.fail(
-                    "{} '{}' is not writable.".format(
-                        self.path_type, filename_to_ui(value)
-                    ),
+                    f"{self.path_type} {filename_to_ui(value)!r} is not writable.",
                     param,
                     ctx,
                 )
             if self.readable and not os.access(value, os.R_OK):
                 self.fail(
-                    "{} '{}' is not readable.".format(
-                        self.path_type, filename_to_ui(value)
-                    ),
+                    f"{self.path_type} {filename_to_ui(value)!r} is not readable.",
                     param,
                     ctx,
                 )
@@ -670,7 +635,7 @@ class Tuple(CompositeParamType):
 
     @property
     def name(self):
-        return "<{}>".format(" ".join(ty.name for ty in self.types))
+        return f"<{' '.join(ty.name for ty in self.types)}>"
 
     @property
     def arity(self):
@@ -701,7 +666,7 @@ def convert_type(ty, default=None):
         return Tuple(ty)
     if isinstance(ty, ParamType):
         return ty
-    if ty is text_type or ty is str or ty is None:
+    if ty is str or ty is None:
         return STRING
     if ty is int:
         return INT
@@ -721,7 +686,7 @@ def convert_type(ty, default=None):
         try:
             if issubclass(ty, ParamType):
                 raise AssertionError(
-                    "Attempted to use an uninstantiated parameter type ({}).".format(ty)
+                    f"Attempted to use an uninstantiated parameter type ({ty})."
                 )
         except TypeError:
             pass
@@ -729,11 +694,10 @@ def convert_type(ty, default=None):
 
 
 #: A dummy parameter type that just does nothing.  From a user's
-#: perspective this appears to just be the same as `STRING` but internally
-#: no string conversion takes place.  This is necessary to achieve the
-#: same bytes/unicode behavior on Python 2/3 in situations where you want
-#: to not convert argument types.  This is usually useful when working
-#: with file paths as they can appear in bytes and unicode.
+#: perspective this appears to just be the same as `STRING` but
+#: internally no string conversion takes place if the input was bytes.
+#: This is usually useful when working with file paths as they can
+#: appear in bytes and unicode.
 #:
 #: For path related uses the :class:`Path` type is a better choice but
 #: there are situations where an unprocessed type is useful which is why

@@ -1,9 +1,6 @@
-import click
+from urllib import parse as urlparse
 
-try:
-    from urllib import parse as urlparse
-except ImportError:
-    import urlparse
+import click
 
 
 def validate_count(ctx, param, value):
@@ -20,8 +17,7 @@ class URL(click.ParamType):
             value = urlparse.urlparse(value)
             if value.scheme not in ("http", "https"):
                 self.fail(
-                    "invalid URL scheme ({}).  Only HTTP URLs are"
-                    " allowed".format(value.scheme),
+                    f"invalid URL scheme ({value.scheme}). Only HTTP URLs are allowed",
                     param,
                     ctx,
                 )
@@ -47,6 +43,6 @@ def cli(count, foo, url):
             'If a value is provided it needs to be the value "wat".',
             param_hint=["--foo"],
         )
-    click.echo("count: {}".format(count))
-    click.echo("foo: {}".format(foo))
-    click.echo("url: {!r}".format(url))
+    click.echo(f"count: {count}")
+    click.echo(f"foo: {foo}")
+    click.echo(f"url: {url!r}")

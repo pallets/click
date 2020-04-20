@@ -21,7 +21,7 @@ def ship():
 @click.argument("name")
 def ship_new(name):
     """Creates a new ship."""
-    click.echo("Created ship {}".format(name))
+    click.echo(f"Created ship {name}")
 
 
 @ship.command("move")
@@ -31,7 +31,7 @@ def ship_new(name):
 @click.option("--speed", metavar="KN", default=10, help="Speed in knots.")
 def ship_move(ship, x, y, speed):
     """Moves SHIP to the new location X,Y."""
-    click.echo("Moving ship {} to {},{} with speed {}".format(ship, x, y, speed))
+    click.echo(f"Moving ship {ship} to {x},{y} with speed {speed}")
 
 
 @ship.command("shoot")
@@ -40,7 +40,7 @@ def ship_move(ship, x, y, speed):
 @click.argument("y", type=float)
 def ship_shoot(ship, x, y):
     """Makes SHIP fire to X,Y."""
-    click.echo("Ship {} fires to {},{}".format(ship, x, y))
+    click.echo(f"Ship {ship} fires to {x},{y}")
 
 
 @cli.group("mine")
@@ -61,7 +61,7 @@ def mine():
 @click.option("ty", "--drifting", flag_value="drifting", help="Drifting mine.")
 def mine_set(x, y, ty):
     """Sets a mine at a specific coordinate."""
-    click.echo("Set {} mine at {},{}".format(ty, x, y))
+    click.echo(f"Set {ty} mine at {x},{y}")
 
 
 @mine.command("remove")
@@ -69,4 +69,4 @@ def mine_set(x, y, ty):
 @click.argument("y", type=float)
 def mine_remove(x, y):
     """Removes a mine at a specific coordinate."""
-    click.echo("Removed mine at {},{}".format(x, y))
+    click.echo(f"Removed mine at {x},{y}")

@@ -3,30 +3,22 @@ import sys
 
 from ._compat import _default_text_stderr
 from ._compat import _default_text_stdout
+from ._compat import _find_binary_writer
 from ._compat import auto_wrap_for_ansi
 from ._compat import binary_streams
 from ._compat import filename_to_ui
 from ._compat import get_filesystem_encoding
-from ._compat import get_streerror
+from ._compat import get_strerror
 from ._compat import is_bytes
 from ._compat import open_stream
-from ._compat import PY2
 from ._compat import should_strip_ansi
-from ._compat import string_types
 from ._compat import strip_ansi
 from ._compat import text_streams
-from ._compat import text_type
 from ._compat import WIN
 from .globals import resolve_color_default
 
-if not PY2:
-    from ._compat import _find_binary_writer
-elif WIN:
-    from ._winconsole import _get_windows_argv
-    from ._winconsole import _hash_py_argv
-    from ._winconsole import _initial_argv_hash
 
-echo_native_types = string_types + (bytes, bytearray)
+echo_native_types = (str, bytes, bytearray)
 
 
 def _posixify(name):
@@ -52,7 +44,7 @@ def make_str(value):
             return value.decode(get_filesystem_encoding())
         except UnicodeError:
             return value.decode("utf-8", "replace")
-    return text_type(value)
+    return str(value)
 
 
 def make_default_short_help(help, max_length=45):
@@ -80,7 +72,7 @@ def make_default_short_help(help, max_length=45):
     return "".join(result)
 
 
-class LazyFile(object):
+class LazyFile:
     """A lazy file works like a regular file but it does not fully open
     the file but it does perform some basic checks early to see if the
     filename parameter does make sense.  This is useful for safely opening
@@ -113,7 +105,7 @@ class LazyFile(object):
     def __repr__(self):
         if self._f is not None:
             return repr(self._f)
-        return "<unopened file '{}' {}>".format(self.name, self.mode)
+        return f"<unopened file '{self.name}' {self.mode}>"
 
     def open(self):
         """Opens the file if it's not yet open.  This call might fail with
@@ -126,10 +118,10 @@ class LazyFile(object):
             rv, self.should_close = open_stream(
                 self.name, self.mode, self.encoding, self.errors, atomic=self.atomic
             )
-        except (IOError, OSError) as e:  # noqa: E402
+        except OSError as e:  # noqa: E402
             from .exceptions import FileError
 
-            raise FileError(self.name, hint=get_streerror(e))
+            raise FileError(self.name, hint=get_strerror(e))
         self._f = rv
         return rv
 
@@ -156,7 +148,7 @@ class LazyFile(object):
         return iter(self._f)
 
 
-class KeepOpenFile(object):
+class KeepOpenFile:
     def __init__(self, file):
         self._file = file
 
@@ -231,21 +223,20 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
 
     # Convert non bytes/text into the native string type.
     if message is not None and not isinstance(message, echo_native_types):
-        message = text_type(message)
+        message = str(message)
 
     if nl:
-        message = message or u""
-        if isinstance(message, text_type):
-            message += u"\n"
+        message = message or ""
+        if isinstance(message, str):
+            message += "\n"
         else:
             message += b"\n"
 
-    # If there is a message, and we're in Python 3, and the value looks
-    # like bytes, we manually need to find the binary stream and write the
-    # message in there.  This is done separately so that most stream
-    # types will work as you would expect.  Eg: you can write to StringIO
-    # for other cases.
-    if message and not PY2 and is_bytes(message):
+    # If there is a message and the value looks like bytes, we manually
+    # need to find the binary stream and write the message in there.
+    # This is done separately so that most stream types will work as you
+    # would expect. Eg: you can write to StringIO for other cases.
+    if message and is_bytes(message):
         binary_file = _find_binary_writer(file)
         if binary_file is not None:
             file.flush()
@@ -274,26 +265,22 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
 
 
 def get_binary_stream(name):
-    """Returns a system stream for byte processing.  This essentially
-    returns the stream from the sys module with the given name but it
-    solves some compatibility issues between different Python versions.
-    Primarily this function is necessary for getting binary streams on
-    Python 3.
+    """Returns a system stream for byte processing.
 
     :param name: the name of the stream to open.  Valid names are ``'stdin'``,
                  ``'stdout'`` and ``'stderr'``
     """
     opener = binary_streams.get(name)
     if opener is None:
-        raise TypeError("Unknown standard stream '{}'".format(name))
+        raise TypeError(f"Unknown standard stream '{name}'")
     return opener()
 
 
 def get_text_stream(name, encoding=None, errors="strict"):
     """Returns a system stream for text processing.  This usually returns
     a wrapped stream around a binary stream returned from
-    :func:`get_binary_stream` but it also can take shortcuts on Python 3
-    for already correctly configured streams.
+    :func:`get_binary_stream` but it also can take shortcuts for already
+    correctly configured streams.
 
     :param name: the name of the stream to open.  Valid names are ``'stdin'``,
                  ``'stdout'`` and ``'stderr'``
@@ -302,7 +289,7 @@ def get_text_stream(name, encoding=None, errors="strict"):
     """
     opener = text_streams.get(name)
     if opener is None:
-        raise TypeError("Unknown standard stream '{}'".format(name))
+        raise TypeError(f"Unknown standard stream '{name}'")
     return opener(encoding, errors)
 
 
@@ -340,23 +327,21 @@ def open_file(
 
 
 def get_os_args():
-    """This returns the argument part of sys.argv in the most appropriate
-    form for processing.  What this means is that this return value is in
-    a format that works for Click to process but does not necessarily
-    correspond well to what's actually standard for the interpreter.
+    """Returns the argument part of ``sys.argv``, removing the first
+    value which is the name of the script.
 
-    On most environments the return value is ``sys.argv[:1]`` unchanged.
-    However if you are on Windows and running Python 2 the return value
-    will actually be a list of unicode strings instead because the
-    default behavior on that platform otherwise will not be able to
-    carry all possible values that sys.argv can have.
-
-    .. versionadded:: 6.0
+    .. deprecated:: 8.0
+        Will be removed in 8.1. Access ``sys.argv[1:]`` directly
+        instead.
     """
-    # We can only extract the unicode argv if sys.argv has not been
-    # changed since the startup of the application.
-    if PY2 and WIN and _initial_argv_hash == _hash_py_argv():
-        return _get_windows_argv()
+    import warnings
+
+    warnings.warn(
+        "'get_os_args' is deprecated and will be removed in 8.1. Access"
+        " 'sys.argv[1:]' directly instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return sys.argv[1:]
 
 
@@ -419,7 +404,7 @@ def get_app_dir(app_name, roaming=True, force_posix=False):
             folder = os.path.expanduser("~")
         return os.path.join(folder, app_name)
     if force_posix:
-        return os.path.join(os.path.expanduser("~/.{}".format(_posixify(app_name))))
+        return os.path.join(os.path.expanduser(f"~/.{_posixify(app_name)}"))
     if sys.platform == "darwin":
         return os.path.join(
             os.path.expanduser("~/Library/Application Support"), app_name
@@ -430,7 +415,7 @@ def get_app_dir(app_name, roaming=True, force_posix=False):
     )
 
 
-class PacifyFlushWrapper(object):
+class PacifyFlushWrapper:
     """This wrapper is used to catch and suppress BrokenPipeErrors resulting
     from ``.flush()`` being called on broken pipe during the shutdown/final-GC
     of the Python interpreter. Notably ``.flush()`` is always called on
@@ -445,7 +430,7 @@ class PacifyFlushWrapper(object):
     def flush(self):
         try:
             self.wrapped.flush()
-        except IOError as e:
+        except OSError as e:
             import errno
 
             if e.errno != errno.EPIPE:

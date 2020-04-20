@@ -2,8 +2,6 @@ import inspect
 import sys
 from functools import update_wrapper
 
-from ._compat import iteritems
-from ._unicodefun import _check_for_unicode_literals
 from .core import Argument
 from .core import Command
 from .core import Group
@@ -68,7 +66,8 @@ def make_pass_decorator(object_type, ensure=False):
             if obj is None:
                 raise RuntimeError(
                     "Managed to invoke callback without a context"
-                    " object of type '{}' existing".format(object_type.__name__)
+                    f" object of type {object_type.__name__!r}"
+                    " existing."
                 )
             return ctx.invoke(f, obj, *args, **kwargs)
 
@@ -94,12 +93,11 @@ def _make_command(f, name, attrs, cls):
     else:
         help = inspect.cleandoc(help)
     attrs["help"] = help
-    _check_for_unicode_literals()
     return cls(
         name=name or f.__name__.lower().replace("_", "-"),
         callback=f,
         params=params,
-        **attrs
+        **attrs,
     )
 
 
@@ -287,7 +285,7 @@ def version_option(version=None, *param_decls, **attrs):
                 else:
                     for dist in pkg_resources.working_set:
                         scripts = dist.get_entry_map().get("console_scripts") or {}
-                        for _, entry_point in iteritems(scripts):
+                        for entry_point in scripts.values():
                             if entry_point.module_name == module:
                                 ver = dist.version
                                 break

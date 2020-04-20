@@ -1,58 +1,9 @@
 import codecs
 import os
-import sys
-
-from ._compat import PY2
 
 
-def _find_unicode_literals_frame():
-    import __future__
-
-    if not hasattr(sys, "_getframe"):  # not all Python implementations have it
-        return 0
-    frm = sys._getframe(1)
-    idx = 1
-    while frm is not None:
-        if frm.f_globals.get("__name__", "").startswith("click."):
-            frm = frm.f_back
-            idx += 1
-        elif frm.f_code.co_flags & __future__.unicode_literals.compiler_flag:
-            return idx
-        else:
-            break
-    return 0
-
-
-def _check_for_unicode_literals():
-    if not __debug__:
-        return
-
-    from . import disable_unicode_literals_warning
-
-    if not PY2 or disable_unicode_literals_warning:
-        return
-    bad_frame = _find_unicode_literals_frame()
-    if bad_frame <= 0:
-        return
-    from warnings import warn
-
-    warn(
-        Warning(
-            "Click detected the use of the unicode_literals __future__"
-            " import. This is heavily discouraged because it can"
-            " introduce subtle bugs in your code. You should instead"
-            ' use explicit u"" literals for your unicode strings. For'
-            " more information see"
-            " https://click.palletsprojects.com/python3/"
-        ),
-        stacklevel=bad_frame,
-    )
-
-
-def _verify_python3_env():
-    """Ensures that the environment is good for unicode on Python 3."""
-    if PY2:
-        return
+def _verify_python_env():
+    """Ensures that the environment is good for Unicode."""
     try:
         import locale
 
@@ -104,9 +55,9 @@ def _verify_python3_env():
             )
         else:
             extra += (
-                "This system lists a couple of UTF-8 supporting locales"
-                " that you can pick from. The following suitable"
-                " locales were discovered: {}".format(", ".join(sorted(good_locales)))
+                "This system lists some UTF-8 supporting locales that"
+                " you can pick from. The following suitable locales"
+                f" were discovered: {', '.join(sorted(good_locales))}"
             )
 
         bad_locale = None
@@ -120,12 +71,12 @@ def _verify_python3_env():
                 "\n\nClick discovered that you exported a UTF-8 locale"
                 " but the locale system could not pick up from it"
                 " because it does not exist. The exported locale is"
-                " '{}' but it is not supported".format(bad_locale)
+                f" {bad_locale!r} but it is not supported"
             )
 
     raise RuntimeError(
-        "Click will abort further execution because Python 3 was"
+        "Click will abort further execution because Python was"
         " configured to use ASCII as encoding for the environment."
-        " Consult https://click.palletsprojects.com/python3/ for"
-        " mitigation steps.{}".format(extra)
+        " Consult https://click.palletsprojects.com/unicode-support/"
+        f" for mitigation steps.{extra}"
     )

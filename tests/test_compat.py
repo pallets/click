@@ -1,23 +1,7 @@
 import pytest
 
-import click
 from click._compat import should_strip_ansi
 from click._compat import WIN
-
-
-def test_legacy_callbacks(runner):
-    def legacy_callback(ctx, value):
-        return value.upper()
-
-    @click.command()
-    @click.option("--foo", callback=legacy_callback)
-    def cli(foo):
-        click.echo(foo)
-
-    with pytest.warns(DeprecationWarning, match="2-arg style"):
-        result = runner.invoke(cli, ["--foo", "wat"])
-        assert result.exit_code == 0
-        assert "WAT" in result.output
 
 
 def test_bash_func_name():
@@ -39,7 +23,7 @@ def test_zsh_func_name():
 
 @pytest.mark.xfail(WIN, reason="Jupyter not tested/supported on Windows")
 def test_is_jupyter_kernel_output():
-    class JupyterKernelFakeStream(object):
+    class JupyterKernelFakeStream:
         pass
 
     # implementation detail, aka cheapskate test

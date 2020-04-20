@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module started out as largely a copy paste from the stdlib's
 optparse module with the features removed that we do not need from
@@ -84,8 +83,8 @@ def _unpack_args(args, nargs_spec):
 
 def _error_opt_args(nargs, opt):
     if nargs == 1:
-        raise BadOptionUsage(opt, "{} option requires an argument".format(opt))
-    raise BadOptionUsage(opt, "{} option requires {} arguments".format(opt, nargs))
+        raise BadOptionUsage(opt, f"{opt} option requires an argument")
+    raise BadOptionUsage(opt, f"{opt} option requires {nargs} arguments")
 
 
 def split_opt(opt):
@@ -101,7 +100,7 @@ def normalize_opt(opt, ctx):
     if ctx is None or ctx.token_normalize_func is None:
         return opt
     prefix, opt = split_opt(opt)
-    return prefix + ctx.token_normalize_func(opt)
+    return f"{prefix}{ctx.token_normalize_func(opt)}"
 
 
 def split_arg_string(string):
@@ -123,7 +122,7 @@ def split_arg_string(string):
     return rv
 
 
-class Option(object):
+class Option:
     def __init__(self, opts, dest, action=None, nargs=1, const=None, obj=None):
         self._short_opts = []
         self._long_opts = []
@@ -132,7 +131,7 @@ class Option(object):
         for opt in opts:
             prefix, value = split_opt(opt)
             if not prefix:
-                raise ValueError("Invalid start character for option ({})".format(opt))
+                raise ValueError(f"Invalid start character for option ({opt})")
             self.prefixes.add(prefix[0])
             if len(prefix) == 1 and len(value) == 1:
                 self._short_opts.append(opt)
@@ -165,11 +164,11 @@ class Option(object):
         elif self.action == "count":
             state.opts[self.dest] = state.opts.get(self.dest, 0) + 1
         else:
-            raise ValueError("unknown action '{}'".format(self.action))
+            raise ValueError(f"unknown action '{self.action}'")
         state.order.append(self.obj)
 
 
-class Argument(object):
+class Argument:
     def __init__(self, dest, nargs=1, obj=None):
         self.dest = dest
         self.nargs = nargs
@@ -182,13 +181,13 @@ class Argument(object):
                 value = None
             elif holes != 0:
                 raise BadArgumentUsage(
-                    "argument {} takes {} values".format(self.dest, self.nargs)
+                    f"argument {self.dest} takes {self.nargs} values"
                 )
         state.opts[self.dest] = value
         state.order.append(self.obj)
 
 
-class ParsingState(object):
+class ParsingState:
     def __init__(self, rargs):
         self.opts = {}
         self.largs = []
@@ -196,7 +195,7 @@ class ParsingState(object):
         self.order = []
 
 
-class OptionParser(object):
+class OptionParser:
     """The option parser is an internal class that is ultimately used to
     parse options and arguments.  It's modelled after optparse and brings
     a similar but vastly simplified API.  It should generally not be used
@@ -348,7 +347,7 @@ class OptionParser(object):
                 del state.rargs[:nargs]
 
         elif explicit_value is not None:
-            raise BadOptionUsage(opt, "{} option does not take a value".format(opt))
+            raise BadOptionUsage(opt, f"{opt} option does not take a value")
 
         else:
             value = None
@@ -362,7 +361,7 @@ class OptionParser(object):
         unknown_options = []
 
         for ch in arg[1:]:
-            opt = normalize_opt(prefix + ch, self.ctx)
+            opt = normalize_opt(f"{prefix}{ch}", self.ctx)
             option = self._short_opt.get(opt)
             i += 1
 
@@ -400,7 +399,7 @@ class OptionParser(object):
         # to the state as new larg.  This way there is basic combinatorics
         # that can be achieved while still ignoring unknown arguments.
         if self.ignore_unknown_options and unknown_options:
-            state.largs.append("{}{}".format(prefix, "".join(unknown_options)))
+            state.largs.append(f"{prefix}{''.join(unknown_options)}")
 
     def _process_opts(self, arg, state):
         explicit_value = None

@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
 import os
 import re
 
 import pytest
 
 import click
-from click._compat import text_type
 
 
 def test_prefixes(runner):
@@ -13,7 +11,7 @@ def test_prefixes(runner):
     @click.option("++foo", is_flag=True, help="das foo")
     @click.option("--bar", is_flag=True, help="das bar")
     def cli(foo, bar):
-        click.echo("foo={} bar={}".format(foo, bar))
+        click.echo(f"foo={foo} bar={bar}")
 
     result = runner.invoke(cli, ["++foo", "--bar"])
     assert not result.exception
@@ -46,8 +44,8 @@ def test_nargs_tup_composite_mult(runner):
     @click.command()
     @click.option("--item", type=(str, int), multiple=True)
     def copy(item):
-        for item in item:
-            click.echo("name={0[0]} id={0[1]:d}".format(item))
+        for name, id in item:
+            click.echo(f"name={name} id={id:d}")
 
     result = runner.invoke(copy, ["--item", "peter", "1", "--item", "max", "2"])
     assert not result.exception
@@ -58,7 +56,7 @@ def test_counting(runner):
     @click.command()
     @click.option("-v", count=True, help="Verbosity", type=click.IntRange(0, 3))
     def cli(v):
-        click.echo("verbosity={:d}".format(v))
+        click.echo(f"verbosity={v:d}")
 
     result = runner.invoke(cli, ["-vvv"])
     assert not result.exception
@@ -87,7 +85,7 @@ def test_unknown_options(runner, unknown_flag):
 
     result = runner.invoke(cli, [unknown_flag])
     assert result.exception
-    assert "no such option: {}".format(unknown_flag) in result.output
+    assert f"no such option: {unknown_flag}" in result.output
 
 
 def test_multiple_required(runner):
@@ -109,7 +107,7 @@ def test_empty_envvar(runner):
     @click.command()
     @click.option("--mypath", type=click.Path(exists=True), envvar="MYPATH")
     def cli(mypath):
-        click.echo("mypath: {}".format(mypath))
+        click.echo(f"mypath: {mypath}")
 
     result = runner.invoke(cli, [], env={"MYPATH": ""})
     assert result.exit_code == 0
@@ -146,7 +144,7 @@ def test_multiple_envvar(runner):
         cmd,
         [],
         auto_envvar_prefix="TEST",
-        env={"TEST_ARG": "foo{}bar".format(os.path.pathsep)},
+        env={"TEST_ARG": f"foo{os.path.pathsep}bar"},
     )
     assert not result.exception
     assert result.output == "foo|bar\n"
@@ -170,11 +168,11 @@ def test_multiple_default_type(runner):
     @click.option("--arg1", multiple=True, default=("foo", "bar"))
     @click.option("--arg2", multiple=True, default=(1, "a"))
     def cmd(arg1, arg2):
-        assert all(isinstance(e[0], text_type) for e in arg1)
-        assert all(isinstance(e[1], text_type) for e in arg1)
+        assert all(isinstance(e[0], str) for e in arg1)
+        assert all(isinstance(e[1], str) for e in arg1)
 
         assert all(isinstance(e[0], int) for e in arg2)
-        assert all(isinstance(e[1], text_type) for e in arg2)
+        assert all(isinstance(e[1], str) for e in arg2)
 
     result = runner.invoke(
         cmd, "--arg1 a b --arg1 test 1 --arg2 2 two --arg2 4 four".split()
@@ -423,12 +421,13 @@ def test_option_help_preserve_paragraphs(runner):
 
     result = runner.invoke(cmd, ["--help"],)
     assert result.exit_code == 0
+    i = " " * 21
     assert (
         "  -C, --config PATH  Configuration file to use.\n"
-        "{i}\n"
-        "{i}If not given, the environment variable CONFIG_FILE is\n"
-        "{i}consulted and used if set. If neither are given, a default\n"
-        "{i}configuration file is loaded.".format(i=" " * 21)
+        f"{i}\n"
+        f"{i}If not given, the environment variable CONFIG_FILE is\n"
+        f"{i}consulted and used if set. If neither are given, a default\n"
+        f"{i}configuration file is loaded."
     ) in result.output
 
 

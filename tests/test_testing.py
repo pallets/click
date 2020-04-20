@@ -1,18 +1,12 @@
 import os
 import sys
+from io import BytesIO
 
 import pytest
 
 import click
-from click._compat import PY2
 from click._compat import WIN
 from click.testing import CliRunner
-
-# Use the most reasonable io that users would use for the python version.
-if PY2:
-    from cStringIO import StringIO as ReasonableBytesIO
-else:
-    from io import BytesIO as ReasonableBytesIO
 
 
 def test_runner():
@@ -51,12 +45,12 @@ def test_runner_with_stream():
             o.flush()
 
     runner = CliRunner()
-    result = runner.invoke(test, input=ReasonableBytesIO(b"Hello World!\n"))
+    result = runner.invoke(test, input=BytesIO(b"Hello World!\n"))
     assert not result.exception
     assert result.output == "Hello World!\n"
 
     runner = CliRunner(echo_stdin=True)
-    result = runner.invoke(test, input=ReasonableBytesIO(b"Hello World!\n"))
+    result = runner.invoke(test, input=BytesIO(b"Hello World!\n"))
     assert not result.exception
     assert result.output == "Hello World!\nHello World!\n"
 
@@ -65,7 +59,7 @@ def test_prompts():
     @click.command()
     @click.option("--foo", prompt=True)
     def test(foo):
-        click.echo("foo={}".format(foo))
+        click.echo(f"foo={foo}")
 
     runner = CliRunner()
     result = runner.invoke(test, input="wau wau\n")
@@ -75,7 +69,7 @@ def test_prompts():
     @click.command()
     @click.option("--foo", prompt=True, hide_input=True)
     def test(foo):
-        click.echo("foo={}".format(foo))
+        click.echo(f"foo={foo}")
 
     runner = CliRunner()
     result = runner.invoke(test, input="wau wau\n")
@@ -131,7 +125,7 @@ def test_with_color():
     assert not result.exception
 
     result = runner.invoke(cli, color=True)
-    assert result.output == "{}\n".format(click.style("hello world", fg="blue"))
+    assert result.output == f"{click.style('hello world', fg='blue')}\n"
     assert not result.exception
 
 
@@ -219,7 +213,7 @@ def test_exit_code_and_output_from_sys_exit():
 def test_env():
     @click.command()
     def cli_env():
-        click.echo("ENV={}".format(os.environ["TEST_CLICK_ENV"]))
+        click.echo(f"ENV={os.environ['TEST_CLICK_ENV']}")
 
     runner = CliRunner()
 

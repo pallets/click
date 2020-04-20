@@ -10,4 +10,4 @@ def cli(ctx, path):
     """Initializes a repository."""
     if path is None:
         path = ctx.home
-    ctx.log("Initialized the repository in %s", click.format_filename(path))
+    ctx.log(f"Initialized the repository in {click.format_filename(path)}")

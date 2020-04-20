@@ -1,6 +1,5 @@
 from ._compat import filename_to_ui
 from ._compat import get_text_stderr
-from ._compat import PY2
 from .utils import echo
 
 
@@ -13,15 +12,11 @@ def _join_param_hints(param_hint):
 class ClickException(Exception):
     """An exception that Click can handle and show to the user."""
 
-    #: The exit code for this exception
+    #: The exit code for this exception.
     exit_code = 1
 
     def __init__(self, message):
-        ctor_msg = message
-        if PY2:
-            if ctor_msg is not None:
-                ctor_msg = ctor_msg.encode("utf-8")
-        Exception.__init__(self, ctor_msg)
+        super().__init__(message)
         self.message = message
 
     def format_message(self):
@@ -30,16 +25,10 @@ class ClickException(Exception):
     def __str__(self):
         return self.message
 
-    if PY2:
-        __unicode__ = __str__
-
-        def __str__(self):
-            return self.message.encode("utf-8")
-
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
-        echo("Error: {}".format(self.format_message()), file=file)
+        echo(f"Error: {self.format_message()}", file=file)
 
 
 class UsageError(ClickException):
@@ -64,13 +53,14 @@ class UsageError(ClickException):
         color = None
         hint = ""
         if self.cmd is not None and self.cmd.get_help_option(self.ctx) is not None:
-            hint = "Try '{} {}' for help.\n".format(
-                self.ctx.command_path, self.ctx.help_option_names[0]
+            hint = (
+                f"Try '{self.ctx.command_path}"
+                f" {self.ctx.help_option_names[0]}' for help.\n"
             )
         if self.ctx is not None:
             color = self.ctx.color
-            echo("{}\n{}".format(self.ctx.get_usage(), hint), file=file, color=color)
-        echo("Error: {}".format(self.format_message()), file=file, color=color)
+            echo(f"{self.ctx.get_usage()}\n{hint}", file=file, color=color)
+        echo(f"Error: {self.format_message()}", file=file, color=color)
 
 
 class BadParameter(UsageError):
@@ -102,10 +92,10 @@ class BadParameter(UsageError):
         elif self.param is not None:
             param_hint = self.param.get_error_hint(self.ctx)
         else:
-            return "Invalid value: {}".format(self.message)
+            return f"Invalid value: {self.message}"
         param_hint = _join_param_hints(param_hint)
 
-        return "Invalid value for {}: {}".format(param_hint, self.message)
+        return f"Invalid value for {param_hint}: {self.message}"
 
 
 class MissingParameter(BadParameter):
@@ -144,29 +134,19 @@ class MissingParameter(BadParameter):
             msg_extra = self.param.type.get_missing_message(self.param)
             if msg_extra:
                 if msg:
-                    msg += ".  {}".format(msg_extra)
+                    msg += f".  {msg_extra}"
                 else:
                     msg = msg_extra
 
-        return "Missing {}{}{}{}".format(
-            param_type,
-            " {}".format(param_hint) if param_hint else "",
-            ".  " if msg else ".",
-            msg or "",
-        )
+        hint_str = f" {param_hint}" if param_hint else ""
+        return f"Missing {param_type}{hint_str}.{' ' if msg else ''}{msg or ''}"
 
     def __str__(self):
         if self.message is None:
             param_name = self.param.name if self.param else None
-            return "missing parameter: {}".format(param_name)
+            return f"missing parameter: {param_name}"
         else:
             return self.message
-
-    if PY2:
-        __unicode__ = __str__
-
-        def __str__(self):
-            return self.__unicode__().encode("utf-8")
 
 
 class NoSuchOption(UsageError):
@@ -178,7 +158,7 @@ class NoSuchOption(UsageError):
 
     def __init__(self, option_name, message=None, possibilities=None, ctx=None):
         if message is None:
-            message = "no such option: {}".format(option_name)
+            message = f"no such option: {option_name}"
         UsageError.__init__(self, message, ctx)
         self.option_name = option_name
         self.possibilities = possibilities
@@ -187,10 +167,10 @@ class NoSuchOption(UsageError):
         bits = [self.message]
         if self.possibilities:
             if len(self.possibilities) == 1:
-                bits.append("Did you mean {}?".format(self.possibilities[0]))
+                bits.append(f"Did you mean {self.possibilities[0]}?")
             else:
                 possibilities = sorted(self.possibilities)
-                bits.append("(Possible options: {})".format(", ".join(possibilities)))
+                bits.append(f"(Possible options: {', '.join(possibilities)})")
         return "  ".join(bits)
 
 
@@ -233,7 +213,7 @@ class FileError(ClickException):
         self.filename = filename
 
     def format_message(self):
-        return "Could not open file {}: {}".format(self.ui_filename, self.message)
+        return f"Could not open file {self.ui_filename}: {self.message}"
 
 
 class Abort(RuntimeError):

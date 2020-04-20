@@ -12,7 +12,6 @@ line utility for Python out there which ticks the following boxes:
 *   supports loading values from environment variables out of the box
 *   support for prompting of custom values
 *   is fully nestable and composable
-*   works the same in Python 2 and 3
 *   supports file handling out of the box
 *   comes with useful common helpers (getting terminal dimensions,
     ANSI colors, fetching direct keyboard input, screen clearing,

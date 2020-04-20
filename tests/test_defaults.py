@@ -6,7 +6,7 @@ def test_basic_defaults(runner):
     @click.option("--foo", default=42, type=click.FLOAT)
     def cli(foo):
         assert type(foo) is float
-        click.echo("FOO:[{}]".format(foo))
+        click.echo(f"FOO:[{foo}]")
 
     result = runner.invoke(cli, [])
     assert not result.exception
@@ -32,8 +32,8 @@ def test_nargs_plus_multiple(runner):
         "--arg", default=((1, 2), (3, 4)), nargs=2, multiple=True, type=click.INT
     )
     def cli(arg):
-        for item in arg:
-            click.echo("<{0[0]:d}|{0[1]:d}>".format(item))
+        for a, b in arg:
+            click.echo(f"<{a:d}|{b:d}>")
 
     result = runner.invoke(cli, [])
     assert not result.exception

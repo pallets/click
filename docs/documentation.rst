@@ -24,7 +24,7 @@ Simple example:
     def hello(count, name):
         """This script prints hello NAME COUNT times."""
         for x in range(count):
-            click.echo('Hello %s!' % name)
+            click.echo(f"Hello {name}!")
 
 And what it looks like:
 
@@ -173,7 +173,7 @@ desired.  This can be customized at all levels:
     def hello(count, name):
         """This script prints hello <name> <int> times."""
         for x in range(count):
-            click.echo('Hello %s!' % name)
+            click.echo(f"Hello {name}!")
 
 Example:
 

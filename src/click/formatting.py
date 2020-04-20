@@ -91,7 +91,7 @@ def wrap_text(
     return "\n\n".join(rv)
 
 
-class HelpFormatter(object):
+class HelpFormatter:
     """This class helps with formatting text-based help pages.  It's
     usually just needed for very special internal cases, but it's also
     exposed so that developers can write their own fancy outputs.
@@ -134,7 +134,7 @@ class HelpFormatter(object):
         :param args: whitespace separated list of arguments.
         :param prefix: the prefix for the first line.
         """
-        usage_prefix = "{:>{w}}{} ".format(prefix, prog, w=self.current_indent)
+        usage_prefix = f"{prefix:>{self.current_indent}}{prog} "
         text_width = self.width - self.current_indent
 
         if text_width >= (term_len(usage_prefix) + 20):
@@ -163,7 +163,7 @@ class HelpFormatter(object):
 
     def write_heading(self, heading):
         """Writes a heading into the buffer."""
-        self.write("{:>{w}}{}:\n".format("", heading, w=self.current_indent))
+        self.write(f"{'':>{self.current_indent}}{heading}:\n")
 
     def write_paragraph(self):
         """Writes a paragraph into the buffer."""
@@ -204,7 +204,7 @@ class HelpFormatter(object):
         first_col = min(widths[0], col_max) + col_spacing
 
         for first, second in iter_rows(rows, len(widths)):
-            self.write("{:>{w}}{}".format("", first, w=self.current_indent))
+            self.write(f"{'':>{self.current_indent}}{first}")
             if not second:
                 self.write("\n")
                 continue
@@ -219,14 +219,10 @@ class HelpFormatter(object):
             lines = wrapped_text.splitlines()
 
             if lines:
-                self.write("{}\n".format(lines[0]))
+                self.write(f"{lines[0]}\n")
 
                 for line in lines[1:]:
-                    self.write(
-                        "{:>{w}}{}\n".format(
-                            "", line, w=first_col + self.current_indent
-                        )
-                    )
+                    self.write(f"{'':>{first_col + self.current_indent}}{line}\n")
 
                 if len(lines) > 1:
                     # separate long help from next option
