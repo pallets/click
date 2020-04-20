@@ -32,11 +32,11 @@ from ._compat import _NonClosingTextIOWrapper
 
 try:
     from ctypes import pythonapi
-
-    PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
-    PyBuffer_Release = pythonapi.PyBuffer_Release
 except ImportError:
     pythonapi = None
+else:
+    PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
+    PyBuffer_Release = pythonapi.PyBuffer_Release
 
 
 c_ssize_p = POINTER(c_ssize_t)

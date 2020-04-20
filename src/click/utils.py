@@ -232,11 +232,10 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
         else:
             message += b"\n"
 
-    # If there is a message, and we're in Python 3, and the value looks
-    # like bytes, we manually need to find the binary stream and write the
-    # message in there.  This is done separately so that most stream
-    # types will work as you would expect.  Eg: you can write to StringIO
-    # for other cases.
+    # If there is a message and the value looks like bytes, we manually
+    # need to find the binary stream and write the message in there.
+    # This is done separately so that most stream types will work as you
+    # would expect. Eg: you can write to StringIO for other cases.
     if message and is_bytes(message):
         binary_file = _find_binary_writer(file)
         if binary_file is not None:

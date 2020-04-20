@@ -1,6 +1,7 @@
 import os
 import stat
 import sys
+from io import StringIO
 
 import pytest
 
@@ -19,19 +20,7 @@ def test_echo(runner):
         bytes = outstreams[0].getvalue().replace(b"\r\n", b"\n")
         assert bytes == b"\xe2\x98\x83\nDD\n42ax"
 
-    # If we are in Python 2, we expect that writing bytes into a string io
-    # does not do anything crazy.  In Python 3
-    if sys.version_info[0] == 2:
-        import StringIO
-
-        sys.stdout = x = StringIO.StringIO()
-        try:
-            click.echo("\xf6")
-        finally:
-            sys.stdout = sys.__stdout__
-        assert x.getvalue() == "\xf6\n"
-
-    # And in any case, if wrapped, we expect bytes to survive.
+    # if wrapped, we expect bytes to survive.
     @click.command()
     def cli():
         click.echo(b"\xf6")
@@ -224,10 +213,6 @@ def test_echo_color_flag(monkeypatch, capfd):
 def test_echo_writing_to_standard_error(capfd, monkeypatch):
     def emulate_input(text):
         """Emulate keyboard input."""
-        if sys.version_info[0] == 2:
-            from StringIO import StringIO
-        else:
-            from io import StringIO
         monkeypatch.setattr(sys, "stdin", StringIO(text))
 
     click.echo("Echo to standard output")

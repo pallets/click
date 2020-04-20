@@ -125,9 +125,6 @@ class ProgressBar(object):
         # twice works and does "what you want".
         return next(iter(self))
 
-    # Python 2 compat
-    next = __next__
-
     def is_fast(self):
         return time.time() - self.start <= self.short_limit
 

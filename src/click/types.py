@@ -721,11 +721,10 @@ def convert_type(ty, default=None):
 
 
 #: A dummy parameter type that just does nothing.  From a user's
-#: perspective this appears to just be the same as `STRING` but internally
-#: no string conversion takes place.  This is necessary to achieve the
-#: same bytes/unicode behavior on Python 2/3 in situations where you want
-#: to not convert argument types.  This is usually useful when working
-#: with file paths as they can appear in bytes and unicode.
+#: perspective this appears to just be the same as `STRING` but
+#: internally no string conversion takes place if the input was bytes.
+#: This is usually useful when working with file paths as they can
+#: appear in bytes and unicode.
 #:
 #: For path related uses the :class:`Path` type is a better choice but
 #: there are situations where an unprocessed type is useful which is why

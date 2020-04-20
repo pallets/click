@@ -1,11 +1,7 @@
+import configparser
 import os
 
 import click
-
-try:
-    import configparser
-except ImportError:
-    import ConfigParser as configparser
 
 
 class Config(object):

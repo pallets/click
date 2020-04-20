@@ -216,14 +216,10 @@ def get_terminal_size():
     """Returns the current size of the terminal as tuple in the form
     ``(width, height)`` in columns and rows.
     """
-    # If shutil has get_terminal_size() (Python 3.3 and later) use that
-    if sys.version_info >= (3, 3):
-        import shutil
+    import shutil
 
-        shutil_get_terminal_size = getattr(shutil, "get_terminal_size", None)
-        if shutil_get_terminal_size:
-            sz = shutil_get_terminal_size()
-            return sz.columns, sz.lines
+    if hasattr(shutil, "get_terminal_size"):
+        return shutil.get_terminal_size()
 
     # We provide a sensible default for get_winterm_size() when being invoked
     # inside a subprocess. Without this, it would not provide a useful input.

@@ -110,9 +110,7 @@ class CliRunner(object):
     works in single-threaded systems without any concurrency as it changes the
     global interpreter state.
 
-    :param charset: the character set for the input and output data.  This is
-                    UTF-8 by default and should not be changed currently as
-                    the reporting to Click only works in Python 2 properly.
+    :param charset: the character set for the input and output data.
     :param env: a dictionary with environment variables for overriding.
     :param echo_stdin: if this is set to `True`, then reading from stdin writes
                        to stdout.  This is useful for showing examples in
@@ -125,9 +123,7 @@ class CliRunner(object):
                        independently
     """
 
-    def __init__(self, charset=None, env=None, echo_stdin=False, mix_stderr=True):
-        if charset is None:
-            charset = "utf-8"
+    def __init__(self, charset="utf-8", env=None, echo_stdin=False, mix_stderr=True):
         self.charset = charset
         self.env = env or {}
         self.echo_stdin = echo_stdin

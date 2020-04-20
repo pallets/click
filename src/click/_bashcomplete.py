@@ -1,6 +1,7 @@
 import copy
 import os
 import re
+from collections import abc
 
 from .core import Argument
 from .core import MultiCommand
@@ -8,11 +9,6 @@ from .core import Option
 from .parser import split_arg_string
 from .types import Choice
 from .utils import echo
-
-try:
-    from collections import abc
-except ImportError:
-    import collections as abc
 
 WORDBREAK = "="
 

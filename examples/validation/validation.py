@@ -1,9 +1,6 @@
-import click
+from urllib import parse as urlparse
 
-try:
-    from urllib import parse as urlparse
-except ImportError:
-    import urlparse
+import click
 
 
 def validate_count(ctx, param, value):
