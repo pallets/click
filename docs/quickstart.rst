@@ -226,90 +226,23 @@ other invocations::
     if __name__ == '__main__':
         cli()
 
-Splitting Nested Commands Between Files
---------------------------------
+Registering commands with add_command
+-------------------------------------
 
-If we want to have nested commands which are split between files
-then we can use the function add_command()
-
-To give an example.
-Lets create a file called root.py to act as a main script
+Commands can be defined with @click.command() and registered with the group later
+by using group.add_command(). This could be used to split commands into multiple Python modules.
 
 .. click:example::
-
-    import click
-    from cli_compile import cli_compile
-    from cli_tools import cli_tools
 
     @click.group()
-    def main():
+    def group():
         pass
+ 
+    @click.command()
+    def greet():
+        click.echo("Hello, World!")
 
-    if __name__ == '__main__':
-        main.add_command(cli_tools)
-        main.add_command(cli_compile)
-        main()
-
-Next lets create a file called cli_tools.py
-To represent the collection of tool commands
-
-.. click:example::
-
-    import click
-
-    @click.group(name='tools', help='tool related commands')
-    def cli_tools():
-        pass
-
-    @cli_tools.command(name='install', help='install something')
-    def install_cmd():
-        click.echo('Installing')
-
-    @cli_tools.command(name='search', help='search for something')
-    def search_cmd():
-        click.echo('Searching')
-
-    if __name__ == '__main__':
-        cli_tools()
-
-Next lets create a file called cli_compile.py
-To represent the collection of compile commands
-
-.. click:example::
-
-
-    import click
-
-    @click.group(name='compile' help='compile related commands')
-    def cli_compile():
-        pass
-
-    @cli_compile.command(name='build', help='build something')
-    def build_cmd():
-        click.echo('Building')
-
-    @cli_compile.command(name='clean', help='clean something')
-    def clean_cmd():
-        click.echo('Cleaning')
-
-    if __name__ == '__main__':
-        cli_compile()
-
-This should give us the ability to have lots of commands and subcommands split across different files
-What it looks like:
-
-.. click:run::
-
-    root.py
-    root.py tools
-    root.py tools install
-    root.py tools search
-    root.py compile
-    root.py compile build
-    root.py compile clean
-
-Each of the files cli_compile.py and cli_tools.py can also be called directly just for they're own commands.
-
+    group.add_command(greet)
 
 Adding Parameters
 -----------------
