@@ -1,5 +1,14 @@
 .. currentmodule:: click
 
+Version 7.2
+-----------
+
+Unreleased
+
+-   Fix version detection when invoked via ``python -m <package>``.
+    :pr:`1531`
+
+
 Version 7.1.2
 -------------
 
