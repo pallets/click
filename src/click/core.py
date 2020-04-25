@@ -603,6 +603,10 @@ class Context(object):
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
                     kwargs[param.name] = param.get_default(ctx)
+                    if param.callback is not None:
+                        kwargs[param.name] = param.callback(
+                            ctx, param, kwargs[param.name]
+                        )
 
         args = args[2:]
         with augment_usage_errors(self):

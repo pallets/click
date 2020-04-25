@@ -20,6 +20,29 @@ def test_other_command_invoke(runner):
     assert result.output == "42\n"
 
 
+def test_invoke_command_with_callback(runner):
+    """Test that invoking a command will call any parameter callbacks."""
+
+    def arg_callback(ctx, param, value):
+        return 42
+
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        return ctx.invoke(other_cmd)
+
+    @click.command()
+    @click.argument("arg", type=click.INT, required=False, callback=arg_callback)
+    def other_cmd(arg):
+        assert arg is not None
+
+    result = runner.invoke(other_cmd, [])
+    assert not result.exception
+
+    result = runner.invoke(cli, [])
+    assert not result.exception
+
+
 def test_other_command_forward(runner):
     cli = click.Group()
 
