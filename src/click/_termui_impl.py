@@ -6,7 +6,6 @@ placed in this module and only imported as needed.
 import contextlib
 import math
 import os
-import shlex
 import sys
 import time
 
@@ -352,7 +351,7 @@ def pager(generator, color=None):
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
-        if hasattr(os, "system") and os.system(f"more {shlex.quote(filename)}") == 0:
+        if hasattr(os, "system") and os.system(f'more "{filename}"') == 0:
             return _pipepager(generator, "more", color)
         return _nullpager(stdout, generator, color)
     finally:
@@ -421,7 +420,7 @@ def _tempfilepager(generator, cmd, color):
     with open_stream(filename, "wb")[0] as f:
         f.write(text.encode(encoding))
     try:
-        os.system(f"{shlex.quote(cmd)} {shlex.quote(filename)}")
+        os.system(f'{cmd} "{filename}"')
     finally:
         os.unlink(filename)
 
@@ -465,11 +464,7 @@ class Editor:
         else:
             environ = None
         try:
-            c = subprocess.Popen(
-                f"{shlex.quote(editor)} {shlex.quote(filename)}",
-                env=environ,
-                shell=True,
-            )
+            c = subprocess.Popen(f'{editor} "{filename}"', env=environ, shell=True)
             exit_code = c.wait()
             if exit_code != 0:
                 raise ClickException(f"{editor}: Editing failed!")
@@ -542,17 +537,21 @@ def open_url(url, wait=False, locate=False):
             null.close()
     elif WIN:
         if locate:
-            url = _unquote_file(url)
-            args = f"explorer /select,{shlex.quote(url)}"
+            url = _unquote_file(url.replace('"', ""))
+            args = f'explorer /select,"{url}"'
         else:
-            args = f"start {'/WAIT' if wait else ''} \"\" {shlex.quote(url)}"
+            url = url.replace('"', "")
+            wait = "/WAIT" if wait else ""
+            args = f'start {wait} "" "{url}"'
         return os.system(args)
     elif CYGWIN:
         if locate:
-            url = _unquote_file(url)
-            args = f"cygstart {shlex.quote(os.path.dirname(url))}"
+            url = os.path.dirname(_unquote_file(url).replace('"', ""))
+            args = f'cygstart "{url}"'
         else:
-            args = f"cygstart {'-w' if wait else ''} {shlex.quote(url)}"
+            url = url.replace('"', "")
+            wait = "-w" if wait else ""
+            args = f'cygstart {wait} "{url}"'
         return os.system(args)
 
     try:

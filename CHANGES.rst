@@ -14,6 +14,18 @@ Unreleased
     ``current_item``. :issue:`1226`, :pr:`1332`
 
 
+Version 7.1.2
+-------------
+
+Released 2020-04-27
+
+-   Revert applying shell quoting to commands for ``echo_with_pager``
+    and ``edit``. This was intended to allows spaces in commands, but
+    caused issues if the string was actually a command and arguments, or
+    on Windows. Instead, the string must be quoted manually as it should
+    appear on the command line. :issue:`1514`
+
+
 Version 7.1.1
 -------------
 

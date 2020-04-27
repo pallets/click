@@ -46,7 +46,6 @@ ALLOWED_IMPORTS = {
     "fcntl",
     "datetime",
     "pipes",
-    "shlex",
 }
 
 if WIN:
