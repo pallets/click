@@ -2355,12 +2355,14 @@ class Option(Parameter):
                     else envvar
                 )
                 extra.append(f"env var: {var_str}")
-        if self.default is not None and (self.show_default or ctx.show_default):
+
+        default_value = ctx.lookup_default(self.name) or self.default
+        if default_value is not None and (self.show_default or ctx.show_default):
             if isinstance(self.show_default, str):
                 default_string = f"({self.show_default})"
-            elif isinstance(self.default, (list, tuple)):
-                default_string = ", ".join(str(d) for d in self.default)
-            elif inspect.isfunction(self.default):
+            elif isinstance(default_value, (list, tuple)):
+                default_string = ", ".join(str(d) for d in default_value)
+            elif inspect.isfunction(default_value):
                 default_string = "(dynamic)"
             elif self.is_bool_flag and self.secondary_opts:
                 # For boolean flags that have distinct True/False opts,
@@ -2369,7 +2371,7 @@ class Option(Parameter):
                     (self.opts if self.default else self.secondary_opts)[0]
                 )[1]
             else:
-                default_string = self.default
+                default_string = default_value
             extra.append(f"default: {default_string}")
 
         if isinstance(self.type, _NumberRangeBase):
