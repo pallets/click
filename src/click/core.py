@@ -1139,7 +1139,7 @@ class Command(BaseCommand):
         """Returns all the pieces that go into the usage line and returns
         it as a list of strings.
         """
-        rv = [self.options_metavar]
+        rv = [self.options_metavar] if self.options_metavar else []
         for param in self.get_params(ctx):
             rv.extend(param.get_usage_pieces(ctx))
         return rv

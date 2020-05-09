@@ -144,7 +144,7 @@ Unreleased
     ``is_flag=False``, and the value can instead be prompted for or
     passed in as a default value.
     :issue:`549, 736, 764, 921, 1015, 1618`
-
+-   Fix formatting when ``Command.options_metavar`` is empty. :pr:`1551`
 
 Version 7.1.2
 -------------
