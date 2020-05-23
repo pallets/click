@@ -33,7 +33,19 @@ def pass_obj(f):
     return update_wrapper(new_func, f)
 
 
-def make_pass_decorator(object_type, ensure=False):
+def merge_contexts(ctx, obj):
+    """Return the given context with the attributes of another object
+    merged into it. This is useful to attach a separate application
+    context to a Click context. Dunders and double prefixed attrs
+    are excluded from the merge.
+    """
+    for attr in obj.__dir__():
+        if not attr.startswith("__"):
+            ctx.__setattr__(attr, getattr(obj, attr))
+    return ctx
+
+
+def make_pass_decorator(object_type, ensure=False, merge=False):
     """Given an object type this creates a decorator that will work
     similar to :func:`pass_obj` but instead of passing the object of the
     current context, it will find the innermost context of type
@@ -51,9 +63,14 @@ def make_pass_decorator(object_type, ensure=False):
             return update_wrapper(new_func, f)
         return decorator
 
+    .. versionchanged:: 7.1.3
+       Added the `merged` parameter.
+
     :param object_type: the type of the object to pass.
     :param ensure: if set to `True`, a new object will be created and
                    remembered on the context if it's not there yet.
+    :param merge: if set to `True`, the object will be merged with
+                   the default context object.
     """
 
     def decorator(f):
@@ -69,7 +86,10 @@ def make_pass_decorator(object_type, ensure=False):
                     f" object of type {object_type.__name__!r}"
                     " existing."
                 )
-            return ctx.invoke(f, obj, *args, **kwargs)
+            if merge:
+                return f(merge_contexts(ctx, obj), *args, **kwargs)
+            else:
+                return ctx.invoke(f, obj, *args, **kwargs)
 
         return update_wrapper(new_func, f)
 

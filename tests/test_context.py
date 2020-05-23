@@ -212,6 +212,38 @@ def test_close_before_pop(runner):
     assert called == [True]
 
 
+def test_make_pass_decorator_merged_context(runner):
+    """
+    Test to check that make_pass_decorator doesn't consume arguments based on
+    invocation order.
+    """
+
+    class Foo:
+        def __init__(self):
+            self.title = "default"
+            self.command = "overwritten"
+
+    pass_foo = click.make_pass_decorator(Foo, ensure=True, merge=True)
+
+    @click.group()
+    @pass_foo
+    def cli(foo):
+        pass
+
+    @cli.command()
+    @pass_foo
+    def test(ctx):
+        click.echo(isinstance(ctx, click.Context))
+        click.echo(ctx.title)
+        click.echo(ctx.command)
+        click.echo(ctx.command_path)
+
+    result = runner.invoke(cli, ["test"])
+    print(result)
+    assert not result.exception
+    assert result.output == "True\ndefault\noverwritten\ncli test\n"
+
+
 def test_make_pass_decorator_args(runner):
     """
     Test to check that make_pass_decorator doesn't consume arguments based on
