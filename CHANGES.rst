@@ -75,6 +75,8 @@ Unreleased
     :issue:`1272`
 -   If only a name is passed to ``option()``, Click suggests renaming it
     to ``--name``. :pr:`1355`
+-   A context's ``show_default`` parameter defaults to the value from
+    the parent context. :issue:`1565`
 
 
 Version 7.1.2
