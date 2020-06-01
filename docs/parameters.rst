@@ -26,7 +26,7 @@ available for options:
     (:ref:`this is intentional <documenting-arguments>` as arguments
     might be too specific to be automatically documented)
 
-On the other hand arguments, unlike options, can accept an arbitrary number
+On the other hand parameters, unlike options, can accept an arbitrary number
 of arguments.  Options can strictly ever only accept a fixed number of
 arguments (defaults to 1), or they may be specified multiple times using
 :ref:`multiple-options`.
