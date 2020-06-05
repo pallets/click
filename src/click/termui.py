@@ -252,6 +252,23 @@ def confirm(
     return rv
 
 
+def get_pager_file(color=None):
+    """Context manager.
+
+    Yields a writable file-like object which can be used as an output pager.
+
+    .. versionadded:: 8.2
+
+    :param color: controls if the pager supports ANSI colors or not.  The
+                  default is autodetection.
+    """
+    from ._termui_impl import get_pager_file
+
+    color = resolve_color_default(color)
+
+    return get_pager_file(color=color)
+
+
 def echo_via_pager(
     text_or_generator: cabc.Iterable[str] | t.Callable[[], cabc.Iterable[str]] | str,
     color: bool | None = None,
@@ -267,7 +284,6 @@ def echo_via_pager(
     :param color: controls if the pager supports ANSI colors or not.  The
                   default is autodetection.
     """
-    color = resolve_color_default(color)
 
     if inspect.isgeneratorfunction(text_or_generator):
         i = t.cast("t.Callable[[], cabc.Iterable[str]]", text_or_generator)()
@@ -279,9 +295,9 @@ def echo_via_pager(
     # convert every element of i to a text type if necessary
     text_generator = (el if isinstance(el, str) else str(el) for el in i)
 
-    from ._termui_impl import pager
-
-    return pager(itertools.chain(text_generator, "\n"), color)
+    with get_pager_file(color=color) as pager:
+        for text in itertools.chain(text_generator, "\n"):
+            pager.write(text)
 
 
 @t.overload
