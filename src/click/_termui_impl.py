@@ -21,7 +21,6 @@ from ._compat import _default_text_stdout
 from ._compat import CYGWIN
 from ._compat import get_best_encoding
 from ._compat import isatty
-from ._compat import open_stream
 from ._compat import strip_ansi
 from ._compat import term_len
 from ._compat import WIN
@@ -364,7 +363,7 @@ class ProgressBar(t.Generic[V]):
             self.render_progress()
 
 
-def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
+def _pager_contextmanager(color: bool | None = None):
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
 
@@ -374,18 +373,18 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
         stdout = StringIO()
 
     if not isatty(sys.stdin) or not isatty(stdout):
-        return _nullpager(stdout, generator, color)
+        return _nullpager(stdout, color)
     pager_cmd = (os.environ.get("PAGER", None) or "").strip()
     if pager_cmd:
         if WIN:
-            return _tempfilepager(generator, pager_cmd, color)
-        return _pipepager(generator, pager_cmd, color)
+            return _tempfilepager(pager_cmd, color)
+        return _pipepager(pager_cmd, color)
     if os.environ.get("TERM") in ("dumb", "emacs"):
-        return _nullpager(stdout, generator, color)
+        return _nullpager(stdout, color)
     if WIN or sys.platform.startswith("os2"):
-        return _tempfilepager(generator, "more <", color)
+        return _tempfilepager("more <", color)
     if hasattr(os, "system") and os.system("(less) 2>/dev/null") == 0:
-        return _pipepager(generator, "less", color)
+        return _pipepager("less", color)
 
     import tempfile
 
@@ -393,13 +392,23 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
     os.close(fd)
     try:
         if hasattr(os, "system") and os.system(f'more "{filename}"') == 0:
-            return _pipepager(generator, "more", color)
-        return _nullpager(stdout, generator, color)
+            return _pipepager("more", color)
+        return _nullpager(stdout, color)
     finally:
         os.unlink(filename)
 
 
-def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> None:
+def pager(generator: cabc.Iterable[str], color: bool | None = None):
+    """Given an iterable of text, write it all to an output pager."""
+    with _pager_contextmanager(color=color) as (pager_file, encoding, color):
+        for text in generator:
+            if not color:
+                text = strip_ansi(text)
+            pager_file.write(text.encode(encoding, "replace"))
+
+
+@contextlib.contextmanager
+def _pipepager(cmd: str, color: bool | None = None):
     """Page through text by feeding it to another program.  Invoking a
     pager through this might support colors.
     """
@@ -422,11 +431,7 @@ def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> N
     stdin = t.cast(t.BinaryIO, c.stdin)
     encoding = get_best_encoding(stdin)
     try:
-        for text in generator:
-            if not color:
-                text = strip_ansi(text)
-
-            stdin.write(text.encode(encoding, "replace"))
+        yield stdin, encoding, color
     except BrokenPipeError:
         # In case the pager exited unexpectedly, ignore the broken pipe error.
         pass
@@ -463,33 +468,23 @@ def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> N
                 break
 
 
-def _tempfilepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> None:
+@contextlib.contextmanager
+def _tempfilepager(cmd: str, color: bool | None = None):
     """Page through text by invoking a program on a temporary file."""
     import tempfile
 
-    fd, filename = tempfile.mkstemp()
-    # TODO: This never terminates if the passed generator never terminates.
-    text = "".join(generator)
-    if not color:
-        text = strip_ansi(text)
     encoding = get_best_encoding(sys.stdout)
-    with open_stream(filename, "wb")[0] as f:
-        f.write(text.encode(encoding))
-    try:
-        os.system(f'{cmd} "{filename}"')
-    finally:
-        os.close(fd)
-        os.unlink(filename)
+    with tempfile.NamedTemporaryFile(mode="wb") as f:
+        yield f, encoding, color
+        f.flush()
+        os.system(f'{cmd} "{f.name}"')
 
 
-def _nullpager(
-    stream: t.TextIO, generator: cabc.Iterable[str], color: bool | None
-) -> None:
+@contextlib.contextmanager
+def _nullpager(stream: t.TextIO, color: bool | None = None):
     """Simply print unformatted text.  This is the ultimate fallback."""
-    for text in generator:
-        if not color:
-            text = strip_ansi(text)
-        stream.write(text)
+    encoding = get_best_encoding(stream)
+    return stream, encoding, color
 
 
 class Editor:
