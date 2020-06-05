@@ -155,6 +155,9 @@ Unreleased
     iterators by setting ``update_min_steps``. :issue:`676`
 -   Respect ``case_sensitive=False`` when doing shell completion for
     ``Choice`` :issue:`1692`
+-   Add ``click.get_pager_file`` for file-like access to an output
+    pager. :pr:`1572`
+
 
 
 Version 7.1.2

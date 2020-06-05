@@ -4,6 +4,7 @@ import time of Click down, some infrequently used functionality is
 placed in this module and only imported as needed.
 """
 import contextlib
+import io
 import math
 import os
 import sys
@@ -341,6 +342,24 @@ class ProgressBar:
             self.render_progress()
 
 
+class StripAnsi(io.TextIOWrapper):
+    @classmethod
+    def maybe(cls, stream, *, color, encoding):
+        if not getattr(stream, "encoding", None):
+            if color:
+                # just wrap the byte stream in a text stream
+                stream = io.TextIOWrapper(stream, encoding=encoding)
+            else:
+                # wrap in a text stream *and* strip ansi chars
+                stream = cls(stream, encoding=encoding)
+        # stream is already a text stream, can't do anything.
+        return stream
+
+    def write(self, text):
+        text = strip_ansi(text)
+        return super().write(text)
+
+
 def _pager_contextmanager(color=None):
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
@@ -370,13 +389,17 @@ def _pager_contextmanager(color=None):
         os.unlink(filename)
 
 
-def pager(generator, color=None):
-    """Given an iterable of text, write it all to an output pager."""
-    with _pager_contextmanager(color=color) as (pager_file, encoding, color):
-        for text in generator:
-            if not color:
-                text = strip_ansi(text)
-            pager_file.write(text.encode(encoding, "replace"))
+@contextlib.contextmanager
+def get_pager_file(color=None):
+    """Context manager.
+    Yields a writable file-like object which can be used as an output pager.
+    .. versionadded:: 8.0
+    :param color: controls if the pager supports ANSI colors or not.  The
+                  default is autodetection.
+    """
+    with _pager_contextmanager(color=color) as (stream, encoding, color):
+        with StripAnsi.maybe(stream, color=color, encoding=encoding) as text_stream:
+            yield text_stream
 
 
 @contextlib.contextmanager

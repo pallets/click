@@ -41,6 +41,7 @@ from .termui import clear
 from .termui import confirm
 from .termui import echo_via_pager
 from .termui import edit
+from .termui import get_pager_file
 from .termui import get_terminal_size
 from .termui import getchar
 from .termui import launch
