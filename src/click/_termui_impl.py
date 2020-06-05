@@ -342,21 +342,14 @@ class ProgressBar:
             self.render_progress()
 
 
-class StripAnsi(io.TextIOWrapper):
-    @classmethod
-    def maybe(cls, stream, *, color, encoding):
-        if not getattr(stream, "encoding", None):
-            if color:
-                # just wrap the byte stream in a text stream
-                stream = io.TextIOWrapper(stream, encoding=encoding)
-            else:
-                # wrap in a text stream *and* strip ansi chars
-                stream = cls(stream, encoding=encoding)
-        # stream is already a text stream, can't do anything.
-        return stream
+class MaybeStripAnsi(io.TextIOWrapper):
+    def __init__(self, stream, *, color, **kwargs):
+        super().__init__(stream, **kwargs)
+        self.color = color
 
     def write(self, text):
-        text = strip_ansi(text)
+        if not self.color:
+            text = strip_ansi(text)
         return super().write(text)
 
 
@@ -398,8 +391,11 @@ def get_pager_file(color=None):
                   default is autodetection.
     """
     with _pager_contextmanager(color=color) as (stream, encoding, color):
-        with StripAnsi.maybe(stream, color=color, encoding=encoding) as text_stream:
-            yield text_stream
+        if not getattr(stream, "encoding", None):
+            # wrap in a text stream
+            stream = MaybeStripAnsi(stream, color=color, encoding=encoding)
+        with stream:
+            yield stream
 
 
 @contextlib.contextmanager
