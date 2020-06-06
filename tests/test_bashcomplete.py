@@ -20,7 +20,7 @@ def test_single_command():
     def cli(local_opt):
         pass
 
-    assert choices_without_help(cli, [], "-") == ["--local-opt"]
+    assert choices_without_help(cli, [], "-") == ["--local-opt", "--help"]
     assert choices_without_help(cli, [], "") == []
 
 
@@ -30,7 +30,7 @@ def test_boolean_flag():
     def cli(local_opt):
         pass
 
-    assert choices_without_help(cli, [], "-") == ["--shout", "--no-shout"]
+    assert choices_without_help(cli, [], "-") == ["--shout", "--no-shout", "--help"]
 
 
 def test_multi_value_option():
@@ -44,7 +44,7 @@ def test_multi_value_option():
     def sub(local_opt):
         pass
 
-    assert choices_without_help(cli, [], "-") == ["--pos"]
+    assert choices_without_help(cli, [], "-") == ["--pos", "--help"]
     assert choices_without_help(cli, ["--pos"], "") == []
     assert choices_without_help(cli, ["--pos", "1.0"], "") == []
     assert choices_without_help(cli, ["--pos", "1.0", "1.0"], "") == ["sub"]
@@ -56,7 +56,7 @@ def test_multi_option():
     def cli(local_opt):
         pass
 
-    assert choices_without_help(cli, [], "-") == ["--message", "-m"]
+    assert choices_without_help(cli, [], "-") == ["--message", "-m", "--help"]
     assert choices_without_help(cli, ["-m"], "") == []
 
 
@@ -72,9 +72,9 @@ def test_small_chain():
         pass
 
     assert choices_without_help(cli, [], "") == ["sub"]
-    assert choices_without_help(cli, [], "-") == ["--global-opt"]
+    assert choices_without_help(cli, [], "-") == ["--global-opt", "--help"]
     assert choices_without_help(cli, ["sub"], "") == []
-    assert choices_without_help(cli, ["sub"], "-") == ["--local-opt"]
+    assert choices_without_help(cli, ["sub"], "-") == ["--local-opt", "--help"]
 
 
 def test_long_chain():
@@ -116,16 +116,17 @@ def test_long_chain():
     def csub(csub_opt, color):
         pass
 
-    assert choices_without_help(cli, [], "-") == ["--cli-opt"]
+    assert choices_without_help(cli, [], "-") == ["--cli-opt", "--help"]
     assert choices_without_help(cli, [], "") == ["asub"]
-    assert choices_without_help(cli, ["asub"], "-") == ["--asub-opt"]
+    assert choices_without_help(cli, ["asub"], "-") == ["--asub-opt", "--help"]
     assert choices_without_help(cli, ["asub"], "") == ["bsub"]
-    assert choices_without_help(cli, ["asub", "bsub"], "-") == ["--bsub-opt"]
+    assert choices_without_help(cli, ["asub", "bsub"], "-") == ["--bsub-opt", "--help"]
     assert choices_without_help(cli, ["asub", "bsub"], "") == ["csub"]
     assert choices_without_help(cli, ["asub", "bsub", "csub"], "-") == [
         "--csub-opt",
         "--csub",
         "--search-color",
+        "--help",
     ]
     assert (
         choices_without_help(cli, ["asub", "bsub", "csub", "--csub-opt"], "")
@@ -173,16 +174,22 @@ def test_chaining():
     def csub(csub_opt, arg):
         pass
 
-    assert choices_without_help(cli, [], "-") == ["--cli-opt"]
+    assert choices_without_help(cli, [], "-") == ["--cli-opt", "--help"]
     assert choices_without_help(cli, [], "") == ["cliarg1", "cliarg2"]
-    assert choices_without_help(cli, ["cliarg1", "asub"], "-") == ["--asub-opt"]
+    assert choices_without_help(cli, ["cliarg1", "asub"], "-") == [
+        "--asub-opt",
+        "--help",
+    ]
     assert choices_without_help(cli, ["cliarg1", "asub"], "") == ["bsub", "csub"]
     assert choices_without_help(cli, ["cliarg1", "bsub"], "") == ["arg1", "arg2"]
     assert choices_without_help(cli, ["cliarg1", "asub", "--asub-opt"], "") == []
     assert choices_without_help(
         cli, ["cliarg1", "asub", "--asub-opt", "5", "bsub"], "-"
-    ) == ["--bsub-opt"]
-    assert choices_without_help(cli, ["cliarg1", "asub", "bsub"], "-") == ["--bsub-opt"]
+    ) == ["--bsub-opt", "--help"]
+    assert choices_without_help(cli, ["cliarg1", "asub", "bsub"], "-") == [
+        "--bsub-opt",
+        "--help",
+    ]
     assert choices_without_help(cli, ["cliarg1", "asub", "csub"], "") == [
         "carg1",
         "carg2",
@@ -191,7 +198,10 @@ def test_chaining():
         "carg1",
         "carg2",
     ]
-    assert choices_without_help(cli, ["cliarg1", "asub", "csub"], "-") == ["--csub-opt"]
+    assert choices_without_help(cli, ["cliarg1", "asub", "csub"], "-") == [
+        "--csub-opt",
+        "--help",
+    ]
     assert choices_with_help(cli, ["cliarg1", "asub"], "b") == [("bsub", "bsub help")]
 
 
@@ -222,6 +232,7 @@ def test_option_choice():
         ("--opt1", "opt1 help"),
         ("--opt2", None),
         ("--opt3", None),
+        ("--help", "Show this message and exit."),
     ]
     assert choices_without_help(cli, [], "--opt") == ["--opt1", "--opt2", "--opt3"]
     assert choices_without_help(cli, [], "--opt1=") == ["opt11", "opt12"]
@@ -234,14 +245,23 @@ def test_option_choice():
         "opt21",
         "opt22",
     ]
-    assert choices_without_help(cli, ["--opt2", "opt21"], "-") == ["--opt1", "--opt3"]
-    assert choices_without_help(cli, ["--opt1", "opt11"], "-") == ["--opt2", "--opt3"]
+    assert choices_without_help(cli, ["--opt2", "opt21"], "-") == [
+        "--opt1",
+        "--opt3",
+        "--help",
+    ]
+    assert choices_without_help(cli, ["--opt1", "opt11"], "-") == [
+        "--opt2",
+        "--opt3",
+        "--help",
+    ]
     assert choices_without_help(cli, ["--opt1"], "opt") == ["opt11", "opt12"]
     assert choices_without_help(cli, ["--opt3"], "opti") == ["option"]
 
     assert choices_without_help(cli, ["--opt1", "invalid_opt"], "-") == [
         "--opt2",
         "--opt3",
+        "--help",
     ]
 
 
@@ -268,7 +288,7 @@ def test_boolean_flag_choice():
     def cli(local_opt):
         pass
 
-    assert choices_without_help(cli, [], "-") == ["--shout", "--no-shout"]
+    assert choices_without_help(cli, [], "-") == ["--shout", "--no-shout", "--help"]
     assert choices_without_help(cli, ["--shout"], "") == ["arg1", "arg2"]
 
 
@@ -382,7 +402,7 @@ def test_long_chain_choice():
     ]
     assert choices_without_help(
         cli, ["sub", "--sub-opt", "subopt1", "subarg1", "bsub"], "-"
-    ) == ["--bsub-opt"]
+    ) == ["--bsub-opt", "--help"]
     assert choices_without_help(
         cli, ["sub", "--sub-opt", "subopt1", "subarg1", "bsub"], ""
     ) == ["bsubarg1", "bsubarg2"]
@@ -472,14 +492,14 @@ def test_hidden():
     assert choices_without_help(cli, [], "h") == []
     # If the user exactly types out the hidden command, complete its subcommands.
     assert choices_without_help(cli, ["hgroup"], "") == ["hgroupsub"]
-    assert choices_without_help(cli, ["hsub"], "--h") == ["--hname"]
+    assert choices_without_help(cli, ["hsub"], "--h") == ["--hname", "--help"]
 
 
 @pytest.mark.parametrize(
     ("args", "part", "expect"),
     [
-        ([], "-", ["--opt"]),
-        (["value"], "--", ["--opt"]),
+        ([], "-", ["--opt", "--help"]),
+        (["value"], "--", ["--opt", "--help"]),
         ([], "-o", []),
         (["--opt"], "-o", []),
         (["--"], "", ["name", "-o", "--opt", "--"]),
