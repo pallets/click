@@ -394,8 +394,7 @@ def get_pager_file(color=None):
         if not getattr(stream, "encoding", None):
             # wrap in a text stream
             stream = MaybeStripAnsi(stream, color=color, encoding=encoding)
-        with stream:
-            yield stream
+        yield stream
 
 
 @contextlib.contextmanager
@@ -420,12 +419,11 @@ def _pipepager(cmd, color=None):
 
     c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, env=env)
     encoding = get_best_encoding(c.stdin)
-    try:
-        yield c.stdin, encoding, color
-    except (OSError, KeyboardInterrupt):
-        pass
-    else:
-        c.stdin.close()
+    with c.stdin:
+        try:
+            yield c.stdin, encoding, color
+        except (OSError, KeyboardInterrupt):
+            pass
 
     # Less doesn't respect ^C, but catches it for its own UI purposes (aborting
     # search or other commands inside less).
