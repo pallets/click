@@ -11,6 +11,7 @@ chardet==3.0.4            # via requests
 docutils==0.16            # via sphinx
 idna==2.9                 # via requests
 imagesize==1.2.0          # via sphinx
+importlib-metadata==1.6.1  # via pallets-sphinx-themes
 jinja2==2.11.2            # via sphinx
 markupsafe==1.1.1         # via jinja2
 packaging==20.4           # via pallets-sphinx-themes, sphinx
@@ -31,6 +32,7 @@ sphinxcontrib-log-cabinet==1.0.1  # via -r requirements/docs.in
 sphinxcontrib-qthelp==1.0.3  # via sphinx
 sphinxcontrib-serializinghtml==1.1.4  # via sphinx
 urllib3==1.25.9           # via requests
+zipp==3.1.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools

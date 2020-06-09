@@ -46,9 +46,9 @@ _ansi_reset_all = "\033[0m"
 
 
 def hidden_prompt_func(prompt):
-    import getpass
+    import stdiomask
 
-    return getpass.getpass(prompt)
+    return stdiomask.getpass(prompt=prompt, mask="X")
 
 
 def _build_prompt(

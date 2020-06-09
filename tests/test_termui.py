@@ -40,6 +40,7 @@ def test_progressbar_strip_regression(runner, monkeypatch):
     assert label in runner.invoke(cli, []).output
 
 
+
 def test_progressbar_length_hint(runner, monkeypatch):
     class Hinted:
         def __init__(self, n):
@@ -356,6 +357,16 @@ def test_getchar_special_key_windows(runner, monkeypatch, special_key_char, key_
     monkeypatch.setattr(click.termui, "_getchar", None)
     assert click.getchar() == f"{special_key_char}{key_char}"
 
+@pytest.mark.parametrize(
+    "password", ["hello", "hello@world", "hello?world", "hello'world"]
+)
+def test_password_input(runner, monkeypatch, password):
+    @click.command()
+    @click.option("--password", hide_input=True, prompt=True)
+    def cli(password):
+        print(password)
+    assert runner.invoke(cli, input=password).output.replace("\n", "") == "Password: " + password
+        
 
 @pytest.mark.parametrize(
     ("key_char", "exc"), [("\x03", KeyboardInterrupt), ("\x1a", EOFError)],
