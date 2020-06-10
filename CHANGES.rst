@@ -13,6 +13,9 @@ Unreleased
 -   Add an optional parameter to ``ProgressBar.update`` to set the
     ``current_item``. :issue:`1226`, :pr:`1332`
 -   Include ``--help`` option in completion. :pr:`1504`
+-   ``version_option`` uses ``importlib.metadata`` (or the
+    ``importlib_metadata`` backport) instead of ``pkg_resources``.
+    :issue:`1582`
 
 
 Version 7.1.2

@@ -1,5 +1,4 @@
 import inspect
-import sys
 from functools import update_wrapper
 
 from .core import Argument
@@ -260,11 +259,6 @@ def version_option(version=None, *param_decls, **attrs):
                     (``'%(prog)s, version %(version)s'``)
     :param others: everything else is forwarded to :func:`option`.
     """
-    if version is None:
-        if hasattr(sys, "_getframe"):
-            module = sys._getframe(1).f_globals.get("__name__")
-        else:
-            module = ""
 
     def decorator(f):
         prog_name = attrs.pop("prog_name", None)
@@ -279,16 +273,14 @@ def version_option(version=None, *param_decls, **attrs):
             ver = version
             if ver is None:
                 try:
-                    import pkg_resources
+                    from importlib.metadata import version as get_version
                 except ImportError:
-                    pass
-                else:
-                    for dist in pkg_resources.working_set:
-                        scripts = dist.get_entry_map().get("console_scripts") or {}
-                        for entry_point in scripts.values():
-                            if entry_point.module_name == module:
-                                ver = dist.version
-                                break
+                    try:
+                        from importlib_metadata import version as get_version
+                    except ImportError:
+                        get_version = None
+                if get_version is not None:
+                    ver = get_version(prog)
                 if ver is None:
                     raise RuntimeError("Could not determine version")
             echo(message % {"prog": prog, "version": ver}, color=ctx.color)

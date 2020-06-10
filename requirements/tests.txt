@@ -6,6 +6,7 @@
 #
 attrs==19.3.0             # via pytest
 colorama==0.4.3           # via -r requirements/tests.in
+importlib-metadata==1.6.1  # via -r requirements/tests.in
 more-itertools==8.3.0     # via pytest
 packaging==20.4           # via pytest
 pluggy==0.13.1            # via pytest
@@ -14,3 +15,4 @@ pyparsing==2.4.7          # via packaging
 pytest==5.4.3             # via -r requirements/tests.in
 six==1.15.0               # via packaging
 wcwidth==0.1.9            # via pytest
+zipp==3.1.0               # via importlib-metadata
