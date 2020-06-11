@@ -293,7 +293,7 @@ def get_choices(cli, prog_name, args, incomplete):
     completions = []
     if not has_double_dash and start_of_option(incomplete):
         # completions for partial options
-        for param in ctx.command.params:
+        for param in ctx.command.get_params(ctx):
             if isinstance(param, Option) and not param.hidden:
                 param_opts = [
                     param_opt
@@ -305,11 +305,11 @@ def get_choices(cli, prog_name, args, incomplete):
                 )
         return completions
     # completion for option values from user supplied values
-    for param in ctx.command.params:
+    for param in ctx.command.get_params(ctx):
         if is_incomplete_option(all_args, param):
             return get_user_autocompletions(ctx, all_args, incomplete, param)
     # completion for argument values from user supplied values
-    for param in ctx.command.params:
+    for param in ctx.command.get_params(ctx):
         if is_incomplete_argument(ctx.params, param):
             return get_user_autocompletions(ctx, all_args, incomplete, param)
 

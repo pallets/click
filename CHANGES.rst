@@ -14,6 +14,12 @@ Unreleased
     ``current_item``. :issue:`1226`, :pr:`1332`
 
 
+Version 7.2
+-----------
+
+-   Include ``--help`` option in completion. :pr:`1504`
+
+
 Version 7.1.2
 -------------
 
@@ -104,6 +110,8 @@ Released 2020-03-09
 -   Make the warning about old 2-arg parameter callbacks a deprecation
     warning, to be removed in 8.0. This has been a warning since Click
     2.0. :pr:`1492`
+-   Adjust error messages to standardize the types of quotes used so
+    they match error messages from Python.
 
 
 Version 7.0
