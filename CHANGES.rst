@@ -12,11 +12,6 @@ Unreleased
     parameter. :issue:`1264`, :pr:`1329`
 -   Add an optional parameter to ``ProgressBar.update`` to set the
     ``current_item``. :issue:`1226`, :pr:`1332`
-
-
-Version 7.2
------------
-
 -   Include ``--help`` option in completion. :pr:`1504`
 
 
