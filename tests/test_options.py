@@ -216,6 +216,16 @@ def test_dynamic_default_help_text(runner):
     assert "(current user)" in result.output
 
 
+def test_intrange_default_help_text(runner):
+    @click.command()
+    @click.option("--count", type=click.IntRange(1, 32), show_default=True, default=1)
+    def cmd(arg):
+        click.echo(arg)
+
+    result = runner.invoke(cmd, ["--help"])
+    assert "1-32 inclusive" in result.output
+
+
 def test_toupper_envvar_prefix(runner):
     @click.command()
     @click.option("--arg")
