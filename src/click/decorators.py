@@ -5,6 +5,7 @@ from functools import update_wrapper
 from .core import Argument
 from .core import Command
 from .core import Group
+from .core import Section
 from .core import Option
 from .globals import get_current_context
 from .utils import echo
@@ -140,6 +141,13 @@ def group(name=None, **attrs):
     attrs.setdefault("cls", Group)
     return command(name, **attrs)
 
+def section(name=None, **attrs):
+    """Creates a new :class:`Section` with a function as callback.  This
+    works otherwise the same as :func:`command` just that the `cls`
+    parameter is set to :class:`Group`.
+    """
+    attrs.setdefault("cls", Section)
+    return command(name, **attrs)
 
 def _param_memo(f, param):
     if isinstance(f, Command):

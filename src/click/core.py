@@ -88,7 +88,14 @@ def _check_multicommand(base_command, cmd_name, cmd, register=False):
         f" {base_command.name!r})."
     )
 
-
+def _check_section_params(cmd):
+    if not isinstance(cmd, Section) or len(cmd.params)==0:
+        return
+    
+    raise RuntimeError(
+        f"Section '{cmd.name}' can not have any parameter as they would be ignored."
+    )
+    
 def batch(iterable, batch_size):
     return list(zip(*repeat(iter(iterable), batch_size)))
 
@@ -1213,7 +1220,11 @@ class MultiCommand(Command):
         """Extra format methods for multi methods that adds all the commands
         after the options.
         """
-        commands = []
+        default_section = "Commands"
+        
+        sections = {}
+        # add default section
+        sections["Commands"] = []
         for subcommand in self.list_commands(ctx):
             cmd = self.get_command(ctx, subcommand)
             # What is this, the tool lied about a command.  Ignore it
@@ -1221,21 +1232,37 @@ class MultiCommand(Command):
                 continue
             if cmd.hidden:
                 continue
-
-            commands.append((subcommand, cmd))
-
+            
+            if isinstance(cmd, Section):
+                # add section subcommands
+                sections[cmd.name] = []
+                for sxnsubcommand in cmd.list_commands(ctx):
+                    sxncmd = cmd.get_command(ctx, sxnsubcommand)
+                    # What is this, the tool lied about a command.  Ignore it
+                    if sxncmd is None:
+                        continue
+                    if sxncmd.hidden:
+                        continue
+                    
+                    sections[cmd.name].append((sxnsubcommand, sxncmd))
+            else:
+                sections[default_section].append((subcommand, cmd))
+        
         # allow for 3 times the default spacing
-        if len(commands):
-            limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
-
-            rows = []
-            for subcommand, cmd in commands:
-                help = cmd.get_short_help_str(limit)
-                rows.append((subcommand, help))
-
-            if rows:
-                with formatter.section("Commands"):
-                    formatter.write_dl(rows)
+        for section in sections:
+            commands = sections[section]
+            
+            if len(commands):
+                limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
+    
+                rows = []
+                for subcommand, cmd in commands:
+                    help = cmd.get_short_help_str(limit)
+                    rows.append((subcommand, help))
+    
+                if rows:
+                    with formatter.section(section):
+                        formatter.write_dl(rows)
 
     def parse_args(self, ctx, args):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
@@ -1328,7 +1355,12 @@ class MultiCommand(Command):
 
         # Get the command
         cmd = self.get_command(ctx, cmd_name)
-
+        
+        if isinstance(cmd, Section):
+            # in case we find a section we do not consume argument, it will be
+            # consumed later by the section
+            return cmd_name, cmd, args
+        
         # If we can't find the command but there is a normalization
         # function available, we try with that one.
         if cmd is None and ctx.token_normalize_func is not None:
@@ -1360,6 +1392,72 @@ class MultiCommand(Command):
         """
         return []
 
+class Section(MultiCommand):
+    """A section allows a command to split subcommands into categories attached. This can be seen
+    as creating an anonymous group of subcommands
+
+    :param commands: a dictionary of commands.
+    """
+
+    def __init__(
+        self,
+        name=None,
+        commands=None,
+        **attrs,
+    ):
+        MultiCommand.__init__(self, name, **attrs)
+        self.commands = commands or {}
+
+    def get_params(self, ctx):
+        # TODO this check is too late, should appear when argument is added
+        _check_section_params(self)
+        return MultiCommand.get_params(self, ctx)
+
+    def add_command(self, cmd, name=None):
+        """Registers another :class:`Command` with this group.  If the name
+        is not provided, the name of the command is used.
+        """
+        name = name or cmd.name
+        if name is None:
+            raise TypeError("Command has no name.")
+        _check_multicommand(self, name, cmd, register=True)
+        self.commands[name] = cmd
+
+    def command(self, *args, **kwargs):
+        """A shortcut decorator for declaring and attaching a command to
+        the group.  This takes the same arguments as :func:`command` but
+        immediately registers the created command with this instance by
+        calling into :meth:`add_command`.
+        """
+        from .decorators import command
+
+        def decorator(f):
+            cmd = command(*args, **kwargs)(f)
+            self.add_command(cmd)
+            return cmd
+
+        return decorator
+
+    def group(self, *args, **kwargs):
+        """A shortcut decorator for declaring and attaching a group to
+        the group.  This takes the same arguments as :func:`group` but
+        immediately registers the created command with this instance by
+        calling into :meth:`add_command`.
+        """
+        from .decorators import group
+
+        def decorator(f):
+            cmd = group(*args, **kwargs)(f)
+            self.add_command(cmd)
+            return cmd
+
+        return decorator
+    
+    def get_command(self, ctx, cmd_name):
+        return self.commands.get(cmd_name)
+
+    def list_commands(self, ctx):
+        return sorted(self.commands)
 
 class Group(MultiCommand):
     """A group allows a command to have subcommands attached.  This is the
@@ -1413,8 +1511,29 @@ class Group(MultiCommand):
 
         return decorator
 
+    def section(self, *args, **kwargs):
+        """A shortcut decorator for declaring and attaching a section to
+        the group.  This takes the same arguments as :func:`group` but
+        immediately registers the created command with this instance by
+        calling into :meth:`add_command`.
+        """
+        from .decorators import section
+
+        def decorator(f):
+            cmd = section(*args, **kwargs)(f)
+            self.add_command(cmd)
+            return cmd
+
+        return decorator
+
     def get_command(self, ctx, cmd_name):
-        return self.commands.get(cmd_name)
+        cmd = self.commands.get(cmd_name)
+        if cmd is None:
+            # look if there is any section containing the command
+            for section in self.commands:
+                if isinstance(self.commands[section], Section) and self.commands[section].get_command(ctx, cmd_name):
+                    return self.commands[section]
+        return cmd
 
     def list_commands(self, ctx):
         return sorted(self.commands)

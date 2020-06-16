@@ -12,9 +12,11 @@ from .core import Context
 from .core import Group
 from .core import MultiCommand
 from .core import Option
+from .core import Section
 from .core import Parameter
 from .decorators import argument
 from .decorators import command
+from .decorators import section
 from .decorators import confirmation_option
 from .decorators import group
 from .decorators import help_option
