@@ -284,7 +284,7 @@ def _is_console(f):
 
     try:
         fileno = f.fileno()
-    except OSError:
+    except (OSError, io.UnsupportedOperation):
         return False
 
     handle = msvcrt.get_osfhandle(fileno)
