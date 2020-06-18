@@ -1840,6 +1840,8 @@ class Option(Parameter):
                     second = second.lstrip()
                     if second:
                         secondary_opts.append(second.lstrip())
+                    if first == second:
+                        raise TypeError('Boolean options cannot use the same flag for true and false.')
                 else:
                     possible_names.append(split_opt(decl))
                     opts.append(decl)
@@ -1882,6 +1884,7 @@ class Option(Parameter):
             kwargs.pop("nargs", None)
             action_const = f"{action}_const"
             if self.is_bool_flag and self.secondary_opts:
+                print(ctx)
                 parser.add_option(self.opts, action=action_const, const=True, **kwargs)
                 parser.add_option(
                     self.secondary_opts, action=action_const, const=False, **kwargs
