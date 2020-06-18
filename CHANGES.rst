@@ -20,6 +20,8 @@ Unreleased
     is not shown in the error message. :issue:`1460`
 -   An ``IntRange`` option shows the accepted range in its help text.
     :issue:`1525`
+-   An option defined with duplicate flag names (``"--foo/--foo"``)
+    raises a ``ValueError``. :issue:`1465`
 
 
 Version 7.1.2

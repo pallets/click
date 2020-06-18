@@ -1840,6 +1840,11 @@ class Option(Parameter):
                     second = second.lstrip()
                     if second:
                         secondary_opts.append(second.lstrip())
+                    if first == second:
+                        raise ValueError(
+                            f"Boolean option {decl!r} cannot use the"
+                            " same flag for true/false."
+                        )
                 else:
                     possible_names.append(split_opt(decl))
                     opts.append(decl)
