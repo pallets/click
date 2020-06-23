@@ -1,7 +1,7 @@
 version: 2
 python:
   install:
-    - requirements: docs/requirements.txt
+    - requirements: requirements/docs.txt
     - method: pip
       path: .
 sphinx:
