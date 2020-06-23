@@ -87,7 +87,8 @@ First time setup
         $ cd click
 
 -   Add your fork as a remote to push your work to. Replace
-    ``{username}`` with your username.
+    ``{username}`` with your username. This names the remote "fork", the
+    default Pallets remote is "origin".
 
     .. code-block:: text
 
@@ -106,11 +107,14 @@ First time setup
 
         > env\Scripts\activate
 
--   Install Click in editable mode with development dependencies.
+-   Install the development dependencies, then install Click in editable
+    mode. This order is important, otherwise you'll get the wrong
+    version of Click.
 
     .. code-block:: text
 
-        $ pip install -e . -r requirements/dev.txt
+        $ pip install -r requirements/dev.txt
+        $ pip install -e .
 
 -   Install the pre-commit hooks.
 
@@ -135,6 +139,7 @@ Start coding
 
     .. code-block:: text
 
+        $ git fetch origin
         $ git checkout -b your-branch-name origin/7.x
 
     If you're submitting a feature addition or change, branch off of the
@@ -142,6 +147,7 @@ Start coding
 
     .. code-block:: text
 
+        $ git fetch origin
         $ git checkout -b your-branch-name origin/master
 
 -   Using your favorite editor, make your changes,
