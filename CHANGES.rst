@@ -16,6 +16,8 @@ Unreleased
 -   ``version_option`` uses ``importlib.metadata`` (or the
     ``importlib_metadata`` backport) instead of ``pkg_resources``.
     :issue:`1582`
+-   If validation fails for a prompt with ``hide_input=True``, the value
+    is not shown in the error message. :issue:`1460`
 
 
 Version 7.1.2

@@ -153,7 +153,10 @@ def prompt(
         try:
             result = value_proc(value)
         except UsageError as e:
-            echo(f"Error: {e.message}", err=err)  # noqa: B306
+            if hide_input:
+                echo("Error: the value you entered was invalid", err=err)
+            else:
+                echo(f"Error: {e.message}", err=err)  # noqa: B306
             continue
         if not confirmation_prompt:
             return result
