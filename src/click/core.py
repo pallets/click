@@ -1624,11 +1624,25 @@ class Parameter:
 
         if value is None and not ctx.resilient_parsing:
             value = self.get_default(ctx)
+
             if value is not None:
                 ctx.set_parameter_source(self.name, ParameterSource.DEFAULT)
 
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)
+
+        # For bounded nargs (!= -1), validate the number of values.
+        if (
+            not ctx.resilient_parsing
+            and self.nargs > 1
+            and self.nargs != len(value)
+            and isinstance(value, (tuple, list))
+        ):
+            were = "was" if len(value) == 1 else "were"
+            ctx.fail(
+                f"Argument {self.name!r} takes {self.nargs} values but"
+                f" {len(value)} {were} given."
+            )
 
         return value
 
