@@ -19,6 +19,7 @@ filelock==3.0.12          # via tox, virtualenv
 identify==1.4.16          # via pre-commit
 idna==2.9                 # via requests
 imagesize==1.2.0          # via sphinx
+importlib-metadata==1.6.1  # via -r requirements/tests.in
 jinja2==2.11.2            # via sphinx
 markupsafe==1.1.1         # via jinja2
 more-itertools==8.3.0     # via pytest
@@ -51,6 +52,7 @@ tox==3.15.2               # via -r requirements/dev.in
 urllib3==1.25.9           # via requests
 virtualenv==20.0.21       # via pre-commit, tox
 wcwidth==0.1.9            # via pytest
+zipp==3.1.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
