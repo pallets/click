@@ -192,59 +192,45 @@ def option(*param_decls, **attrs):
     return decorator
 
 
-def confirmation_option(*param_decls, **attrs):
-    """Shortcut for confirmation prompts that can be ignored by passing
-    ``--yes`` as parameter.
+def confirmation_option(*param_decls, **kwargs):
+    """Add a ``--yes`` option which shows a prompt before continuing if
+    not passed. If the prompt is declined, the program will exit.
 
-    This is equivalent to decorating a function with :func:`option` with
-    the following parameters::
-
-        def callback(ctx, param, value):
-            if not value:
-                ctx.abort()
-
-        @click.command()
-        @click.option('--yes', is_flag=True, callback=callback,
-                      expose_value=False, prompt='Do you want to continue?')
-        def dropdb():
-            pass
+    :param param_decls: One or more option names. Defaults to the single
+        value ``"--yes"``.
+    :param kwargs: Extra arguments are passed to :func:`option`.
     """
 
-    def decorator(f):
-        def callback(ctx, param, value):
-            if not value:
-                ctx.abort()
+    def callback(ctx, param, value):
+        if not value:
+            ctx.abort()
 
-        attrs.setdefault("is_flag", True)
-        attrs.setdefault("callback", callback)
-        attrs.setdefault("expose_value", False)
-        attrs.setdefault("prompt", "Do you want to continue?")
-        attrs.setdefault("help", "Confirm the action without prompting.")
-        return option(*(param_decls or ("--yes",)), **attrs)(f)
+    if not param_decls:
+        param_decls = ("--yes",)
 
-    return decorator
+    kwargs.setdefault("is_flag", True)
+    kwargs.setdefault("callback", callback)
+    kwargs.setdefault("expose_value", False)
+    kwargs.setdefault("prompt", "Do you want to continue?")
+    kwargs.setdefault("help", "Confirm the action without prompting.")
+    return option(*param_decls, **kwargs)
 
 
-def password_option(*param_decls, **attrs):
-    """Shortcut for password prompts.
+def password_option(*param_decls, **kwargs):
+    """Add a ``--password`` option which prompts for a password, hiding
+    input and asking to enter the value again for confirmation.
 
-    This is equivalent to decorating a function with :func:`option` with
-    the following parameters::
-
-        @click.command()
-        @click.option('--password', prompt=True, confirmation_prompt=True,
-                      hide_input=True)
-        def changeadmin(password):
-            pass
+    :param param_decls: One or more option names. Defaults to the single
+        value ``"--password"``.
+    :param kwargs: Extra arguments are passed to :func:`option`.
     """
+    if not param_decls:
+        param_decls = ("--password",)
 
-    def decorator(f):
-        attrs.setdefault("prompt", True)
-        attrs.setdefault("confirmation_prompt", True)
-        attrs.setdefault("hide_input", True)
-        return option(*(param_decls or ("--password",)), **attrs)(f)
-
-    return decorator
+    kwargs.setdefault("prompt", True)
+    kwargs.setdefault("confirmation_prompt", True)
+    kwargs.setdefault("hide_input", True)
+    return option(*param_decls, **kwargs)
 
 
 def version_option(
@@ -358,28 +344,32 @@ def version_option(
     return option(*param_decls, **kwargs)
 
 
-def help_option(*param_decls, **attrs):
-    """Adds a ``--help`` option which immediately ends the program
-    printing out the help page.  This is usually unnecessary to add as
-    this is added by default to all commands unless suppressed.
+def help_option(*param_decls, **kwargs):
+    """Add a ``--help`` option which immediately prints the help page
+    and exits the program.
 
-    Like :func:`version_option`, this is implemented as eager option that
-    prints in the callback and exits.
+    This is usually unnecessary, as the ``--help`` option is added to
+    each command automatically unless ``add_help_option=False`` is
+    passed.
 
-    All arguments are forwarded to :func:`option`.
+    :param param_decls: One or more option names. Defaults to the single
+        value ``"--help"``.
+    :param kwargs: Extra arguments are passed to :func:`option`.
     """
 
-    def decorator(f):
-        def callback(ctx, param, value):
-            if value and not ctx.resilient_parsing:
-                echo(ctx.get_help(), color=ctx.color)
-                ctx.exit()
+    def callback(ctx, param, value):
+        if not value or ctx.resilient_parsing:
+            return
 
-        attrs.setdefault("is_flag", True)
-        attrs.setdefault("expose_value", False)
-        attrs.setdefault("help", "Show this message and exit.")
-        attrs.setdefault("is_eager", True)
-        attrs["callback"] = callback
-        return option(*(param_decls or ("--help",)), **attrs)(f)
+        echo(ctx.get_help(), color=ctx.color)
+        ctx.exit()
 
-    return decorator
+    if not param_decls:
+        param_decls = ("--help",)
+
+    kwargs.setdefault("is_flag", True)
+    kwargs.setdefault("expose_value", False)
+    kwargs.setdefault("is_eager", True)
+    kwargs.setdefault("help", "Show this message and exit.")
+    kwargs["callback"] = callback
+    return option(*param_decls, **kwargs)
