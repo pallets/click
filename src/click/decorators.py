@@ -247,53 +247,105 @@ def password_option(*param_decls, **attrs):
     return decorator
 
 
-def version_option(version=None, *param_decls, **attrs):
-    """Adds a ``--version`` option which immediately ends the program
-    printing out the version number.  This is implemented as an eager
-    option that prints the version and exits the program in the callback.
+def version_option(
+    version=None,
+    *param_decls,
+    package_name=None,
+    prog_name=None,
+    message="%(prog)s, version %(version)s",
+    **kwargs,
+):
+    """Add a ``--version`` option which immediately prints the version
+    number and exits the program.
 
-    :param version: the version number to show.  If not provided Click
-                    attempts an auto discovery via setuptools.
-    :param prog_name: the name of the program (defaults to autodetection)
-    :param message: custom message to show instead of the default
-                    (``'%(prog)s, version %(version)s'``)
-    :param others: everything else is forwarded to :func:`option`.
+    If ``version`` is not provided, Click will try to detect it using
+    :func:`importlib.metadata.version` to get the version for the
+    ``package_name``. On Python < 3.8, the ``importlib_metadata``
+    backport must be installed.
+
+    If ``package_name`` is not provided, Click will try to detect it by
+    inspecting the stack frames. This will be used to detect the
+    version, so it must match the name of the installed package.
+
+    :param version: The version number to show. If not provided, Click
+        will try to detect it.
+    :param param_decls: One or more option names. Defaults to the single
+        value ``"--version"``.
+    :param package_name: The package name to detect the version from. If
+        not provided, Click will try to detect it.
+    :param prog_name: The name of the CLI to show in the message. If not
+        provided, it will be detected from the command.
+    :param message: The message to show. The values ``%(prog)s``,
+        ``%(package)s``, and ``%(version)s`` are available.
+    :param kwargs: Extra arguments are passed to :func:`option`.
+    :raise RuntimeError: ``version`` could not be detected.
+
+    .. versionchanged:: 8.0
+        Add the ``package_name`` parameter, and the ``%(package)s``
+        value for messages.
+
+    .. versionchanged:: 8.0
+        Use :mod:`importlib.metadata` instead of ``pkg_resources``.
     """
+    if version is None and package_name is None:
+        frame = inspect.currentframe()
 
-    def decorator(f):
-        prog_name = attrs.pop("prog_name", None)
-        message = attrs.pop("message", "%(prog)s, version %(version)s")
+        if frame is not None:
+            package_name = frame.f_back.f_globals.get("__name__").partition(".")[0]
 
-        def callback(ctx, param, value):
-            if not value or ctx.resilient_parsing:
-                return
-            prog = prog_name
-            if prog is None:
-                prog = ctx.find_root().info_name
-            ver = version
-            if ver is None:
+    def callback(ctx, param, value):
+        if not value or ctx.resilient_parsing:
+            return
+
+        nonlocal prog_name
+        nonlocal version
+
+        if prog_name is None:
+            prog_name = ctx.find_root().info_name
+
+        if version is None and package_name is not None:
+            try:
+                from importlib import metadata
+            except ImportError:
+                # Python < 3.8
                 try:
-                    from importlib.metadata import version as get_version
+                    import importlib_metadata as metadata
                 except ImportError:
-                    try:
-                        from importlib_metadata import version as get_version
-                    except ImportError:
-                        get_version = None
-                if get_version is not None:
-                    ver = get_version(prog)
-                if ver is None:
-                    raise RuntimeError("Could not determine version")
-            echo(message % {"prog": prog, "version": ver}, color=ctx.color)
-            ctx.exit()
+                    metadata = None
 
-        attrs.setdefault("is_flag", True)
-        attrs.setdefault("expose_value", False)
-        attrs.setdefault("is_eager", True)
-        attrs.setdefault("help", "Show the version and exit.")
-        attrs["callback"] = callback
-        return option(*(param_decls or ("--version",)), **attrs)(f)
+            if metadata is None:
+                raise RuntimeError(
+                    "Install 'importlib_metadata' to get the version on Python < 3.8."
+                )
 
-    return decorator
+            try:
+                version = metadata.version(package_name)
+            except metadata.PackageNotFoundError:
+                raise RuntimeError(
+                    f"{package_name!r} is not installed. Try passing"
+                    " 'package_name' instead."
+                )
+
+        if version is None:
+            raise RuntimeError(
+                f"Could not determine the version for {package_name!r} automatically."
+            )
+
+        echo(
+            message % {"prog": prog_name, "package": package_name, "version": version},
+            color=ctx.color,
+        )
+        ctx.exit()
+
+    if not param_decls:
+        param_decls = ("--version",)
+
+    kwargs.setdefault("is_flag", True)
+    kwargs.setdefault("expose_value", False)
+    kwargs.setdefault("is_eager", True)
+    kwargs.setdefault("help", "Show the version and exit.")
+    kwargs["callback"] = callback
+    return option(*param_decls, **kwargs)
 
 
 def help_option(*param_decls, **attrs):
