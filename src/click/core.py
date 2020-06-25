@@ -1936,6 +1936,10 @@ class Option(Parameter):
                 default_string = self.default
             extra.append(f"default: {default_string}")
 
+        if isinstance(self.type, IntRange):
+            if self.type.min is not None and self.type.max is not None:
+                extra.append(f"{self.type.min}-{self.type.max} inclusive")
+
         if self.required:
             extra.append("required")
         if extra:

@@ -18,6 +18,8 @@ Unreleased
     :issue:`1582`
 -   If validation fails for a prompt with ``hide_input=True``, the value
     is not shown in the error message. :issue:`1460`
+-   An ``IntRange`` option shows the accepted range in its help text.
+    :issue:`1525`
 
 
 Version 7.1.2
