@@ -33,6 +33,8 @@ Unreleased
     its result callback. :issue:`1178`
 -   ``nargs == -1`` and ``nargs > 1`` is parsed and validated for
     values from environment variables and defaults. :issue:`729`
+-   Detect the program name when executing a module or package with
+    ``python -m name``. :issue:`1603`
 
 
 Version 7.1.2

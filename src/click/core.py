@@ -25,6 +25,7 @@ from .termui import style
 from .types import BOOL
 from .types import convert_type
 from .types import IntRange
+from .utils import _detect_program_name
 from .utils import echo
 from .utils import make_default_short_help
 from .utils import make_str
@@ -795,9 +796,7 @@ class BaseCommand:
             args = list(args)
 
         if prog_name is None:
-            prog_name = make_str(
-                os.path.basename(sys.argv[0] if sys.argv else __file__)
-            )
+            prog_name = _detect_program_name()
 
         # Hook for the Bash completion.  This only activates if the Bash
         # completion is actually enabled, otherwise this is quite a fast
