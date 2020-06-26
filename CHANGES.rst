@@ -22,6 +22,8 @@ Unreleased
     :issue:`1525`
 -   An option defined with duplicate flag names (``"--foo/--foo"``)
     raises a ``ValueError``. :issue:`1465`
+-   ``echo()`` will not fail when using pytest's ``capsys`` fixture on
+    Windows. :issue:`1590`
 
 
 Version 7.1.2
