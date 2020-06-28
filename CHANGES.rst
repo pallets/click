@@ -111,6 +111,8 @@ Unreleased
     completion system. :issue:`942`
 -   Include ``--help`` option in completion. :pr:`1504`
 -   ``ParameterSource`` is an ``enum.Enum`` subclass. :issue:`1530`
+-   Boolean type strips surrounding space before converting.
+    :issue:`1605`
 
 
 Version 7.1.2
