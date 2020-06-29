@@ -298,3 +298,86 @@ def test_deprecated_in_invocation(runner):
 
     result = runner.invoke(deprecated_cmd)
     assert "DeprecationWarning:" in result.output
+
+
+def test_other_command_invoke_with_envvars(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    @click.option("--value")
+    def a(value):
+        click.echo(f"a: {value}")
+
+    @cli.command()
+    @click.pass_context
+    def invoke_a(ctx):
+        ctx.invoke(a)
+        ctx.parent.invoke(a)
+
+    result = runner.invoke(
+        cli,
+        ["invoke-a"],
+        auto_envvar_prefix="FOO",
+        env={"FOO_INVOKE_A_A_VALUE": "42", "FOO_A_VALUE": "24"},
+    )
+    assert not result.exception
+    assert result.output == "a: 42\na: 24\n"
+
+
+def test_other_command_forward_with_envvars(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    @click.option("--value")
+    def a(value):
+        click.echo(f"a: {value}")
+
+    @cli.command()
+    @click.pass_context
+    def forward_a(ctx):
+        ctx.forward(a)
+        ctx.parent.forward(a)
+
+    result = runner.invoke(
+        cli,
+        ["forward-a"],
+        auto_envvar_prefix="FOO",
+        env={"FOO_FORWARD_A_A_VALUE": "42", "FOO_A_VALUE": "24"},
+    )
+    assert not result.exception
+    assert result.output == "a: 42\na: 24\n"
+
+
+def test_other_group_command_invoke_with_envvars(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.group()
+    def foo():
+        pass
+
+    @foo.command()
+    @click.pass_context
+    def a(ctx):
+        ctx.invoke(b)
+
+    @cli.group()
+    def bar():
+        pass
+
+    @bar.group()
+    @click.option("--value")
+    @click.pass_context
+    def b(ctx, value):
+        click.echo(f"b: {value}")
+
+    result = runner.invoke(
+        cli, ["foo", "a"], auto_envvar_prefix="X", env={"X_FOO_A_B_VALUE": "42"}
+    )
+    assert not result.exception
+    assert result.output == "b: 42\n"

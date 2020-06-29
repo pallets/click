@@ -605,7 +605,12 @@ class Context:
 
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
-                    kwargs[param.name] = param.get_default(ctx)
+                    value = None
+                    if param.allow_from_autoenv:
+                        value = param.value_from_envvar(ctx)
+                    kwargs[param.name] = (
+                        param.get_default(ctx) if value is None else value
+                    )
 
         args = args[2:]
         with augment_usage_errors(self):
