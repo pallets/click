@@ -24,6 +24,8 @@ Unreleased
     raises a ``ValueError``. :issue:`1465`
 -   ``echo()`` will not fail when using pytest's ``capsys`` fixture on
     Windows. :issue:`1590`
+-   Include check for ``envvar`` values in commands invoked with
+    ``Context.invoke`` and ``Context.forward``. :issue:`1079`
 
 
 Version 7.1.2
