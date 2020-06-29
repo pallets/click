@@ -258,6 +258,22 @@ def test_invoked_subcommand(runner):
     assert result.output == "no subcommand, use default\nin subcommand\n"
 
 
+def test_aliased_command_canonical_name(runner):
+    class AliasedGroup(click.Group):
+        def get_command(self, ctx, cmd_name):
+            return push
+
+    cli = AliasedGroup()
+
+    @cli.command()
+    def push():
+        click.echo("push command")
+
+    result = runner.invoke(cli, ["pu", "--help"])
+    assert not result.exception
+    assert result.output.startswith("Usage: root push [OPTIONS]")
+
+
 def test_unprocessed_options(runner):
     @click.command(context_settings=dict(ignore_unknown_options=True))
     @click.argument("args", nargs=-1, type=click.UNPROCESSED)

@@ -1346,7 +1346,7 @@ class MultiCommand(Command):
                 self.parse_args(ctx, ctx.args)
             ctx.fail(f"No such command '{original_cmd_name}'.")
 
-        return cmd_name, cmd, args[1:]
+        return cmd.name, cmd, args[1:]
 
     def get_command(self, ctx, cmd_name):
         """Given a context and a command name, this returns a
