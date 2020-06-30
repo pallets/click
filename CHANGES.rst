@@ -24,6 +24,10 @@ Unreleased
     raises a ``ValueError``. :issue:`1465`
 -   ``echo()`` will not fail when using pytest's ``capsys`` fixture on
     Windows. :issue:`1590`
+-   Resolving commands returns the canonical command name instead of the
+    matched name. This makes behavior such as help text and
+    ``Context.invoked_subcommand`` consistent when using patterns like
+    ``AliasedGroup``. :issue:`1422`
 
 
 Version 7.1.2
