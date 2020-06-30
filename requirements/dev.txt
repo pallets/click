@@ -19,7 +19,7 @@ filelock==3.0.12          # via tox, virtualenv
 identify==1.4.16          # via pre-commit
 idna==2.9                 # via requests
 imagesize==1.2.0          # via sphinx
-importlib_metadata==1.7.0  # via -r requirements/tests.in
+importlib-metadata==1.7.0  # via -r requirements/tests.in
 jinja2==2.11.2            # via sphinx
 markupsafe==1.1.1         # via jinja2
 more-itertools==8.3.0     # via pytest
@@ -48,7 +48,7 @@ sphinxcontrib-log-cabinet==1.0.1  # via -r requirements/docs.in
 sphinxcontrib-qthelp==1.0.3  # via sphinx
 sphinxcontrib-serializinghtml==1.1.4  # via sphinx
 toml==0.10.1              # via pre-commit, tox
-tox==3.16.0               # via -r requirements/dev.in
+tox==3.16.1               # via -r requirements/dev.in
 urllib3==1.25.9           # via requests
 virtualenv==20.0.21       # via pre-commit, tox
 wcwidth==0.1.9            # via pytest
