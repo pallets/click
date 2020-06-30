@@ -508,7 +508,10 @@ class Context:
         if self.info_name is not None:
             rv = self.info_name
         if self.parent is not None:
-            rv = f"{self.parent.command_path} {rv}"
+            parent_command_path = [self.parent.command_path]
+            for param in self.parent.command.get_params(self):
+                parent_command_path.extend(param.get_usage_pieces(self))
+            rv = f"{' '.join(parent_command_path)} {rv}"
         return rv.lstrip()
 
     def find_root(self):
