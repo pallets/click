@@ -137,6 +137,13 @@ Unreleased
 -   ``Parameter.get_default()`` checks ``Context.default_map`` to
     handle overrides consistently in help text, ``invoke()``, and
     prompts. :issue:`1548`
+-   Add ``prompt_required`` param to ``Option``. When set to ``False``,
+    the user will only be prompted for an input if no value was passed.
+    :issue:`736`
+-   Providing the value to an option can be made optional through
+    ``is_flag=False``, and the value can instead be prompted for or
+    passed in as a default value.
+    :issue:`549, 736, 764, 921, 1015, 1618`
 
 
 Version 7.1.2

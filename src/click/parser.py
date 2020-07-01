@@ -29,6 +29,11 @@ from .exceptions import BadOptionUsage
 from .exceptions import NoSuchOption
 from .exceptions import UsageError
 
+# Sentinel value that indicates an option was passed as a flag without a
+# value but is not a flag option. Option.consume_value uses this to
+# prompt or use the flag_value.
+_flag_needs_value = object()
+
 
 def _unpack_args(args, nargs_spec):
     """Given an iterable of arguments and an iterable of nargs specifications,
@@ -79,12 +84,6 @@ def _unpack_args(args, nargs_spec):
         rv[spos + 1 :] = reversed(rv[spos + 1 :])
 
     return tuple(rv), list(args)
-
-
-def _error_opt_args(nargs, opt):
-    if nargs == 1:
-        raise BadOptionUsage(opt, f"{opt} option requires an argument")
-    raise BadOptionUsage(opt, f"{opt} option requires {nargs} arguments")
 
 
 def split_opt(opt):
@@ -343,14 +342,7 @@ class OptionParser:
             if explicit_value is not None:
                 state.rargs.insert(0, explicit_value)
 
-            nargs = option.nargs
-            if len(state.rargs) < nargs:
-                _error_opt_args(nargs, opt)
-            elif nargs == 1:
-                value = state.rargs.pop(0)
-            else:
-                value = tuple(state.rargs[:nargs])
-                del state.rargs[:nargs]
+            value = self._get_value_from_state(opt, option, state)
 
         elif explicit_value is not None:
             raise BadOptionUsage(opt, f"{opt} option does not take a value")
@@ -383,14 +375,7 @@ class OptionParser:
                     state.rargs.insert(0, arg[i:])
                     stop = True
 
-                nargs = option.nargs
-                if len(state.rargs) < nargs:
-                    _error_opt_args(nargs, opt)
-                elif nargs == 1:
-                    value = state.rargs.pop(0)
-                else:
-                    value = tuple(state.rargs[:nargs])
-                    del state.rargs[:nargs]
+                value = self._get_value_from_state(opt, option, state)
 
             else:
                 value = None
@@ -406,6 +391,38 @@ class OptionParser:
         # that can be achieved while still ignoring unknown arguments.
         if self.ignore_unknown_options and unknown_options:
             state.largs.append(f"{prefix}{''.join(unknown_options)}")
+
+    def _get_value_from_state(self, option_name, option, state):
+        nargs = option.nargs
+
+        if len(state.rargs) < nargs:
+            if option.obj._flag_needs_value:
+                # Option allows omitting the value.
+                value = _flag_needs_value
+            else:
+                n_str = "an argument" if nargs == 1 else f"{nargs} arguments"
+                raise BadOptionUsage(
+                    option_name, f"{option_name} option requires {n_str}."
+                )
+        elif nargs == 1:
+            next_rarg = state.rargs[0]
+
+            if (
+                option.obj._flag_needs_value
+                and isinstance(next_rarg, str)
+                and next_rarg[:1] in self._opt_prefixes
+                and len(next_rarg) > 1
+            ):
+                # The next arg looks like the start of an option, don't
+                # use it as the value if omitting the value is allowed.
+                value = _flag_needs_value
+            else:
+                value = state.rargs.pop(0)
+        else:
+            value = tuple(state.rargs[:nargs])
+            del state.rargs[:nargs]
+
+        return value
 
     def _process_opts(self, arg, state):
         explicit_value = None
