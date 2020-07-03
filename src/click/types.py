@@ -43,6 +43,12 @@ class ParamType:
     #: Windows).
     envvar_list_splitter = None
 
+    def to_info_dict(self):
+        # The class name without the "ParamType" suffix.
+        param_type = type(self).__name__.partition("ParamType")[0]
+        param_type = param_type.partition("ParameterType")[0]
+        return {"param_type": param_type, "name": self.name}
+
     def __call__(self, value, param=None, ctx=None):
         if value is not None:
             return self.convert(value, param, ctx)
@@ -106,6 +112,11 @@ class FuncParamType(ParamType):
     def __init__(self, func):
         self.name = func.__name__
         self.func = func
+
+    def to_info_dict(self):
+        info_dict = super().to_info_dict()
+        info_dict["func"] = self.func
+        return info_dict
 
     def convert(self, value, param, ctx):
         try:
@@ -175,6 +186,12 @@ class Choice(ParamType):
     def __init__(self, choices, case_sensitive=True):
         self.choices = choices
         self.case_sensitive = case_sensitive
+
+    def to_info_dict(self):
+        info_dict = super().to_info_dict()
+        info_dict["choices"] = self.choices
+        info_dict["case_sensitive"] = self.case_sensitive
+        return info_dict
 
     def get_metavar(self, param):
         choices_str = "|".join(self.choices)
@@ -251,6 +268,11 @@ class DateTime(ParamType):
     def __init__(self, formats=None):
         self.formats = formats or ["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]
 
+    def to_info_dict(self):
+        info_dict = super().to_info_dict()
+        info_dict["formats"] = self.formats
+        return info_dict
+
     def get_metavar(self, param):
         return f"[{'|'.join(self.formats)}]"
 
@@ -292,6 +314,17 @@ class _NumberRangeBase(_NumberParamTypeBase):
         self.min_open = min_open
         self.max_open = max_open
         self.clamp = clamp
+
+    def to_info_dict(self):
+        info_dict = super().to_info_dict()
+        info_dict.update(
+            min=self.min,
+            max=self.max,
+            min_open=self.min_open,
+            max_open=self.max_open,
+            clamp=self.clamp,
+        )
+        return info_dict
 
     def convert(self, value, param, ctx):
         import operator
@@ -492,6 +525,11 @@ class File(ParamType):
         self.lazy = lazy
         self.atomic = atomic
 
+    def to_info_dict(self):
+        info_dict = super().to_info_dict()
+        info_dict.update(mode=self.mode, encoding=self.encoding)
+        return info_dict
+
     def resolve_lazy_flag(self, value):
         if self.lazy is not None:
             return self.lazy
@@ -601,6 +639,18 @@ class Path(ParamType):
             self.name = "path"
             self.path_type = "Path"
 
+    def to_info_dict(self):
+        info_dict = super().to_info_dict()
+        info_dict.update(
+            exists=self.exists,
+            file_okay=self.file_okay,
+            dir_okay=self.dir_okay,
+            writable=self.writable,
+            readable=self.readable,
+            allow_dash=self.allow_dash,
+        )
+        return info_dict
+
     def coerce_path_result(self, rv):
         if self.type is not None and not isinstance(rv, self.type):
             if self.type is str:
@@ -673,6 +723,11 @@ class Tuple(CompositeParamType):
 
     def __init__(self, types):
         self.types = [convert_type(ty) for ty in types]
+
+    def to_info_dict(self):
+        info_dict = super().to_info_dict()
+        info_dict["types"] = [t.to_info_dict() for t in self.types]
+        return info_dict
 
     @property
     def name(self):
