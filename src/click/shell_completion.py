@@ -227,7 +227,7 @@ class ShellComplete:
         """Produce the completion data to send back to the shell.
 
         By default this calls :meth:`get_completion_args`, gets the
-        completions, then calls `:meth:`format_completion` for each
+        completions, then calls :meth:`format_completion` for each
         completion.
         """
         args, incomplete = self.get_completion_args()

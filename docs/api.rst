@@ -169,6 +169,22 @@ Parsing
 .. autoclass:: OptionParser
    :members:
 
+
+Shell Completion
+----------------
+
+See :doc:`/shell-completion` for information about enabling and
+customizing Click's shell completion system.
+
+.. currentmodule:: click.shell_completion
+
+.. autoclass:: ShellComplete
+    :members:
+    :member-order: bysource
+
+.. autofunction:: add_completion_class
+
+
 Testing
 -------
 

@@ -90,6 +90,12 @@ Unreleased
     information about the object's structure that could be useful for a
     tool generating user-facing documentation. To get the structure of
     an entire CLI, use ``Context(cli).to_info_dict()``. :issue:`461`
+-   Redesign the shell completion system. :issue:`1484`, :pr:`1622`
+
+    -   Support Bash >= 4.4, Zsh, and Fish, with the ability for
+        extensions to add support for other shells.
+    -   Allow commands, groups, parameters, and types to override their
+        completions suggestions.
 
 
 Version 7.1.2
