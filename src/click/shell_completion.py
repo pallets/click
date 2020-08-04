@@ -242,7 +242,7 @@ class BashComplete(ShellComplete):
     name = "bash"
     source_template = _SOURCE_BASH
 
-    def source(self):
+    def _check_version(self):
         import subprocess
 
         output = subprocess.run(["bash", "--version"], stdout=subprocess.PIPE)
@@ -261,6 +261,8 @@ class BashComplete(ShellComplete):
                 "Couldn't detect Bash version, shell completion is not supported."
             )
 
+    def source(self):
+        self._check_version()
         return super().source()
 
     def get_completion_args(self):
