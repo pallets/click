@@ -1,0 +1,507 @@
+import os
+import re
+
+from .core import Argument
+from .core import MultiCommand
+from .core import Option
+from .parser import split_arg_string
+from .utils import echo
+
+
+def shell_complete(cli, prog_name, complete_var, instruction):
+    """Perform shell completion for the given CLI program.
+
+    :param cli: Command being called.
+    :param prog_name: Name of the executable in the shell.
+    :param complete_var: Name of the environment variable that holds
+        the completion instruction.
+    :param instruction: Value of ``complete_var`` with the completion
+        instruction and shell, in the form ``instruction_shell``.
+    :return: Status code to exit with.
+    """
+    instruction, _, shell = instruction.partition("_")
+    comp_cls = get_completion_class(shell)
+
+    if comp_cls is None:
+        return 1
+
+    comp = comp_cls(cli, prog_name, complete_var)
+
+    if instruction == "source":
+        echo(comp.source())
+        return 0
+
+    if instruction == "complete":
+        echo(comp.complete())
+        return 0
+
+    return 1
+
+
+# Only Bash >= 4.4 has the nosort option.
+_SOURCE_BASH = """\
+%(complete_func)s() {
+    local IFS=$'\\n'
+    local response
+
+    response=$(env COMP_WORDS="${COMP_WORDS[*]}" COMP_CWORD=$COMP_CWORD \
+%(complete_var)s=complete_bash $1)
+
+    for completion in $response; do
+        IFS=',' read type value <<< "$completion"
+
+        if [[ $type == 'dir' ]]; then
+            COMREPLY=()
+            compopt -o dirnames
+        elif [[ $type == 'file' ]]; then
+            COMREPLY=()
+            compopt -o default
+        elif [[ $type == 'plain' ]]; then
+            COMPREPLY+=($value)
+        fi
+    done
+
+    return 0
+}
+
+%(complete_func)s_setup() {
+    complete -o nosort -F %(complete_func)s %(prog_name)s
+}
+
+%(complete_func)s_setup;
+"""
+
+_SOURCE_ZSH = """\
+#compdef %(prog_name)s
+
+%(complete_func)s() {
+    local -a completions
+    local -a completions_with_descriptions
+    local -a response
+    (( ! $+commands[%(prog_name)s] )) && return 1
+
+    response=("${(@f)$(env COMP_WORDS="${words[*]}" COMP_CWORD=$((CURRENT-1)) \
+%(complete_var)s=complete_zsh %(prog_name)s)}")
+
+    for type key descr in ${response}; do
+        if [[ "$type" == "plain" ]]; then
+            if [[ "$descr" == "_" ]]; then
+                completions+=("$key")
+            else
+                completions_with_descriptions+=("$key":"$descr")
+            fi
+        elif [[ "$type" == "dir" ]]; then
+            _path_files -/
+        elif [[ "$type" == "file" ]]; then
+            _path_files -f
+        fi
+    done
+
+    if [ -n "$completions_with_descriptions" ]; then
+        _describe -V unsorted completions_with_descriptions -U
+    fi
+
+    if [ -n "$completions" ]; then
+        compadd -U -V unsorted -a completions
+    fi
+}
+
+compdef %(complete_func)s %(prog_name)s;
+"""
+
+_SOURCE_FISH = """\
+function %(complete_func)s;
+    set -l response;
+
+    for value in (env %(complete_var)s=complete_fish COMP_WORDS=(commandline -cp) \
+COMP_CWORD=(commandline -t) %(prog_name)s);
+        set response $response $value;
+    end;
+
+    for completion in $response;
+        set -l metadata (string split "," $completion);
+
+        if test $metadata[1] = "dir";
+            __fish_complete_directories $metadata[2];
+        else if test $metadata[1] = "file";
+            __fish_complete_path $metadata[2];
+        else if test $metadata[1] = "plain";
+            echo $metadata[2];
+        end;
+    end;
+end;
+
+complete --no-files --command %(prog_name)s --arguments \
+"(%(complete_func)s)";
+"""
+
+
+class ShellComplete:
+    """Base class for providing shell completion support. A subclass for
+    a given shell will override attributes and methods to implement the
+    completion instructions (``source`` and ``complete``).
+
+    :param cli: Command being called.
+    :param prog_name: Name of the executable in the shell.
+    :param complete_var: Name of the environment variable that holds
+        the completion instruction.
+
+    .. versionadded:: 8.0
+    """
+
+    name = None
+    """Name to register the shell as with :func:`add_completion_class`.
+    This is used in completion instructions (``source_{name}`` and
+    ``complete_{name}``).
+    """
+    source_template = None
+    """Completion script template formatted by :meth:`source`. This must
+    be provided by subclasses.
+    """
+
+    def __init__(self, cli, prog_name, complete_var):
+        self.cli = cli
+        self.prog_name = prog_name
+        self.complete_var = complete_var
+
+    @property
+    def func_name(self):
+        """The name of the shell function defined by the completion
+        script.
+        """
+        safe_name = re.sub(r"\W*", "", self.prog_name.replace("-", "_"), re.ASCII)
+        return f"_{safe_name}_completion"
+
+    def source_vars(self):
+        """Vars for formatting :attr:`source_template`.
+
+        By default this provides ``complete_func``, ``complete_var``,
+        and ``prog_name``.
+        """
+        return {
+            "complete_func": self.func_name,
+            "complete_var": self.complete_var,
+            "prog_name": self.prog_name,
+        }
+
+    def source(self):
+        """Produce the shell script that defines the completion
+        function. By default this ``%``-style formats
+        :attr:`source_template` with the dict returned by
+        :meth:`source_vars`.
+        """
+        return self.source_template % self.source_vars()
+
+    def get_completion_args(self):
+        """Use the env vars defined by the shell script to return a
+        tuple of ``args, incomplete``. This must be implemented by
+        subclasses.
+        """
+        raise NotImplementedError
+
+    def get_completions(self, args, incomplete):
+        """Determine the context and last complete command or parameter
+        from the complete args. Call that object's ``shell_complete``
+        method to get the completions for the incomplete value.
+
+        :param args: List of complete args before the incomplete value.
+        :param incomplete: Value being completed. May be empty.
+        """
+        ctx = _resolve_context(self.cli, self.prog_name, args)
+
+        if ctx is None:
+            return []
+
+        obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
+        return obj.shell_complete(ctx, args, incomplete)
+
+    def format_completion(self, item):
+        """Format a completion item into the form recognized by the
+        shell script. This must be implemented by subclasses.
+
+        :param item: Completion item to format.
+        """
+        raise NotImplementedError
+
+    def complete(self):
+        """Produce the completion data to send back to the shell.
+
+        By default this calls :meth:`get_completion_args`, gets the
+        completions, then calls `:meth:`format_completion` for each
+        completion.
+        """
+        args, incomplete = self.get_completion_args()
+        completions = self.get_completions(args, incomplete)
+        out = [self.format_completion(item) for item in completions]
+        return "\n".join(out)
+
+
+class BashComplete(ShellComplete):
+    """Shell completion for Bash."""
+
+    name = "bash"
+    source_template = _SOURCE_BASH
+
+    def source(self):
+        import subprocess
+
+        output = subprocess.run(["bash", "--version"], stdout=subprocess.PIPE)
+        match = re.search(r"version (\d)\.(\d)\.\d", output.stdout.decode())
+
+        if match is not None:
+            major, minor = match.groups()
+
+            if major < "4" or major == "4" and minor < "4":
+                raise RuntimeError(
+                    "Shell completion is not supported for Bash"
+                    " versions older than 4.4."
+                )
+        else:
+            raise RuntimeError(
+                "Couldn't detect Bash version, shell completion is not supported."
+            )
+
+        return super().source()
+
+    def get_completion_args(self):
+        cwords = split_arg_string(os.environ["COMP_WORDS"])
+        cword = int(os.environ["COMP_CWORD"])
+        args = cwords[1:cword]
+
+        try:
+            incomplete = cwords[cword]
+        except IndexError:
+            incomplete = ""
+
+        return args, incomplete
+
+    def format_completion(self, item):
+        type, value, _ = item
+        return f"{type},{value}"
+
+
+class ZshComplete(ShellComplete):
+    """Shell completion for Zsh."""
+
+    name = "zsh"
+    source_template = _SOURCE_ZSH
+
+    def get_completion_args(self):
+        cwords = split_arg_string(os.environ["COMP_WORDS"])
+        cword = int(os.environ["COMP_CWORD"])
+        args = cwords[1:cword]
+
+        try:
+            incomplete = cwords[cword]
+        except IndexError:
+            incomplete = ""
+
+        return args, incomplete
+
+    def format_completion(self, item):
+        type, value, desc = item
+        return f"{type}\n{value}\n{desc if desc else '_'}"
+
+
+class FishComplete(ShellComplete):
+    """Shell completion for Fish."""
+
+    name = "fish"
+    source_template = _SOURCE_FISH
+
+    def get_completion_args(self):
+        cwords = split_arg_string(os.environ["COMP_WORDS"])
+        incomplete = os.environ["COMP_CWORD"]
+        args = cwords[1:]
+
+        # Fish stores the partial word in both COMP_WORDS and
+        # COMP_CWORD, remove it from complete args.
+        if incomplete and args and args[-1] == incomplete:
+            args.pop()
+
+        return args, incomplete
+
+    def format_completion(self, item):
+        type, value, desc = item
+
+        if desc:
+            return f"{type},{value}\t{desc}"
+
+        return f"{type},{value}"
+
+
+_available_shells = {
+    "bash": BashComplete,
+    "fish": FishComplete,
+    "zsh": ZshComplete,
+}
+
+
+def add_completion_class(cls, name=None):
+    """Register a :class:`ShellComplete` subclass under the given name.
+    The name will be provided by the completion instruction environment
+    variable during completion.
+
+    :param cls: The completion class that will handle completion for the
+        shell.
+    :param name: Name to register the class under. Defaults to the
+        class's ``name`` attribute.
+    """
+    if name is None:
+        name = cls.name
+
+    _available_shells[name] = cls
+
+
+def get_completion_class(shell):
+    """Look up a registered :class:`ShellComplete` subclass by the name
+    provided by the completion instruction environment variable. If the
+    name isn't registered, returns ``None``.
+
+    :param shell: Name the class is registered under.
+    """
+    return _available_shells.get(shell)
+
+
+def _is_incomplete_argument(values, param):
+    """Determine if the given parameter is an argument that can still
+    accept values.
+
+    :param values: Dict of param names and values parsed from the
+        command line args.
+    :param param: Argument object being checked.
+    """
+    if not isinstance(param, Argument):
+        return False
+
+    value = values[param.name]
+
+    if value is None:
+        return True
+
+    if param.nargs == -1:
+        return True
+
+    if isinstance(value, list) and param.nargs > 1 and len(value) < param.nargs:
+        return True
+
+    return False
+
+
+def _start_of_option(value):
+    """Check if the value looks like the start of an option."""
+    return value and not value[0].isalnum()
+
+
+def _is_incomplete_option(args, param):
+    """Determine if the given parameter is an option that needs a value.
+
+    :param args: List of complete args before the incomplete value.
+    :param param: Option object being checked.
+    """
+    if not isinstance(param, Option):
+        return False
+
+    if param.is_flag:
+        return False
+
+    last_option = None
+
+    for index, arg in enumerate(reversed(args)):
+        if index + 1 > param.nargs:
+            break
+
+        if _start_of_option(arg):
+            last_option = arg
+
+    return bool(last_option and last_option in param.opts)
+
+
+def _resolve_context(cli, prog_name, args):
+    """Produce the context hierarchy starting with the command and
+    traversing the complete arguments. This only follows the commands,
+    it doesn't trigger input prompts or callbacks.
+
+    :param cli: Command being called.
+    :param prog_name: Name of the executable in the shell.
+    :param args: List of complete args before the incomplete value.
+    """
+    ctx = cli.make_context(prog_name, args.copy(), resilient_parsing=True)
+    args = ctx.protected_args + ctx.args
+
+    while args:
+        if isinstance(ctx.command, MultiCommand):
+            if not ctx.command.chain:
+                name, cmd, args = ctx.command.resolve_command(ctx, args)
+
+                if cmd is None:
+                    return ctx
+
+                ctx = cmd.make_context(name, args, parent=ctx, resilient_parsing=True)
+                args = ctx.protected_args + ctx.args
+            else:
+                while args:
+                    name, cmd, args = ctx.command.resolve_command(ctx, args)
+
+                    if cmd is None:
+                        return ctx
+
+                    sub_ctx = cmd.make_context(
+                        name,
+                        args,
+                        parent=ctx,
+                        allow_extra_args=True,
+                        allow_interspersed_args=False,
+                        resilient_parsing=True,
+                    )
+                    args = sub_ctx.args
+
+                ctx = sub_ctx
+                args = sub_ctx.protected_args + sub_ctx.args
+        else:
+            break
+
+    return ctx
+
+
+def _resolve_incomplete(ctx, args, incomplete):
+    """Find the Click object that will handle the completion of the
+    incomplete value. Return the object and the incomplete value.
+
+    :param ctx: Invocation context for the command represented by
+        the parsed complete args.
+    :param args: List of complete args before the incomplete value.
+    :param incomplete: Value being completed. May be empty.
+    """
+    # Different shells treat an "=" between a long option name and
+    # value differently. Might keep the value joined, return the "="
+    # as a separate item, or return the split name and value. Always
+    # split and discard the "=" to make completion easier.
+    if incomplete == "=":
+        incomplete = ""
+    elif "=" in incomplete and _start_of_option(incomplete):
+        name, _, incomplete = incomplete.partition("=")
+        args.append(name)
+
+    # The "--" marker tells Click to stop treating values as options
+    # even if they start with the option character. If it hasn't been
+    # given and the incomplete arg looks like an option, the current
+    # command will provide option name completions.
+    if "--" not in args and _start_of_option(incomplete):
+        return ctx.command, incomplete
+
+    # If the last complete arg is an option name with an incomplete
+    # value, the option will provide value completions.
+    for param in ctx.command.get_params(ctx):
+        if _is_incomplete_option(args, param):
+            return param, incomplete
+
+    # It's not an option name or value. The first argument without a
+    # parsed value will provide value completions.
+    for param in ctx.command.get_params(ctx):
+        if _is_incomplete_argument(ctx.params, param):
+            return param, incomplete
+
+    # There were no unparsed arguments, the command may be a group that
+    # will provide command name completions.
+    return ctx.command, incomplete

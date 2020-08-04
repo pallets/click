@@ -107,6 +107,19 @@ class ParamType:
         """Helper method to fail with an invalid value message."""
         raise BadParameter(message, ctx=ctx, param=param)
 
+    def shell_complete(self, ctx, args, incomplete):
+        """Return a list of completions for the incomplete value. Most
+        types do not provide completions, but some do, and this allows
+        custom types to provide custom completions as well.
+
+        :param ctx: Invocation context for this command.
+        :param args: List of complete args before the incomplete value.
+        :param incomplete: Value being completed. May be empty.
+
+        .. versionadded:: 8.0
+        """
+        return []
+
 
 class CompositeParamType(ParamType):
     is_composite = True
@@ -248,6 +261,20 @@ class Choice(ParamType):
 
     def __repr__(self):
         return f"Choice({list(self.choices)})"
+
+    def shell_complete(self, ctx, args, incomplete):
+        """Return a list of completions for the incomplete value based
+        on the choices.
+
+        :param ctx: Invocation context for this command.
+        :param args: List of complete args before the incomplete value.
+        :param incomplete: Value being completed. May be empty.
+
+        .. versionadded:: 8.0
+        """
+        return [
+            ("plain", c, None) for c in self.choices if str(c).startswith(incomplete)
+        ]
 
 
 class DateTime(ParamType):
@@ -583,6 +610,18 @@ class File(ParamType):
                 ctx,
             )
 
+    def shell_complete(self, ctx, args, incomplete):
+        """Return a special completion marker that tells the completion
+        system to use the shell to provide file path completions.
+
+        :param ctx: Invocation context for this command.
+        :param args: List of complete args before the incomplete value.
+        :param incomplete: Value being completed. May be empty.
+
+        .. versionadded:: 8.0
+        """
+        return [("file", incomplete, None)]
+
 
 class Path(ParamType):
     """The path type is similar to the :class:`File` type but it performs
@@ -713,6 +752,20 @@ class Path(ParamType):
                 )
 
         return self.coerce_path_result(rv)
+
+    def shell_complete(self, ctx, args, incomplete):
+        """Return a special completion marker that tells the completion
+        system to use the shell to provide path completions for only
+        directories or any paths.
+
+        :param ctx: Invocation context for this command.
+        :param args: List of complete args before the incomplete value.
+        :param incomplete: Value being completed. May be empty.
+
+        .. versionadded:: 8.0
+        """
+        completion_type = "dir" if self.dir_okay and not self.file_okay else "file"
+        return [(completion_type, incomplete, None)]
 
 
 class Tuple(CompositeParamType):
