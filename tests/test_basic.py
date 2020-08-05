@@ -1,5 +1,8 @@
 import os
 import uuid
+from itertools import chain
+
+import pytest
 
 import click
 
@@ -198,27 +201,24 @@ def test_boolean_option(runner):
         assert result.output == f"{default}\n"
 
 
-def test_boolean_conversion(runner):
-    for default in True, False:
+@pytest.mark.parametrize(
+    ("value", "expect"),
+    chain(
+        ((x, "True") for x in ("1", "true", "t", "yes", "y", "on")),
+        ((x, "False") for x in ("0", "false", "f", "no", "n", "off")),
+    ),
+)
+def test_boolean_conversion(runner, value, expect):
+    @click.command()
+    @click.option("--flag", type=bool)
+    def cli(flag):
+        click.echo(flag, nl=False)
 
-        @click.command()
-        @click.option("--flag", default=default, type=bool)
-        def cli(flag):
-            click.echo(flag)
+    result = runner.invoke(cli, ["--flag", value])
+    assert result.output == expect
 
-        for value in "true", "t", "1", "yes", "y":
-            result = runner.invoke(cli, ["--flag", value])
-            assert not result.exception
-            assert result.output == "True\n"
-
-        for value in "false", "f", "0", "no", "n":
-            result = runner.invoke(cli, ["--flag", value])
-            assert not result.exception
-            assert result.output == "False\n"
-
-        result = runner.invoke(cli, [])
-        assert not result.exception
-        assert result.output == f"{default}\n"
+    result = runner.invoke(cli, ["--flag", value.title()])
+    assert result.output == expect
 
 
 def test_file_option(runner):

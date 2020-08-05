@@ -387,11 +387,11 @@ class BoolParamType(ParamType):
         if isinstance(value, bool):
             return bool(value)
         value = value.lower()
-        if value in ("true", "t", "1", "yes", "y"):
+        if value in {"1", "true", "t", "yes", "y", "on"}:
             return True
-        elif value in ("false", "f", "0", "no", "n"):
+        elif value in {"0", "false", "f", "no", "n", "off"}:
             return False
-        self.fail(f"{value} is not a valid boolean", param, ctx)
+        self.fail(f"{value!r} is not a valid boolean value.", param, ctx)
 
     def __repr__(self):
         return "BOOL"
