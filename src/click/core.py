@@ -1170,7 +1170,7 @@ class MultiCommand(Command):
         self.format_commands(ctx, formatter)
 
     def resultcallback(self, replace=False):
-        """Adds a result callback to the chain command.  By default if a
+        """Adds a result callback to the command.  By default if a
         result callback is already registered this will chain them but
         this can be disabled with the `replace` parameter.  The result
         callback is invoked with the return value of the subcommand
@@ -1189,10 +1189,10 @@ class MultiCommand(Command):
             def process_result(result, input):
                 return result + input
 
-        .. versionadded:: 3.0
-
         :param replace: if set to `True` an already existing result
                         callback will be removed.
+
+        .. versionadded:: 3.0
         """
 
         def decorator(f):
@@ -1258,18 +1258,13 @@ class MultiCommand(Command):
             return value
 
         if not ctx.protected_args:
-            # If we are invoked without command the chain flag controls
-            # how this happens.  If we are not in chain mode, the return
-            # value here is the return value of the command.
-            # If however we are in chain mode, the return value is the
-            # return value of the result processor invoked with an empty
-            # list (which means that no subcommand actually was executed).
             if self.invoke_without_command:
-                if not self.chain:
-                    return Command.invoke(self, ctx)
+                # No subcommand was invoked, so the result callback is
+                # invoked with None for regular groups, or an empty list
+                # for chained groups.
                 with ctx:
                     Command.invoke(self, ctx)
-                    return _process_result([])
+                    return _process_result([] if self.chain else None)
             ctx.fail("Missing command.")
 
         # Fetch args back out

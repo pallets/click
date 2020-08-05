@@ -29,6 +29,8 @@ Unreleased
     ``Context.invoked_subcommand`` consistent when using patterns like
     ``AliasedGroup``. :issue:`1422`
 -   The ``BOOL`` type accepts the values "on" and "off". :issue:`1629`
+-   A ``Group`` with ``invoke_without_command=True`` will always invoke
+    its result callback. :issue:`1178`
 
 
 Version 7.1.2
