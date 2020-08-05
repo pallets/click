@@ -28,7 +28,7 @@ Unreleased
     matched name. This makes behavior such as help text and
     ``Context.invoked_subcommand`` consistent when using patterns like
     ``AliasedGroup``. :issue:`1422`
--   The ``BOOL`` type now accepts the strings "on" and "off".  :issue:`1629`
+-   The ``BOOL`` type accepts the values "on" and "off". :issue:`1629`
 
 
 Version 7.1.2
