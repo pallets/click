@@ -18,7 +18,7 @@ def test_nargs_star(runner):
     assert result.output.splitlines() == ["src=foo.txt|bar.txt", "dst=dir"]
 
 
-def test_nargs_default(runner):
+def test_argument_unbounded_nargs_cant_have_default(runner):
     with pytest.raises(TypeError, match="nargs=-1"):
 
         @click.command()
@@ -163,26 +163,31 @@ def test_stdout_default(runner):
     assert result.output == "Foo bar baz\n"
 
 
-def test_nargs_envvar(runner):
+@pytest.mark.parametrize(
+    ("nargs", "value", "code", "output"),
+    [
+        (2, "", 2, "Argument 'arg' takes 2 values but 0 were given."),
+        (2, "a", 2, "Argument 'arg' takes 2 values but 1 was given."),
+        (2, "a b", 0, "len 2"),
+        (2, "a b c", 2, "Argument 'arg' takes 2 values but 3 were given."),
+        (-1, "a b c", 0, "len 3"),
+        (-1, "", 0, "len 0"),
+    ],
+)
+def test_nargs_envvar(runner, nargs, value, code, output):
+    if nargs == -1:
+        param = click.argument("arg", envvar="X", nargs=nargs)
+    else:
+        param = click.option("--arg", envvar="X", nargs=nargs)
+
     @click.command()
-    @click.option("--arg", nargs=2)
+    @param
     def cmd(arg):
-        click.echo("|".join(arg))
+        click.echo(f"len {len(arg)}")
 
-    result = runner.invoke(
-        cmd, [], auto_envvar_prefix="TEST", env={"TEST_ARG": "foo bar"}
-    )
-    assert not result.exception
-    assert result.output == "foo|bar\n"
-
-    @click.command()
-    @click.option("--arg", envvar="X", nargs=2)
-    def cmd(arg):
-        click.echo("|".join(arg))
-
-    result = runner.invoke(cmd, [], env={"X": "foo bar"})
-    assert not result.exception
-    assert result.output == "foo|bar\n"
+    result = runner.invoke(cmd, env={"X": value})
+    assert result.exit_code == code
+    assert output in result.output
 
 
 def test_empty_nargs(runner):
@@ -303,3 +308,23 @@ def test_multiple_param_decls_not_allowed(runner):
         @click.argument("x", click.Choice(["a", "b"]))
         def copy(x):
             click.echo(x)
+
+
+@pytest.mark.parametrize(
+    ("value", "code", "output"),
+    [
+        ((), 2, "Argument 'arg' takes 2 values but 0 were given."),
+        (("a",), 2, "Argument 'arg' takes 2 values but 1 was given."),
+        (("a", "b"), 0, "len 2"),
+        (("a", "b", "c"), 2, "Argument 'arg' takes 2 values but 3 were given."),
+    ],
+)
+def test_nargs_default(runner, value, code, output):
+    @click.command()
+    @click.argument("arg", nargs=2, default=value)
+    def cmd(arg):
+        click.echo(f"len {len(arg)}")
+
+    result = runner.invoke(cmd)
+    assert result.exit_code == code
+    assert output in result.output

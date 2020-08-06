@@ -183,6 +183,10 @@ class Argument:
                 raise BadArgumentUsage(
                     f"argument {self.dest} takes {self.nargs} values"
                 )
+
+        if self.nargs == -1 and self.obj.envvar is not None:
+            value = None
+
         state.opts[self.dest] = value
         state.order.append(self.obj)
 

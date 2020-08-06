@@ -31,6 +31,8 @@ Unreleased
 -   The ``BOOL`` type accepts the values "on" and "off". :issue:`1629`
 -   A ``Group`` with ``invoke_without_command=True`` will always invoke
     its result callback. :issue:`1178`
+-   ``nargs == -1`` and ``nargs > 1`` is parsed and validated for
+    values from environment variables and defaults. :issue:`729`
 
 
 Version 7.1.2
