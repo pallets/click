@@ -328,3 +328,44 @@ def test_nargs_default(runner, value, code, output):
     result = runner.invoke(cmd)
     assert result.exit_code == code
     assert output in result.output
+
+
+def test_subcommand_help(runner):
+    @click.group()
+    @click.argument("name")
+    @click.argument("val")
+    @click.option("--opt")
+    @click.pass_context
+    def cli(ctx, name, val, opt):
+        ctx.obj = dict(name=name, val=val)
+
+    @cli.command()
+    @click.pass_obj
+    def cmd(obj):
+        click.echo(f"CMD for {obj['name']} with value {obj['val']}")
+
+    result = runner.invoke(cli, ["foo", "bar", "cmd", "--help"])
+    assert not result.exception
+    assert "Usage: cli NAME VAL cmd [OPTIONS]" in result.output
+
+
+def test_nested_subcommand_help(runner):
+    @click.group()
+    @click.argument("arg1")
+    @click.option("--opt1")
+    def cli(arg1, opt1):
+        pass
+
+    @cli.group()
+    @click.argument("arg2")
+    @click.option("--opt2")
+    def cmd(arg2, opt2):
+        pass
+
+    @cmd.command()
+    def subcmd():
+        click.echo("subcommand")
+
+    result = runner.invoke(cli, ["arg1", "cmd", "arg2", "subcmd", "--help"])
+    assert not result.exception
+    assert "Usage: cli ARG1 cmd ARG2 subcmd [OPTIONS]" in result.output

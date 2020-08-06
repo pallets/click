@@ -35,6 +35,8 @@ Unreleased
     values from environment variables and defaults. :issue:`729`
 -   Detect the program name when executing a module or package with
     ``python -m name``. :issue:`1603`
+-   Include required parent arguments in help synopsis of subcommands.
+    :issue:`1475`
 
 
 Version 7.1.2
