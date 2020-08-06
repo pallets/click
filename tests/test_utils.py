@@ -1,4 +1,5 @@
 import os
+import pathlib
 import stat
 import sys
 from io import StringIO
@@ -382,3 +383,32 @@ def test_iter_lazyfile(tmpdir):
         with click.utils.LazyFile(f.name) as lf:
             for e_line, a_line in zip(expected, lf):
                 assert e_line == a_line.strip()
+
+
+class MockMain:
+    __slots__ = "__package__"
+
+    def __init__(self, package_name):
+        self.__package__ = package_name
+
+
+@pytest.mark.parametrize(
+    ("path", "main", "expected"),
+    [
+        ("example.py", None, "example.py"),
+        (str(pathlib.Path("/foo/bar/example.py")), None, "example.py"),
+        ("example", None, "example"),
+        (
+            str(pathlib.Path("example/__main__.py")),
+            MockMain(".example"),
+            "python -m example",
+        ),
+        (
+            str(pathlib.Path("example/cli.py")),
+            MockMain(".example"),
+            "python -m example.cli",
+        ),
+    ],
+)
+def test_detect_program_name(path, main, expected):
+    assert click.utils._detect_program_name(path, _main=main) == expected
