@@ -1948,6 +1948,12 @@ class Option(Parameter):
                 default_string = ", ".join(str(d) for d in self.default)
             elif inspect.isfunction(self.default):
                 default_string = "(dynamic)"
+            elif self.is_bool_flag and self.secondary_opts:
+                # For boolean flags that have distinct True/False opts,
+                # use the opt without prefix instead of the value.
+                default_string = split_opt(
+                    (self.opts if self.default else self.secondary_opts)[0]
+                )[1]
             else:
                 default_string = self.default
             extra.append(f"default: {default_string}")
