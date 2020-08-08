@@ -43,6 +43,11 @@ Unreleased
     converted to string. :pr:`1146`
 -   ``edit(require_save=True)`` will detect saves for editors that exit
     very fast on filesystems with 1 second resolution. :pr:`1050`
+-   ``Command`` has a ``context_class`` attribute to quickly customize
+    the ``Context``. ``Context`` has a ``formatter_class`` attribute to
+    quickly customize the ``HelpFormatter``. ``Context.invoke`` creates
+    child contexts of the same type as itself. Core objects use
+    ``super()`` consistently. :pr:`938`
 
 
 Version 7.1.2

@@ -245,6 +245,11 @@ class Context:
                     this command-level setting overrides it.
     """
 
+    #: The formatter class to create with :meth:`make_formatter`.
+    #:
+    #: .. versionadded:: 8.0
+    formatter_class = HelpFormatter
+
     def __init__(
         self,
         command,
@@ -475,8 +480,16 @@ class Context:
         return self._meta
 
     def make_formatter(self):
-        """Creates the formatter for the help and usage output."""
-        return HelpFormatter(
+        """Creates the :class:`~click.HelpFormatter` for the help and
+        usage output.
+
+        To quickly customize the formatter class used without overriding
+        this method, set the :attr:`formatter_class` attribute.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`formatter_class` attribute.
+        """
+        return self.formatter_class(
             width=self.terminal_width, max_width=self.max_content_width
         )
 
