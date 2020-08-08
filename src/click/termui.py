@@ -7,6 +7,7 @@ import sys
 
 from ._compat import DEFAULT_COLUMNS
 from ._compat import get_winterm_size
+from ._compat import is_bytes
 from ._compat import isatty
 from ._compat import strip_ansi
 from ._compat import WIN
@@ -482,11 +483,6 @@ def style(
     * ``bright_white``
     * ``reset`` (reset the color code only)
 
-    .. versionadded:: 2.0
-
-    .. versionadded:: 7.0
-       Added support for bright colors.
-
     :param text: the string to style with ansi codes.
     :param fg: if provided this will become the foreground color.
     :param bg: if provided this will become the background color.
@@ -501,7 +497,18 @@ def style(
     :param reset: by default a reset-all code is added at the end of the
                   string which means that styles do not carry over.  This
                   can be disabled to compose styles.
+
+    .. versionchanged:: 8.0
+        A non-string ``message`` is converted to a string.
+
+    .. versionchanged:: 7.0
+        Added support for bright colors.
+
+    .. versionadded:: 2.0
     """
+    if not isinstance(text, str):
+        text = str(text)
+
     bits = []
     if fg:
         try:
@@ -551,10 +558,20 @@ def secho(message=None, file=None, nl=True, err=False, color=None, **styles):
     All keyword arguments are forwarded to the underlying functions
     depending on which one they go with.
 
+    Non-string types will be converted to :class:`str`. However,
+    :class:`bytes` are passed directly to :meth:`echo` without applying
+    style. If you want to style bytes that represent text, call
+    :meth:`bytes.decode` first.
+
+    .. versionchanged:: 8.0
+        A non-string ``message`` is converted to a string. Bytes are
+        passed through without style applied.
+
     .. versionadded:: 2.0
     """
-    if message is not None:
+    if message is not None and not is_bytes(message):
         message = style(message, **styles)
+
     return echo(message, file=file, nl=nl, err=err, color=color)
 
 
