@@ -474,25 +474,26 @@ class Editor:
     def edit(self, text):
         import tempfile
 
-        text = text or ""
-        binary_data = type(text) in [bytes, bytearray]
+        if not text:
+            text = ""
 
-        if not binary_data and text and not text.endswith("\n"):
-            text += "\n"
+        is_bytes = isinstance(text, (bytes, bytearray))
+
+        if not is_bytes:
+            if text and not text.endswith("\n"):
+                text += "\n"
+
+            if WIN:
+                text = text.replace("\n", "\r\n").encode("utf-8-sig")
+            else:
+                text = text.encode("utf-8")
 
         fd, name = tempfile.mkstemp(prefix="editor-", suffix=self.extension)
-        try:
-            if not binary_data:
-                if WIN:
-                    encoding = "utf-8-sig"
-                    text = text.replace("\n", "\r\n")
-                else:
-                    encoding = "utf-8"
-                text = text.encode(encoding)
 
-            f = os.fdopen(fd, "wb")
-            f.write(text)
-            f.close()
+        try:
+            with os.fdopen(fd, "wb") as f:
+                f.write(text)
+
             # If the filesystem resolution is 1 second, like Mac OS
             # 10.12 Extended, or 2 seconds, like FAT32, and the editor
             # closes very fast, require_save can fail. Set the modified
@@ -507,15 +508,13 @@ class Editor:
             if self.require_save and os.path.getmtime(name) == timestamp:
                 return None
 
-            f = open(name, "rb")
-            try:
+            with open(name, "rb") as f:
                 rv = f.read()
-            finally:
-                f.close()
-            if binary_data:
+
+            if is_bytes:
                 return rv
-            else:
-                return rv.decode("utf-8-sig").replace("\r\n", "\n")
+
+            return rv.decode("utf-8-sig").replace("\r\n", "\n")
         finally:
             os.unlink(name)
 
