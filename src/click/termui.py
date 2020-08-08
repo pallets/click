@@ -7,6 +7,7 @@ import sys
 
 from ._compat import DEFAULT_COLUMNS
 from ._compat import get_winterm_size
+from ._compat import is_bytes
 from ._compat import isatty
 from ._compat import strip_ansi
 from ._compat import WIN
@@ -557,13 +558,20 @@ def secho(message=None, file=None, nl=True, err=False, color=None, **styles):
     All keyword arguments are forwarded to the underlying functions
     depending on which one they go with.
 
+    Non-string types will be converted to :class:`str`. However,
+    :class:`bytes` are passed directly to :meth:`echo` without applying
+    style. If you want to style bytes that represent text, call
+    :meth:`bytes.decode` first.
+
     .. versionchanged:: 8.0
-        A non-string ``message`` is converted to a string.
+        A non-string ``message`` is converted to a string. Bytes are
+        passed through without style applied.
 
     .. versionadded:: 2.0
     """
-    if message is not None:
+    if message is not None and not is_bytes(message):
         message = style(message, **styles)
+
     return echo(message, file=file, nl=nl, err=err, color=color)
 
 

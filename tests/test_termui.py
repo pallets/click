@@ -1,3 +1,4 @@
+import platform
 import time
 
 import pytest
@@ -257,11 +258,15 @@ def test_secho(runner):
         assert bytes == b""
 
 
-def test_secho_non_text(runner):
-    with runner.isolation() as outstreams:
-        click.secho(Exception("spam"), nl=False)
-        bytes = outstreams[0].getvalue()
-        assert bytes == b"spam"
+@pytest.mark.skipif(platform.system() == "Windows", reason="No style on Windows.")
+@pytest.mark.parametrize(
+    ("value", "expect"), [(123, b"\x1b[45m123\x1b[0m"), (b"test", b"test")]
+)
+def test_secho_non_text(runner, value, expect):
+    with runner.isolation() as (out, _):
+        click.secho(value, nl=False, color=True, bg="magenta")
+        result = out.getvalue()
+        assert result == expect
 
 
 def test_progressbar_yields_all_items(runner):
