@@ -96,6 +96,8 @@ Unreleased
         extensions to add support for other shells.
     -   Allow commands, groups, parameters, and types to override their
         completions suggestions.
+    -   Groups complete the names commands were registered with, which
+        can differ from the name they were created with.
 
 
 Version 7.1.2

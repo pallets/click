@@ -70,7 +70,7 @@ def _complete_visible_commands(ctx, incomplete):
             command = ctx.command.get_command(ctx, name)
 
             if not command.hidden:
-                yield command
+                yield name, command
 
 
 def _check_multicommand(base_command, cmd_name, cmd, register=False):
@@ -885,9 +885,9 @@ class BaseCommand:
 
             if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
                 results.extend(
-                    ("plain", command.name, command.get_short_help_str())
-                    for command in _complete_visible_commands(ctx, incomplete)
-                    if command.name not in ctx.protected_args
+                    ("plain", name, command.get_short_help_str())
+                    for name, command in _complete_visible_commands(ctx, incomplete)
+                    if name not in ctx.protected_args
                 )
 
         return results
@@ -1590,8 +1590,8 @@ class MultiCommand(Command):
         .. versionadded:: 8.0
         """
         results = [
-            ("plain", command.name, command.get_short_help_str())
-            for command in _complete_visible_commands(ctx, incomplete)
+            ("plain", name, command.get_short_help_str())
+            for name, command in _complete_visible_commands(ctx, incomplete)
         ]
         results.extend(super().shell_complete(ctx, args, incomplete))
         return results

@@ -203,6 +203,13 @@ def test_hidden():
     assert _get_words(cli, ["hidden", "-b"], "") == ["a", "b"]
 
 
+def test_add_different_name():
+    cli = Group("cli", commands={"renamed": Command("original")})
+    words = _get_words(cli, [], "")
+    assert "renamed" in words
+    assert "original" not in words
+
+
 @pytest.fixture()
 def _patch_for_completion(monkeypatch):
     monkeypatch.setattr("click.core._fast_exit", sys.exit)
