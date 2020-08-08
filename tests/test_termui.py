@@ -379,3 +379,9 @@ def test_getchar_windows_exceptions(runner, monkeypatch, key_char, exc):
 
     with pytest.raises(exc):
         click.getchar()
+
+
+@pytest.mark.skipif(platform.system() == "Windows", reason="No sed on Windows.")
+def test_fast_edit(runner):
+    result = click.edit("a\nb", editor="sed -i~ 's/$/Test/'")
+    assert result == "aTest\nbTest\n"
