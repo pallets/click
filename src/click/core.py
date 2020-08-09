@@ -1393,6 +1393,25 @@ class Group(MultiCommand):
     :param commands: a dictionary of commands.
     """
 
+    #: If set, this is used by the group's :meth:`command` decorator
+    #: as the default :class:`Command` class. This is useful to make all
+    #: subcommands use a custom command class.
+    #:
+    #: .. versionadded:: 8.0
+    command_class = None
+
+    #: If set, this is used by the group's :meth:`group` decorator
+    #: as the default :class:`Group` class. This is useful to make all
+    #: subgroups use a custom group class.
+    #:
+    #: If set to the special value :class:`type` (literally
+    #: ``group_class = type``), this group's class will be used as the
+    #: default class. This makes a custom group class continue to make
+    #: custom groups.
+    #:
+    #: .. versionadded:: 8.0
+    group_class = None
+
     def __init__(self, name=None, commands=None, **attrs):
         super().__init__(name, **attrs)
         #: the registered subcommands by their exported names.
@@ -1410,11 +1429,20 @@ class Group(MultiCommand):
 
     def command(self, *args, **kwargs):
         """A shortcut decorator for declaring and attaching a command to
-        the group.  This takes the same arguments as :func:`command` but
-        immediately registers the created command with this instance by
-        calling into :meth:`add_command`.
+        the group. This takes the same arguments as :func:`command` and
+        immediately registers the created command with this group by
+        calling :meth:`add_command`.
+
+        To customize the command class used, set the
+        :attr:`command_class` attribute.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`command_class` attribute.
         """
         from .decorators import command
+
+        if self.command_class is not None and "cls" not in kwargs:
+            kwargs["cls"] = self.command_class
 
         def decorator(f):
             cmd = command(*args, **kwargs)(f)
@@ -1425,11 +1453,23 @@ class Group(MultiCommand):
 
     def group(self, *args, **kwargs):
         """A shortcut decorator for declaring and attaching a group to
-        the group.  This takes the same arguments as :func:`group` but
-        immediately registers the created command with this instance by
-        calling into :meth:`add_command`.
+        the group. This takes the same arguments as :func:`group` and
+        immediately registers the created group with this group by
+        calling :meth:`add_command`.
+
+        To customize the group class used, set the :attr:`group_class`
+        attribute.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`group_class` attribute.
         """
         from .decorators import group
+
+        if self.group_class is not None and "cls" not in kwargs:
+            if self.group_class is type:
+                kwargs["cls"] = type(self)
+            else:
+                kwargs["cls"] = self.group_class
 
         def decorator(f):
             cmd = group(*args, **kwargs)(f)
