@@ -601,11 +601,14 @@ class Context:
         if isinstance(callback, Command):
             other_cmd = callback
             callback = other_cmd.callback
-            ctx = Context(other_cmd, info_name=other_cmd.name, parent=self)
+
             if callback is None:
                 raise TypeError(
                     "The given command does not have a callback that can be invoked."
                 )
+
+            # Create a new context of the same type as this context.
+            ctx = type(self)(other_cmd, info_name=other_cmd.name, parent=self)
 
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
@@ -623,8 +626,7 @@ class Context:
         """
         self, cmd = args[:2]
 
-        # It's also possible to invoke another command which might or
-        # might not have a callback.
+        # Can only forward to other commands, not direct callbacks.
         if not isinstance(cmd, Command):
             raise TypeError("Callback is not a command.")
 
@@ -686,6 +688,10 @@ class BaseCommand:
                              passed to the context object.
     """
 
+    #: The context class to create with :meth:`make_context`.
+    #:
+    #: .. versionadded:: 8.0
+    context_class = Context
     #: the default for the :attr:`Context.allow_extra_args` flag.
     allow_extra_args = False
     #: the default for the :attr:`Context.allow_interspersed_args` flag.
@@ -718,6 +724,9 @@ class BaseCommand:
         off the parsing and create a new :class:`Context`.  It does not
         invoke the actual command callback though.
 
+        To quickly customize the context class used without overriding
+        this method, set the :attr:`context_class` attribute.
+
         :param info_name: the info name for this invokation.  Generally this
                           is the most descriptive name for the script or
                           command.  For the toplevel script it's usually
@@ -727,11 +736,16 @@ class BaseCommand:
         :param parent: the parent context if available.
         :param extra: extra keyword arguments forwarded to the context
                       constructor.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`context_class` attribute.
         """
         for key, value in self.context_settings.items():
             if key not in extra:
                 extra[key] = value
-        ctx = Context(self, info_name=info_name, parent=parent, **extra)
+
+        ctx = self.context_class(self, info_name=info_name, parent=parent, **extra)
+
         with ctx.scope(cleanup=False):
             self.parse_args(ctx, args)
         return ctx
