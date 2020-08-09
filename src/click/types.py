@@ -278,7 +278,8 @@ class IntRange(IntParamType):
         self.clamp = clamp
 
     def convert(self, value, param, ctx):
-        rv = IntParamType.convert(self, value, param, ctx)
+        rv = super().convert(value, param, ctx)
+
         if self.clamp:
             if self.min is not None and rv < self.min:
                 return self.min
@@ -344,7 +345,8 @@ class FloatRange(FloatParamType):
         self.clamp = clamp
 
     def convert(self, value, param, ctx):
-        rv = FloatParamType.convert(self, value, param, ctx)
+        rv = super().convert(value, param, ctx)
+
         if self.clamp:
             if self.min is not None and rv < self.min:
                 return self.min

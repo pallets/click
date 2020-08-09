@@ -43,7 +43,7 @@ class UsageError(ClickException):
     exit_code = 2
 
     def __init__(self, message, ctx=None):
-        ClickException.__init__(self, message)
+        super().__init__(message)
         self.ctx = ctx
         self.cmd = self.ctx.command if self.ctx else None
 
@@ -82,7 +82,7 @@ class BadParameter(UsageError):
     """
 
     def __init__(self, message, ctx=None, param=None, param_hint=None):
-        UsageError.__init__(self, message, ctx)
+        super().__init__(message, ctx)
         self.param = param
         self.param_hint = param_hint
 
@@ -113,7 +113,7 @@ class MissingParameter(BadParameter):
     def __init__(
         self, message=None, ctx=None, param=None, param_hint=None, param_type=None
     ):
-        BadParameter.__init__(self, message, ctx, param, param_hint)
+        super().__init__(message, ctx, param, param_hint)
         self.param_type = param_type
 
     def format_message(self):
@@ -159,7 +159,8 @@ class NoSuchOption(UsageError):
     def __init__(self, option_name, message=None, possibilities=None, ctx=None):
         if message is None:
             message = f"no such option: {option_name}"
-        UsageError.__init__(self, message, ctx)
+
+        super().__init__(message, ctx)
         self.option_name = option_name
         self.possibilities = possibilities
 
@@ -185,7 +186,7 @@ class BadOptionUsage(UsageError):
     """
 
     def __init__(self, option_name, message, ctx=None):
-        UsageError.__init__(self, message, ctx)
+        super().__init__(message, ctx)
         self.option_name = option_name
 
 
@@ -197,9 +198,6 @@ class BadArgumentUsage(UsageError):
     .. versionadded:: 6.0
     """
 
-    def __init__(self, message, ctx=None):
-        UsageError.__init__(self, message, ctx)
-
 
 class FileError(ClickException):
     """Raised if a file cannot be opened."""
@@ -208,7 +206,8 @@ class FileError(ClickException):
         ui_filename = filename_to_ui(filename)
         if hint is None:
             hint = "unknown error"
-        ClickException.__init__(self, hint)
+
+        super().__init__(hint)
         self.ui_filename = ui_filename
         self.filename = filename
 

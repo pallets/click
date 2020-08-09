@@ -113,7 +113,7 @@ class _WindowsConsoleRawIOBase(io.RawIOBase):
         self.handle = handle
 
     def isatty(self):
-        io.RawIOBase.isatty(self)
+        super().isatty()
         return True
 
 
