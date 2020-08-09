@@ -43,6 +43,22 @@ Unreleased
     converted to string. :pr:`1146`
 -   ``edit(require_save=True)`` will detect saves for editors that exit
     very fast on filesystems with 1 second resolution. :pr:`1050`
+-   New class attributes make it easier to use custom core objects
+    throughout an entire application. :pr:`938`
+
+    -   ``Command.context_class`` controls the context created when
+        running the command.
+    -   ``Context.invoke`` creates new contexts of the same type, so a
+        custom type will persist to invoked subcommands.
+    -   ``Context.formatter_class`` controls the formatter used to
+        generate help and usage.
+    -   ``Group.command_class`` changes the default type for
+        subcommands with ``@group.command()``.
+    -   ``Group.group_class`` changes the default type for subgroups
+        with ``@group.group()``. Setting it to ``type`` will create
+        subgroups of the same type as the group itself.
+    -   Core objects use ``super()`` consistently for better support of
+        subclassing.
 
 
 Version 7.1.2

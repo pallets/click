@@ -245,6 +245,11 @@ class Context:
                     this command-level setting overrides it.
     """
 
+    #: The formatter class to create with :meth:`make_formatter`.
+    #:
+    #: .. versionadded:: 8.0
+    formatter_class = HelpFormatter
+
     def __init__(
         self,
         command,
@@ -475,8 +480,16 @@ class Context:
         return self._meta
 
     def make_formatter(self):
-        """Creates the formatter for the help and usage output."""
-        return HelpFormatter(
+        """Creates the :class:`~click.HelpFormatter` for the help and
+        usage output.
+
+        To quickly customize the formatter class used without overriding
+        this method, set the :attr:`formatter_class` attribute.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`formatter_class` attribute.
+        """
+        return self.formatter_class(
             width=self.terminal_width, max_width=self.max_content_width
         )
 
@@ -601,11 +614,14 @@ class Context:
         if isinstance(callback, Command):
             other_cmd = callback
             callback = other_cmd.callback
-            ctx = Context(other_cmd, info_name=other_cmd.name, parent=self)
+
             if callback is None:
                 raise TypeError(
                     "The given command does not have a callback that can be invoked."
                 )
+
+            # Create a new context of the same type as this context.
+            ctx = type(self)(other_cmd, info_name=other_cmd.name, parent=self)
 
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
@@ -623,8 +639,7 @@ class Context:
         """
         self, cmd = args[:2]
 
-        # It's also possible to invoke another command which might or
-        # might not have a callback.
+        # Can only forward to other commands, not direct callbacks.
         if not isinstance(cmd, Command):
             raise TypeError("Callback is not a command.")
 
@@ -686,6 +701,10 @@ class BaseCommand:
                              passed to the context object.
     """
 
+    #: The context class to create with :meth:`make_context`.
+    #:
+    #: .. versionadded:: 8.0
+    context_class = Context
     #: the default for the :attr:`Context.allow_extra_args` flag.
     allow_extra_args = False
     #: the default for the :attr:`Context.allow_interspersed_args` flag.
@@ -718,6 +737,9 @@ class BaseCommand:
         off the parsing and create a new :class:`Context`.  It does not
         invoke the actual command callback though.
 
+        To quickly customize the context class used without overriding
+        this method, set the :attr:`context_class` attribute.
+
         :param info_name: the info name for this invokation.  Generally this
                           is the most descriptive name for the script or
                           command.  For the toplevel script it's usually
@@ -727,11 +749,16 @@ class BaseCommand:
         :param parent: the parent context if available.
         :param extra: extra keyword arguments forwarded to the context
                       constructor.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`context_class` attribute.
         """
         for key, value in self.context_settings.items():
             if key not in extra:
                 extra[key] = value
-        ctx = Context(self, info_name=info_name, parent=parent, **extra)
+
+        ctx = self.context_class(self, info_name=info_name, parent=parent, **extra)
+
         with ctx.scope(cleanup=False):
             self.parse_args(ctx, args)
         return ctx
@@ -909,7 +936,7 @@ class Command(BaseCommand):
         hidden=False,
         deprecated=False,
     ):
-        BaseCommand.__init__(self, name, context_settings)
+        super().__init__(name, context_settings)
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
         self.callback = callback
@@ -1138,7 +1165,7 @@ class MultiCommand(Command):
         result_callback=None,
         **attrs,
     ):
-        Command.__init__(self, name, **attrs)
+        super().__init__(name, **attrs)
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
         self.no_args_is_help = no_args_is_help
@@ -1163,12 +1190,12 @@ class MultiCommand(Command):
                     )
 
     def collect_usage_pieces(self, ctx):
-        rv = Command.collect_usage_pieces(self, ctx)
+        rv = super().collect_usage_pieces(ctx)
         rv.append(self.subcommand_metavar)
         return rv
 
     def format_options(self, ctx, formatter):
-        Command.format_options(self, ctx, formatter)
+        super().format_options(ctx, formatter)
         self.format_commands(ctx, formatter)
 
     def resultcallback(self, replace=False):
@@ -1244,7 +1271,8 @@ class MultiCommand(Command):
             echo(ctx.get_help(), color=ctx.color)
             ctx.exit()
 
-        rest = Command.parse_args(self, ctx, args)
+        rest = super().parse_args(ctx, args)
+
         if self.chain:
             ctx.protected_args = rest
             ctx.args = []
@@ -1265,7 +1293,7 @@ class MultiCommand(Command):
                 # invoked with None for regular groups, or an empty list
                 # for chained groups.
                 with ctx:
-                    Command.invoke(self, ctx)
+                    super().invoke(ctx)
                     return _process_result([] if self.chain else None)
             ctx.fail("Missing command.")
 
@@ -1283,7 +1311,7 @@ class MultiCommand(Command):
             with ctx:
                 cmd_name, cmd, args = self.resolve_command(ctx, args)
                 ctx.invoked_subcommand = cmd_name
-                Command.invoke(self, ctx)
+                super().invoke(ctx)
                 sub_ctx = cmd.make_context(cmd_name, args, parent=ctx)
                 with sub_ctx:
                     return _process_result(sub_ctx.command.invoke(sub_ctx))
@@ -1295,7 +1323,7 @@ class MultiCommand(Command):
         # but nothing else.
         with ctx:
             ctx.invoked_subcommand = "*" if args else None
-            Command.invoke(self, ctx)
+            super().invoke(ctx)
 
             # Otherwise we make every single context and invoke them in a
             # chain.  In that case the return value to the result processor
@@ -1365,8 +1393,27 @@ class Group(MultiCommand):
     :param commands: a dictionary of commands.
     """
 
+    #: If set, this is used by the group's :meth:`command` decorator
+    #: as the default :class:`Command` class. This is useful to make all
+    #: subcommands use a custom command class.
+    #:
+    #: .. versionadded:: 8.0
+    command_class = None
+
+    #: If set, this is used by the group's :meth:`group` decorator
+    #: as the default :class:`Group` class. This is useful to make all
+    #: subgroups use a custom group class.
+    #:
+    #: If set to the special value :class:`type` (literally
+    #: ``group_class = type``), this group's class will be used as the
+    #: default class. This makes a custom group class continue to make
+    #: custom groups.
+    #:
+    #: .. versionadded:: 8.0
+    group_class = None
+
     def __init__(self, name=None, commands=None, **attrs):
-        MultiCommand.__init__(self, name, **attrs)
+        super().__init__(name, **attrs)
         #: the registered subcommands by their exported names.
         self.commands = commands or {}
 
@@ -1382,11 +1429,20 @@ class Group(MultiCommand):
 
     def command(self, *args, **kwargs):
         """A shortcut decorator for declaring and attaching a command to
-        the group.  This takes the same arguments as :func:`command` but
-        immediately registers the created command with this instance by
-        calling into :meth:`add_command`.
+        the group. This takes the same arguments as :func:`command` and
+        immediately registers the created command with this group by
+        calling :meth:`add_command`.
+
+        To customize the command class used, set the
+        :attr:`command_class` attribute.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`command_class` attribute.
         """
         from .decorators import command
+
+        if self.command_class is not None and "cls" not in kwargs:
+            kwargs["cls"] = self.command_class
 
         def decorator(f):
             cmd = command(*args, **kwargs)(f)
@@ -1397,11 +1453,23 @@ class Group(MultiCommand):
 
     def group(self, *args, **kwargs):
         """A shortcut decorator for declaring and attaching a group to
-        the group.  This takes the same arguments as :func:`group` but
-        immediately registers the created command with this instance by
-        calling into :meth:`add_command`.
+        the group. This takes the same arguments as :func:`group` and
+        immediately registers the created group with this group by
+        calling :meth:`add_command`.
+
+        To customize the group class used, set the :attr:`group_class`
+        attribute.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`group_class` attribute.
         """
         from .decorators import group
+
+        if self.group_class is not None and "cls" not in kwargs:
+            if self.group_class is type:
+                kwargs["cls"] = type(self)
+            else:
+                kwargs["cls"] = self.group_class
 
         def decorator(f):
             cmd = group(*args, **kwargs)(f)
@@ -1425,7 +1493,7 @@ class CommandCollection(MultiCommand):
     """
 
     def __init__(self, name=None, sources=None, **attrs):
-        MultiCommand.__init__(self, name, **attrs)
+        super().__init__(name, **attrs)
         #: The list of registered multi commands.
         self.sources = sources or []
 
@@ -1763,7 +1831,7 @@ class Option(Parameter):
         **attrs,
     ):
         default_is_missing = attrs.get("default", _missing) is _missing
-        Parameter.__init__(self, param_decls, type=type, **attrs)
+        super().__init__(param_decls, type=type, **attrs)
 
         if prompt is True:
             prompt_text = self.name.replace("_", " ").capitalize()
@@ -1980,7 +2048,8 @@ class Option(Parameter):
                 if param.name == self.name and param.default:
                     return param.flag_value
             return None
-        return Parameter.get_default(self, ctx)
+
+        return super().get_default(ctx)
 
     def prompt_for_value(self, ctx):
         """This is an alternative flow that can be activated in the full
@@ -2007,7 +2076,8 @@ class Option(Parameter):
         )
 
     def resolve_envvar_value(self, ctx):
-        rv = Parameter.resolve_envvar_value(self, ctx)
+        rv = super().resolve_envvar_value(ctx)
+
         if rv is not None:
             return rv
         if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
@@ -2028,7 +2098,8 @@ class Option(Parameter):
     def full_process_value(self, ctx, value):
         if value is None and self.prompt is not None and not ctx.resilient_parsing:
             return self.prompt_for_value(ctx)
-        return Parameter.full_process_value(self, ctx, value)
+
+        return super().full_process_value(ctx, value)
 
 
 class Argument(Parameter):
@@ -2047,7 +2118,9 @@ class Argument(Parameter):
                 required = False
             else:
                 required = attrs.get("nargs", 1) > 0
-        Parameter.__init__(self, param_decls, required=required, **attrs)
+
+        super().__init__(param_decls, required=required, **attrs)
+
         if self.default is not None and self.nargs < 0:
             raise TypeError(
                 "nargs=-1 in combination with a default value is not supported."
