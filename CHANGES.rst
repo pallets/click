@@ -64,6 +64,9 @@ Unreleased
     normally be used in a ``with`` statement, allowing them to be used
     across subcommands and callbacks, then cleaned up when the context
     ends. :pr:`1191`
+-   The result object returned by the test runner's ``invoke()`` method
+    has a ``return_value`` attribute with the value returned by the
+    invoked command. :pr:`1312`
 
 
 Version 7.1.2

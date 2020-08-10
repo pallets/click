@@ -295,3 +295,16 @@ def test_setting_prog_name_in_extra():
     result = runner.invoke(cli, prog_name="foobar")
     assert not result.exception
     assert result.output == "ok\n"
+
+
+def test_command_standalone_mode_returns_value():
+    @click.command()
+    def cli():
+        click.echo("ok")
+        return "Hello, World!"
+
+    runner = CliRunner()
+    result = runner.invoke(cli, standalone_mode=False)
+    assert result.output == "ok\n"
+    assert result.return_value == "Hello, World!"
+    assert result.exit_code == 0
