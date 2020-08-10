@@ -352,6 +352,27 @@ def test_choice_option(runner):
     assert "--method [foo|bar|baz]" in result.output
 
 
+def test_choice_argument(runner):
+    @click.command()
+    @click.argument("method", type=click.Choice(["foo", "bar", "baz"]))
+    def cli(method):
+        click.echo(method)
+
+    result = runner.invoke(cli, ["foo"])
+    assert not result.exception
+    assert result.output == "foo\n"
+
+    result = runner.invoke(cli, ["meh"])
+    assert result.exit_code == 2
+    assert (
+        "Invalid value for '{foo|bar|baz}': invalid choice: meh. "
+        "(choose from foo, bar, baz)" in result.output
+    )
+
+    result = runner.invoke(cli, ["--help"])
+    assert "{foo|bar|baz}" in result.output
+
+
 def test_datetime_option_default(runner):
     @click.command()
     @click.option("--start_date", type=click.DateTime())
