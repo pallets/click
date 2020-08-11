@@ -23,6 +23,7 @@ from .parser import split_opt
 from .termui import confirm
 from .termui import prompt
 from .termui import style
+from .types import _NumberRangeBase
 from .types import BOOL
 from .types import convert_type
 from .types import IntRange
@@ -2060,9 +2061,11 @@ class Option(Parameter):
                 default_string = self.default
             extra.append(f"default: {default_string}")
 
-        if isinstance(self.type, IntRange):
-            if self.type.min is not None and self.type.max is not None:
-                extra.append(f"{self.type.min}-{self.type.max} inclusive")
+        if isinstance(self.type, _NumberRangeBase):
+            range_str = self.type._describe_range()
+
+            if range_str:
+                extra.append(range_str)
 
         if self.required:
             extra.append("required")
