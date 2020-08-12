@@ -775,39 +775,34 @@ boolean flag you need to separate it with ``;`` instead of ``/``:
 Range Options
 -------------
 
-A special mention should go to the :class:`IntRange` type, which works very
-similarly to the :data:`INT` type, but restricts the value to fall into a
-specific range (inclusive on both edges).  It has two modes:
+The :class:`IntRange` type extends the :data:`INT` type to ensure the
+value is contained in the given range. The :class:`FloatRange` type does
+the same for :data:`FLOAT`.
 
--   the default mode (non-clamping mode) where a value that falls outside
-    of the range will cause an error.
--   an optional clamping mode where a value that falls outside of the
-    range will be clamped.  This means that a range of ``0-5`` would
-    return ``5`` for the value ``10`` or ``0`` for the value ``-1`` (for
-    example).
+If ``min`` or ``max`` is omitted, that side is *unbounded*. Any value in
+that direction is accepted. By default, both bounds are *closed*, which
+means the boundary value is included in the accepted range. ``min_open``
+and ``max_open`` can be used to exclude that boundary from the range.
 
-Example:
+If ``clamp`` mode is enabled, a value that is outside the range is set
+to the boundary instead of failing. For example, the range ``0, 5``
+would return ``5`` for the value ``10``, or ``0`` for the value ``-1``.
+When using :class:`FloatRange`, ``clamp`` can only be enabled if both
+bounds are *closed* (the default).
 
 .. click:example::
 
     @click.command()
-    @click.option('--count', type=click.IntRange(0, 20, clamp=True))
-    @click.option('--digit', type=click.IntRange(0, 10))
+    @click.option("--count", type=click.IntRange(0, 20, clamp=True))
+    @click.option("--digit", type=click.IntRange(0, 9))
     def repeat(count, digit):
         click.echo(str(digit) * count)
 
-    if __name__ == '__main__':
-        repeat()
-
-And from the command line:
-
 .. click:run::
 
-    invoke(repeat, args=['--count=1000', '--digit=5'])
-    invoke(repeat, args=['--count=1000', '--digit=12'])
+    invoke(repeat, args=['--count=100', '--digit=5'])
+    invoke(repeat, args=['--count=6', '--digit=12'])
 
-If you pass ``None`` for any of the edges, it means that the range is open
-at that side.
 
 Callbacks for Validation
 ------------------------

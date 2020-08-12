@@ -255,138 +255,150 @@ class DateTime(ParamType):
         return "DateTime"
 
 
-class IntParamType(ParamType):
-    name = "integer"
+class _NumberParamTypeBase(ParamType):
+    _number_class = None
 
     def convert(self, value, param, ctx):
         try:
-            return int(value)
+            return self._number_class(value)
         except ValueError:
-            self.fail(f"{value} is not a valid integer", param, ctx)
+            self.fail(f"{value} is not a valid {self.name}", param, ctx)
+
+
+class _NumberRangeBase(_NumberParamTypeBase):
+    def __init__(self, min=None, max=None, min_open=False, max_open=False, clamp=False):
+        self.min = min
+        self.max = max
+        self.min_open = min_open
+        self.max_open = max_open
+        self.clamp = clamp
+
+    def convert(self, value, param, ctx):
+        import operator
+
+        rv = super().convert(value, param, ctx)
+        lt_min = self.min is not None and (
+            operator.le if self.min_open else operator.lt
+        )(rv, self.min)
+        gt_max = self.max is not None and (
+            operator.ge if self.max_open else operator.gt
+        )(rv, self.max)
+
+        if self.clamp:
+            if lt_min:
+                return self._clamp(self.min, 1, self.min_open)
+
+            if gt_max:
+                return self._clamp(self.max, -1, self.max_open)
+
+        if lt_min or gt_max:
+            self.fail(f"{rv} is not in the range {self._describe_range()}.", param, ctx)
+
+        return rv
+
+    def _clamp(self, bound, dir, open):
+        """Find the valid value to clamp to bound in the given
+        direction.
+
+        :param bound: The boundary value.
+        :param dir: 1 or -1 indicating the direction to move.
+        :param open: If true, the range does not include the bound.
+        """
+        raise NotImplementedError
+
+    def _describe_range(self):
+        """Describe the range for use in help text."""
+        if self.min is None:
+            op = "<" if self.max_open else "<="
+            return f"x{op}{self.max}"
+
+        if self.max is None:
+            op = ">" if self.min_open else ">="
+            return f"x{op}{self.min}"
+
+        lop = "<" if self.min_open else "<="
+        rop = "<" if self.max_open else "<="
+        return f"{self.min}{lop}x{rop}{self.max}"
+
+    def __repr__(self):
+        clamp = " clamped" if self.clamp else ""
+        return f"<{type(self).__name__} {self._describe_range()}{clamp}>"
+
+
+class IntParamType(_NumberParamTypeBase):
+    name = "integer"
+    _number_class = int
 
     def __repr__(self):
         return "INT"
 
 
-class IntRange(IntParamType):
-    """A parameter that works similar to :data:`click.INT` but restricts
-    the value to fit into a range.  The default behavior is to fail if the
-    value falls outside the range, but it can also be silently clamped
-    between the two edges.
+class IntRange(_NumberRangeBase, IntParamType):
+    """Restrict an :data:`click.INT` value to a range of accepted
+    values. See :ref:`ranges`.
 
-    See :ref:`ranges` for an example.
+    If ``min`` or ``max`` are not passed, any value is accepted in that
+    direction. If ``min_open`` or ``max_open`` are enabled, the
+    corresponding boundary is not included in the range.
+
+    If ``clamp`` is enabled, a value outside the range is clamped to the
+    boundary instead of failing.
+
+    .. versionchanged:: 8.0
+        Added the ``min_open`` and ``max_open`` parameters.
     """
 
     name = "integer range"
 
-    def __init__(self, min=None, max=None, clamp=False):
-        self.min = min
-        self.max = max
-        self.clamp = clamp
+    def _clamp(self, bound, dir, open):
+        if not open:
+            return bound
 
-    def convert(self, value, param, ctx):
-        rv = super().convert(value, param, ctx)
-
-        if self.clamp:
-            if self.min is not None and rv < self.min:
-                return self.min
-            if self.max is not None and rv > self.max:
-                return self.max
-        if (
-            self.min is not None
-            and rv < self.min
-            or self.max is not None
-            and rv > self.max
-        ):
-            if self.min is None:
-                self.fail(
-                    f"{rv} is bigger than the maximum valid value {self.max}.",
-                    param,
-                    ctx,
-                )
-            elif self.max is None:
-                self.fail(
-                    f"{rv} is smaller than the minimum valid value {self.min}.",
-                    param,
-                    ctx,
-                )
-            else:
-                self.fail(
-                    f"{rv} is not in the valid range of {self.min} to {self.max}.",
-                    param,
-                    ctx,
-                )
-        return rv
-
-    def __repr__(self):
-        return f"IntRange({self.min}, {self.max})"
+        return bound + dir
 
 
-class FloatParamType(ParamType):
+class FloatParamType(_NumberParamTypeBase):
     name = "float"
-
-    def convert(self, value, param, ctx):
-        try:
-            return float(value)
-        except ValueError:
-            self.fail(f"{value} is not a valid floating point value", param, ctx)
+    _number_class = float
 
     def __repr__(self):
         return "FLOAT"
 
 
-class FloatRange(FloatParamType):
-    """A parameter that works similar to :data:`click.FLOAT` but restricts
-    the value to fit into a range.  The default behavior is to fail if the
-    value falls outside the range, but it can also be silently clamped
-    between the two edges.
+class FloatRange(_NumberRangeBase, FloatParamType):
+    """Restrict a :data:`click.FLOAT` value to a range of accepted
+    values. See :ref:`ranges`.
 
-    See :ref:`ranges` for an example.
+    If ``min`` or ``max`` are not passed, any value is accepted in that
+    direction. If ``min_open`` or ``max_open`` are enabled, the
+    corresponding boundary is not included in the range.
+
+    If ``clamp`` is enabled, a value outside the range is clamped to the
+    boundary instead of failing. This is not supported if either
+    boundary is marked ``open``.
+
+    .. versionchanged:: 8.0
+        Added the ``min_open`` and ``max_open`` parameters.
     """
 
     name = "float range"
 
-    def __init__(self, min=None, max=None, clamp=False):
-        self.min = min
-        self.max = max
-        self.clamp = clamp
+    def __init__(self, min=None, max=None, min_open=False, max_open=False, clamp=False):
+        super().__init__(
+            min=min, max=max, min_open=min_open, max_open=max_open, clamp=clamp
+        )
 
-    def convert(self, value, param, ctx):
-        rv = super().convert(value, param, ctx)
+        if (min_open or max_open) and clamp:
+            raise TypeError("Clamping is not supported for open bounds.")
 
-        if self.clamp:
-            if self.min is not None and rv < self.min:
-                return self.min
-            if self.max is not None and rv > self.max:
-                return self.max
-        if (
-            self.min is not None
-            and rv < self.min
-            or self.max is not None
-            and rv > self.max
-        ):
-            if self.min is None:
-                self.fail(
-                    f"{rv} is bigger than the maximum valid value {self.max}.",
-                    param,
-                    ctx,
-                )
-            elif self.max is None:
-                self.fail(
-                    f"{rv} is smaller than the minimum valid value {self.min}.",
-                    param,
-                    ctx,
-                )
-            else:
-                self.fail(
-                    f"{rv} is not in the valid range of {self.min} to {self.max}.",
-                    param,
-                    ctx,
-                )
-        return rv
+    def _clamp(self, bound, dir, open):
+        if not open:
+            return bound
 
-    def __repr__(self):
-        return f"FloatRange({self.min}, {self.max})"
+        # Could use Python 3.9's math.nextafter here, but clamping an
+        # open float range doesn't seem to be particularly useful. It's
+        # left up to the user to write a callback to do it if needed.
+        raise RuntimeError("Clamping is not supported for open bounds.")
 
 
 class BoolParamType(ParamType):

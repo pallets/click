@@ -64,10 +64,7 @@ def test_counting(runner):
 
     result = runner.invoke(cli, ["-vvvv"])
     assert result.exception
-    assert (
-        "Invalid value for '-v': 4 is not in the valid range of 0 to 3."
-        in result.output
-    )
+    assert "Invalid value for '-v': 4 is not in the range 0<=x<=3." in result.output
 
     result = runner.invoke(cli, [])
     assert not result.exception
@@ -216,14 +213,20 @@ def test_dynamic_default_help_text(runner):
     assert "(current user)" in result.output
 
 
-def test_intrange_default_help_text(runner):
-    @click.command()
-    @click.option("--count", type=click.IntRange(1, 32), show_default=True, default=1)
-    def cmd(arg):
-        click.echo(arg)
-
-    result = runner.invoke(cmd, ["--help"])
-    assert "1-32 inclusive" in result.output
+@pytest.mark.parametrize(
+    ("type", "expect"),
+    [
+        (click.IntRange(1, 32), "1<=x<=32"),
+        (click.IntRange(1, 32, min_open=True, max_open=True), "1<x<32"),
+        (click.IntRange(1), "x>=1"),
+        (click.IntRange(max=32), "x<=32"),
+    ],
+)
+def test_intrange_default_help_text(runner, type, expect):
+    option = click.Option(["--count"], type=type, show_default=True, default=1)
+    context = click.Context(click.Command("test"))
+    result = option.get_help_record(context)[1]
+    assert expect in result
 
 
 def test_toupper_envvar_prefix(runner):
