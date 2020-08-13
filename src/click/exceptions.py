@@ -255,6 +255,14 @@ class BadArgumentUsage(UsageError):
     """
 
 
+class NoArgsIsHelpError(UsageError):
+    def __init__(self, ctx):
+        super().__init__(ctx.get_help(), ctx=ctx)
+
+    def show(self, file=None):
+        echo(self.format_message(), file=file, err=True, color=self.ctx.color)
+
+
 class FileError(ClickException):
     """Raised if a file cannot be opened."""
 

@@ -56,6 +56,9 @@ Unreleased
     :issue:`2746` :pr:`2788`
 -   Add ``Choice.get_invalid_choice_message`` method for customizing the
     invalid choice message. :issue:`2621` :pr:`2622`
+-   If help is shown because ``no_args_is_help`` is enabled (default on
+    for groups, off for commands), the exit code is 2 instead of 0.
+    :issue:`1489`
 
 
 Version 8.1.8

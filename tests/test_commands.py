@@ -95,13 +95,9 @@ def test_auto_shorthelp(runner):
     )
 
 
-def test_no_args_is_help(runner):
-    @click.command(no_args_is_help=True)
-    def cli():
-        pass
-
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 0
+def test_command_no_args_is_help(runner):
+    result = runner.invoke(click.Command("test", no_args_is_help=True))
+    assert result.exit_code == 2
     assert "Show this message and exit." in result.output
 
 
@@ -140,9 +136,21 @@ def test_group_with_args(runner, args, exit_code, expect):
     def move():
         click.echo("move")
 
-    result = runner.invoke(cli, args)
-    assert result.exit_code == exit_code
-    assert expect in result.output
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 2
+    assert "Show this message and exit." in result.output
+
+    result = runner.invoke(cli, ["obj1"])
+    assert result.exit_code == 2
+    assert "Error: Missing command." in result.output
+
+    result = runner.invoke(cli, ["obj1", "--help"])
+    assert result.exit_code == 0
+    assert "Show this message and exit." in result.output
+
+    result = runner.invoke(cli, ["obj1", "move"])
+    assert result.exit_code == 0
+    assert result.output == "obj=obj1\nmove\n"
 
 
 def test_custom_parser(runner):
