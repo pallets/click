@@ -173,21 +173,6 @@ class Context:
     A context can be used as context manager in which case it will call
     :meth:`close` on teardown.
 
-    .. versionadded:: 2.0
-       Added the `resilient_parsing`, `help_option_names`,
-       `token_normalize_func` parameters.
-
-    .. versionadded:: 3.0
-       Added the `allow_extra_args` and `allow_interspersed_args`
-       parameters.
-
-    .. versionadded:: 4.0
-       Added the `color`, `ignore_unknown_options`, and
-       `max_content_width` parameters.
-
-    .. versionadded:: 7.1
-       Added the `show_default` parameter.
-
     :param command: the command class for this context.
     :param parent: the parent context.
     :param info_name: the info name for this invocation.  Generally this
@@ -242,9 +227,28 @@ class Context:
                   codes are used in texts that Click prints which is by
                   default not the case.  This for instance would affect
                   help output.
-    :param show_default: if True, shows defaults for all options.
-                    Even if an option is later created with show_default=False,
-                    this command-level setting overrides it.
+    :param show_default: Show defaults for all options. If not set,
+        defaults to the value from a parent context. Overrides an
+        option's ``show_default`` argument.
+
+    .. versionchanged:: 8.0
+        The ``show_default`` parameter defaults to the value from the
+        parent context.
+
+    .. versionchanged:: 7.1
+       Added the ``show_default`` parameter.
+
+    .. versionchanged:: 4.0
+        Added the ``color``, ``ignore_unknown_options``, and
+        ``max_content_width`` parameters.
+
+    .. versionchanged:: 3.0
+        Added the ``allow_extra_args`` and ``allow_interspersed_args``
+        parameters.
+
+    .. versionchanged:: 2.0
+        Added the ``resilient_parsing``, ``help_option_names``, and
+        ``token_normalize_func`` parameters.
     """
 
     #: The formatter class to create with :meth:`make_formatter`.
@@ -398,6 +402,10 @@ class Context:
         #: Controls if styling output is wanted or not.
         self.color = color
 
+        if show_default is None and parent is not None:
+            show_default = parent.show_default
+
+        #: Show option default values when formatting help text.
         self.show_default = show_default
 
         self._close_callbacks = []

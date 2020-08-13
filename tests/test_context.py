@@ -267,6 +267,20 @@ def test_make_pass_decorator_args(runner):
     assert result.output == "foocmd\n"
 
 
+def test_propagate_show_default_setting(runner):
+    """A context's ``show_default`` setting defaults to the value from
+    the parent context.
+    """
+    group = click.Group(
+        commands={
+            "sub": click.Command("sub", params=[click.Option(["-a"], default="a")]),
+        },
+        context_settings={"show_default": True},
+    )
+    result = runner.invoke(group, ["sub", "--help"])
+    assert "[default: a]" in result.output
+
+
 def test_exit_not_standalone():
     @click.command()
     @click.pass_context
