@@ -13,6 +13,7 @@ from .exceptions import BadParameter
 from .exceptions import ClickException
 from .exceptions import Exit
 from .exceptions import MissingParameter
+from .exceptions import NoArgsIsHelpError
 from .exceptions import UsageError
 from .formatting import HelpFormatter
 from .formatting import join_options
@@ -1135,8 +1136,7 @@ class Command(BaseCommand):
 
     def parse_args(self, ctx, args):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
-            echo(ctx.get_help(), color=ctx.color)
-            ctx.exit()
+            raise NoArgsIsHelpError(ctx)
 
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
@@ -1303,8 +1303,7 @@ class MultiCommand(Command):
 
     def parse_args(self, ctx, args):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
-            echo(ctx.get_help(), color=ctx.color)
-            ctx.exit()
+            raise NoArgsIsHelpError(ctx)
 
         rest = super().parse_args(ctx, args)
 

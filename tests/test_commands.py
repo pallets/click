@@ -71,13 +71,9 @@ def test_auto_shorthelp(runner):
     )
 
 
-def test_no_args_is_help(runner):
-    @click.command(no_args_is_help=True)
-    def cli():
-        pass
-
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 0
+def test_command_no_args_is_help(runner):
+    result = runner.invoke(click.Command("test", no_args_is_help=True))
+    assert result.exit_code == 2
     assert "Show this message and exit." in result.output
 
 
@@ -107,8 +103,8 @@ def test_group_with_args(runner):
     def move():
         click.echo("move")
 
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 0
+    result = runner.invoke(cli)
+    assert result.exit_code == 2
     assert "Show this message and exit." in result.output
 
     result = runner.invoke(cli, ["obj1"])

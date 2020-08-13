@@ -75,6 +75,9 @@ Unreleased
     :issue:`1272`
 -   If only a name is passed to ``option()``, Click suggests renaming it
     to ``--name``. :pr:`1355`
+-   If help is shown because ``no_args_is_help`` is enabled (default on
+    for groups, off for commands), the exit code is 2 instead of 0.
+    :issue:`1489`
 
 
 Version 7.1.2
