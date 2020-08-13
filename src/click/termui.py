@@ -441,6 +441,17 @@ def clear():
         sys.stdout.write("\033[2J\033[1;1H")
 
 
+def _interpret_color(color, offset=0):
+    if isinstance(color, int):
+        return f"{38 + offset};5;{color:d}"
+
+    if isinstance(color, (tuple, list)):
+        r, g, b = color
+        return f"{38 + offset};2;{r:d};{g:d};{b:d}"
+
+    return str(_ansi_colors[color] + offset)
+
+
 def style(
     text,
     fg=None,
@@ -462,6 +473,7 @@ def style(
         click.echo(click.style('Hello World!', fg='green'))
         click.echo(click.style('ATTENTION!', blink=True))
         click.echo(click.style('Some things', reverse=True, fg='cyan'))
+        click.echo(click.style('More colors', fg=(255, 12, 128), bg=117))
 
     Supported color names:
 
@@ -483,6 +495,16 @@ def style(
     * ``bright_white``
     * ``reset`` (reset the color code only)
 
+    If the terminal supports it, color may also be specified as:
+
+    -   An integer in the interval [0, 255]. The terminal must support
+        8-bit/256-color mode.
+    -   An RGB tuple of three integers in [0, 255]. The terminal must
+        support 24-bit/true-color mode.
+
+    See https://en.wikipedia.org/wiki/ANSI_color and
+    https://gist.github.com/XVilka/8346728 for more information.
+
     :param text: the string to style with ansi codes.
     :param fg: if provided this will become the foreground color.
     :param bg: if provided this will become the background color.
@@ -501,6 +523,9 @@ def style(
     .. versionchanged:: 8.0
         A non-string ``message`` is converted to a string.
 
+    .. versionchanged:: 8.0
+       Added support for 256 and RGB color codes.
+
     .. versionchanged:: 7.0
         Added support for bright colors.
 
@@ -510,16 +535,19 @@ def style(
         text = str(text)
 
     bits = []
+
     if fg:
         try:
-            bits.append(f"\033[{_ansi_colors[fg]}m")
+            bits.append(f"\033[{_interpret_color(fg)}m")
         except KeyError:
             raise TypeError(f"Unknown color {fg!r}")
+
     if bg:
         try:
-            bits.append(f"\033[{_ansi_colors[bg] + 10}m")
+            bits.append(f"\033[{_interpret_color(bg, 10)}m")
         except KeyError:
             raise TypeError(f"Unknown color {bg!r}")
+
     if bold is not None:
         bits.append(f"\033[{1 if bold else 22}m")
     if dim is not None:
