@@ -23,12 +23,13 @@ def test_prefixes(runner):
 
 
 def test_invalid_option(runner):
-    with pytest.raises(TypeError, match="name was passed"):
+    with pytest.raises(TypeError, match="name was passed") as exc_info:
+        click.Option(["foo"])
 
-        @click.command()
-        @click.option("foo")
-        def cli(foo):
-            pass
+    message = str(exc_info.value)
+    assert "name was passed (foo)" in message
+    assert "declare an argument" in message
+    assert "'--foo'" in message
 
 
 def test_invalid_nargs(runner):

@@ -1977,8 +1977,8 @@ class Option(Parameter):
         if not opts and not secondary_opts:
             raise TypeError(
                 f"No options defined but a name was passed ({name})."
-                " Did you mean to declare an argument instead of an"
-                " option?"
+                " Did you mean to declare an argument instead? Did"
+                f" you mean to pass '--{name}'?"
             )
 
         return name, opts, secondary_opts
