@@ -13,17 +13,21 @@ from .utils import safecall
 
 
 class ParamType:
-    """Helper for converting values through types.  The following is
-    necessary for a valid type:
+    """Represents the type of a parameter. Validates and converts values
+    from the command line or Python into the correct type.
 
-    *   it needs a name
-    *   it needs to pass through None unchanged
-    *   it needs to convert from a string
-    *   it needs to convert its result type through unchanged
-        (eg: needs to be idempotent)
-    *   it needs to be able to deal with param and context being `None`.
-        This can be the case when the object is used with prompt
-        inputs.
+    To implement a custom type, subclass and implement at least the
+    following:
+
+    -   The :attr:`name` class attribute must be set.
+    -   Calling an instance of the type with ``None`` must return
+        ``None``. This is already implemented by default.
+    -   :meth:`convert` must convert string values to the correct type.
+    -   :meth:`convert` must accept values that are already the correct
+        type.
+    -   It must be able to convert a value if the ``ctx`` and ``param``
+        arguments are ``None``. This can occur when converting prompt
+        input.
     """
 
     is_composite = False
@@ -54,8 +58,24 @@ class ParamType:
         """
 
     def convert(self, value, param, ctx):
-        """Converts the value.  This is not invoked for values that are
-        `None` (the missing value).
+        """Convert the value to the correct type. This is not called if
+        the value is ``None`` (the missing value).
+
+        This must accept string values from the command line, as well as
+        values that are already the correct type. It may also convert
+        other compatible types.
+
+        The ``param`` and ``ctx`` arguments may be ``None`` in certain
+        situations, such as when converting prompt input.
+
+        If the value cannot be converted, call :meth:`fail` with a
+        descriptive message.
+
+        :param value: The value to convert.
+        :param param: The parameter that is using this type to convert
+            its value. May be ``None``.
+        :param ctx: The current context that arrived at this value. May
+            be ``None``.
         """
         return value
 
