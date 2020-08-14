@@ -226,6 +226,30 @@ other invocations::
     if __name__ == '__main__':
         cli()
 
+
+Registering Commands Later
+--------------------------
+
+Instead of using the ``@group.command()`` decorator, commands can be
+decorated with the plain ``@click.command()`` decorator and registered
+with a group later with ``group.add_command()``. This could be used to
+split commands into multiple Python modules.
+
+.. code-block:: python
+
+    @click.command()
+    def greet():
+        click.echo("Hello, World!")
+
+.. code-block:: python
+
+    @click.group()
+    def group():
+        pass
+
+    group.add_command(greet)
+
+
 Adding Parameters
 -----------------
 
