@@ -84,6 +84,8 @@ Unreleased
     the ``-`` value match non-testing behavior. :issue:`1064`
 -   When creating a ``Group``, allow passing a list of commands instead
     of a dict. :issue:`1339`
+-   When a long option name isn't valid, use ``difflib`` to make better
+    suggestions for possible corrections. :issue:`1446`
 
 
 Version 7.1.2

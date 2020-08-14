@@ -329,7 +329,9 @@ class OptionParser:
 
     def _match_long_opt(self, opt, explicit_value, state):
         if opt not in self._long_opt:
-            possibilities = [word for word in self._long_opt if word.startswith(opt)]
+            from difflib import get_close_matches
+
+            possibilities = get_close_matches(opt, self._long_opt)
             raise NoSuchOption(opt, possibilities=possibilities, ctx=self.ctx)
 
         option = self._long_opt[opt]
