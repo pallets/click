@@ -1430,10 +1430,19 @@ class MultiCommand(Command):
 
 
 class Group(MultiCommand):
-    """A group allows a command to have subcommands attached.  This is the
-    most common way to implement nesting in Click.
+    """A group allows a command to have subcommands attached. This is
+    the most common way to implement nesting in Click.
 
-    :param commands: a dictionary of commands.
+    :param name: The name of the group command.
+    :param commands: A dict mapping names to :class:`Command` objects.
+        Can also be a list of :class:`Command`, which will use
+        :attr:`Command.name` to create the dict.
+    :param attrs: Other command arguments described in
+        :class:`MultiCommand`, :class:`Command`, and
+        :class:`BaseCommand`.
+
+    .. versionchanged:: 8.0
+        The ``commmands`` argument can be a list of command objects.
     """
 
     #: If set, this is used by the group's :meth:`command` decorator
@@ -1457,8 +1466,14 @@ class Group(MultiCommand):
 
     def __init__(self, name=None, commands=None, **attrs):
         super().__init__(name, **attrs)
-        #: the registered subcommands by their exported names.
-        self.commands = commands or {}
+
+        if commands is None:
+            commands = {}
+        elif isinstance(commands, (list, tuple)):
+            commands = {c.name: c for c in commands}
+
+        #: The registered subcommands by their exported names.
+        self.commands = commands
 
     def add_command(self, cmd, name=None):
         """Registers another :class:`Command` with this group.  If the name

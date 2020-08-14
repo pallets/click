@@ -82,6 +82,8 @@ Unreleased
 -   When using ``CliRunner.invoke()``, the replaced ``stdin`` file has
     ``name`` and ``mode`` attributes. This lets ``File`` options with
     the ``-`` value match non-testing behavior. :issue:`1064`
+-   When creating a ``Group``, allow passing a list of commands instead
+    of a dict. :issue:`1339`
 
 
 Version 7.1.2
