@@ -658,7 +658,9 @@ def launch(url, wait=False, locate=False):
     .. versionadded:: 2.0
 
     :param url: URL or filename of the thing to launch.
-    :param wait: waits for the program to stop.
+    :param wait: Wait for the program to exit before returning. This
+        only works if the launched program blocks. In particular,
+        ``xdg-open`` on Linux does not block.
     :param locate: if this is set to `True` then instead of launching the
                    application associated with the URL it will attempt to
                    launch a file manager with the file located.  This
