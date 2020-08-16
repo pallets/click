@@ -86,6 +86,10 @@ Unreleased
     of a dict. :issue:`1339`
 -   When a long option name isn't valid, use ``difflib`` to make better
     suggestions for possible corrections. :issue:`1446`
+-   Core objects have a ``to_info_dict()`` method. This gathers
+    information about the object's structure that could be useful for a
+    tool generating user-facing documentation. To get the structure of
+    an entire CLI, use ``Context(cli).to_info_dict()``. :issue:`461`
 
 
 Version 7.1.2

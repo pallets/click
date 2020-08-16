@@ -85,7 +85,7 @@ HELLO_GROUP = (
         "short_help": None,
         "hidden": False,
         "deprecated": False,
-        "commands": [HELLO_COMMAND[1]],
+        "commands": {"hello": HELLO_COMMAND[1]},
         "chain": False,
     },
 )
@@ -209,7 +209,6 @@ HELLO_GROUP = (
     ],
 )
 def test_parameter(obj, expect):
-    """Test to_info_dict for types and parameters."""
     out = obj.to_info_dict()
     assert out == expect
 
@@ -232,9 +231,9 @@ def test_parameter(obj, expect):
                 "short_help": None,
                 "hidden": False,
                 "deprecated": False,
-                "commands": [
-                    HELLO_GROUP[1],
-                    {
+                "commands": {
+                    "cli": HELLO_GROUP[1],
+                    "test": {
                         "name": "test",
                         "params": [NAME_ARGUMENT[1], HELP_OPTION[1]],
                         "help": None,
@@ -243,15 +242,27 @@ def test_parameter(obj, expect):
                         "hidden": False,
                         "deprecated": False,
                     },
-                ],
+                },
                 "chain": False,
             },
             id="Nested Group",
         ),
     ],
 )
-def test_ctx_obj(obj, expect):
-    """Test to_info_dict for objects that have a make_context method."""
-    ctx = obj.make_context("test", [], resilient_parsing=True)
+def test_command(obj, expect):
+    ctx = click.Context(obj)
     out = obj.to_info_dict(ctx)
     assert out == expect
+
+
+def test_context():
+    ctx = click.Context(HELLO_COMMAND[0])
+    out = ctx.to_info_dict()
+    assert out == {
+        "command": HELLO_COMMAND[1],
+        "info_name": None,
+        "allow_extra_args": False,
+        "allow_interspersed_args": True,
+        "ignore_unknown_options": False,
+        "auto_envvar_prefix": None,
+    }
