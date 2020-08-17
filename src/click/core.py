@@ -413,6 +413,27 @@ class Context:
         self._source_by_paramname = {}
         self._exit_stack = ExitStack()
 
+    def to_info_dict(self):
+        """Gather information that could be useful for a tool generating
+        user-facing documentation. This traverses the entire CLI
+        structure.
+
+        .. code-block:: python
+
+            with Context(cli) as ctx:
+                info = ctx.to_info_dict()
+
+        .. versionadded:: 8.0
+        """
+        return {
+            "command": self.command.to_info_dict(self),
+            "info_name": self.info_name,
+            "allow_extra_args": self.allow_extra_args,
+            "allow_interspersed_args": self.allow_interspersed_args,
+            "ignore_unknown_options": self.ignore_unknown_options,
+            "auto_envvar_prefix": self.auto_envvar_prefix,
+        }
+
     def __enter__(self):
         self._depth += 1
         push_context(self)
@@ -632,6 +653,14 @@ class Context:
         """
         return self.command.get_help(self)
 
+    def _make_sub_context(self, command):
+        """Create a new context of the same type as this context, but
+        for a new command.
+
+        :meta private:
+        """
+        return type(self)(command, info_name=command.name, parent=self)
+
     def invoke(*args, **kwargs):  # noqa: B902
         """Invokes a command callback in exactly the way it expects.  There
         are two ways to invoke this method:
@@ -663,8 +692,7 @@ class Context:
                     "The given command does not have a callback that can be invoked."
                 )
 
-            # Create a new context of the same type as this context.
-            ctx = type(self)(other_cmd, info_name=other_cmd.name, parent=self)
+            ctx = self._make_sub_context(other_cmd)
 
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
@@ -765,6 +793,20 @@ class BaseCommand:
             context_settings = {}
         #: an optional dictionary with defaults passed to the context.
         self.context_settings = context_settings
+
+    def to_info_dict(self, ctx):
+        """Gather information that could be useful for a tool generating
+        user-facing documentation. This traverses the entire structure
+        below this command.
+
+        Use :meth:`click.Context.to_info_dict` to traverse the entire
+        CLI structure.
+
+        :param ctx: A :class:`Context` representing this command.
+
+        .. versionadded:: 8.0
+        """
+        return {"name": self.name}
 
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.name}>"
@@ -1000,6 +1042,18 @@ class Command(BaseCommand):
         self.hidden = hidden
         self.deprecated = deprecated
 
+    def to_info_dict(self, ctx):
+        info_dict = super().to_info_dict(ctx)
+        info_dict.update(
+            params=[param.to_info_dict() for param in self.get_params(ctx)],
+            help=self.help,
+            epilog=self.epilog,
+            short_help=self.short_help,
+            hidden=self.hidden,
+            deprecated=self.deprecated,
+        )
+        return info_dict
+
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.name}>"
 
@@ -1231,6 +1285,20 @@ class MultiCommand(Command):
                         "Multi commands in chain mode cannot have"
                         " optional arguments."
                     )
+
+    def to_info_dict(self, ctx):
+        info_dict = super().to_info_dict(ctx)
+        commands = {}
+
+        for name in self.list_commands(ctx):
+            command = self.get_command(ctx, name)
+            sub_ctx = ctx._make_sub_context(command)
+
+            with sub_ctx.scope(cleanup=False):
+                commands[name] = command.to_info_dict(sub_ctx)
+
+        info_dict.update(commands=commands, chain=self.chain)
+        return info_dict
 
     def collect_usage_pieces(self, ctx):
         rv = super().collect_usage_pieces(ctx)
@@ -1661,6 +1729,28 @@ class Parameter:
         self.envvar = envvar
         self.autocompletion = autocompletion
 
+    def to_info_dict(self):
+        """Gather information that could be useful for a tool generating
+        user-facing documentation.
+
+        Use :meth:`click.Context.to_info_dict` to traverse the entire
+        CLI structure.
+
+        .. versionadded:: 8.0
+        """
+        return {
+            "name": self.name,
+            "param_type_name": self.param_type_name,
+            "opts": self.opts,
+            "secondary_opts": self.secondary_opts,
+            "type": self.type.to_info_dict(),
+            "required": self.required,
+            "nargs": self.nargs,
+            "multiple": self.multiple,
+            "default": self.default,
+            "envvar": self.envvar,
+        }
+
     def __repr__(self):
         return f"<{self.__class__.__name__} {self.name}>"
 
@@ -1954,6 +2044,18 @@ class Option(Parameter):
                     raise TypeError(
                         "Options cannot be count and flags at the same time."
                     )
+
+    def to_info_dict(self):
+        info_dict = super().to_info_dict()
+        info_dict.update(
+            help=self.help,
+            prompt=self.prompt,
+            is_flag=self.is_flag,
+            flag_value=self.flag_value,
+            count=self.count,
+            hidden=self.hidden,
+        )
+        return info_dict
 
     def _parse_decls(self, decls, expose_value):
         opts = []
