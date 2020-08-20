@@ -90,6 +90,8 @@ Unreleased
     information about the object's structure that could be useful for a
     tool generating user-facing documentation. To get the structure of
     an entire CLI, use ``Context(cli).to_info_dict()``. :issue:`461`
+-   Add ``Date`` type for converting input in given date  formats.
+    :pr:``
 
 
 Version 7.1.2

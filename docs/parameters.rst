@@ -74,6 +74,9 @@ different behavior and some are supported out of the box:
 .. autoclass:: DateTime
    :noindex:
 
+.. autoclass:: Date
+   :noindex:
+
 Custom parameter types can be implemented by subclassing
 :class:`click.ParamType`.  For simple cases, passing a Python function that
 fails with a `ValueError` is also supported, though discouraged.

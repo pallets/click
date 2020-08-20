@@ -52,6 +52,7 @@ from .termui import style
 from .termui import unstyle
 from .types import BOOL
 from .types import Choice
+from .types import Date
 from .types import DateTime
 from .types import File
 from .types import FLOAT
