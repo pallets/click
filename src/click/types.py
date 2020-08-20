@@ -324,11 +324,12 @@ class Date(ParamType):
                     which they should be tried. Defaults to
                     ``'%Y-%m-%d'``.
     """
-    name = 'date'
+
+    name = "date"
 
     def __init__(self, formats=None):
         self.formats = formats or [
-            '%Y-%m-%d',
+            "%Y-%m-%d",
         ]
 
     def to_info_dict(self):
@@ -356,7 +357,7 @@ class Date(ParamType):
         )
 
     def __repr__(self):
-        return 'Date'
+        return "Date"
 
 
 class _NumberParamTypeBase(ParamType):

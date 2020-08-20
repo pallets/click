@@ -455,9 +455,7 @@ def test_date_option_default(runner):
     ) in result.output
 
     result = runner.invoke(cli, ["--help"])
-    assert (
-        "--start_date [%Y-%m-%d]" in result.output
-    )
+    assert "--start_date [%Y-%m-%d]" in result.output
 
 
 def test_date_option_custom(runner):
