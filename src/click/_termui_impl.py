@@ -16,7 +16,7 @@ from ._compat import isatty
 from ._compat import open_stream
 from ._compat import strip_ansi
 from ._compat import term_len
-from ._compat import WIN
+from ._compat import WIN, MSYS2
 from .exceptions import ClickException
 from .utils import echo
 
@@ -587,7 +587,7 @@ def _translate_ch_to_exc(ch):
         raise EOFError()
 
 
-if WIN:
+if WIN or MSYS2:
     import msvcrt
 
     @contextlib.contextmanager
