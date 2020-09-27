@@ -353,3 +353,64 @@ def test_aliases_in_help(runner):
         "Options:",
         "  --help  Show this message and exit.",
     ]
+
+
+def test_alias_multi_command(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @click.group(help="Manage lamas", alias="l")
+    def lama():
+        pass
+
+    @lama.command()
+    def list():
+        click.echo("Listing lamas")
+
+    cli.add_command(lama)
+
+    result = runner.invoke(cli, ["lama", "list"])
+
+    assert "Listing lamas" in result.output
+    assert not result.exception
+    assert result.exit_code == 0
+
+    result = runner.invoke(cli, ["l", "list"])
+
+    assert "Listing lamas" in result.output
+    assert not result.exception
+    assert result.exit_code == 0
+
+
+def test_alias_multi_command_help(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @click.group(help="Manage lamas", alias="l")
+    def lama():
+        pass
+
+    @lama.command()
+    def list():
+        click.echo("Listing lamas")
+
+    cli.add_command(lama)
+
+    result = runner.invoke(cli, ["l", "--help"])
+
+    assert result.output.splitlines() == [
+        "Usage: cli lama [OPTIONS] COMMAND [ARGS]...",
+        "",
+        "  Manage lamas",
+        "",
+        "Aliases:",
+        "  lama, l",
+        "",
+        "Options:",
+        "  --help  Show this message and exit.",
+        "",
+        "Commands:",
+        "  list",
+    ]
