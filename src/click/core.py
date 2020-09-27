@@ -1160,11 +1160,13 @@ class Command(BaseCommand):
 
         -   :meth:`format_usage`
         -   :meth:`format_help_text`
+        -   :meth:`format_aliases`
         -   :meth:`format_options`
         -   :meth:`format_epilog`
         """
         self.format_usage(ctx, formatter)
         self.format_help_text(ctx, formatter)
+        self.format_aliases(ctx, formatter)
         self.format_options(ctx, formatter)
         self.format_epilog(ctx, formatter)
 
@@ -1181,6 +1183,12 @@ class Command(BaseCommand):
             formatter.write_paragraph()
             with formatter.indentation():
                 formatter.write_text(DEPRECATED_HELP_NOTICE)
+
+    def format_aliases(self, ctx, formatter):
+        """Writes the aliases to the formatter it any."""
+        if self.alias:
+            with formatter.section("Aliases"):
+                formatter.write_text(", ".join([self.name, self.alias]))
 
     def format_options(self, ctx, formatter):
         """Writes all the options into the formatter if they exist."""

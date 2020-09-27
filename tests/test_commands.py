@@ -334,3 +334,22 @@ def test_alias(runner):
     assert "Running list command" in result.output
     assert not result.exception
     assert result.exit_code == 0
+
+
+def test_aliases_in_help(runner):
+    cli = click.Group()
+
+    @cli.command(alias="ls")
+    def list():
+        click.echo("Running list command")
+
+    result = runner.invoke(cli, ["list", "--help"])
+    assert result.output.splitlines() == [
+        "Usage: root list [OPTIONS]",
+        "",
+        "Aliases:",
+        "  list, ls",
+        "",
+        "Options:",
+        "  --help  Show this message and exit.",
+    ]
