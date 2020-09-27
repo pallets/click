@@ -982,8 +982,6 @@ class Command(BaseCommand):
        Added repr showing the command name
     .. versionchanged:: 7.1
        Added the `no_args_is_help` parameter.
-    .. versionchanged:: 7.2
-       Added the `alias` parameter.
 
     :param name: the name of the command to use unless a group overrides it.
     :param context_settings: an optional dictionary with defaults that are
