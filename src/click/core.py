@@ -1556,8 +1556,6 @@ class Group(MultiCommand):
 
         #: The registered subcommands by their exported names.
         self.commands = commands
-        # A dict of aliases for each command of the group
-        self.aliases = {cmd_name: c.alias for cmd_name, c in commands.items()}
 
     def add_command(self, cmd, name=None):
         """Registers another :class:`Command` with this group.  If the name
@@ -1568,8 +1566,6 @@ class Group(MultiCommand):
             raise TypeError("Command has no name.")
         _check_multicommand(self, name, cmd, register=True)
         self.commands[name] = cmd
-        if hasattr(cmd, "alias"):
-            self.aliases[name] = cmd.alias
 
     def command(self, *args, **kwargs):
         """A shortcut decorator for declaring and attaching a command to
@@ -1623,9 +1619,11 @@ class Group(MultiCommand):
         return decorator
 
     def get_command(self, ctx, cmd_name):
-        for cmd, alias in self.aliases.items():
-            if cmd_name == alias:
-                return self.commands.get(cmd)
+        for name in self.commands.keys():
+            cmd = self.commands.get(name)
+            if hasattr(cmd, "alias"):
+                if cmd.alias == cmd_name:
+                    return cmd
         return self.commands.get(cmd_name)
 
     def list_commands(self, ctx):
