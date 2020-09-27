@@ -1185,7 +1185,7 @@ class Command(BaseCommand):
                 formatter.write_text(DEPRECATED_HELP_NOTICE)
 
     def format_aliases(self, ctx, formatter):
-        """Writes the aliases to the formatter it any."""
+        """Writes the aliases to the formatter if any."""
         if self.alias:
             with formatter.section("Aliases"):
                 formatter.write_text(", ".join([self.name, self.alias]))
