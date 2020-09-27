@@ -982,6 +982,8 @@ class Command(BaseCommand):
        Added repr showing the command name
     .. versionchanged:: 7.1
        Added the `no_args_is_help` parameter.
+    .. versionchanged:: 7.2
+       Added the `alias` parameter.
 
     :param name: the name of the command to use unless a group overrides it.
     :param context_settings: an optional dictionary with defaults that are
@@ -1004,6 +1006,8 @@ class Command(BaseCommand):
 
     :param deprecated: issues a message indicating that
                              the command is deprecated.
+
+    :param alias: pre-defined alias that can be used to invoke the command.
     """
 
     def __init__(
@@ -1020,6 +1024,7 @@ class Command(BaseCommand):
         no_args_is_help=False,
         hidden=False,
         deprecated=False,
+        alias=None,
     ):
         super().__init__(name, context_settings)
         #: the callback to execute when the command fires.  This might be
@@ -1041,6 +1046,7 @@ class Command(BaseCommand):
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
+        self.alias = alias
 
     def to_info_dict(self, ctx):
         info_dict = super().to_info_dict(ctx)
@@ -1542,6 +1548,8 @@ class Group(MultiCommand):
 
         #: The registered subcommands by their exported names.
         self.commands = commands
+        # A dict of aliases for each command of the group
+        self.aliases = {cmd_name: c.alias for cmd_name, c in commands.items()}
 
     def add_command(self, cmd, name=None):
         """Registers another :class:`Command` with this group.  If the name
@@ -1552,6 +1560,8 @@ class Group(MultiCommand):
             raise TypeError("Command has no name.")
         _check_multicommand(self, name, cmd, register=True)
         self.commands[name] = cmd
+        if hasattr(cmd, "alias"):
+            self.aliases[name] = cmd.alias
 
     def command(self, *args, **kwargs):
         """A shortcut decorator for declaring and attaching a command to
@@ -1605,6 +1615,9 @@ class Group(MultiCommand):
         return decorator
 
     def get_command(self, ctx, cmd_name):
+        for cmd, alias in self.aliases.items():
+            if cmd_name == alias:
+                return self.commands.get(cmd)
         return self.commands.get(cmd_name)
 
     def list_commands(self, ctx):

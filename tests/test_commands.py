@@ -314,3 +314,23 @@ def test_deprecated_in_invocation(runner):
 
     result = runner.invoke(deprecated_cmd)
     assert "DeprecationWarning:" in result.output
+
+
+def test_alias(runner):
+    cli = click.Group()
+
+    @cli.command(alias="ls")
+    def list():
+        click.echo("Running list command")
+
+    result = runner.invoke(cli, ["list"])
+
+    assert "Running list command" in result.output
+    assert not result.exception
+    assert result.exit_code == 0
+
+    result = runner.invoke(cli, ["ls"])
+
+    assert "Running list command" in result.output
+    assert not result.exception
+    assert result.exit_code == 0
