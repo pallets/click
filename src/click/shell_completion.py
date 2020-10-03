@@ -8,10 +8,12 @@ from .parser import split_arg_string
 from .utils import echo
 
 
-def shell_complete(cli, prog_name, complete_var, instruction):
+def shell_complete(cli, ctx_args, prog_name, complete_var, instruction):
     """Perform shell completion for the given CLI program.
 
     :param cli: Command being called.
+    :param ctx_args: Extra arguments to pass to
+        ``cli.make_context``.
     :param prog_name: Name of the executable in the shell.
     :param complete_var: Name of the environment variable that holds
         the completion instruction.
@@ -25,7 +27,7 @@ def shell_complete(cli, prog_name, complete_var, instruction):
     if comp_cls is None:
         return 1
 
-    comp = comp_cls(cli, prog_name, complete_var)
+    comp = comp_cls(cli, ctx_args, prog_name, complete_var)
 
     if instruction == "source":
         echo(comp.source())
@@ -190,8 +192,9 @@ class ShellComplete:
     be provided by subclasses.
     """
 
-    def __init__(self, cli, prog_name, complete_var):
+    def __init__(self, cli, ctx_args, prog_name, complete_var):
         self.cli = cli
+        self.ctx_args = ctx_args
         self.prog_name = prog_name
         self.complete_var = complete_var
 
@@ -238,7 +241,7 @@ class ShellComplete:
         :param args: List of complete args before the incomplete value.
         :param incomplete: Value being completed. May be empty.
         """
-        ctx = _resolve_context(self.cli, self.prog_name, args)
+        ctx = _resolve_context(self.cli, self.ctx_args, self.prog_name, args)
 
         if ctx is None:
             return []
@@ -446,7 +449,7 @@ def _is_incomplete_option(args, param):
     return last_option is not None and last_option in param.opts
 
 
-def _resolve_context(cli, prog_name, args):
+def _resolve_context(cli, ctx_args, prog_name, args):
     """Produce the context hierarchy starting with the command and
     traversing the complete arguments. This only follows the commands,
     it doesn't trigger input prompts or callbacks.
@@ -455,7 +458,8 @@ def _resolve_context(cli, prog_name, args):
     :param prog_name: Name of the executable in the shell.
     :param args: List of complete args before the incomplete value.
     """
-    ctx = cli.make_context(prog_name, args.copy(), resilient_parsing=True)
+    ctx_args["resilient_parsing"] = True
+    ctx = cli.make_context(prog_name, args.copy(), **ctx_args)
     args = ctx.protected_args + ctx.args
 
     while args:

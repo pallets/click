@@ -12,7 +12,6 @@ Unreleased
     parameter. :issue:`1264`, :pr:`1329`
 -   Add an optional parameter to ``ProgressBar.update`` to set the
     ``current_item``. :issue:`1226`, :pr:`1332`
--   Include ``--help`` option in completion. :pr:`1504`
 -   ``version_option`` uses ``importlib.metadata`` (or the
     ``importlib_metadata`` backport) instead of ``pkg_resources``.
     :issue:`1582`
@@ -104,6 +103,10 @@ Unreleased
         all values, and must return a list of strings or a list of
         ``ShellComplete``. The old name and behavior is deprecated and
         will be removed in 8.1.
+
+-   Extra context settings (``obj=...``, etc.) are passed on to the
+    completion system. :issue:`942`
+-   Include ``--help`` option in completion. :pr:`1504`
 
 
 Version 7.1.2
