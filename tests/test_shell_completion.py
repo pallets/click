@@ -114,7 +114,7 @@ def test_option_flag():
 
 
 def test_option_custom():
-    def custom(ctx, args, incomplete):
+    def custom(ctx, param, args, incomplete):
         return [incomplete.upper()]
 
     cli = Command(
@@ -122,11 +122,24 @@ def test_option_custom():
         params=[
             Argument(["x"]),
             Argument(["y"]),
-            Argument(["z"], autocompletion=custom),
+            Argument(["z"], shell_complete=custom),
         ],
     )
     assert _get_words(cli, ["a", "b"], "") == [""]
     assert _get_words(cli, ["a", "b"], "c") == ["C"]
+
+
+def test_autocompletion_deprecated():
+    # old function takes three params, returns all values, can mix
+    # strings and tuples
+    def custom(ctx, args, incomplete):
+        return [("art", "x"), "bat", "cat"]
+
+    with pytest.deprecated_call():
+        cli = Command("cli", params=[Argument(["x"], autocompletion=custom)])
+
+    assert _get_words(cli, [], "") == ["art", "bat", "cat"]
+    assert _get_words(cli, [], "c") == ["cat"]
 
 
 def test_option_multiple():

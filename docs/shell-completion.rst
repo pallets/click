@@ -148,11 +148,12 @@ Overriding Value Completion
 ---------------------------
 
 Value completions for a parameter can be customized without a custom
-type by providing an ``autocompletion`` function. The function is used
+type by providing a ``shell_complete`` function. The function is used
 instead of any completion provided by the type. It is passed 3 keyword
 arguments:
 
 -   ``ctx`` - The current command context.
+-   ``param`` - The current parameter requesting completion.
 -   ``args`` - The list of complete args before the incomplete value.
 -   ``incomplete`` - The partial word that is being completed. May
     be an empty string if no characters have been entered yet.
@@ -165,11 +166,11 @@ start with the incomplete value.
 
 .. code-block:: python
 
-    def complete_env_vars(ctx, args, incomplete):
+    def complete_env_vars(ctx, param, args, incomplete):
         return [k for k in os.environ if k.startswith(incomplete)]
 
     @click.command()
-    @click.argument("name", autocompletion=complete_env_vars)
+    @click.argument("name", shell_complete=complete_env_vars)
     def cli(name):
         click.echo(f"Name: {name}")
         click.echo(f"Value: {os.environ[name]}")

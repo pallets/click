@@ -1781,9 +1781,17 @@ class Parameter:
                      order of processing.
     :param envvar: a string or list of strings that are environment variables
                    that should be checked.
-    :param autocompletion: A function that returns custom shell
+    :param shell_complete: A function that returns custom shell
         completions. Used instead of the param's type completion if
-        given.
+        given. Takes ``ctx, param, args, incomplete`` and returns a list
+        of :class:`~click.shell_completion.CompletionItem` or a list of
+        strings.
+
+    .. versionchanged:: 8.0
+        ``autocompletion`` is renamed to ``shell_complete`` and has new
+        semantics described in the docs above. The old name is
+        deprecated and will be removed in 8.1, until then it will be
+        wrapped to match the new requirements.
 
     .. versionchanged:: 7.1
         Empty environment variables are ignored rather than taking the
@@ -1795,6 +1803,7 @@ class Parameter:
         parameter. The old callback format will still work, but it will
         raise a warning to give you a chance to migrate the code easier.
     """
+
     param_type_name = "parameter"
 
     def __init__(
@@ -1809,6 +1818,7 @@ class Parameter:
         expose_value=True,
         is_eager=False,
         envvar=None,
+        shell_complete=None,
         autocompletion=None,
     ):
         self.name, self.opts, self.secondary_opts = self._parse_decls(
@@ -1834,7 +1844,35 @@ class Parameter:
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
-        self.autocompletion = autocompletion
+
+        if autocompletion is not None:
+            import warnings
+
+            warnings.warn(
+                "'autocompletion' is renamed to 'shell_complete'. The old name is"
+                " deprecated and will be removed in Click 8.1. See the docs about"
+                " 'Parameter' for information about new behavior.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+            def shell_complete(ctx, param, args, incomplete):
+                from click.shell_completion import CompletionItem
+
+                out = []
+
+                for c in autocompletion(ctx, args, incomplete):
+                    if isinstance(c, tuple):
+                        c = CompletionItem(c[0], help=c[1])
+                    elif isinstance(c, str):
+                        c = CompletionItem(c)
+
+                    if c.value.startswith(incomplete):
+                        out.append(c)
+
+                return out
+
+        self._custom_shell_complete = shell_complete
 
     def to_info_dict(self):
         """Gather information that could be useful for a tool generating
@@ -2025,8 +2063,8 @@ class Parameter:
         return " / ".join(repr(x) for x in hint_list)
 
     def shell_complete(self, ctx, args, incomplete):
-        """Return a list of completions for the incomplete value. If an
-        :attr:`autocompletion` function was given, it is used.
+        """Return a list of completions for the incomplete value. If a
+        ``shell_complete`` function was given during init, it is used.
         Otherwise, the :attr:`type`
         :meth:`~click.types.ParamType.shell_complete` function is used.
 
@@ -2036,22 +2074,17 @@ class Parameter:
 
         .. versionadded:: 8.0
         """
-        from click.shell_completion import CompletionItem
+        if self._custom_shell_complete is not None:
+            results = self._custom_shell_complete(ctx, self, args, incomplete)
 
-        if self.autocompletion is not None:
-            results = []
+            if results and isinstance(results[0], str):
+                from click.shell_completion import CompletionItem
 
-            for c in self.autocompletion(ctx=ctx, args=args, incomplete=incomplete):
-                if isinstance(c, CompletionItem):
-                    results.append(c)
-                elif isinstance(c, tuple):
-                    results.append(CompletionItem(c[0], help=c[1]))
-                else:
-                    results.append(CompletionItem(c))
+                results = [CompletionItem(c) for c in results]
 
             return results
 
-        return self.type.shell_complete(ctx, args, incomplete)
+        return self.type.shell_complete(ctx, self, args, incomplete)
 
 
 class Option(Parameter):
