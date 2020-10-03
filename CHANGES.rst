@@ -90,6 +90,20 @@ Unreleased
     information about the object's structure that could be useful for a
     tool generating user-facing documentation. To get the structure of
     an entire CLI, use ``Context(cli).to_info_dict()``. :issue:`461`
+-   Redesign the shell completion system. :issue:`1484`, :pr:`1622`
+
+    -   Support Bash >= 4.4, Zsh, and Fish, with the ability for
+        extensions to add support for other shells.
+    -   Allow commands, groups, parameters, and types to override their
+        completions suggestions.
+    -   Groups complete the names commands were registered with, which
+        can differ from the name they were created with.
+    -   The ``autocompletion`` parameter for options and arguments is
+        renamed to ``shell_complete``. The function must take
+        ``ctx, param, incomplete``, must do matching rather than return
+        all values, and must return a list of strings or a list of
+        ``ShellComplete``. The old name and behavior is deprecated and
+        will be removed in 8.1.
 
 
 Version 7.1.2

@@ -79,7 +79,7 @@ usage patterns.
    advanced
    testing
    utils
-   bashcomplete
+   shell-completion
    exceptions
    unicode-support
    wincmd

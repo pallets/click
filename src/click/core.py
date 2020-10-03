@@ -47,27 +47,30 @@ def _maybe_show_deprecated_notice(cmd):
         echo(style(DEPRECATED_INVOKE_NOTICE.format(name=cmd.name), fg="red"), err=True)
 
 
-def fast_exit(code):
-    """Exit without garbage collection, this speeds up exit by about 10ms for
-    things like bash completion.
+def _fast_exit(code):
+    """Low-level exit that skips Python's cleanup but speeds up exit by
+    about 10ms for things like shell completion.
+
+    :param code: Exit code.
     """
     sys.stdout.flush()
     sys.stderr.flush()
     os._exit(code)
 
 
-def _bashcomplete(cmd, prog_name, complete_var=None):
-    """Internal handler for the bash completion support."""
-    if complete_var is None:
-        complete_var = f"_{prog_name}_COMPLETE".replace("-", "_").upper()
-    complete_instr = os.environ.get(complete_var)
-    if not complete_instr:
-        return
+def _complete_visible_commands(ctx, incomplete):
+    """List all the subcommands of a group that start with the
+    incomplete value and aren't hidden.
 
-    from ._bashcomplete import bashcomplete
+    :param ctx: Invocation context for the group.
+    :param incomplete: Value being completed. May be empty.
+    """
+    for name in ctx.command.list_commands(ctx):
+        if name.startswith(incomplete):
+            command = ctx.command.get_command(ctx, name)
 
-    if bashcomplete(cmd, prog_name, complete_var, complete_instr):
-        fast_exit(1)
+            if not command.hidden:
+                yield name, command
 
 
 def _check_multicommand(base_command, cmd_name, cmd, register=False):
@@ -281,9 +284,13 @@ class Context:
         self.command = command
         #: the descriptive information name
         self.info_name = info_name
-        #: the parsed parameters except if the value is hidden in which
-        #: case it's not remembered.
+        #: Map of parameter names to their parsed values. Parameters
+        #: with ``expose_value=False`` are not stored.
         self.params = {}
+        # This tracks the actual param objects that were parsed, even if
+        # they didn't expose a value. Used by completion system to know
+        # what parameters to exclude.
+        self._seen_params = set()
         #: the leftover arguments.
         self.args = []
         #: protected arguments.  These are arguments that are prepended
@@ -861,6 +868,35 @@ class BaseCommand:
         """
         raise NotImplementedError("Base commands are not invokable by default")
 
+    def shell_complete(self, ctx, incomplete):
+        """Return a list of completions for the incomplete value. Looks
+        at the names of chained multi-commands.
+
+        Any command could be part of a chained multi-command, so sibling
+        commands are valid at any point during command completion. Other
+        command classes will return more completions.
+
+        :param ctx: Invocation context for this command.
+        :param incomplete: Value being completed. May be empty.
+
+        .. versionadded:: 8.0
+        """
+        from click.shell_completion import CompletionItem
+
+        results = []
+
+        while ctx.parent is not None:
+            ctx = ctx.parent
+
+            if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
+                results.extend(
+                    CompletionItem(name, help=command.get_short_help_str())
+                    for name, command in _complete_visible_commands(ctx, incomplete)
+                    if name not in ctx.protected_args
+                )
+
+        return results
+
     def main(
         self,
         args=None,
@@ -913,10 +949,8 @@ class BaseCommand:
         if prog_name is None:
             prog_name = _detect_program_name()
 
-        # Hook for the Bash completion.  This only activates if the Bash
-        # completion is actually enabled, otherwise this is quite a fast
-        # noop.
-        _bashcomplete(self, prog_name, complete_var)
+        # Process shell completion requests and exit early.
+        self._main_shell_completion(prog_name, complete_var)
 
         try:
             try:
@@ -965,6 +999,29 @@ class BaseCommand:
                 raise
             echo("Aborted!", file=sys.stderr)
             sys.exit(1)
+
+    def _main_shell_completion(self, prog_name, complete_var=None):
+        """Check if the shell is asking for tab completion, process
+        that, then exit early. Called from :meth:`main` before the
+        program is invoked.
+
+        :param prog_name: Name of the executable in the shell.
+        :param complete_var: Name of the environment variable that holds
+            the completion instruction. Defaults to
+            ``_{PROG_NAME}_COMPLETE``.
+        """
+        if complete_var is None:
+            complete_var = f"_{prog_name}_COMPLETE".replace("-", "_").upper()
+
+        instruction = os.environ.get(complete_var)
+
+        if not instruction:
+            return
+
+        from .shell_completion import shell_complete
+
+        rv = shell_complete(self, prog_name, complete_var, instruction)
+        _fast_exit(rv)
 
     def __call__(self, *args, **kwargs):
         """Alias for :meth:`main`."""
@@ -1224,6 +1281,37 @@ class Command(BaseCommand):
         if self.callback is not None:
             return ctx.invoke(self.callback, **ctx.params)
 
+    def shell_complete(self, ctx, incomplete):
+        """Return a list of completions for the incomplete value. Looks
+        at the names of options and chained multi-commands.
+
+        :param ctx: Invocation context for this command.
+        :param incomplete: Value being completed. May be empty.
+
+        .. versionadded:: 8.0
+        """
+        from click.shell_completion import CompletionItem
+
+        results = []
+
+        if incomplete and not incomplete[0].isalnum():
+            for param in self.get_params(ctx):
+                if (
+                    not isinstance(param, Option)
+                    or param.hidden
+                    or (not param.multiple and param in ctx._seen_params)
+                ):
+                    continue
+
+                results.extend(
+                    CompletionItem(name, help=param.help)
+                    for name in param.opts + param.secondary_opts
+                    if name.startswith(incomplete)
+                )
+
+        results.extend(super().shell_complete(ctx, incomplete))
+        return results
+
 
 class MultiCommand(Command):
     """A multi command is the basic implementation of a command that
@@ -1481,8 +1569,7 @@ class MultiCommand(Command):
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
             ctx.fail(f"No such command '{original_cmd_name}'.")
-
-        return cmd.name, cmd, args[1:]
+        return cmd.name if cmd else None, cmd, args[1:]
 
     def get_command(self, ctx, cmd_name):
         """Given a context and a command name, this returns a
@@ -1495,6 +1582,25 @@ class MultiCommand(Command):
         appear.
         """
         return []
+
+    def shell_complete(self, ctx, incomplete):
+        """Return a list of completions for the incomplete value. Looks
+        at the names of options, subcommands, and chained
+        multi-commands.
+
+        :param ctx: Invocation context for this command.
+        :param incomplete: Value being completed. May be empty.
+
+        .. versionadded:: 8.0
+        """
+        from click.shell_completion import CompletionItem
+
+        results = [
+            CompletionItem(name, help=command.get_short_help_str())
+            for name, command in _complete_visible_commands(ctx, incomplete)
+        ]
+        results.extend(super().shell_complete(ctx, incomplete))
+        return results
 
 
 class Group(MultiCommand):
@@ -1677,6 +1783,17 @@ class Parameter:
                      order of processing.
     :param envvar: a string or list of strings that are environment variables
                    that should be checked.
+    :param shell_complete: A function that returns custom shell
+        completions. Used instead of the param's type completion if
+        given. Takes ``ctx, param, incomplete`` and must return a list
+        of :class:`~click.shell_completion.CompletionItem` or a list of
+        strings.
+
+    .. versionchanged:: 8.0
+        ``autocompletion`` is renamed to ``shell_complete`` and has new
+        semantics described above. The old name is deprecated and will
+        be removed in 8.1, until then it will be wrapped to match the
+        new requirements.
 
     .. versionchanged:: 7.1
         Empty environment variables are ignored rather than taking the
@@ -1688,6 +1805,7 @@ class Parameter:
         parameter. The old callback format will still work, but it will
         raise a warning to give you a chance to migrate the code easier.
     """
+
     param_type_name = "parameter"
 
     def __init__(
@@ -1702,6 +1820,7 @@ class Parameter:
         expose_value=True,
         is_eager=False,
         envvar=None,
+        shell_complete=None,
         autocompletion=None,
     ):
         self.name, self.opts, self.secondary_opts = self._parse_decls(
@@ -1727,7 +1846,35 @@ class Parameter:
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
-        self.autocompletion = autocompletion
+
+        if autocompletion is not None:
+            import warnings
+
+            warnings.warn(
+                "'autocompletion' is renamed to 'shell_complete'. The old name is"
+                " deprecated and will be removed in Click 8.1. See the docs about"
+                " 'Parameter' for information about new behavior.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+            def shell_complete(ctx, param, incomplete):
+                from click.shell_completion import CompletionItem
+
+                out = []
+
+                for c in autocompletion(ctx, [], incomplete):
+                    if isinstance(c, tuple):
+                        c = CompletionItem(c[0], help=c[1])
+                    elif isinstance(c, str):
+                        c = CompletionItem(c)
+
+                    if c.value.startswith(incomplete):
+                        out.append(c)
+
+                return out
+
+        self._custom_shell_complete = shell_complete
 
     def to_info_dict(self):
         """Gather information that could be useful for a tool generating
@@ -1902,6 +2049,10 @@ class Parameter:
 
         if self.expose_value:
             ctx.params[self.name] = value
+
+        if value is not None:
+            ctx._seen_params.add(self)
+
         return value, args
 
     def get_help_record(self, ctx):
@@ -1916,6 +2067,29 @@ class Parameter:
         """
         hint_list = self.opts or [self.human_readable_name]
         return " / ".join(repr(x) for x in hint_list)
+
+    def shell_complete(self, ctx, incomplete):
+        """Return a list of completions for the incomplete value. If a
+        ``shell_complete`` function was given during init, it is used.
+        Otherwise, the :attr:`type`
+        :meth:`~click.types.ParamType.shell_complete` function is used.
+
+        :param ctx: Invocation context for this command.
+        :param incomplete: Value being completed. May be empty.
+
+        .. versionadded:: 8.0
+        """
+        if self._custom_shell_complete is not None:
+            results = self._custom_shell_complete(ctx, self, incomplete)
+
+            if results and isinstance(results[0], str):
+                from click.shell_completion import CompletionItem
+
+                results = [CompletionItem(c) for c in results]
+
+            return results
+
+        return self.type.shell_complete(ctx, self, incomplete)
 
 
 class Option(Parameter):

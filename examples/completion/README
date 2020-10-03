@@ -1,0 +1,28 @@
+$ completion
+============
+
+Demonstrates Click's shell completion support.
+
+.. code-block:: bash
+
+    pip install --editable .
+
+For Bash:
+
+.. code-block:: bash
+
+    eval "$(_COMPLETION_COMPLETE=source_bash completion)"
+
+For Zsh:
+
+.. code-block:: zsh
+
+    eval "$(_COMPLETION_COMPLETE=source_zsh completion)"
+
+For Fish:
+
+.. code-block:: fish
+
+    eval (env _COMPLETION_COMPLETE=source_fish completion)
+
+Now press tab (maybe twice) after typing something to see completions.
