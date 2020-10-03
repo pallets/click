@@ -121,9 +121,10 @@ Custom Type Completion
 When creating a custom :class:`~click.ParamType`, override its
 :meth:`~click.ParamType.shell_complete` method to provide shell
 completion for parameters with the type. The method must return a list
-of ``(type, value, help)`` tuples. ``type`` will usually be ``"plain"``
-unless you've implemented a custom shell script. Some shells know how to
-display a ``help`` string next to each suggestion.
+of :class:`~CompletionItem` objects. Besides the value, these objects
+hold metadata that shell support might use. The built-in implementations
+use ``type`` to indicate special handling for paths, and ``help`` for
+shells that support showing a help string next to a suggestion.
 
 In this example, the type will suggest environment variables that start
 with the incomplete value.
@@ -133,9 +134,8 @@ with the incomplete value.
     class EnvVarType(ParamType):
         def shell_complete(self, ctx, args, incomplete):
             return [
-                ("plain", k, None)
-                for k in os.environ
-                if k.startswith(incomplete)
+                CompletionItem(name)
+                for name in os.environ if name.startswith(incomplete)
             ]
 
     @click.command()
@@ -150,12 +150,15 @@ Overriding Value Completion
 Value completions for a parameter can be customized without a custom
 type by providing an ``autocompletion`` function. The function is used
 instead of any completion provided by the type. It is passed 3 keyword
-arguments, and returns a list of strings to be shown.
+arguments:
 
 -   ``ctx`` - The current command context.
 -   ``args`` - The list of complete args before the incomplete value.
 -   ``incomplete`` - The partial word that is being completed. May
     be an empty string if no characters have been entered yet.
+
+It must return a list of :class:`CompletionItem` objects, or as a
+shortcut it can return a list of strings.
 
 In this example, the command will suggest environment variables that
 start with the incomplete value.

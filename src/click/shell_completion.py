@@ -38,6 +38,37 @@ def shell_complete(cli, prog_name, complete_var, instruction):
     return 1
 
 
+class CompletionItem:
+    """Represents a completion value and metadata about the value. The
+    default metadata is ``type`` to indicate special shell handling,
+    and ``help`` if a shell supports showing a help string next to the
+    value.
+
+    Arbitrary parameters can be passed when creating the object, and
+    accessed using ``item.attr``. If an attribute wasn't passed,
+    accessing it returns ``None``.
+
+    :param value: The completion suggestion.
+    :param type: Tells the shell script to provide special completion
+        support for the type. Click uses ``"dir"`` and ``"file"``.
+    :param help: String shown next to the value if supported.
+    :param kwargs: Arbitrary metadata. The built-in implementations
+        don't use this, but custom type completions paired with custom
+        shell support could use it.
+    """
+
+    __slots__ = ("value", "type", "help", "_info")
+
+    def __init__(self, value, type="plain", help=None, **kwargs):
+        self.value = value
+        self.type = type
+        self.help = help
+        self._info = kwargs
+
+    def __getattr__(self, name):
+        return self._info.get(name)
+
+
 # Only Bash >= 4.4 has the nosort option.
 _SOURCE_BASH = """\
 %(complete_func)s() {
@@ -277,9 +308,8 @@ class BashComplete(ShellComplete):
 
         return args, incomplete
 
-    def format_completion(self, item):
-        type, value, _ = item
-        return f"{type},{value}"
+    def format_completion(self, item: CompletionItem):
+        return f"{item.type},{item.value}"
 
 
 class ZshComplete(ShellComplete):
@@ -300,9 +330,8 @@ class ZshComplete(ShellComplete):
 
         return args, incomplete
 
-    def format_completion(self, item):
-        type, value, desc = item
-        return f"{type}\n{value}\n{desc if desc else '_'}"
+    def format_completion(self, item: CompletionItem):
+        return f"{item.type}\n{item.value}\n{item.help if item.help else '_'}"
 
 
 class FishComplete(ShellComplete):
@@ -323,13 +352,11 @@ class FishComplete(ShellComplete):
 
         return args, incomplete
 
-    def format_completion(self, item):
-        type, value, desc = item
+    def format_completion(self, item: CompletionItem):
+        if item.help:
+            return f"{item.type},{item.value}\t{item.help}"
 
-        if desc:
-            return f"{type},{value}\t{desc}"
-
-        return f"{type},{value}"
+        return f"{item.type},{item.value}"
 
 
 _available_shells = {

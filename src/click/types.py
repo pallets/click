@@ -108,9 +108,11 @@ class ParamType:
         raise BadParameter(message, ctx=ctx, param=param)
 
     def shell_complete(self, ctx, args, incomplete):
-        """Return a list of completions for the incomplete value. Most
-        types do not provide completions, but some do, and this allows
-        custom types to provide custom completions as well.
+        """Return a list of
+        :class:`~click.shell_completion.CompletionItem` objects for the
+        incomplete value. Most types do not provide completions, but
+        some do, and this allows custom types to provide custom
+        completions as well.
 
         :param ctx: Invocation context for this command.
         :param args: List of complete args before the incomplete value.
@@ -263,8 +265,7 @@ class Choice(ParamType):
         return f"Choice({list(self.choices)})"
 
     def shell_complete(self, ctx, args, incomplete):
-        """Return a list of completions for the incomplete value based
-        on the choices.
+        """Complete choices that start with the incomplete value.
 
         :param ctx: Invocation context for this command.
         :param args: List of complete args before the incomplete value.
@@ -272,9 +273,10 @@ class Choice(ParamType):
 
         .. versionadded:: 8.0
         """
-        return [
-            ("plain", c, None) for c in self.choices if str(c).startswith(incomplete)
-        ]
+        from click.shell_completion import CompletionItem
+
+        str_choices = map(str, self.choices)
+        return [CompletionItem(c) for c in str_choices if c.startswith(incomplete)]
 
 
 class DateTime(ParamType):
@@ -620,7 +622,9 @@ class File(ParamType):
 
         .. versionadded:: 8.0
         """
-        return [("file", incomplete, None)]
+        from click.shell_completion import CompletionItem
+
+        return [CompletionItem(incomplete, type="file")]
 
 
 class Path(ParamType):
@@ -764,8 +768,10 @@ class Path(ParamType):
 
         .. versionadded:: 8.0
         """
-        completion_type = "dir" if self.dir_okay and not self.file_okay else "file"
-        return [(completion_type, incomplete, None)]
+        from click.shell_completion import CompletionItem
+
+        type = "dir" if self.dir_okay and not self.file_okay else "file"
+        return [CompletionItem(incomplete, type=type)]
 
 
 class Tuple(CompositeParamType):

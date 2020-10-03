@@ -878,6 +878,8 @@ class BaseCommand:
 
         .. versionadded:: 8.0
         """
+        from click.shell_completion import CompletionItem
+
         results = []
 
         while ctx.parent is not None:
@@ -885,7 +887,7 @@ class BaseCommand:
 
             if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
                 results.extend(
-                    ("plain", name, command.get_short_help_str())
+                    CompletionItem(name, help=command.get_short_help_str())
                     for name, command in _complete_visible_commands(ctx, incomplete)
                     if name not in ctx.protected_args
                 )
@@ -1286,6 +1288,8 @@ class Command(BaseCommand):
 
         .. versionadded:: 8.0
         """
+        from click.shell_completion import CompletionItem
+
         results = []
 
         if incomplete and not incomplete[0].isalnum():
@@ -1293,15 +1297,13 @@ class Command(BaseCommand):
                 if not isinstance(param, Option) or param.hidden:
                     continue
 
-                names = (
-                    name
-                    for name in param.opts + param.secondary_opts
-                    if name not in args or param.multiple
-                )
                 results.extend(
-                    ("plain", name, param.help)
-                    for name in names
-                    if name.startswith(incomplete)
+                    CompletionItem(name, help=param.help)
+                    for name in param.opts + param.secondary_opts
+                    if (
+                        (name not in args or param.multiple)
+                        and name.startswith(incomplete)
+                    )
                 )
 
         results.extend(super().shell_complete(ctx, args, incomplete))
@@ -1589,8 +1591,10 @@ class MultiCommand(Command):
 
         .. versionadded:: 8.0
         """
+        from click.shell_completion import CompletionItem
+
         results = [
-            ("plain", name, command.get_short_help_str())
+            CompletionItem(name, help=command.get_short_help_str())
             for name, command in _complete_visible_commands(ctx, incomplete)
         ]
         results.extend(super().shell_complete(ctx, args, incomplete))
@@ -2032,11 +2036,20 @@ class Parameter:
 
         .. versionadded:: 8.0
         """
+        from click.shell_completion import CompletionItem
+
         if self.autocompletion is not None:
-            return [
-                ("plain",) + c if isinstance(c, tuple) else ("plain", c, None)
-                for c in self.autocompletion(ctx=ctx, args=args, incomplete=incomplete)
-            ]
+            results = []
+
+            for c in self.autocompletion(ctx=ctx, args=args, incomplete=incomplete):
+                if isinstance(c, CompletionItem):
+                    results.append(c)
+                elif isinstance(c, tuple):
+                    results.append(CompletionItem(c[0], help=c[1]))
+                else:
+                    results.append(CompletionItem(c))
+
+            return results
 
         return self.type.shell_complete(ctx, args, incomplete)
 

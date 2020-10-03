@@ -178,6 +178,8 @@ customizing Click's shell completion system.
 
 .. currentmodule:: click.shell_completion
 
+.. autoclass:: CompletionItem
+
 .. autoclass:: ShellComplete
     :members:
     :member-order: bysource

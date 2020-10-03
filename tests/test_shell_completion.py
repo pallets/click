@@ -6,6 +6,7 @@ from click.core import Argument
 from click.core import Command
 from click.core import Group
 from click.core import Option
+from click.shell_completion import CompletionItem
 from click.shell_completion import ShellComplete
 from click.types import Choice
 from click.types import File
@@ -18,7 +19,7 @@ def _get_completions(cli, args, incomplete):
 
 
 def _get_words(cli, args, incomplete):
-    return [c[1] for c in _get_completions(cli, args, incomplete)]
+    return [c.value for c in _get_completions(cli, args, incomplete)]
 
 
 def test_command():
@@ -85,19 +86,17 @@ def test_type_choice():
     assert _get_words(cli, ["-c"], "a2") == ["a2"]
 
 
-def test_type_file():
-    cli = Command("cli", params=[Option(["-f"], type=File())])
-    assert _get_completions(cli, ["-f"], "ab") == [("file", "ab", None)]
-
-
-def test_type_path_file():
-    cli = Command("cli", params=[Option(["-p"], type=Path())])
-    assert _get_completions(cli, ["-p"], "ab") == [("file", "ab", None)]
-
-
-def test_type_path_dir():
-    cli = Command("cli", params=[Option(["-d"], type=Path(file_okay=False))])
-    assert _get_completions(cli, ["-d"], "ab") == [("dir", "ab", None)]
+@pytest.mark.parametrize(
+    ("type", "expect"),
+    [(File(), "file"), (Path(), "file"), (Path(file_okay=False), "dir")],
+)
+def test_path_types(type, expect):
+    cli = Command("cli", params=[Option(["-f"], type=type)])
+    out = _get_completions(cli, ["-f"], "ab")
+    assert len(out) == 1
+    c = out[0]
+    assert c.value == "ab"
+    assert c.type == expect
 
 
 def test_option_flag():
@@ -208,6 +207,12 @@ def test_add_different_name():
     words = _get_words(cli, [], "")
     assert "renamed" in words
     assert "original" not in words
+
+
+def test_completion_item_data():
+    c = CompletionItem("test", a=1)
+    assert c.a == 1
+    assert c.b is None
 
 
 @pytest.fixture()
