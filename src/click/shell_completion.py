@@ -244,7 +244,7 @@ class ShellComplete:
             return []
 
         obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
-        return obj.shell_complete(ctx, args, incomplete)
+        return obj.shell_complete(ctx, incomplete)
 
     def format_completion(self, item):
         """Format a completion item into the form recognized by the
@@ -443,7 +443,7 @@ def _is_incomplete_option(args, param):
         if _start_of_option(arg):
             last_option = arg
 
-    return bool(last_option and last_option in param.opts)
+    return last_option is not None and last_option in param.opts
 
 
 def _resolve_context(cli, prog_name, args):

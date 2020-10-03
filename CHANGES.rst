@@ -99,11 +99,11 @@ Unreleased
     -   Groups complete the names commands were registered with, which
         can differ from the name they were created with.
     -   The ``autocompletion`` parameter for options and arguments is
-        renamed to ``shell_complete``. The function must take four
-        parameters ``ctx, param, args, incomplete``, must do matching
-        rather than return all values, and must return a list of strings
-        or a list of ``ShellComplete``. The old name and behavior is
-        deprecated and will be removed in 8.1.
+        renamed to ``shell_complete``. The function must take
+        ``ctx, param, incomplete``, must do matching rather than return
+        all values, and must return a list of strings or a list of
+        ``ShellComplete``. The old name and behavior is deprecated and
+        will be removed in 8.1.
 
 
 Version 7.1.2

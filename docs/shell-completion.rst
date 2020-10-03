@@ -132,7 +132,7 @@ with the incomplete value.
 .. code-block:: python
 
     class EnvVarType(ParamType):
-        def shell_complete(self, ctx, args, incomplete):
+        def shell_complete(self, ctx, param, incomplete):
             return [
                 CompletionItem(name)
                 for name in os.environ if name.startswith(incomplete)
@@ -154,7 +154,6 @@ arguments:
 
 -   ``ctx`` - The current command context.
 -   ``param`` - The current parameter requesting completion.
--   ``args`` - The list of complete args before the incomplete value.
 -   ``incomplete`` - The partial word that is being completed. May
     be an empty string if no characters have been entered yet.
 
@@ -166,7 +165,7 @@ start with the incomplete value.
 
 .. code-block:: python
 
-    def complete_env_vars(ctx, param, args, incomplete):
+    def complete_env_vars(ctx, param, incomplete):
         return [k for k in os.environ if k.startswith(incomplete)]
 
     @click.command()

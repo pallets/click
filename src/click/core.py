@@ -284,9 +284,13 @@ class Context:
         self.command = command
         #: the descriptive information name
         self.info_name = info_name
-        #: the parsed parameters except if the value is hidden in which
-        #: case it's not remembered.
+        #: Map of parameter names to their parsed values. Parameters
+        #: with ``expose_value=False`` are not stored.
         self.params = {}
+        # This tracks the actual param objects that were parsed, even if
+        # they didn't expose a value. Used by completion system to know
+        # what parameters to exclude.
+        self._seen_params = set()
         #: the leftover arguments.
         self.args = []
         #: protected arguments.  These are arguments that are prepended
@@ -864,7 +868,7 @@ class BaseCommand:
         """
         raise NotImplementedError("Base commands are not invokable by default")
 
-    def shell_complete(self, ctx, args, incomplete):
+    def shell_complete(self, ctx, incomplete):
         """Return a list of completions for the incomplete value. Looks
         at the names of chained multi-commands.
 
@@ -873,7 +877,6 @@ class BaseCommand:
         command classes will return more completions.
 
         :param ctx: Invocation context for this command.
-        :param args: List of complete args before the incomplete value.
         :param incomplete: Value being completed. May be empty.
 
         .. versionadded:: 8.0
@@ -1278,12 +1281,11 @@ class Command(BaseCommand):
         if self.callback is not None:
             return ctx.invoke(self.callback, **ctx.params)
 
-    def shell_complete(self, ctx, args, incomplete):
+    def shell_complete(self, ctx, incomplete):
         """Return a list of completions for the incomplete value. Looks
         at the names of options and chained multi-commands.
 
         :param ctx: Invocation context for this command.
-        :param args: List of complete args before the incomplete value.
         :param incomplete: Value being completed. May be empty.
 
         .. versionadded:: 8.0
@@ -1294,19 +1296,20 @@ class Command(BaseCommand):
 
         if incomplete and not incomplete[0].isalnum():
             for param in self.get_params(ctx):
-                if not isinstance(param, Option) or param.hidden:
+                if (
+                    not isinstance(param, Option)
+                    or param.hidden
+                    or (not param.multiple and param in ctx._seen_params)
+                ):
                     continue
 
                 results.extend(
                     CompletionItem(name, help=param.help)
                     for name in param.opts + param.secondary_opts
-                    if (
-                        (name not in args or param.multiple)
-                        and name.startswith(incomplete)
-                    )
+                    if name.startswith(incomplete)
                 )
 
-        results.extend(super().shell_complete(ctx, args, incomplete))
+        results.extend(super().shell_complete(ctx, incomplete))
         return results
 
 
@@ -1580,13 +1583,12 @@ class MultiCommand(Command):
         """
         return []
 
-    def shell_complete(self, ctx, args, incomplete):
+    def shell_complete(self, ctx, incomplete):
         """Return a list of completions for the incomplete value. Looks
         at the names of options, subcommands, and chained
         multi-commands.
 
         :param ctx: Invocation context for this command.
-        :param args: List of complete args before the incomplete value.
         :param incomplete: Value being completed. May be empty.
 
         .. versionadded:: 8.0
@@ -1597,7 +1599,7 @@ class MultiCommand(Command):
             CompletionItem(name, help=command.get_short_help_str())
             for name, command in _complete_visible_commands(ctx, incomplete)
         ]
-        results.extend(super().shell_complete(ctx, args, incomplete))
+        results.extend(super().shell_complete(ctx, incomplete))
         return results
 
 
@@ -1783,15 +1785,15 @@ class Parameter:
                    that should be checked.
     :param shell_complete: A function that returns custom shell
         completions. Used instead of the param's type completion if
-        given. Takes ``ctx, param, args, incomplete`` and returns a list
+        given. Takes ``ctx, param, incomplete`` and must return a list
         of :class:`~click.shell_completion.CompletionItem` or a list of
         strings.
 
     .. versionchanged:: 8.0
         ``autocompletion`` is renamed to ``shell_complete`` and has new
-        semantics described in the docs above. The old name is
-        deprecated and will be removed in 8.1, until then it will be
-        wrapped to match the new requirements.
+        semantics described above. The old name is deprecated and will
+        be removed in 8.1, until then it will be wrapped to match the
+        new requirements.
 
     .. versionchanged:: 7.1
         Empty environment variables are ignored rather than taking the
@@ -1856,12 +1858,12 @@ class Parameter:
                 stacklevel=2,
             )
 
-            def shell_complete(ctx, param, args, incomplete):
+            def shell_complete(ctx, param, incomplete):
                 from click.shell_completion import CompletionItem
 
                 out = []
 
-                for c in autocompletion(ctx, args, incomplete):
+                for c in autocompletion(ctx, [], incomplete):
                     if isinstance(c, tuple):
                         c = CompletionItem(c[0], help=c[1])
                     elif isinstance(c, str):
@@ -2047,6 +2049,10 @@ class Parameter:
 
         if self.expose_value:
             ctx.params[self.name] = value
+
+        if value is not None:
+            ctx._seen_params.add(self)
+
         return value, args
 
     def get_help_record(self, ctx):
@@ -2062,20 +2068,19 @@ class Parameter:
         hint_list = self.opts or [self.human_readable_name]
         return " / ".join(repr(x) for x in hint_list)
 
-    def shell_complete(self, ctx, args, incomplete):
+    def shell_complete(self, ctx, incomplete):
         """Return a list of completions for the incomplete value. If a
         ``shell_complete`` function was given during init, it is used.
         Otherwise, the :attr:`type`
         :meth:`~click.types.ParamType.shell_complete` function is used.
 
         :param ctx: Invocation context for this command.
-        :param args: List of complete args before the incomplete value.
         :param incomplete: Value being completed. May be empty.
 
         .. versionadded:: 8.0
         """
         if self._custom_shell_complete is not None:
-            results = self._custom_shell_complete(ctx, self, args, incomplete)
+            results = self._custom_shell_complete(ctx, self, incomplete)
 
             if results and isinstance(results[0], str):
                 from click.shell_completion import CompletionItem
@@ -2084,7 +2089,7 @@ class Parameter:
 
             return results
 
-        return self.type.shell_complete(ctx, self, args, incomplete)
+        return self.type.shell_complete(ctx, self, incomplete)
 
 
 class Option(Parameter):

@@ -28,13 +28,24 @@ def test_command():
     assert _get_words(cli, [], "-") == ["-t", "--test", "--help"]
     assert _get_words(cli, [], "--") == ["--test", "--help"]
     assert _get_words(cli, [], "--t") == ["--test"]
-    assert _get_words(cli, ["-t", "a"], "-") == ["--test", "--help"]
+    # -t has been seen, so --test isn't suggested
+    assert _get_words(cli, ["-t", "a"], "-") == ["--help"]
 
 
 def test_group():
     cli = Group("cli", params=[Option(["-a"])], commands=[Command("x"), Command("y")])
     assert _get_words(cli, [], "") == ["x", "y"]
     assert _get_words(cli, [], "-") == ["-a", "--help"]
+
+
+def test_group_command_same_option():
+    cli = Group(
+        "cli", params=[Option(["-a"])], commands=[Command("x", params=[Option(["-a"])])]
+    )
+    assert _get_words(cli, [], "-") == ["-a", "--help"]
+    assert _get_words(cli, ["-a", "a"], "-") == ["--help"]
+    assert _get_words(cli, ["-a", "a", "x"], "-") == ["-a", "--help"]
+    assert _get_words(cli, ["-a", "a", "x", "-a", "a"], "-") == ["--help"]
 
 
 def test_chained():
@@ -114,7 +125,7 @@ def test_option_flag():
 
 
 def test_option_custom():
-    def custom(ctx, param, args, incomplete):
+    def custom(ctx, param, incomplete):
         return [incomplete.upper()]
 
     cli = Command(
@@ -130,9 +141,10 @@ def test_option_custom():
 
 
 def test_autocompletion_deprecated():
-    # old function takes three params, returns all values, can mix
+    # old function takes args and not param, returns all values, can mix
     # strings and tuples
     def custom(ctx, args, incomplete):
+        assert isinstance(args, list)
         return [("art", "x"), "bat", "cat"]
 
     with pytest.deprecated_call():

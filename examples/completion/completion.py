@@ -15,7 +15,7 @@ def ls(dir):
     click.echo("\n".join(os.listdir(dir)))
 
 
-def get_env_vars(ctx, param, args, incomplete):
+def get_env_vars(ctx, param, incomplete):
     # Returning a list of values is a shortcut to returning a list of
     # CompletionItem(value).
     return [k for k in os.environ if incomplete in k]
@@ -33,7 +33,7 @@ def group():
     pass
 
 
-def list_users(ctx, args, incomplete):
+def list_users(ctx, param, incomplete):
     # You can generate completions with help strings by returning a list
     # of CompletionItem. You can match on whatever you want, including
     # the help.
@@ -45,7 +45,7 @@ def list_users(ctx, args, incomplete):
 
 
 @group.command(help="Choose a user")
-@click.argument("user", type=click.STRING, autocompletion=list_users)
+@click.argument("user", shell_complete=list_users)
 def select_user(user):
     click.echo(f"Chosen user is {user}")
 
