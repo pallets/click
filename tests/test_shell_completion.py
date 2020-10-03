@@ -14,7 +14,7 @@ from click.types import Path
 
 
 def _get_completions(cli, args, incomplete):
-    comp = ShellComplete(cli, cli.name, "_CLICK_COMPLETE")
+    comp = ShellComplete(cli, {}, cli.name, "_CLICK_COMPLETE")
     return comp.get_completions(args, incomplete)
 
 
@@ -275,3 +275,17 @@ def test_full_complete(runner, shell, env, expect):
     env["_CLI_COMPLETE"] = f"complete_{shell}"
     result = runner.invoke(cli, env=env)
     assert result.output == expect
+
+
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_context_settings(runner):
+    def complete(ctx, param, incomplete):
+        return ctx.obj["choices"]
+
+    cli = Command("cli", params=[Argument("x", shell_complete=complete)])
+    result = runner.invoke(
+        cli,
+        obj={"choices": ["a", "b"]},
+        env={"COMP_WORDS": "", "COMP_CWORD": "0", "_CLI_COMPLETE": "complete_bash"},
+    )
+    assert result.output == "plain,a\nplain,b\n"

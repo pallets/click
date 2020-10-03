@@ -950,7 +950,7 @@ class BaseCommand:
             prog_name = _detect_program_name()
 
         # Process shell completion requests and exit early.
-        self._main_shell_completion(prog_name, complete_var)
+        self._main_shell_completion(extra, prog_name, complete_var)
 
         try:
             try:
@@ -1000,7 +1000,7 @@ class BaseCommand:
             echo("Aborted!", file=sys.stderr)
             sys.exit(1)
 
-    def _main_shell_completion(self, prog_name, complete_var=None):
+    def _main_shell_completion(self, ctx_args, prog_name, complete_var=None):
         """Check if the shell is asking for tab completion, process
         that, then exit early. Called from :meth:`main` before the
         program is invoked.
@@ -1020,7 +1020,7 @@ class BaseCommand:
 
         from .shell_completion import shell_complete
 
-        rv = shell_complete(self, prog_name, complete_var, instruction)
+        rv = shell_complete(self, ctx_args, prog_name, complete_var, instruction)
         _fast_exit(rv)
 
     def __call__(self, *args, **kwargs):
