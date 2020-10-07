@@ -818,37 +818,55 @@ class Tuple(CompositeParamType):
 
 
 def convert_type(ty, default=None):
-    """Converts a callable or python type into the most appropriate
-    param type.
+    """Find the most appropriate :class:`ParamType` for the given Python
+    type. If the type isn't provided, it can be inferred from a default
+    value.
     """
     guessed_type = False
+
     if ty is None and default is not None:
-        if isinstance(default, tuple):
-            ty = tuple(map(type, default))
+        if isinstance(default, (tuple, list)):
+            # If the default is empty, ty will remain None and will
+            # return STRING.
+            if default:
+                item = default[0]
+
+                # A tuple of tuples needs to detect the inner types.
+                # Can't call convert recursively because that would
+                # incorrectly unwind the tuple to a single type.
+                if isinstance(item, (tuple, list)):
+                    ty = tuple(map(type, item))
+                else:
+                    ty = type(item)
         else:
             ty = type(default)
+
         guessed_type = True
 
     if isinstance(ty, tuple):
         return Tuple(ty)
+
     if isinstance(ty, ParamType):
         return ty
+
     if ty is str or ty is None:
         return STRING
+
     if ty is int:
         return INT
-    # Booleans are only okay if not guessed.  This is done because for
-    # flags the default value is actually a bit of a lie in that it
-    # indicates which of the flags is the one we want.  See get_default()
-    # for more information.
-    if ty is bool and not guessed_type:
-        return BOOL
+
     if ty is float:
         return FLOAT
+
+    # Booleans are only okay if not guessed. For is_flag options with
+    # flag_value, default=True indicates which flag_value is the
+    # default.
+    if ty is bool and not guessed_type:
+        return BOOL
+
     if guessed_type:
         return STRING
 
-    # Catch a common mistake
     if __debug__:
         try:
             if issubclass(ty, ParamType):
@@ -856,7 +874,9 @@ def convert_type(ty, default=None):
                     f"Attempted to use an uninstantiated parameter type ({ty})."
                 )
         except TypeError:
+            # ty is an instance (correct), so issubclass fails.
             pass
+
     return FuncParamType(ty)
 
 

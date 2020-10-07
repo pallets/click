@@ -1988,8 +1988,12 @@ class Parameter:
         if (
             not ctx.resilient_parsing
             and self.nargs > 1
-            and self.nargs != len(value)
             and isinstance(value, (tuple, list))
+            and (
+                any(len(v) != self.nargs for v in value)
+                if self.multiple
+                else len(value) != self.nargs
+            )
         ):
             were = "was" if len(value) == 1 else "were"
             ctx.fail(
