@@ -31,7 +31,7 @@ a special environment variable will put Click in completion mode.
 In order for completion to be used, the user needs to register a special
 function with their shell. The script is different for every shell, and
 Click will output it when called with ``_{PROG_NAME}_COMPLETE`` set to
-``source_{shell}``. ``{PROG_NAME}`` is the executable name in uppercase
+``{shell}_source``. ``{PROG_NAME}`` is the executable name in uppercase
 with dashes replaced by underscores. The built-in shells are ``bash``,
 ``zsh``, and ``fish``.
 
@@ -46,7 +46,7 @@ program name. This uses ``foo-bar`` as an example.
 
         .. code-block:: bash
 
-            eval "$(_FOO_BAR_COMPLETE=source_bash foo-bar)"
+            eval "$(_FOO_BAR_COMPLETE=bash_source foo-bar)"
 
     .. group-tab:: Zsh
 
@@ -54,7 +54,7 @@ program name. This uses ``foo-bar`` as an example.
 
         .. code-block:: zsh
 
-            eval "$(_FOO_BAR_COMPLETE=source_zsh foo-bar)"
+            eval "$(_FOO_BAR_COMPLETE=zsh_source foo-bar)"
 
     .. group-tab:: Fish
 
@@ -62,7 +62,7 @@ program name. This uses ``foo-bar`` as an example.
 
         .. code-block:: fish
 
-            eval (env _FOO_BAR_COMPLETE=source_fish foo-bar)
+            eval (env _FOO_BAR_COMPLETE=fish_source foo-bar)
 
         This is the same file used for the activation script method
         below. For Fish it's probably always easier to use that method.
@@ -81,7 +81,7 @@ to save your users a step.
 
         .. code-block:: bash
 
-            _FOO_BAR_COMPLETE=source_bash foo-bar > ~/.foo-bar-complete.bash
+            _FOO_BAR_COMPLETE=bash_source foo-bar > ~/.foo-bar-complete.bash
 
         Source the file in ``~/.bashrc``.
 
@@ -95,7 +95,7 @@ to save your users a step.
 
         .. code-block:: bash
 
-            _FOO_BAR_COMPLETE=source_zsh foo-bar > ~/.foo-bar-complete.zsh
+            _FOO_BAR_COMPLETE=zsh_source foo-bar > ~/.foo-bar-complete.zsh
 
         Source the file in ``~/.zshrc``.
 
@@ -109,7 +109,7 @@ to save your users a step.
 
         .. code-block:: fish
 
-            _FOO_BAR_COMPLETE=source_fish foo-bar > ~/.config/fish/completions/foo-bar.fish
+            _FOO_BAR_COMPLETE=fish_source foo-bar > ~/.config/fish/completions/foo-bar.fish
 
 After modifying the shell config, you need to start a new shell in order
 for the changes to be loaded.
@@ -193,7 +193,7 @@ require implementing some smaller parts.
 First, you'll need to figure out how your shell's completion system
 works and write a script to integrate it with Click. It must invoke your
 program with the environment variable ``_{PROG_NAME}_COMPLETE`` set to
-``complete_{shell}`` and pass the complete args and incomplete value.
+``{shell}_complete`` and pass the complete args and incomplete value.
 How it passes those values, and the format of the completion response
 from Click is up to you.
 
@@ -204,7 +204,7 @@ formatting with the following variables:
 -   ``complete_func`` - A safe name for the completion function defined
     in the script.
 -   ``complete_var`` - The environment variable name for passing the
-    ``complete_{shell}`` value.
+    ``{shell}_complete`` instruction.
 -   ``prog_name`` - The name of the executable being completed.
 
 The example code is for a made up shell "My Shell" or "mysh" for short.
@@ -216,7 +216,7 @@ The example code is for a made up shell "My Shell" or "mysh" for short.
 
     _mysh_source = """\
     %(complete_func)s {
-        response=$(%(complete_var)s=complete_mysh %(prog_name)s)
+        response=$(%(complete_var)s=mysh_complete %(prog_name)s)
         # parse response and set completions somehow
     }
     call-on-complete %(prog_name)s %(complete_func)s
@@ -252,12 +252,12 @@ method must return a ``(args, incomplete)`` tuple.
             return args, ""
 
 Finally, implement :meth:`~ShellComplete.format_completion`. This is
-called to format each ``(type, value, help)`` tuples returned by Click
-into a string. For example, the Bash implementation returns
-``f"{type},{value}`` (it doesn't support help strings), and the Zsh
-implementation returns each part separated by a newline, replacing empty
-help with a ``_`` placeholder. This format is entirely up to what you
-parse with your completion script.
+called to format each :class:`CompletionItem` into a string. For
+example, the Bash implementation returns ``f"{item.type},{item.value}``
+(it doesn't support help strings), and the Zsh implementation returns
+each part separated by a newline, replacing empty help with a ``_``
+placeholder. This format is entirely up to what you parse with your
+completion script.
 
 The ``type`` value is usually ``plain``, but it can be another value
 that the completion script can switch on. For example, ``file`` or
@@ -266,15 +266,11 @@ better at that than Click.
 
 .. code-block:: python
 
-    import os
-    from click.parser import split_arg_string
-
     class MyshComplete(ShellComplete):
         ...
 
         def format_completion(self, item):
-            type, value, _ = item
-            return f"{type}\t{value}"
+            return f"{item.type}\t{item.value}"
 
 With those three things implemented, the new shell support is ready. In
 case those weren't sufficient, there are more parts that can be
@@ -286,4 +282,4 @@ the shell somehow.
 
 .. code-block:: text
 
-    _FOO_BAR_COMPLETE=source_mysh foo-bar
+    _FOO_BAR_COMPLETE=mysh_source foo-bar

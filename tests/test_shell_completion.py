@@ -254,8 +254,8 @@ def _patch_for_completion(monkeypatch):
 @pytest.mark.usefixtures("_patch_for_completion")
 def test_full_source(runner, shell):
     cli = Group("cli", commands=[Command("a"), Command("b")])
-    result = runner.invoke(cli, env={"_CLI_COMPLETE": f"source_{shell}"})
-    assert f"_CLI_COMPLETE=complete_{shell}" in result.output
+    result = runner.invoke(cli, env={"_CLI_COMPLETE": f"{shell}_source"})
+    assert f"_CLI_COMPLETE={shell}_complete" in result.output
 
 
 @pytest.mark.parametrize(
@@ -272,7 +272,7 @@ def test_full_source(runner, shell):
 @pytest.mark.usefixtures("_patch_for_completion")
 def test_full_complete(runner, shell, env, expect):
     cli = Group("cli", commands=[Command("a"), Command("b", help="bee")])
-    env["_CLI_COMPLETE"] = f"complete_{shell}"
+    env["_CLI_COMPLETE"] = f"{shell}_complete"
     result = runner.invoke(cli, env=env)
     assert result.output == expect
 
@@ -286,6 +286,6 @@ def test_context_settings(runner):
     result = runner.invoke(
         cli,
         obj={"choices": ["a", "b"]},
-        env={"COMP_WORDS": "", "COMP_CWORD": "0", "_CLI_COMPLETE": "complete_bash"},
+        env={"COMP_WORDS": "", "COMP_CWORD": "0", "_CLI_COMPLETE": "bash_complete"},
     )
     assert result.output == "plain,a\nplain,b\n"

@@ -21,7 +21,7 @@ def shell_complete(cli, ctx_args, prog_name, complete_var, instruction):
         instruction and shell, in the form ``instruction_shell``.
     :return: Status code to exit with.
     """
-    instruction, _, shell = instruction.partition("_")
+    shell, _, instruction = instruction.partition("_")
     comp_cls = get_completion_class(shell)
 
     if comp_cls is None:
@@ -78,7 +78,7 @@ _SOURCE_BASH = """\
     local response
 
     response=$(env COMP_WORDS="${COMP_WORDS[*]}" COMP_CWORD=$COMP_CWORD \
-%(complete_var)s=complete_bash $1)
+%(complete_var)s=bash_complete $1)
 
     for completion in $response; do
         IFS=',' read type value <<< "$completion"
@@ -114,7 +114,7 @@ _SOURCE_ZSH = """\
     (( ! $+commands[%(prog_name)s] )) && return 1
 
     response=("${(@f)$(env COMP_WORDS="${words[*]}" COMP_CWORD=$((CURRENT-1)) \
-%(complete_var)s=complete_zsh %(prog_name)s)}")
+%(complete_var)s=zsh_complete %(prog_name)s)}")
 
     for type key descr in ${response}; do
         if [[ "$type" == "plain" ]]; then
@@ -146,7 +146,7 @@ _SOURCE_FISH = """\
 function %(complete_func)s;
     set -l response;
 
-    for value in (env %(complete_var)s=complete_fish COMP_WORDS=(commandline -cp) \
+    for value in (env %(complete_var)s=fish_complete COMP_WORDS=(commandline -cp) \
 COMP_CWORD=(commandline -t) %(prog_name)s);
         set response $response $value;
     end;
@@ -184,8 +184,8 @@ class ShellComplete:
 
     name = None
     """Name to register the shell as with :func:`add_completion_class`.
-    This is used in completion instructions (``source_{name}`` and
-    ``complete_{name}``).
+    This is used in completion instructions (``{name}_source`` and
+    ``{name}_complete``).
     """
     source_template = None
     """Completion script template formatted by :meth:`source`. This must
