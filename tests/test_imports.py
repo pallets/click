@@ -45,7 +45,7 @@ ALLOWED_IMPORTS = {
     "errno",
     "fcntl",
     "datetime",
-    "pipes",
+    "enum",
 }
 
 if WIN:

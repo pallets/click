@@ -297,63 +297,48 @@ def test_exit_not_standalone():
     assert cli.main([], "test_exit_not_standalone", standalone_mode=False) == 0
 
 
-def test_parameter_source_default(runner):
+@pytest.mark.parametrize(
+    ("option_args", "invoke_args", "expect"),
+    [
+        pytest.param({}, {}, ParameterSource.DEFAULT, id="default"),
+        pytest.param(
+            {},
+            {"default_map": {"option": 1}},
+            ParameterSource.DEFAULT_MAP,
+            id="default_map",
+        ),
+        pytest.param(
+            {},
+            {"args": ["-o", "1"]},
+            ParameterSource.COMMANDLINE,
+            id="commandline short",
+        ),
+        pytest.param(
+            {},
+            {"args": ["--option", "1"]},
+            ParameterSource.COMMANDLINE,
+            id="commandline long",
+        ),
+        pytest.param(
+            {},
+            {"auto_envvar_prefix": "TEST", "env": {"TEST_OPTION": "1"}},
+            ParameterSource.ENVIRONMENT,
+            id="environment auto",
+        ),
+        pytest.param(
+            {"envvar": "NAME"},
+            {"env": {"NAME": "1"}},
+            ParameterSource.ENVIRONMENT,
+            id="environment manual",
+        ),
+    ],
+)
+def test_parameter_source(runner, option_args, invoke_args, expect):
     @click.command()
     @click.pass_context
-    @click.option("-o", "--option", default=1)
+    @click.option("-o", "--option", default=1, **option_args)
     def cli(ctx, option):
-        click.echo(ctx.get_parameter_source("option"))
+        return ctx.get_parameter_source("option")
 
-    rv = runner.invoke(cli)
-    assert rv.output.rstrip() == ParameterSource.DEFAULT
-
-
-def test_parameter_source_default_map(runner):
-    @click.command()
-    @click.pass_context
-    @click.option("-o", "--option", default=1)
-    def cli(ctx, option):
-        click.echo(ctx.get_parameter_source("option"))
-
-    rv = runner.invoke(cli, default_map={"option": 1})
-    assert rv.output.rstrip() == ParameterSource.DEFAULT_MAP
-
-
-def test_parameter_source_commandline(runner):
-    @click.command()
-    @click.pass_context
-    @click.option("-o", "--option", default=1)
-    def cli(ctx, option):
-        click.echo(ctx.get_parameter_source("option"))
-
-    rv = runner.invoke(cli, ["-o", "1"])
-    assert rv.output.rstrip() == ParameterSource.COMMANDLINE
-    rv = runner.invoke(cli, ["--option", "1"])
-    assert rv.output.rstrip() == ParameterSource.COMMANDLINE
-
-
-def test_parameter_source_environment(runner):
-    @click.command()
-    @click.pass_context
-    @click.option("-o", "--option", default=1)
-    def cli(ctx, option):
-        click.echo(ctx.get_parameter_source("option"))
-
-    rv = runner.invoke(cli, auto_envvar_prefix="TEST", env={"TEST_OPTION": "1"})
-    assert rv.output.rstrip() == ParameterSource.ENVIRONMENT
-
-
-def test_parameter_source_environment_variable_specified(runner):
-    @click.command()
-    @click.pass_context
-    @click.option("-o", "--option", default=1, envvar="NAME")
-    def cli(ctx, option):
-        click.echo(ctx.get_parameter_source("option"))
-
-    rv = runner.invoke(cli, env={"NAME": "1"})
-    assert rv.output.rstrip() == ParameterSource.ENVIRONMENT
-
-
-def test_validate_parameter_source():
-    with pytest.raises(ValueError):
-        ParameterSource.validate("NOT_A_VALID_PARAMETER_SOURCE")
+    rv = runner.invoke(cli, standalone_mode=False, **invoke_args)
+    assert rv.return_value == expect
