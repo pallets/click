@@ -103,6 +103,9 @@ Unreleased
         all values, and must return a list of strings or a list of
         ``ShellComplete``. The old name and behavior is deprecated and
         will be removed in 8.1.
+    -   The env var values used to start completion have changed order.
+        The shell now comes first, such as ``{shell}_source`` rather
+        than ``source_{shell}``, and is always required.
 
 -   Extra context settings (``obj=...``, etc.) are passed on to the
     completion system. :issue:`942`
