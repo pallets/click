@@ -195,7 +195,7 @@ def test_formatting_usage_error_metavar_bad_arg(runner):
         "Usage: cmd [OPTIONS] metavar",
         "Try 'cmd --help' for help.",
         "",
-        "Error: Invalid value for 'metavar': 3.14 is not a valid integer",
+        "Error: Invalid value for 'metavar': '3.14' is not a valid integer.",
     ]
 
 

@@ -152,6 +152,8 @@ class ParameterSource(enum.Enum):
     """Used the default specified by the parameter."""
     DEFAULT_MAP = enum.auto()
     """Used a default provided by :attr:`Context.default_map`."""
+    PROMPT = enum.auto()
+    """Used a prompt to confirm a default or provide a value."""
 
 
 class Context:
@@ -277,10 +279,6 @@ class Context:
         #: Map of parameter names to their parsed values. Parameters
         #: with ``expose_value=False`` are not stored.
         self.params = {}
-        # This tracks the actual param objects that were parsed, even if
-        # they didn't expose a value. Used by completion system to know
-        # what parameters to exclude.
-        self._seen_params = set()
         #: the leftover arguments.
         self.args = []
         #: protected arguments.  These are arguments that are prepended
@@ -738,7 +736,7 @@ class Context:
         :param name: The name of the parameter.
         :rtype: ParameterSource
         """
-        return self._parameter_source[name]
+        return self._parameter_source.get(name)
 
 
 class BaseCommand:
@@ -1283,7 +1281,11 @@ class Command(BaseCommand):
                 if (
                     not isinstance(param, Option)
                     or param.hidden
-                    or (not param.multiple and param in ctx._seen_params)
+                    or (
+                        not param.multiple
+                        and ctx.get_parameter_source(param.name)
+                        is ParameterSource.COMMANDLINE
+                    )
                 ):
                     continue
 
@@ -1926,10 +1928,11 @@ class Parameter:
             value = ctx.lookup_default(self.name)
             source = ParameterSource.DEFAULT_MAP
 
-        if value is not None:
-            ctx.set_parameter_source(self.name, source)
+        if value is None:
+            value = self.get_default(ctx)
+            source = ParameterSource.DEFAULT
 
-        return value
+        return value, source
 
     def type_cast_value(self, ctx, value):
         """Given a value this runs it properly through the type system.
@@ -1975,12 +1978,6 @@ class Parameter:
     def full_process_value(self, ctx, value):
         value = self.process_value(ctx, value)
 
-        if value is None and not ctx.resilient_parsing:
-            value = self.get_default(ctx)
-
-            if value is not None:
-                ctx.set_parameter_source(self.name, ParameterSource.DEFAULT)
-
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)
 
@@ -2025,25 +2022,22 @@ class Parameter:
 
     def handle_parse_result(self, ctx, opts, args):
         with augment_usage_errors(ctx, param=self):
-            value = self.consume_value(ctx, opts)
+            value, source = self.consume_value(ctx, opts)
+            ctx.set_parameter_source(self.name, source)
+
             try:
                 value = self.full_process_value(ctx, value)
+
+                if self.callback is not None:
+                    value = self.callback(ctx, self, value)
             except Exception:
                 if not ctx.resilient_parsing:
                     raise
+
                 value = None
-            if self.callback is not None:
-                try:
-                    value = self.callback(ctx, self, value)
-                except Exception:
-                    if not ctx.resilient_parsing:
-                        raise
 
         if self.expose_value:
             ctx.params[self.name] = value
-
-        if value is not None:
-            ctx._seen_params.add(self)
 
         return value, args
 
@@ -2423,11 +2417,20 @@ class Option(Parameter):
                 rv = batch(rv, self.nargs)
         return rv
 
-    def full_process_value(self, ctx, value):
-        if value is None and self.prompt is not None and not ctx.resilient_parsing:
-            return self.prompt_for_value(ctx)
+    def consume_value(self, ctx, opts):
+        value, source = super().consume_value(ctx, opts)
 
-        return super().full_process_value(ctx, value)
+        # The value wasn't set, or used the param's default, prompt if
+        # prompting is enabled.
+        if (
+            source in {None, ParameterSource.DEFAULT}
+            and self.prompt is not None
+            and not ctx.resilient_parsing
+        ):
+            value = self.prompt_for_value(ctx)
+            source = ParameterSource.PROMPT
+
+        return value, source
 
 
 class Argument(Parameter):

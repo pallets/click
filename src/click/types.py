@@ -181,7 +181,7 @@ class StringParamType(ParamType):
                 else:
                     value = value.decode("utf-8", "replace")
             return value
-        return value
+        return str(value)
 
     def __repr__(self):
         return "STRING"
@@ -255,11 +255,9 @@ class Choice(ParamType):
         if normed_value in normed_choices:
             return normed_choices[normed_value]
 
-        self.fail(
-            f"invalid choice: {value}. (choose from {', '.join(self.choices)})",
-            param,
-            ctx,
-        )
+        one_of = "one of " if len(self.choices) > 1 else ""
+        choices_str = ", ".join(repr(c) for c in self.choices)
+        self.fail(f"{value!r} is not {one_of}{choices_str}.", param, ctx)
 
     def __repr__(self):
         return f"Choice({list(self.choices)})"
@@ -320,14 +318,19 @@ class DateTime(ParamType):
             return None
 
     def convert(self, value, param, ctx):
-        # Exact match
-        for format in self.formats:
-            dtime = self._try_to_convert_date(value, format)
-            if dtime:
-                return dtime
+        if isinstance(value, datetime):
+            return value
 
+        for format in self.formats:
+            converted = self._try_to_convert_date(value, format)
+
+            if converted is not None:
+                return converted
+
+        plural = "s" if len(self.formats) > 1 else ""
+        formats_str = ", ".join(repr(f) for f in self.formats)
         self.fail(
-            f"invalid datetime format: {value}. (choose from {', '.join(self.formats)})"
+            f"{value!r} does not match the format{plural} {formats_str}.", param, ctx
         )
 
     def __repr__(self):
@@ -341,7 +344,7 @@ class _NumberParamTypeBase(ParamType):
         try:
             return self._number_class(value)
         except ValueError:
-            self.fail(f"{value} is not a valid {self.name}", param, ctx)
+            self.fail(f"{value!r} is not a valid {self.name}.", param, ctx)
 
 
 class _NumberRangeBase(_NumberParamTypeBase):
@@ -495,7 +498,7 @@ class BoolParamType(ParamType):
     name = "boolean"
 
     def convert(self, value, param, ctx):
-        if isinstance(value, bool):
+        if value in {False, True}:
             return bool(value)
 
         norm = value.strip().lower()
@@ -506,7 +509,7 @@ class BoolParamType(ParamType):
         if norm in {"0", "false", "f", "no", "n", "off"}:
             return False
 
-        self.fail(f"{value!r} is not a valid boolean value.", param, ctx)
+        self.fail(f"{value!r} is not a valid boolean.", param, ctx)
 
     def __repr__(self):
         return "BOOL"
@@ -518,10 +521,15 @@ class UUIDParameterType(ParamType):
     def convert(self, value, param, ctx):
         import uuid
 
+        if isinstance(value, uuid.UUID):
+            return value
+
+        value = value.strip()
+
         try:
             return uuid.UUID(value)
         except ValueError:
-            self.fail(f"{value} is not a valid UUID value", param, ctx)
+            self.fail(f"{value!r} is not a valid UUID.", param, ctx)
 
     def __repr__(self):
         return "UUID"
@@ -610,11 +618,7 @@ class File(ParamType):
                     ctx.call_on_close(safecall(f.flush))
             return f
         except OSError as e:  # noqa: B014
-            self.fail(
-                f"Could not open file: {filename_to_ui(value)}: {get_strerror(e)}",
-                param,
-                ctx,
-            )
+            self.fail(f"{filename_to_ui(value)!r}: {get_strerror(e)}", param, ctx)
 
     def shell_complete(self, ctx, param, incomplete):
         """Return a special completion marker that tells the completion
