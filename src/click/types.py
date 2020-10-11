@@ -497,11 +497,15 @@ class BoolParamType(ParamType):
     def convert(self, value, param, ctx):
         if isinstance(value, bool):
             return bool(value)
-        value = value.lower()
-        if value in {"1", "true", "t", "yes", "y", "on"}:
+
+        norm = value.strip().lower()
+
+        if norm in {"1", "true", "t", "yes", "y", "on"}:
             return True
-        elif value in {"0", "false", "f", "no", "n", "off"}:
+
+        if norm in {"0", "false", "f", "no", "n", "off"}:
             return False
+
         self.fail(f"{value!r} is not a valid boolean value.", param, ctx)
 
     def __repr__(self):

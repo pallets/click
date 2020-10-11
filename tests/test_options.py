@@ -164,6 +164,17 @@ def test_multiple_envvar(runner):
     assert result.output == "foo|bar\n"
 
 
+def test_trailing_blanks_boolean_envvar(runner):
+    @click.command()
+    @click.option("--shout/--no-shout", envvar="SHOUT")
+    def cli(shout):
+        click.echo(f"shout: {shout!r}")
+
+    result = runner.invoke(cli, [], env={"SHOUT": " true "})
+    assert result.exit_code == 0
+    assert result.output == "shout: True\n"
+
+
 def test_multiple_default_help(runner):
     @click.command()
     @click.option("--arg1", multiple=True, default=("foo", "bar"), show_default=True)
