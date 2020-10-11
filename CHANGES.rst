@@ -127,6 +127,10 @@ Unreleased
     value did not come from the command line args. :issue:`1649`
 -   Added ``ParameterSource.PROMPT`` to track parameter values that were
     prompted for. :issue:`1649`
+-   Options with ``nargs`` > 1 no longer raise an error if a default is
+    not given. Parameters with ``nargs`` > 1 default to ``None``, and
+    parameters with ``multiple=True`` or ``nargs=-1`` default to an
+    empty tuple. :issue:`472`
 
 
 Version 7.1.2

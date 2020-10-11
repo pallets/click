@@ -142,6 +142,9 @@ class ParameterSource(enum.Enum):
 
     .. versionchanged:: 8.0
         Use :class:`~enum.Enum` and drop the ``validate`` method.
+
+    .. versionchanged:: 8.0
+        Added the ``PROMPT`` value.
     """
 
     COMMANDLINE = enum.auto()
@@ -735,6 +738,10 @@ class Context:
 
         :param name: The name of the parameter.
         :rtype: ParameterSource
+
+        .. versionchanged:: 8.0
+            Returns ``None`` if the parameter was not provided from any
+            source.
         """
         return self._parameter_source.get(name)
 
@@ -1781,6 +1788,15 @@ class Parameter:
         be removed in 8.1, until then it will be wrapped to match the
         new requirements.
 
+    .. versionchanged:: 8.0
+        For ``multiple=True, nargs>1``, the default must be a list of
+        tuples.
+
+    .. versionchanged:: 8.0
+        Setting a default is no longer required for ``nargs>1``, it will
+        default to ``None``. ``multiple=True`` or ``nargs=-1`` will
+        default to ``()``.
+
     .. versionchanged:: 7.1
         Empty environment variables are ignored rather than taking the
         empty string value. This makes it possible for scripts to clear
@@ -1939,6 +1955,9 @@ class Parameter:
         This automatically handles things like `nargs` and `multiple` as
         well as composite types.
         """
+        if value is None:
+            return () if self.multiple or self.nargs == -1 else None
+
         if self.type.is_composite:
             if self.nargs <= 1:
                 raise TypeError(
@@ -1946,14 +1965,17 @@ class Parameter:
                     f" been set to {self.nargs}. This is not supported;"
                     " nargs needs to be set to a fixed value > 1."
                 )
+
             if self.multiple:
-                return tuple(self.type(x or (), self, ctx) for x in value or ())
-            return self.type(value or (), self, ctx)
+                return tuple(self.type(x, self, ctx) for x in value)
+
+            return self.type(value, self, ctx)
 
         def _convert(value, level):
             if level == 0:
                 return self.type(value, self, ctx)
-            return tuple(_convert(x, level - 1) for x in value or ())
+
+            return tuple(_convert(x, level - 1) for x in value)
 
         return _convert(value, (self.nargs != 1) + bool(self.multiple))
 

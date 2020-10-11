@@ -54,3 +54,27 @@ def test_float_range_no_clamp_open():
 
     with pytest.raises(RuntimeError):
         sneaky.convert("1.5", None, None)
+
+
+@pytest.mark.parametrize(
+    ("nargs", "multiple", "default", "expect"),
+    [
+        (2, False, None, None),
+        (2, False, (None, None), (None, None)),
+        (None, True, None, ()),
+        (None, True, (None, None), (None, None)),
+        (2, True, None, ()),
+        (2, True, [(None, None)], ((None, None),)),
+        (-1, None, None, ()),
+    ],
+)
+def test_cast_multi_default(runner, nargs, multiple, default, expect):
+    if nargs == -1:
+        param = click.Argument(["a"], nargs=nargs, default=default)
+    else:
+        param = click.Option(["-a"], nargs=nargs, multiple=multiple, default=default)
+
+    cli = click.Command("cli", params=[param], callback=lambda a: a)
+    result = runner.invoke(cli, standalone_mode=False)
+    assert result.exception is None
+    assert result.return_value == expect
