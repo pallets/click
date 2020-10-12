@@ -134,8 +134,9 @@ Unreleased
 -   Handle empty env vars as though the option were not passed. This
     extends the change introduced in 7.1 to be consistent in more cases.
     :issue:`1285`
--   ``show_default`` considers ``default_map`` to display the
-    proper default value. :issue:`1548`
+-   ``Parameter.get_default()`` checks ``Context.default_map`` to
+    handle overrides consistently in help text, ``invoke()``, and
+    prompts. :issue:`1548`
 
 
 Version 7.1.2
