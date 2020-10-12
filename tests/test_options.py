@@ -188,21 +188,37 @@ def test_multiple_default_help(runner):
     assert "1, 2" in result.output
 
 
-def test_multiple_default_type(runner):
+def test_multiple_default_type():
+    opt = click.Option(["-a"], multiple=True, default=(1, 2))
+    assert opt.nargs == 1
+    assert opt.multiple
+    assert opt.type is click.INT
+    ctx = click.Context(click.Command("test"))
+    assert opt.get_default(ctx) == (1, 2)
+
+
+def test_multiple_default_composite_type():
+    opt = click.Option(["-a"], multiple=True, default=[(1, "a")])
+    assert opt.nargs == 2
+    assert opt.multiple
+    assert isinstance(opt.type, click.Tuple)
+    assert opt.type.types == [click.INT, click.STRING]
+    ctx = click.Context(click.Command("test"))
+    assert opt.get_default(ctx) == ((1, "a"),)
+
+
+def test_parse_multiple_default_composite_type(runner):
     @click.command()
-    @click.option("--arg1", multiple=True, default=("foo", "bar"))
-    @click.option("--arg2", multiple=True, default=(1, "a"))
-    def cmd(arg1, arg2):
-        assert all(isinstance(e[0], str) for e in arg1)
-        assert all(isinstance(e[1], str) for e in arg1)
+    @click.option("-a", multiple=True, default=("a", "b"))
+    @click.option("-b", multiple=True, default=[(1, "a")])
+    def cmd(a, b):
+        click.echo(a)
+        click.echo(b)
 
-        assert all(isinstance(e[0], int) for e in arg2)
-        assert all(isinstance(e[1], str) for e in arg2)
-
-    result = runner.invoke(
-        cmd, "--arg1 a b --arg1 test 1 --arg2 2 two --arg2 4 four".split()
-    )
-    assert not result.exception
+    # result = runner.invoke(cmd, "-a c -a 1 -a d -b 2 two -b 4 four".split())
+    # assert result.output == "('c', '1', 'd')\n((2, 'two'), (4, 'four'))\n"
+    result = runner.invoke(cmd)
+    assert result.output == "('a', 'b')\n((1, 'a'),)\n"
 
 
 def test_dynamic_default_help_unset(runner):
@@ -251,7 +267,7 @@ def test_dynamic_default_help_text(runner):
     ],
 )
 def test_intrange_default_help_text(runner, type, expect):
-    option = click.Option(["--count"], type=type, show_default=True, default=1)
+    option = click.Option(["--count"], type=type, show_default=True, default=2)
     context = click.Context(click.Command("test"))
     result = option.get_help_record(context)[1]
     assert expect in result

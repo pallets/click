@@ -111,8 +111,29 @@ Unreleased
     completion system. :issue:`942`
 -   Include ``--help`` option in completion. :pr:`1504`
 -   ``ParameterSource`` is an ``enum.Enum`` subclass. :issue:`1530`
--   Boolean type strips surrounding space before converting.
+-   Boolean and UUID types strip surrounding space before converting.
     :issue:`1605`
+-   Adjusted error message from parameter type validation to be more
+    consistent. Quotes are used to distinguish the invalid value.
+    :issue:`1605`
+-   The default value for a parameter with ``nargs`` > 1 and
+    ``multiple=True`` must be a list of tuples. :issue:`1649`
+-   When getting the value for a parameter, the default is tried in the
+    same section as other sources to ensure consistent processing.
+    :issue:`1649`
+-   All parameter types accept a value that is already the correct type.
+    :issue:`1649`
+-   For shell completion, an argument is considered incomplete if its
+    value did not come from the command line args. :issue:`1649`
+-   Added ``ParameterSource.PROMPT`` to track parameter values that were
+    prompted for. :issue:`1649`
+-   Options with ``nargs`` > 1 no longer raise an error if a default is
+    not given. Parameters with ``nargs`` > 1 default to ``None``, and
+    parameters with ``multiple=True`` or ``nargs=-1`` default to an
+    empty tuple. :issue:`472`
+-   Handle empty env vars as though the option were not passed. This
+    extends the change introduced in 7.1 to be consistent in more cases.
+    :issue:`1285`
 
 
 Version 7.1.2

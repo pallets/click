@@ -147,7 +147,7 @@ def test_int_option(runner):
 
     result = runner.invoke(cli, ["--foo=bar"])
     assert result.exception
-    assert "Invalid value for '--foo': bar is not a valid integer" in result.output
+    assert "Invalid value for '--foo': 'bar' is not a valid integer." in result.output
 
 
 def test_uuid_option(runner):
@@ -169,7 +169,7 @@ def test_uuid_option(runner):
 
     result = runner.invoke(cli, ["--u=bar"])
     assert result.exception
-    assert "Invalid value for '--u': bar is not a valid UUID value" in result.output
+    assert "Invalid value for '--u': 'bar' is not a valid UUID." in result.output
 
 
 def test_float_option(runner):
@@ -189,7 +189,7 @@ def test_float_option(runner):
 
     result = runner.invoke(cli, ["--foo=bar"])
     assert result.exception
-    assert "Invalid value for '--foo': bar is not a valid float" in result.output
+    assert "Invalid value for '--foo': 'bar' is not a valid float." in result.output
 
 
 def test_boolean_option(runner):
@@ -303,10 +303,7 @@ def test_file_lazy_mode(runner):
         os.mkdir("example.txt")
         result_in = runner.invoke(input_non_lazy, ["--file=example.txt"])
         assert result_in.exit_code == 2
-        assert (
-            "Invalid value for '--file': Could not open file: example.txt"
-            in result_in.output
-        )
+        assert "Invalid value for '--file': 'example.txt'" in result_in.output
 
 
 def test_path_option(runner):
@@ -368,8 +365,8 @@ def test_choice_option(runner):
     result = runner.invoke(cli, ["--method=meh"])
     assert result.exit_code == 2
     assert (
-        "Invalid value for '--method': invalid choice: meh."
-        " (choose from foo, bar, baz)" in result.output
+        "Invalid value for '--method': 'meh' is not one of 'foo', 'bar', 'baz'."
+        in result.output
     )
 
     result = runner.invoke(cli, ["--help"])
@@ -389,8 +386,8 @@ def test_choice_argument(runner):
     result = runner.invoke(cli, ["meh"])
     assert result.exit_code == 2
     assert (
-        "Invalid value for '{foo|bar|baz}': invalid choice: meh. "
-        "(choose from foo, bar, baz)" in result.output
+        "Invalid value for '{foo|bar|baz}': 'meh' is not one of 'foo',"
+        " 'bar', 'baz'." in result.output
     )
 
     result = runner.invoke(cli, ["--help"])
@@ -414,9 +411,8 @@ def test_datetime_option_default(runner):
     result = runner.invoke(cli, ["--start_date=2015-09"])
     assert result.exit_code == 2
     assert (
-        "Invalid value for '--start_date':"
-        " invalid datetime format: 2015-09."
-        " (choose from %Y-%m-%d, %Y-%m-%dT%H:%M:%S, %Y-%m-%d %H:%M:%S)"
+        "Invalid value for '--start_date': '2015-09' does not match the formats"
+        " '%Y-%m-%d', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S'."
     ) in result.output
 
     result = runner.invoke(cli, ["--help"])

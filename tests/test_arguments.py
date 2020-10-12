@@ -164,17 +164,17 @@ def test_stdout_default(runner):
 
 
 @pytest.mark.parametrize(
-    ("nargs", "value", "code", "output"),
+    ("nargs", "value", "expect"),
     [
-        (2, "", 2, "Argument 'arg' takes 2 values but 0 were given."),
-        (2, "a", 2, "Argument 'arg' takes 2 values but 1 was given."),
-        (2, "a b", 0, "len 2"),
-        (2, "a b c", 2, "Argument 'arg' takes 2 values but 3 were given."),
-        (-1, "a b c", 0, "len 3"),
-        (-1, "", 0, "len 0"),
+        (2, "", None),
+        (2, "a", "Argument 'arg' takes 2 values but 1 was given."),
+        (2, "a b", ("a", "b")),
+        (2, "a b c", "Argument 'arg' takes 2 values but 3 were given."),
+        (-1, "a b c", ("a", "b", "c")),
+        (-1, "", ()),
     ],
 )
-def test_nargs_envvar(runner, nargs, value, code, output):
+def test_nargs_envvar(runner, nargs, value, expect):
     if nargs == -1:
         param = click.argument("arg", envvar="X", nargs=nargs)
     else:
@@ -183,11 +183,14 @@ def test_nargs_envvar(runner, nargs, value, code, output):
     @click.command()
     @param
     def cmd(arg):
-        click.echo(f"len {len(arg)}")
+        return arg
 
-    result = runner.invoke(cmd, env={"X": value})
-    assert result.exit_code == code
-    assert output in result.output
+    result = runner.invoke(cmd, env={"X": value}, standalone_mode=False)
+
+    if isinstance(expect, str):
+        assert expect in str(result.exception)
+    else:
+        assert result.return_value == expect
 
 
 def test_empty_nargs(runner):

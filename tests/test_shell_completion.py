@@ -90,6 +90,21 @@ def test_argument_order():
     assert _get_words(cli, ["x", "b"], "d") == ["d"]
 
 
+def test_argument_default():
+    cli = Command(
+        "cli",
+        add_help_option=False,
+        params=[
+            Argument(["a"], type=Choice(["a"]), default="a"),
+            Argument(["b"], type=Choice(["b"]), default="b"),
+        ],
+    )
+    assert _get_words(cli, [], "") == ["a"]
+    assert _get_words(cli, ["a"], "b") == ["b"]
+    # ignore type validation
+    assert _get_words(cli, ["x"], "b") == ["b"]
+
+
 def test_type_choice():
     cli = Command("cli", params=[Option(["-c"], type=Choice(["a1", "a2", "b"]))])
     assert _get_words(cli, ["-c"], "") == ["a1", "a2", "b"]
@@ -119,9 +134,9 @@ def test_option_flag():
             Argument(["a"], type=Choice(["a1", "a2", "b"])),
         ],
     )
-    assert _get_words(cli, ["type"], "--") == ["--on", "--off"]
+    assert _get_words(cli, [], "--") == ["--on", "--off"]
     # flag option doesn't take value, use choice argument
-    assert _get_words(cli, ["x", "--on"], "a") == ["a1", "a2"]
+    assert _get_words(cli, ["--on"], "a") == ["a1", "a2"]
 
 
 def test_option_custom():

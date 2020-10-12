@@ -4,6 +4,7 @@ import re
 from .core import Argument
 from .core import MultiCommand
 from .core import Option
+from .core import ParameterSource
 from .parser import split_arg_string
 from .utils import echo
 
@@ -395,29 +396,27 @@ def get_completion_class(shell):
     return _available_shells.get(shell)
 
 
-def _is_incomplete_argument(values, param):
+def _is_incomplete_argument(ctx, param):
     """Determine if the given parameter is an argument that can still
     accept values.
 
-    :param values: Dict of param names and values parsed from the
-        command line args.
+    :param ctx: Invocation context for the command represented by the
+        parsed complete args.
     :param param: Argument object being checked.
     """
     if not isinstance(param, Argument):
         return False
 
-    value = values[param.name]
-
-    if value is None:
-        return True
-
-    if param.nargs == -1:
-        return True
-
-    if isinstance(value, list) and param.nargs > 1 and len(value) < param.nargs:
-        return True
-
-    return False
+    value = ctx.params[param.name]
+    return (
+        param.nargs == -1
+        or ctx.get_parameter_source(param.name) is not ParameterSource.COMMANDLINE
+        or (
+            param.nargs > 1
+            and isinstance(value, (tuple, list))
+            and len(value) < param.nargs
+        )
+    )
 
 
 def _start_of_option(value):
@@ -523,16 +522,18 @@ def _resolve_incomplete(ctx, args, incomplete):
     if "--" not in args and _start_of_option(incomplete):
         return ctx.command, incomplete
 
+    params = ctx.command.get_params(ctx)
+
     # If the last complete arg is an option name with an incomplete
     # value, the option will provide value completions.
-    for param in ctx.command.get_params(ctx):
+    for param in params:
         if _is_incomplete_option(args, param):
             return param, incomplete
 
     # It's not an option name or value. The first argument without a
     # parsed value will provide value completions.
-    for param in ctx.command.get_params(ctx):
-        if _is_incomplete_argument(ctx.params, param):
+    for param in params:
+        if _is_incomplete_argument(ctx, param):
             return param, incomplete
 
     # There were no unparsed arguments, the command may be a group that
