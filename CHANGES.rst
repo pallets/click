@@ -134,6 +134,9 @@ Unreleased
 -   Handle empty env vars as though the option were not passed. This
     extends the change introduced in 7.1 to be consistent in more cases.
     :issue:`1285`
+-   ``Parameter.get_default()`` checks ``Context.default_map`` to
+    handle overrides consistently in help text, ``invoke()``, and
+    prompts. :issue:`1548`
 
 
 Version 7.1.2
@@ -182,7 +185,7 @@ Released 2020-03-09
     :issue:`1277`, :pr:`1318`
 -   Add ``no_args_is_help`` option to ``click.Command``, defaults to
     False :pr:`1167`
--   Add ``show_defaults`` parameter to ``Context`` to enable showing
+-   Add ``show_default`` parameter to ``Context`` to enable showing
     defaults globally. :issue:`1018`
 -   Handle ``env MYPATH=''`` as though the option were not passed.
     :issue:`1196`

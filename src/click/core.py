@@ -1,6 +1,5 @@
 import enum
 import errno
-import inspect
 import os
 import sys
 from contextlib import contextmanager
@@ -613,15 +612,23 @@ class Context:
             self.obj = rv = object_type()
         return rv
 
-    def lookup_default(self, name):
-        """Looks up the default for a parameter name.  This by default
-        looks into the :attr:`default_map` if available.
+    def lookup_default(self, name, call=True):
+        """Get the default for a parameter from :attr:`default_map`.
+
+        :param name: Name of the parameter.
+        :param call: If the default is a callable, call it. Disable to
+            return the callable instead.
+
+        .. versionchanged:: 8.0
+            Added the ``call`` parameter.
         """
         if self.default_map is not None:
-            rv = self.default_map.get(name)
-            if callable(rv):
-                rv = rv()
-            return rv
+            value = self.default_map.get(name)
+
+            if call and callable(value):
+                return value()
+
+            return value
 
     def fail(self, message):
         """Aborts the execution of the program with a specific error
@@ -1920,14 +1927,33 @@ class Parameter:
             metavar += "..."
         return metavar
 
-    def get_default(self, ctx):
-        """Given a context variable this calculates the default value."""
-        # Otherwise go with the regular default.
-        if callable(self.default):
-            rv = self.default()
-        else:
-            rv = self.default
-        return self.type_cast_value(ctx, rv)
+    def get_default(self, ctx, call=True):
+        """Get the default for the parameter. Tries
+        :meth:`Context.lookup_value` first, then the local default.
+
+        :param ctx: Current context.
+        :param call: If the default is a callable, call it. Disable to
+            return the callable instead.
+
+        .. versionchanged:: 8.0
+            Looks at ``ctx.default_map`` first.
+
+        .. versionchanged:: 8.0
+            Added the ``call`` parameter.
+        """
+        value = ctx.lookup_default(self.name, call=False)
+
+        if value is None:
+            value = self.default
+
+        if callable(value):
+            if not call:
+                # Don't type cast the callable.
+                return value
+
+            value = value()
+
+        return self.type_cast_value(ctx, value)
 
     def add_to_parser(self, parser, ctx):
         pass
@@ -2355,12 +2381,15 @@ class Option(Parameter):
                     else envvar
                 )
                 extra.append(f"env var: {var_str}")
-        if self.default is not None and (self.show_default or ctx.show_default):
+
+        default_value = self.get_default(ctx, call=False)
+
+        if default_value is not None and (self.show_default or ctx.show_default):
             if isinstance(self.show_default, str):
                 default_string = f"({self.show_default})"
-            elif isinstance(self.default, (list, tuple)):
-                default_string = ", ".join(str(d) for d in self.default)
-            elif inspect.isfunction(self.default):
+            elif isinstance(default_value, (list, tuple)):
+                default_string = ", ".join(str(d) for d in default_value)
+            elif callable(default_value):
                 default_string = "(dynamic)"
             elif self.is_bool_flag and self.secondary_opts:
                 # For boolean flags that have distinct True/False opts,
@@ -2369,7 +2398,8 @@ class Option(Parameter):
                     (self.opts if self.default else self.secondary_opts)[0]
                 )[1]
             else:
-                default_string = self.default
+                default_string = default_value
+
             extra.append(f"default: {default_string}")
 
         if isinstance(self.type, _NumberRangeBase):
@@ -2386,7 +2416,7 @@ class Option(Parameter):
 
         return ("; " if any_prefix_is_slash else " / ").join(rv), help
 
-    def get_default(self, ctx):
+    def get_default(self, ctx, call=True):
         # If we're a non boolean flag our default is more complex because
         # we need to look at all flags in the same group to figure out
         # if we're the the default one in which case we return the flag
@@ -2395,9 +2425,10 @@ class Option(Parameter):
             for param in ctx.command.params:
                 if param.name == self.name and param.default:
                     return param.flag_value
+
             return None
 
-        return super().get_default(ctx)
+        return super().get_default(ctx, call=call)
 
     def prompt_for_value(self, ctx):
         """This is an alternative flow that can be activated in the full
