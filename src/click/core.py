@@ -2025,21 +2025,25 @@ class Parameter:
     def resolve_envvar_value(self, ctx):
         if self.envvar is None:
             return
+
         if isinstance(self.envvar, (tuple, list)):
             for envvar in self.envvar:
                 rv = os.environ.get(envvar)
-                if rv is not None:
+
+                if rv:
                     return rv
         else:
             rv = os.environ.get(self.envvar)
 
-            if rv != "":
+            if rv:
                 return rv
 
     def value_from_envvar(self, ctx):
         rv = self.resolve_envvar_value(ctx)
+
         if rv is not None and self.nargs != 1:
             rv = self.type.split_envvar_value(rv)
+
         return rv
 
     def handle_parse_result(self, ctx, opts, args):
@@ -2424,19 +2428,28 @@ class Option(Parameter):
 
         if rv is not None:
             return rv
+
         if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
             envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
-            return os.environ.get(envvar)
+            rv = os.environ.get(envvar)
+
+            if rv:
+                return rv
 
     def value_from_envvar(self, ctx):
         rv = self.resolve_envvar_value(ctx)
+
         if rv is None:
             return None
+
         value_depth = (self.nargs != 1) + bool(self.multiple)
+
         if value_depth > 0 and rv is not None:
             rv = self.type.split_envvar_value(rv)
+
             if self.multiple and self.nargs != 1:
                 rv = batch(rv, self.nargs)
+
         return rv
 
     def consume_value(self, ctx, opts):

@@ -131,6 +131,9 @@ Unreleased
     not given. Parameters with ``nargs`` > 1 default to ``None``, and
     parameters with ``multiple=True`` or ``nargs=-1`` default to an
     empty tuple. :issue:`472`
+-   Handle empty env vars as though the option were not passed. This
+    extends the change introduced in 7.1 to be consistent in more cases.
+    :issue:`1285`
 
 
 Version 7.1.2
