@@ -433,6 +433,10 @@ What it looks like:
 It is advised that prompt not be used in conjunction with the multiple
 flag set to True. Instead, prompt in the function interactively.
 
+By default, the user will be prompted for an input if one was not passed
+through the command line. To turn this behavior off, see
+:ref:`optional-value`.
+
 
 Password Prompts
 ----------------
@@ -845,3 +849,50 @@ And what it looks like:
     invoke(roll, args=['--rolls=42'])
     println()
     invoke(roll, args=['--rolls=2d12'])
+
+
+.. _optional-value:
+
+Optional Value
+--------------
+
+Providing the value to an option can be made optional, in which case
+providing only the option's flag without a value will either show a
+prompt or use its ``flag_value``.
+
+Setting ``is_flag=False, flag_value=value`` tells Click that the option
+can still be passed a value, but if only the flag is given the
+``flag_value`` is used.
+
+.. click:example::
+
+    @click.command()
+    @click.option("--name", is_flag=False, flag_value="Flag", default="Default")
+    def hello(name):
+        click.echo(f"Hello, {name}!")
+
+.. click:run::
+
+    invoke(hello, args=[])
+    invoke(hello, args=["--name", "Value"])
+    invoke(hello, args=["--name"])
+
+If the option has ``prompt`` enabled, then setting
+``prompt_required=False`` tells Click to only show the prompt if the
+option's flag is given, instead of if the option is not provided at all.
+
+.. click:example::
+
+    @click.command()
+    @click.option('--name', prompt=True, prompt_required=False, default="Default")
+    def hello(name):
+        click.echo(f"Hello {name}!")
+
+.. click:run::
+
+    invoke(hello)
+    invoke(hello, args=["--name", "Value"])
+    invoke(hello, args=["--name"], input="Prompt")
+
+If ``required=True``, then the option will still prompt if it is not
+given, but it will also prompt if only the flag is given.

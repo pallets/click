@@ -385,3 +385,54 @@ def test_getchar_windows_exceptions(runner, monkeypatch, key_char, exc):
 def test_fast_edit(runner):
     result = click.edit("a\nb", editor="sed -i~ 's/$/Test/'")
     assert result == "aTest\nbTest\n"
+
+
+@pytest.mark.parametrize(
+    ("prompt_required", "required", "args", "expect"),
+    [
+        (True, False, None, "prompt"),
+        (True, False, ["-v"], "-v option requires an argument"),
+        (False, True, None, "prompt"),
+        (False, True, ["-v"], "prompt"),
+    ],
+)
+def test_prompt_required_with_required(runner, prompt_required, required, args, expect):
+    @click.command()
+    @click.option("-v", prompt=True, prompt_required=prompt_required, required=required)
+    def cli(v):
+        click.echo(str(v))
+
+    result = runner.invoke(cli, args, input="prompt")
+    assert expect in result.output
+
+
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        # Flag not passed, don't prompt.
+        pytest.param(None, None, id="no flag"),
+        # Flag and value passed, don't prompt.
+        pytest.param(["-v", "value"], "value", id="short sep value"),
+        pytest.param(["--value", "value"], "value", id="long sep value"),
+        pytest.param(["-vvalue"], "value", id="short join value"),
+        pytest.param(["--value=value"], "value", id="long join value"),
+        # Flag without value passed, prompt.
+        pytest.param(["-v"], "prompt", id="short no value"),
+        pytest.param(["--value"], "prompt", id="long no value"),
+        # Don't use next option flag as value.
+        pytest.param(["-v", "-o", "42"], ("prompt", "42"), id="no value opt"),
+    ],
+)
+def test_prompt_required_false(runner, args, expect):
+    @click.command()
+    @click.option("-v", "--value", prompt=True, prompt_required=False)
+    @click.option("-o")
+    def cli(value, o):
+        if o is not None:
+            return value, o
+
+        return value
+
+    result = runner.invoke(cli, args=args, input="prompt", standalone_mode=False)
+    assert result.exception is None
+    assert result.return_value == expect

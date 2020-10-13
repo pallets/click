@@ -18,6 +18,7 @@ from .formatting import HelpFormatter
 from .formatting import join_options
 from .globals import pop_context
 from .globals import push_context
+from .parser import _flag_needs_value
 from .parser import OptionParser
 from .parser import split_opt
 from .termui import confirm
@@ -2148,6 +2149,9 @@ class Option(Parameter):
                    option name capitalized.
     :param confirmation_prompt: if set then the value will need to be confirmed
                                 if it was prompted for.
+    :param prompt_required: If set to ``False``, the user will be
+        prompted for input only when the option was specified as a flag
+        without a value.
     :param hide_input: if this is `True` then the input on the prompt will be
                        hidden from the user.  This is useful for password
                        input.
@@ -2177,6 +2181,7 @@ class Option(Parameter):
         show_default=False,
         prompt=False,
         confirmation_prompt=False,
+        prompt_required=True,
         hide_input=False,
         is_flag=None,
         flag_value=None,
@@ -2201,21 +2206,38 @@ class Option(Parameter):
             prompt_text = prompt
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
+        self.prompt_required = prompt_required
         self.hide_input = hide_input
         self.hidden = hidden
 
-        # Flags
+        # If prompt is enabled but not required, then the option can be
+        # used as a flag to indicate using prompt or flag_value.
+        self._flag_needs_value = self.prompt is not None and not self.prompt_required
+
         if is_flag is None:
             if flag_value is not None:
+                # Implicitly a flag because flag_value was set.
                 is_flag = True
+            elif self._flag_needs_value:
+                # Not a flag, but when used as a flag it shows a prompt.
+                is_flag = False
             else:
+                # Implicitly a flag because flag options were given.
                 is_flag = bool(self.secondary_opts)
+        elif is_flag is False and not self._flag_needs_value:
+            # Not a flag, and prompt is not enabled, can be used as a
+            # flag if flag_value is set.
+            self._flag_needs_value = flag_value is not None
+
         if is_flag and default_is_missing:
             self.default = False
+
         if flag_value is None:
             flag_value = not self.default
+
         self.is_flag = is_flag
         self.flag_value = flag_value
+
         if self.is_flag and isinstance(self.flag_value, bool) and type in [None, bool]:
             self.type = BOOL
             self.is_bool_flag = True
@@ -2486,11 +2508,23 @@ class Option(Parameter):
     def consume_value(self, ctx, opts):
         value, source = super().consume_value(ctx, opts)
 
+        # The parser will emit a sentinel value if the option can be
+        # given as a flag without a value. This is different from None
+        # to distinguish from the flag not being given at all.
+        if value is _flag_needs_value:
+            if self.prompt is not None and not ctx.resilient_parsing:
+                value = self.prompt_for_value(ctx)
+                source = ParameterSource.PROMPT
+            else:
+                value = self.flag_value
+                source = ParameterSource.COMMANDLINE
+
         # The value wasn't set, or used the param's default, prompt if
         # prompting is enabled.
-        if (
+        elif (
             source in {None, ParameterSource.DEFAULT}
             and self.prompt is not None
+            and (self.required or self.prompt_required)
             and not ctx.resilient_parsing
         ):
             value = self.prompt_for_value(ctx)
