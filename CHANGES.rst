@@ -145,6 +145,9 @@ Unreleased
     passed in as a default value.
     :issue:`549, 736, 764, 921, 1015, 1618`
 -   Fix formatting when ``Command.options_metavar`` is empty. :pr:`1551`
+-   The default value passed to ``prompt`` will be cast to the correct
+    type like an input value would be. :pr:`1517`
+
 
 Version 7.1.2
 -------------
