@@ -304,3 +304,13 @@ def test_context_settings(runner):
         env={"COMP_WORDS": "", "COMP_CWORD": "0", "_CLI_COMPLETE": "bash_complete"},
     )
     assert result.output == "plain,a\nplain,b\n"
+
+
+@pytest.mark.parametrize(("value", "expect"), [(False, ["Au", "al"]), (True, ["al"])])
+def test_choice_case_sensitive(value, expect):
+    cli = Command(
+        "cli",
+        params=[Option(["-a"], type=Choice(["Au", "al", "Bc"], case_sensitive=value))],
+    )
+    completions = _get_words(cli, ["-a"], "a")
+    assert completions == expect
