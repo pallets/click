@@ -528,3 +528,22 @@ def test_hidden_group(runner):
     assert result.exit_code == 0
     assert "subgroup" not in result.output
     assert "nope" not in result.output
+
+
+def test_summary_line(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    def cmd():
+        """
+        Summary line without period
+
+        Here is a sentence. And here too.
+        """
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert "Summary line without period" in result.output
+    assert "Here is a sentence." not in result.output

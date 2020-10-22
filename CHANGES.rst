@@ -147,6 +147,8 @@ Unreleased
 -   Fix formatting when ``Command.options_metavar`` is empty. :pr:`1551`
 -   The default value passed to ``prompt`` will be cast to the correct
     type like an input value would be. :pr:`1517`
+-   Automatically generated short help messages will stop at the first
+    ending of a phrase or double linebreak. :issue:`1082`
 
 
 Version 7.1.2

@@ -49,6 +49,9 @@ def make_str(value):
 
 def make_default_short_help(help, max_length=45):
     """Return a condensed version of help string."""
+    line_ending = help.find("\n\n")
+    if line_ending != -1:
+        help = help[:line_ending]
     words = help.split()
     total_length = 0
     result = []
