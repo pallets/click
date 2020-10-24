@@ -253,6 +253,7 @@ And on the command line:
 
     invoke(info, args=['--shout'])
     invoke(info, args=['--no-shout'])
+    invoke(info)
 
 If you really don't want an off-switch, you can just define one and
 manually inform Click that something is a flag:
@@ -274,6 +275,7 @@ And on the command line:
 .. click:run::
 
     invoke(info, args=['--shout'])
+    invoke(info)
 
 Note that if a slash is contained in your option already (for instance, if
 you use Windows-style parameters where ``/`` is the prefix character), you
