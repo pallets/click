@@ -344,6 +344,16 @@ def test_progressbar_update_with_item_show_func(runner, monkeypatch):
     assert "Custom 4" in lines[2]
 
 
+def test_progress_bar_update_min_steps(runner):
+    bar = _create_progress(update_min_steps=5)
+    bar.update(3)
+    assert bar._completed_intervals == 3
+    assert bar.pos == 0
+    bar.update(2)
+    assert bar._completed_intervals == 0
+    assert bar.pos == 5
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")

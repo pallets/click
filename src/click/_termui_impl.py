@@ -62,6 +62,7 @@ class ProgressBar:
         label=None,
         file=None,
         color=None,
+        update_min_steps=1,
         width=30,
     ):
         self.fill_char = fill_char
@@ -77,6 +78,8 @@ class ProgressBar:
             file = _default_text_stdout()
         self.file = file
         self.color = color
+        self.update_min_steps = update_min_steps
+        self._completed_intervals = 0
         self.width = width
         self.autowidth = width == 0
 
@@ -290,13 +293,23 @@ class ProgressBar:
         :param current_item: Optional item to set as ``current_item``
             for the updated position.
 
-        .. versionadded:: 8.0
+        .. versionchanged:: 8.0
             Added the ``current_item`` optional parameter.
+
+        .. versionchanged:: 8.0
+            Only render when the number of steps meets the
+            ``update_min_steps`` threshold.
         """
-        self.make_step(n_steps)
-        if current_item is not None:
-            self.current_item = current_item
-        self.render_progress()
+        self._completed_intervals += n_steps
+
+        if self._completed_intervals >= self.update_min_steps:
+            self.make_step(self._completed_intervals)
+
+            if current_item is not None:
+                self.current_item = current_item
+
+            self.render_progress()
+            self._completed_intervals = 0
 
     def finish(self):
         self.eta_known = 0

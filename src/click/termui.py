@@ -299,6 +299,7 @@ def progressbar(
     width=36,
     file=None,
     color=None,
+    update_min_steps=1,
 ):
     """This function creates an iterable context manager that can be used
     to iterate over something while showing a progress bar.  It will
@@ -353,12 +354,6 @@ def progressbar(
                 archive.extract()
                 bar.update(archive.size, archive)
 
-    .. versionadded:: 2.0
-
-    .. versionadded:: 4.0
-       Added the `color` parameter.  Added a `update` method to the
-       progressbar object.
-
     :param iterable: an iterable to iterate over.  If not provided the length
                      is required.
     :param length: the number of items to iterate over.  By default the
@@ -397,6 +392,17 @@ def progressbar(
                   default is autodetection.  This is only needed if ANSI
                   codes are included anywhere in the progress bar output
                   which is not the case by default.
+    :param update_min_steps: Render only when this many updates have
+        completed. This allows tuning for very fast iterators.
+
+    .. versionadded:: 8.0
+       Added the ``update_min_steps`` parameter.
+
+    .. versionchanged:: 4.0
+        Added the ``color`` parameter. Added the ``update`` method to
+        the object.
+
+    .. versionadded:: 2.0
     """
     from ._termui_impl import ProgressBar
 
@@ -416,6 +422,7 @@ def progressbar(
         label=label,
         width=width,
         color=color,
+        update_min_steps=update_min_steps,
     )
 
 
