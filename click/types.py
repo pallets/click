@@ -161,7 +161,9 @@ class Choice(ParamType):
             try:
                 idx = int(value)
             except:
-                self.fail('invaid index choice: %s. Please input integer type!' % (value))
+                if value in self.choices.values():
+                    return value
+                self.fail('invaid index choice: %s. Please input integer index or correct value!' % (value))
 
             if idx in list(self.choices.keys()):
                 return self.choices[idx]
