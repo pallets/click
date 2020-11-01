@@ -151,6 +151,8 @@ Unreleased
     ending of a phrase or double linebreak. :issue:`1082`
 -   Skip progress bar render steps for efficiency with very fast
     iterators by setting ``update_min_steps``. :issue:`676`
+-   Respect ``case_sensitive=False`` when doing shell completion for
+    ``Choice`` :issue:`1692`
 
 
 Version 7.1.2
