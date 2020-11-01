@@ -149,6 +149,8 @@ Unreleased
     type like an input value would be. :pr:`1517`
 -   Automatically generated short help messages will stop at the first
     ending of a phrase or double linebreak. :issue:`1082`
+-   Skip progress bar render steps for efficiency with very fast
+    iterators by setting ``update_min_steps``. :issue:`676`
 
 
 Version 7.1.2
