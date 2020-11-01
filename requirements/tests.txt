@@ -5,7 +5,7 @@
 #    pip-compile requirements/tests.in
 #
 attrs==19.3.0             # via pytest
-colorama==0.4.3           # via -r requirements/tests.in
+colorama==0.4.4           # via -r requirements/tests.in
 importlib-metadata==2.0.0  # via -r requirements/tests.in
 iniconfig==1.0.0          # via pytest
 packaging==20.4           # via pytest
