@@ -21,7 +21,6 @@ Copyright 2002-2006 Python Software Foundation. All rights reserved.
 # maintained by the Python Software Foundation.
 # Copyright 2001-2006 Gregory P. Ward
 # Copyright 2002-2006 Python Software Foundation
-import re
 from collections import deque
 
 from .exceptions import BadArgumentUsage
@@ -103,22 +102,37 @@ def normalize_opt(opt, ctx):
 
 
 def split_arg_string(string):
-    """Given an argument string this attempts to split it into small parts."""
-    rv = []
-    for match in re.finditer(
-        r"('([^'\\]*(?:\\.[^'\\]*)*)'|\"([^\"\\]*(?:\\.[^\"\\]*)*)\"|\S+)\s*",
-        string,
-        re.S,
-    ):
-        arg = match.group().strip()
-        if arg[:1] == arg[-1:] and arg[:1] in "\"'":
-            arg = arg[1:-1].encode("ascii", "backslashreplace").decode("unicode-escape")
-        try:
-            arg = type(string)(arg)
-        except UnicodeError:
-            pass
-        rv.append(arg)
-    return rv
+    """Split an argument string as with :func:`shlex.split`, but don't
+    fail if the string is incomplete. Ignores a missing closing quote or
+    incomplete escape sequence and uses the partial token as-is.
+
+    .. code-block:: python
+
+        split_arg_string("example 'my file")
+        ["example", "my file"]
+
+        split_arg_string("example my\\")
+        ["example", "my"]
+
+    :param string: String to split.
+    """
+    import shlex
+
+    lex = shlex.shlex(string, posix=True)
+    lex.whitespace_split = True
+    lex.commenters = ""
+    out = []
+
+    try:
+        for token in lex:
+            out.append(token)
+    except ValueError:
+        # Raised when end-of-string is reached in an invalid state. Use
+        # the partial token as-is. The quote or escape character is in
+        # lex.state, not lex.token.
+        out.append(lex.token)
+
+    return out
 
 
 class Option:

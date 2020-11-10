@@ -107,6 +107,8 @@ Unreleased
         The shell now comes first, such as ``{shell}_source`` rather
         than ``source_{shell}``, and is always required.
 
+-   Completion correctly parses command line strings with incomplete
+    quoting or escape sequences. :issue:`1708`
 -   Extra context settings (``obj=...``, etc.) are passed on to the
     completion system. :issue:`942`
 -   Include ``--help`` option in completion. :pr:`1504`
