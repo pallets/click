@@ -136,6 +136,8 @@ Types
 
 .. autoclass:: IntRange
 
+.. autoclass:: FloatRange
+
 .. autoclass:: Tuple
 
 .. autoclass:: ParamType
