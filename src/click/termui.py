@@ -2,11 +2,8 @@ import inspect
 import io
 import itertools
 import os
-import struct
 import sys
 
-from ._compat import DEFAULT_COLUMNS
-from ._compat import get_winterm_size
 from ._compat import is_bytes
 from ._compat import isatty
 from ._compat import strip_ansi
@@ -215,44 +212,21 @@ def confirm(
 def get_terminal_size():
     """Returns the current size of the terminal as tuple in the form
     ``(width, height)`` in columns and rows.
+
+    .. deprecated:: 8.0
+        Will be removed in Click 8.1. Use
+        :func:`shutil.get_terminal_size` instead.
     """
     import shutil
+    import warnings
 
-    if hasattr(shutil, "get_terminal_size"):
-        return shutil.get_terminal_size()
-
-    # We provide a sensible default for get_winterm_size() when being invoked
-    # inside a subprocess. Without this, it would not provide a useful input.
-    if get_winterm_size is not None:
-        size = get_winterm_size()
-        if size == (0, 0):
-            return (79, 24)
-        else:
-            return size
-
-    def ioctl_gwinsz(fd):
-        try:
-            import fcntl
-            import termios
-
-            cr = struct.unpack("hh", fcntl.ioctl(fd, termios.TIOCGWINSZ, "1234"))
-        except Exception:
-            return
-        return cr
-
-    cr = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
-    if not cr:
-        try:
-            fd = os.open(os.ctermid(), os.O_RDONLY)
-            try:
-                cr = ioctl_gwinsz(fd)
-            finally:
-                os.close(fd)
-        except Exception:
-            pass
-    if not cr or not cr[0] or not cr[1]:
-        cr = (os.environ.get("LINES", 25), os.environ.get("COLUMNS", DEFAULT_COLUMNS))
-    return int(cr[1]), int(cr[0])
+    warnings.warn(
+        "'click.get_terminal_size()' is deprecated and will be removed"
+        " in Click 8.1. Use 'shutil.get_terminal_size()' instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    return shutil.get_terminal_size()
 
 
 def echo_via_pager(text_or_generator, color=None):
