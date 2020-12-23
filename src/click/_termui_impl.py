@@ -395,6 +395,7 @@ def get_pager_file(color=None):
             # wrap in a text stream
             stream = MaybeStripAnsi(stream, color=color, encoding=encoding)
         yield stream
+        stream.flush()
 
 
 @contextlib.contextmanager
@@ -458,7 +459,7 @@ def _tempfilepager(cmd, color=None):
 def _nullpager(stream, color=None):
     """Simply print unformatted text.  This is the ultimate fallback."""
     encoding = get_best_encoding(stream)
-    return stream, encoding, color
+    yield stream, encoding, color
 
 
 class Editor:
