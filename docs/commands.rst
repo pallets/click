@@ -192,31 +192,34 @@ A custom multi command just needs to implement a list and load method:
 
 .. click:example::
 
+    from pathlib import Path
+    from typing import List
+
     import click
-    import os
 
-    plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
+    plugin_folder = Path(__file__).resolve().parent.parent.joinpath('commands')
 
-    class MyCLI(click.MultiCommand):
 
-        def list_commands(self, ctx):
+    class Console(click.MultiCommand):
+        def list_commands(self, ctx: click.core.Context) -> List[str]:
             rv = []
-            for filename in os.listdir(plugin_folder):
-                if filename.endswith('.py') and filename != '__init__.py':
-                    rv.append(filename[:-3])
-            rv.sort()
+            for filename in plugin_folder.glob('*.py'):
+                if filename.stem != '__init__':
+                    rv.append(filename.stem)
             return rv
 
-        def get_command(self, ctx, name):
+        def get_command(self, ctx: click.core.Context, name: str) -> click.core.Command:
             ns = {}
-            fn = os.path.join(plugin_folder, name + '.py')
-            with open(fn) as f:
-                code = compile(f.read(), fn, 'exec')
-                eval(code, ns, ns)
+            fn = plugin_folder.joinpath(name + '.py')
+            with fn.open() as f:
+                eval(compile(f.read(), fn.absolute(), 'exec'), ns, ns)
             return ns['cli']
 
-    cli = MyCLI(help='This tool\'s subcommands are loaded from a '
-                'plugin folder dynamically.')
+
+    @click.command(cls=Console)
+    def cli() -> None:
+        pass
+
 
     if __name__ == '__main__':
         cli()
@@ -225,9 +228,9 @@ These custom classes can also be used with decorators:
 
 .. click:example::
 
-    @click.command(cls=MyCLI)
-    def cli():
-        pass
+    @click.command()
+    def cli() -> None:
+        click.echo("works")
 
 Merging Multi Commands
 ----------------------
