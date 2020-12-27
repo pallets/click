@@ -197,20 +197,20 @@ A custom multi command just needs to implement a list and load method:
 
     import click
 
-    plugin_folder = Path(__file__).resolve().parent.parent.joinpath('commands')
+    commands_path = Path(__file__).resolve().parent.parent.joinpath('commands')
 
 
     class Console(click.MultiCommand):
         def list_commands(self, ctx: click.core.Context) -> List[str]:
             rv = []
-            for filename in plugin_folder.glob('*.py'):
-                if filename.stem != '__init__':
-                    rv.append(filename.stem)
+            for file in commands_path.glob('*.py'):
+                if file.stem != '__init__':
+                    rv.append(file.stem)
             return rv
 
         def get_command(self, ctx: click.core.Context, name: str) -> click.core.Command:
             ns = {}
-            fn = plugin_folder.joinpath(name + '.py')
+            fn = commands_path.joinpath(name + '.py')
             with fn.open() as f:
                 eval(compile(f.read(), fn.absolute(), 'exec'), ns, ns)
             return ns['cli']
