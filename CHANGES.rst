@@ -4,6 +4,8 @@ Version 7.2
 -----------
 
 -   Include ``--help`` option in completion. :pr:`1504`
+-   Use ``mkstemp()`` instead of ``mktemp()`` in pager implementation.
+    :issue:`1752`
 
 
 Version 7.1.2
