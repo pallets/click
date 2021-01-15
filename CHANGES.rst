@@ -157,6 +157,8 @@ Unreleased
     ``Choice`` :issue:`1692`
 -   Use ``mkstemp()`` instead of ``mktemp()`` in pager implementation.
     :issue:`1752`
+-   If ``Option.show_default`` is a string, it is displayed even if
+    ``default`` is ``None``. :issue:`1732`
 
 
 Version 7.1.2

@@ -2405,9 +2405,12 @@ class Option(Parameter):
                 extra.append(f"env var: {var_str}")
 
         default_value = self.get_default(ctx, call=False)
+        show_default_is_str = isinstance(self.show_default, str)
 
-        if default_value is not None and (self.show_default or ctx.show_default):
-            if isinstance(self.show_default, str):
+        if show_default_is_str or (
+            default_value is not None and (self.show_default or ctx.show_default)
+        ):
+            if show_default_is_str:
                 default_string = f"({self.show_default})"
             elif isinstance(default_value, (list, tuple)):
                 default_string = ", ".join(str(d) for d in default_value)

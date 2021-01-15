@@ -660,6 +660,14 @@ def test_show_default_boolean_flag_value(runner):
     assert "[default: False]" in message
 
 
+def test_show_default_string(runner):
+    """When show_default is a string show that value as default."""
+    opt = click.Option(["--limit"], show_default="unlimited")
+    ctx = click.Context(click.Command("cli"))
+    message = opt.get_help_record(ctx)[1]
+    assert "[default: (unlimited)]" in message
+
+
 @pytest.mark.parametrize(
     ("args", "expect"),
     [
