@@ -3,6 +3,7 @@ import io
 import os
 import re
 import sys
+import typing as t
 from weakref import WeakKeyDictionary
 
 CYGWIN = sys.platform.startswith("cygwin")
@@ -12,8 +13,7 @@ APP_ENGINE = "APPENGINE_RUNTIME" in os.environ and "Development/" in os.environ.
     "SERVER_SOFTWARE", ""
 )
 WIN = sys.platform.startswith("win") and not APP_ENGINE and not MSYS2
-auto_wrap_for_ansi = None
-colorama = None
+auto_wrap_for_ansi: t.Optional[t.Callable[[t.TextIO], t.TextIO]] = None
 _ansi_re = re.compile(r"\033\[[;?0-9]*[a-zA-Z]")
 
 
@@ -493,7 +493,8 @@ def should_strip_ansi(stream=None, color=None):
 # If we're on Windows, we provide transparent integration through
 # colorama.  This will make ANSI colors through the echo function
 # work automatically.
-if WIN:
+# NOTE: double check is needed so mypy does not analyze this on Linux
+if sys.platform.startswith("win") and WIN:
     from ._winconsole import _get_windows_console_stream
 
     def _get_argv_encoding():
@@ -506,9 +507,13 @@ if WIN:
     except ImportError:
         pass
     else:
-        _ansi_stream_wrappers = WeakKeyDictionary()
+        _ansi_stream_wrappers: t.MutableMapping[
+            t.TextIO, t.TextIO
+        ] = WeakKeyDictionary()
 
-        def auto_wrap_for_ansi(stream, color=None):
+        def auto_wrap_for_ansi(
+            stream: t.TextIO, color: t.Optional[bool] = None
+        ) -> t.TextIO:
             """This function wraps a stream so that calls through colorama
             are issued to the win32 console API to recolor on demand.  It
             also ensures to reset the colors if a write call is interrupted

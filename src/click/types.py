@@ -1,5 +1,6 @@
 import os
 import stat
+import typing as t
 from datetime import datetime
 
 from ._compat import _get_argv_encoding
@@ -33,7 +34,7 @@ class ParamType:
     is_composite = False
 
     #: the descriptive name of this type
-    name = None
+    name: t.Optional[str] = None
 
     #: if a list of this type is expected and the value is pulled from a
     #: string environment variable, this is what splits it up.  `None`
@@ -41,7 +42,7 @@ class ParamType:
     #: whitespace splits them up.  The exception are paths and files which
     #: are split by ``os.path.pathsep`` by default (":" on Unix and ";" on
     #: Windows).
-    envvar_list_splitter = None
+    envvar_list_splitter: t.ClassVar[t.Optional[str]] = None
 
     def to_info_dict(self):
         """Gather information that could be useful for a tool generating
@@ -345,7 +346,7 @@ class DateTime(ParamType):
 
 
 class _NumberParamTypeBase(ParamType):
-    _number_class = None
+    _number_class: t.ClassVar[t.Optional[t.Type]] = None
 
     def convert(self, value, param, ctx):
         try:

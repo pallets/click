@@ -2,6 +2,7 @@ import enum
 import errno
 import os
 import sys
+import typing as t
 from contextlib import contextmanager
 from contextlib import ExitStack
 from functools import update_wrapper
@@ -1625,7 +1626,7 @@ class Group(MultiCommand):
     #: subcommands use a custom command class.
     #:
     #: .. versionadded:: 8.0
-    command_class = None
+    command_class: t.Optional[t.Type[BaseCommand]] = None
 
     #: If set, this is used by the group's :meth:`group` decorator
     #: as the default :class:`Group` class. This is useful to make all
@@ -1637,7 +1638,8 @@ class Group(MultiCommand):
     #: custom groups.
     #:
     #: .. versionadded:: 8.0
-    group_class = None
+    group_class: t.Optional[t.Union[t.Type["Group"], t.Type[type]]] = None
+    # Literal[type] isn't valid, so use Type[type]
 
     def __init__(self, name=None, commands=None, **attrs):
         super().__init__(name, **attrs)

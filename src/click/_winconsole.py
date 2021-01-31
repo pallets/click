@@ -6,8 +6,8 @@
 # compared to the original patches as we do not need to patch
 # the entire interpreter but just work in our little world of
 # echo and prompt.
-import ctypes
 import io
+import sys
 import time
 from ctypes import byref
 from ctypes import c_char
@@ -18,25 +18,18 @@ from ctypes import c_ulong
 from ctypes import c_void_p
 from ctypes import POINTER
 from ctypes import py_object
-from ctypes import windll
-from ctypes import WINFUNCTYPE
+from ctypes import Structure
 from ctypes.wintypes import DWORD
 from ctypes.wintypes import HANDLE
 from ctypes.wintypes import LPCWSTR
 from ctypes.wintypes import LPWSTR
 
-import msvcrt
-
 from ._compat import _NonClosingTextIOWrapper
 
-try:
-    from ctypes import pythonapi
-except ImportError:
-    pythonapi = None
-else:
-    PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
-    PyBuffer_Release = pythonapi.PyBuffer_Release
-
+assert sys.platform == "win32"
+import msvcrt  # noqa: E402
+from ctypes import windll  # noqa: E402
+from ctypes import WINFUNCTYPE  # noqa: E402
 
 c_ssize_p = POINTER(c_ssize_t)
 
@@ -50,15 +43,11 @@ GetCommandLineW = WINFUNCTYPE(LPWSTR)(("GetCommandLineW", windll.kernel32))
 CommandLineToArgvW = WINFUNCTYPE(POINTER(LPWSTR), LPCWSTR, POINTER(c_int))(
     ("CommandLineToArgvW", windll.shell32)
 )
-LocalFree = WINFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p)(
-    ("LocalFree", windll.kernel32)
-)
-
+LocalFree = WINFUNCTYPE(c_void_p, c_void_p)(("LocalFree", windll.kernel32))
 
 STDIN_HANDLE = GetStdHandle(-10)
 STDOUT_HANDLE = GetStdHandle(-11)
 STDERR_HANDLE = GetStdHandle(-12)
-
 
 PyBUF_SIMPLE = 0
 PyBUF_WRITABLE = 1
@@ -74,33 +63,37 @@ STDERR_FILENO = 2
 EOF = b"\x1a"
 MAX_BYTES_WRITTEN = 32767
 
-
-class Py_buffer(ctypes.Structure):
-    _fields_ = [
-        ("buf", c_void_p),
-        ("obj", py_object),
-        ("len", c_ssize_t),
-        ("itemsize", c_ssize_t),
-        ("readonly", c_int),
-        ("ndim", c_int),
-        ("format", c_char_p),
-        ("shape", c_ssize_p),
-        ("strides", c_ssize_p),
-        ("suboffsets", c_ssize_p),
-        ("internal", c_void_p),
-    ]
-
-
-# On PyPy we cannot get buffers so our ability to operate here is
-# severely limited.
-if pythonapi is None:
+try:
+    from ctypes import pythonapi
+except ImportError:
+    # On PyPy we cannot get buffers so our ability to operate here is
+    # severely limited.
     get_buffer = None
 else:
+
+    class Py_buffer(Structure):
+        _fields_ = [
+            ("buf", c_void_p),
+            ("obj", py_object),
+            ("len", c_ssize_t),
+            ("itemsize", c_ssize_t),
+            ("readonly", c_int),
+            ("ndim", c_int),
+            ("format", c_char_p),
+            ("shape", c_ssize_p),
+            ("strides", c_ssize_p),
+            ("suboffsets", c_ssize_p),
+            ("internal", c_void_p),
+        ]
+
+    PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
+    PyBuffer_Release = pythonapi.PyBuffer_Release
 
     def get_buffer(obj, writable=False):
         buf = Py_buffer()
         flags = PyBUF_WRITABLE if writable else PyBUF_SIMPLE
         PyObject_GetBuffer(py_object(obj), byref(buf), flags)
+
         try:
             buffer_type = c_char * buf.len
             return buffer_type.from_address(buf.buf)

@@ -44,6 +44,10 @@ jinja2==2.11.3
     # via sphinx
 markupsafe==1.1.1
     # via jinja2
+mypy-extensions==0.4.3
+    # via mypy
+mypy==0.800
+    # via -r requirements/typing.in
 nodeenv==1.5.0
     # via pre-commit
 packaging==20.9
@@ -118,6 +122,10 @@ toml==0.10.2
     #   tox
 tox==3.21.4
     # via -r requirements/dev.in
+typed-ast==1.4.2
+    # via mypy
+typing-extensions==3.7.4.3
+    # via mypy
 urllib3==1.26.3
     # via requests
 virtualenv==20.4.2

@@ -46,6 +46,8 @@ ALLOWED_IMPORTS = {
     "fcntl",
     "datetime",
     "enum",
+    "typing",
+    "types",
 }
 
 if WIN:

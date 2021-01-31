@@ -3,6 +3,7 @@ import io
 import itertools
 import os
 import sys
+import typing as t
 
 from ._compat import is_bytes
 from ._compat import isatty
@@ -651,7 +652,7 @@ def launch(url, wait=False, locate=False):
 
 # If this is provided, getchar() calls into this instead.  This is used
 # for unittesting purposes.
-_getchar = None
+_getchar: t.Optional[t.Callable[[bool], str]] = None
 
 
 def getchar(echo=False):
