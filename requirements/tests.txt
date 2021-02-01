@@ -8,7 +8,7 @@ attrs==19.3.0
     # via pytest
 colorama==0.4.4
     # via -r requirements/tests.in
-importlib_metadata==3.4.0
+importlib-metadata==3.4.0
     # via -r requirements/tests.in
 iniconfig==1.0.0
     # via pytest
@@ -20,7 +20,7 @@ py==1.9.0
     # via pytest
 pyparsing==2.4.7
     # via packaging
-pytest==6.2.1
+pytest==6.2.2
     # via -r requirements/tests.in
 six==1.15.0
     # via packaging
