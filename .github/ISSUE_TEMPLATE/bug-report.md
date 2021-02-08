@@ -4,36 +4,24 @@ about: Report a bug in Click (not other projects which depend on Click)
 ---
 
 <!--
-This issue tracker is a tool to address bugs in Click itself.
-Please use the #pocoo IRC channel on freenode, the Discord server or
-Stack Overflow for general questions about using Flask or issues
-not related to Click.
+This issue tracker is a tool to address bugs in Click itself. Please use
+Pallets Discord or Stack Overflow for questions about your own code.
 
-If you'd like to report a bug in Click, fill out the template below. Provide
-any extra information that may be useful / related to your problem.
-Ideally, create an [MCVE](https://stackoverflow.com/help/mcve), which helps us
-understand the problem and helps check that it is not caused by something in
-your code.
+Replace this comment with a clear outline of what the bug is.
 -->
 
+<!--
+Describe how to replicate the bug.
 
-### Expected Behavior
+Include a minimal reproducible example that demonstrates the bug.
+Include the full traceback if there was an exception.
+-->
 
-Tell us what should happen.
+<!--
+Describe the expected behavior that should have happened but didn't.
+-->
 
-```python
-Paste a minimal example that causes the problem.
-```
+Environment:
 
-### Actual Behavior
-
-Tell us what happens instead.
-
-```pytb
-Paste the full traceback if there was an exception.
-```
-
-### Environment
-
-* Python version:
-* Click version:
+- Python version:
+- Click version:
