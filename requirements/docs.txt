@@ -6,45 +6,43 @@
 #
 alabaster==0.7.12
     # via sphinx
-babel==2.8.0
+babel==2.9.0
     # via sphinx
-certifi==2020.4.5.1
+certifi==2020.12.5
     # via requests
-chardet==3.0.4
+chardet==4.0.0
     # via requests
 docutils==0.16
     # via sphinx
-idna==2.9
+idna==2.10
     # via requests
 imagesize==1.2.0
     # via sphinx
-jinja2==2.11.2
+jinja2==2.11.3
     # via sphinx
 markupsafe==1.1.1
     # via jinja2
-packaging==20.4
+packaging==20.9
     # via
     #   pallets-sphinx-themes
     #   sphinx
 pallets-sphinx-themes==1.2.3
     # via -r requirements/docs.in
-pygments==2.6.1
+pygments==2.7.4
     # via
     #   sphinx
     #   sphinx-tabs
 pyparsing==2.4.7
     # via packaging
-pytz==2020.1
+pytz==2021.1
     # via babel
-requests==2.23.0
+requests==2.25.1
     # via sphinx
-six==1.15.0
-    # via packaging
-snowballstemmer==2.0.0
+snowballstemmer==2.1.0
     # via sphinx
 sphinx-issues==1.2.0
     # via -r requirements/docs.in
-sphinx-tabs==2.0.0
+sphinx-tabs==2.0.1
     # via -r requirements/docs.in
 sphinx==3.4.3
     # via
@@ -67,7 +65,7 @@ sphinxcontrib-qthelp==1.0.3
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.4
     # via sphinx
-urllib3==1.25.9
+urllib3==1.26.3
     # via requests
 
 # The following packages are considered to be unsafe in a requirements file:
