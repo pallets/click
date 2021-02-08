@@ -23,7 +23,6 @@ jobs:
           - {name: '3.7', python: '3.7', os: ubuntu-latest, tox: py37}
           - {name: '3.6', python: '3.6', os: ubuntu-latest, tox: py36}
           - {name: 'PyPy', python: pypy3, os: ubuntu-latest, tox: pypy3}
-          - {name: Style, python: '3.9', os: ubuntu-latest, tox: style}
           - {name: Docs, python: '3.9', os: ubuntu-latest, tox: docs}
     steps:
       - uses: actions/checkout@v2
@@ -43,11 +42,6 @@ jobs:
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: pip|${{ runner.os }}|${{ matrix.python }}|${{ hashFiles('setup.py') }}|${{ hashFiles('requirements/*.txt') }}
-      - name: cache pre-commit
-        uses: actions/cache@v1
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ matrix.python }}|${{ hashFiles('.pre-commit-config.yaml') }}
         if: matrix.tox == 'style'
       - run: pip install tox
       - run: tox -e ${{ matrix.tox }}

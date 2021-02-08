@@ -1,17 +1,22 @@
-
 <!--
-Before opening a PR, open a ticket describing the issue or feature the PR will address. Follow the steps in CONTRIBUTING.rst.
-Replace this comment with a description of the change. Describe how it addresses the linked ticket.
+Before opening a PR, open a ticket describing the issue or feature the
+PR will address. Follow the steps in CONTRIBUTING.rst.
+
+Replace this comment with a description of the change. Describe how it
+addresses the linked ticket.
 -->
 
 <!--
-Link to relevant issues or previous PRs, one per line. Use "fixes" to automatically close an issue.
+Link to relevant issues or previous PRs, one per line. Use "fixes" to
+automatically close an issue.
 -->
 
-- Fixes #<issue number>
+- fixes #<issue number>
 
 <!--
-Ensure each step in CONTRIBUTING.rst is complete by adding an "x" to each box below.
+Ensure each step in CONTRIBUTING.rst is complete by adding an "x" to
+each box below.
+
 If only docs were changed, these aren't relevant and can be removed.
 -->
 
