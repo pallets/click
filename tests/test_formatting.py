@@ -52,13 +52,11 @@ def test_basic_functionality(runner):
 def test_wrapping_long_options_strings(runner):
     @click.group()
     def cli():
-        """Top level command
-        """
+        """Top level command"""
 
     @cli.group()
     def a_very_long():
-        """Second level
-        """
+        """Second level"""
 
     @a_very_long.command()
     @click.argument("first")
@@ -68,8 +66,7 @@ def test_wrapping_long_options_strings(runner):
     @click.argument("fifth")
     @click.argument("sixth")
     def command():
-        """A command.
-        """
+        """A command."""
 
     # 54 is chosen as a length where the second line is one character
     # longer than the maximum length.
@@ -90,13 +87,11 @@ def test_wrapping_long_options_strings(runner):
 def test_wrapping_long_command_name(runner):
     @click.group()
     def cli():
-        """Top level command
-        """
+        """Top level command"""
 
     @cli.group()
     def a_very_very_very_long():
-        """Second level
-        """
+        """Second level"""
 
     @a_very_very_very_long.command()
     @click.argument("first")
@@ -106,8 +101,7 @@ def test_wrapping_long_command_name(runner):
     @click.argument("fifth")
     @click.argument("sixth")
     def command():
-        """A command.
-        """
+        """A command."""
 
     result = runner.invoke(
         cli, ["a-very-very-very-long", "command", "--help"], terminal_width=54
@@ -128,9 +122,11 @@ def test_wrapping_long_command_name(runner):
 def test_formatting_empty_help_lines(runner):
     @click.command()
     def cli():
+        # fmt: off
         """Top level command
 
         """
+        # fmt: on
 
     result = runner.invoke(cli, ["--help"])
     assert not result.exception
@@ -306,7 +302,7 @@ def test_global_show_default(runner):
     def cli():
         pass
 
-    result = runner.invoke(cli, ["--help"],)
+    result = runner.invoke(cli, ["--help"])
     assert result.output.splitlines() == [
         "Usage: cli [OPTIONS]",
         "",
