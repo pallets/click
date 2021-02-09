@@ -263,9 +263,7 @@ def _patch_for_completion(monkeypatch):
     )
 
 
-@pytest.mark.parametrize(
-    "shell", ["bash", "zsh", "fish"],
-)
+@pytest.mark.parametrize("shell", ["bash", "zsh", "fish"])
 @pytest.mark.usefixtures("_patch_for_completion")
 def test_full_source(runner, shell):
     cli = Group("cli", commands=[Command("a"), Command("b")])

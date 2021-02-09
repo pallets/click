@@ -488,7 +488,7 @@ def test_option_help_preserve_paragraphs(runner):
     def cmd(config):
         pass
 
-    result = runner.invoke(cmd, ["--help"],)
+    result = runner.invoke(cmd, ["--help"])
     assert result.exit_code == 0
     i = " " * 21
     assert (
@@ -653,7 +653,7 @@ def test_show_default_boolean_flag_value(runner):
     value, not the opt name.
     """
     opt = click.Option(
-        ("--cache",), is_flag=True, show_default=True, help="Enable the cache.",
+        ("--cache",), is_flag=True, show_default=True, help="Enable the cache."
     )
     ctx = click.Context(click.Command("test"))
     message = opt.get_help_record(ctx)[1]

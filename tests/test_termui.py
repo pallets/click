@@ -380,7 +380,7 @@ def test_getchar_special_key_windows(runner, monkeypatch, special_key_char, key_
 
 
 @pytest.mark.parametrize(
-    ("key_char", "exc"), [("\x03", KeyboardInterrupt), ("\x1a", EOFError)],
+    ("key_char", "exc"), [("\x03", KeyboardInterrupt), ("\x1a", EOFError)]
 )
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
 def test_getchar_windows_exceptions(runner, monkeypatch, key_char, exc):
