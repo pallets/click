@@ -319,3 +319,18 @@ def test_file_stdin_attrs(runner):
 
     result = runner.invoke(cli, ["-"])
     assert result.output == "<stdin>\nr"
+
+
+def test_isolated_runner(runner):
+    with runner.isolated_filesystem() as d:
+        assert os.path.exists(d)
+
+    assert not os.path.exists(d)
+
+
+def test_isolated_runner_custom_tempdir(runner, tmp_path):
+    with runner.isolated_filesystem(temp_dir=tmp_path) as d:
+        assert os.path.exists(d)
+
+    assert os.path.exists(d)
+    os.rmdir(d)

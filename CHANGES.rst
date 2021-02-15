@@ -161,6 +161,9 @@ Unreleased
     ``default`` is ``None``. :issue:`1732`
 -   ``click.get_terminal_size()`` is deprecated and will be removed in
     8.1. Use :func:`shutil.get_terminal_size` instead. :issue:`1736`
+-   Control the location of the temporary directory created by
+    ``CLIRunner.isolated_filesystem`` by passing ``temp_dir``. A custom
+    directory will not be removed automatically. :issue:`395`
 
 
 Version 7.1.2
