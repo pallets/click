@@ -1,5 +1,6 @@
 import os
 import re
+import typing as t
 
 from .core import Argument
 from .core import MultiCommand
@@ -183,12 +184,12 @@ class ShellComplete:
     .. versionadded:: 8.0
     """
 
-    name = None
+    name: t.ClassVar[t.Optional[str]] = None
     """Name to register the shell as with :func:`add_completion_class`.
     This is used in completion instructions (``{name}_source`` and
     ``{name}_complete``).
     """
-    source_template = None
+    source_template: t.ClassVar[t.Optional[str]] = None
     """Completion script template formatted by :meth:`source`. This must
     be provided by subclasses.
     """
@@ -312,7 +313,7 @@ class BashComplete(ShellComplete):
 
         return args, incomplete
 
-    def format_completion(self, item: CompletionItem):
+    def format_completion(self, item: CompletionItem) -> str:
         return f"{item.type},{item.value}"
 
 
@@ -334,7 +335,7 @@ class ZshComplete(ShellComplete):
 
         return args, incomplete
 
-    def format_completion(self, item: CompletionItem):
+    def format_completion(self, item: CompletionItem) -> str:
         return f"{item.type}\n{item.value}\n{item.help if item.help else '_'}"
 
 
@@ -356,7 +357,7 @@ class FishComplete(ShellComplete):
 
         return args, incomplete
 
-    def format_completion(self, item: CompletionItem):
+    def format_completion(self, item: CompletionItem) -> str:
         if item.help:
             return f"{item.type},{item.value}\t{item.help}"
 
