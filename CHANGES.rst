@@ -164,6 +164,8 @@ Unreleased
 -   Control the location of the temporary directory created by
     ``CLIRunner.isolated_filesystem`` by passing ``temp_dir``. A custom
     directory will not be removed automatically. :issue:`395`
+-   ``click.confirm()`` will prompt until input is given if called with
+    ``default=None``. :issue:`#1381`
 
 
 Version 7.1.2
