@@ -418,9 +418,6 @@ def clear():
     """
     if not isatty(sys.stdout):
         return
-    # If we're on Windows and we don't have colorama available, then we
-    # clear the screen by shelling out.  Otherwise we can use an escape
-    # sequence.
     if WIN:
         os.system("cls")
     else:

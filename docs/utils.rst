@@ -52,10 +52,8 @@ ANSI Colors
 
 .. versionadded:: 2.0
 
-The :func:`echo` function gained extra functionality to deal with ANSI
-colors and styles.  Note that on Windows, this functionality is only
-available if `colorama`_ is installed.  If it is installed, then ANSI
-codes are intelligently handled.
+The :func:`echo` function supports ANSI colors and styles. On Windows
+this uses `colorama`_.
 
 Primarily this means that:
 
@@ -66,12 +64,8 @@ Primarily this means that:
     that colors will work on Windows the same way they do on other
     operating systems.
 
-Note for `colorama` support: Click will automatically detect when `colorama`
-is available and use it.  Do *not* call ``colorama.init()``!
-
-To install `colorama`, run this command::
-
-    $ pip install colorama
+On Windows, Click uses colorama without calling ``colorama.init()``. You
+can still call that in your code, but it's not required for Click.
 
 For styling a string, the :func:`style` function can be used::
 

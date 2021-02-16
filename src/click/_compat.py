@@ -490,9 +490,8 @@ def should_strip_ansi(stream=None, color=None):
     return not color
 
 
-# If we're on Windows, we provide transparent integration through
-# colorama.  This will make ANSI colors through the echo function
-# work automatically.
+# On Windows, wrap the output streams with colorama to support ANSI
+# color codes.
 # NOTE: double check is needed so mypy does not analyze this on Linux
 if sys.platform.startswith("win") and WIN:
     from ._winconsole import _get_windows_console_stream
@@ -502,47 +501,44 @@ if sys.platform.startswith("win") and WIN:
 
         return locale.getpreferredencoding()
 
-    try:
+    _ansi_stream_wrappers: t.MutableMapping[t.TextIO, t.TextIO] = WeakKeyDictionary()
+
+    def auto_wrap_for_ansi(
+        stream: t.TextIO, color: t.Optional[bool] = None
+    ) -> t.TextIO:
+        """Support ANSI color and style codes on Windows by wrapping a
+        stream with colorama.
+        """
+        try:
+            cached = _ansi_stream_wrappers.get(stream)
+        except Exception:
+            cached = None
+
+        if cached is not None:
+            return cached
+
         import colorama
-    except ImportError:
-        pass
-    else:
-        _ansi_stream_wrappers: t.MutableMapping[
-            t.TextIO, t.TextIO
-        ] = WeakKeyDictionary()
 
-        def auto_wrap_for_ansi(
-            stream: t.TextIO, color: t.Optional[bool] = None
-        ) -> t.TextIO:
-            """This function wraps a stream so that calls through colorama
-            are issued to the win32 console API to recolor on demand.  It
-            also ensures to reset the colors if a write call is interrupted
-            to not destroy the console afterwards.
-            """
+        strip = should_strip_ansi(stream, color)
+        ansi_wrapper = colorama.AnsiToWin32(stream, strip=strip)
+        rv = ansi_wrapper.stream
+        _write = rv.write
+
+        def _safe_write(s):
             try:
-                cached = _ansi_stream_wrappers.get(stream)
-            except Exception:
-                cached = None
-            if cached is not None:
-                return cached
-            strip = should_strip_ansi(stream, color)
-            ansi_wrapper = colorama.AnsiToWin32(stream, strip=strip)
-            rv = ansi_wrapper.stream
-            _write = rv.write
+                return _write(s)
+            except BaseException:
+                ansi_wrapper.reset_all()
+                raise
 
-            def _safe_write(s):
-                try:
-                    return _write(s)
-                except BaseException:
-                    ansi_wrapper.reset_all()
-                    raise
+        rv.write = _safe_write
 
-            rv.write = _safe_write
-            try:
-                _ansi_stream_wrappers[stream] = rv
-            except Exception:
-                pass
-            return rv
+        try:
+            _ansi_stream_wrappers[stream] = rv
+        except Exception:
+            pass
+
+        return rv
 
 
 else:

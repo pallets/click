@@ -172,51 +172,43 @@ class KeepOpenFile:
 
 
 def echo(message=None, file=None, nl=True, err=False, color=None):
-    """Prints a message plus a newline to the given file or stdout.  On
-    first sight, this looks like the print function, but it has improved
-    support for handling Unicode and binary data that does not fail no
-    matter how badly configured the system is.
+    """Print a message and newline to stdout or a file. This should be
+    used instead of :func:`print` because it provides better support
+    for different data, files, and environments.
 
-    Primarily it means that you can print binary data as well as Unicode
-    data on both 2.x and 3.x to the given file in the most appropriate way
-    possible.  This is a very carefree function in that it will try its
-    best to not fail.  As of Click 6.0 this includes support for unicode
-    output on the Windows console.
+    Compared to :func:`print`, this does the following:
 
-    In addition to that, if `colorama`_ is installed, the echo function will
-    also support clever handling of ANSI codes.  Essentially it will then
-    do the following:
+    -   Ensures that the output encoding is not misconfigured on Linux.
+    -   Supports Unicode in the Windows console.
+    -   Supports writing to binary outputs, and supports writing bytes
+        to text outputs.
+    -   Supports colors and styles on Windows.
+    -   Removes ANSI color and style codes if the output does not look
+        like an interactive terminal.
+    -   Always flushes the output.
 
-    -   add transparent handling of ANSI color codes on Windows.
-    -   hide ANSI codes automatically if the destination file is not a
-        terminal.
-
-    .. _colorama: https://pypi.org/project/colorama/
+    :param message: The string or bytes to output. Other objects are
+        converted to strings.
+    :param file: The file to write to. Defaults to ``stdout``.
+    :param err: Write to ``stderr`` instead of ``stdout``.
+    :param nl: Print a newline after the message. Enabled by default.
+    :param color: Force showing or hiding colors and other styles. By
+        default Click will remove color if the output does not look like
+        an interactive terminal.
 
     .. versionchanged:: 6.0
-       As of Click 6.0 the echo function will properly support unicode
-       output on the windows console.  Not that click does not modify
-       the interpreter in any way which means that `sys.stdout` or the
-       print statement or function will still not provide unicode support.
-
-    .. versionchanged:: 2.0
-       Starting with version 2.0 of Click, the echo function will work
-       with colorama if it's installed.
-
-    .. versionadded:: 3.0
-       The `err` parameter was added.
+        Support Unicode output on the Windows console. Click does not
+        modify ``sys.stdout``, so ``sys.stdout.write()`` and ``print()``
+        will still not support Unicode.
 
     .. versionchanged:: 4.0
-       Added the `color` flag.
+        Added the ``color`` parameter.
 
-    :param message: the message to print
-    :param file: the file to write to (defaults to ``stdout``)
-    :param err: if set to true the file defaults to ``stderr`` instead of
-                ``stdout``.  This is faster and easier than calling
-                :func:`get_text_stderr` yourself.
-    :param nl: if set to `True` (the default) a newline is printed afterwards.
-    :param color: controls if the terminal supports ANSI colors or not.  The
-                  default is autodetection.
+    .. versionadded:: 3.0
+        Added the ``err`` parameter.
+
+    .. versionchanged:: 2.0
+        Support colors on Windows if colorama is installed.
     """
     if file is None:
         if err:
@@ -247,11 +239,8 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
             binary_file.flush()
             return
 
-    # ANSI-style support.  If there is no message or we are dealing with
-    # bytes nothing is happening.  If we are connected to a file we want
-    # to strip colors.  If we are on windows we either wrap the stream
-    # to strip the color or we use the colorama support to translate the
-    # ansi codes to API calls.
+    # ANSI style code support. For no message or bytes, nothing happens.
+    # When outputting to a file instead of a terminal, strip codes.
     if message and not is_bytes(message):
         color = resolve_color_default(color)
         if should_strip_ansi(file, color):
