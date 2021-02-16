@@ -448,27 +448,30 @@ useful for password input:
 
 .. click:example::
 
-    @click.command()
-    @click.option('--password', prompt=True, hide_input=True,
-                  confirmation_prompt=True)
-    def encrypt(password):
-        click.echo(f"Encrypting password to {password.encode('rot13')}")
+    import codecs
 
-What it looks like:
+    @click.command()
+    @click.option(
+        "--password", prompt=True, hide_input=True,
+        confirmation_prompt=True
+    )
+    def encode(password):
+        click.echo(f"encoded: {codecs.encode(password, 'rot13')}")
 
 .. click:run::
 
-    invoke(encrypt, input=['secret', 'secret'])
+    invoke(encode, input=['secret', 'secret'])
 
 Because this combination of parameters is quite common, this can also be
 replaced with the :func:`password_option` decorator:
 
-.. click:example::
+.. code-block:: python
 
     @click.command()
     @click.password_option()
     def encrypt(password):
-        click.echo(f"Encrypting password to {password.encode('rot13')}")
+        click.echo(f"encoded: to {codecs.encode(password, 'rot13')}")
+
 
 Dynamic Defaults for Prompts
 ----------------------------
@@ -483,28 +486,37 @@ prompted if the option isn't specified on the command line, you can do so
 by supplying a callable as the default value. For example, to get a default
 from the environment:
 
-.. click:example::
+.. code-block:: python
+
+    import os
 
     @click.command()
-    @click.option('--username', prompt=True,
-                  default=lambda: os.environ.get('USER', ''))
+    @click.option(
+        "--username", prompt=True,
+        default=lambda: os.environ.get("USER", "")
+    )
     def hello(username):
-        print("Hello,", username)
+        click.echo(f"Hello, {username}!")
 
 To describe what the default value will be, set it in ``show_default``.
 
 .. click:example::
 
+    import os
+
     @click.command()
-    @click.option('--username', prompt=True,
-                  default=lambda: os.environ.get('USER', ''),
-                  show_default='current user')
+    @click.option(
+        "--username", prompt=True,
+        default=lambda: os.environ.get("USER", ""),
+        show_default="current user"
+    )
     def hello(username):
-        print("Hello,", username)
+        click.echo(f"Hello, {username}!")
 
 .. click:run::
 
-   invoke(hello, args=['--help'])
+   invoke(hello, args=["--help"])
+
 
 Callbacks and Eager Options
 ---------------------------
@@ -830,27 +842,24 @@ Example:
 
     def validate_rolls(ctx, param, value):
         try:
-            rolls, dice = map(int, value.split('d', 2))
-            return (dice, rolls)
+            rolls, _, dice = value.partition("d")
+            return int(dice), int(rolls)
         except ValueError:
-            raise click.BadParameter('rolls need to be in format NdM')
+            raise click.BadParameter("format must be 'NdM'")
 
     @click.command()
-    @click.option('--rolls', callback=validate_rolls, default='1d6')
+    @click.option("--rolls", callback=validate_rolls, default="1d6")
     def roll(rolls):
         sides, times = rolls
         click.echo(f"Rolling a {sides}-sided dice {times} time(s)")
-
-    if __name__ == '__main__':
-        roll()
 
 And what it looks like:
 
 .. click:run::
 
-    invoke(roll, args=['--rolls=42'])
+    invoke(roll, args=["--rolls=42"])
     println()
-    invoke(roll, args=['--rolls=2d12'])
+    invoke(roll, args=["--rolls=2d12"])
 
 
 .. _optional-value:
