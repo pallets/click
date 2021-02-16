@@ -6,6 +6,8 @@ Version 8.0
 Unreleased
 
 -   Drop support for Python 2 and 3.5.
+-   Colorama is always installed on Windows in order to provide style
+    and color support. :pr:`1784`
 -   Adds a repr to Command, showing the command name for friendlier
     debugging. :issue:`1267`, :pr:`1295`
 -   Add support for distinguishing the source of a command line
