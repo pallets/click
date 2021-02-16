@@ -1769,9 +1769,10 @@ class Parameter:
     :param default: the default value if omitted.  This can also be a callable,
                     in which case it's invoked when the default is needed
                     without any arguments.
-    :param callback: a callback that should be executed after the parameter
-                     was matched.  This is called as ``fn(ctx, param,
-                     value)`` and needs to return the value.
+    :param callback: A function to further process or validate the value
+        after type conversion. It is called as ``f(ctx, param, value)``
+        and must return the value. It is called for all sources,
+        including prompts.
     :param nargs: the number of arguments to match.  If not ``1`` the return
                   value is a tuple instead of single value.  The default for
                   nargs is ``1`` (except if the type is a tuple, then it's
@@ -1791,6 +1792,12 @@ class Parameter:
         given. Takes ``ctx, param, incomplete`` and must return a list
         of :class:`~click.shell_completion.CompletionItem` or a list of
         strings.
+
+    .. versionchanged:: 8.0
+        ``process_value`` validates required parameters and bounded
+        ``nargs``, and invokes the parameter callback before returning
+        the value. This allows the callback to validate prompts.
+        ``full_process_value`` is removed.
 
     .. versionchanged:: 8.0
         ``autocompletion`` is renamed to ``shell_complete`` and has new
@@ -2008,17 +2015,6 @@ class Parameter:
 
         return _convert(value, (self.nargs != 1) + bool(self.multiple))
 
-    def process_value(self, ctx, value):
-        """Given a value and context this runs the logic to convert the
-        value as necessary.
-        """
-        # If the value we were given is None we do nothing.  This way
-        # code that calls this can easily figure out if something was
-        # not provided.  Otherwise it would be converted into an empty
-        # tuple for multiple invocations which is inconvenient.
-        if value is not None:
-            return self.type_cast_value(ctx, value)
-
     def value_is_missing(self, value):
         if value is None:
             return True
@@ -2026,8 +2022,9 @@ class Parameter:
             return True
         return False
 
-    def full_process_value(self, ctx, value):
-        value = self.process_value(ctx, value)
+    def process_value(self, ctx, value):
+        if value is not None:
+            value = self.type_cast_value(ctx, value)
 
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)
@@ -2048,6 +2045,9 @@ class Parameter:
                 f"Argument {self.name!r} takes {self.nargs} values but"
                 f" {len(value)} {were} given."
             )
+
+        if self.callback is not None:
+            value = self.callback(ctx, self, value)
 
         return value
 
@@ -2081,10 +2081,7 @@ class Parameter:
             ctx.set_parameter_source(self.name, source)
 
             try:
-                value = self.full_process_value(ctx, value)
-
-                if self.callback is not None:
-                    value = self.callback(ctx, self, value)
+                value = self.process_value(ctx, value)
             except Exception:
                 if not ctx.resilient_parsing:
                     raise

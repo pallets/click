@@ -376,6 +376,22 @@ def test_custom_validation(runner):
     assert result.output == "42\n"
 
 
+def test_callback_validates_prompt(runner, monkeypatch):
+    def validate(ctx, param, value):
+        if value < 0:
+            raise click.BadParameter("should be positive")
+
+        return value
+
+    @click.command()
+    @click.option("-a", type=int, callback=validate, prompt=True)
+    def cli(a):
+        click.echo(a)
+
+    result = runner.invoke(cli, input="-12\n60\n")
+    assert result.output == "A: -12\nError: should be positive\nA: 60\n60\n"
+
+
 def test_winstyle_options(runner):
     @click.command()
     @click.option("/debug;/no-debug", help="Enables or disables debug mode.")
@@ -409,7 +425,7 @@ def test_missing_option_string_cast():
     ctx = click.Context(click.Command(""))
 
     with pytest.raises(click.MissingParameter) as excinfo:
-        click.Option(["-a"], required=True).full_process_value(ctx, None)
+        click.Option(["-a"], required=True).process_value(ctx, None)
 
     assert str(excinfo.value) == "missing parameter: a"
 

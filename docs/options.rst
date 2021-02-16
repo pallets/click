@@ -828,19 +828,21 @@ Callbacks for Validation
 .. versionchanged:: 2.0
 
 If you want to apply custom validation logic, you can do this in the
-parameter callbacks.  These callbacks can both modify values as well as
-raise errors if the validation does not work.
+parameter callbacks. These callbacks can both modify values as well as
+raise errors if the validation does not work. The callback runs after
+type conversion. It is called for all sources, including prompts.
 
 In Click 1.0, you can only raise the :exc:`UsageError` but starting with
 Click 2.0, you can also raise the :exc:`BadParameter` error, which has the
 added advantage that it will automatically format the error message to
 also contain the parameter name.
 
-Example:
-
 .. click:example::
 
     def validate_rolls(ctx, param, value):
+        if isinstance(value, tuple):
+            return value
+
         try:
             rolls, _, dice = value.partition("d")
             return int(dice), int(rolls)
@@ -848,18 +850,21 @@ Example:
             raise click.BadParameter("format must be 'NdM'")
 
     @click.command()
-    @click.option("--rolls", callback=validate_rolls, default="1d6")
+    @click.option(
+        "--rolls", type=click.UNPROCESSED, callback=validate_rolls,
+        default="1d6", prompt=True,
+    )
     def roll(rolls):
         sides, times = rolls
         click.echo(f"Rolling a {sides}-sided dice {times} time(s)")
-
-And what it looks like:
 
 .. click:run::
 
     invoke(roll, args=["--rolls=42"])
     println()
     invoke(roll, args=["--rolls=2d12"])
+    println()
+    invoke(roll, input=["42", "2d12"])
 
 
 .. _optional-value:
