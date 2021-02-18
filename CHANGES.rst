@@ -170,6 +170,7 @@ Unreleased
     ``default=None``. :issue:`1381`
 -   Option prompts validate the value with the option's callback in
     addition to its type. :issue:`457`
+-   ``confirmation_prompt`` can be set to a custom string. :issue:`723`
 -   Allow styled output in Jupyter on Windows. :issue:`1271`
 
 
