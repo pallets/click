@@ -170,6 +170,7 @@ Unreleased
     ``default=None``. :issue:`1381`
 -   Option prompts validate the value with the option's callback in
     addition to its type. :issue:`457`
+-   Allow styled output in Jupyter on Windows. :issue:`1271`
 
 
 Version 7.1.2
