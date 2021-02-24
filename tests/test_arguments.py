@@ -228,7 +228,7 @@ def test_missing_argument_string_cast():
     ctx = click.Context(click.Command(""))
 
     with pytest.raises(click.MissingParameter) as excinfo:
-        click.Argument(["a"], required=True).full_process_value(ctx, None)
+        click.Argument(["a"], required=True).process_value(ctx, None)
 
     assert str(excinfo.value) == "missing parameter: a"
 

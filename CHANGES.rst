@@ -167,7 +167,9 @@ Unreleased
     ``CLIRunner.isolated_filesystem`` by passing ``temp_dir``. A custom
     directory will not be removed automatically. :issue:`395`
 -   ``click.confirm()`` will prompt until input is given if called with
-    ``default=None``. :issue:`#1381`
+    ``default=None``. :issue:`1381`
+-   Option prompts validate the value with the option's callback in
+    addition to its type. :issue:`457`
 
 
 Version 7.1.2
