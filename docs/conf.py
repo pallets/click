@@ -33,11 +33,13 @@ html_theme = "click"
 html_theme_options = {"index_sidebar_logo": False}
 html_context = {
     "project_links": [
-        ProjectLink("Donate to Pallets", "https://palletsprojects.com/donate"),
-        ProjectLink("Click Website", "https://palletsprojects.com/p/click/"),
-        ProjectLink("PyPI releases", "https://pypi.org/project/click/"),
+        ProjectLink("Donate", "https://palletsprojects.com/donate"),
+        ProjectLink("PyPI Releases", "https://pypi.org/project/click/"),
         ProjectLink("Source Code", "https://github.com/pallets/click/"),
         ProjectLink("Issue Tracker", "https://github.com/pallets/click/issues/"),
+        ProjectLink("Website", "https://palletsprojects.com/"),
+        ProjectLink("Twitter", "https://twitter.com/PalletsTeam"),
+        ProjectLink("Chat", "https://discord.gg/pallets"),
     ]
 }
 html_sidebars = {
