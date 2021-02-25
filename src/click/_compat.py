@@ -471,11 +471,6 @@ def strip_ansi(value):
 
 
 def _is_jupyter_kernel_output(stream):
-    if WIN:
-        # TODO: Couldn't test on Windows, should't try to support until
-        # someone tests the details wrt colorama.
-        return
-
     while isinstance(stream, (_FixupStream, _NonClosingTextIOWrapper)):
         stream = stream._stream
 
@@ -521,7 +516,7 @@ if sys.platform.startswith("win") and WIN:
 
         strip = should_strip_ansi(stream, color)
         ansi_wrapper = colorama.AnsiToWin32(stream, strip=strip)
-        rv = ansi_wrapper.stream
+        rv = t.cast(t.TextIO, ansi_wrapper.stream)
         _write = rv.write
 
         def _safe_write(s):
