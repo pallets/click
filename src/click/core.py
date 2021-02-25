@@ -2146,8 +2146,9 @@ class Option(Parameter):
     :param prompt: if set to `True` or a non empty string then the user will be
                    prompted for input.  If set to `True` the prompt will be the
                    option name capitalized.
-    :param confirmation_prompt: if set then the value will need to be confirmed
-                                if it was prompted for.
+    :param confirmation_prompt: Prompt a second time to confirm the
+        value if it was prompted for. Can be set to a string instead of
+        ``True`` to customize the message.
     :param prompt_required: If set to ``False``, the user will be
         prompted for input only when the option was specified as a flag
         without a value.
@@ -2203,6 +2204,7 @@ class Option(Parameter):
             prompt_text = None
         else:
             prompt_text = prompt
+
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
         self.prompt_required = prompt_required

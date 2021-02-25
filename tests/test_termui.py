@@ -446,3 +446,27 @@ def test_prompt_required_false(runner, args, expect):
     result = runner.invoke(cli, args=args, input="prompt", standalone_mode=False)
     assert result.exception is None
     assert result.return_value == expect
+
+
+@pytest.mark.parametrize(
+    ("prompt", "input", "expect"),
+    [
+        (True, "password\npassword", "password"),
+        ("Confirm Password", "password\npassword\n", "password"),
+        (False, None, None),
+    ],
+)
+def test_confirmation_prompt(runner, prompt, input, expect):
+    @click.command()
+    @click.option(
+        "--password", prompt=prompt, hide_input=True, confirmation_prompt=prompt
+    )
+    def cli(password):
+        return password
+
+    result = runner.invoke(cli, input=input, standalone_mode=False)
+    assert result.exception is None
+    assert result.return_value == expect
+
+    if prompt == "Confirm Password":
+        assert "Confirm Password: " in result.output

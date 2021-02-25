@@ -85,21 +85,14 @@ def prompt(
     If the user aborts the input by sending a interrupt signal, this
     function will catch it and raise a :exc:`Abort` exception.
 
-    .. versionadded:: 7.0
-       Added the show_choices parameter.
-
-    .. versionadded:: 6.0
-       Added unicode support for cmd.exe on Windows.
-
-    .. versionadded:: 4.0
-       Added the `err` parameter.
-
     :param text: the text to show for the prompt.
     :param default: the default value to use if no input happens.  If this
                     is not given it will prompt until it's aborted.
     :param hide_input: if this is set to true then the input value will
                        be hidden.
-    :param confirmation_prompt: asks for confirmation for the value.
+    :param confirmation_prompt: Prompt a second time to confirm the
+        value. Can be set to a string instead of ``True`` to customize
+        the message.
     :param type: the type to use to check the value against.
     :param value_proc: if this parameter is provided it's a function that
                        is invoked instead of the type conversion to
@@ -112,6 +105,19 @@ def prompt(
                          For example if type is a Choice of either day or week,
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
+
+    .. versionadded:: 8.0
+        ``confirmation_prompt`` can be a custom string.
+
+    .. versionadded:: 7.0
+        Added the ``show_choices`` parameter.
+
+    .. versionadded:: 6.0
+        Added unicode support for cmd.exe on Windows.
+
+    .. versionadded:: 4.0
+        Added the `err` parameter.
+
     """
     result = None
 
@@ -137,6 +143,12 @@ def prompt(
         text, prompt_suffix, show_default, default, show_choices, type
     )
 
+    if confirmation_prompt:
+        if confirmation_prompt is True:
+            confirmation_prompt = "Repeat for confirmation"
+
+        confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
+
     while 1:
         while 1:
             value = prompt_func(prompt)
@@ -156,7 +168,7 @@ def prompt(
         if not confirmation_prompt:
             return result
         while 1:
-            value2 = prompt_func("Repeat for confirmation: ")
+            value2 = prompt_func(confirmation_prompt)
             if value2:
                 break
         if value == value2:
