@@ -208,6 +208,7 @@ class CliRunner:
             bytes_output, encoding=self.charset, name="<stdout>", mode="w"
         )
 
+        bytes_error = None
         if self.mix_stderr:
             sys.stderr = sys.stdout
         else:
@@ -262,7 +263,7 @@ class CliRunner:
                         pass
                 else:
                     os.environ[key] = value
-            yield (bytes_output, not self.mix_stderr and bytes_error)
+            yield (bytes_output, bytes_error)
         finally:
             for key, value in old_env.items():
                 if value is None:
