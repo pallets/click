@@ -44,7 +44,7 @@ markupsafe==1.1.1
     # via jinja2
 mypy-extensions==0.4.3
     # via mypy
-mypy==0.800
+mypy==0.812
     # via -r requirements/typing.in
 nodeenv==1.5.0
     # via pre-commit

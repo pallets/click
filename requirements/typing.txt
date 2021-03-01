@@ -6,7 +6,7 @@
 #
 mypy-extensions==0.4.3
     # via mypy
-mypy==0.800
+mypy==0.812
     # via -r requirements/typing.in
 typed-ast==1.4.2
     # via mypy
