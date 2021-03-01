@@ -57,6 +57,9 @@ def make_default_short_help(help, max_length=45):
     result = []
     done = False
 
+    if words[0] == "\b":
+        words = words[1:]
+
     for word in words:
         if word[-1:] == ".":
             done = True
