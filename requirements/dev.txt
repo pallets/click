@@ -34,7 +34,7 @@ idna==2.10
     # via requests
 imagesize==1.2.0
     # via sphinx
-importlib_metadata==3.7.0
+importlib-metadata==3.7.0
     # via -r requirements/tests.in
 iniconfig==1.1.1
     # via pytest
@@ -92,7 +92,7 @@ sphinx-issues==1.2.0
     # via -r requirements/docs.in
 sphinx-tabs==2.0.1
     # via -r requirements/docs.in
-sphinx==3.4.3
+sphinx==3.5.1
     # via
     #   -r requirements/docs.in
     #   pallets-sphinx-themes
