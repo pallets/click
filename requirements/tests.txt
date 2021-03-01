@@ -6,7 +6,7 @@
 #
 attrs==20.3.0
     # via pytest
-importlib-metadata==3.4.0
+importlib_metadata==3.7.0
     # via -r requirements/tests.in
 iniconfig==1.1.1
     # via pytest
