@@ -456,6 +456,7 @@ def style(
     underline=None,
     blink=None,
     reverse=None,
+    strikethrough=None,
     reset=True,
 ):
     """Styles a text with ANSI styles and returns the new string.  By
@@ -511,6 +512,8 @@ def style(
     :param reverse: if provided this will enable or disable inverse
                     rendering (foreground becomes background and the
                     other way round).
+    :param strikethrough: if provided this will enable or disable
+        striking through text.
     :param reset: by default a reset-all code is added at the end of the
                   string which means that styles do not carry over.  This
                   can be disabled to compose styles.
@@ -520,6 +523,9 @@ def style(
 
     .. versionchanged:: 8.0
        Added support for 256 and RGB color codes.
+
+    .. versionchanged:: 8.0
+        Added the ``strikethrough`` parameter.
 
     .. versionchanged:: 7.0
         Added support for bright colors.
@@ -553,6 +559,8 @@ def style(
         bits.append(f"\033[{5 if blink else 25}m")
     if reverse is not None:
         bits.append(f"\033[{7 if reverse else 27}m")
+    if strikethrough is not None:
+        bits.append(f"\033[{9 if strikethrough else 29}m")
     bits.append(text)
     if reset:
         bits.append(_ansi_reset_all)
