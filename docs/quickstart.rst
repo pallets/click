@@ -79,7 +79,7 @@ After doing this, the prompt of your shell should be as familiar as before.
 Now, let's move on. Enter the following command to get Click activated in your
 virtualenv::
 
-    $ pip install Click
+    $ pip install click
 
 A few seconds later and you are good to go.
 
