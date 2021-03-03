@@ -227,6 +227,12 @@ class ProgressBar:
         import shutil
 
         if self.is_hidden:
+            # Only output the label as it changes if the output is not a
+            # TTY. Use file=stderr if you expect to be piping stdout.
+            if self._last_line != self.label:
+                self._last_line = self.label
+                echo(self.label, file=self.file, color=self.color)
+
             return
 
         buf = []
