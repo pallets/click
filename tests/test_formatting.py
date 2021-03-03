@@ -296,6 +296,25 @@ def test_truncating_docstring(runner):
     ]
 
 
+def test_removing_multiline_marker(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    def cmd1():
+        """\b
+        This is command with a multiline help text
+        which should not be rewrapped.
+        The output of the short help text should
+        not contain the multiline marker.
+        """
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert "\b" not in result.output
+
+
 def test_global_show_default(runner):
     @click.command(context_settings=dict(show_default=True))
     @click.option("-f", "in_file", default="out.txt", help="Output file name")

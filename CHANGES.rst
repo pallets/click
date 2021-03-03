@@ -173,6 +173,7 @@ Unreleased
 -   ``confirmation_prompt`` can be set to a custom string. :issue:`723`
 -   Allow styled output in Jupyter on Windows. :issue:`1271`
 -   ``style()`` supports the ``strikethrough`` style. :issue:`805`
+-   Multiline marker is removed from short help text. :issue:`1597`
 
 
 Version 7.1.2
