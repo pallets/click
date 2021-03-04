@@ -302,14 +302,13 @@ class ProgressBar:
             Only render when the number of steps meets the
             ``update_min_steps`` threshold.
         """
+        if current_item is not None:
+            self.current_item = current_item
+
         self._completed_intervals += n_steps
 
         if self._completed_intervals >= self.update_min_steps:
             self.make_step(self._completed_intervals)
-
-            if current_item is not None:
-                self.current_item = current_item
-
             self.render_progress()
             self._completed_intervals = 0
 
@@ -338,8 +337,16 @@ class ProgressBar:
         else:
             for rv in self.iter:
                 self.current_item = rv
+
+                # This allows show_item_func to be updated before the
+                # item is processed. Only trigger at the beginning of
+                # the update interval.
+                if self._completed_intervals == 0:
+                    self.render_progress()
+
                 yield rv
                 self.update(1)
+
             self.finish()
             self.render_progress()
 

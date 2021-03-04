@@ -284,22 +284,19 @@ def test_progressbar_update(runner, monkeypatch):
 
 
 def test_progressbar_item_show_func(runner, monkeypatch):
+    """item_show_func should show the current item being yielded."""
+
     @click.command()
     def cli():
-        with click.progressbar(
-            range(3), item_show_func=lambda x: f"Custom {x}"
-        ) as progress:
-            for _ in progress:
-                click.echo()
+        with click.progressbar(range(3), item_show_func=lambda x: str(x)) as progress:
+            for item in progress:
+                click.echo(f" item {item}")
 
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
-    output = runner.invoke(cli, []).output
-    lines = [line for line in output.splitlines() if "[" in line]
-    assert "Custom None" in lines[0]
-    assert "Custom 0" in lines[1]
-    assert "Custom 1" in lines[2]
-    assert "Custom 2" in lines[3]
-    assert "Custom None" in lines[4]
+    lines = runner.invoke(cli).output.splitlines()
+
+    for i, line in enumerate(x for x in lines if "item" in x):
+        assert f"{i}    item {i}" in line
 
 
 def test_progressbar_update_with_item_show_func(runner, monkeypatch):
