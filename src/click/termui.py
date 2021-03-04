@@ -391,6 +391,9 @@ def progressbar(
         completed. This allows tuning for very fast iterators.
 
     .. versionchanged:: 8.0
+        Output is shown even if execution time is less than 0.5 seconds.
+
+    .. versionchanged:: 8.0
         Labels are echoed if the output is not a TTY. Reverts a change
         in 7.0 that removed all output.
 

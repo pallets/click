@@ -176,6 +176,8 @@ Unreleased
 -   Multiline marker is removed from short help text. :issue:`1597`
 -   Restore progress bar behavior of echoing only the label if the file
     is not a TTY. :issue:`1138`
+-   Progress bar output is shown even if execution time is less than 0.5
+    seconds. :issue:`1648`
 
 
 Version 7.1.2
