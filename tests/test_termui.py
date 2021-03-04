@@ -27,16 +27,14 @@ def _create_progress(length=10, length_known=True, **kwargs):
 
 
 def test_progressbar_strip_regression(runner, monkeypatch):
-    fake_clock = FakeClock()
     label = "    padded line"
 
     @click.command()
     def cli():
         with _create_progress(label=label) as progress:
             for _ in progress:
-                fake_clock.advance_time()
+                pass
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     assert label in runner.invoke(cli, []).output
 
@@ -60,30 +58,24 @@ def test_progressbar_length_hint(runner, monkeypatch):
 
         next = __next__
 
-    fake_clock = FakeClock()
-
     @click.command()
     def cli():
         with click.progressbar(Hinted(10), label="test") as progress:
             for _ in progress:
-                fake_clock.advance_time()
+                pass
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     result = runner.invoke(cli, [])
     assert result.exception is None
 
 
 def test_progressbar_hidden(runner, monkeypatch):
-    fake_clock = FakeClock()
-
     @click.command()
     def cli():
         with _create_progress(label="working") as progress:
             for _ in progress:
-                fake_clock.advance_time()
+                pass
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
     assert runner.invoke(cli, []).output == "working\n"
 
@@ -193,21 +185,16 @@ def test_progressbar_iter_outside_with_exceptions(runner):
 
 
 def test_progressbar_is_iterator(runner, monkeypatch):
-    fake_clock = FakeClock()
-
     @click.command()
     def cli():
         with click.progressbar(range(10), label="test") as progress:
             while True:
                 try:
                     next(progress)
-                    fake_clock.advance_time()
                 except StopIteration:
                     break
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
-
     result = runner.invoke(cli, [])
     assert result.exception is None
 
@@ -289,50 +276,42 @@ def test_progressbar_update(runner, monkeypatch):
 
     lines = [line for line in output.split("\n") if "[" in line]
 
-    assert " 25%  00:00:03" in lines[0]
-    assert " 50%  00:00:02" in lines[1]
-    assert " 75%  00:00:01" in lines[2]
-    assert "100%          " in lines[3]
+    assert "  0%" in lines[0]
+    assert " 25%  00:00:03" in lines[1]
+    assert " 50%  00:00:02" in lines[2]
+    assert " 75%  00:00:01" in lines[3]
+    assert "100%          " in lines[4]
 
 
 def test_progressbar_item_show_func(runner, monkeypatch):
-    fake_clock = FakeClock()
-
     @click.command()
     def cli():
         with click.progressbar(
-            range(4), item_show_func=lambda x: f"Custom {x}"
+            range(3), item_show_func=lambda x: f"Custom {x}"
         ) as progress:
             for _ in progress:
-                fake_clock.advance_time()
-                print("")
+                click.echo()
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     output = runner.invoke(cli, []).output
-
-    lines = [line for line in output.split("\n") if "[" in line]
-
-    assert "Custom 0" in lines[0]
-    assert "Custom 1" in lines[1]
-    assert "Custom 2" in lines[2]
-    assert "Custom None" in lines[3]
+    lines = [line for line in output.splitlines() if "[" in line]
+    assert "Custom None" in lines[0]
+    assert "Custom 0" in lines[1]
+    assert "Custom 1" in lines[2]
+    assert "Custom 2" in lines[3]
+    assert "Custom None" in lines[4]
 
 
 def test_progressbar_update_with_item_show_func(runner, monkeypatch):
-    fake_clock = FakeClock()
-
     @click.command()
     def cli():
         with click.progressbar(
             length=6, item_show_func=lambda x: f"Custom {x}"
         ) as progress:
             while not progress.finished:
-                fake_clock.advance_time()
                 progress.update(2, progress.pos)
-                print("")
+                click.echo()
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     output = runner.invoke(cli, []).output
 
