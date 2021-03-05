@@ -2015,7 +2015,7 @@ class Parameter:
                 iter_value = iter(value)
             except TypeError:
                 raise TypeError(
-                    "Default for parameter with multiple = True or nargs > 1"
+                    "Value for parameter with multiple = True or nargs > 1"
                     " should be an iterable."
                 )
 
