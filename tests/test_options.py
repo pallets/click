@@ -117,6 +117,20 @@ def test_multiple_required(runner):
     assert "Error: Missing option '-m' / '--message'." in result.output
 
 
+def test_multiple_bad_default(runner):
+    @click.command()
+    @click.option("--flags", multiple=True, default=False)
+    def cli(flags):
+        pass
+
+    result = runner.invoke(cli, [])
+    assert result.exception
+    assert (
+        "Value for parameter with multiple = True or nargs > 1 should be an iterable."
+        in result.exception.args
+    )
+
+
 def test_empty_envvar(runner):
     @click.command()
     @click.option("--mypath", type=click.Path(exists=True), envvar="MYPATH")
