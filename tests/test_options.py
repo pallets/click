@@ -126,7 +126,7 @@ def test_multiple_bad_default(runner):
     result = runner.invoke(cli, [])
     assert result.exception
     assert (
-        "Default for parameter with multiple = True or nargs > 1 should be an iterable."
+        "Value for parameter with multiple = True or nargs > 1 should be an iterable."
         in result.exception.args
     )
 
