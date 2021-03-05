@@ -180,6 +180,8 @@ Unreleased
     seconds. :issue:`1648`
 -   Progress bar ``item_show_func`` shows the current item, not the
     previous item. :issue:`1353`
+-   The ``Path`` param type can be passed ``path_type=pathlib.Path`` to
+    return a path object instead of a string. :issue:`405`
 
 
 Version 7.1.2

@@ -649,9 +649,6 @@ class Path(ParamType):
     handle it returns just the filename.  Secondly, it can perform various
     basic checks about what the file or directory should be.
 
-    .. versionchanged:: 6.0
-       `allow_dash` was added.
-
     :param exists: if set to true, the file or directory needs to exist for
                    this value to be valid.  If this is not required and a
                    file does indeed not exist, then all further checks are
@@ -667,11 +664,15 @@ class Path(ParamType):
                          supposed to be done by the shell only.
     :param allow_dash: If this is set to `True`, a single dash to indicate
                        standard streams is permitted.
-    :param path_type: optionally a string type that should be used to
-                      represent the path.  The default is `None` which
-                      means the return value will be either bytes or
-                      unicode depending on what makes most sense given the
-                      input data Click deals with.
+    :param path_type: Convert the incoming path value to this type. If
+        ``None``, keep Python's default, which is ``str``. Useful to
+        convert to :class:`pathlib.Path`.
+
+    .. versionchanged:: 8.0
+        Allow passing ``type=pathlib.Path``.
+
+    .. versionchanged:: 6.0
+        Added the ``allow_dash`` parameter.
     """
 
     envvar_list_splitter = os.path.pathsep
@@ -698,13 +699,10 @@ class Path(ParamType):
 
         if self.file_okay and not self.dir_okay:
             self.name = "file"
-            self.path_type = "File"
         elif self.dir_okay and not self.file_okay:
             self.name = "directory"
-            self.path_type = "Directory"
         else:
             self.name = "path"
-            self.path_type = "Path"
 
     def to_info_dict(self):
         info_dict = super().to_info_dict()
@@ -721,9 +719,12 @@ class Path(ParamType):
     def coerce_path_result(self, rv):
         if self.type is not None and not isinstance(rv, self.type):
             if self.type is str:
-                rv = rv.decode(get_filesystem_encoding())
+                rv = os.fsdecode(rv)
+            elif self.type is bytes:
+                rv = os.fsencode(rv)
             else:
-                rv = rv.encode(get_filesystem_encoding())
+                rv = self.type(rv)
+
         return rv
 
     def convert(self, value, param, ctx):
@@ -741,32 +742,32 @@ class Path(ParamType):
                 if not self.exists:
                     return self.coerce_path_result(rv)
                 self.fail(
-                    f"{self.path_type} {filename_to_ui(value)!r} does not exist.",
+                    f"{self.name.title()} {filename_to_ui(value)!r} does not exist.",
                     param,
                     ctx,
                 )
 
             if not self.file_okay and stat.S_ISREG(st.st_mode):
                 self.fail(
-                    f"{self.path_type} {filename_to_ui(value)!r} is a file.",
+                    f"{self.name.title()} {filename_to_ui(value)!r} is a file.",
                     param,
                     ctx,
                 )
             if not self.dir_okay and stat.S_ISDIR(st.st_mode):
                 self.fail(
-                    f"{self.path_type} {filename_to_ui(value)!r} is a directory.",
+                    f"{self.name.title()} {filename_to_ui(value)!r} is a directory.",
                     param,
                     ctx,
                 )
             if self.writable and not os.access(value, os.W_OK):
                 self.fail(
-                    f"{self.path_type} {filename_to_ui(value)!r} is not writable.",
+                    f"{self.name.title()} {filename_to_ui(value)!r} is not writable.",
                     param,
                     ctx,
                 )
             if self.readable and not os.access(value, os.R_OK):
                 self.fail(
-                    f"{self.path_type} {filename_to_ui(value)!r} is not readable.",
+                    f"{self.name.title()} {filename_to_ui(value)!r} is not readable.",
                     param,
                     ctx,
                 )
