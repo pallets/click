@@ -1,4 +1,5 @@
 import inspect
+import typing as t
 from functools import update_wrapper
 
 from .core import Argument
@@ -8,6 +9,8 @@ from .core import Option
 from .globals import get_current_context
 from .utils import echo
 
+if t.TYPE_CHECKING:
+    F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 
 def pass_context(f):
     """Marks a callback as wanting to receive the current context
@@ -72,6 +75,39 @@ def make_pass_decorator(object_type, ensure=False):
 
         return update_wrapper(new_func, f)
 
+    return decorator
+
+
+def pass_meta_key(
+    key: str, *, doc_description: t.Optional[str] = None
+) -> "t.Callable[[F], F]":
+    """Create a decorator that passes a key from
+    :attr:`click.Context.meta` as the first argument to the decorated
+    function.
+
+    :param key: Key in ``Context.meta`` to pass.
+    :param doc_description: Description of the object being passed,
+        inserted into the decorator's docstring. Defaults to "the 'key'
+        key from Context.meta".
+
+    .. versionadded:: 8.0
+    """
+
+    def decorator(f: "F") -> "F":
+        def new_func(*args, **kwargs):
+            ctx = get_current_context()
+            obj = ctx.meta[key]
+            return ctx.invoke(f, obj, *args, **kwargs)
+
+        return update_wrapper(t.cast("F", new_func), f)
+
+    if doc_description is None:
+        doc_description = f"the {key!r} key from :attr:`click.Context.meta`"
+
+    decorator.__doc__ = (
+        f"Decorator that passes {doc_description} as the first argument"
+        " to the decorated function."
+    )
     return decorator
 
 
