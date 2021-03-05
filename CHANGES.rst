@@ -184,6 +184,9 @@ Unreleased
     return a path object instead of a string. :issue:`405`
 -   ``TypeError`` is raised when parameter with ``multiple=True`` or
     ``nargs > 1`` has non-iterable default. :issue:`1749`
+-   Add a ``pass_meta_key`` decorator for passing a key from
+    ``Context.meta``. This is useful for extensions using ``meta`` to
+    store information. :issue:`1739`
 
 
 Version 7.1.2

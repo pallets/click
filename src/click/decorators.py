@@ -1,4 +1,5 @@
 import inspect
+import typing as t
 from functools import update_wrapper
 
 from .core import Argument
@@ -8,8 +9,11 @@ from .core import Option
 from .globals import get_current_context
 from .utils import echo
 
+if t.TYPE_CHECKING:
+    F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 
-def pass_context(f):
+
+def pass_context(f: "F") -> "F":
     """Marks a callback as wanting to receive the current context
     object as first argument.
     """
@@ -17,10 +21,10 @@ def pass_context(f):
     def new_func(*args, **kwargs):
         return f(get_current_context(), *args, **kwargs)
 
-    return update_wrapper(new_func, f)
+    return update_wrapper(t.cast("F", new_func), f)
 
 
-def pass_obj(f):
+def pass_obj(f: "F") -> "F":
     """Similar to :func:`pass_context`, but only pass the object on the
     context onwards (:attr:`Context.obj`).  This is useful if that object
     represents the state of a nested system.
@@ -29,10 +33,12 @@ def pass_obj(f):
     def new_func(*args, **kwargs):
         return f(get_current_context().obj, *args, **kwargs)
 
-    return update_wrapper(new_func, f)
+    return update_wrapper(t.cast("F", new_func), f)
 
 
-def make_pass_decorator(object_type, ensure=False):
+def make_pass_decorator(
+    object_type: t.Type, ensure: bool = False
+) -> "t.Callable[[F], F]":
     """Given an object type this creates a decorator that will work
     similar to :func:`pass_obj` but instead of passing the object of the
     current context, it will find the innermost context of type
@@ -55,23 +61,59 @@ def make_pass_decorator(object_type, ensure=False):
                    remembered on the context if it's not there yet.
     """
 
-    def decorator(f):
+    def decorator(f: "F") -> "F":
         def new_func(*args, **kwargs):
             ctx = get_current_context()
+
             if ensure:
                 obj = ctx.ensure_object(object_type)
             else:
                 obj = ctx.find_object(object_type)
+
             if obj is None:
                 raise RuntimeError(
                     "Managed to invoke callback without a context"
                     f" object of type {object_type.__name__!r}"
                     " existing."
                 )
+
             return ctx.invoke(f, obj, *args, **kwargs)
 
-        return update_wrapper(new_func, f)
+        return update_wrapper(t.cast("F", new_func), f)
 
+    return decorator
+
+
+def pass_meta_key(
+    key: str, *, doc_description: t.Optional[str] = None
+) -> "t.Callable[[F], F]":
+    """Create a decorator that passes a key from
+    :attr:`click.Context.meta` as the first argument to the decorated
+    function.
+
+    :param key: Key in ``Context.meta`` to pass.
+    :param doc_description: Description of the object being passed,
+        inserted into the decorator's docstring. Defaults to "the 'key'
+        key from Context.meta".
+
+    .. versionadded:: 8.0
+    """
+
+    def decorator(f: "F") -> "F":
+        def new_func(*args, **kwargs):
+            ctx = get_current_context()
+            obj = ctx.meta[key]
+            return ctx.invoke(f, obj, *args, **kwargs)
+
+        return update_wrapper(t.cast("F", new_func), f)
+
+    if doc_description is None:
+        doc_description = f"the {key!r} key from :attr:`click.Context.meta`"
+
+    decorator.__doc__ = (
+        f"Decorator that passes {doc_description} as the first argument"
+        " to the decorated function."
+    )
     return decorator
 
 

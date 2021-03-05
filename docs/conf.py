@@ -24,6 +24,7 @@ extensions = [
     "sphinx_issues",
     "sphinx_tabs.tabs",
 ]
+autodoc_typehints = "description"
 intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
 issues_github_path = "pallets/click"
 
