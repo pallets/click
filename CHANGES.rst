@@ -182,7 +182,7 @@ Unreleased
     previous item. :issue:`1353`
 -   The ``Path`` param type can be passed ``path_type=pathlib.Path`` to
     return a path object instead of a string. :issue:`405`
--   TypeError is raised when parameter with ``multiple=True`` or
+-   ``TypeError`` is raised when parameter with ``multiple=True`` or
     ``nargs > 1`` has non-iterable default. :issue:`1749`
 
 
