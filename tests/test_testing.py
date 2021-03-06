@@ -26,10 +26,66 @@ def test_runner():
     assert not result.exception
     assert result.output == "Hello World!\n"
 
+
+def test_echo_stdin_stream():
+    @click.command()
+    def test():
+        i = click.get_binary_stream("stdin")
+        o = click.get_binary_stream("stdout")
+        while 1:
+            chunk = i.read(4096)
+            if not chunk:
+                break
+            o.write(chunk)
+            o.flush()
+
     runner = CliRunner(echo_stdin=True)
     result = runner.invoke(test, input="Hello World!\n")
     assert not result.exception
     assert result.output == "Hello World!\nHello World!\n"
+
+
+def test_echo_stdin_prompts():
+    @click.command()
+    def test_python_input():
+        foo = input("Foo: ")
+        click.echo(f"foo={foo}")
+
+    runner = CliRunner(echo_stdin=True)
+    result = runner.invoke(test_python_input, input="wau wau\n")
+    assert not result.exception
+    assert result.output == "Foo: wau wau\nfoo=wau wau\n"
+
+    @click.command()
+    @click.option("--foo", prompt=True)
+    def test_prompt(foo):
+        click.echo(f"foo={foo}")
+
+    runner = CliRunner(echo_stdin=True)
+    result = runner.invoke(test_prompt, input="wau wau\n")
+    assert not result.exception
+    assert result.output == "Foo: wau wau\nfoo=wau wau\n"
+
+    @click.command()
+    @click.option("--foo", prompt=True, hide_input=True)
+    def test_hidden_prompt(foo):
+        click.echo(f"foo={foo}")
+
+    runner = CliRunner(echo_stdin=True)
+    result = runner.invoke(test_hidden_prompt, input="wau wau\n")
+    assert not result.exception
+    assert result.output == "Foo: \nfoo=wau wau\n"
+
+    @click.command()
+    @click.option("--foo", prompt=True)
+    @click.option("--bar", prompt=True)
+    def test_multiple_prompts(foo, bar):
+        click.echo(f"foo={foo}, bar={bar}")
+
+    runner = CliRunner(echo_stdin=True)
+    result = runner.invoke(test_multiple_prompts, input="one\ntwo\n")
+    assert not result.exception
+    assert result.output == "Foo: one\nBar: two\nfoo=one, bar=two\n"
 
 
 def test_runner_with_stream():
@@ -86,6 +142,25 @@ def test_getchar():
     result = runner.invoke(continue_it, input="y")
     assert not result.exception
     assert result.output == "y\n"
+
+    runner = CliRunner(echo_stdin=True)
+    result = runner.invoke(continue_it, input="y")
+    assert not result.exception
+    assert result.output == "y\n"
+
+    @click.command()
+    def getchar_echo():
+        click.echo(click.getchar(echo=True))
+
+    runner = CliRunner()
+    result = runner.invoke(getchar_echo, input="y")
+    assert not result.exception
+    assert result.output == "yy\n"
+
+    runner = CliRunner(echo_stdin=True)
+    result = runner.invoke(getchar_echo, input="y")
+    assert not result.exception
+    assert result.output == "yy\n"
 
 
 def test_catch_exceptions():

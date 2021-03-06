@@ -208,6 +208,8 @@ Unreleased
     :issue:`1568`
 -   The ``MultiCommand.resultcallback`` decorator is renamed to
     ``result_callback``. The old name is deprecated. :issue:`1160`
+-   Fix issues with ``CliRunner`` output when using ``echo_stdin=True``.
+    :issue:`1101`
 
 
 Version 7.1.2

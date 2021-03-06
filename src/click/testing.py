@@ -16,16 +16,21 @@ class EchoingStdin:
     def __init__(self, input, output):
         self._input = input
         self._output = output
+        self.paused = False
 
     def __getattr__(self, x):
         return getattr(self._input, x)
 
     def _echo(self, rv):
-        self._output.write(rv)
+        if not self.paused:
+            self._output.write(rv)
         return rv
 
     def read(self, n=-1):
         return self._echo(self._input.read(n))
+
+    def read1(self, n=-1):
+        return self._echo(self._input.read1(n))
 
     def readline(self, n=-1):
         return self._echo(self._input.readline(n))
@@ -204,10 +209,16 @@ class CliRunner:
 
         if self.echo_stdin:
             input = EchoingStdin(input, bytes_output)
+            echo_input = input
 
         sys.stdin = input = _NamedTextIOWrapper(
             input, encoding=self.charset, name="<stdin>", mode="r"
         )
+        if self.echo_stdin:
+            # Force unbuffered reads, otherwise the underlying EchoingStdin
+            # stream will echo a big chunk of input on the first read.
+            input._CHUNK_SIZE = 1
+
         sys.stdout = _NamedTextIOWrapper(
             bytes_output, encoding=self.charset, name="<stdout>", mode="w"
         )
@@ -228,20 +239,30 @@ class CliRunner:
         def visible_input(prompt=None):
             sys.stdout.write(prompt or "")
             val = input.readline().rstrip("\r\n")
-            sys.stdout.write(f"{val}\n")
+            if not self.echo_stdin:
+                sys.stdout.write(f"{val}\n")
             sys.stdout.flush()
             return val
 
         def hidden_input(prompt=None):
             sys.stdout.write(f"{prompt or ''}\n")
             sys.stdout.flush()
-            return input.readline().rstrip("\r\n")
+            if self.echo_stdin:
+                echo_input.paused = True
+            val = input.readline().rstrip("\r\n")
+            if self.echo_stdin:
+                echo_input.paused = False
+            return val
 
         def _getchar(echo):
+            if not echo and self.echo_stdin:
+                echo_input.paused = True
             char = sys.stdin.read(1)
-            if echo:
+            if echo and not self.echo_stdin:
                 sys.stdout.write(char)
                 sys.stdout.flush()
+            elif not echo and self.echo_stdin:
+                echo_input.paused = False
             return char
 
         default_color = color
