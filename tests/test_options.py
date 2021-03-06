@@ -117,7 +117,8 @@ def test_multiple_required(runner):
     assert "Error: Missing option '-m' / '--message'." in result.output
 
 
-def test_multiple_bad_default(runner):
+@pytest.mark.parametrize(("multiple", "nargs"), [(True, None), (None, 2)])
+def test_multiple_bad_default(runner, multiple, nargs):
     with pytest.raises(
         click.BadParameter,
         match=(
@@ -127,7 +128,8 @@ def test_multiple_bad_default(runner):
     ) as exc_info:
 
         @click.command()
-        @click.option("--flags", multiple=True, default=False)
+        @click.option("--flags", multiple=multiple, default=False)
+        @click.argument("message", nargs=nargs, default=False)
         def cli(flags):
             pass
 
