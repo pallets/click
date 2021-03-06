@@ -1876,6 +1876,14 @@ class Parameter:
                     " should be an iterable."
                 )
 
+        if self.type.is_composite:
+            if self.nargs <= 1:
+                raise BadParameter(
+                    "Attempted to invoke composite type but nargs has"
+                    f" been set to {self.nargs}. This is not supported;"
+                    " nargs needs to be set to a fixed value > 1."
+                )
+
         if autocompletion is not None:
             import warnings
 
@@ -2005,13 +2013,6 @@ class Parameter:
             return () if self.multiple or self.nargs == -1 else None
 
         if self.type.is_composite:
-            if self.nargs <= 1:
-                raise TypeError(
-                    "Attempted to invoke composite type but nargs has"
-                    f" been set to {self.nargs}. This is not supported;"
-                    " nargs needs to be set to a fixed value > 1."
-                )
-
             if self.multiple:
                 return tuple(self.type(x, self, ctx) for x in value)
 
