@@ -118,16 +118,23 @@ def test_multiple_required(runner):
 
 
 def test_multiple_bad_default(runner):
-    @click.command()
-    @click.option("--flags", multiple=True, default=False)
-    def cli(flags):
-        pass
+    with pytest.raises(
+        click.BadParameter,
+        match=(
+            "Default for parameter with multiple = True or nargs > 1 should be an"
+            " iterable."
+        ),
+    ) as exc_info:
 
-    result = runner.invoke(cli, [])
-    assert result.exception
+        @click.command()
+        @click.option("--flags", multiple=True, default=False)
+        def cli(flags):
+            pass
+
+    message = str(exc_info.value)
     assert (
-        "Value for parameter with multiple = True or nargs > 1 should be an iterable."
-        in result.exception.args
+        "Default for parameter with multiple = True or nargs > 1 should be an iterable."
+        in message
     )
 
 
@@ -526,8 +533,8 @@ def test_option_help_preserve_paragraphs(runner):
         f"{i}\n"
         f"{i}If not given, the environment variable CONFIG_FILE is\n"
         f"{i}consulted and used if set. If neither are given, a default\n"
-        f"{i}configuration file is loaded."
-    ) in result.output
+        f"{i}configuration file is loaded." in result.output
+    )
 
 
 def test_argument_custom_class(runner):

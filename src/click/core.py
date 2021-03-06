@@ -1836,6 +1836,7 @@ class Parameter:
         callback=None,
         nargs=None,
         metavar=None,
+        multiple=False,
         expose_value=True,
         is_eager=False,
         envvar=None,
@@ -1859,12 +1860,21 @@ class Parameter:
         self.required = required
         self.callback = callback
         self.nargs = nargs
-        self.multiple = False
+        self.multiple = multiple
         self.expose_value = expose_value
         self.default = default
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
+
+        if self.default is not None and (self.multiple or self.nargs > 1):
+            try:
+                self.default = iter(self.default)
+            except TypeError:
+                raise BadParameter(
+                    "Default for parameter with multiple = True or nargs > 1"
+                    " should be an iterable."
+                )
 
         if autocompletion is not None:
             import warnings
@@ -2011,15 +2021,7 @@ class Parameter:
             if level == 0:
                 return self.type(value, self, ctx)
 
-            try:
-                iter_value = iter(value)
-            except TypeError:
-                raise TypeError(
-                    "Value for parameter with multiple = True or nargs > 1"
-                    " should be an iterable."
-                )
-
-            return tuple(_convert(x, level - 1) for x in iter_value)
+            return tuple(_convert(x, level - 1) for x in value)
 
         return _convert(value, (self.nargs != 1) + bool(self.multiple))
 
@@ -2204,7 +2206,7 @@ class Option(Parameter):
         **attrs,
     ):
         default_is_missing = attrs.get("default", _missing) is _missing
-        super().__init__(param_decls, type=type, **attrs)
+        super().__init__(param_decls, type=type, multiple=multiple, **attrs)
 
         if prompt is True:
             prompt_text = self.name.replace("_", " ").capitalize()
@@ -2261,7 +2263,6 @@ class Option(Parameter):
             if default_is_missing:
                 self.default = 0
 
-        self.multiple = multiple
         self.allow_from_autoenv = allow_from_autoenv
         self.help = help
         self.show_default = show_default
