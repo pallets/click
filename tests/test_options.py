@@ -117,13 +117,15 @@ def test_multiple_required(runner):
     assert "Error: Missing option '-m' / '--message'." in result.output
 
 
-@pytest.mark.parametrize(("multiple", "nargs"), [(True, None), (None, 2)])
-def test_multiple_bad_default(runner, multiple, nargs):
+@pytest.mark.parametrize(
+    ("name", "multiple", "nargs"), [("flags", True, None), ("message", None, 2)]
+)
+def test_multiple_bad_default(runner, name, multiple, nargs):
     with pytest.raises(
         click.BadParameter,
         match=(
-            "Default for parameter with multiple = True or nargs > 1 should be an"
-            " iterable."
+            f"Default for parameter '{name}' with multiple = True or nargs > 1"
+            " should be an iterable."
         ),
     ) as exc_info:
 
@@ -135,9 +137,9 @@ def test_multiple_bad_default(runner, multiple, nargs):
 
     message = str(exc_info.value)
     assert (
-        "Default for parameter with multiple = True or nargs > 1 should be an iterable."
-        in message
-    )
+        f"Default for parameter '{name}' with multiple = True or nargs > 1"
+        " should be an iterable."
+    ) in message
 
 
 def test_empty_envvar(runner):

@@ -1779,6 +1779,10 @@ class Parameter:
                   the arity of the tuple). If ``nargs=-1``, all remaining
                   parameters are collected.
     :param metavar: how the value is represented in the help page.
+    :param multiple: if this is set to `True` then the argument is accepted
+                     multiple times and recorded.  This is similar to ``nargs``
+                     in how it works but supports arbitrary number of
+                     arguments.
     :param expose_value: if this is `True` then the value is passed onwards
                          to the command callback and stored on the context,
                          otherwise it's skipped.
@@ -1792,6 +1796,11 @@ class Parameter:
         given. Takes ``ctx, param, incomplete`` and must return a list
         of :class:`~click.shell_completion.CompletionItem` or a list of
         strings.
+
+    .. versionchanged:: 8.0
+        Param ``multiple`` is added for checking value provided as default
+        for ``multiple=True`` or ``nargs>1`` is an iterable. Iterable checks
+        from ``type_cast_value`` are moved to ``__init__``.
 
     .. versionchanged:: 8.0
         ``process_value`` validates required parameters and bounded
@@ -1872,8 +1881,8 @@ class Parameter:
                 self.default = iter(self.default)
             except TypeError:
                 raise BadParameter(
-                    "Default for parameter with multiple = True or nargs > 1"
-                    " should be an iterable."
+                    f"Default for parameter '{self.name}' with multiple = True"
+                    " or nargs > 1 should be an iterable."
                 )
 
         if self.type.is_composite:
@@ -2171,10 +2180,6 @@ class Option(Parameter):
     :param flag_value: which value should be used for this flag if it's
                        enabled.  This is set to a boolean automatically if
                        the option string contains a slash to mark two options.
-    :param multiple: if this is set to `True` then the argument is accepted
-                     multiple times and recorded.  This is similar to ``nargs``
-                     in how it works but supports arbitrary number of
-                     arguments.
     :param count: this flag makes an option increment an integer.
     :param allow_from_autoenv: if this is enabled then the value of this
                                parameter will be pulled from an environment
@@ -2196,7 +2201,6 @@ class Option(Parameter):
         hide_input=False,
         is_flag=None,
         flag_value=None,
-        multiple=False,
         count=False,
         allow_from_autoenv=True,
         type=None,
@@ -2207,7 +2211,7 @@ class Option(Parameter):
         **attrs,
     ):
         default_is_missing = attrs.get("default", _missing) is _missing
-        super().__init__(param_decls, type=type, multiple=multiple, **attrs)
+        super().__init__(param_decls, type=type, **attrs)
 
         if prompt is True:
             prompt_text = self.name.replace("_", " ").capitalize()

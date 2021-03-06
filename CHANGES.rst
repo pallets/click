@@ -187,6 +187,11 @@ Unreleased
 -   Add a ``pass_meta_key`` decorator for passing a key from
     ``Context.meta``. This is useful for extensions using ``meta`` to
     store information. :issue:`1739`
+-   Param ``multiple`` is moved from ``Option`` to ``Parameter`` to support
+    default value iterable checks for ``multiple=True`` or ``nargs>1``. The
+    checks are moved from ``type_cast_value`` to ``Parameter.__init__()``.
+    ``BadParameter`` is raised instead of ``TypeError`` when the checks fail.
+    :issue:`1806`
 
 
 Version 7.1.2
