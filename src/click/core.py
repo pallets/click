@@ -8,7 +8,7 @@ from contextlib import ExitStack
 from functools import update_wrapper
 from itertools import repeat
 
-from ._unicodefun import _verify_python_env
+# from ._unicodefun import _verify_python_env
 from .exceptions import Abort
 from .exceptions import BadParameter
 from .exceptions import ClickException
@@ -937,7 +937,7 @@ class BaseCommand:
         """
         # Verify that the environment is configured correctly, or reject
         # further execution to avoid a broken script.
-        _verify_python_env()
+        # _verify_python_env()
 
         if args is None:
             args = sys.argv[1:]
