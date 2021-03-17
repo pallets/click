@@ -187,6 +187,7 @@ Unreleased
 -   Add a ``pass_meta_key`` decorator for passing a key from
     ``Context.meta``. This is useful for extensions using ``meta`` to
     store information. :issue:`1739`
+-   Deprecation Notice now shows at the top of the help text. :issue: `1791`
 
 
 Version 7.1.2
