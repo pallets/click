@@ -1224,7 +1224,7 @@ class Command(BaseCommand):
             with formatter.indentation():
                 help_text = self.help
                 if self.deprecated:
-                    help_text += DEPRECATED_HELP_NOTICE
+                    help_text = DEPRECATED_HELP_NOTICE + "\n" + help_text
                 formatter.write_text(help_text)
         elif self.deprecated:
             formatter.write_paragraph()
@@ -2011,15 +2011,7 @@ class Parameter:
             if level == 0:
                 return self.type(value, self, ctx)
 
-            try:
-                iter_value = iter(value)
-            except TypeError:
-                raise TypeError(
-                    "Value for parameter with multiple = True or nargs > 1"
-                    " should be an iterable."
-                )
-
-            return tuple(_convert(x, level - 1) for x in iter_value)
+            return tuple(_convert(x, level - 1) for x in value)
 
         return _convert(value, (self.nargs != 1) + bool(self.multiple))
 
