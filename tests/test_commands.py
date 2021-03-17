@@ -297,14 +297,14 @@ def test_deprecated_in_help_messages(runner):
         pass
 
     result = runner.invoke(cmd_with_help, ["--help"])
-    assert "(DEPRECATED)" in result.output
+    assert "(Deprecated)" in result.output
 
     @click.command(deprecated=True)
     def cmd_without_help():
         pass
 
     result = runner.invoke(cmd_without_help, ["--help"])
-    assert "(DEPRECATED)" in result.output
+    assert "(Deprecated)" in result.output
 
 
 def test_deprecated_in_invocation(runner):

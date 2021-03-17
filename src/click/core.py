@@ -40,14 +40,6 @@ _missing = object()
 SUBCOMMAND_METAVAR = "COMMAND [ARGS]..."
 SUBCOMMANDS_METAVAR = "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."
 
-DEPRECATED_HELP_NOTICE = " (DEPRECATED)"
-DEPRECATED_INVOKE_NOTICE = "DeprecationWarning: The command {name} is deprecated."
-
-
-def _maybe_show_deprecated_notice(cmd):
-    if cmd.deprecated:
-        echo(style(DEPRECATED_INVOKE_NOTICE.format(name=cmd.name), fg="red"), err=True)
-
 
 def _fast_exit(code):
     """Low-level exit that skips Python's cleanup but speeds up exit by
@@ -1193,12 +1185,15 @@ class Command(BaseCommand):
         """Gets short help for the command or makes it by shortening the
         long help string.
         """
-        return (
-            self.short_help
-            or self.help
-            and make_default_short_help(self.help, limit)
-            or ""
-        )
+        text = self.short_help or ""
+
+        if not text and self.help:
+            text = make_default_short_help(self.help, limit)
+
+        if self.deprecated:
+            text = f"(Deprecated) {text}"
+
+        return text.strip()
 
     def format_help(self, ctx, formatter):
         """Writes the help into the formatter if it exists.
@@ -1219,17 +1214,16 @@ class Command(BaseCommand):
 
     def format_help_text(self, ctx, formatter):
         """Writes the help text to the formatter if it exists."""
-        if self.help:
+        text = self.help or ""
+
+        if self.deprecated:
+            text = f"(Deprecated) {text}"
+
+        if text:
             formatter.write_paragraph()
+
             with formatter.indentation():
-                help_text = self.help
-                if self.deprecated:
-                    help_text += DEPRECATED_HELP_NOTICE
-                formatter.write_text(help_text)
-        elif self.deprecated:
-            formatter.write_paragraph()
-            with formatter.indentation():
-                formatter.write_text(DEPRECATED_HELP_NOTICE)
+                formatter.write_text(text)
 
     def format_options(self, ctx, formatter):
         """Writes all the options into the formatter if they exist."""
@@ -1275,7 +1269,15 @@ class Command(BaseCommand):
         """Given a context, this invokes the attached callback (if it exists)
         in the right way.
         """
-        _maybe_show_deprecated_notice(self)
+        if self.deprecated:
+            echo(
+                style(
+                    f"DeprecationWarning: The command {self.name!r} is deprecated.",
+                    fg="red",
+                ),
+                err=True,
+            )
+
         if self.callback is not None:
             return ctx.invoke(self.callback, **ctx.params)
 
