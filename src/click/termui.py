@@ -464,6 +464,8 @@ def style(
     bold=None,
     dim=None,
     underline=None,
+    overline=None,
+    italic=None,
     blink=None,
     reverse=None,
     strikethrough=None,
@@ -518,6 +520,8 @@ def style(
     :param dim: if provided this will enable or disable dim mode.  This is
                 badly supported.
     :param underline: if provided this will enable or disable underline.
+    :param overline: if provided this will enable or disable overline.
+    :param italic: if provided this will enable or disable italic.
     :param blink: if provided this will enable or disable blinking.
     :param reverse: if provided this will enable or disable inverse
                     rendering (foreground becomes background and the
@@ -535,7 +539,8 @@ def style(
        Added support for 256 and RGB color codes.
 
     .. versionchanged:: 8.0
-        Added the ``strikethrough`` parameter.
+        Added the ``strikethrough``, ``italic``, and ``overline``
+        parameters.
 
     .. versionchanged:: 7.0
         Added support for bright colors.
@@ -565,6 +570,10 @@ def style(
         bits.append(f"\033[{2 if dim else 22}m")
     if underline is not None:
         bits.append(f"\033[{4 if underline else 24}m")
+    if overline is not None:
+        bits.append(f"\033[{53 if underline else 55}m")
+    if italic is not None:
+        bits.append(f"\033[{5 if underline else 23}m")
     if blink is not None:
         bits.append(f"\033[{5 if blink else 25}m")
     if reverse is not None:
