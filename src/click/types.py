@@ -734,6 +734,10 @@ class Path(ParamType):
 
         if not is_dash:
             if self.resolve_path:
+                # realpath on Windows Python < 3.8 doesn't resolve symlinks
+                if os.path.islink(rv):
+                    rv = os.readlink(rv)
+
                 rv = os.path.realpath(rv)
 
             try:
