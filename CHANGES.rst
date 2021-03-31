@@ -189,6 +189,9 @@ Unreleased
     store information. :issue:`1739`
 -   ``Path`` ``resolve_path`` resolves symlinks on Windows Python < 3.8.
     :issue:`1813`
+-   Command deprecation notice appears at the start of the help text, as
+    well as in the short help. The notice is not in all caps.
+    :issue:`1791`
 
 
 Version 7.1.2
