@@ -4,6 +4,7 @@ import itertools
 import os
 import sys
 import typing as t
+from gettext import gettext as _
 
 from ._compat import is_bytes
 from ._compat import isatty
@@ -145,7 +146,7 @@ def prompt(
 
     if confirmation_prompt:
         if confirmation_prompt is True:
-            confirmation_prompt = "Repeat for confirmation"
+            confirmation_prompt = _("Repeat for confirmation")
 
         confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
 
@@ -161,9 +162,9 @@ def prompt(
             result = value_proc(value)
         except UsageError as e:
             if hide_input:
-                echo("Error: the value you entered was invalid", err=err)
+                echo(_("Error: the value you entered was invalid"), err=err)
             else:
-                echo(f"Error: {e.message}", err=err)  # noqa: B306
+                echo(_("Error: {e.message}").format(e=e), err=err)  # noqa: B306
             continue
         if not confirmation_prompt:
             return result
@@ -173,7 +174,7 @@ def prompt(
                 break
         if value == value2:
             return result
-        echo("Error: the two entered values do not match", err=err)
+        echo(_("Error: the two entered values do not match"), err=err)
 
 
 def confirm(
@@ -222,7 +223,7 @@ def confirm(
         elif default is not None and value == "":
             rv = default
         else:
-            echo("Error: invalid input", err=err)
+            echo(_("Error: invalid input"), err=err)
             continue
         break
     if abort and not rv:

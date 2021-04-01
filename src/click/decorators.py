@@ -1,6 +1,7 @@
 import inspect
 import typing as t
 from functools import update_wrapper
+from gettext import gettext as _
 
 from .core import Argument
 from .core import Command
@@ -280,7 +281,7 @@ def version_option(
     *param_decls,
     package_name=None,
     prog_name=None,
-    message="%(prog)s, version %(version)s",
+    message=None,
     **kwargs,
 ):
     """Add a ``--version`` option which immediately prints the version
@@ -315,6 +316,9 @@ def version_option(
     .. versionchanged:: 8.0
         Use :mod:`importlib.metadata` instead of ``pkg_resources``.
     """
+    if message is None:
+        message = _("%(prog)s, version %(version)s")
+
     if version is None and package_name is None:
         frame = inspect.currentframe()
         f_globals = frame.f_back.f_globals if frame is not None else None
@@ -381,7 +385,7 @@ def version_option(
     kwargs.setdefault("is_flag", True)
     kwargs.setdefault("expose_value", False)
     kwargs.setdefault("is_eager", True)
-    kwargs.setdefault("help", "Show the version and exit.")
+    kwargs.setdefault("help", _("Show the version and exit."))
     kwargs["callback"] = callback
     return option(*param_decls, **kwargs)
 
@@ -412,6 +416,6 @@ def help_option(*param_decls, **kwargs):
     kwargs.setdefault("is_flag", True)
     kwargs.setdefault("expose_value", False)
     kwargs.setdefault("is_eager", True)
-    kwargs.setdefault("help", "Show this message and exit.")
+    kwargs.setdefault("help", _("Show this message and exit."))
     kwargs["callback"] = callback
     return option(*param_decls, **kwargs)

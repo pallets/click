@@ -6,6 +6,7 @@ import typing as t
 from contextlib import contextmanager
 from contextlib import ExitStack
 from functools import update_wrapper
+from gettext import gettext as _
 from itertools import repeat
 
 from ._unicodefun import _verify_python_env
@@ -995,7 +996,7 @@ class BaseCommand:
         except Abort:
             if not standalone_mode:
                 raise
-            echo("Aborted!", file=sys.stderr)
+            echo(_("Aborted!"), file=sys.stderr)
             sys.exit(1)
 
     def _main_shell_completion(self, ctx_args, prog_name, complete_var=None):
@@ -1170,7 +1171,7 @@ class Command(BaseCommand):
             is_eager=True,
             expose_value=False,
             callback=show_help,
-            help="Show this message and exit.",
+            help=_("Show this message and exit."),
         )
 
     def make_parser(self, ctx):
@@ -1280,7 +1281,9 @@ class Command(BaseCommand):
         if self.deprecated:
             echo(
                 style(
-                    f"DeprecationWarning: The command {self.name!r} is deprecated.",
+                    _(
+                        "DeprecationWarning: The command {self.name!r} is deprecated."
+                    ).format(self=self),
                     fg="red",
                 ),
                 err=True,

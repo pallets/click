@@ -1,3 +1,5 @@
+from gettext import gettext as _
+
 from ._compat import filename_to_ui
 from ._compat import get_text_stderr
 from .utils import echo
@@ -28,7 +30,7 @@ class ClickException(Exception):
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
-        echo(f"Error: {self.format_message()}", file=file)
+        echo(_("Error: {self.format_message()}").format(self=self), file=file)
 
 
 class UsageError(ClickException):
@@ -59,8 +61,16 @@ class UsageError(ClickException):
             )
         if self.ctx is not None:
             color = self.ctx.color
-            echo(f"{self.ctx.get_usage()}\n{hint}", file=file, color=color)
-        echo(f"Error: {self.format_message()}", file=file, color=color)
+            echo(
+                _("{usage}\n{hint}").format(usage=self.ctx.get_usage(), hint=hint),
+                file=file,
+                color=color,
+            )
+        echo(
+            _("Error: {message}").format(message=self.format_message()),
+            file=file,
+            color=color,
+        )
 
 
 class BadParameter(UsageError):
@@ -144,7 +154,7 @@ class MissingParameter(BadParameter):
     def __str__(self):
         if self.message is None:
             param_name = self.param.name if self.param else None
-            return f"missing parameter: {param_name}"
+            return _("missing parameter: {param_name}").format(param_name=param_name)
         else:
             return self.message
 

@@ -197,7 +197,7 @@ Unreleased
     :issue:`1791`
 -   When taking arguments from ``sys.argv`` on Windows, glob patterns,
     user dir, and env vars are expanded. :issue:`1096`
-
+-   Wrapped public messages with ``_(gettext)`` for i18n support. :issue:`303`
 
 Version 7.1.2
 -------------

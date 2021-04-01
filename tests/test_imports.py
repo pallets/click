@@ -47,6 +47,7 @@ ALLOWED_IMPORTS = {
     "enum",
     "typing",
     "types",
+    "gettext",
 }
 
 if WIN:
