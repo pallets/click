@@ -30,6 +30,7 @@ from .types import BOOL
 from .types import convert_type
 from .types import IntRange
 from .utils import _detect_program_name
+from .utils import _expand_args
 from .utils import echo
 from .utils import make_default_short_help
 from .utils import make_str
@@ -903,9 +904,6 @@ class BaseCommand:
         This method is also available by directly calling the instance of
         a :class:`Command`.
 
-        .. versionadded:: 3.0
-           Added the `standalone_mode` flag to control the standalone mode.
-
         :param args: the arguments that should be used for parsing.  If not
                      provided, ``sys.argv[1:]`` is used.
         :param prog_name: the program name that should be used.  By default
@@ -926,6 +924,13 @@ class BaseCommand:
                                 of :meth:`invoke`.
         :param extra: extra keyword arguments are forwarded to the context
                       constructor.  See :class:`Context` for more information.
+
+        .. versionchanged:: 8.0
+            When taking arguments from ``sys.argv`` on Windows, glob
+            patterns, user dir, and env vars are expanded.
+
+        .. versionchanged:: 3.0
+           Added the ``standalone_mode`` parameter.
         """
         # Verify that the environment is configured correctly, or reject
         # further execution to avoid a broken script.
@@ -933,6 +938,9 @@ class BaseCommand:
 
         if args is None:
             args = sys.argv[1:]
+
+            if os.name == "nt":
+                args = _expand_args(args)
         else:
             args = list(args)
 
