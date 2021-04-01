@@ -192,6 +192,8 @@ Unreleased
 -   Command deprecation notice appears at the start of the help text, as
     well as in the short help. The notice is not in all caps.
     :issue:`1791`
+-   When taking arguments from ``sys.argv`` on Windows, glob patterns,
+    user dir, and env vars are expanded. :issue:`1096`
 
 
 Version 7.1.2

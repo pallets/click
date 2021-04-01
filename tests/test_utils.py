@@ -429,3 +429,13 @@ class MockMain:
 )
 def test_detect_program_name(path, main, expected):
     assert click.utils._detect_program_name(path, _main=main) == expected
+
+
+def test_expand_args(monkeypatch):
+    user = os.path.expanduser("~")
+    assert user in click.utils._expand_args(["~"])
+    monkeypatch.setenv("CLICK_TEST", "hello")
+    assert "hello" in click.utils._expand_args(["$CLICK_TEST"])
+    assert "setup.cfg" in click.utils._expand_args(["*.cfg"])
+    assert os.path.join("docs", "conf.py") in click.utils._expand_args(["**/conf.py"])
+    assert "*.not-found" in click.utils._expand_args(["*.not-found"])
