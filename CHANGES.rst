@@ -149,6 +149,8 @@ Unreleased
     passed in as a default value.
     :issue:`549, 736, 764, 921, 1015, 1618`
 -   Fix formatting when ``Command.options_metavar`` is empty. :pr:`1551`
+-   Revert adding space between option help text that wraps.
+    :issue:`1831`
 -   The default value passed to ``prompt`` will be cast to the correct
     type like an input value would be. :pr:`1517`
 -   Automatically generated short help messages will stop at the first
