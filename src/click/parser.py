@@ -22,6 +22,8 @@ Copyright 2002-2006 Python Software Foundation. All rights reserved.
 # Copyright 2001-2006 Gregory P. Ward
 # Copyright 2002-2006 Python Software Foundation
 from collections import deque
+from gettext import gettext as _
+from gettext import ngettext
 
 from .exceptions import BadArgumentUsage
 from .exceptions import BadOptionUsage
@@ -194,7 +196,9 @@ class Argument:
                 value = None
             elif holes != 0:
                 raise BadArgumentUsage(
-                    f"argument {self.dest} takes {self.nargs} values"
+                    _("Argument {name!r} takes {nargs} values.").format(
+                        name=self.dest, nargs=self.nargs
+                    )
                 )
 
         if self.nargs == -1 and self.obj.envvar is not None:
@@ -359,7 +363,9 @@ class OptionParser:
             value = self._get_value_from_state(opt, option, state)
 
         elif explicit_value is not None:
-            raise BadOptionUsage(opt, f"{opt} option does not take a value")
+            raise BadOptionUsage(
+                opt, _("Option {name!r} does not take a value.").format(name=opt)
+            )
 
         else:
             value = None
@@ -414,9 +420,13 @@ class OptionParser:
                 # Option allows omitting the value.
                 value = _flag_needs_value
             else:
-                n_str = "an argument" if nargs == 1 else f"{nargs} arguments"
                 raise BadOptionUsage(
-                    option_name, f"{option_name} option requires {n_str}."
+                    option_name,
+                    ngettext(
+                        "Option {name!r} requires an argument.",
+                        "Option {name!r} requires {nargs} arguments.",
+                        nargs,
+                    ).format(name=option_name, nargs=nargs),
                 )
         elif nargs == 1:
             next_rarg = state.rargs[0]

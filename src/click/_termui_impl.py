@@ -8,6 +8,7 @@ import math
 import os
 import sys
 import time
+from gettext import gettext as _
 
 from ._compat import _default_text_stdout
 from ._compat import CYGWIN
@@ -489,9 +490,13 @@ class Editor:
             c = subprocess.Popen(f'{editor} "{filename}"', env=environ, shell=True)
             exit_code = c.wait()
             if exit_code != 0:
-                raise ClickException(f"{editor}: Editing failed!")
+                raise ClickException(
+                    _("{editor}: Editing failed").format(editor=editor)
+                )
         except OSError as e:
-            raise ClickException(f"{editor}: Editing failed: {e}")
+            raise ClickException(
+                _("{editor}: Editing failed: {e}").format(editor=editor, e=e)
+            )
 
     def edit(self, text):
         import tempfile

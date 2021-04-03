@@ -120,7 +120,7 @@ def test_basic_option(runner):
 
     result = runner.invoke(cli, ["--foo"])
     assert result.exception
-    assert "--foo option requires an argument" in result.output
+    assert "Option '--foo' requires an argument." in result.output
 
     result = runner.invoke(cli, ["--foo="])
     assert not result.exception

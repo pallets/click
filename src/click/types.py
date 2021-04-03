@@ -2,6 +2,8 @@ import os
 import stat
 import typing as t
 from datetime import datetime
+from gettext import gettext as _
+from gettext import ngettext
 
 from ._compat import _get_argv_encoding
 from ._compat import filename_to_ui
@@ -228,8 +230,7 @@ class Choice(ParamType):
         return f"[{choices_str}]"
 
     def get_missing_message(self, param):
-        choice_str = ",\n\t".join(self.choices)
-        return f"Choose from:\n\t{choice_str}"
+        return _("Choose from:\n\t{choices}").format(choices=",\n\t".join(self.choices))
 
     def convert(self, value, param, ctx):
         # Match through normalization and case sensitivity
@@ -256,9 +257,16 @@ class Choice(ParamType):
         if normed_value in normed_choices:
             return normed_choices[normed_value]
 
-        one_of = "one of " if len(self.choices) > 1 else ""
-        choices_str = ", ".join(repr(c) for c in self.choices)
-        self.fail(f"{value!r} is not {one_of}{choices_str}.", param, ctx)
+        choices_str = ", ".join(map(repr, self.choices))
+        self.fail(
+            ngettext(
+                "{value!r} is not {choice}.",
+                "{value!r} is not one of {choices}.",
+                len(self.choices),
+            ).format(value=value, choice=choices_str, choices=choices_str),
+            param,
+            ctx,
+        )
 
     def __repr__(self):
         return f"Choice({list(self.choices)})"
@@ -335,10 +343,15 @@ class DateTime(ParamType):
             if converted is not None:
                 return converted
 
-        plural = "s" if len(self.formats) > 1 else ""
-        formats_str = ", ".join(repr(f) for f in self.formats)
+        formats_str = ", ".join(map(repr, self.formats))
         self.fail(
-            f"{value!r} does not match the format{plural} {formats_str}.", param, ctx
+            ngettext(
+                "{value!r} does not match the format {format}.",
+                "{value!r} does not match the formats {formats}.",
+                len(self.formats),
+            ).format(value=value, format=formats_str, formats=formats_str),
+            param,
+            ctx,
         )
 
     def __repr__(self):
@@ -352,7 +365,13 @@ class _NumberParamTypeBase(ParamType):
         try:
             return self._number_class(value)
         except ValueError:
-            self.fail(f"{value!r} is not a valid {self.name}.", param, ctx)
+            self.fail(
+                _("{value!r} is not a valid {number_type}.").format(
+                    value=value, number_type=self.name
+                ),
+                param,
+                ctx,
+            )
 
 
 class _NumberRangeBase(_NumberParamTypeBase):
@@ -393,7 +412,13 @@ class _NumberRangeBase(_NumberParamTypeBase):
                 return self._clamp(self.max, -1, self.max_open)
 
         if lt_min or gt_max:
-            self.fail(f"{rv} is not in the range {self._describe_range()}.", param, ctx)
+            self.fail(
+                _("{value} is not in the range {range}.").format(
+                    value=rv, range=self._describe_range()
+                ),
+                param,
+                ctx,
+            )
 
         return rv
 
@@ -517,7 +542,9 @@ class BoolParamType(ParamType):
         if norm in {"0", "false", "f", "no", "n", "off"}:
             return False
 
-        self.fail(f"{value!r} is not a valid boolean.", param, ctx)
+        self.fail(
+            _("{value!r} is not a valid boolean.").format(value=value), param, ctx
+        )
 
     def __repr__(self):
         return "BOOL"
@@ -537,7 +564,9 @@ class UUIDParameterType(ParamType):
         try:
             return uuid.UUID(value)
         except ValueError:
-            self.fail(f"{value!r} is not a valid UUID.", param, ctx)
+            self.fail(
+                _("{value!r} is not a valid UUID.").format(value=value), param, ctx
+            )
 
     def __repr__(self):
         return "UUID"
@@ -698,11 +727,11 @@ class Path(ParamType):
         self.type = path_type
 
         if self.file_okay and not self.dir_okay:
-            self.name = "file"
+            self.name = _("file")
         elif self.dir_okay and not self.file_okay:
-            self.name = "directory"
+            self.name = _("directory")
         else:
-            self.name = "path"
+            self.name = _("path")
 
     def to_info_dict(self):
         info_dict = super().to_info_dict()
@@ -746,32 +775,42 @@ class Path(ParamType):
                 if not self.exists:
                     return self.coerce_path_result(rv)
                 self.fail(
-                    f"{self.name.title()} {filename_to_ui(value)!r} does not exist.",
+                    _("{name} {filename!r} does not exist.").format(
+                        name=self.name.title(), filename=filename_to_ui(value)
+                    ),
                     param,
                     ctx,
                 )
 
             if not self.file_okay and stat.S_ISREG(st.st_mode):
                 self.fail(
-                    f"{self.name.title()} {filename_to_ui(value)!r} is a file.",
+                    _("{name} {filename!r} is a file.").format(
+                        name=self.name.title(), filename=filename_to_ui(value)
+                    ),
                     param,
                     ctx,
                 )
             if not self.dir_okay and stat.S_ISDIR(st.st_mode):
                 self.fail(
-                    f"{self.name.title()} {filename_to_ui(value)!r} is a directory.",
+                    _("{name} {filename!r} is a directory.").format(
+                        name=self.name.title(), filename=filename_to_ui(value)
+                    ),
                     param,
                     ctx,
                 )
             if self.writable and not os.access(value, os.W_OK):
                 self.fail(
-                    f"{self.name.title()} {filename_to_ui(value)!r} is not writable.",
+                    _("{name} {filename!r} is not writable.").format(
+                        name=self.name.title(), filename=filename_to_ui(value)
+                    ),
                     param,
                     ctx,
                 )
             if self.readable and not os.access(value, os.R_OK):
                 self.fail(
-                    f"{self.name.title()} {filename_to_ui(value)!r} is not readable.",
+                    _("{name} {filename!r} is not readable.").format(
+                        name=self.name.title(), filename=filename_to_ui(value)
+                    ),
                     param,
                     ctx,
                 )

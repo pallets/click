@@ -1,5 +1,6 @@
 import typing as t
 from contextlib import contextmanager
+from gettext import gettext as _
 
 from ._compat import term_len
 from .parser import split_opt
@@ -129,13 +130,17 @@ class HelpFormatter:
         """Decreases the indentation."""
         self.current_indent -= self.indent_increment
 
-    def write_usage(self, prog, args="", prefix="Usage: "):
+    def write_usage(self, prog, args="", prefix=None):
         """Writes a usage line into the buffer.
 
         :param prog: the program name.
         :param args: whitespace separated list of arguments.
-        :param prefix: the prefix for the first line.
+        :param prefix: The prefix for the first line. Defaults to
+            ``"Usage: "``.
         """
+        if prefix is None:
+            prefix = f"{_('Usage:')} "
+
         usage_prefix = f"{prefix:>{self.current_indent}}{prog} "
         text_width = self.width - self.current_indent
 

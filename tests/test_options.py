@@ -83,7 +83,7 @@ def test_unknown_options(runner, unknown_flag):
 
     result = runner.invoke(cli, [unknown_flag])
     assert result.exception
-    assert f"no such option: {unknown_flag}" in result.output
+    assert f"No such option: {unknown_flag}" in result.output
 
 
 @pytest.mark.parametrize(
@@ -441,7 +441,7 @@ def test_missing_option_string_cast():
     with pytest.raises(click.MissingParameter) as excinfo:
         click.Option(["-a"], required=True).process_value(ctx, None)
 
-    assert str(excinfo.value) == "missing parameter: a"
+    assert str(excinfo.value) == "Missing parameter: a"
 
 
 def test_missing_choice(runner):

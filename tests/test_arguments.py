@@ -230,7 +230,7 @@ def test_missing_argument_string_cast():
     with pytest.raises(click.MissingParameter) as excinfo:
         click.Argument(["a"], required=True).process_value(ctx, None)
 
-    assert str(excinfo.value) == "missing parameter: a"
+    assert str(excinfo.value) == "Missing parameter: a"
 
 
 def test_implicit_non_required(runner):
@@ -301,7 +301,7 @@ def test_defaults_for_nargs(runner):
 
     result = runner.invoke(cmd, ["3"])
     assert result.exception is not None
-    assert "argument a takes 2 values" in result.output
+    assert "Argument 'a' takes 2 values." in result.output
 
 
 def test_multiple_param_decls_not_allowed(runner):
