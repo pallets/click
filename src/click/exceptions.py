@@ -1,4 +1,5 @@
 from gettext import gettext as _
+from gettext import ngettext
 
 from ._compat import filename_to_ui
 from ._compat import get_text_stderr
@@ -30,7 +31,7 @@ class ClickException(Exception):
     def show(self, file=None):
         if file is None:
             file = get_text_stderr()
-        echo(_("Error: {self.format_message()}").format(self=self), file=file)
+        echo(_("Error: {message}").format(message=self.format_message()), file=file)
 
 
 class UsageError(ClickException):
@@ -55,17 +56,13 @@ class UsageError(ClickException):
         color = None
         hint = ""
         if self.cmd is not None and self.cmd.get_help_option(self.ctx) is not None:
-            hint = (
-                f"Try '{self.ctx.command_path}"
-                f" {self.ctx.help_option_names[0]}' for help.\n"
+            hint = _("Try '{command} {option}' for help.").format(
+                command=self.ctx.command_path, option=self.ctx.help_option_names[0]
             )
+            hint = f"{hint}\n"
         if self.ctx is not None:
             color = self.ctx.color
-            echo(
-                _("{usage}\n{hint}").format(usage=self.ctx.get_usage(), hint=hint),
-                file=file,
-                color=color,
-            )
+            echo(f"{self.ctx.get_usage()}\n{hint}", file=file, color=color)
         echo(
             _("Error: {message}").format(message=self.format_message()),
             file=file,
@@ -102,10 +99,11 @@ class BadParameter(UsageError):
         elif self.param is not None:
             param_hint = self.param.get_error_hint(self.ctx)
         else:
-            return f"Invalid value: {self.message}"
-        param_hint = _join_param_hints(param_hint)
+            return _("Invalid value: {message}").format(message=self.message)
 
-        return f"Invalid value for {param_hint}: {self.message}"
+        return _("Invalid value for {param_hint}: {message}").format(
+            param_hint=_join_param_hints(param_hint), message=self.message
+        )
 
 
 class MissingParameter(BadParameter):
@@ -133,7 +131,9 @@ class MissingParameter(BadParameter):
             param_hint = self.param.get_error_hint(self.ctx)
         else:
             param_hint = None
+
         param_hint = _join_param_hints(param_hint)
+        param_hint = f" {param_hint}" if param_hint else ""
 
         param_type = self.param_type
         if param_type is None and self.param is not None:
@@ -144,17 +144,28 @@ class MissingParameter(BadParameter):
             msg_extra = self.param.type.get_missing_message(self.param)
             if msg_extra:
                 if msg:
-                    msg += f".  {msg_extra}"
+                    msg += f". {msg_extra}"
                 else:
                     msg = msg_extra
 
-        hint_str = f" {param_hint}" if param_hint else ""
-        return f"Missing {param_type}{hint_str}.{' ' if msg else ''}{msg or ''}"
+        msg = f" {msg}" if msg else ""
+
+        # Translate param_type for known types.
+        if param_type == "argument":
+            missing = _("Missing argument")
+        elif param_type == "option":
+            missing = _("Missing option")
+        elif param_type == "parameter":
+            missing = _("Missing parameter")
+        else:
+            missing = _("Missing {param_type}").format(param_type=param_type)
+
+        return f"{missing}{param_hint}.{msg}"
 
     def __str__(self):
         if self.message is None:
             param_name = self.param.name if self.param else None
-            return _("missing parameter: {param_name}").format(param_name=param_name)
+            return _("Missing parameter: {param_name}").format(param_name=param_name)
         else:
             return self.message
 
@@ -168,21 +179,23 @@ class NoSuchOption(UsageError):
 
     def __init__(self, option_name, message=None, possibilities=None, ctx=None):
         if message is None:
-            message = f"no such option: {option_name}"
+            message = _("No such option: {name}").format(name=option_name)
 
         super().__init__(message, ctx)
         self.option_name = option_name
         self.possibilities = possibilities
 
     def format_message(self):
-        bits = [self.message]
-        if self.possibilities:
-            if len(self.possibilities) == 1:
-                bits.append(f"Did you mean {self.possibilities[0]}?")
-            else:
-                possibilities = sorted(self.possibilities)
-                bits.append(f"(Possible options: {', '.join(possibilities)})")
-        return "  ".join(bits)
+        if not self.possibilities:
+            return self.message
+
+        possibility_str = ", ".join(sorted(self.possibilities))
+        suggest = ngettext(
+            "Did you mean {possibility}?",
+            "(Possible options: {possibilities})",
+            len(self.possibilities),
+        ).format(possibility=possibility_str, possibilities=possibility_str)
+        return f"{self.message} {suggest}"
 
 
 class BadOptionUsage(UsageError):
@@ -215,14 +228,16 @@ class FileError(ClickException):
     def __init__(self, filename, hint=None):
         ui_filename = filename_to_ui(filename)
         if hint is None:
-            hint = "unknown error"
+            hint = _("unknown error")
 
         super().__init__(hint)
         self.ui_filename = ui_filename
         self.filename = filename
 
     def format_message(self):
-        return f"Could not open file {self.ui_filename}: {self.message}"
+        return _("Could not open file {filename!r}: {message}").format(
+            filename=self.ui_filename, message=self.message
+        )
 
 
 class Abort(RuntimeError):

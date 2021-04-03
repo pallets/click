@@ -1,6 +1,7 @@
 import os
 import re
 import typing as t
+from gettext import gettext as _
 
 from .core import Argument
 from .core import MultiCommand
@@ -289,12 +290,14 @@ class BashComplete(ShellComplete):
 
             if major < "4" or major == "4" and minor < "4":
                 raise RuntimeError(
-                    "Shell completion is not supported for Bash"
-                    " versions older than 4.4."
+                    _(
+                        "Shell completion is not supported for Bash"
+                        " versions older than 4.4."
+                    )
                 )
         else:
             raise RuntimeError(
-                "Couldn't detect Bash version, shell completion is not supported."
+                _("Couldn't detect Bash version, shell completion is not supported.")
             )
 
     def source(self):

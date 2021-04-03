@@ -376,7 +376,7 @@ def test_fast_edit(runner):
     ("prompt_required", "required", "args", "expect"),
     [
         (True, False, None, "prompt"),
-        (True, False, ["-v"], "-v option requires an argument"),
+        (True, False, ["-v"], "Option '-v' requires an argument."),
         (False, True, None, "prompt"),
         (False, True, ["-v"], "prompt"),
     ],

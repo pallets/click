@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from contextlib import ExitStack
 from functools import update_wrapper
 from gettext import gettext as _
+from gettext import ngettext
 from itertools import repeat
 
 from ._unicodefun import _verify_python_env
@@ -1200,7 +1201,7 @@ class Command(BaseCommand):
             text = make_default_short_help(self.help, limit)
 
         if self.deprecated:
-            text = f"(Deprecated) {text}"
+            text = _("(Deprecated) {text}").format(text=text)
 
         return text.strip()
 
@@ -1226,7 +1227,7 @@ class Command(BaseCommand):
         text = self.help or ""
 
         if self.deprecated:
-            text = f"(Deprecated) {text}"
+            text = _("(Deprecated) {text}").format(text=text)
 
         if text:
             formatter.write_paragraph()
@@ -1243,7 +1244,7 @@ class Command(BaseCommand):
                 opts.append(rv)
 
         if opts:
-            with formatter.section("Options"):
+            with formatter.section(_("Options")):
                 formatter.write_dl(opts)
 
     def format_epilog(self, ctx, formatter):
@@ -1266,9 +1267,11 @@ class Command(BaseCommand):
 
         if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
             ctx.fail(
-                "Got unexpected extra"
-                f" argument{'s' if len(args) != 1 else ''}"
-                f" ({' '.join(map(make_str, args))})"
+                ngettext(
+                    "Got unexpected extra argument ({args})",
+                    "Got unexpected extra arguments ({args})",
+                    len(args),
+                ).format(args=" ".join(map(str, args)))
             )
 
         ctx.args = args
@@ -1281,9 +1284,9 @@ class Command(BaseCommand):
         if self.deprecated:
             echo(
                 style(
-                    _(
-                        "DeprecationWarning: The command {self.name!r} is deprecated."
-                    ).format(self=self),
+                    _("DeprecationWarning: The command {name!r} is deprecated.").format(
+                        name=self.name
+                    ),
                     fg="red",
                 ),
                 err=True,
@@ -1477,7 +1480,7 @@ class MultiCommand(Command):
                 rows.append((subcommand, help))
 
             if rows:
-                with formatter.section("Commands"):
+                with formatter.section(_("Commands")):
                     formatter.write_dl(rows)
 
     def parse_args(self, ctx, args):
@@ -1509,7 +1512,7 @@ class MultiCommand(Command):
                 with ctx:
                     super().invoke(ctx)
                     return _process_result([] if self.chain else None)
-            ctx.fail("Missing command.")
+            ctx.fail(_("Missing command."))
 
         # Fetch args back out
         args = ctx.protected_args + ctx.args
@@ -1583,7 +1586,7 @@ class MultiCommand(Command):
         if cmd is None and not ctx.resilient_parsing:
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
-            ctx.fail(f"No such command '{original_cmd_name}'.")
+            ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
         return cmd.name if cmd else None, cmd, args[1:]
 
     def get_command(self, ctx, cmd_name):
@@ -2061,10 +2064,12 @@ class Parameter:
                 else len(value) != self.nargs
             )
         ):
-            were = "was" if len(value) == 1 else "were"
             ctx.fail(
-                f"Argument {self.name!r} takes {self.nargs} values but"
-                f" {len(value)} {were} given."
+                ngettext(
+                    "Argument {name!r} takes {nargs} values but 1 was given.",
+                    "Argument {name!r} takes {nargs} values but {len} were given.",
+                    len(value),
+                ).format(name=self.name, nargs=self.nargs, len=len(value))
             )
 
         if self.callback is not None:
@@ -2424,7 +2429,7 @@ class Option(Parameter):
                     if isinstance(envvar, (list, tuple))
                     else envvar
                 )
-                extra.append(f"env var: {var_str}")
+                extra.append(_("env var: {var}").format(var=var_str))
 
         default_value = self.get_default(ctx, call=False)
         show_default_is_str = isinstance(self.show_default, str)
@@ -2437,7 +2442,7 @@ class Option(Parameter):
             elif isinstance(default_value, (list, tuple)):
                 default_string = ", ".join(str(d) for d in default_value)
             elif callable(default_value):
-                default_string = "(dynamic)"
+                default_string = _("(dynamic)")
             elif self.is_bool_flag and self.secondary_opts:
                 # For boolean flags that have distinct True/False opts,
                 # use the opt without prefix instead of the value.
@@ -2447,7 +2452,7 @@ class Option(Parameter):
             else:
                 default_string = default_value
 
-            extra.append(f"default: {default_string}")
+            extra.append(_("default: {default}").format(default=default_string))
 
         if isinstance(self.type, _NumberRangeBase):
             range_str = self.type._describe_range()
@@ -2456,7 +2461,7 @@ class Option(Parameter):
                 extra.append(range_str)
 
         if self.required:
-            extra.append("required")
+            extra.append(_("required"))
         if extra:
             extra_str = ";".join(extra)
             help = f"{help}  [{extra_str}]" if help else f"[{extra_str}]"

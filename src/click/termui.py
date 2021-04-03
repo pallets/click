@@ -162,7 +162,7 @@ def prompt(
             result = value_proc(value)
         except UsageError as e:
             if hide_input:
-                echo(_("Error: the value you entered was invalid"), err=err)
+                echo(_("Error: The value you entered was invalid."), err=err)
             else:
                 echo(_("Error: {e.message}").format(e=e), err=err)  # noqa: B306
             continue
@@ -174,7 +174,7 @@ def prompt(
                 break
         if value == value2:
             return result
-        echo(_("Error: the two entered values do not match"), err=err)
+        echo(_("Error: The two entered values do not match."), err=err)
 
 
 def confirm(
@@ -732,7 +732,7 @@ def raw_terminal():
     return f()
 
 
-def pause(info="Press any key to continue ...", err=False):
+def pause(info=None, err=False):
     """This command stops execution and waits for the user to press any
     key to continue.  This is similar to the Windows batch "pause"
     command.  If the program is not run through a terminal, this command
@@ -743,12 +743,17 @@ def pause(info="Press any key to continue ...", err=False):
     .. versionadded:: 4.0
        Added the `err` parameter.
 
-    :param info: the info string to print before pausing.
+    :param info: The message to print before pausing. Defaults to
+        ``"Press any key to continue..."``.
     :param err: if set to message goes to ``stderr`` instead of
                 ``stdout``, the same as with echo.
     """
     if not isatty(sys.stdin) or not isatty(sys.stdout):
         return
+
+    if info is None:
+        info = _("Press any key to continue...")
+
     try:
         if info:
             echo(info, nl=False, err=err)
