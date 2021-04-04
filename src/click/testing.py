@@ -178,13 +178,17 @@ class CliRunner:
 
         This is automatically done in the :meth:`invoke` method.
 
-        .. versionadded:: 4.0
-           The ``color`` parameter was added.
-
         :param input: the input stream to put into sys.stdin.
         :param env: the environment overrides as dictionary.
         :param color: whether the output should contain color codes. The
                       application can still override this explicitly.
+
+        .. versionchanged:: 8.0
+            ``stderr`` is opened with ``errors="backslashreplace"``
+            instead of the default ``"strict"``.
+
+        .. versionchanged:: 4.0
+            Added the ``color`` parameter.
         """
         input = make_input_stream(input, self.charset)
 
@@ -214,7 +218,11 @@ class CliRunner:
         else:
             bytes_error = io.BytesIO()
             sys.stderr = _NamedTextIOWrapper(
-                bytes_error, encoding=self.charset, name="<stderr>", mode="w"
+                bytes_error,
+                encoding=self.charset,
+                name="<stderr>",
+                mode="w",
+                errors="backslashreplace",
             )
 
         def visible_input(prompt=None):

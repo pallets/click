@@ -334,3 +334,15 @@ def test_isolated_runner_custom_tempdir(runner, tmp_path):
 
     assert os.path.exists(d)
     os.rmdir(d)
+
+
+def test_isolation_stderr_errors():
+    """Writing to stderr should escape invalid characters instead of
+    raising a UnicodeEncodeError.
+    """
+    runner = CliRunner(mix_stderr=False)
+
+    with runner.isolation() as (_, err):
+        click.echo("\udce2", err=True, nl=False)
+
+    assert err.getvalue() == b"\\udce2"
