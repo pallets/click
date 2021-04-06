@@ -127,8 +127,10 @@ def prompt(
         try:
             # Write the prompt separately so that we get nice
             # coloring through colorama on Windows
-            echo(text, nl=False, err=err)
-            return f("")
+            echo(text.rstrip(" "), nl=False, err=err)
+            # Echo a space to stdout to work around an issue where
+            # readline causes backspace to clear the whole line.
+            return f(" ")
         except (KeyboardInterrupt, EOFError):
             # getpass doesn't print a newline if the user aborts input with ^C.
             # Allegedly this behavior is inherited from getpass(3).

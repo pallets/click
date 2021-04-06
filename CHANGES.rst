@@ -201,6 +201,8 @@ Unreleased
     applications to translate Click's built-in strings. :issue:`303`
 -   Writing invalid characters  to ``stderr`` when using the test runner
     does not raise a ``UnicodeEncodeError``. :issue:`848`
+-   Fix an issue where ``readline`` would clear the entire ``prompt()``
+    line instead of only the input when pressing backspace. :issue:`665`
 
 
 Version 7.1.2
