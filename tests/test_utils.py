@@ -154,10 +154,10 @@ def test_prompts_abort(monkeypatch, capsys):
     try:
         click.prompt("Password", hide_input=True)
     except click.Abort:
-        click.echo("Screw you.")
+        click.echo("interrupted")
 
     out, err = capsys.readouterr()
-    assert out == "Password: \nScrew you.\n"
+    assert out == "Password:\ninterrupted\n"
 
 
 def _test_gen_func():
@@ -255,8 +255,8 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     emulate_input("asdlkj\n")
     click.prompt("Prompt to stderr", err=True)
     out, err = capfd.readouterr()
-    assert out == ""
-    assert err == "Prompt to stderr: "
+    assert out == " "
+    assert err == "Prompt to stderr:"
 
     emulate_input("y\n")
     click.confirm("Prompt to stdin")
