@@ -549,11 +549,12 @@ class Editor:
 def open_url(url, wait=False, locate=False):
     import subprocess
 
-    def _unquote_file(url):
-        import urllib
+    def _unquote_file(url: str) -> str:
+        from urllib.parse import unquote
 
         if url.startswith("file://"):
-            url = urllib.unquote(url[7:])
+            url = unquote(url[7:])
+
         return url
 
     if sys.platform == "darwin":
