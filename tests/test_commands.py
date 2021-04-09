@@ -39,6 +39,28 @@ def test_other_command_forward(runner):
     assert result.output == "Count: 1\nCount: 42\n"
 
 
+def test_forwarded_params_consistency(runner):
+    cli = click.Group()
+
+    @cli.command()
+    @click.option("-a")
+    @click.pass_context
+    def first(ctx, **kwargs):
+        click.echo(f"{ctx.params}")
+
+    @cli.command()
+    @click.option("-a")
+    @click.option("-b")
+    @click.pass_context
+    def second(ctx, **kwargs):
+        click.echo(f"{ctx.params}")
+        ctx.forward(first)
+
+    result = runner.invoke(cli, ["second", "-a", "foo", "-b", "bar"])
+    assert not result.exception
+    assert result.output == "{'a': 'foo', 'b': 'bar'}\n{'a': 'foo', 'b': 'bar'}\n"
+
+
 def test_auto_shorthelp(runner):
     @click.group()
     def cli():
