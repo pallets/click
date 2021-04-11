@@ -335,3 +335,25 @@ def test_formatting_with_options_metavar_empty(runner):
     cli = click.Command("cli", options_metavar="", params=[click.Argument(["var"])])
     result = runner.invoke(cli, ["--help"])
     assert "Usage: cli VAR\n" in result.output
+
+
+def test_col_max_in_format_commands(runner):
+    @click.group(context_settings=dict(col_max=2))
+    def group():
+        pass
+
+    @group.group()
+    def command():
+        """docstring"""
+
+    result = runner.invoke(group, ["--help"])
+    assert result.output.splitlines() == [
+        "Usage: group [OPTIONS] COMMAND [ARGS]...",
+        "",
+        "Options:",
+        "  --help  Show this message and exit.",
+        "",
+        "Commands:",
+        "  command",
+        "      docstring",
+    ]
