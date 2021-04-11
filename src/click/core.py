@@ -1483,8 +1483,12 @@ class MultiCommand(Command):
         # allow for 3 times the default spacing
         if len(commands):
             # default col_max is 30
-            limit = formatter.width - (ctx.col_max - 30) \
-                - 6 - max(len(cmd[0]) for cmd in commands)
+            limit = (
+                formatter.width
+                - (ctx.col_max - 30)
+                - 6
+                - max(len(cmd[0]) for cmd in commands)
+            )
 
             rows = []
             for subcommand, cmd in commands:
