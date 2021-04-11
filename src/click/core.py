@@ -194,6 +194,7 @@ class Context:
                               format things wider than 80 characters by
                               default.  In addition to that, formatters might
                               add some safety mapping on the right.
+    :param col_max: the maximum with of the command name column in usage.
     :param resilient_parsing: if this flag is enabled then Click will
                               parse without any interactivity or callback
                               invocation.  Default values will also be
@@ -260,6 +261,7 @@ class Context:
         default_map=None,
         terminal_width=None,
         max_content_width=None,
+        col_max=None,
         resilient_parsing=False,
         allow_extra_args=None,
         allow_interspersed_args=None,
@@ -322,6 +324,11 @@ class Context:
         #: The maximum width of formatted content (None implies a sensible
         #: default which is 80 for most things).
         self.max_content_width = max_content_width
+
+        if col_max is None and parent is not None:
+            col_max = parent.col_max
+        # The with maximum with of the command name column in usage.
+        self.col_max = col_max
 
         if allow_extra_args is None:
             allow_extra_args = command.allow_extra_args
@@ -1472,7 +1479,9 @@ class MultiCommand(Command):
 
         # allow for 3 times the default spacing
         if len(commands):
-            limit = formatter.width - 6 - max(len(cmd[0]) for cmd in commands)
+            # default col_max is 30
+            limit = formatter.width - (ctx.col_max - 30) \
+                - 6 - max(len(cmd[0]) for cmd in commands)
 
             rows = []
             for subcommand, cmd in commands:
@@ -1481,7 +1490,7 @@ class MultiCommand(Command):
 
             if rows:
                 with formatter.section(_("Commands")):
-                    formatter.write_dl(rows)
+                    formatter.write_dl(rows, col_max=ctx.col_max)
 
     def parse_args(self, ctx, args):
         if not args and self.no_args_is_help and not ctx.resilient_parsing:

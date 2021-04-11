@@ -194,7 +194,7 @@ class HelpFormatter:
         )
         self.write("\n")
 
-    def write_dl(self, rows, col_max=30, col_spacing=2):
+    def write_dl(self, rows, col_max=None, col_spacing=2):
         """Writes a definition list into the buffer.  This is how options
         and commands are usually formatted.
 
@@ -203,6 +203,10 @@ class HelpFormatter:
         :param col_spacing: the number of spaces between the first and
                             second column.
         """
+
+        if col_max is None:
+            col_max = 30
+
         rows = list(rows)
         widths = measure_table(rows)
         if len(widths) != 2:
