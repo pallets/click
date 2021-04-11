@@ -229,6 +229,7 @@ class Context:
     .. versionchanged:: 8.0
         The ``show_default`` parameter defaults to the value from the
         parent context.
+        Added the ``col_max`` parameter.
 
     .. versionchanged:: 7.1
        Added the ``show_default`` parameter.
@@ -330,7 +331,9 @@ class Context:
                 col_max = parent.col_max
             else:
                 col_max = 30
-        # The with maximum with of the command name column in usage.
+        #: The with maximum with of the command name column in usage.
+        #:
+        #: .. versionadded:: 8.0
         self.col_max = col_max
 
         if allow_extra_args is None:
