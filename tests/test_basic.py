@@ -1,5 +1,4 @@
 import os
-import uuid
 from itertools import chain
 
 import pytest
@@ -104,92 +103,103 @@ def test_group_from_list(runner):
     assert result.output == "sub"
 
 
-def test_basic_option(runner):
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        ([], "S:[no value]"),
+        (["--s=42"], "S:[42]"),
+        (["--s"], "Error: Option '--s' requires an argument."),
+        (["--s="], "S:[]"),
+        (["--s=\N{SNOWMAN}"], "S:[\N{SNOWMAN}]"),
+    ],
+)
+def test_string_option(runner, args, expect):
     @click.command()
-    @click.option("--foo", default="no value")
-    def cli(foo):
-        click.echo(f"FOO:[{foo}]")
+    @click.option("--s", default="no value")
+    def cli(s):
+        click.echo(f"S:[{s}]")
 
-    result = runner.invoke(cli, [])
-    assert not result.exception
-    assert "FOO:[no value]" in result.output
+    result = runner.invoke(cli, args)
+    assert expect in result.output
 
-    result = runner.invoke(cli, ["--foo=42"])
-    assert not result.exception
-    assert "FOO:[42]" in result.output
-
-    result = runner.invoke(cli, ["--foo"])
-    assert result.exception
-    assert "Option '--foo' requires an argument." in result.output
-
-    result = runner.invoke(cli, ["--foo="])
-    assert not result.exception
-    assert "FOO:[]" in result.output
-
-    result = runner.invoke(cli, ["--foo=\N{SNOWMAN}"])
-    assert not result.exception
-    assert "FOO:[\N{SNOWMAN}]" in result.output
+    if expect.startswith("Error:"):
+        assert result.exception is not None
+    else:
+        assert result.exception is None
 
 
-def test_int_option(runner):
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        ([], "I:[84]"),
+        (["--i=23"], "I:[46]"),
+        (["--i=x"], "Error: Invalid value for '--i': 'x' is not a valid integer."),
+    ],
+)
+def test_int_option(runner, args, expect):
     @click.command()
-    @click.option("--foo", default=42)
-    def cli(foo):
-        click.echo(f"FOO:[{foo * 2}]")
+    @click.option("--i", default=42)
+    def cli(i):
+        click.echo(f"I:[{i * 2}]")
 
-    result = runner.invoke(cli, [])
-    assert not result.exception
-    assert "FOO:[84]" in result.output
+    result = runner.invoke(cli, args)
+    assert expect in result.output
 
-    result = runner.invoke(cli, ["--foo=23"])
-    assert not result.exception
-    assert "FOO:[46]" in result.output
-
-    result = runner.invoke(cli, ["--foo=bar"])
-    assert result.exception
-    assert "Invalid value for '--foo': 'bar' is not a valid integer." in result.output
+    if expect.startswith("Error:"):
+        assert result.exception is not None
+    else:
+        assert result.exception is None
 
 
-def test_uuid_option(runner):
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        ([], "U:[ba122011-349f-423b-873b-9d6a79c688ab]"),
+        (
+            ["--u=821592c1-c50e-4971-9cd6-e89dc6832f86"],
+            "U:[821592c1-c50e-4971-9cd6-e89dc6832f86]",
+        ),
+        (["--u=x"], "Error: Invalid value for '--u': 'x' is not a valid UUID."),
+    ],
+)
+def test_uuid_option(runner, args, expect):
     @click.command()
     @click.option(
         "--u", default="ba122011-349f-423b-873b-9d6a79c688ab", type=click.UUID
     )
     def cli(u):
-        assert type(u) is uuid.UUID
         click.echo(f"U:[{u}]")
 
-    result = runner.invoke(cli, [])
-    assert not result.exception
-    assert "U:[ba122011-349f-423b-873b-9d6a79c688ab]" in result.output
+    result = runner.invoke(cli, args)
+    assert expect in result.output
 
-    result = runner.invoke(cli, ["--u=821592c1-c50e-4971-9cd6-e89dc6832f86"])
-    assert not result.exception
-    assert "U:[821592c1-c50e-4971-9cd6-e89dc6832f86]" in result.output
-
-    result = runner.invoke(cli, ["--u=bar"])
-    assert result.exception
-    assert "Invalid value for '--u': 'bar' is not a valid UUID." in result.output
+    if expect.startswith("Error:"):
+        assert result.exception is not None
+    else:
+        assert result.exception is None
 
 
-def test_float_option(runner):
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        ([], "F:[42.0]"),
+        ("--f=23.5", "F:[23.5]"),
+        ("--f=x", "Error: Invalid value for '--f': 'x' is not a valid float."),
+    ],
+)
+def test_float_option(runner, args, expect):
     @click.command()
-    @click.option("--foo", default=42, type=click.FLOAT)
-    def cli(foo):
-        assert type(foo) is float
-        click.echo(f"FOO:[{foo}]")
+    @click.option("--f", default=42.0)
+    def cli(f):
+        click.echo(f"F:[{f}]")
 
-    result = runner.invoke(cli, [])
-    assert not result.exception
-    assert "FOO:[42.0]" in result.output
+    result = runner.invoke(cli, args)
+    assert expect in result.output
 
-    result = runner.invoke(cli, ["--foo=23.5"])
-    assert not result.exception
-    assert "FOO:[23.5]" in result.output
-
-    result = runner.invoke(cli, ["--foo=bar"])
-    assert result.exception
-    assert "Invalid value for '--foo': 'bar' is not a valid float." in result.output
+    if expect.startswith("Error:"):
+        assert result.exception is not None
+    else:
+        assert result.exception is None
 
 
 def test_boolean_option(runner):
