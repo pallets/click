@@ -325,8 +325,11 @@ class Context:
         #: default which is 80 for most things).
         self.max_content_width = max_content_width
 
-        if col_max is None and parent is not None:
-            col_max = parent.col_max
+        if col_max is None:
+            if parent is not None:
+                col_max = parent.col_max
+            else:
+                col_max = 30
         # The with maximum with of the command name column in usage.
         self.col_max = col_max
 
