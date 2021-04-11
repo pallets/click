@@ -203,6 +203,10 @@ Unreleased
     does not raise a ``UnicodeEncodeError``. :issue:`848`
 -   Fix an issue where ``readline`` would clear the entire ``prompt()``
     line instead of only the input when pressing backspace. :issue:`665`
+-   Added the ``col_max`` parameter to ``Context`` which gets passed
+    along to ``HelpFormatter.write_dl``. This allows you to customize
+    the width of the first column showing the command names
+    in the usage.
 
 
 Version 7.1.2
