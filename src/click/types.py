@@ -6,7 +6,6 @@ from gettext import gettext as _
 from gettext import ngettext
 
 from ._compat import _get_argv_encoding
-from ._compat import filename_to_ui
 from ._compat import get_filesystem_encoding
 from ._compat import get_strerror
 from ._compat import open_stream
@@ -655,7 +654,7 @@ class File(ParamType):
                     ctx.call_on_close(safecall(f.flush))
             return f
         except OSError as e:  # noqa: B014
-            self.fail(f"{filename_to_ui(value)!r}: {get_strerror(e)}", param, ctx)
+            self.fail(f"{os.fsdecode(value)!r}: {get_strerror(e)}", param, ctx)
 
     def shell_complete(self, ctx, param, incomplete):
         """Return a special completion marker that tells the completion
@@ -776,7 +775,7 @@ class Path(ParamType):
                     return self.coerce_path_result(rv)
                 self.fail(
                     _("{name} {filename!r} does not exist.").format(
-                        name=self.name.title(), filename=filename_to_ui(value)
+                        name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
                     ctx,
@@ -785,7 +784,7 @@ class Path(ParamType):
             if not self.file_okay and stat.S_ISREG(st.st_mode):
                 self.fail(
                     _("{name} {filename!r} is a file.").format(
-                        name=self.name.title(), filename=filename_to_ui(value)
+                        name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
                     ctx,
@@ -793,7 +792,7 @@ class Path(ParamType):
             if not self.dir_okay and stat.S_ISDIR(st.st_mode):
                 self.fail(
                     _("{name} {filename!r} is a directory.").format(
-                        name=self.name.title(), filename=filename_to_ui(value)
+                        name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
                     ctx,
@@ -801,7 +800,7 @@ class Path(ParamType):
             if self.writable and not os.access(value, os.W_OK):
                 self.fail(
                     _("{name} {filename!r} is not writable.").format(
-                        name=self.name.title(), filename=filename_to_ui(value)
+                        name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
                     ctx,
@@ -809,7 +808,7 @@ class Path(ParamType):
             if self.readable and not os.access(value, os.R_OK):
                 self.fail(
                     _("{name} {filename!r} is not readable.").format(
-                        name=self.name.title(), filename=filename_to_ui(value)
+                        name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
                     ctx,

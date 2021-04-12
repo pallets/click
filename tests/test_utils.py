@@ -93,7 +93,7 @@ def test_filename_formatting():
 
     # filesystem encoding on windows permits this.
     if not WIN:
-        assert click.format_filename(b"/x/foo\xff.txt", shorten=True) == "foo\ufffd.txt"
+        assert click.format_filename(b"/x/foo\xff.txt", shorten=True) == "foo\udcff.txt"
 
 
 def test_prompts(runner):

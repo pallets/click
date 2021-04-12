@@ -333,14 +333,6 @@ def get_text_stderr(encoding=None, errors=None):
     return _force_correct_text_writer(sys.stderr, encoding, errors, force_writable=True)
 
 
-def filename_to_ui(value):
-    if isinstance(value, bytes):
-        value = value.decode(get_filesystem_encoding(), "replace")
-    else:
-        value = value.encode("utf-8", "surrogateescape").decode("utf-8", "replace")
-    return value
-
-
 def get_strerror(e, default=None):
     if hasattr(e, "strerror"):
         msg = e.strerror

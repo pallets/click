@@ -1,7 +1,7 @@
+import os
 from gettext import gettext as _
 from gettext import ngettext
 
-from ._compat import filename_to_ui
 from ._compat import get_text_stderr
 from .utils import echo
 
@@ -226,12 +226,11 @@ class FileError(ClickException):
     """Raised if a file cannot be opened."""
 
     def __init__(self, filename, hint=None):
-        ui_filename = filename_to_ui(filename)
         if hint is None:
             hint = _("unknown error")
 
         super().__init__(hint)
-        self.ui_filename = ui_filename
+        self.ui_filename = os.fsdecode(filename)
         self.filename = filename
 
     def format_message(self):
