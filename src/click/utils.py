@@ -7,7 +7,6 @@ from ._compat import _default_text_stdout
 from ._compat import _find_binary_writer
 from ._compat import auto_wrap_for_ansi
 from ._compat import binary_streams
-from ._compat import filename_to_ui
 from ._compat import get_filesystem_encoding
 from ._compat import get_strerror
 from ._compat import is_bytes
@@ -355,7 +354,8 @@ def format_filename(filename, shorten=False):
     """
     if shorten:
         filename = os.path.basename(filename)
-    return filename_to_ui(filename)
+
+    return os.fsdecode(filename)
 
 
 def get_app_dir(app_name, roaming=True, force_posix=False):
