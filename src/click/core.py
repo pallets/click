@@ -309,7 +309,7 @@ class Context:
         #: If chaining is enabled this will be set to ``'*'`` in case
         #: any commands are executed.  It is however not possible to
         #: figure out which ones.  If you require this knowledge you
-        #: should use a :func:`resultcallback`.
+        #: should use a :func:`result_callback`.
         self.invoked_subcommand = None
 
         if terminal_width is None and parent is not None:
@@ -1363,8 +1363,9 @@ class MultiCommand(Command):
                   is enabled.  This restricts the form of commands in that
                   they cannot have optional arguments but it allows
                   multiple commands to be chained together.
-    :param result_callback: the result callback to attach to this multi
-                            command.
+    :param result_callback: The result callback to attach to this multi
+        command. This can be set or changed later with the
+        :meth:`result_callback` decorator.
     """
 
     allow_extra_args = True
@@ -1392,9 +1393,9 @@ class MultiCommand(Command):
                 subcommand_metavar = SUBCOMMAND_METAVAR
         self.subcommand_metavar = subcommand_metavar
         self.chain = chain
-        #: The result callback that is stored.  This can be set or
-        #: overridden with the :func:`resultcallback` decorator.
-        self.result_callback = result_callback
+        # The result callback that is stored. This can be set or
+        # overridden with the :func:`result_callback` decorator.
+        self._result_callback = result_callback
 
         if self.chain:
             for param in self.params:
@@ -1427,7 +1428,7 @@ class MultiCommand(Command):
         super().format_options(ctx, formatter)
         self.format_commands(ctx, formatter)
 
-    def resultcallback(self, replace=False):
+    def result_callback(self, replace=False):
         """Adds a result callback to the command.  By default if a
         result callback is already registered this will chain them but
         this can be disabled with the `replace` parameter.  The result
@@ -1443,29 +1444,44 @@ class MultiCommand(Command):
             def cli(input):
                 return 42
 
-            @cli.resultcallback()
+            @cli.result_callback()
             def process_result(result, input):
                 return result + input
 
         :param replace: if set to `True` an already existing result
                         callback will be removed.
 
+        .. versionchanged:: 8.0
+            Renamed from ``resultcallback``.
+
         .. versionadded:: 3.0
         """
 
         def decorator(f):
-            old_callback = self.result_callback
+            old_callback = self._result_callback
+
             if old_callback is None or replace:
-                self.result_callback = f
+                self._result_callback = f
                 return f
 
             def function(__value, *args, **kwargs):
                 return f(old_callback(__value, *args, **kwargs), *args, **kwargs)
 
-            self.result_callback = rv = update_wrapper(function, f)
+            self._result_callback = rv = update_wrapper(function, f)
             return rv
 
         return decorator
+
+    def resultcallback(self, replace=False):
+        import warnings
+
+        warnings.warn(
+            "'resultcallback' has been renamed to 'result_callback'."
+            " The old name will be removed in Click 8.1.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.result_callback(replace=replace)
 
     def format_commands(self, ctx, formatter):
         """Extra format methods for multi methods that adds all the commands
@@ -1512,8 +1528,8 @@ class MultiCommand(Command):
 
     def invoke(self, ctx):
         def _process_result(value):
-            if self.result_callback is not None:
-                value = ctx.invoke(self.result_callback, value, **ctx.params)
+            if self._result_callback is not None:
+                value = ctx.invoke(self._result_callback, value, **ctx.params)
             return value
 
         if not ctx.protected_args:
