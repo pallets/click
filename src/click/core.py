@@ -678,6 +678,10 @@ class Context:
         in against the intention of this code and no context was created.  For
         more information about this change and why it was done in a bugfix
         release see :ref:`upgrade-to-3.2`.
+
+        .. versionchanged:: 8.0
+            All ``kwargs`` are tracked in :attr:`params` so they will be
+            passed if :meth:`forward` is called at multiple levels.
         """
         self, callback = args[:2]
         ctx = self
@@ -700,6 +704,10 @@ class Context:
                 if param.name not in kwargs and param.expose_value:
                     kwargs[param.name] = param.get_default(ctx)
 
+            # Track all kwargs as params, so that forward() will pass
+            # them on in subsequent calls.
+            ctx.params.update(kwargs)
+
         args = args[2:]
         with augment_usage_errors(self):
             with ctx:
@@ -709,6 +717,10 @@ class Context:
         """Similar to :meth:`invoke` but fills in default keyword
         arguments from the current context if the other command expects
         it.  This cannot invoke callbacks directly, only other commands.
+
+        .. versionchanged:: 8.0
+            All ``kwargs`` are tracked in :attr:`params` so they will be
+            passed if ``forward`` is called at multiple levels.
         """
         self, cmd = args[:2]
 
