@@ -90,7 +90,7 @@ restored.
 If you do require the know which exact commands will be invoked there are
 different ways to cope with this.  The first one is to let the subcommands
 all return functions and then to invoke the functions in a
-:meth:`Context.resultcallback`.
+:meth:`Context.result_callback`.
 
 
 .. _upgrade-to-2.0:
