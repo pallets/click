@@ -210,6 +210,8 @@ Unreleased
     ``result_callback``. The old name is deprecated. :issue:`1160`
 -   Fix issues with ``CliRunner`` output when using ``echo_stdin=True``.
     :issue:`1101`
+-   Fix a bug of ``click.utils.make_default_short_help`` for which the
+    returned string could be as long as ``max_width + 3``. :issue:`1849`
 
 
 Version 7.1.2
