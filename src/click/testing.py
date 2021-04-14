@@ -16,16 +16,22 @@ class EchoingStdin:
     def __init__(self, input, output):
         self._input = input
         self._output = output
+        self._paused = False
 
     def __getattr__(self, x):
         return getattr(self._input, x)
 
     def _echo(self, rv):
-        self._output.write(rv)
+        if not self._paused:
+            self._output.write(rv)
+
         return rv
 
     def read(self, n=-1):
         return self._echo(self._input.read(n))
+
+    def read1(self, n=-1):
+        return self._echo(self._input.read1(n))
 
     def readline(self, n=-1):
         return self._echo(self._input.readline(n))
@@ -38,6 +44,16 @@ class EchoingStdin:
 
     def __repr__(self):
         return repr(self._input)
+
+
+@contextlib.contextmanager
+def _pause_echo(stream):
+    if stream is None:
+        yield
+    else:
+        stream._paused = True
+        yield
+        stream._paused = False
 
 
 class _NamedTextIOWrapper(io.TextIOWrapper):
@@ -191,6 +207,7 @@ class CliRunner:
             Added the ``color`` parameter.
         """
         input = make_input_stream(input, self.charset)
+        echo_input = None
 
         old_stdin = sys.stdin
         old_stdout = sys.stdout
@@ -203,11 +220,17 @@ class CliRunner:
         bytes_output = io.BytesIO()
 
         if self.echo_stdin:
-            input = EchoingStdin(input, bytes_output)
+            input = echo_input = EchoingStdin(input, bytes_output)
 
         sys.stdin = input = _NamedTextIOWrapper(
             input, encoding=self.charset, name="<stdin>", mode="r"
         )
+
+        if self.echo_stdin:
+            # Force unbuffered reads, otherwise TextIOWrapper reads a
+            # large chunk which is echoed early.
+            input._CHUNK_SIZE = 1
+
         sys.stdout = _NamedTextIOWrapper(
             bytes_output, encoding=self.charset, name="<stdout>", mode="w"
         )
@@ -225,6 +248,7 @@ class CliRunner:
                 errors="backslashreplace",
             )
 
+        @_pause_echo(echo_input)
         def visible_input(prompt=None):
             sys.stdout.write(prompt or "")
             val = input.readline().rstrip("\r\n")
@@ -232,16 +256,20 @@ class CliRunner:
             sys.stdout.flush()
             return val
 
+        @_pause_echo(echo_input)
         def hidden_input(prompt=None):
             sys.stdout.write(f"{prompt or ''}\n")
             sys.stdout.flush()
             return input.readline().rstrip("\r\n")
 
+        @_pause_echo(echo_input)
         def _getchar(echo):
             char = sys.stdin.read(1)
+
             if echo:
                 sys.stdout.write(char)
-                sys.stdout.flush()
+
+            sys.stdout.flush()
             return char
 
         default_color = color
