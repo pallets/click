@@ -52,29 +52,27 @@ def test_echo_stdin_prompts():
         click.echo(f"foo={foo}")
 
     runner = CliRunner(echo_stdin=True)
-    result = runner.invoke(test_python_input, input="wau wau\n")
+    result = runner.invoke(test_python_input, input="bar bar\n")
     assert not result.exception
-    assert result.output == "Foo: wau wau\nfoo=wau wau\n"
+    assert result.output == "Foo: bar bar\nfoo=bar bar\n"
 
     @click.command()
     @click.option("--foo", prompt=True)
     def test_prompt(foo):
         click.echo(f"foo={foo}")
 
-    runner = CliRunner(echo_stdin=True)
-    result = runner.invoke(test_prompt, input="wau wau\n")
+    result = runner.invoke(test_prompt, input="bar bar\n")
     assert not result.exception
-    assert result.output == "Foo: wau wau\nfoo=wau wau\n"
+    assert result.output == "Foo: bar bar\nfoo=bar bar\n"
 
     @click.command()
     @click.option("--foo", prompt=True, hide_input=True)
     def test_hidden_prompt(foo):
         click.echo(f"foo={foo}")
 
-    runner = CliRunner(echo_stdin=True)
-    result = runner.invoke(test_hidden_prompt, input="wau wau\n")
+    result = runner.invoke(test_hidden_prompt, input="bar bar\n")
     assert not result.exception
-    assert result.output == "Foo: \nfoo=wau wau\n"
+    assert result.output == "Foo: \nfoo=bar bar\n"
 
     @click.command()
     @click.option("--foo", prompt=True)
@@ -82,7 +80,6 @@ def test_echo_stdin_prompts():
     def test_multiple_prompts(foo, bar):
         click.echo(f"foo={foo}, bar={bar}")
 
-    runner = CliRunner(echo_stdin=True)
     result = runner.invoke(test_multiple_prompts, input="one\ntwo\n")
     assert not result.exception
     assert result.output == "Foo: one\nBar: two\nfoo=one, bar=two\n"
