@@ -33,7 +33,7 @@ def test_invalid_option(runner):
 
 
 def test_invalid_nargs(runner):
-    with pytest.raises(TypeError, match="nargs < 0"):
+    with pytest.raises(TypeError, match="nargs=-1"):
 
         @click.command()
         @click.option("--foo", nargs=-1)
@@ -117,18 +117,39 @@ def test_multiple_required(runner):
     assert "Error: Missing option '-m' / '--message'." in result.output
 
 
-def test_multiple_bad_default(runner):
-    @click.command()
-    @click.option("--flags", multiple=True, default=False)
-    def cli(flags):
-        pass
+@pytest.mark.parametrize(
+    ("multiple", "nargs", "default"),
+    [
+        (True, 1, []),
+        (True, 1, [1]),
+        # (False, -1, []),
+        # (False, -1, [1]),
+        (False, 2, [1, 2]),
+        # (True, -1, [[]]),
+        # (True, -1, []),
+        # (True, -1, [[1]]),
+        (True, 2, []),
+        (True, 2, [[1, 2]]),
+    ],
+)
+def test_init_good_default_list(runner, multiple, nargs, default):
+    click.Option(["-a"], multiple=multiple, nargs=nargs, default=default)
 
-    result = runner.invoke(cli, [])
-    assert result.exception
-    assert (
-        "Value for parameter with multiple = True or nargs > 1 should be an iterable."
-        in result.exception.args
-    )
+
+@pytest.mark.parametrize(
+    ("multiple", "nargs", "default"),
+    [
+        (True, 1, 1),
+        # (False, -1, 1),
+        (False, 2, [1]),
+        (True, 2, [[1]]),
+    ],
+)
+def test_init_bad_default_list(runner, multiple, nargs, default):
+    type = (str, str) if nargs == 2 else None
+
+    with pytest.raises(ValueError, match="default"):
+        click.Option(["-a"], type=type, multiple=multiple, nargs=nargs, default=default)
 
 
 def test_empty_envvar(runner):

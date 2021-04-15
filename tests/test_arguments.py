@@ -22,7 +22,7 @@ def test_argument_unbounded_nargs_cant_have_default(runner):
     with pytest.raises(TypeError, match="nargs=-1"):
 
         @click.command()
-        @click.argument("src", nargs=-1, default=42)
+        @click.argument("src", nargs=-1, default=["42"])
         def copy(src):
             pass
 
@@ -167,9 +167,9 @@ def test_stdout_default(runner):
     ("nargs", "value", "expect"),
     [
         (2, "", None),
-        (2, "a", "Argument 'arg' takes 2 values but 1 was given."),
+        (2, "a", "Takes 2 values but 1 was given."),
         (2, "a b", ("a", "b")),
-        (2, "a b c", "Argument 'arg' takes 2 values but 3 were given."),
+        (2, "a b c", "Takes 2 values but 3 were given."),
         (-1, "a b c", ("a", "b", "c")),
         (-1, "", ()),
     ],
@@ -188,7 +188,8 @@ def test_nargs_envvar(runner, nargs, value, expect):
     result = runner.invoke(cmd, env={"X": value}, standalone_mode=False)
 
     if isinstance(expect, str):
-        assert expect in str(result.exception)
+        assert isinstance(result.exception, click.BadParameter)
+        assert expect in result.exception.format_message()
     else:
         assert result.return_value == expect
 
@@ -313,24 +314,15 @@ def test_multiple_param_decls_not_allowed(runner):
             click.echo(x)
 
 
-@pytest.mark.parametrize(
-    ("value", "code", "output"),
-    [
-        ((), 2, "Argument 'arg' takes 2 values but 0 were given."),
-        (("a",), 2, "Argument 'arg' takes 2 values but 1 was given."),
-        (("a", "b"), 0, "len 2"),
-        (("a", "b", "c"), 2, "Argument 'arg' takes 2 values but 3 were given."),
-    ],
-)
-def test_nargs_default(runner, value, code, output):
-    @click.command()
-    @click.argument("arg", nargs=2, default=value)
-    def cmd(arg):
-        click.echo(f"len {len(arg)}")
+def test_multiple_not_allowed():
+    with pytest.raises(TypeError, match="multiple"):
+        click.Argument(["a"], multiple=True)
 
-    result = runner.invoke(cmd)
-    assert result.exit_code == code
-    assert output in result.output
+
+@pytest.mark.parametrize("value", [(), ("a",), ("a", "b", "c")])
+def test_nargs_bad_default(runner, value):
+    with pytest.raises(ValueError, match="nargs=2"):
+        click.Argument(["a"], nargs=2, default=value)
 
 
 def test_subcommand_help(runner):
