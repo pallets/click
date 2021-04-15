@@ -345,14 +345,14 @@ def get_os_args():
     value which is the name of the script.
 
     .. deprecated:: 8.0
-        Will be removed in 8.1. Access ``sys.argv[1:]`` directly
+        Will be removed in Click 8.1. Access ``sys.argv[1:]`` directly
         instead.
     """
     import warnings
 
     warnings.warn(
-        "'get_os_args' is deprecated and will be removed in 8.1. Access"
-        " 'sys.argv[1:]' directly instead.",
+        "'get_os_args' is deprecated and will be removed in Click 8.1."
+        " Access 'sys.argv[1:]' directly instead.",
         DeprecationWarning,
         stacklevel=2,
     )
