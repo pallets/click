@@ -5,6 +5,7 @@ import sys
 import typing as t
 from contextlib import contextmanager
 from contextlib import ExitStack
+from functools import partial
 from functools import update_wrapper
 from gettext import gettext as _
 from gettext import ngettext
@@ -1795,6 +1796,16 @@ class CommandCollection(MultiCommand):
         return sorted(rv)
 
 
+def _check_iter(value):
+    """Check if the value is iterable but not a string. Raises a type
+    error, or return an iterator over the value.
+    """
+    if isinstance(value, str):
+        raise TypeError
+
+    return iter(value)
+
+
 class Parameter:
     r"""A parameter to a command comes in two versions: they are either
     :class:`Option`\s or :class:`Argument`\s.  Other subclasses are currently
@@ -1879,6 +1890,7 @@ class Parameter:
         default=None,
         callback=None,
         nargs=None,
+        multiple=False,
         metavar=None,
         expose_value=True,
         is_eager=False,
@@ -1903,7 +1915,7 @@ class Parameter:
         self.required = required
         self.callback = callback
         self.nargs = nargs
-        self.multiple = False
+        self.multiple = multiple
         self.expose_value = expose_value
         self.default = default
         self.is_eager = is_eager
@@ -1938,6 +1950,47 @@ class Parameter:
                 return out
 
         self._custom_shell_complete = shell_complete
+
+        if __debug__:
+            if self.type.is_composite and nargs != self.type.arity:
+                raise ValueError(
+                    f"'nargs' must be {self.type.arity} (or None) for"
+                    f" type {self.type!r}, but it was {nargs}."
+                )
+
+            # Skip no default or callable default.
+            check_default = default if not callable(default) else None
+
+            if check_default is not None:
+                if multiple:
+                    try:
+                        # Only check the first value against nargs.
+                        check_default = next(_check_iter(check_default), None)
+                    except TypeError:
+                        raise ValueError(
+                            "'default' must be a list when 'multiple' is true."
+                        ) from None
+
+                # Can be None for multiple with empty default.
+                if nargs != 1 and check_default is not None:
+                    try:
+                        _check_iter(check_default)
+                    except TypeError:
+                        if multiple:
+                            message = (
+                                "'default' must be a list of lists when 'multiple' is"
+                                " true and 'nargs' != 1."
+                            )
+                        else:
+                            message = "'default' must be a list when 'nargs' != 1."
+
+                        raise ValueError(message) from None
+
+                    if nargs > 1 and len(check_default) != nargs:
+                        subject = "item length" if multiple else "length"
+                        raise ValueError(
+                            f"'default' {subject} must match nargs={nargs}."
+                        )
 
     def to_info_dict(self):
         """Gather information that could be useful for a tool generating
@@ -2031,47 +2084,60 @@ class Parameter:
         return value, source
 
     def type_cast_value(self, ctx, value):
-        """Given a value this runs it properly through the type system.
-        This automatically handles things like `nargs` and `multiple` as
-        well as composite types.
+        """Convert and validate a value against the option's
+        :attr:`type`, :attr:`multiple`, and :attr:`nargs`.
         """
         if value is None:
             return () if self.multiple or self.nargs == -1 else None
 
-        if self.type.is_composite:
-            if self.nargs <= 1:
-                raise TypeError(
-                    "Attempted to invoke composite type but nargs has"
-                    f" been set to {self.nargs}. This is not supported;"
-                    " nargs needs to be set to a fixed value > 1."
-                )
+        def check_iter(value):
+            try:
+                return _check_iter(value)
+            except TypeError:
+                # This should only happen when passing in args manually,
+                # the parser should construct an iterable when parsing
+                # the command line.
+                raise BadParameter(
+                    _("Value must be an iterable."), ctx=ctx, param=self
+                ) from None
 
-            if self.multiple:
+        if self.nargs == 1 or self.type.is_composite:
+            convert = partial(self.type, param=self, ctx=ctx)
+        elif self.nargs == -1:
+
+            def convert(value):
+                return tuple(self.type(x, self, ctx) for x in check_iter(value))
+
+        else:  # nargs > 1
+
+            def convert(value):
+                value = tuple(check_iter(value))
+
+                if len(value) != self.nargs:
+                    raise BadParameter(
+                        ngettext(
+                            "Takes {nargs} values but 1 was given.",
+                            "Takes {nargs} values but {len} were given.",
+                            len(value),
+                        ).format(nargs=self.nargs, len=len(value)),
+                        ctx=ctx,
+                        param=self,
+                    )
+
                 return tuple(self.type(x, self, ctx) for x in value)
 
-            return self.type(value, self, ctx)
+        if self.multiple:
+            return tuple(convert(x) for x in check_iter(value))
 
-        def _convert(value, level):
-            if level == 0:
-                return self.type(value, self, ctx)
-
-            try:
-                iter_value = iter(value)
-            except TypeError:
-                raise TypeError(
-                    "Value for parameter with multiple = True or nargs > 1"
-                    " should be an iterable."
-                )
-
-            return tuple(_convert(x, level - 1) for x in iter_value)
-
-        return _convert(value, (self.nargs != 1) + bool(self.multiple))
+        return convert(value)
 
     def value_is_missing(self, value):
         if value is None:
             return True
+
         if (self.nargs != 1 or self.multiple) and value == ():
             return True
+
         return False
 
     def process_value(self, ctx, value):
@@ -2080,25 +2146,6 @@ class Parameter:
 
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)
-
-        # For bounded nargs (!= -1), validate the number of values.
-        if (
-            not ctx.resilient_parsing
-            and self.nargs > 1
-            and isinstance(value, (tuple, list))
-            and (
-                any(len(v) != self.nargs for v in value)
-                if self.multiple
-                else len(value) != self.nargs
-            )
-        ):
-            ctx.fail(
-                ngettext(
-                    "Argument {name!r} takes {nargs} values but 1 was given.",
-                    "Argument {name!r} takes {nargs} values but {len} were given.",
-                    len(value),
-                ).format(name=self.name, nargs=self.nargs, len=len(value))
-            )
 
         if self.callback is not None:
             value = self.callback(ctx, self, value)
@@ -2250,7 +2297,7 @@ class Option(Parameter):
         **attrs,
     ):
         default_is_missing = attrs.get("default", _missing) is _missing
-        super().__init__(param_decls, type=type, **attrs)
+        super().__init__(param_decls, type=type, multiple=multiple, **attrs)
 
         if prompt is True:
             prompt_text = self.name.replace("_", " ").capitalize()
@@ -2307,32 +2354,33 @@ class Option(Parameter):
             if default_is_missing:
                 self.default = 0
 
-        self.multiple = multiple
         self.allow_from_autoenv = allow_from_autoenv
         self.help = help
         self.show_default = show_default
         self.show_choices = show_choices
         self.show_envvar = show_envvar
 
-        # Sanity check for stuff we don't support
         if __debug__:
-            if self.nargs < 0:
-                raise TypeError("Options cannot have nargs < 0")
+            if self.nargs == -1:
+                raise TypeError("nargs=-1 is not supported for options.")
+
             if self.prompt and self.is_flag and not self.is_bool_flag:
-                raise TypeError("Cannot prompt for flags that are not bools.")
+                raise TypeError("'prompt' is not valid for non-boolean flag.")
+
             if not self.is_bool_flag and self.secondary_opts:
-                raise TypeError("Got secondary option for non boolean flag.")
+                raise TypeError("Secondary flag is not valid for non-boolean flag.")
+
             if self.is_bool_flag and self.hide_input and self.prompt is not None:
-                raise TypeError("Hidden input does not work with boolean flag prompts.")
+                raise TypeError(
+                    "'prompt' with 'hide_input' is not valid for boolean flag."
+                )
+
             if self.count:
                 if self.multiple:
-                    raise TypeError(
-                        "Options cannot be multiple and count at the same time."
-                    )
-                elif self.is_flag:
-                    raise TypeError(
-                        "Options cannot be count and flags at the same time."
-                    )
+                    raise TypeError("'count' is not valid with 'multiple'.")
+
+                if self.is_flag:
+                    raise TypeError("'count' is not valid with 'is_flag'.")
 
     def to_info_dict(self):
         info_dict = super().to_info_dict()
@@ -2608,12 +2656,14 @@ class Argument(Parameter):
             else:
                 required = attrs.get("nargs", 1) > 0
 
+        if "multiple" in attrs:
+            raise TypeError("__init__() got an unexpected keyword argument 'multiple'.")
+
         super().__init__(param_decls, required=required, **attrs)
 
-        if self.default is not None and self.nargs < 0:
-            raise TypeError(
-                "nargs=-1 in combination with a default value is not supported."
-            )
+        if __debug__:
+            if self.default is not None and self.nargs == -1:
+                raise TypeError("'default' is not supported for nargs=-1.")
 
     @property
     def human_readable_name(self):

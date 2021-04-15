@@ -212,6 +212,9 @@ Unreleased
     :issue:`1101`
 -   Fix a bug of ``click.utils.make_default_short_help`` for which the
     returned string could be as long as ``max_width + 3``. :issue:`1849`
+-   When defining a parameter, ``default`` is validated with
+    ``multiple`` and ``nargs``. More validation is done for values being
+    processed as well. :issue:`1806`
 
 
 Version 7.1.2
