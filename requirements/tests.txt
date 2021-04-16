@@ -6,7 +6,7 @@
 #
 attrs==20.3.0
     # via pytest
-importlib_metadata==3.7.0
+importlib-metadata==3.10.1
     # via -r requirements/tests.in
 iniconfig==1.1.1
     # via pytest
@@ -18,9 +18,9 @@ py==1.10.0
     # via pytest
 pyparsing==2.4.7
     # via packaging
-pytest==6.2.2
+pytest==6.2.3
     # via -r requirements/tests.in
 toml==0.10.2
     # via pytest
-zipp==3.4.0
+zipp==3.4.1
     # via importlib-metadata
