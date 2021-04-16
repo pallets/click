@@ -39,11 +39,6 @@ from .utils import make_default_short_help
 from .utils import make_str
 from .utils import PacifyFlushWrapper
 
-_missing = object()
-
-SUBCOMMAND_METAVAR = "COMMAND [ARGS]..."
-SUBCOMMANDS_METAVAR = "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."
-
 
 def _fast_exit(code):
     """Low-level exit that skips Python's cleanup but speeds up exit by
@@ -1389,9 +1384,9 @@ class MultiCommand(Command):
         self.invoke_without_command = invoke_without_command
         if subcommand_metavar is None:
             if chain:
-                subcommand_metavar = SUBCOMMANDS_METAVAR
+                subcommand_metavar = "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."
             else:
-                subcommand_metavar = SUBCOMMAND_METAVAR
+                subcommand_metavar = "COMMAND [ARGS]..."
         self.subcommand_metavar = subcommand_metavar
         self.chain = chain
         # The result callback that is stored. This can be set or
@@ -2296,7 +2291,7 @@ class Option(Parameter):
         show_envvar=False,
         **attrs,
     ):
-        default_is_missing = attrs.get("default", _missing) is _missing
+        default_is_missing = "default" not in attrs
         super().__init__(param_decls, type=type, multiple=multiple, **attrs)
 
         if prompt is True:

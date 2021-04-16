@@ -18,9 +18,6 @@ from ._compat import WIN
 from .globals import resolve_color_default
 
 
-echo_native_types = (str, bytes, bytearray)
-
-
 def _posixify(name):
     return "-".join(name.split()).lower()
 
@@ -239,7 +236,7 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
             file = _default_text_stdout()
 
     # Convert non bytes/text into the native string type.
-    if message is not None and not isinstance(message, echo_native_types):
+    if message is not None and not isinstance(message, (str, bytes, bytearray)):
         message = str(message)
 
     if nl:
