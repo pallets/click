@@ -14,7 +14,7 @@ def test_runner():
     def test():
         i = click.get_binary_stream("stdin")
         o = click.get_binary_stream("stdout")
-        while 1:
+        while True:
             chunk = i.read(4096)
             if not chunk:
                 break
@@ -32,7 +32,7 @@ def test_echo_stdin_stream():
     def test():
         i = click.get_binary_stream("stdin")
         o = click.get_binary_stream("stdout")
-        while 1:
+        while True:
             chunk = i.read(4096)
             if not chunk:
                 break
@@ -90,7 +90,7 @@ def test_runner_with_stream():
     def test():
         i = click.get_binary_stream("stdin")
         o = click.get_binary_stream("stdout")
-        while 1:
+        while True:
             chunk = i.read(4096)
             if not chunk:
                 break

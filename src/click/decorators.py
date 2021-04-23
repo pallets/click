@@ -1,40 +1,43 @@
 import inspect
+import types
 import typing as t
 from functools import update_wrapper
 from gettext import gettext as _
 
 from .core import Argument
 from .core import Command
+from .core import Context
 from .core import Group
 from .core import Option
+from .core import Parameter
 from .globals import get_current_context
 from .utils import echo
 
-if t.TYPE_CHECKING:
-    F = t.TypeVar("F", bound=t.Callable[..., t.Any])
+F = t.TypeVar("F", bound=t.Callable[..., t.Any])
+FC = t.TypeVar("FC", t.Callable[..., t.Any], Command)
 
 
-def pass_context(f: "F") -> "F":
+def pass_context(f: F) -> F:
     """Marks a callback as wanting to receive the current context
     object as first argument.
     """
 
-    def new_func(*args, **kwargs):
+    def new_func(*args, **kwargs):  # type: ignore
         return f(get_current_context(), *args, **kwargs)
 
-    return update_wrapper(t.cast("F", new_func), f)
+    return update_wrapper(t.cast(F, new_func), f)
 
 
-def pass_obj(f: "F") -> "F":
+def pass_obj(f: F) -> F:
     """Similar to :func:`pass_context`, but only pass the object on the
     context onwards (:attr:`Context.obj`).  This is useful if that object
     represents the state of a nested system.
     """
 
-    def new_func(*args, **kwargs):
+    def new_func(*args, **kwargs):  # type: ignore
         return f(get_current_context().obj, *args, **kwargs)
 
-    return update_wrapper(t.cast("F", new_func), f)
+    return update_wrapper(t.cast(F, new_func), f)
 
 
 def make_pass_decorator(
@@ -62,8 +65,8 @@ def make_pass_decorator(
                    remembered on the context if it's not there yet.
     """
 
-    def decorator(f: "F") -> "F":
-        def new_func(*args, **kwargs):
+    def decorator(f: F) -> F:
+        def new_func(*args, **kwargs):  # type: ignore
             ctx = get_current_context()
 
             if ensure:
@@ -80,7 +83,7 @@ def make_pass_decorator(
 
             return ctx.invoke(f, obj, *args, **kwargs)
 
-        return update_wrapper(t.cast("F", new_func), f)
+        return update_wrapper(t.cast(F, new_func), f)
 
     return decorator
 
@@ -100,13 +103,13 @@ def pass_meta_key(
     .. versionadded:: 8.0
     """
 
-    def decorator(f: "F") -> "F":
-        def new_func(*args, **kwargs):
+    def decorator(f: F) -> F:
+        def new_func(*args, **kwargs):  # type: ignore
             ctx = get_current_context()
             obj = ctx.meta[key]
             return ctx.invoke(f, obj, *args, **kwargs)
 
-        return update_wrapper(t.cast("F", new_func), f)
+        return update_wrapper(t.cast(F, new_func), f)
 
     if doc_description is None:
         doc_description = f"the {key!r} key from :attr:`click.Context.meta`"
@@ -118,22 +121,29 @@ def pass_meta_key(
     return decorator
 
 
-def _make_command(f, name, attrs, cls):
+def _make_command(
+    f: F,
+    name: t.Optional[str],
+    attrs: t.MutableMapping[str, t.Any],
+    cls: t.Type[Command],
+) -> Command:
     if isinstance(f, Command):
         raise TypeError("Attempted to convert a callback into a command twice.")
+
     try:
-        params = f.__click_params__
+        params = f.__click_params__  # type: ignore
         params.reverse()
-        del f.__click_params__
+        del f.__click_params__  # type: ignore
     except AttributeError:
         params = []
+
     help = attrs.get("help")
+
     if help is None:
         help = inspect.getdoc(f)
-        if isinstance(help, bytes):
-            help = help.decode("utf-8")
     else:
         help = inspect.cleandoc(help)
+
     attrs["help"] = help
     return cls(
         name=name or f.__name__.lower().replace("_", "-"),
@@ -143,7 +153,11 @@ def _make_command(f, name, attrs, cls):
     )
 
 
-def command(name=None, cls=None, **attrs):
+def command(
+    name: t.Optional[str] = None,
+    cls: t.Optional[t.Type[Command]] = None,
+    **attrs: t.Any,
+) -> t.Callable[[F], Command]:
     r"""Creates a new :class:`Command` and uses the decorated function as
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as parameters to the command.
@@ -166,33 +180,34 @@ def command(name=None, cls=None, **attrs):
     if cls is None:
         cls = Command
 
-    def decorator(f):
-        cmd = _make_command(f, name, attrs, cls)
+    def decorator(f: t.Callable[..., t.Any]) -> Command:
+        cmd = _make_command(f, name, attrs, cls)  # type: ignore
         cmd.__doc__ = f.__doc__
         return cmd
 
     return decorator
 
 
-def group(name=None, **attrs):
+def group(name: t.Optional[str] = None, **attrs: t.Any) -> t.Callable[[F], Group]:
     """Creates a new :class:`Group` with a function as callback.  This
     works otherwise the same as :func:`command` just that the `cls`
     parameter is set to :class:`Group`.
     """
     attrs.setdefault("cls", Group)
-    return command(name, **attrs)
+    return t.cast(Group, command(name, **attrs))
 
 
-def _param_memo(f, param):
+def _param_memo(f: FC, param: Parameter) -> None:
     if isinstance(f, Command):
         f.params.append(param)
     else:
         if not hasattr(f, "__click_params__"):
-            f.__click_params__ = []
-        f.__click_params__.append(param)
+            f.__click_params__ = []  # type: ignore
+
+        f.__click_params__.append(param)  # type: ignore
 
 
-def argument(*param_decls, **attrs):
+def argument(*param_decls: str, **attrs: t.Any) -> t.Callable[[FC], FC]:
     """Attaches an argument to the command.  All positional arguments are
     passed as parameter declarations to :class:`Argument`; all keyword
     arguments are forwarded unchanged (except ``cls``).
@@ -203,7 +218,7 @@ def argument(*param_decls, **attrs):
                 :class:`Argument`.
     """
 
-    def decorator(f):
+    def decorator(f: FC) -> FC:
         ArgumentClass = attrs.pop("cls", Argument)
         _param_memo(f, ArgumentClass(param_decls, **attrs))
         return f
@@ -211,7 +226,7 @@ def argument(*param_decls, **attrs):
     return decorator
 
 
-def option(*param_decls, **attrs):
+def option(*param_decls: str, **attrs: t.Any) -> t.Callable[[FC], FC]:
     """Attaches an option to the command.  All positional arguments are
     passed as parameter declarations to :class:`Option`; all keyword
     arguments are forwarded unchanged (except ``cls``).
@@ -222,7 +237,7 @@ def option(*param_decls, **attrs):
                 :class:`Option`.
     """
 
-    def decorator(f):
+    def decorator(f: FC) -> FC:
         # Issue 926, copy attrs, so pre-defined options can re-use the same cls=
         option_attrs = attrs.copy()
 
@@ -235,7 +250,7 @@ def option(*param_decls, **attrs):
     return decorator
 
 
-def confirmation_option(*param_decls, **kwargs):
+def confirmation_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--yes`` option which shows a prompt before continuing if
     not passed. If the prompt is declined, the program will exit.
 
@@ -244,7 +259,7 @@ def confirmation_option(*param_decls, **kwargs):
     :param kwargs: Extra arguments are passed to :func:`option`.
     """
 
-    def callback(ctx, param, value):
+    def callback(ctx: Context, param: Parameter, value: bool) -> None:
         if not value:
             ctx.abort()
 
@@ -259,7 +274,7 @@ def confirmation_option(*param_decls, **kwargs):
     return option(*param_decls, **kwargs)
 
 
-def password_option(*param_decls, **kwargs):
+def password_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--password`` option which prompts for a password, hiding
     input and asking to enter the value again for confirmation.
 
@@ -277,13 +292,13 @@ def password_option(*param_decls, **kwargs):
 
 
 def version_option(
-    version=None,
-    *param_decls,
-    package_name=None,
-    prog_name=None,
-    message=None,
-    **kwargs,
-):
+    version: t.Optional[str] = None,
+    *param_decls: str,
+    package_name: t.Optional[str] = None,
+    prog_name: t.Optional[str] = None,
+    message: t.Optional[str] = None,
+    **kwargs: t.Any,
+) -> t.Callable[[FC], FC]:
     """Add a ``--version`` option which immediately prints the version
     number and exits the program.
 
@@ -322,6 +337,8 @@ def version_option(
 
     if version is None and package_name is None:
         frame = inspect.currentframe()
+        assert frame is not None
+        assert frame.f_back is not None
         f_globals = frame.f_back.f_globals if frame is not None else None
         # break reference cycle
         # https://docs.python.org/3/library/inspect.html#the-interpreter-stack
@@ -336,7 +353,7 @@ def version_option(
             if package_name:
                 package_name = package_name.partition(".")[0]
 
-    def callback(ctx, param, value):
+    def callback(ctx: Context, param: Parameter, value: bool) -> None:
         if not value or ctx.resilient_parsing:
             return
 
@@ -347,12 +364,14 @@ def version_option(
             prog_name = ctx.find_root().info_name
 
         if version is None and package_name is not None:
+            metadata: t.Optional[types.ModuleType]
+
             try:
-                from importlib import metadata
+                from importlib import metadata  # type: ignore
             except ImportError:
                 # Python < 3.8
                 try:
-                    import importlib_metadata as metadata
+                    import importlib_metadata as metadata  # type: ignore
                 except ImportError:
                     metadata = None
 
@@ -362,8 +381,8 @@ def version_option(
                 )
 
             try:
-                version = metadata.version(package_name)
-            except metadata.PackageNotFoundError:
+                version = metadata.version(package_name)  # type: ignore
+            except metadata.PackageNotFoundError:  # type: ignore
                 raise RuntimeError(
                     f"{package_name!r} is not installed. Try passing"
                     " 'package_name' instead."
@@ -375,7 +394,8 @@ def version_option(
             )
 
         echo(
-            message % {"prog": prog_name, "package": package_name, "version": version},
+            t.cast(str, message)
+            % {"prog": prog_name, "package": package_name, "version": version},
             color=ctx.color,
         )
         ctx.exit()
@@ -391,7 +411,7 @@ def version_option(
     return option(*param_decls, **kwargs)
 
 
-def help_option(*param_decls, **kwargs):
+def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--help`` option which immediately prints the help page
     and exits the program.
 
@@ -404,7 +424,7 @@ def help_option(*param_decls, **kwargs):
     :param kwargs: Extra arguments are passed to :func:`option`.
     """
 
-    def callback(ctx, param, value):
+    def callback(ctx: Context, param: Parameter, value: bool) -> None:
         if not value or ctx.resilient_parsing:
             return
 

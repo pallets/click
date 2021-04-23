@@ -18,11 +18,10 @@ class FakeClock:
         return self.now
 
 
-def _create_progress(length=10, length_known=True, **kwargs):
+def _create_progress(length=10, **kwargs):
     progress = click.progressbar(tuple(range(length)))
     for key, value in kwargs.items():
         setattr(progress, key, value)
-    progress.length_known = length_known
     return progress
 
 
@@ -36,7 +35,10 @@ def test_progressbar_strip_regression(runner, monkeypatch):
                 pass
 
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
-    assert label in runner.invoke(cli, []).output
+    assert (
+        label
+        in runner.invoke(cli, [], standalone_mode=False, catch_exceptions=False).output
+    )
 
 
 def test_progressbar_length_hint(runner, monkeypatch):
@@ -111,12 +113,9 @@ def test_progressbar_format_eta(runner, eta, expected):
 
 @pytest.mark.parametrize("pos, length", [(0, 5), (-1, 1), (5, 5), (6, 5), (4, 0)])
 def test_progressbar_format_pos(runner, pos, length):
-    with _create_progress(length, length_known=length != 0, pos=pos) as progress:
+    with _create_progress(length, pos=pos) as progress:
         result = progress.format_pos()
-        if progress.length_known:
-            assert result == f"{pos}/{length}"
-        else:
-            assert result == str(pos)
+        assert result == f"{pos}/{length}"
 
 
 @pytest.mark.parametrize(
@@ -124,33 +123,30 @@ def test_progressbar_format_pos(runner, pos, length):
     [
         (8, False, 7, 0, "#######-"),
         (0, True, 8, 0, "########"),
-        (0, False, 8, 0, "--------"),
-        (0, False, 5, 3, "#-------"),
     ],
 )
 def test_progressbar_format_bar(runner, length, finished, pos, avg, expected):
     with _create_progress(
-        length, length_known=length != 0, width=8, pos=pos, finished=finished, avg=[avg]
+        length, width=8, pos=pos, finished=finished, avg=[avg]
     ) as progress:
         assert progress.format_bar() == expected
 
 
 @pytest.mark.parametrize(
-    "length, length_known, show_percent, show_pos, pos, expected",
+    "length, show_percent, show_pos, pos, expected",
     [
-        (0, True, True, True, 0, "  [--------]  0/0    0%"),
-        (0, True, False, True, 0, "  [--------]  0/0"),
-        (0, True, False, False, 0, "  [--------]"),
-        (0, False, False, False, 0, "  [--------]"),
-        (8, True, True, True, 8, "  [########]  8/8  100%"),
+        (0, True, True, 0, "  [--------]  0/0    0%"),
+        (0, False, True, 0, "  [--------]  0/0"),
+        (0, False, False, 0, "  [--------]"),
+        (0, False, False, 0, "  [--------]"),
+        (8, True, True, 8, "  [########]  8/8  100%"),
     ],
 )
 def test_progressbar_format_progress_line(
-    runner, length, length_known, show_percent, show_pos, pos, expected
+    runner, length, show_percent, show_pos, pos, expected
 ):
     with _create_progress(
         length,
-        length_known,
         width=8,
         show_percent=show_percent,
         pos=pos,

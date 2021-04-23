@@ -9,6 +9,7 @@
 import io
 import sys
 import time
+import typing as t
 from ctypes import byref
 from ctypes import c_char
 from ctypes import c_char_p
@@ -178,15 +179,15 @@ class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
 
 
 class ConsoleStream:
-    def __init__(self, text_stream, byte_stream):
+    def __init__(self, text_stream: t.TextIO, byte_stream: t.BinaryIO) -> None:
         self._text_stream = text_stream
         self.buffer = byte_stream
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.buffer.name
 
-    def write(self, x):
+    def write(self, x: t.AnyStr) -> int:
         if isinstance(x, str):
             return self._text_stream.write(x)
         try:
@@ -195,83 +196,58 @@ class ConsoleStream:
             pass
         return self.buffer.write(x)
 
-    def writelines(self, lines):
+    def writelines(self, lines: t.Iterable[t.AnyStr]) -> None:
         for line in lines:
             self.write(line)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> t.Any:
         return getattr(self._text_stream, name)
 
-    def isatty(self):
+    def isatty(self) -> bool:
         return self.buffer.isatty()
 
     def __repr__(self):
         return f"<ConsoleStream name={self.name!r} encoding={self.encoding!r}>"
 
 
-class WindowsChunkedWriter:
-    """
-    Wraps a stream (such as stdout), acting as a transparent proxy for all
-    attribute access apart from method 'write()' which we wrap to write in
-    limited chunks due to a Windows limitation on binary console streams.
-    """
-
-    def __init__(self, wrapped):
-        # double-underscore everything to prevent clashes with names of
-        # attributes on the wrapped stream object.
-        self.__wrapped = wrapped
-
-    def __getattr__(self, name):
-        return getattr(self.__wrapped, name)
-
-    def write(self, text):
-        total_to_write = len(text)
-        written = 0
-
-        while written < total_to_write:
-            to_write = min(total_to_write - written, MAX_BYTES_WRITTEN)
-            self.__wrapped.write(text[written : written + to_write])
-            written += to_write
-
-
-def _get_text_stdin(buffer_stream):
+def _get_text_stdin(buffer_stream: t.BinaryIO) -> t.TextIO:
     text_stream = _NonClosingTextIOWrapper(
         io.BufferedReader(_WindowsConsoleReader(STDIN_HANDLE)),
         "utf-16-le",
         "strict",
         line_buffering=True,
     )
-    return ConsoleStream(text_stream, buffer_stream)
+    return t.cast(t.TextIO, ConsoleStream(text_stream, buffer_stream))
 
 
-def _get_text_stdout(buffer_stream):
+def _get_text_stdout(buffer_stream: t.BinaryIO) -> t.TextIO:
     text_stream = _NonClosingTextIOWrapper(
         io.BufferedWriter(_WindowsConsoleWriter(STDOUT_HANDLE)),
         "utf-16-le",
         "strict",
         line_buffering=True,
     )
-    return ConsoleStream(text_stream, buffer_stream)
+    return t.cast(t.TextIO, ConsoleStream(text_stream, buffer_stream))
 
 
-def _get_text_stderr(buffer_stream):
+def _get_text_stderr(buffer_stream: t.BinaryIO) -> t.TextIO:
     text_stream = _NonClosingTextIOWrapper(
         io.BufferedWriter(_WindowsConsoleWriter(STDERR_HANDLE)),
         "utf-16-le",
         "strict",
         line_buffering=True,
     )
-    return ConsoleStream(text_stream, buffer_stream)
+    return t.cast(t.TextIO, ConsoleStream(text_stream, buffer_stream))
 
 
-_stream_factories = {
+_stream_factories: t.Mapping[int, t.Callable[[t.BinaryIO], t.TextIO]] = {
     0: _get_text_stdin,
     1: _get_text_stdout,
     2: _get_text_stderr,
 }
 
 
-def _is_console(f):
+def _is_console(f: t.TextIO) -> bool:
     if not hasattr(f, "fileno"):
         return False
 
@@ -284,7 +260,9 @@ def _is_console(f):
     return bool(GetConsoleMode(handle, byref(DWORD())))
 
 
-def _get_windows_console_stream(f, encoding, errors):
+def _get_windows_console_stream(
+    f: t.TextIO, encoding: t.Optional[str], errors: t.Optional[str]
+) -> t.Optional[t.TextIO]:
     if (
         get_buffer is not None
         and encoding in {"utf-16-le", None}
@@ -293,9 +271,9 @@ def _get_windows_console_stream(f, encoding, errors):
     ):
         func = _stream_factories.get(f.fileno())
         if func is not None:
-            f = getattr(f, "buffer", None)
+            b = getattr(f, "buffer", None)
 
-            if f is None:
+            if b is None:
                 return None
 
-            return func(f)
+            return func(b)

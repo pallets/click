@@ -145,7 +145,7 @@ def pause():
 def menu():
     """Shows a simple menu."""
     menu = "main"
-    while 1:
+    while True:
         if menu == "main":
             click.echo("Main menu:")
             click.echo("  d: debug menu")

@@ -3,14 +3,15 @@ import os
 from gettext import gettext as _
 
 
-def _verify_python_env():
+def _verify_python_env() -> None:
     """Ensures that the environment is good for Unicode."""
     try:
-        import locale
+        from locale import getpreferredencoding
 
-        fs_enc = codecs.lookup(locale.getpreferredencoding()).name
+        fs_enc = codecs.lookup(getpreferredencoding()).name
     except Exception:
         fs_enc = "ascii"
+
     if fs_enc != "ascii":
         return
 
@@ -28,21 +29,24 @@ def _verify_python_env():
 
         try:
             rv = subprocess.Popen(
-                ["locale", "-a"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                ["locale", "-a"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                encoding="ascii",
+                errors="replace",
             ).communicate()[0]
         except OSError:
-            rv = b""
+            rv = ""
+
         good_locales = set()
         has_c_utf8 = False
 
-        # Make sure we're operating on text here.
-        if isinstance(rv, bytes):
-            rv = rv.decode("ascii", "replace")
-
         for line in rv.splitlines():
             locale = line.strip()
+
             if locale.lower().endswith((".utf-8", ".utf8")):
                 good_locales.add(locale)
+
                 if locale.lower() in ("c.utf8", "c.utf-8"):
                     has_c_utf8 = True
 
@@ -75,11 +79,14 @@ def _verify_python_env():
             )
 
         bad_locale = None
-        for locale in os.environ.get("LC_ALL"), os.environ.get("LANG"):
-            if locale and locale.lower().endswith((".utf-8", ".utf8")):
-                bad_locale = locale
-            if locale is not None:
+
+        for env_locale in os.environ.get("LC_ALL"), os.environ.get("LANG"):
+            if env_locale and env_locale.lower().endswith((".utf-8", ".utf8")):
+                bad_locale = env_locale
+
+            if env_locale is not None:
                 break
+
         if bad_locale is not None:
             extra.append(
                 _(
