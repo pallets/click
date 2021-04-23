@@ -210,31 +210,6 @@ class ConsoleStream:
         return f"<ConsoleStream name={self.name!r} encoding={self.encoding!r}>"
 
 
-class WindowsChunkedWriter:
-    """
-    Wraps a stream (such as stdout), acting as a transparent proxy for all
-    attribute access apart from method 'write()' which we wrap to write in
-    limited chunks due to a Windows limitation on binary console streams.
-    """
-
-    def __init__(self, wrapped):
-        # double-underscore everything to prevent clashes with names of
-        # attributes on the wrapped stream object.
-        self.__wrapped = wrapped
-
-    def __getattr__(self, name):
-        return getattr(self.__wrapped, name)
-
-    def write(self, text):
-        total_to_write = len(text)
-        written = 0
-
-        while written < total_to_write:
-            to_write = min(total_to_write - written, MAX_BYTES_WRITTEN)
-            self.__wrapped.write(text[written : written + to_write])
-            written += to_write
-
-
 def _get_text_stdin(buffer_stream: t.BinaryIO) -> t.TextIO:
     text_stream = _NonClosingTextIOWrapper(
         io.BufferedReader(_WindowsConsoleReader(STDIN_HANDLE)),
