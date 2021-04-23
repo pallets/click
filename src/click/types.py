@@ -7,7 +7,6 @@ from gettext import ngettext
 
 from ._compat import _get_argv_encoding
 from ._compat import get_filesystem_encoding
-from ._compat import get_strerror
 from ._compat import open_stream
 from .exceptions import BadParameter
 from .utils import LazyFile
@@ -725,7 +724,7 @@ class File(ParamType):
 
             return f
         except OSError as e:  # noqa: B014
-            self.fail(f"{os.fsdecode(value)!r}: {get_strerror(e)}", param, ctx)
+            self.fail(f"{os.fsdecode(value)!r}: {e.strerror}", param, ctx)
 
     def shell_complete(
         self, ctx: "Context", param: "Parameter", incomplete: str

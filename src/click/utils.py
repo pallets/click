@@ -10,7 +10,6 @@ from ._compat import _find_binary_writer
 from ._compat import auto_wrap_for_ansi
 from ._compat import binary_streams
 from ._compat import get_filesystem_encoding
-from ._compat import get_strerror
 from ._compat import open_stream
 from ._compat import should_strip_ansi
 from ._compat import strip_ansi
@@ -155,7 +154,7 @@ class LazyFile:
         except OSError as e:  # noqa: E402
             from .exceptions import FileError
 
-            raise FileError(self.name, hint=get_strerror(e))
+            raise FileError(self.name, hint=e.strerror)
         self._f = rv
         return rv
 

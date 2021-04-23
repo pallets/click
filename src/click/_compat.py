@@ -366,17 +366,6 @@ def get_text_stderr(
     return _force_correct_text_writer(sys.stderr, encoding, errors, force_writable=True)
 
 
-def get_strerror(e: OSError, default: t.Optional[str] = None) -> str:
-    if hasattr(e, "strerror"):
-        msg = e.strerror
-    else:
-        if default is not None:
-            msg = default
-        else:
-            msg = str(e)
-    return msg
-
-
 def _wrap_io_open(
     file: t.Union[str, os.PathLike, int],
     mode: str,
