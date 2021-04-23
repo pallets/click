@@ -3,10 +3,10 @@ import io
 import itertools
 import os
 import sys
+import typing
 import typing as t
 from gettext import gettext as _
 
-from ._compat import is_bytes
 from ._compat import isatty
 from ._compat import strip_ansi
 from ._compat import WIN
@@ -15,12 +15,18 @@ from .exceptions import UsageError
 from .globals import resolve_color_default
 from .types import Choice
 from .types import convert_type
+from .types import ParamType
 from .utils import echo
 from .utils import LazyFile
 
+if t.TYPE_CHECKING:
+    from ._termui_impl import ProgressBar
+
+V = t.TypeVar("V")
+
 # The prompt functions to use.  The doc tools currently override these
 # functions to customize how they work.
-visible_prompt_func = input
+visible_prompt_func: t.Callable[[str], str] = input
 
 _ansi_colors = {
     "black": 30,
@@ -44,15 +50,20 @@ _ansi_colors = {
 _ansi_reset_all = "\033[0m"
 
 
-def hidden_prompt_func(prompt):
+def hidden_prompt_func(prompt: str) -> str:
     import getpass
 
     return getpass.getpass(prompt)
 
 
 def _build_prompt(
-    text, suffix, show_default=False, default=None, show_choices=True, type=None
-):
+    text: str,
+    suffix: str,
+    show_default: bool = False,
+    default: t.Optional[t.Any] = None,
+    show_choices: bool = True,
+    type: t.Optional[ParamType] = None,
+) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += f" ({', '.join(map(str, type.choices))})"
@@ -61,25 +72,25 @@ def _build_prompt(
     return f"{prompt}{suffix}"
 
 
-def _format_default(default):
+def _format_default(default: t.Any) -> t.Any:
     if isinstance(default, (io.IOBase, LazyFile)) and hasattr(default, "name"):
-        return default.name
+        return default.name  # type: ignore
 
     return default
 
 
 def prompt(
-    text,
-    default=None,
-    hide_input=False,
-    confirmation_prompt=False,
-    type=None,
-    value_proc=None,
-    prompt_suffix=": ",
-    show_default=True,
-    err=False,
-    show_choices=True,
-):
+    text: str,
+    default: t.Optional[t.Any] = None,
+    hide_input: bool = False,
+    confirmation_prompt: t.Union[bool, str] = False,
+    type: t.Optional[ParamType] = None,
+    value_proc: t.Optional[t.Callable[[str], t.Any]] = None,
+    prompt_suffix: str = ": ",
+    show_default: bool = True,
+    err: bool = False,
+    show_choices: bool = True,
+) -> t.Any:
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
@@ -120,9 +131,8 @@ def prompt(
         Added the `err` parameter.
 
     """
-    result = None
 
-    def prompt_func(text):
+    def prompt_func(text: str) -> str:
         f = hidden_prompt_func if hide_input else visible_prompt_func
         try:
             # Write the prompt separately so that we get nice
@@ -150,10 +160,11 @@ def prompt(
         if confirmation_prompt is True:
             confirmation_prompt = _("Repeat for confirmation")
 
+        confirmation_prompt = t.cast(str, confirmation_prompt)
         confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
 
-    while 1:
-        while 1:
+    while True:
+        while True:
             value = prompt_func(prompt)
             if value:
                 break
@@ -170,7 +181,8 @@ def prompt(
             continue
         if not confirmation_prompt:
             return result
-        while 1:
+        while True:
+            confirmation_prompt = t.cast(str, confirmation_prompt)
             value2 = prompt_func(confirmation_prompt)
             if value2:
                 break
@@ -180,8 +192,13 @@ def prompt(
 
 
 def confirm(
-    text, default=False, abort=False, prompt_suffix=": ", show_default=True, err=False
-):
+    text: str,
+    default: t.Optional[bool] = False,
+    abort: bool = False,
+    prompt_suffix: str = ": ",
+    show_default: bool = True,
+    err: bool = False,
+) -> bool:
     """Prompts for confirmation (yes/no question).
 
     If the user aborts the input by sending a interrupt signal this
@@ -210,7 +227,7 @@ def confirm(
         "y/n" if default is None else ("Y/n" if default else "y/N"),
     )
 
-    while 1:
+    while True:
         try:
             # Write the prompt separately so that we get nice
             # coloring through colorama on Windows
@@ -233,7 +250,7 @@ def confirm(
     return rv
 
 
-def get_terminal_size():
+def get_terminal_size() -> os.terminal_size:
     """Returns the current size of the terminal as tuple in the form
     ``(width, height)`` in columns and rows.
 
@@ -253,7 +270,10 @@ def get_terminal_size():
     return shutil.get_terminal_size()
 
 
-def echo_via_pager(text_or_generator, color=None):
+def echo_via_pager(
+    text_or_generator: t.Union[t.Iterable[str], t.Callable[[], t.Iterable[str]], str],
+    color: t.Optional[bool] = None,
+) -> None:
     """This function takes a text and shows it via an environment specific
     pager on stdout.
 
@@ -268,11 +288,11 @@ def echo_via_pager(text_or_generator, color=None):
     color = resolve_color_default(color)
 
     if inspect.isgeneratorfunction(text_or_generator):
-        i = text_or_generator()
+        i = t.cast(t.Callable[[], t.Iterable[str]], text_or_generator)()
     elif isinstance(text_or_generator, str):
         i = [text_or_generator]
     else:
-        i = iter(text_or_generator)
+        i = iter(t.cast(t.Iterable[str], text_or_generator))
 
     # convert every element of i to a text type if necessary
     text_generator = (el if isinstance(el, str) else str(el) for el in i)
@@ -283,22 +303,22 @@ def echo_via_pager(text_or_generator, color=None):
 
 
 def progressbar(
-    iterable=None,
-    length=None,
-    label=None,
-    show_eta=True,
-    show_percent=None,
-    show_pos=False,
-    item_show_func=None,
-    fill_char="#",
-    empty_char="-",
-    bar_template="%(label)s  [%(bar)s]  %(info)s",
-    info_sep="  ",
-    width=36,
-    file=None,
-    color=None,
-    update_min_steps=1,
-):
+    iterable: t.Optional[t.Iterable[V]] = None,
+    length: t.Optional[int] = None,
+    label: t.Optional[str] = None,
+    show_eta: bool = True,
+    show_percent: t.Optional[bool] = None,
+    show_pos: bool = False,
+    item_show_func: t.Optional[t.Callable[[t.Optional[V]], t.Optional[str]]] = None,
+    fill_char: str = "#",
+    empty_char: str = "-",
+    bar_template: str = "%(label)s  [%(bar)s]  %(info)s",
+    info_sep: str = "  ",
+    width: int = 36,
+    file: t.Optional[t.TextIO] = None,
+    color: t.Optional[bool] = None,
+    update_min_steps: int = 1,
+) -> "ProgressBar":
     """This function creates an iterable context manager that can be used
     to iterate over something while showing a progress bar.  It will
     either iterate over the `iterable` or `length` items (that are counted
@@ -434,7 +454,7 @@ def progressbar(
     )
 
 
-def clear():
+def clear() -> None:
     """Clears the terminal screen.  This will have the effect of clearing
     the whole visible space of the terminal and moving the cursor to the
     top left.  This does not do anything if not connected to a terminal.
@@ -449,7 +469,9 @@ def clear():
         sys.stdout.write("\033[2J\033[1;1H")
 
 
-def _interpret_color(color, offset=0):
+def _interpret_color(
+    color: t.Union[int, t.Tuple[int, int, int], str], offset: int = 0
+) -> str:
     if isinstance(color, int):
         return f"{38 + offset};5;{color:d}"
 
@@ -461,19 +483,19 @@ def _interpret_color(color, offset=0):
 
 
 def style(
-    text,
-    fg=None,
-    bg=None,
-    bold=None,
-    dim=None,
-    underline=None,
-    overline=None,
-    italic=None,
-    blink=None,
-    reverse=None,
-    strikethrough=None,
-    reset=True,
-):
+    text: t.Any,
+    fg: t.Optional[t.Union[int, t.Tuple[int, int, int], str]] = None,
+    bg: t.Optional[t.Union[int, t.Tuple[int, int, int], str]] = None,
+    bold: t.Optional[bool] = None,
+    dim: t.Optional[bool] = None,
+    underline: t.Optional[bool] = None,
+    overline: t.Optional[bool] = None,
+    italic: t.Optional[bool] = None,
+    blink: t.Optional[bool] = None,
+    reverse: t.Optional[bool] = None,
+    strikethrough: t.Optional[bool] = None,
+    reset: bool = True,
+) -> str:
     """Styles a text with ANSI styles and returns the new string.  By
     default the styling is self contained which means that at the end
     of the string a reset code is issued.  This can be prevented by
@@ -589,7 +611,7 @@ def style(
     return "".join(bits)
 
 
-def unstyle(text):
+def unstyle(text: str) -> str:
     """Removes ANSI styling information from a string.  Usually it's not
     necessary to use this function as Click's echo function will
     automatically remove styling if necessary.
@@ -601,7 +623,14 @@ def unstyle(text):
     return strip_ansi(text)
 
 
-def secho(message=None, file=None, nl=True, err=False, color=None, **styles):
+def secho(
+    message: t.Optional[t.Any] = None,
+    file: t.Optional[t.IO] = None,
+    nl: bool = True,
+    err: bool = False,
+    color: t.Optional[bool] = None,
+    **styles: t.Any,
+) -> None:
     """This function combines :func:`echo` and :func:`style` into one
     call.  As such the following two calls are the same::
 
@@ -622,15 +651,20 @@ def secho(message=None, file=None, nl=True, err=False, color=None, **styles):
 
     .. versionadded:: 2.0
     """
-    if message is not None and not is_bytes(message):
+    if message is not None and not isinstance(message, (bytes, bytearray)):
         message = style(message, **styles)
 
     return echo(message, file=file, nl=nl, err=err, color=color)
 
 
 def edit(
-    text=None, editor=None, env=None, require_save=True, extension=".txt", filename=None
-):
+    text: t.Optional[t.AnyStr] = None,
+    editor: t.Optional[str] = None,
+    env: t.Optional[t.Mapping[str, str]] = None,
+    require_save: bool = True,
+    extension: str = ".txt",
+    filename: t.Optional[str] = None,
+) -> t.Optional[t.AnyStr]:
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
     system search path is used for finding the executable) it overrides
@@ -660,15 +694,16 @@ def edit(
     """
     from ._termui_impl import Editor
 
-    editor = Editor(
-        editor=editor, env=env, require_save=require_save, extension=extension
-    )
+    ed = Editor(editor=editor, env=env, require_save=require_save, extension=extension)
+
     if filename is None:
-        return editor.edit(text)
-    editor.edit_file(filename)
+        return ed.edit(text)
+
+    ed.edit_file(filename)
+    return None
 
 
-def launch(url, wait=False, locate=False):
+def launch(url: str, wait: bool = False, locate: bool = False) -> int:
     """This function launches the given URL (or filename) in the default
     viewer application for this file type.  If this is an executable, it
     might launch the executable in a new session.  The return value is
@@ -702,7 +737,7 @@ def launch(url, wait=False, locate=False):
 _getchar: t.Optional[t.Callable[[bool], str]] = None
 
 
-def getchar(echo=False):
+def getchar(echo: bool = False) -> str:
     """Fetches a single character from the terminal and returns it.  This
     will always return a unicode character and under certain rare
     circumstances this might return more than one character.  The
@@ -722,19 +757,23 @@ def getchar(echo=False):
     :param echo: if set to `True`, the character read will also show up on
                  the terminal.  The default is to not show it.
     """
-    f = _getchar
-    if f is None:
+    global _getchar
+
+    if _getchar is None:
         from ._termui_impl import getchar as f
-    return f(echo)
+
+        _getchar = f
+
+    return _getchar(echo)
 
 
-def raw_terminal():
+def raw_terminal() -> t.ContextManager[int]:
     from ._termui_impl import raw_terminal as f
 
     return f()
 
 
-def pause(info=None, err=False):
+def pause(info: t.Optional[str] = None, err: bool = False) -> None:
     """This command stops execution and waits for the user to press any
     key to continue.  This is similar to the Windows batch "pause"
     command.  If the program is not run through a terminal, this command
