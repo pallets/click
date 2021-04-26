@@ -34,7 +34,17 @@ def test_basic_chaining(runner):
     ]
 
 
-def test_chaining_help(runner):
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        (["--help"], "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."),
+        (["--help"], "ROOT HELP"),
+        (["sdist", "--help"], "SDIST HELP"),
+        (["bdist", "--help"], "BDIST HELP"),
+        (["bdist", "sdist", "--help"], "SDIST HELP"),
+    ],
+)
+def test_chaining_help(runner, args, expect):
     @click.group(chain=True)
     def cli():
         """ROOT HELP"""
@@ -50,22 +60,9 @@ def test_chaining_help(runner):
         """BDIST HELP"""
         click.echo("bdist called")
 
-    result = runner.invoke(cli, ["--help"])
+    result = runner.invoke(cli, args)
     assert not result.exception
-    assert "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..." in result.output
-    assert "ROOT HELP" in result.output
-
-    result = runner.invoke(cli, ["sdist", "--help"])
-    assert not result.exception
-    assert "SDIST HELP" in result.output
-
-    result = runner.invoke(cli, ["bdist", "--help"])
-    assert not result.exception
-    assert "BDIST HELP" in result.output
-
-    result = runner.invoke(cli, ["bdist", "sdist", "--help"])
-    assert not result.exception
-    assert "SDIST HELP" in result.output
+    assert expect in result.output
 
 
 def test_chaining_with_options(runner):
@@ -127,15 +124,23 @@ def test_chaining_with_arguments(runner):
     assert result.output.splitlines() == ["bdist called 1", "sdist called 2"]
 
 
-def test_pipeline(runner):
+@pytest.mark.parametrize(
+    ("args", "input", "expect"),
+    [
+        (["-f", "-"], "foo\nbar", ["foo", "bar"]),
+        (["-f", "-", "strip"], "foo \n bar", ["foo", "bar"]),
+        (["-f", "-", "strip", "uppercase"], "foo \n bar", ["FOO", "BAR"]),
+    ],
+)
+def test_pipeline(runner, args, input, expect):
     @click.group(chain=True, invoke_without_command=True)
-    @click.option("-i", "--input", type=click.File("r"))
-    def cli(input):
+    @click.option("-f", type=click.File("r"))
+    def cli(f):
         pass
 
     @cli.result_callback()
-    def process_pipeline(processors, input):
-        iterator = (x.rstrip("\r\n") for x in input)
+    def process_pipeline(processors, f):
+        iterator = (x.rstrip("\r\n") for x in f)
         for processor in processors:
             iterator = processor(iterator)
         for item in iterator:
@@ -157,17 +162,9 @@ def test_pipeline(runner):
 
         return processor
 
-    result = runner.invoke(cli, ["-i", "-"], input="foo\nbar")
+    result = runner.invoke(cli, args, input=input)
     assert not result.exception
-    assert result.output.splitlines() == ["foo", "bar"]
-
-    result = runner.invoke(cli, ["-i", "-", "strip"], input="foo \n bar")
-    assert not result.exception
-    assert result.output.splitlines() == ["foo", "bar"]
-
-    result = runner.invoke(cli, ["-i", "-", "strip", "uppercase"], input="foo \n bar")
-    assert not result.exception
-    assert result.output.splitlines() == ["FOO", "BAR"]
+    assert result.output.splitlines() == expect
 
 
 def test_args_and_chain(runner):
