@@ -34,7 +34,7 @@ idna==2.10
     # via requests
 imagesize==1.2.0
     # via sphinx
-importlib-metadata==3.10.1
+importlib_metadata==4.0.1
     # via -r requirements/tests.in
 iniconfig==1.1.1
     # via pytest
