@@ -41,25 +41,25 @@ def test_nargs_tup(runner):
     assert result.output.splitlines() == ["name=peter", "point=1/2"]
 
 
-def test_nargs_tup_composite(runner):
-    variations = [
+@pytest.mark.parametrize(
+    "opts",
+    [
         dict(type=(str, int)),
         dict(type=click.Tuple([str, int])),
         dict(nargs=2, type=click.Tuple([str, int])),
         dict(nargs=2, type=(str, int)),
-    ]
+    ],
+)
+def test_nargs_tup_composite(runner, opts):
+    @click.command()
+    @click.argument("item", **opts)
+    def copy(item):
+        name, id = item
+        click.echo(f"name={name} id={id:d}")
 
-    for opts in variations:
-
-        @click.command()
-        @click.argument("item", **opts)
-        def copy(item):
-            name, id = item
-            click.echo(f"name={name} id={id:d}")
-
-        result = runner.invoke(copy, ["peter", "1"])
-        assert not result.exception
-        assert result.output.splitlines() == ["name=peter id=1"]
+    result = runner.invoke(copy, ["peter", "1"])
+    assert result.exception is None
+    assert result.output.splitlines() == ["name=peter id=1"]
 
 
 def test_nargs_err(runner):
