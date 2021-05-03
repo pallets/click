@@ -1,11 +1,16 @@
+# mypy: disallow_untyped_defs = False
+# mypy: disallow_untyped_calls = False
 import sys
+import typing as t
 
 import pytest
 
 from click.core import Argument
 from click.core import Command
+from click.core import Context
 from click.core import Group
 from click.core import Option
+from click.core import Parameter
 from click.shell_completion import CompletionItem
 from click.shell_completion import ShellComplete
 from click.types import Choice
@@ -158,11 +163,20 @@ def test_option_custom():
 def test_autocompletion_deprecated():
     # old function takes args and not param, returns all values, can mix
     # strings and tuples
-    def custom(ctx, args, incomplete):
+    def custom(
+        ctx: Context,
+        args: t.List[str],
+        incomplete: str,
+    ) -> t.Iterable[t.Union[t.Tuple[str, str], str]]:
         assert isinstance(args, list)
-        return [("art", "x"), "bat", "cat"]
+        yield "art", "x"
+        yield "bat"
+        yield "cat"
 
     with pytest.deprecated_call():
+        if t.TYPE_CHECKING:
+            # Force type checking against base class' constructor signature
+            Parameter(autocompletion=custom)
         cli = Command("cli", params=[Argument(["x"], autocompletion=custom)])
 
     assert _get_words(cli, [], "") == ["art", "bat", "cat"]
