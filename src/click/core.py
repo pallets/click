@@ -2022,7 +2022,8 @@ class Parameter:
         envvar: t.Optional[t.Union[str, t.Sequence[str]]] = None,
         shell_complete: t.Optional[
             t.Callable[
-                [Context, "Parameter", str], t.List[t.Union["CompletionItem", str]]
+                [Context, "Parameter", str],
+                t.Union[t.List["CompletionItem"], t.List[str]],
             ]
         ] = None,
         autocompletion: t.Optional[
@@ -2068,7 +2069,7 @@ class Parameter:
 
             def shell_complete(
                 ctx: Context, param: "Parameter", incomplete: str
-            ) -> t.List[t.Union["CompletionItem", str]]:
+            ) -> t.List["CompletionItem"]:
                 from click.shell_completion import CompletionItem
 
                 out = []
