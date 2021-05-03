@@ -2027,7 +2027,7 @@ class Parameter:
         ] = None,
         autocompletion: t.Optional[
             t.Callable[
-                [Context, t.List[str], str], t.List[t.Union[t.Tuple[str, str], str]]
+                [Context, t.List[str], str], t.Iterable[t.Union[t.Tuple[str, str], str]]
             ]
         ] = None,
     ) -> None:
