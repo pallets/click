@@ -2372,7 +2372,7 @@ class Parameter:
         indicate which param caused the error.
         """
         hint_list = self.opts or [self.human_readable_name]
-        return " / ".join(repr(x) for x in hint_list)
+        return " / ".join(f"'{x}'" for x in hint_list)
 
     def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
         """Return a list of completions for the incomplete value. If a
@@ -2926,7 +2926,7 @@ class Argument(Parameter):
         return [self.make_metavar()]
 
     def get_error_hint(self, ctx: Context) -> str:
-        return repr(self.make_metavar())
+        return f"'{self.make_metavar()}'"
 
     def add_to_parser(self, parser: OptionParser, ctx: Context) -> None:
         parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)
