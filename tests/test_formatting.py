@@ -335,3 +335,13 @@ def test_formatting_with_options_metavar_empty(runner):
     cli = click.Command("cli", options_metavar="", params=[click.Argument(["var"])])
     result = runner.invoke(cli, ["--help"])
     assert "Usage: cli VAR\n" in result.output
+
+
+def test_help_formatter_write_text():
+    text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
+    formatter = click.HelpFormatter(width=len("  Lorem ipsum dolor sit amet,"))
+    formatter.current_indent = 2
+    formatter.write_text(text)
+    actual = formatter.getvalue()
+    expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
+    assert actual == expected

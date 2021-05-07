@@ -215,6 +215,8 @@ Unreleased
 -   When defining a parameter, ``default`` is validated with
     ``multiple`` and ``nargs``. More validation is done for values being
     processed as well. :issue:`1806`
+-   ``HelpFormatter.write_text`` uses the full line width when wrapping
+    text. :issue:`1871`
 
 
 Version 7.1.2

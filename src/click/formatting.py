@@ -195,12 +195,11 @@ class HelpFormatter:
         """Writes re-indented text into the buffer.  This rewraps and
         preserves paragraphs.
         """
-        text_width = max(self.width - self.current_indent, 11)
         indent = " " * self.current_indent
         self.write(
             wrap_text(
                 text,
-                text_width,
+                self.width,
                 initial_indent=indent,
                 subsequent_indent=indent,
                 preserve_paragraphs=True,
