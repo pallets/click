@@ -1,9 +1,9 @@
 .. currentmodule:: click
 
-Version 8.0
------------
+Version 8.0.0
+-------------
 
-Unreleased
+Released 2021-05-11
 
 -   Drop support for Python 2 and 3.5.
 -   Colorama is always installed on Windows in order to provide style
