@@ -97,23 +97,23 @@ Examples of Click applications can be found in the documentation as well
 as in the GitHub repository together with readme files:
 
 *   ``inout``: `File input and output
-    <https://github.com/pallets/click/tree/master/examples/inout>`_
+    <https://github.com/pallets/click/tree/main/examples/inout>`_
 *   ``naval``: `Port of docopt naval example
-    <https://github.com/pallets/click/tree/master/examples/naval>`_
+    <https://github.com/pallets/click/tree/main/examples/naval>`_
 *   ``aliases``: `Command alias example
-    <https://github.com/pallets/click/tree/master/examples/aliases>`_
+    <https://github.com/pallets/click/tree/main/examples/aliases>`_
 *   ``repo``: `Git-/Mercurial-like command line interface
-    <https://github.com/pallets/click/tree/master/examples/repo>`_
+    <https://github.com/pallets/click/tree/main/examples/repo>`_
 *   ``complex``: `Complex example with plugin loading
-    <https://github.com/pallets/click/tree/master/examples/complex>`_
+    <https://github.com/pallets/click/tree/main/examples/complex>`_
 *   ``validation``: `Custom parameter validation example
-    <https://github.com/pallets/click/tree/master/examples/validation>`_
+    <https://github.com/pallets/click/tree/main/examples/validation>`_
 *   ``colors``: `Color support demo
-    <https://github.com/pallets/click/tree/master/examples/colors>`_
+    <https://github.com/pallets/click/tree/main/examples/colors>`_
 *   ``termui``: `Terminal UI functions demo
-    <https://github.com/pallets/click/tree/master/examples/termui>`_
+    <https://github.com/pallets/click/tree/main/examples/termui>`_
 *   ``imagepipe``: `Multi command chaining demo
-    <https://github.com/pallets/click/tree/master/examples/imagepipe>`_
+    <https://github.com/pallets/click/tree/main/examples/imagepipe>`_
 
 Basic Concepts - Creating a Command
 -----------------------------------
