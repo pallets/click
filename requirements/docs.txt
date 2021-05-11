@@ -6,7 +6,7 @@
 #
 alabaster==0.7.12
     # via sphinx
-babel==2.9.0
+babel==2.9.1
     # via sphinx
 certifi==2020.12.5
     # via requests
@@ -20,15 +20,15 @@ imagesize==1.2.0
     # via sphinx
 jinja2==2.11.3
     # via sphinx
-markupsafe==1.1.1
+markupsafe==2.0.0
     # via jinja2
 packaging==20.9
     # via
     #   pallets-sphinx-themes
     #   sphinx
-pallets-sphinx-themes==2.0.0rc1
+pallets-sphinx-themes==2.0.0
     # via -r requirements/docs.in
-pygments==2.8.1
+pygments==2.9.0
     # via
     #   sphinx
     #   sphinx-tabs
