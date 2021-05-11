@@ -1,5 +1,11 @@
 .. currentmodule:: click
 
+Version 8.0.1
+-------------
+
+Unreleased
+
+
 Version 8.0.0
 -------------
 

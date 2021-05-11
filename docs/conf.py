@@ -11,7 +11,7 @@ click._compat.text_type = str
 project = "Click"
 copyright = "2014 Pallets"
 author = "Pallets"
-release, version = get_version("Click", version_length=1)
+release, version = get_version("Click")
 
 # General --------------------------------------------------------------
 
