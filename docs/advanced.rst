@@ -13,7 +13,7 @@ Command Aliases
 ---------------
 
 Many tools support aliases for commands (see `Command alias example
-<https://github.com/pallets/click/tree/master/examples/aliases>`_).
+<https://github.com/pallets/click/tree/main/examples/aliases>`_).
 For instance, you can configure ``git`` to accept ``git ci`` as alias for
 ``git commit``.  Other tools also support auto-discovery for aliases by
 automatically shortening them.
