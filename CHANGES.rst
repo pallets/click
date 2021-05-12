@@ -5,6 +5,9 @@ Version 8.0.1
 
 Unreleased
 
+-   Mark top-level names as exported so type checking understand imports
+    in user projects. :issue:`1879`
+
 
 Version 8.0.0
 -------------
