@@ -308,7 +308,7 @@ class Context:
             obj = parent.obj
 
         #: the user object stored.
-        self.obj: t.Optional[t.Any] = obj
+        self.obj: t.Any = obj
         self._meta: t.Dict[str, t.Any] = getattr(parent, "meta", {})
 
         #: A dictionary (-like object) with defaults for parameters.

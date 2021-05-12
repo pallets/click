@@ -7,6 +7,8 @@ Unreleased
 
 -   Mark top-level names as exported so type checking understand imports
     in user projects. :issue:`1879`
+-   Annotate ``Context.obj`` as ``Any`` so type checking allows all
+    operations on the arbitrary object. :issue:`
 
 
 Version 8.0.0
