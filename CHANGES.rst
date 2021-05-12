@@ -11,6 +11,12 @@ Version 8.0.1
 
 Unreleased
 
+-   Mark top-level names as exported so type checking understand imports
+    in user projects. :issue:`1879`
+-   Annotate ``Context.obj`` as ``Any`` so type checking allows all
+    operations on the arbitrary object. :issue:`1885`
+-   Fix some types that weren't available in Python 3.6.0. :issue:`1882`
+
 
 Version 8.0.0
 -------------

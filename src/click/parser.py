@@ -32,6 +32,7 @@ from .exceptions import NoSuchOption
 from .exceptions import UsageError
 
 if t.TYPE_CHECKING:
+    import typing_extensions as te
     from .core import Argument as CoreArgument
     from .core import Context
     from .core import Option as CoreOption
@@ -62,7 +63,7 @@ def _unpack_args(
     rv: t.List[t.Union[str, t.Tuple[t.Optional[str], ...], None]] = []
     spos: t.Optional[int] = None
 
-    def _fetch(c: t.Deque[V]) -> t.Optional[V]:
+    def _fetch(c: "te.Deque[V]") -> t.Optional[V]:
         try:
             if spos is None:
                 return c.popleft()

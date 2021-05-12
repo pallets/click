@@ -50,7 +50,7 @@ F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 V = t.TypeVar("V")
 
 
-def _fast_exit(code: int) -> t.NoReturn:
+def _fast_exit(code: int) -> "te.NoReturn":
     """Low-level exit that skips Python's cleanup but speeds up exit by
     about 10ms for things like shell completion.
 
@@ -308,7 +308,7 @@ class Context:
             obj = parent.obj
 
         #: the user object stored.
-        self.obj: t.Optional[t.Any] = obj
+        self.obj: t.Any = obj
         self._meta: t.Dict[str, t.Any] = getattr(parent, "meta", {})
 
         #: A dictionary (-like object) with defaults for parameters.
@@ -679,7 +679,7 @@ class Context:
 
         return None
 
-    def fail(self, message: str) -> t.NoReturn:
+    def fail(self, message: str) -> "te.NoReturn":
         """Aborts the execution of the program with a specific error
         message.
 
@@ -687,11 +687,11 @@ class Context:
         """
         raise UsageError(message, self)
 
-    def abort(self) -> t.NoReturn:
+    def abort(self) -> "te.NoReturn":
         """Aborts the script."""
         raise Abort()
 
-    def exit(self, code: int = 0) -> t.NoReturn:
+    def exit(self, code: int = 0) -> "te.NoReturn":
         """Exits the application with a given exit code."""
         raise Exit(code)
 
@@ -977,7 +977,7 @@ class BaseCommand:
         complete_var: t.Optional[str] = None,
         standalone_mode: "te.Literal[True]" = True,
         **extra: t.Any,
-    ) -> t.NoReturn:
+    ) -> "te.NoReturn":
         ...
 
     @typing.overload
