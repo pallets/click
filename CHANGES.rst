@@ -117,7 +117,7 @@ Released 2021-05-11
         renamed to ``shell_complete``. The function must take
         ``ctx, param, incomplete``, must do matching rather than return
         all values, and must return a list of strings or a list of
-        ``ShellComplete``. The old name and behavior is deprecated and
+        ``CompletionItem``. The old name and behavior is deprecated and
         will be removed in 8.1.
     -   The env var values used to start completion have changed order.
         The shell now comes first, such as ``{shell}_source`` rather
