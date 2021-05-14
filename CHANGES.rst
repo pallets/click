@@ -20,6 +20,8 @@ Unreleased
     locale detection is removed. :issue:`2198`
 -   Single options boolean flags with ``show_default=True`` only show
     the default if it is ``True``. :issue:`1971`
+-   The ``command`` and ``group`` decorators can be applied with or
+    without parentheses. :issue:`1359`
 
 
 Version 8.0.4
