@@ -345,3 +345,25 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+
+def test_invalid_default(runner):
+    @click.command()
+    @click.option(
+        "-f",
+        type=click.Path(exists=True, file_okay=True),
+        default="this does not exist",
+        help="Output file name",
+        show_default=True,
+    )
+    def cli():
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.output.splitlines() == [
+        "Usage: cli [OPTIONS]",
+        "",
+        "Options:",
+        "  -f PATH  Output file name  [default: this does not exist]",
+        "  --help   Show this message and exit.",
+    ]

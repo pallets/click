@@ -2219,7 +2219,15 @@ class Parameter:
 
             value = value()
 
-        return self.type_cast_value(ctx, value)
+        try:
+            # allow the type casting to fail if ``call`` is False which is used for
+            # generating help.
+            return self.type_cast_value(ctx, value)
+        except BadParameter:
+            if not call:
+                return value
+
+            raise
 
     def add_to_parser(self, parser: OptionParser, ctx: Context) -> None:
         raise NotImplementedError()
