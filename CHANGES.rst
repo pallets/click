@@ -14,6 +14,8 @@ Unreleased
     :issue:`1892`
 -   The ``importlib_metadata`` backport package is installed on Python <
     3.8. :issue:`1889`
+-   Arguments with ``nargs=-1`` only use env var value if no command
+    line values are given. :issue:`1903`
 
 
 Version 8.0.0
