@@ -16,6 +16,7 @@ Unreleased
 -   Annotate ``Context.obj`` as ``Any`` so type checking allows all
     operations on the arbitrary object. :issue:`1885`
 -   Fix some types that weren't available in Python 3.6.0. :issue:`1882`
+-   Fix arguments with ``nargs=-1`` and ``envvar`` set. :issue:`1903`
 
 
 Version 8.0.0

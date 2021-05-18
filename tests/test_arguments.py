@@ -194,6 +194,19 @@ def test_nargs_envvar(runner, nargs, value, expect):
         assert result.return_value == expect
 
 
+def test_vararg_envvar_not_used(runner):
+    @click.command()
+    @click.argument("arg", envvar="X", nargs=-1)
+    def cmd(arg):
+        return arg
+
+    value = ("arg1", "arg2")
+
+    result = runner.invoke(cmd, args=value, standalone_mode=False)
+
+    assert result.return_value == value
+
+
 def test_empty_nargs(runner):
     @click.command()
     @click.argument("arg", nargs=-1)
