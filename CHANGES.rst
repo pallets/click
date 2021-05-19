@@ -18,6 +18,8 @@ Unreleased
     line values are given. :issue:`1903`
 -   Flag options guess their type from ``flag_value`` if given, like
     regular options do from ``default``. :issue:`1886`
+-   Added documentation that custom parameter types may be passed
+    already valid values in addition to strings. :issue:`1898`
 
 
 Version 8.0.0
