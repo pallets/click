@@ -16,6 +16,8 @@ Unreleased
     3.8. :issue:`1889`
 -   Arguments with ``nargs=-1`` only use env var value if no command
     line values are given. :issue:`1903`
+-   Flag options guess their type from ``flag_value`` if given, like
+    regular options do from ``default``. :issue:`1886`
 
 
 Version 8.0.0

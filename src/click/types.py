@@ -1000,10 +1000,7 @@ def convert_type(ty: t.Optional[t.Any], default: t.Optional[t.Any] = None) -> Pa
     if ty is float:
         return FLOAT
 
-    # Booleans are only okay if not guessed. For is_flag options with
-    # flag_value, default=True indicates which flag_value is the
-    # default.
-    if ty is bool and not guessed_type:
+    if ty is bool:
         return BOOL
 
     if guessed_type:
