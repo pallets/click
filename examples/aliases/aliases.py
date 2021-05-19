@@ -67,6 +67,11 @@ class AliasedGroup(click.Group):
             return click.Group.get_command(self, ctx, matches[0])
         ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
 
+    def resolve_command(self, ctx, args):
+        # always return the command's name, not the alias
+        _, cmd, args = super().resolve_command(ctx, args)
+        return cmd.name, cmd, args
+
 
 def read_config(ctx, param, value):
     """Callback that is used whenever --config is passed.  We use this to
