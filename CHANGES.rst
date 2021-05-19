@@ -25,6 +25,8 @@ Unreleased
     ``default_map`` lookups. When using patterns like ``AliasedGroup``,
     override ``resolve_command`` to change the name that is returned if
     needed. :issue:`1895`
+-   If a default value is invalid, it does not prevent showing help
+    text. :issue:`1889`
 
 
 Version 8.0.0

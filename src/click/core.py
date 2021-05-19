@@ -2196,6 +2196,10 @@ class Parameter:
         :param call: If the default is a callable, call it. Disable to
             return the callable instead.
 
+        .. versionchanged:: 8.0.1
+            Type casting can fail in resilient parsing mode. Invalid
+            defaults will not prevent showing help text.
+
         .. versionchanged:: 8.0
             Looks at ``ctx.default_map`` first.
 
@@ -2214,7 +2218,13 @@ class Parameter:
 
             value = value()
 
-        return self.type_cast_value(ctx, value)
+        try:
+            return self.type_cast_value(ctx, value)
+        except BadParameter:
+            if ctx.resilient_parsing:
+                return value
+
+            raise
 
     def add_to_parser(self, parser: OptionParser, ctx: Context) -> None:
         raise NotImplementedError()
@@ -2700,14 +2710,24 @@ class Option(Parameter):
                 )
                 extra.append(_("env var: {var}").format(var=var_str))
 
-        default_value = self.get_default(ctx, call=False)
+        # Temporarily enable resilient parsing to avoid type casting
+        # failing for the default. Might be possible to extend this to
+        # help formatting in general.
+        resilient = ctx.resilient_parsing
+        ctx.resilient_parsing = True
+
+        try:
+            default_value = self.get_default(ctx, call=False)
+        finally:
+            ctx.resilient_parsing = resilient
+
         show_default_is_str = isinstance(self.show_default, str)
 
         if show_default_is_str or (
             default_value is not None and (self.show_default or ctx.show_default)
         ):
             if show_default_is_str:
-                default_string: t.Union[str, t.Any] = f"({self.show_default})"
+                default_string = f"({self.show_default})"
             elif isinstance(default_value, (list, tuple)):
                 default_string = ", ".join(str(d) for d in default_value)
             elif callable(default_value):
@@ -2719,7 +2739,7 @@ class Option(Parameter):
                     (self.opts if self.default else self.secondary_opts)[0]
                 )[1]
             else:
-                default_string = default_value
+                default_string = str(default_value)
 
             extra.append(_("default: {default}").format(default=default_string))
 

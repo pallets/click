@@ -553,7 +553,7 @@ def test_option_help_preserve_paragraphs(runner):
 
 def test_argument_custom_class(runner):
     class CustomArgument(click.Argument):
-        def get_default(self, ctx):
+        def get_default(self, ctx, call=True):
             """a dumb override of a default value for testing"""
             return "I am a default"
 
