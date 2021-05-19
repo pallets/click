@@ -118,19 +118,15 @@ integers.
         name = "integer"
 
         def convert(self, value, param, ctx):
+            if isinstance(value, int):
+                return value
+
             try:
                 if value[:2].lower() == "0x":
                     return int(value[2:], 16)
                 elif value[:1] == "0":
                     return int(value, 8)
                 return int(value, 10)
-            except TypeError:
-                self.fail(
-                    "expected string for int() conversion, got "
-                    f"{value!r} of type {type(value).__name__}",
-                    param,
-                    ctx,
-                )
             except ValueError:
                 self.fail(f"{value!r} is not a valid integer", param, ctx)
 
@@ -140,3 +136,8 @@ The :attr:`~ParamType.name` attribute is optional and is used for
 documentation. Call :meth:`~ParamType.fail` if conversion fails. The
 ``param`` and ``ctx`` arguments may be ``None`` in some cases such as
 prompts.
+
+Values from user input or the command line will be strings, but default
+values and Python arguments may already be the correct type. The custom
+type should check at the top if the value is already valid and pass it
+through to support those cases.
