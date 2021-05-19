@@ -547,3 +547,20 @@ def test_summary_line(runner):
     result = runner.invoke(cli, ["--help"])
     assert "Summary line without period" in result.output
     assert "Here is a sentence." not in result.output
+
+
+def test_help_invalid_default(runner):
+    cli = click.Command(
+        "cli",
+        params=[
+            click.Option(
+                ["-a"],
+                type=click.Path(exists=True),
+                default="not found",
+                show_default=True,
+            ),
+        ],
+    )
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "default: not found" in result.output
