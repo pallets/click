@@ -3,7 +3,7 @@
 Version 8.0.1
 -------------
 
-Unreleased
+Released 2021-05-19
 
 -   Mark top-level names as exported so type checking understand imports
     in user projects. :issue:`1879`
