@@ -285,6 +285,10 @@ def test_aliased_command_canonical_name(runner):
         def get_command(self, ctx, cmd_name):
             return push
 
+        def resolve_command(self, ctx, args):
+            _, command, args = super().resolve_command(ctx, args)
+            return command.name, command, args
+
     cli = AliasedGroup()
 
     @cli.command()
@@ -294,6 +298,16 @@ def test_aliased_command_canonical_name(runner):
     result = runner.invoke(cli, ["pu", "--help"])
     assert not result.exception
     assert result.output.startswith("Usage: root push [OPTIONS]")
+
+
+def test_group_add_command_name(runner):
+    cli = click.Group("cli")
+    cmd = click.Command("a", params=[click.Option(["-x"], required=True)])
+    cli.add_command(cmd, "b")
+    # Check that the command is accessed through the registered name,
+    # not the original name.
+    result = runner.invoke(cli, ["b"], default_map={"b": {"x": 3}})
+    assert result.exit_code == 0
 
 
 def test_unprocessed_options(runner):

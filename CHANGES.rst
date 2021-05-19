@@ -20,6 +20,11 @@ Unreleased
     regular options do from ``default``. :issue:`1886`
 -   Added documentation that custom parameter types may be passed
     already valid values in addition to strings. :issue:`1898`
+-   Resolving commands returns the name that was given, not
+    ``command.name``, fixing an unintended change to help text and
+    ``default_map`` lookups. When using patterns like ``AliasedGroup``,
+    override ``resolve_command`` to change the name that is returned if
+    needed. :issue:`1895`
 
 
 Version 8.0.0

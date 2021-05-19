@@ -1717,7 +1717,7 @@ class MultiCommand(Command):
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
             ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
-        return cmd.name if cmd else None, cmd, args[1:]
+        return cmd_name if cmd else None, cmd, args[1:]
 
     def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
         """Given a context and a command name, this returns a
