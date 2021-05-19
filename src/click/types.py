@@ -123,7 +123,7 @@ class ParamType:
         message: str,
         param: t.Optional["Parameter"] = None,
         ctx: t.Optional["Context"] = None,
-    ) -> t.NoReturn:
+    ) -> "t.NoReturn":
         """Helper method to fail with an invalid value message."""
         raise BadParameter(message, ctx=ctx, param=param)
 
