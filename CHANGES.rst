@@ -33,8 +33,10 @@ Released 2021-05-11
 -   Add an optional parameter to ``ProgressBar.update`` to set the
     ``current_item``. :issue:`1226`, :pr:`1332`
 -   ``version_option`` uses ``importlib.metadata`` (or the
-    ``importlib_metadata`` backport) instead of ``pkg_resources``.
-    :issue:`1582`
+    ``importlib_metadata`` backport) instead of ``pkg_resources``. The
+    version is detected based on the package name, not the entry point
+    name. The Python package name must match the installed package
+    name, or be passed with ``package_name=``. :issue:`1582`
 -   If validation fails for a prompt with ``hide_input=True``, the value
     is not shown in the error message. :issue:`1460`
 -   An ``IntRange`` or ``FloatRange`` option shows the accepted range in
