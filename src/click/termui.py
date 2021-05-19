@@ -318,7 +318,7 @@ def progressbar(
     file: t.Optional[t.TextIO] = None,
     color: t.Optional[bool] = None,
     update_min_steps: int = 1,
-) -> "ProgressBar":
+) -> "ProgressBar[V]":
     """This function creates an iterable context manager that can be used
     to iterate over something while showing a progress bar.  It will
     either iterate over the `iterable` or `length` items (that are counted

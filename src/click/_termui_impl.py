@@ -32,7 +32,7 @@ else:
     AFTER_BAR = "\033[?25h\n"
 
 
-class ProgressBar:
+class ProgressBar(t.Generic[V]):
     def __init__(
         self,
         iterable: t.Optional[t.Iterable[V]],
@@ -50,7 +50,7 @@ class ProgressBar:
         color: t.Optional[bool] = None,
         update_min_steps: int = 1,
         width: int = 30,
-    ):
+    ) -> None:
         self.fill_char = fill_char
         self.empty_char = empty_char
         self.bar_template = bar_template
@@ -101,7 +101,7 @@ class ProgressBar:
     def __exit__(self, exc_type, exc_value, tb):  # type: ignore
         self.render_finish()
 
-    def __iter__(self) -> t.Iterable[V]:
+    def __iter__(self) -> t.Iterator[V]:
         if not self.entered:
             raise RuntimeError("You need to use progress bars in a with block.")
         self.render_progress()
@@ -113,7 +113,7 @@ class ProgressBar:
         # because `self.iter` is an iterable consumed by that generator,
         # so it is re-entry safe. Calling `next(self.generator())`
         # twice works and does "what you want".
-        return next(iter(self))  # type: ignore
+        return next(iter(self))
 
     def render_finish(self) -> None:
         if self.is_hidden:
