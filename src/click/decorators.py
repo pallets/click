@@ -330,7 +330,10 @@ def version_option(
         value for messages.
 
     .. versionchanged:: 8.0
-        Use :mod:`importlib.metadata` instead of ``pkg_resources``.
+        Use :mod:`importlib.metadata` instead of ``pkg_resources``. The
+        version is detected based on the package name, not the entry
+        point name. The Python package name must match the installed
+        package name, or be passed with ``package_name=``.
     """
     if message is None:
         message = _("%(prog)s, version %(version)s")
@@ -370,15 +373,7 @@ def version_option(
                 from importlib import metadata  # type: ignore
             except ImportError:
                 # Python < 3.8
-                try:
-                    import importlib_metadata as metadata  # type: ignore
-                except ImportError:
-                    metadata = None
-
-            if metadata is None:
-                raise RuntimeError(
-                    "Install 'importlib_metadata' to get the version on Python < 3.8."
-                )
+                import importlib_metadata as metadata  # type: ignore
 
             try:
                 version = metadata.version(package_name)  # type: ignore

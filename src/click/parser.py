@@ -233,7 +233,9 @@ class Argument:
                     )
                 )
 
-        if self.nargs == -1 and self.obj.envvar is not None:
+        if self.nargs == -1 and self.obj.envvar is not None and value == ():
+            # Replace empty tuple with None so that a value from the
+            # environment may be tried.
             value = None
 
         state.opts[self.dest] = value  # type: ignore

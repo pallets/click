@@ -36,8 +36,6 @@ idna==2.10
     # via requests
 imagesize==1.2.0
     # via sphinx
-importlib-metadata==4.0.1
-    # via -r requirements/tests.in
 iniconfig==1.1.1
     # via pytest
 jinja2==2.11.3
@@ -135,8 +133,6 @@ virtualenv==20.4.6
     # via
     #   pre-commit
     #   tox
-zipp==3.4.1
-    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

@@ -6,16 +6,43 @@ Version 8.1.0
 Unreleased
 
 
-Version 8.0.1
+Version 8.0.2
 -------------
 
 Unreleased
+
+
+Version 8.0.1
+-------------
+
+Released 2021-05-19
 
 -   Mark top-level names as exported so type checking understand imports
     in user projects. :issue:`1879`
 -   Annotate ``Context.obj`` as ``Any`` so type checking allows all
     operations on the arbitrary object. :issue:`1885`
 -   Fix some types that weren't available in Python 3.6.0. :issue:`1882`
+-   Fix type checking for iterating over ``ProgressBar`` object.
+    :issue:`1892`
+-   The ``importlib_metadata`` backport package is installed on Python <
+    3.8. :issue:`1889`
+-   Arguments with ``nargs=-1`` only use env var value if no command
+    line values are given. :issue:`1903`
+-   Flag options guess their type from ``flag_value`` if given, like
+    regular options do from ``default``. :issue:`1886`
+-   Added documentation that custom parameter types may be passed
+    already valid values in addition to strings. :issue:`1898`
+-   Resolving commands returns the name that was given, not
+    ``command.name``, fixing an unintended change to help text and
+    ``default_map`` lookups. When using patterns like ``AliasedGroup``,
+    override ``resolve_command`` to change the name that is returned if
+    needed. :issue:`1895`
+-   If a default value is invalid, it does not prevent showing help
+    text. :issue:`1889`
+-   Pass ``windows_expand_args=False`` when calling the main command to
+    disable pattern expansion on Windows. There is no way to escape
+    patterns in CMD, so if the program needs to pass them on as-is then
+    expansion must be disabled. :issue:`1901`
 
 
 Version 8.0.0
@@ -33,8 +60,10 @@ Released 2021-05-11
 -   Add an optional parameter to ``ProgressBar.update`` to set the
     ``current_item``. :issue:`1226`, :pr:`1332`
 -   ``version_option`` uses ``importlib.metadata`` (or the
-    ``importlib_metadata`` backport) instead of ``pkg_resources``.
-    :issue:`1582`
+    ``importlib_metadata`` backport) instead of ``pkg_resources``. The
+    version is detected based on the package name, not the entry point
+    name. The Python package name must match the installed package
+    name, or be passed with ``package_name=``. :issue:`1582`
 -   If validation fails for a prompt with ``hide_input=True``, the value
     is not shown in the error message. :issue:`1460`
 -   An ``IntRange`` or ``FloatRange`` option shows the accepted range in
@@ -121,7 +150,7 @@ Released 2021-05-11
         renamed to ``shell_complete``. The function must take
         ``ctx, param, incomplete``, must do matching rather than return
         all values, and must return a list of strings or a list of
-        ``ShellComplete``. The old name and behavior is deprecated and
+        ``CompletionItem``. The old name and behavior is deprecated and
         will be removed in 8.1.
     -   The env var values used to start completion have changed order.
         The shell now comes first, such as ``{shell}_source`` rather

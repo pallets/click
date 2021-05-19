@@ -13,6 +13,7 @@ from gettext import gettext as _
 from gettext import ngettext
 from itertools import repeat
 
+from . import types
 from ._unicodefun import _verify_python_env
 from .exceptions import Abort
 from .exceptions import BadParameter
@@ -30,11 +31,6 @@ from .parser import split_opt
 from .termui import confirm
 from .termui import prompt
 from .termui import style
-from .types import _NumberRangeBase
-from .types import BOOL
-from .types import convert_type
-from .types import IntRange
-from .types import ParamType
 from .utils import _detect_program_name
 from .utils import _expand_args
 from .utils import echo
@@ -997,6 +993,7 @@ class BaseCommand:
         prog_name: t.Optional[str] = None,
         complete_var: t.Optional[str] = None,
         standalone_mode: bool = True,
+        windows_expand_args: bool = True,
         **extra: t.Any,
     ) -> t.Any:
         """This is the way to invoke a script with all the bells and
@@ -1025,8 +1022,14 @@ class BaseCommand:
                                 propagated to the caller and the return
                                 value of this function is the return value
                                 of :meth:`invoke`.
+        :param windows_expand_args: Expand glob patterns, user dir, and
+            env vars in command line args on Windows.
         :param extra: extra keyword arguments are forwarded to the context
                       constructor.  See :class:`Context` for more information.
+
+        .. versionchanged:: 8.0.1
+            Added the ``windows_expand_args`` parameter to allow
+            disabling command line arg expansion on Windows.
 
         .. versionchanged:: 8.0
             When taking arguments from ``sys.argv`` on Windows, glob
@@ -1042,7 +1045,7 @@ class BaseCommand:
         if args is None:
             args = sys.argv[1:]
 
-            if os.name == "nt":
+            if os.name == "nt" and windows_expand_args:
                 args = _expand_args(args)
         else:
             args = list(args)
@@ -1721,7 +1724,7 @@ class MultiCommand(Command):
             if split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
             ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
-        return cmd.name if cmd else None, cmd, args[1:]
+        return cmd_name if cmd else None, cmd, args[1:]
 
     def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
         """Given a context and a command name, this returns a
@@ -2010,7 +2013,7 @@ class Parameter:
     def __init__(
         self,
         param_decls: t.Optional[t.Sequence[str]] = None,
-        type: t.Optional[t.Union["ParamType", t.Any]] = None,
+        type: t.Optional[t.Union[types.ParamType, t.Any]] = None,
         required: bool = False,
         default: t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]] = None,
         callback: t.Optional[t.Callable[[Context, "Parameter", t.Any], t.Any]] = None,
@@ -2035,8 +2038,7 @@ class Parameter:
         self.name, self.opts, self.secondary_opts = self._parse_decls(
             param_decls or (), expose_value
         )
-
-        self.type = convert_type(type, default)
+        self.type = types.convert_type(type, default)
 
         # Default nargs to what the type tells us if we have that
         # information available.
@@ -2201,6 +2203,10 @@ class Parameter:
         :param call: If the default is a callable, call it. Disable to
             return the callable instead.
 
+        .. versionchanged:: 8.0.1
+            Type casting can fail in resilient parsing mode. Invalid
+            defaults will not prevent showing help text.
+
         .. versionchanged:: 8.0
             Looks at ``ctx.default_map`` first.
 
@@ -2219,7 +2225,13 @@ class Parameter:
 
             value = value()
 
-        return self.type_cast_value(ctx, value)
+        try:
+            return self.type_cast_value(ctx, value)
+        except BadParameter:
+            if ctx.resilient_parsing:
+                return value
+
+            raise
 
     def add_to_parser(self, parser: OptionParser, ctx: Context) -> None:
         raise NotImplementedError()
@@ -2439,6 +2451,9 @@ class Option(Parameter):
                                context.
     :param help: the help string.
     :param hidden: hide this option from help outputs.
+
+    .. versionchanged:: 8.0.1
+        ``type`` is detected from ``flag_value`` if given.
     """
 
     param_type_name = "option"
@@ -2456,7 +2471,7 @@ class Option(Parameter):
         multiple: bool = False,
         count: bool = False,
         allow_from_autoenv: bool = True,
-        type: t.Optional[t.Union["ParamType", t.Any]] = None,
+        type: t.Optional[t.Union[types.ParamType, t.Any]] = None,
         help: t.Optional[str] = None,
         hidden: bool = False,
         show_choices: bool = True,
@@ -2507,20 +2522,20 @@ class Option(Parameter):
         if flag_value is None:
             flag_value = not self.default
 
-        self.is_flag: bool = is_flag
-        self.flag_value: t.Any = flag_value
+        if is_flag and type is None:
+            # Re-guess the type from the flag value instead of the
+            # default.
+            self.type = types.convert_type(None, flag_value)
 
-        if self.is_flag and isinstance(self.flag_value, bool) and type in [None, bool]:
-            self.type: "ParamType" = BOOL
-            self.is_bool_flag = True
-        else:
-            self.is_bool_flag = False
+        self.is_flag: bool = is_flag
+        self.is_bool_flag = isinstance(self.type, types.BoolParamType)
+        self.flag_value: t.Any = flag_value
 
         # Counting
         self.count = count
         if count:
             if type is None:
-                self.type = IntRange(min=0)
+                self.type = types.IntRange(min=0)
             if default_is_missing:
                 self.default = 0
 
@@ -2702,14 +2717,24 @@ class Option(Parameter):
                 )
                 extra.append(_("env var: {var}").format(var=var_str))
 
-        default_value = self.get_default(ctx, call=False)
+        # Temporarily enable resilient parsing to avoid type casting
+        # failing for the default. Might be possible to extend this to
+        # help formatting in general.
+        resilient = ctx.resilient_parsing
+        ctx.resilient_parsing = True
+
+        try:
+            default_value = self.get_default(ctx, call=False)
+        finally:
+            ctx.resilient_parsing = resilient
+
         show_default_is_str = isinstance(self.show_default, str)
 
         if show_default_is_str or (
             default_value is not None and (self.show_default or ctx.show_default)
         ):
             if show_default_is_str:
-                default_string: t.Union[str, t.Any] = f"({self.show_default})"
+                default_string = f"({self.show_default})"
             elif isinstance(default_value, (list, tuple)):
                 default_string = ", ".join(str(d) for d in default_value)
             elif callable(default_value):
@@ -2721,11 +2746,11 @@ class Option(Parameter):
                     (self.opts if self.default else self.secondary_opts)[0]
                 )[1]
             else:
-                default_string = default_value
+                default_string = str(default_value)
 
             extra.append(_("default: {default}").format(default=default_string))
 
-        if isinstance(self.type, _NumberRangeBase):
+        if isinstance(self.type, types._NumberRangeBase):
             range_str = self.type._describe_range()
 
             if range_str:

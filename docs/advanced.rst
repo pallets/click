@@ -35,7 +35,6 @@ it would accept ``pus`` as an alias (so long as it was unique):
 .. click:example::
 
     class AliasedGroup(click.Group):
-
         def get_command(self, ctx, cmd_name):
             rv = click.Group.get_command(self, ctx, cmd_name)
             if rv is not None:
@@ -47,6 +46,11 @@ it would accept ``pus`` as an alias (so long as it was unique):
             elif len(matches) == 1:
                 return click.Group.get_command(self, ctx, matches[0])
             ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
+
+        def resolve_command(self, ctx, args):
+            # always return the full command name
+            _, cmd, args = super().resolve_command(ctx, args)
+            return cmd.name, cmd, args
 
 And it can then be used like this:
 
