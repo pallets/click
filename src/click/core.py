@@ -13,6 +13,7 @@ from gettext import gettext as _
 from gettext import ngettext
 from itertools import repeat
 
+from . import types
 from ._unicodefun import _verify_python_env
 from .exceptions import Abort
 from .exceptions import BadParameter
@@ -30,11 +31,6 @@ from .parser import split_opt
 from .termui import confirm
 from .termui import prompt
 from .termui import style
-from .types import _NumberRangeBase
-from .types import BOOL
-from .types import convert_type
-from .types import IntRange
-from .types import ParamType
 from .utils import _detect_program_name
 from .utils import _expand_args
 from .utils import echo
@@ -2010,7 +2006,7 @@ class Parameter:
     def __init__(
         self,
         param_decls: t.Optional[t.Sequence[str]] = None,
-        type: t.Optional[t.Union["ParamType", t.Any]] = None,
+        type: t.Optional[t.Union[types.ParamType, t.Any]] = None,
         required: bool = False,
         default: t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]] = None,
         callback: t.Optional[t.Callable[[Context, "Parameter", t.Any], t.Any]] = None,
@@ -2035,8 +2031,7 @@ class Parameter:
         self.name, self.opts, self.secondary_opts = self._parse_decls(
             param_decls or (), expose_value
         )
-
-        self.type = convert_type(type, default)
+        self.type = types.convert_type(type, default)
 
         # Default nargs to what the type tells us if we have that
         # information available.
@@ -2439,6 +2434,9 @@ class Option(Parameter):
                                context.
     :param help: the help string.
     :param hidden: hide this option from help outputs.
+
+    .. versionchanged:: 8.0.1
+        ``type`` is detected from ``flag_value`` if given.
     """
 
     param_type_name = "option"
@@ -2456,7 +2454,7 @@ class Option(Parameter):
         multiple: bool = False,
         count: bool = False,
         allow_from_autoenv: bool = True,
-        type: t.Optional[t.Union["ParamType", t.Any]] = None,
+        type: t.Optional[t.Union[types.ParamType, t.Any]] = None,
         help: t.Optional[str] = None,
         hidden: bool = False,
         show_choices: bool = True,
@@ -2507,20 +2505,20 @@ class Option(Parameter):
         if flag_value is None:
             flag_value = not self.default
 
-        self.is_flag: bool = is_flag
-        self.flag_value: t.Any = flag_value
+        if is_flag and type is None:
+            # Re-guess the type from the flag value instead of the
+            # default.
+            self.type = types.convert_type(None, flag_value)
 
-        if self.is_flag and isinstance(self.flag_value, bool) and type in [None, bool]:
-            self.type: "ParamType" = BOOL
-            self.is_bool_flag = True
-        else:
-            self.is_bool_flag = False
+        self.is_flag: bool = is_flag
+        self.is_bool_flag = isinstance(self.type, types.BoolParamType)
+        self.flag_value: t.Any = flag_value
 
         # Counting
         self.count = count
         if count:
             if type is None:
-                self.type = IntRange(min=0)
+                self.type = types.IntRange(min=0)
             if default_is_missing:
                 self.default = 0
 
@@ -2725,7 +2723,7 @@ class Option(Parameter):
 
             extra.append(_("default: {default}").format(default=default_string))
 
-        if isinstance(self.type, _NumberRangeBase):
+        if isinstance(self.type, types._NumberRangeBase):
             range_str = self.type._describe_range()
 
             if range_str:
