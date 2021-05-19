@@ -12,6 +12,8 @@ Unreleased
 -   Fix some types that weren't available in Python 3.6.0. :issue:`1882`
 -   Fix type checking for iterating over ``ProgressBar`` object.
     :issue:`1892`
+-   The ``importlib_metadata`` backport package is installed on Python <
+    3.8. :issue:`1889`
 
 
 Version 8.0.0

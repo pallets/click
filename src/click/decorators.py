@@ -370,15 +370,7 @@ def version_option(
                 from importlib import metadata  # type: ignore
             except ImportError:
                 # Python < 3.8
-                try:
-                    import importlib_metadata as metadata  # type: ignore
-                except ImportError:
-                    metadata = None
-
-            if metadata is None:
-                raise RuntimeError(
-                    "Install 'importlib_metadata' to get the version on Python < 3.8."
-                )
+                import importlib_metadata as metadata  # type: ignore
 
             try:
                 version = metadata.version(package_name)  # type: ignore
