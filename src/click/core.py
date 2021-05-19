@@ -993,6 +993,7 @@ class BaseCommand:
         prog_name: t.Optional[str] = None,
         complete_var: t.Optional[str] = None,
         standalone_mode: bool = True,
+        windows_expand_args: bool = True,
         **extra: t.Any,
     ) -> t.Any:
         """This is the way to invoke a script with all the bells and
@@ -1021,8 +1022,14 @@ class BaseCommand:
                                 propagated to the caller and the return
                                 value of this function is the return value
                                 of :meth:`invoke`.
+        :param windows_expand_args: Expand glob patterns, user dir, and
+            env vars in command line args on Windows.
         :param extra: extra keyword arguments are forwarded to the context
                       constructor.  See :class:`Context` for more information.
+
+        .. versionchanged:: 8.0.1
+            Added the ``windows_expand_args`` parameter to allow
+            disabling command line arg expansion on Windows.
 
         .. versionchanged:: 8.0
             When taking arguments from ``sys.argv`` on Windows, glob
@@ -1038,7 +1045,7 @@ class BaseCommand:
         if args is None:
             args = sys.argv[1:]
 
-            if os.name == "nt":
+            if os.name == "nt" and windows_expand_args:
                 args = _expand_args(args)
         else:
             args = list(args)
