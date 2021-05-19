@@ -27,6 +27,10 @@ Unreleased
     needed. :issue:`1895`
 -   If a default value is invalid, it does not prevent showing help
     text. :issue:`1889`
+-   Pass ``windows_expand_args=False`` when calling the main command to
+    disable pattern expansion on Windows. There is no way to escape
+    patterns in CMD, so if the program needs to pass them on as-is then
+    expansion must be disabled. :issue:`1901`
 
 
 Version 8.0.0
