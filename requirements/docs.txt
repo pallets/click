@@ -13,20 +13,22 @@ certifi==2020.12.5
 chardet==4.0.0
     # via requests
 docutils==0.16
-    # via sphinx
+    # via
+    #   sphinx
+    #   sphinx-tabs
 idna==2.10
     # via requests
 imagesize==1.2.0
     # via sphinx
-jinja2==2.11.3
+jinja2==3.0.1
     # via sphinx
-markupsafe==2.0.0
+markupsafe==2.0.1
     # via jinja2
 packaging==20.9
     # via
     #   pallets-sphinx-themes
     #   sphinx
-pallets-sphinx-themes==2.0.0
+pallets-sphinx-themes==2.0.1
     # via -r requirements/docs.in
 pygments==2.9.0
     # via
@@ -42,9 +44,9 @@ snowballstemmer==2.1.0
     # via sphinx
 sphinx-issues==1.2.0
     # via -r requirements/docs.in
-sphinx-tabs==2.1.0
+sphinx-tabs==3.0.0
     # via -r requirements/docs.in
-sphinx==3.5.4
+sphinx==4.0.2
     # via
     #   -r requirements/docs.in
     #   pallets-sphinx-themes
