@@ -2197,7 +2197,7 @@ class Parameter:
         self, ctx: Context, call: bool = True
     ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
         """Get the default for the parameter. Tries
-        :meth:`Context.lookup_value` first, then the local default.
+        :meth:`Context.lookup_default` first, then the local default.
 
         :param ctx: Current context.
         :param call: If the default is a callable, call it. Disable to
