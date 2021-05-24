@@ -2528,7 +2528,7 @@ class Option(Parameter):
             self.type = types.convert_type(None, flag_value)
 
         self.is_flag: bool = is_flag
-        self.is_bool_flag = isinstance(self.type, types.BoolParamType)
+        self.is_bool_flag = is_flag and isinstance(self.type, types.BoolParamType)
         self.flag_value: t.Any = flag_value
 
         # Counting
