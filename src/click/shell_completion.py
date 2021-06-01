@@ -302,8 +302,10 @@ class BashComplete(ShellComplete):
     def _check_version(self) -> None:
         import subprocess
 
-        output = subprocess.run(["bash", "--version"], stdout=subprocess.PIPE)
-        match = re.search(r"version (\d)\.(\d)\.\d", output.stdout.decode())
+        output = subprocess.run(
+            ["bash", "-c", "echo ${BASH_VERSION}"], stdout=subprocess.PIPE
+        )
+        match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
 
         if match is not None:
             major, minor = match.groups()
