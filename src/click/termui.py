@@ -177,7 +177,7 @@ def prompt(
             if hide_input:
                 echo(_("Error: The value you entered was invalid."), err=err)
             else:
-                echo(_("Error: {e.message}").format(e=e), err=err)  # noqa: B306
+                echo(_("Error: {}").format(e), err=err)  # noqa: B306
             continue
         if not confirmation_prompt:
             return result
