@@ -346,6 +346,9 @@ but you want to quickly show the user some progress about how long that
 will take.  Click supports simple progress bar rendering for that through
 the :func:`progressbar` function.
 
+But since version 8.0 support for progress bars has been discontinued and it
+is better to use tqdm to render progress bars.
+
 The basic usage is very simple: the idea is that you have an iterable that
 you want to operate on.  For each item in the iterable it might take some
 time to do processing.  So say you have a loop like this::
