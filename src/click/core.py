@@ -2760,7 +2760,7 @@ class Option(Parameter):
             extra.append(_("required"))
 
         if extra:
-            extra_str = ";".join(extra)
+            extra_str = "; ".join(extra)
             help = f"{help}  [{extra_str}]" if help else f"[{extra_str}]"
 
         return ("; " if any_prefix_is_slash else " / ").join(rv), help
