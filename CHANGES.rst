@@ -3,7 +3,8 @@
 Version 8.1.0
 -------------
 
-Unreleased
+-   An an argument to ``Path`` which mirrors writable/readable, but for
+    executable bits. :issue:`1961`
 
 -   Drop support for Python 3.6. :pr:`2129`
 -   Remove previously deprecated code. :pr:`2130`
