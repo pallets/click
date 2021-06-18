@@ -22,6 +22,8 @@ Version 8.1.0
     without parentheses. :issue:`1359`
 -   The ``Path`` type can check whether the target is executable.
     :issue:`1961`
+-   ``Command.show_default`` overrides ``Context.show_default``, instead
+    of the other way around. :issue:`1963`
 
 
 Version 8.0.4
