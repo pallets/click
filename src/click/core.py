@@ -2748,7 +2748,8 @@ class Option(Parameter):
             else:
                 default_string = str(default_value)
 
-            extra.append(_("default: {default}").format(default=default_string))
+            if default_string:
+                extra.append(_("default: {default}").format(default=default_string))
 
         if isinstance(self.type, types._NumberRangeBase):
             range_str = self.type._describe_range()
