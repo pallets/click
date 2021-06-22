@@ -303,7 +303,7 @@ class BashComplete(ShellComplete):
         import subprocess
 
         output = subprocess.run(["bash", "--version"], stdout=subprocess.PIPE)
-        match = re.search(r"version (\d)\.(\d)\.\d", output.stdout.decode())
+        match = re.search(r"(\d+)\.(\d+)\.\d", output.stdout.decode())
 
         if match is not None:
             major, minor = match.groups()
