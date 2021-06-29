@@ -31,7 +31,7 @@ class ClickException(Exception):
         self.message = message
 
     def format_message(self) -> str:
-        return self.message
+        return _("Error: {message}").format(message=self.message)
 
     def __str__(self) -> str:
         return self.message
@@ -40,7 +40,7 @@ class ClickException(Exception):
         if file is None:
             file = get_text_stderr()
 
-        echo(_("Error: {message}").format(message=self.format_message()), file=file)
+        echo(self.format_message(), file=file)
 
 
 class UsageError(ClickException):

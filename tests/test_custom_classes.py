@@ -1,3 +1,6 @@
+from abc import ABCMeta
+from typing import IO
+
 import click
 
 
@@ -110,3 +113,29 @@ def test_group_group_class_self(runner):
     group = CustomGroup()
     subgroup = group.group()(lambda: None)
     assert type(subgroup) is CustomGroup
+
+
+def test_custom_exception_class():
+    """Subclasses of click.ClickException should be able to override
+    the default message start "Error: {message}" """
+
+    class CustomException(click.ClickException):
+        def format_message(self) -> str:
+            return f"CustomError: {self.message}"
+
+    class MockStdIO(IO, metaclass=ABCMeta):
+        value = None
+
+        def write(self, *args, **kwargs):
+            self.value = args[0]
+
+    try:
+        raise CustomException("Bad things happened")
+    except CustomException as excinfo:
+        exc = excinfo
+
+    mock_file = MockStdIO()
+    exc.show(mock_file)
+
+    assert isinstance(exc, click.ClickException)
+    assert str(mock_file.value.strip()) == "CustomError: Bad things happened"
