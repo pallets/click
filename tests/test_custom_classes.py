@@ -1,5 +1,4 @@
-from abc import ABCMeta
-from typing import IO
+import io
 
 import click
 
@@ -123,19 +122,6 @@ def test_custom_exception_class():
         def format_message(self) -> str:
             return f"CustomError: {self.message}"
 
-    class MockStdIO(IO, metaclass=ABCMeta):
-        value = None
-
-        def write(self, *args, **kwargs):
-            self.value = args[0]
-
-    try:
-        raise CustomException("Bad things happened")
-    except CustomException as excinfo:
-        exc = excinfo
-
-    mock_file = MockStdIO()
-    exc.show(mock_file)
-
-    assert isinstance(exc, click.ClickException)
-    assert str(mock_file.value.strip()) == "CustomError: Bad things happened"
+    mock_file = io.StringIO()
+    CustomException("Bad things happened").show(mock_file)
+    assert str(mock_file.getvalue().strip()) == "CustomError: Bad things happened"
