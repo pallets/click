@@ -4,6 +4,7 @@ import re
 import pytest
 
 import click
+from click import Option
 
 
 def test_prefixes(runner):
@@ -763,3 +764,22 @@ def test_type_from_flag_value():
     assert param.type is click.INT
     param = click.Option(["-b", "x"], flag_value=8)
     assert param.type is click.INT
+
+
+@pytest.mark.parametrize(
+    ("option", "expected"),
+    [
+        # Not boolean flags
+        pytest.param(Option(["-a"], type=int), False, id="int option"),
+        pytest.param(Option(["-a"], type=bool), False, id="bool non-flag [None]"),
+        pytest.param(Option(["-a"], default=True), False, id="bool non-flag [True]"),
+        pytest.param(Option(["-a"], default=False), False, id="bool non-flag [False]"),
+        pytest.param(Option(["-a"], flag_value=1), False, id="non-bool flag_value"),
+        # Boolean flags
+        pytest.param(Option(["-a"], is_flag=True), True, id="is_flag=True"),
+        pytest.param(Option(["-a/-A"]), True, id="secondary option [implicit flag]"),
+        pytest.param(Option(["-a"], flag_value=True), True, id="bool flag_value"),
+    ],
+)
+def test_is_bool_flag_is_correctly_set(option, expected):
+    assert option.is_bool_flag is expected

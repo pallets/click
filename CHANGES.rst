@@ -5,6 +5,9 @@ Version 8.0.2
 
 Unreleased
 
+-   ``is_bool_flag`` is not set to ``True`` if ``is_flag`` is ``False``.
+    :issue:`1925`
+
 
 Version 8.0.1
 -------------
