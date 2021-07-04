@@ -2461,7 +2461,7 @@ class Option(Parameter):
     def __init__(
         self,
         param_decls: t.Optional[t.Sequence[str]] = None,
-        show_default: bool = False,
+        show_default: t.Union[bool, str] = False,
         prompt: t.Union[bool, str] = False,
         confirmation_prompt: t.Union[bool, str] = False,
         prompt_required: bool = True,
