@@ -339,12 +339,17 @@ Example usage::
 Showing Progress Bars
 ---------------------
 
-.. versionadded:: 2.0
-
 Sometimes, you have command line scripts that need to process a lot of data,
 but you want to quickly show the user some progress about how long that
 will take.  Click supports simple progress bar rendering for that through
 the :func:`progressbar` function.
+
+.. note::
+
+    If you find that you have requirements beyond what Click's progress
+    bar supports, try using `tqdm`_.
+
+    .. _tqdm: https://tqdm.github.io/
 
 The basic usage is very simple: the idea is that you have an iterable that
 you want to operate on.  For each item in the iterable it might take some
