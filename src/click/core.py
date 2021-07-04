@@ -2461,7 +2461,7 @@ class Option(Parameter):
     def __init__(
         self,
         param_decls: t.Optional[t.Sequence[str]] = None,
-        show_default: bool = False,
+        show_default: t.Union[bool, str] = False,
         prompt: t.Union[bool, str] = False,
         confirmation_prompt: t.Union[bool, str] = False,
         prompt_required: bool = True,
@@ -2748,7 +2748,8 @@ class Option(Parameter):
             else:
                 default_string = str(default_value)
 
-            extra.append(_("default: {default}").format(default=default_string))
+            if default_string:
+                extra.append(_("default: {default}").format(default=default_string))
 
         if isinstance(self.type, types._NumberRangeBase):
             range_str = self.type._describe_range()
