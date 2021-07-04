@@ -27,6 +27,8 @@ Version 8.1.0
 -   Parameter decorators and ``@group`` handles ``cls=None`` the same as
     not passing ``cls``. ``@option`` handles ``help=None`` the same as
     not passing ``help``. :issue:`#1959`
+-   Help text passed to ``Option`` is processed the same way as using
+    the ``@option`` decorator. :issue:`1985`
 
 
 Version 8.0.4

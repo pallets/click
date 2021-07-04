@@ -297,9 +297,6 @@ def option(*param_decls: str, **attrs: t.Any) -> t.Callable[[FC], FC]:
     def decorator(f: FC) -> FC:
         # Issue 926, copy attrs, so pre-defined options can re-use the same cls=
         option_attrs = attrs.copy()
-
-        if option_attrs.get("help"):
-            option_attrs["help"] = inspect.cleandoc(option_attrs["help"])
         OptionClass = option_attrs.pop("cls", None) or Option
         _param_memo(f, OptionClass(param_decls, **option_attrs))
         return f

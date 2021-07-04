@@ -2416,6 +2416,10 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
 
     .. versionchanged:: 8.1.0
+        Help text indentation is cleaned here instead of only in the
+        ``@option`` decorator.
+
+    .. versionchanged:: 8.1.0
         The ``show_default`` parameter overrides
         ``Context.show_default``.
 
@@ -2449,6 +2453,9 @@ class Option(Parameter):
         show_envvar: bool = False,
         **attrs: t.Any,
     ) -> None:
+        if help:
+            help = inspect.cleandoc(help)
+
         default_is_missing = "default" not in attrs
         super().__init__(param_decls, type=type, multiple=multiple, **attrs)
 
