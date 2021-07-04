@@ -10,6 +10,8 @@ Unreleased
 -   Bash version detection is locale independent. :issue:`1940`
 -   Empty ``default`` value is not shown for ``multiple=True``.
     :issue:`1969`
+-   Fix shell completion for arguments that start with a forward slash
+    such as absolute file paths. :issue:`1929`
 
 
 Version 8.0.1
