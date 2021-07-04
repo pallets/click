@@ -2590,7 +2590,7 @@ class Option(Parameter):
         for decl in decls:
             if decl.isidentifier():
                 if name is not None:
-                    raise TypeError("Name defined twice")
+                    raise TypeError(f"Name '{name}' defined twice")
                 name = decl
             else:
                 split_char = ";" if decl[:1] == "/" else "/"
