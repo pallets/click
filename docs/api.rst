@@ -141,6 +141,8 @@ Types
 
 .. autoclass:: FloatRange
 
+.. autoclass:: DateTime
+
 .. autoclass:: Tuple
 
 .. autoclass:: ParamType

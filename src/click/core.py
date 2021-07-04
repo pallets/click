@@ -2197,7 +2197,7 @@ class Parameter:
         self, ctx: Context, call: bool = True
     ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
         """Get the default for the parameter. Tries
-        :meth:`Context.lookup_value` first, then the local default.
+        :meth:`Context.lookup_default` first, then the local default.
 
         :param ctx: Current context.
         :param call: If the default is a callable, call it. Disable to
@@ -2461,7 +2461,7 @@ class Option(Parameter):
     def __init__(
         self,
         param_decls: t.Optional[t.Sequence[str]] = None,
-        show_default: bool = False,
+        show_default: t.Union[bool, str] = False,
         prompt: t.Union[bool, str] = False,
         confirmation_prompt: t.Union[bool, str] = False,
         prompt_required: bool = True,
@@ -2528,7 +2528,7 @@ class Option(Parameter):
             self.type = types.convert_type(None, flag_value)
 
         self.is_flag: bool = is_flag
-        self.is_bool_flag = isinstance(self.type, types.BoolParamType)
+        self.is_bool_flag = is_flag and isinstance(self.type, types.BoolParamType)
         self.flag_value: t.Any = flag_value
 
         # Counting
@@ -2590,7 +2590,7 @@ class Option(Parameter):
         for decl in decls:
             if decl.isidentifier():
                 if name is not None:
-                    raise TypeError("Name defined twice")
+                    raise TypeError(f"Name '{name}' defined twice")
                 name = decl
             else:
                 split_char = ";" if decl[:1] == "/" else "/"
@@ -2748,7 +2748,8 @@ class Option(Parameter):
             else:
                 default_string = str(default_value)
 
-            extra.append(_("default: {default}").format(default=default_string))
+            if default_string:
+                extra.append(_("default: {default}").format(default=default_string))
 
         if isinstance(self.type, types._NumberRangeBase):
             range_str = self.type._describe_range()
@@ -2760,7 +2761,7 @@ class Option(Parameter):
             extra.append(_("required"))
 
         if extra:
-            extra_str = ";".join(extra)
+            extra_str = "; ".join(extra)
             help = f"{help}  [{extra_str}]" if help else f"[{extra_str}]"
 
         return ("; " if any_prefix_is_slash else " / ").join(rv), help
