@@ -2511,7 +2511,7 @@ class Option(Parameter):
             # flag if flag_value is set.
             self._flag_needs_value = flag_value is not None
 
-        if is_flag and default_is_missing:
+        if is_flag and default_is_missing and not self.required:
             self.default: t.Union[t.Any, t.Callable[[], t.Any]] = False
 
         if flag_value is None:

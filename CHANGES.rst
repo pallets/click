@@ -31,6 +31,8 @@ Version 8.1.0
     cleaned the same as using the ``@option`` and ``@command``
     decorators does. A command's ``epilog`` and ``short_help`` are also
     processed. :issue:`1985`
+-   A flag option with ``required=True`` requires that the flag is
+    passed instead of choosing the implicit default value. :issue:`1978`
 
 
 Version 8.0.4
