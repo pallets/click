@@ -2416,25 +2416,26 @@ class Option(Parameter):
 
     All other parameters are passed onwards to the parameter constructor.
 
-    :param show_default: controls if the default value should be shown on the
-                         help page. Normally, defaults are not shown. If this
-                         value is a string, it shows the string instead of the
-                         value. This is particularly useful for dynamic options.
-    :param show_envvar: controls if an environment variable should be shown on
-                        the help page.  Normally, environment variables
-                        are not shown.
-    :param prompt: if set to `True` or a non empty string then the user will be
-                   prompted for input.  If set to `True` the prompt will be the
-                   option name capitalized.
+    :param show_default: Controls if the default value should be shown
+        on the help page. Normally, defaults are not shown. If this
+        value is a string, it shows that string in parentheses instead
+        of the actual value. This is particularly useful for dynamic
+        options. For single option boolean flags, the default remains
+        hidden if its value is ``False``.
+    :param show_envvar: Controls if an environment variable should be
+        shown on the help page. Normally, environment ariables are not
+        shown.
+    :param prompt: If set to ``True`` or a non empty string then the
+        user will be prompted for input. If set to ``True`` the prompt
+        will be the option name capitalized.
     :param confirmation_prompt: Prompt a second time to confirm the
         value if it was prompted for. Can be set to a string instead of
         ``True`` to customize the message.
     :param prompt_required: If set to ``False``, the user will be
         prompted for input only when the option was specified as a flag
         without a value.
-    :param hide_input: if this is `True` then the input on the prompt will be
-                       hidden from the user.  This is useful for password
-                       input.
+    :param hide_input: If this is ``True`` then the input on the prompt
+        will be hidden from the user. This is useful for password input.
     :param is_flag: forces this option to act as a flag.  The default is
                     auto detection.
     :param flag_value: which value should be used for this flag if it's
@@ -2451,6 +2452,10 @@ class Option(Parameter):
                                context.
     :param help: the help string.
     :param hidden: hide this option from help outputs.
+
+    .. versionchanged:: 8.1.0
+        The default of a single option boolean flag is not shown if the
+        default value is ``False``.
 
     .. versionchanged:: 8.0.1
         ``type`` is detected from ``flag_value`` if given.
@@ -2745,6 +2750,8 @@ class Option(Parameter):
                 default_string = split_opt(
                     (self.opts if self.default else self.secondary_opts)[0]
                 )[1]
+            elif self.is_bool_flag and not self.secondary_opts and not default_value:
+                default_string = ""
             else:
                 default_string = str(default_value)
 
