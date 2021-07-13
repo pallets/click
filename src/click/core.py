@@ -2853,6 +2853,14 @@ class Option(Parameter):
                 value = self.flag_value
                 source = ParameterSource.COMMANDLINE
 
+        elif (
+            self.multiple
+            and value is not None
+            and any(v is _flag_needs_value for v in value)
+        ):
+            value = [self.flag_value if v is _flag_needs_value else v for v in value]
+            source = ParameterSource.COMMANDLINE
+
         # The value wasn't set, or used the param's default, prompt if
         # prompting is enabled.
         elif (

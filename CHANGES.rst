@@ -24,6 +24,8 @@ Unreleased
     :issue:`2072`
 -   Default values are not cast to the parameter type twice during
     processing. :issue:`2085`
+-   Options with ``multiple`` and ``flag_value`` use the flag value
+    instead of leaving an internal placeholder. :issue:`2001`
 
 
 Version 8.0.1
