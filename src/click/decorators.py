@@ -340,9 +340,8 @@ def version_option(
 
     if version is None and package_name is None:
         frame = inspect.currentframe()
-        assert frame is not None
-        assert frame.f_back is not None
-        f_globals = frame.f_back.f_globals if frame is not None else None
+        f_back = frame.f_back if frame is not None else None
+        f_globals = f_back.f_globals if f_back is not None else None
         # break reference cycle
         # https://docs.python.org/3/library/inspect.html#the-interpreter-stack
         del frame
