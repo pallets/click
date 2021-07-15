@@ -836,11 +836,20 @@ class Path(ParamType):
 
         if not is_dash:
             if self.resolve_path:
-                # realpath on Windows Python < 3.8 doesn't resolve symlinks
+                # Get the absolute directory containing the path.
+                dir_ = os.path.dirname(os.path.abspath(rv))
+
+                # Resolve a symlink. realpath on Windows Python < 3.9
+                # doesn't resolve symlinks. This might return a relative
+                # path even if the path to the link is absolute.
                 if os.path.islink(rv):
                     rv = os.readlink(rv)
 
-                rv = os.path.realpath(rv)
+                # Join dir_ with the resolved symlink. If the resolved
+                # path is relative, this will make it relative to the
+                # original containing directory. If it is absolute, this
+                # has no effect.
+                rv = os.path.join(dir_, rv)
 
             try:
                 st = os.stat(rv)
@@ -871,7 +880,7 @@ class Path(ParamType):
                     param,
                     ctx,
                 )
-            if self.writable and not os.access(value, os.W_OK):
+            if self.writable and not os.access(rv, os.W_OK):
                 self.fail(
                     _("{name} {filename!r} is not writable.").format(
                         name=self.name.title(), filename=os.fsdecode(value)
@@ -879,7 +888,7 @@ class Path(ParamType):
                     param,
                     ctx,
                 )
-            if self.readable and not os.access(value, os.R_OK):
+            if self.readable and not os.access(rv, os.R_OK):
                 self.fail(
                     _("{name} {filename!r} is not readable.").format(
                         name=self.name.title(), filename=os.fsdecode(value)

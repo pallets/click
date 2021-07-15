@@ -12,6 +12,8 @@ Unreleased
     :issue:`1969`
 -   Fix shell completion for arguments that start with a forward slash
     such as absolute file paths. :issue:`1929`
+-   ``Path`` type with ``resolve_path=True`` resolves relative symlinks
+    to be relative to the containing directory. :issue:`1921`
 
 
 Version 8.0.1
