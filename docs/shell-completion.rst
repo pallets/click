@@ -31,7 +31,7 @@ a special environment variable will put Click in completion mode.
 In order for completion to be used, the user needs to register a special
 function with their shell. The script is different for every shell, and
 Click will output it when called with ``_{PROG_NAME}_COMPLETE`` set to
-``{shell}_source``. ``{PROG_NAME}`` is the executable name in uppercase
+``source_{shell}``. ``{PROG_NAME}`` is the executable name in uppercase
 with dashes replaced by underscores. The built-in shells are ``bash``,
 ``zsh``, and ``fish``.
 
@@ -46,7 +46,7 @@ program name. This uses ``foo-bar`` as an example.
 
         .. code-block:: bash
 
-            eval "$(_FOO_BAR_COMPLETE=bash_source foo-bar)"
+            eval "$(_FOO_BAR_COMPLETE=source_bash foo-bar)"
 
     .. group-tab:: Zsh
 
@@ -54,7 +54,7 @@ program name. This uses ``foo-bar`` as an example.
 
         .. code-block:: zsh
 
-            eval "$(_FOO_BAR_COMPLETE=zsh_source foo-bar)"
+            eval "$(_FOO_BAR_COMPLETE=source_zsh foo-bar)"
 
     .. group-tab:: Fish
 
@@ -62,7 +62,7 @@ program name. This uses ``foo-bar`` as an example.
 
         .. code-block:: fish
 
-            eval (env _FOO_BAR_COMPLETE=fish_source foo-bar)
+            eval (env _FOO_BAR_COMPLETE=source_fish foo-bar)
 
         This is the same file used for the activation script method
         below. For Fish it's probably always easier to use that method.
@@ -81,7 +81,7 @@ to save your users a step.
 
         .. code-block:: bash
 
-            _FOO_BAR_COMPLETE=bash_source foo-bar > ~/.foo-bar-complete.bash
+            _FOO_BAR_COMPLETE=source_bash foo-bar > ~/.foo-bar-complete.bash
 
         Source the file in ``~/.bashrc``.
 
@@ -95,7 +95,7 @@ to save your users a step.
 
         .. code-block:: bash
 
-            _FOO_BAR_COMPLETE=zsh_source foo-bar > ~/.foo-bar-complete.zsh
+            _FOO_BAR_COMPLETE=source_zsh foo-bar > ~/.foo-bar-complete.zsh
 
         Source the file in ``~/.zshrc``.
 
@@ -109,7 +109,7 @@ to save your users a step.
 
         .. code-block:: fish
 
-            _FOO_BAR_COMPLETE=fish_source foo-bar > ~/.config/fish/completions/foo-bar.fish
+            _FOO_BAR_COMPLETE=source_fish foo-bar > ~/.config/fish/completions/foo-bar.fish
 
 After modifying the shell config, you need to start a new shell in order
 for the changes to be loaded.
@@ -282,4 +282,4 @@ the shell somehow.
 
 .. code-block:: text
 
-    _FOO_BAR_COMPLETE=mysh_source foo-bar
+    _FOO_BAR_COMPLETE=source_mysh foo-bar
