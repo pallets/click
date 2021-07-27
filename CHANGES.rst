@@ -20,6 +20,9 @@ Unreleased
     :issue:`2062`
 -   Fix overline and italic styles, which were incorrectly added when
     adding underline. :pr:`2058`
+-   Fix `prompt(..., err=True)` sending characters to `stdout`.
+    :issue:`2018`
+
 
 
 Version 8.0.1

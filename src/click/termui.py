@@ -24,10 +24,6 @@ if t.TYPE_CHECKING:
 
 V = t.TypeVar("V")
 
-# The prompt functions to use.  The doc tools currently override these
-# functions to customize how they work.
-visible_prompt_func: t.Callable[[str], str] = input
-
 _ansi_colors = {
     "black": 30,
     "red": 31,
@@ -50,10 +46,32 @@ _ansi_colors = {
 _ansi_reset_all = "\033[0m"
 
 
-def hidden_prompt_func(prompt: str) -> str:
+def visible_prompt_func(prompt: str, err: bool = False) -> str:
+    """
+    .. versionadded:: 8.0.2
+        Added the `err` parameter.
+
+    """
+    try:
+        sys.stdout = sys.__stderr__ if err else sys.__stdout__
+        return input(prompt)
+    finally:
+        sys.stdout = sys.__stdout__
+
+
+def hidden_prompt_func(prompt: str, err: bool = False) -> str:
+    """
+    .. versionadded:: 8.0.2
+        Added the `err` parameter.
+
+    """
     import getpass
 
-    return getpass.getpass(prompt)
+    try:
+        sys.stdout = sys.__stderr__ if err else sys.__stdout__
+        return getpass.getpass(prompt)
+    finally:
+        sys.stdout = sys.__stdout__
 
 
 def _build_prompt(
@@ -140,7 +158,7 @@ def prompt(
             echo(text.rstrip(" "), nl=False, err=err)
             # Echo a space to stdout to work around an issue where
             # readline causes backspace to clear the whole line.
-            return f(" ")
+            return f(" ", err=err)
         except (KeyboardInterrupt, EOFError):
             # getpass doesn't print a newline if the user aborts input with ^C.
             # Allegedly this behavior is inherited from getpass(3).
@@ -232,7 +250,7 @@ def confirm(
             # Write the prompt separately so that we get nice
             # coloring through colorama on Windows
             echo(prompt, nl=False, err=err)
-            value = visible_prompt_func("").lower().strip()
+            value = visible_prompt_func("", err=err).lower().strip()
         except (KeyboardInterrupt, EOFError):
             raise Abort() from None
         if value in ("y", "yes"):

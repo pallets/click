@@ -154,7 +154,7 @@ def test_confirm_repeat(runner):
 
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
 def test_prompts_abort(monkeypatch, capsys):
-    def f(_):
+    def f(prompt, err):
         raise KeyboardInterrupt()
 
     monkeypatch.setattr("click.termui.hidden_prompt_func", f)
@@ -263,8 +263,8 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     emulate_input("asdlkj\n")
     click.prompt("Prompt to stderr", err=True)
     out, err = capfd.readouterr()
-    assert out == " "
-    assert err == "Prompt to stderr:"
+    assert out == ""
+    assert err == "Prompt to stderr: "
 
     emulate_input("y\n")
     click.confirm("Prompt to stdin")

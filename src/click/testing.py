@@ -275,17 +275,23 @@ class CliRunner:
             )
 
         @_pause_echo(echo_input)  # type: ignore
-        def visible_input(prompt: t.Optional[str] = None) -> str:
-            sys.stdout.write(prompt or "")
+        def visible_input(
+            prompt: t.Optional[str] = None, err: t.Optional[bool] = False
+        ) -> str:
+            out = sys.stderr if err else sys.stdout
+            out.write(prompt or "")
             val = text_input.readline().rstrip("\r\n")
-            sys.stdout.write(f"{val}\n")
-            sys.stdout.flush()
+            out.write(f"{val}\n")
+            out.flush()
             return val
 
         @_pause_echo(echo_input)  # type: ignore
-        def hidden_input(prompt: t.Optional[str] = None) -> str:
-            sys.stdout.write(f"{prompt or ''}\n")
-            sys.stdout.flush()
+        def hidden_input(
+            prompt: t.Optional[str] = None, err: t.Optional[bool] = False
+        ) -> str:
+            out = sys.stderr if err else sys.stdout
+            out.write(f"{prompt or ''}\n")
+            out.flush()
             return text_input.readline().rstrip("\r\n")
 
         @_pause_echo(echo_input)  # type: ignore
