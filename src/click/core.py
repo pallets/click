@@ -1467,7 +1467,7 @@ class MultiCommand(Command):
         command. This can be set or changed later with the
         :meth:`result_callback` decorator.
     :param disable_double_dash: if this is set to 'True' using '--' between the
-        group name and the command name, and between subcommands is disabled and will
+        group name and the command name and between subcommands is disabled and will
         print an error message to the user. The default is 'False' in order to save the
         originall behaviour.
     """

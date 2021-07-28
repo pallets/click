@@ -358,7 +358,7 @@ All you have to do is to pass ``disable_double_dash=True`` to your multicommand:
         click.echo('bdist_wheel called')
 
 This will also work when using ``chain=True`` in your multicommand. In that case using
-'--' will be also impossible  between subcommands too. Switching double-dash off may be
+'--' will be also impossible  between subcommands. Switching double-dash off may be
 used with :class:`CommandCollection` instance. To do that you should pass
 disable_double_dash=True to your `CommandCollection` instance.
 
