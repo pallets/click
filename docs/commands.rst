@@ -331,6 +331,65 @@ be handled are not yet available when the callback fires.
     It is currently not possible for chain commands to be nested.  This
     will be fixed in future versions of Click.
 
+Multi Command Switching Off The '--' Separator
+----------------------------------------------
+.. versionadded:: 8.0.2
+
+The default behaviour of Click is that you can use double-dash separator ('--') between
+the command and subcommands and also between subcommands when nesting them through
+multicommand instance. You can switch that off and using '--' will generate a user Error
+``can't use '--' separator between a command and a subcommand and between subcommands``.
+All you have to do is to pass ``disable_double_dash=True`` to your multicommand:
+
+.. click:example::
+
+    @click.group(disable_double_dash=True)
+    def cli():
+        pass
+
+
+    @cli.command('sdist')
+    def sdist():
+        click.echo('sdist called')
+
+
+    @cli.command('bdist_wheel')
+    def bdist_wheel():
+        click.echo('bdist_wheel called')
+
+This will also work when using ``chain=True`` in your multicommand. In that case using
+'--' will be also impossible  between subcommands too. Switching double-dash off may be
+used with :class:`CommandCollection` instance. To do that you should pass
+disable_double_dash=True to your `CommandCollection` instance.
+
+.. click:example::
+
+    import click
+
+    @click.group()
+    def cli1():
+        pass
+
+    @cli1.command()
+    def cmd1():
+        """Command on cli1"""
+
+    @click.group()
+    def cli2():
+        pass
+
+    @cli2.command()
+    def cmd2():
+        """Command on cli2"""
+
+    cli = click.CommandCollection(sources=[cli1, cli2], disable_double_dash=True)
+
+    if __name__ == '__main__':
+        cli()
+
+.. note::
+
+    It is still possible to use '--' between a command and an argument.
 
 Multi Command Pipelines
 -----------------------

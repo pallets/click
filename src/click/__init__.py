@@ -32,6 +32,7 @@ from .exceptions import ClickException as ClickException
 from .exceptions import FileError as FileError
 from .exceptions import MissingParameter as MissingParameter
 from .exceptions import NoSuchOption as NoSuchOption
+from .exceptions import NotAllowedDoubleDash as NotAllowedDoubleDash
 from .exceptions import UsageError as UsageError
 from .formatting import HelpFormatter as HelpFormatter
 from .formatting import wrap_text as wrap_text
