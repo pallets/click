@@ -389,7 +389,7 @@ disable_double_dash=True to your `CommandCollection` instance.
 
 .. note::
 
-    It is still possible to use '--' between a command and an argument.
+    Using '--' between multicommand and its argument will generate the same user error.
 
 Multi Command Pipelines
 -----------------------
