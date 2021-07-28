@@ -76,7 +76,7 @@ def test_cast_multi_default(runner, nargs, multiple, default, expect):
     else:
         param = click.Option(["-a"], nargs=nargs, multiple=multiple, default=default)
 
-    cli = click.Command("cli", params=[param], callback=lambda a: a)
+    cli = click.Command("cli", callback=lambda a: a, params=[param])
     result = runner.invoke(cli, standalone_mode=False)
     assert result.exception is None
     assert result.return_value == expect
@@ -94,8 +94,8 @@ def test_cast_multi_default(runner, nargs, multiple, default, expect):
 def test_path_type(runner, cls, expect):
     cli = click.Command(
         "cli",
-        params=[click.Argument(["p"], type=click.Path(path_type=cls))],
         callback=lambda p: p,
+        params=[click.Argument(["p"], type=click.Path(path_type=cls))],
     )
     result = runner.invoke(cli, ["a/b/c.txt"], standalone_mode=False)
     assert result.exception is None

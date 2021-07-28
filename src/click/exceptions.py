@@ -285,3 +285,14 @@ class Exit(RuntimeError):
 
     def __init__(self, code: int = 0) -> None:
         self.exit_code = code
+
+
+class NotAllowedDoubleDash(UsageError):
+    """Raised if '--' argument appears in sys.argv and multicommand.disable_double_dash
+    is set to 'True'.
+
+       .. versionadded:: 8.0.2
+    """
+
+    def __init__(self, message: str, ctx: t.Optional["Context"] = None) -> None:
+        super().__init__(message, ctx)

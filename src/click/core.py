@@ -1070,6 +1070,7 @@ class BaseCommand:
                     # even always obvious that `rv` indicates success/failure
                     # by its truthiness/falsiness
                     ctx.exit()
+
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
                 raise Abort()
@@ -1444,6 +1445,9 @@ class MultiCommand(Command):
     dispatches to subcommands.  The most common version is the
     :class:`Group`.
 
+    .. versionchanged:: 8.0.2
+       Added the `disable_double_dash` parameter.
+
     :param invoke_without_command: this controls how the multi command itself
                                    is invoked.  By default it's only invoked
                                    if a subcommand is provided.
@@ -1462,6 +1466,10 @@ class MultiCommand(Command):
     :param result_callback: The result callback to attach to this multi
         command. This can be set or changed later with the
         :meth:`result_callback` decorator.
+    :param disable_double_dash: if this is set to 'True' using '--' between the
+        group name and the command name, and between subcommands is disabled and will
+        print an error message to the user. The default is 'False' in order to save the
+        originall behaviour.
     """
 
     allow_extra_args = True
@@ -1475,6 +1483,7 @@ class MultiCommand(Command):
         subcommand_metavar: t.Optional[str] = None,
         chain: bool = False,
         result_callback: t.Optional[t.Callable[..., t.Any]] = None,
+        disable_double_dash: bool = False,
         **attrs: t.Any,
     ) -> None:
         super().__init__(name, **attrs)
@@ -1505,7 +1514,10 @@ class MultiCommand(Command):
                         " optional arguments."
                     )
 
+        self.disable_double_dash = disable_double_dash
+
     def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
+
         info_dict = super().to_info_dict(ctx)
         commands = {}
 

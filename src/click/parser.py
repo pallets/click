@@ -29,7 +29,9 @@ from gettext import ngettext
 from .exceptions import BadArgumentUsage
 from .exceptions import BadOptionUsage
 from .exceptions import NoSuchOption
+from .exceptions import NotAllowedDoubleDash
 from .exceptions import UsageError
+
 
 if t.TYPE_CHECKING:
     import typing_extensions as te
@@ -37,6 +39,7 @@ if t.TYPE_CHECKING:
     from .core import Context
     from .core import Option as CoreOption
     from .core import Parameter as CoreParameter
+
 
 V = t.TypeVar("V")
 
@@ -332,10 +335,37 @@ class OptionParser:
         appear on the command line.  If arguments appear multiple times they
         will be memorized multiple times as well.
         """
+        # This part checks the type of a self.ctx.command. If it is a Group
+        # or CommandCollection instance and '--' separator is used with
+        # multicommand.disable_double_dash=True it raises an NotAllowedDoubleDash
+        # exception.
+        TYPECHECKER_TUPLE = (
+            "<class 'click.core.Group'>",
+            "<class 'click.core.CommandCollection'>",
+        )
+        try:
+            typechecker = type(self.ctx.command)
+            strtypechecker = str(typechecker)
+            if (
+                strtypechecker in TYPECHECKER_TUPLE
+                and "--" in args
+                and self.ctx.command.disable_double_dash is True
+            ):
+                raise NotAllowedDoubleDash(
+                    "can't use '--' separator between a command and a subcommand"
+                    " and between subcommands",
+                    self.ctx,
+                )
+        # if self.ctx is None we handle the AttributeError silently
+        except AttributeError:
+            pass
+
         state = ParsingState(args)
+
         try:
             self._process_args_for_options(state)
             self._process_args_for_args(state)
+
         except UsageError:
             if self.ctx is None or not self.ctx.resilient_parsing:
                 raise

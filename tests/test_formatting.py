@@ -332,7 +332,7 @@ def test_global_show_default(runner):
 
 
 def test_formatting_with_options_metavar_empty(runner):
-    cli = click.Command("cli", options_metavar="", params=[click.Argument(["var"])])
+    cli = click.Command("cli", params=[click.Argument(["var"])], options_metavar="")
     result = runner.invoke(cli, ["--help"])
     assert "Usage: cli VAR\n" in result.output
 

@@ -9,7 +9,8 @@ Unreleased
 Version 8.0.2
 -------------
 
-Unreleased
+-   Using double-dash separator between command and subcommands
+-   can be turned off. :issue:`619`
 
 
 Version 8.0.1

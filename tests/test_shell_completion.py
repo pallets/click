@@ -93,11 +93,11 @@ def test_argument_order():
 def test_argument_default():
     cli = Command(
         "cli",
-        add_help_option=False,
         params=[
             Argument(["a"], type=Choice(["a"]), default="a"),
             Argument(["b"], type=Choice(["b"]), default="b"),
         ],
+        add_help_option=False,
     )
     assert _get_words(cli, [], "") == ["a"]
     assert _get_words(cli, ["a"], "b") == ["b"]
@@ -128,11 +128,11 @@ def test_path_types(type, expect):
 def test_option_flag():
     cli = Command(
         "cli",
-        add_help_option=False,
         params=[
             Option(["--on/--off"]),
             Argument(["a"], type=Choice(["a1", "a2", "b"])),
         ],
+        add_help_option=False,
     )
     assert _get_words(cli, [], "--") == ["--on", "--off"]
     # flag option doesn't take value, use choice argument
@@ -209,11 +209,11 @@ def test_argument_nargs():
 def test_double_dash():
     cli = Command(
         "cli",
-        add_help_option=False,
         params=[
             Option(["--opt"]),
             Argument(["name"], type=Choice(["name", "--", "-o", "--opt"])),
         ],
+        add_help_option=False,
     )
     assert _get_words(cli, [], "-") == ["--opt"]
     assert _get_words(cli, ["value"], "-") == ["--opt"]
@@ -227,12 +227,12 @@ def test_hidden():
         commands=[
             Command(
                 "hidden",
-                add_help_option=False,
-                hidden=True,
                 params=[
                     Option(["-a"]),
                     Option(["-b"], type=Choice(["a", "b"]), hidden=True),
                 ],
+                add_help_option=False,
+                hidden=True,
             )
         ],
     )
