@@ -1132,6 +1132,7 @@ class BaseCommand:
         rv = shell_complete(self, ctx_args, prog_name, complete_var, instruction)
 
         import platform
+
         if platform.system() == "Linux":
             _fast_exit(rv)
         else:
