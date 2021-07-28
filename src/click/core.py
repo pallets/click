@@ -1,6 +1,7 @@
 import enum
 import errno
 import os
+import platform
 import sys
 import typing
 import typing as t
@@ -1130,7 +1131,11 @@ class BaseCommand:
         from .shell_completion import shell_complete
 
         rv = shell_complete(self, ctx_args, prog_name, complete_var, instruction)
-        _fast_exit(rv)
+
+        if platform.system() == "Linux":
+            _fast_exit(rv)
+        else:
+            sys.exit(rv)
 
     def __call__(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Alias for :meth:`main`."""
