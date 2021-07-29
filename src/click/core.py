@@ -1143,12 +1143,14 @@ class Command(BaseCommand):
     Click.  A basic command handles command line parsing and might dispatch
     more parsing to commands nested below it.
 
-    .. versionchanged:: 2.0
-       Added the `context_settings` parameter.
+    .. versionchanged:: 8.0.2
+       Added the `disable_double_dash` parameter.
     .. versionchanged:: 8.0
        Added repr showing the command name
     .. versionchanged:: 7.1
        Added the `no_args_is_help` parameter.
+    .. versionchanged:: 2.0
+       Added the `context_settings` parameter.
 
     :param name: the name of the command to use unless a group overrides it.
     :param context_settings: an optional dictionary with defaults that are
@@ -1168,9 +1170,12 @@ class Command(BaseCommand):
                             If enabled this will add ``--help`` as argument
                             if no arguments are passed
     :param hidden: hide this command from help outputs.
-
-    :param deprecated: issues a message indicating that
-                             the command is deprecated.
+    :param deprecated: issues a message indicating that the command is deprecated.
+    :param disable_double_dash: if this is set to 'True' using '--' between the group
+                                name and the command name and between subcommands is
+                                disabled and will print an error message to the user.
+                                The default is 'False' in order to save the originall
+                                behaviour.
     """
 
     def __init__(
@@ -1187,6 +1192,7 @@ class Command(BaseCommand):
         no_args_is_help: bool = False,
         hidden: bool = False,
         deprecated: bool = False,
+        disable_double_dash: bool = False,
     ) -> None:
         super().__init__(name, context_settings)
         #: the callback to execute when the command fires.  This might be
@@ -1210,6 +1216,7 @@ class Command(BaseCommand):
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
+        self.disable_double_dash = disable_double_dash
 
     def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
         info_dict = super().to_info_dict(ctx)
@@ -1445,9 +1452,6 @@ class MultiCommand(Command):
     dispatches to subcommands.  The most common version is the
     :class:`Group`.
 
-    .. versionchanged:: 8.0.2
-       Added the `disable_double_dash` parameter.
-
     :param invoke_without_command: this controls how the multi command itself
                                    is invoked.  By default it's only invoked
                                    if a subcommand is provided.
@@ -1466,10 +1470,6 @@ class MultiCommand(Command):
     :param result_callback: The result callback to attach to this multi
         command. This can be set or changed later with the
         :meth:`result_callback` decorator.
-    :param disable_double_dash: if this is set to 'True' using '--' between the
-        group name and the command name and between subcommands is disabled and will
-        print an error message to the user. The default is 'False' in order to save the
-        originall behaviour.
     """
 
     allow_extra_args = True
@@ -1483,7 +1483,6 @@ class MultiCommand(Command):
         subcommand_metavar: t.Optional[str] = None,
         chain: bool = False,
         result_callback: t.Optional[t.Callable[..., t.Any]] = None,
-        disable_double_dash: bool = False,
         **attrs: t.Any,
     ) -> None:
         super().__init__(name, **attrs)
@@ -1513,8 +1512,6 @@ class MultiCommand(Command):
                         "Multi commands in chain mode cannot have"
                         " optional arguments."
                     )
-
-        self.disable_double_dash = disable_double_dash
 
     def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
 

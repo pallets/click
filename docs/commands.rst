@@ -389,7 +389,8 @@ disable_double_dash=True to your `CommandCollection` instance.
 
 .. note::
 
-    Using '--' between multicommand and its argument will generate the same user error.
+    Using '--' between multicommand and its argument will generate the same user Error.
+    ``disable_double_dash=True`` parameter is implemented on the Command level.
 
 Multi Command Pipelines
 -----------------------

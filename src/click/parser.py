@@ -343,7 +343,9 @@ class OptionParser:
             "<class 'click.core.Group'>",
             "<class 'click.core.CommandCollection'>",
         )
-        try:
+        if self.ctx is None:
+            pass
+        else:
             typechecker = type(self.ctx.command)
             strtypechecker = str(typechecker)
             if (
@@ -356,9 +358,6 @@ class OptionParser:
                     " and between subcommands",
                     self.ctx,
                 )
-        # if self.ctx is None we handle the AttributeError silently
-        except AttributeError:
-            pass
 
         state = ParsingState(args)
 
