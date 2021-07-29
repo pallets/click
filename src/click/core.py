@@ -1143,7 +1143,6 @@ class BaseCommand:
         rv = shell_complete(self, ctx_args, prog_name, complete_var, instruction)
         _fast_exit(rv)
 
-
     def __call__(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Alias for :meth:`main`."""
         return self.main(*args, **kwargs)

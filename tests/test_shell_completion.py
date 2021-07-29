@@ -1,6 +1,6 @@
-import textwrap
 import subprocess
 import sys
+import textwrap
 
 import pytest
 
