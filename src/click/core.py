@@ -50,11 +50,19 @@ def _fast_exit(code: int) -> "te.NoReturn":
     """Low-level exit that skips Python's cleanup but speeds up exit by
     about 10ms for things like shell completion.
 
+    Fallback to sys.exit() on non-Linux platforms.
+
     :param code: Exit code.
     """
-    sys.stdout.flush()
-    sys.stderr.flush()
-    os._exit(code)
+
+    import platform
+
+    if platform.system() == "Linux":
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(code)
+    else:
+        sys.exit(code)
 
 
 def _complete_visible_commands(
@@ -1130,13 +1138,8 @@ class BaseCommand:
         from .shell_completion import shell_complete
 
         rv = shell_complete(self, ctx_args, prog_name, complete_var, instruction)
+        _fast_exit(rv)
 
-        import platform
-
-        if platform.system() == "Linux":
-            _fast_exit(rv)
-        else:
-            sys.exit(rv)
 
     def __call__(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Alias for :meth:`main`."""
