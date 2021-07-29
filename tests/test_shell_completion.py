@@ -1,3 +1,5 @@
+import textwrap
+import subprocess
 import sys
 
 import pytest
@@ -320,3 +322,27 @@ def test_choice_case_sensitive(value, expect):
     )
     completions = _get_words(cli, ["-a"], "a")
     assert completions == expect
+
+
+def test_fast_exit_multiprocessing():
+
+    script = textwrap.dedent(
+        """
+        from multiprocessing import SimpleQueue
+        from click.core import _fast_exit
+
+        my_queue = SimpleQueue()
+        _fast_exit(0)
+        """
+    ).strip()
+
+    command = [
+        sys.executable,
+        "-c",
+        script,
+    ]
+
+    result = subprocess.run(command, shell=False, capture_output=True)
+    stderr = result.stderr.decode("UTF-8")
+
+    assert "UserWarning: resource_tracker:" not in stderr
