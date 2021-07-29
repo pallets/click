@@ -18,6 +18,8 @@ Unreleased
     :issue:`1969`
 -   Fix shell completion for arguments that start with a forward slash
     such as absolute file paths. :issue:`1929`
+-   Fix use of ``_fast_exit`` on non-Linux platforms.
+    :issue:`2017`
 
 
 Version 8.0.1

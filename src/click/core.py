@@ -53,6 +53,9 @@ def _fast_exit(code: int) -> "te.NoReturn":
     Fallback to sys.exit() on non-Linux platforms.
 
     :param code: Exit code.
+
+    .. versionchanged:: 8.0.2
+        Use ``sys.exit`` on non-Linux platforms.
     """
 
     import platform
