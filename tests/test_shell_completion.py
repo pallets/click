@@ -345,4 +345,4 @@ def test_fast_exit_multiprocessing():
     result = subprocess.run(command, shell=False, capture_output=True)
     stderr = result.stderr.decode("UTF-8")
 
-    assert "UserWarning: resource_tracker:" not in stderr
+    assert stderr == ""
