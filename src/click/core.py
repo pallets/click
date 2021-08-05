@@ -1376,7 +1376,7 @@ class Command(BaseCommand):
         opts, args, param_order = parser.parse_args(args=args)
 
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
-            value = param.handle_parse_result(ctx, opts)
+            param.handle_parse_result(ctx, opts)
 
         if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
             ctx.fail(
@@ -2353,7 +2353,7 @@ class Parameter:
 
         return rv
 
-    def handle_parse_result(self, ctx: Context, opts: t.Mapping[str, t.Any]) -> t.Any:
+    def handle_parse_result(self, ctx: Context, opts: t.Mapping[str, t.Any]) -> None:
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
             ctx.set_parameter_source(self.name, source)  # type: ignore
@@ -2368,8 +2368,6 @@ class Parameter:
 
         if self.expose_value:
             ctx.params[self.name] = value  # type: ignore
-
-        return value
 
     def get_help_record(self, ctx: Context) -> t.Optional[t.Tuple[str, str]]:
         pass
