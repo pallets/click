@@ -109,6 +109,27 @@ To show the default values when showing command help, use ``show_default=True``
 
    invoke(dots, args=['--help'])
 
+For single option boolean flags, the default remains hidden if the default
+value is False.
+
+.. click:example::
+
+    @click.command()
+    @click.option('--n', default=1, show_default=True)
+    @click.option("--gr", is_flag=True, show_default=True, default=False, help="Greet the world.")
+    @click.option("--br", is_flag=True, show_default=True, default=True, help="Add a thematic break")
+    def dots(n, gr, br):
+        if gr:
+            click.echo('Hello world!')
+        click.echo('.' * n)
+        if br:
+            click.echo('-' * n)
+
+.. click:run::
+
+   invoke(dots, args=['--help'])
+
+
 Multi Value Options
 -------------------
 

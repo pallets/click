@@ -322,12 +322,13 @@ def test_global_show_default(runner):
         pass
 
     result = runner.invoke(cli, ["--help"])
+    # the default to "--help" is not shown because it is False
     assert result.output.splitlines() == [
         "Usage: cli [OPTIONS]",
         "",
         "Options:",
         "  -f TEXT  Output file name  [default: out.txt]",
-        "  --help   Show this message and exit.  [default: False]",
+        "  --help   Show this message and exit.",
     ]
 
 
