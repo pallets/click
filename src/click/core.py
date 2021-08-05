@@ -46,17 +46,6 @@ F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 V = t.TypeVar("V")
 
 
-def _fast_exit(code: int) -> "te.NoReturn":
-    """Low-level exit that skips Python's cleanup but speeds up exit by
-    about 10ms for things like shell completion.
-
-    :param code: Exit code.
-    """
-    sys.stdout.flush()
-    sys.stderr.flush()
-    os._exit(code)
-
-
 def _complete_visible_commands(
     ctx: "Context", incomplete: str
 ) -> t.Iterator[t.Tuple[str, "Command"]]:
@@ -1130,7 +1119,7 @@ class BaseCommand:
         from .shell_completion import shell_complete
 
         rv = shell_complete(self, ctx_args, prog_name, complete_var, instruction)
-        _fast_exit(rv)
+        sys.exit(rv)
 
     def __call__(self, *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Alias for :meth:`main`."""

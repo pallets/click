@@ -1,5 +1,3 @@
-import sys
-
 import pytest
 
 from click.core import Argument
@@ -265,7 +263,6 @@ def test_completion_item_data():
 
 @pytest.fixture()
 def _patch_for_completion(monkeypatch):
-    monkeypatch.setattr("click.core._fast_exit", sys.exit)
     monkeypatch.setattr(
         "click.shell_completion.BashComplete._check_version", lambda self: True
     )
