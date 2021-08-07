@@ -23,9 +23,8 @@ all_colors = (
 
 @click.command()
 def cli():
-    """This script prints some colors.  If colorama is installed this will
-    also work on Windows.  It will also automatically remove all ANSI
-    styles if data is piped into a file.
+    """This script prints some colors. It will also automatically remove
+    all ANSI styles if data is piped into a file.
 
     Give it a try!
     """

@@ -109,6 +109,27 @@ To show the default values when showing command help, use ``show_default=True``
 
    invoke(dots, args=['--help'])
 
+For single option boolean flags, the default remains hidden if the default
+value is False.
+
+.. click:example::
+
+    @click.command()
+    @click.option('--n', default=1, show_default=True)
+    @click.option("--gr", is_flag=True, show_default=True, default=False, help="Greet the world.")
+    @click.option("--br", is_flag=True, show_default=True, default=True, help="Add a thematic break")
+    def dots(n, gr, br):
+        if gr:
+            click.echo('Hello world!')
+        click.echo('.' * n)
+        if br:
+            click.echo('-' * n)
+
+.. click:run::
+
+   invoke(dots, args=['--help'])
+
+
 Multi Value Options
 -------------------
 
@@ -448,27 +469,30 @@ useful for password input:
 
 .. click:example::
 
-    @click.command()
-    @click.option('--password', prompt=True, hide_input=True,
-                  confirmation_prompt=True)
-    def encrypt(password):
-        click.echo(f"Encrypting password to {password.encode('rot13')}")
+    import codecs
 
-What it looks like:
+    @click.command()
+    @click.option(
+        "--password", prompt=True, hide_input=True,
+        confirmation_prompt=True
+    )
+    def encode(password):
+        click.echo(f"encoded: {codecs.encode(password, 'rot13')}")
 
 .. click:run::
 
-    invoke(encrypt, input=['secret', 'secret'])
+    invoke(encode, input=['secret', 'secret'])
 
 Because this combination of parameters is quite common, this can also be
 replaced with the :func:`password_option` decorator:
 
-.. click:example::
+.. code-block:: python
 
     @click.command()
     @click.password_option()
     def encrypt(password):
-        click.echo(f"Encrypting password to {password.encode('rot13')}")
+        click.echo(f"encoded: to {codecs.encode(password, 'rot13')}")
+
 
 Dynamic Defaults for Prompts
 ----------------------------
@@ -483,28 +507,37 @@ prompted if the option isn't specified on the command line, you can do so
 by supplying a callable as the default value. For example, to get a default
 from the environment:
 
-.. click:example::
+.. code-block:: python
+
+    import os
 
     @click.command()
-    @click.option('--username', prompt=True,
-                  default=lambda: os.environ.get('USER', ''))
+    @click.option(
+        "--username", prompt=True,
+        default=lambda: os.environ.get("USER", "")
+    )
     def hello(username):
-        print("Hello,", username)
+        click.echo(f"Hello, {username}!")
 
 To describe what the default value will be, set it in ``show_default``.
 
 .. click:example::
 
+    import os
+
     @click.command()
-    @click.option('--username', prompt=True,
-                  default=lambda: os.environ.get('USER', ''),
-                  show_default='current user')
+    @click.option(
+        "--username", prompt=True,
+        default=lambda: os.environ.get("USER", ""),
+        show_default="current user"
+    )
     def hello(username):
-        print("Hello,", username)
+        click.echo(f"Hello, {username}!")
 
 .. click:run::
 
-   invoke(hello, args=['--help'])
+   invoke(hello, args=["--help"])
+
 
 Callbacks and Eager Options
 ---------------------------
@@ -816,41 +849,43 @@ Callbacks for Validation
 .. versionchanged:: 2.0
 
 If you want to apply custom validation logic, you can do this in the
-parameter callbacks.  These callbacks can both modify values as well as
-raise errors if the validation does not work.
+parameter callbacks. These callbacks can both modify values as well as
+raise errors if the validation does not work. The callback runs after
+type conversion. It is called for all sources, including prompts.
 
 In Click 1.0, you can only raise the :exc:`UsageError` but starting with
 Click 2.0, you can also raise the :exc:`BadParameter` error, which has the
 added advantage that it will automatically format the error message to
 also contain the parameter name.
 
-Example:
-
 .. click:example::
 
     def validate_rolls(ctx, param, value):
+        if isinstance(value, tuple):
+            return value
+
         try:
-            rolls, dice = map(int, value.split('d', 2))
-            return (dice, rolls)
+            rolls, _, dice = value.partition("d")
+            return int(dice), int(rolls)
         except ValueError:
-            raise click.BadParameter('rolls need to be in format NdM')
+            raise click.BadParameter("format must be 'NdM'")
 
     @click.command()
-    @click.option('--rolls', callback=validate_rolls, default='1d6')
+    @click.option(
+        "--rolls", type=click.UNPROCESSED, callback=validate_rolls,
+        default="1d6", prompt=True,
+    )
     def roll(rolls):
         sides, times = rolls
         click.echo(f"Rolling a {sides}-sided dice {times} time(s)")
 
-    if __name__ == '__main__':
-        roll()
-
-And what it looks like:
-
 .. click:run::
 
-    invoke(roll, args=['--rolls=42'])
+    invoke(roll, args=["--rolls=42"])
     println()
-    invoke(roll, args=['--rolls=2d12'])
+    invoke(roll, args=["--rolls=2d12"])
+    println()
+    invoke(roll, input=["42", "2d12"])
 
 
 .. _optional-value:

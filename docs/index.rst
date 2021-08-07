@@ -102,6 +102,6 @@ Miscellaneous Pages
    :maxdepth: 2
 
    contrib
-   changelog
    upgrading
    license
+   changes

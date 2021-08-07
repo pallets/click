@@ -52,10 +52,8 @@ ANSI Colors
 
 .. versionadded:: 2.0
 
-The :func:`echo` function gained extra functionality to deal with ANSI
-colors and styles.  Note that on Windows, this functionality is only
-available if `colorama`_ is installed.  If it is installed, then ANSI
-codes are intelligently handled.
+The :func:`echo` function supports ANSI colors and styles. On Windows
+this uses `colorama`_.
 
 Primarily this means that:
 
@@ -66,12 +64,8 @@ Primarily this means that:
     that colors will work on Windows the same way they do on other
     operating systems.
 
-Note for `colorama` support: Click will automatically detect when `colorama`
-is available and use it.  Do *not* call ``colorama.init()``!
-
-To install `colorama`, run this command::
-
-    $ pip install colorama
+On Windows, Click uses colorama without calling ``colorama.init()``. You
+can still call that in your code, but it's not required for Click.
 
 For styling a string, the :func:`style` function can be used::
 
@@ -357,12 +351,17 @@ Example usage::
 Showing Progress Bars
 ---------------------
 
-.. versionadded:: 2.0
-
 Sometimes, you have command line scripts that need to process a lot of data,
 but you want to quickly show the user some progress about how long that
 will take.  Click supports simple progress bar rendering for that through
 the :func:`progressbar` function.
+
+.. note::
+
+    If you find that you have requirements beyond what Click's progress
+    bar supports, try using `tqdm`_.
+
+    .. _tqdm: https://tqdm.github.io/
 
 The basic usage is very simple: the idea is that you have an iterable that
 you want to operate on.  For each item in the iterable it might take some

@@ -1,11 +1,72 @@
 .. currentmodule:: click
 
-Version 8.0
------------
+Version 8.1.0
+-------------
 
 Unreleased
 
+-   Single options boolean flags with ``show_default=True`` only show
+    the default if it is ``True``. :issue:`1971`:
+-   Add ``click.get_pager_file`` for file-like access to an output
+    pager. :pr:`1572`
+
+
+
+Version 8.0.2
+-------------
+
+Unreleased
+
+-   ``is_bool_flag`` is not set to ``True`` if ``is_flag`` is ``False``.
+    :issue:`1925`
+-   Bash version detection is locale independent. :issue:`1940`
+-   Empty ``default`` value is not shown for ``multiple=True``.
+    :issue:`1969`
+-   Fix shell completion for arguments that start with a forward slash
+    such as absolute file paths. :issue:`1929`
+
+
+Version 8.0.1
+-------------
+
+Released 2021-05-19
+
+-   Mark top-level names as exported so type checking understand imports
+    in user projects. :issue:`1879`
+-   Annotate ``Context.obj`` as ``Any`` so type checking allows all
+    operations on the arbitrary object. :issue:`1885`
+-   Fix some types that weren't available in Python 3.6.0. :issue:`1882`
+-   Fix type checking for iterating over ``ProgressBar`` object.
+    :issue:`1892`
+-   The ``importlib_metadata`` backport package is installed on Python <
+    3.8. :issue:`1889`
+-   Arguments with ``nargs=-1`` only use env var value if no command
+    line values are given. :issue:`1903`
+-   Flag options guess their type from ``flag_value`` if given, like
+    regular options do from ``default``. :issue:`1886`
+-   Added documentation that custom parameter types may be passed
+    already valid values in addition to strings. :issue:`1898`
+-   Resolving commands returns the name that was given, not
+    ``command.name``, fixing an unintended change to help text and
+    ``default_map`` lookups. When using patterns like ``AliasedGroup``,
+    override ``resolve_command`` to change the name that is returned if
+    needed. :issue:`1895`
+-   If a default value is invalid, it does not prevent showing help
+    text. :issue:`1889`
+-   Pass ``windows_expand_args=False`` when calling the main command to
+    disable pattern expansion on Windows. There is no way to escape
+    patterns in CMD, so if the program needs to pass them on as-is then
+    expansion must be disabled. :issue:`1901`
+
+
+Version 8.0.0
+-------------
+
+Released 2021-05-11
+
 -   Drop support for Python 2 and 3.5.
+-   Colorama is always installed on Windows in order to provide style
+    and color support. :pr:`1784`
 -   Adds a repr to Command, showing the command name for friendlier
     debugging. :issue:`1267`, :pr:`1295`
 -   Add support for distinguishing the source of a command line
@@ -13,8 +74,10 @@ Unreleased
 -   Add an optional parameter to ``ProgressBar.update`` to set the
     ``current_item``. :issue:`1226`, :pr:`1332`
 -   ``version_option`` uses ``importlib.metadata`` (or the
-    ``importlib_metadata`` backport) instead of ``pkg_resources``.
-    :issue:`1582`
+    ``importlib_metadata`` backport) instead of ``pkg_resources``. The
+    version is detected based on the package name, not the entry point
+    name. The Python package name must match the installed package
+    name, or be passed with ``package_name=``. :issue:`1582`
 -   If validation fails for a prompt with ``hide_input=True``, the value
     is not shown in the error message. :issue:`1460`
 -   An ``IntRange`` or ``FloatRange`` option shows the accepted range in
@@ -101,7 +164,7 @@ Unreleased
         renamed to ``shell_complete``. The function must take
         ``ctx, param, incomplete``, must do matching rather than return
         all values, and must return a list of strings or a list of
-        ``ShellComplete``. The old name and behavior is deprecated and
+        ``CompletionItem``. The old name and behavior is deprecated and
         will be removed in 8.1.
     -   The env var values used to start completion have changed order.
         The shell now comes first, such as ``{shell}_source`` rather
@@ -147,6 +210,8 @@ Unreleased
     passed in as a default value.
     :issue:`549, 736, 764, 921, 1015, 1618`
 -   Fix formatting when ``Command.options_metavar`` is empty. :pr:`1551`
+-   Revert adding space between option help text that wraps.
+    :issue:`1831`
 -   The default value passed to ``prompt`` will be cast to the correct
     type like an input value would be. :pr:`1517`
 -   Automatically generated short help messages will stop at the first
@@ -155,9 +220,64 @@ Unreleased
     iterators by setting ``update_min_steps``. :issue:`676`
 -   Respect ``case_sensitive=False`` when doing shell completion for
     ``Choice`` :issue:`1692`
--   Add ``click.get_pager_file`` for file-like access to an output
-    pager. :pr:`1572`
-
+-   Use ``mkstemp()`` instead of ``mktemp()`` in pager implementation.
+    :issue:`1752`
+-   If ``Option.show_default`` is a string, it is displayed even if
+    ``default`` is ``None``. :issue:`1732`
+-   ``click.get_terminal_size()`` is deprecated and will be removed in
+    8.1. Use :func:`shutil.get_terminal_size` instead. :issue:`1736`
+-   Control the location of the temporary directory created by
+    ``CLIRunner.isolated_filesystem`` by passing ``temp_dir``. A custom
+    directory will not be removed automatically. :issue:`395`
+-   ``click.confirm()`` will prompt until input is given if called with
+    ``default=None``. :issue:`1381`
+-   Option prompts validate the value with the option's callback in
+    addition to its type. :issue:`457`
+-   ``confirmation_prompt`` can be set to a custom string. :issue:`723`
+-   Allow styled output in Jupyter on Windows. :issue:`1271`
+-   ``style()`` supports the ``strikethrough``, ``italic``, and
+    ``overline`` styles. :issue:`805, 1821`
+-   Multiline marker is removed from short help text. :issue:`1597`
+-   Restore progress bar behavior of echoing only the label if the file
+    is not a TTY. :issue:`1138`
+-   Progress bar output is shown even if execution time is less than 0.5
+    seconds. :issue:`1648`
+-   Progress bar ``item_show_func`` shows the current item, not the
+    previous item. :issue:`1353`
+-   The ``Path`` param type can be passed ``path_type=pathlib.Path`` to
+    return a path object instead of a string. :issue:`405`
+-   ``TypeError`` is raised when parameter with ``multiple=True`` or
+    ``nargs > 1`` has non-iterable default. :issue:`1749`
+-   Add a ``pass_meta_key`` decorator for passing a key from
+    ``Context.meta``. This is useful for extensions using ``meta`` to
+    store information. :issue:`1739`
+-   ``Path`` ``resolve_path`` resolves symlinks on Windows Python < 3.8.
+    :issue:`1813`
+-   Command deprecation notice appears at the start of the help text, as
+    well as in the short help. The notice is not in all caps.
+    :issue:`1791`
+-   When taking arguments from ``sys.argv`` on Windows, glob patterns,
+    user dir, and env vars are expanded. :issue:`1096`
+-   Marked messages shown by the CLI with ``gettext()`` to allow
+    applications to translate Click's built-in strings. :issue:`303`
+-   Writing invalid characters  to ``stderr`` when using the test runner
+    does not raise a ``UnicodeEncodeError``. :issue:`848`
+-   Fix an issue where ``readline`` would clear the entire ``prompt()``
+    line instead of only the input when pressing backspace. :issue:`665`
+-   Add all kwargs passed to ``Context.invoke()`` to ``ctx.params``.
+    Fixes an inconsistency when nesting ``Context.forward()`` calls.
+    :issue:`1568`
+-   The ``MultiCommand.resultcallback`` decorator is renamed to
+    ``result_callback``. The old name is deprecated. :issue:`1160`
+-   Fix issues with ``CliRunner`` output when using ``echo_stdin=True``.
+    :issue:`1101`
+-   Fix a bug of ``click.utils.make_default_short_help`` for which the
+    returned string could be as long as ``max_width + 3``. :issue:`1849`
+-   When defining a parameter, ``default`` is validated with
+    ``multiple`` and ``nargs``. More validation is done for values being
+    processed as well. :issue:`1806`
+-   ``HelpFormatter.write_text`` uses the full line width when wrapping
+    text. :issue:`1871`
 
 
 Version 7.1.2

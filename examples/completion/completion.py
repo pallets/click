@@ -38,10 +38,13 @@ def list_users(ctx, param, incomplete):
     # of CompletionItem. You can match on whatever you want, including
     # the help.
     items = [("bob", "butcher"), ("alice", "baker"), ("jerry", "candlestick maker")]
+    out = []
 
     for value, help in items:
         if incomplete in value or incomplete in help:
-            yield CompletionItem(value, help=help)
+            out.append(CompletionItem(value, help=help))
+
+    return out
 
 
 @group.command(help="Choose a user")

@@ -99,7 +99,7 @@ def test_no_command_result_callback(runner, chain, expect):
     def cli():
         pass
 
-    @cli.resultcallback()
+    @cli.result_callback()
     def process_result(result):
         click.echo(str(result), nl=False)
 
@@ -133,7 +133,7 @@ def test_pipeline(runner):
     def cli(input):
         pass
 
-    @cli.resultcallback()
+    @cli.result_callback()
     def process_pipeline(processors, input):
         iterator = (x.rstrip("\r\n") for x in input)
         for processor in processors:

@@ -112,6 +112,19 @@ current working directory to a new, empty folder.
          assert result.exit_code == 0
          assert result.output == 'Hello World!\n'
 
+Pass ``temp_dir`` to control where the temporary directory is created.
+The directory will not be removed by Click in this case. This is useful
+to integrate with a framework like Pytest that manages temporary files.
+
+.. code-block:: python
+
+    def test_keep_dir(tmp_path):
+        runner = CliRunner()
+
+        with runner.isolated_filesystem(temp_dir=tmp_path) as td:
+            ...
+
+
 Input Streams
 -------------
 

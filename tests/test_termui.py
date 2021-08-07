@@ -18,27 +18,27 @@ class FakeClock:
         return self.now
 
 
-def _create_progress(length=10, length_known=True, **kwargs):
+def _create_progress(length=10, **kwargs):
     progress = click.progressbar(tuple(range(length)))
     for key, value in kwargs.items():
         setattr(progress, key, value)
-    progress.length_known = length_known
     return progress
 
 
 def test_progressbar_strip_regression(runner, monkeypatch):
-    fake_clock = FakeClock()
     label = "    padded line"
 
     @click.command()
     def cli():
         with _create_progress(label=label) as progress:
             for _ in progress:
-                fake_clock.advance_time()
+                pass
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
-    assert label in runner.invoke(cli, []).output
+    assert (
+        label
+        in runner.invoke(cli, [], standalone_mode=False, catch_exceptions=False).output
+    )
 
 
 def test_progressbar_length_hint(runner, monkeypatch):
@@ -60,33 +60,26 @@ def test_progressbar_length_hint(runner, monkeypatch):
 
         next = __next__
 
-    fake_clock = FakeClock()
-
     @click.command()
     def cli():
         with click.progressbar(Hinted(10), label="test") as progress:
             for _ in progress:
-                fake_clock.advance_time()
+                pass
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     result = runner.invoke(cli, [])
     assert result.exception is None
 
 
 def test_progressbar_hidden(runner, monkeypatch):
-    fake_clock = FakeClock()
-    label = "whatever"
-
     @click.command()
     def cli():
-        with _create_progress(label=label) as progress:
+        with _create_progress(label="working") as progress:
             for _ in progress:
-                fake_clock.advance_time()
+                pass
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
-    assert runner.invoke(cli, []).output == ""
+    assert runner.invoke(cli, []).output == "working\n"
 
 
 @pytest.mark.parametrize("avg, expected", [([], 0.0), ([1, 4], 2.5)])
@@ -120,12 +113,9 @@ def test_progressbar_format_eta(runner, eta, expected):
 
 @pytest.mark.parametrize("pos, length", [(0, 5), (-1, 1), (5, 5), (6, 5), (4, 0)])
 def test_progressbar_format_pos(runner, pos, length):
-    with _create_progress(length, length_known=length != 0, pos=pos) as progress:
+    with _create_progress(length, pos=pos) as progress:
         result = progress.format_pos()
-        if progress.length_known:
-            assert result == f"{pos}/{length}"
-        else:
-            assert result == str(pos)
+        assert result == f"{pos}/{length}"
 
 
 @pytest.mark.parametrize(
@@ -133,33 +123,30 @@ def test_progressbar_format_pos(runner, pos, length):
     [
         (8, False, 7, 0, "#######-"),
         (0, True, 8, 0, "########"),
-        (0, False, 8, 0, "--------"),
-        (0, False, 5, 3, "#-------"),
     ],
 )
 def test_progressbar_format_bar(runner, length, finished, pos, avg, expected):
     with _create_progress(
-        length, length_known=length != 0, width=8, pos=pos, finished=finished, avg=[avg]
+        length, width=8, pos=pos, finished=finished, avg=[avg]
     ) as progress:
         assert progress.format_bar() == expected
 
 
 @pytest.mark.parametrize(
-    "length, length_known, show_percent, show_pos, pos, expected",
+    "length, show_percent, show_pos, pos, expected",
     [
-        (0, True, True, True, 0, "  [--------]  0/0    0%"),
-        (0, True, False, True, 0, "  [--------]  0/0"),
-        (0, True, False, False, 0, "  [--------]"),
-        (0, False, False, False, 0, "  [--------]"),
-        (8, True, True, True, 8, "  [########]  8/8  100%"),
+        (0, True, True, 0, "  [--------]  0/0    0%"),
+        (0, False, True, 0, "  [--------]  0/0"),
+        (0, False, False, 0, "  [--------]"),
+        (0, False, False, 0, "  [--------]"),
+        (8, True, True, 8, "  [########]  8/8  100%"),
     ],
 )
 def test_progressbar_format_progress_line(
-    runner, length, length_known, show_percent, show_pos, pos, expected
+    runner, length, show_percent, show_pos, pos, expected
 ):
     with _create_progress(
         length,
-        length_known,
         width=8,
         show_percent=show_percent,
         pos=pos,
@@ -194,21 +181,16 @@ def test_progressbar_iter_outside_with_exceptions(runner):
 
 
 def test_progressbar_is_iterator(runner, monkeypatch):
-    fake_clock = FakeClock()
-
     @click.command()
     def cli():
         with click.progressbar(range(10), label="test") as progress:
             while True:
                 try:
                     next(progress)
-                    fake_clock.advance_time()
                 except StopIteration:
                     break
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
-
     result = runner.invoke(cli, [])
     assert result.exception is None
 
@@ -290,50 +272,39 @@ def test_progressbar_update(runner, monkeypatch):
 
     lines = [line for line in output.split("\n") if "[" in line]
 
-    assert " 25%  00:00:03" in lines[0]
-    assert " 50%  00:00:02" in lines[1]
-    assert " 75%  00:00:01" in lines[2]
-    assert "100%          " in lines[3]
+    assert "  0%" in lines[0]
+    assert " 25%  00:00:03" in lines[1]
+    assert " 50%  00:00:02" in lines[2]
+    assert " 75%  00:00:01" in lines[3]
+    assert "100%          " in lines[4]
 
 
 def test_progressbar_item_show_func(runner, monkeypatch):
-    fake_clock = FakeClock()
+    """item_show_func should show the current item being yielded."""
 
     @click.command()
     def cli():
-        with click.progressbar(
-            range(4), item_show_func=lambda x: f"Custom {x}"
-        ) as progress:
-            for _ in progress:
-                fake_clock.advance_time()
-                print("")
+        with click.progressbar(range(3), item_show_func=lambda x: str(x)) as progress:
+            for item in progress:
+                click.echo(f" item {item}")
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
-    output = runner.invoke(cli, []).output
+    lines = runner.invoke(cli).output.splitlines()
 
-    lines = [line for line in output.split("\n") if "[" in line]
-
-    assert "Custom 0" in lines[0]
-    assert "Custom 1" in lines[1]
-    assert "Custom 2" in lines[2]
-    assert "Custom None" in lines[3]
+    for i, line in enumerate(x for x in lines if "item" in x):
+        assert f"{i}    item {i}" in line
 
 
 def test_progressbar_update_with_item_show_func(runner, monkeypatch):
-    fake_clock = FakeClock()
-
     @click.command()
     def cli():
         with click.progressbar(
             length=6, item_show_func=lambda x: f"Custom {x}"
         ) as progress:
             while not progress.finished:
-                fake_clock.advance_time()
                 progress.update(2, progress.pos)
-                print("")
+                click.echo()
 
-    monkeypatch.setattr(time, "time", fake_clock.time)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     output = runner.invoke(cli, []).output
 
@@ -380,7 +351,7 @@ def test_getchar_special_key_windows(runner, monkeypatch, special_key_char, key_
 
 
 @pytest.mark.parametrize(
-    ("key_char", "exc"), [("\x03", KeyboardInterrupt), ("\x1a", EOFError)],
+    ("key_char", "exc"), [("\x03", KeyboardInterrupt), ("\x1a", EOFError)]
 )
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
 def test_getchar_windows_exceptions(runner, monkeypatch, key_char, exc):
@@ -401,7 +372,7 @@ def test_fast_edit(runner):
     ("prompt_required", "required", "args", "expect"),
     [
         (True, False, None, "prompt"),
-        (True, False, ["-v"], "-v option requires an argument"),
+        (True, False, ["-v"], "Option '-v' requires an argument."),
         (False, True, None, "prompt"),
         (False, True, ["-v"], "prompt"),
     ],
@@ -446,3 +417,27 @@ def test_prompt_required_false(runner, args, expect):
     result = runner.invoke(cli, args=args, input="prompt", standalone_mode=False)
     assert result.exception is None
     assert result.return_value == expect
+
+
+@pytest.mark.parametrize(
+    ("prompt", "input", "expect"),
+    [
+        (True, "password\npassword", "password"),
+        ("Confirm Password", "password\npassword\n", "password"),
+        (False, None, None),
+    ],
+)
+def test_confirmation_prompt(runner, prompt, input, expect):
+    @click.command()
+    @click.option(
+        "--password", prompt=prompt, hide_input=True, confirmation_prompt=prompt
+    )
+    def cli(password):
+        return password
+
+    result = runner.invoke(cli, input=input, standalone_mode=False)
+    assert result.exception is None
+    assert result.return_value == expect
+
+    if prompt == "Confirm Password":
+        assert "Confirm Password: " in result.output

@@ -4,6 +4,7 @@ import re
 import pytest
 
 import click
+from click import Option
 
 
 def test_prefixes(runner):
@@ -33,7 +34,7 @@ def test_invalid_option(runner):
 
 
 def test_invalid_nargs(runner):
-    with pytest.raises(TypeError, match="nargs < 0"):
+    with pytest.raises(TypeError, match="nargs=-1"):
 
         @click.command()
         @click.option("--foo", nargs=-1)
@@ -83,7 +84,7 @@ def test_unknown_options(runner, unknown_flag):
 
     result = runner.invoke(cli, [unknown_flag])
     assert result.exception
-    assert f"no such option: {unknown_flag}" in result.output
+    assert f"No such option: {unknown_flag}" in result.output
 
 
 @pytest.mark.parametrize(
@@ -115,6 +116,41 @@ def test_multiple_required(runner):
     result = runner.invoke(cli, [])
     assert result.exception
     assert "Error: Missing option '-m' / '--message'." in result.output
+
+
+@pytest.mark.parametrize(
+    ("multiple", "nargs", "default"),
+    [
+        (True, 1, []),
+        (True, 1, [1]),
+        # (False, -1, []),
+        # (False, -1, [1]),
+        (False, 2, [1, 2]),
+        # (True, -1, [[]]),
+        # (True, -1, []),
+        # (True, -1, [[1]]),
+        (True, 2, []),
+        (True, 2, [[1, 2]]),
+    ],
+)
+def test_init_good_default_list(runner, multiple, nargs, default):
+    click.Option(["-a"], multiple=multiple, nargs=nargs, default=default)
+
+
+@pytest.mark.parametrize(
+    ("multiple", "nargs", "default"),
+    [
+        (True, 1, 1),
+        # (False, -1, 1),
+        (False, 2, [1]),
+        (True, 2, [[1]]),
+    ],
+)
+def test_init_bad_default_list(runner, multiple, nargs, default):
+    type = (str, str) if nargs == 2 else None
+
+    with pytest.raises(ValueError, match="default"):
+        click.Option(["-a"], type=type, multiple=multiple, nargs=nargs, default=default)
 
 
 def test_empty_envvar(runner):
@@ -376,6 +412,22 @@ def test_custom_validation(runner):
     assert result.output == "42\n"
 
 
+def test_callback_validates_prompt(runner, monkeypatch):
+    def validate(ctx, param, value):
+        if value < 0:
+            raise click.BadParameter("should be positive")
+
+        return value
+
+    @click.command()
+    @click.option("-a", type=int, callback=validate, prompt=True)
+    def cli(a):
+        click.echo(a)
+
+    result = runner.invoke(cli, input="-12\n60\n")
+    assert result.output == "A: -12\nError: should be positive\nA: 60\n60\n"
+
+
 def test_winstyle_options(runner):
     @click.command()
     @click.option("/debug;/no-debug", help="Enables or disables debug mode.")
@@ -409,9 +461,9 @@ def test_missing_option_string_cast():
     ctx = click.Context(click.Command(""))
 
     with pytest.raises(click.MissingParameter) as excinfo:
-        click.Option(["-a"], required=True).full_process_value(ctx, None)
+        click.Option(["-a"], required=True).process_value(ctx, None)
 
-    assert str(excinfo.value) == "missing parameter: a"
+    assert str(excinfo.value) == "Missing parameter: a"
 
 
 def test_missing_choice(runner):
@@ -488,7 +540,7 @@ def test_option_help_preserve_paragraphs(runner):
     def cmd(config):
         pass
 
-    result = runner.invoke(cmd, ["--help"],)
+    result = runner.invoke(cmd, ["--help"])
     assert result.exit_code == 0
     i = " " * 21
     assert (
@@ -502,7 +554,7 @@ def test_option_help_preserve_paragraphs(runner):
 
 def test_argument_custom_class(runner):
     class CustomArgument(click.Argument):
-        def get_default(self, ctx):
+        def get_default(self, ctx, call=True):
             """a dumb override of a default value for testing"""
             return "I am a default"
 
@@ -648,16 +700,63 @@ def test_show_default_boolean_flag_name(runner, default, expect):
     assert f"[default: {expect}]" in message
 
 
-def test_show_default_boolean_flag_value(runner):
-    """When a boolean flag only has one opt, it will show the default
-    value, not the opt name.
+def test_show_true_default_boolean_flag_value(runner):
+    """When a boolean flag only has one opt and its default is True,
+    it will show the default value, not the opt name.
     """
     opt = click.Option(
-        ("--cache",), is_flag=True, show_default=True, help="Enable the cache.",
+        ("--cache",),
+        is_flag=True,
+        show_default=True,
+        default=True,
+        help="Enable the cache.",
     )
     ctx = click.Context(click.Command("test"))
     message = opt.get_help_record(ctx)[1]
-    assert "[default: False]" in message
+    assert "[default: True]" in message
+
+
+@pytest.mark.parametrize("default", [False, None])
+def test_hide_false_default_boolean_flag_value(runner, default):
+    """When a boolean flag only has one opt and its default is False or
+    None, it will not show the default
+    """
+    opt = click.Option(
+        ("--cache",),
+        is_flag=True,
+        show_default=True,
+        default=default,
+        help="Enable the cache.",
+    )
+    ctx = click.Context(click.Command("test"))
+    message = opt.get_help_record(ctx)[1]
+    assert "[default: " not in message
+
+
+def test_show_default_string(runner):
+    """When show_default is a string show that value as default."""
+    opt = click.Option(["--limit"], show_default="unlimited")
+    ctx = click.Context(click.Command("cli"))
+    message = opt.get_help_record(ctx)[1]
+    assert "[default: (unlimited)]" in message
+
+
+def test_do_not_show_no_default(runner):
+    """When show_default is True and no default is set do not show None."""
+    opt = click.Option(["--limit"], show_default=True)
+    ctx = click.Context(click.Command("cli"))
+    message = opt.get_help_record(ctx)[1]
+    assert "[default: None]" not in message
+
+
+def test_do_not_show_default_empty_multiple():
+    """When show_default is True and multiple=True is set, it should not
+    print empty default value in --help output.
+    """
+    opt = click.Option(["-a"], multiple=True, help="values", show_default=True)
+    ctx = click.Context(click.Command("cli"))
+    message = opt.get_help_record(ctx)[1]
+    assert message == "values"
 
 
 @pytest.mark.parametrize(
@@ -689,3 +788,29 @@ def test_option_with_optional_value(runner, args, expect):
 
     result = runner.invoke(cli, args, standalone_mode=False, catch_exceptions=False)
     assert result.return_value == expect
+
+
+def test_type_from_flag_value():
+    param = click.Option(["-a", "x"], default=True, flag_value=4)
+    assert param.type is click.INT
+    param = click.Option(["-b", "x"], flag_value=8)
+    assert param.type is click.INT
+
+
+@pytest.mark.parametrize(
+    ("option", "expected"),
+    [
+        # Not boolean flags
+        pytest.param(Option(["-a"], type=int), False, id="int option"),
+        pytest.param(Option(["-a"], type=bool), False, id="bool non-flag [None]"),
+        pytest.param(Option(["-a"], default=True), False, id="bool non-flag [True]"),
+        pytest.param(Option(["-a"], default=False), False, id="bool non-flag [False]"),
+        pytest.param(Option(["-a"], flag_value=1), False, id="non-bool flag_value"),
+        # Boolean flags
+        pytest.param(Option(["-a"], is_flag=True), True, id="is_flag=True"),
+        pytest.param(Option(["-a/-A"]), True, id="secondary option [implicit flag]"),
+        pytest.param(Option(["-a"], flag_value=True), True, id="bool flag_value"),
+    ],
+)
+def test_is_bool_flag_is_correctly_set(option, expected):
+    assert option.is_bool_flag is expected

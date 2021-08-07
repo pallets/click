@@ -125,6 +125,14 @@ def test_path_types(type, expect):
     assert c.type == expect
 
 
+def test_absolute_path():
+    cli = Command("cli", params=[Option(["-f"], type=Path())])
+    out = _get_completions(cli, ["-f"], "/ab")
+    assert len(out) == 1
+    c = out[0]
+    assert c.value == "/ab"
+
+
 def test_option_flag():
     cli = Command(
         "cli",
@@ -263,9 +271,7 @@ def _patch_for_completion(monkeypatch):
     )
 
 
-@pytest.mark.parametrize(
-    "shell", ["bash", "zsh", "fish"],
-)
+@pytest.mark.parametrize("shell", ["bash", "zsh", "fish"])
 @pytest.mark.usefixtures("_patch_for_completion")
 def test_full_source(runner, shell):
     cli = Group("cli", commands=[Command("a"), Command("b")])

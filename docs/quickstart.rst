@@ -79,7 +79,7 @@ After doing this, the prompt of your shell should be as familiar as before.
 Now, let's move on. Enter the following command to get Click activated in your
 virtualenv::
 
-    $ pip install Click
+    $ pip install click
 
 A few seconds later and you are good to go.
 
@@ -97,23 +97,23 @@ Examples of Click applications can be found in the documentation as well
 as in the GitHub repository together with readme files:
 
 *   ``inout``: `File input and output
-    <https://github.com/pallets/click/tree/master/examples/inout>`_
+    <https://github.com/pallets/click/tree/main/examples/inout>`_
 *   ``naval``: `Port of docopt naval example
-    <https://github.com/pallets/click/tree/master/examples/naval>`_
+    <https://github.com/pallets/click/tree/main/examples/naval>`_
 *   ``aliases``: `Command alias example
-    <https://github.com/pallets/click/tree/master/examples/aliases>`_
+    <https://github.com/pallets/click/tree/main/examples/aliases>`_
 *   ``repo``: `Git-/Mercurial-like command line interface
-    <https://github.com/pallets/click/tree/master/examples/repo>`_
+    <https://github.com/pallets/click/tree/main/examples/repo>`_
 *   ``complex``: `Complex example with plugin loading
-    <https://github.com/pallets/click/tree/master/examples/complex>`_
+    <https://github.com/pallets/click/tree/main/examples/complex>`_
 *   ``validation``: `Custom parameter validation example
-    <https://github.com/pallets/click/tree/master/examples/validation>`_
-*   ``colors``: `Colorama ANSI color support
-    <https://github.com/pallets/click/tree/master/examples/colors>`_
+    <https://github.com/pallets/click/tree/main/examples/validation>`_
+*   ``colors``: `Color support demo
+    <https://github.com/pallets/click/tree/main/examples/colors>`_
 *   ``termui``: `Terminal UI functions demo
-    <https://github.com/pallets/click/tree/master/examples/termui>`_
+    <https://github.com/pallets/click/tree/main/examples/termui>`_
 *   ``imagepipe``: `Multi command chaining demo
-    <https://github.com/pallets/click/tree/master/examples/imagepipe>`_
+    <https://github.com/pallets/click/tree/main/examples/imagepipe>`_
 
 Basic Concepts - Creating a Command
 -----------------------------------
@@ -166,10 +166,10 @@ What this means is that the :func:`echo` function applies some error
 correction in case the terminal is misconfigured instead of dying with an
 :exc:`UnicodeError`.
 
-As an added benefit, starting with Click 2.0, the echo function also
-has good support for ANSI colors.  It will automatically strip ANSI codes
-if the output stream is a file and if colorama is supported, ANSI colors
-will also work on Windows. See :ref:`ansi-colors`.
+The echo function also supports color and other styles in output. It
+will automatically remove styles if the output stream is a file. On
+Windows, colorama is automatically installed and used. See
+:ref:`ansi-colors`.
 
 If you don't need this, you can also use the `print()` construct /
 function.

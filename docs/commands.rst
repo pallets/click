@@ -351,7 +351,7 @@ how to do its processing.  At that point it then returns a processing
 function and returns.
 
 Where do the returned functions go?  The chained multicommand can register
-a callback with :meth:`MultiCommand.resultcallback` that goes over all
+a callback with :meth:`MultiCommand.result_callback` that goes over all
 these functions and then invoke them.
 
 To make this a bit more concrete consider this example:
@@ -363,7 +363,7 @@ To make this a bit more concrete consider this example:
     def cli(input):
         pass
 
-    @cli.resultcallback()
+    @cli.result_callback()
     def process_pipeline(processors, input):
         iterator = (x.rstrip('\r\n') for x in input)
         for processor in processors:
@@ -422,7 +422,7 @@ to not use the file type and manually open the file through
 
 For a more complex example that also improves upon handling of the
 pipelines have a look at the `imagepipe multi command chaining demo
-<https://github.com/pallets/click/tree/master/examples/imagepipe>`__ in
+<https://github.com/pallets/click/tree/main/examples/imagepipe>`__ in
 the Click repository.  It implements a pipeline based image editing tool
 that has a nice internal structure for the pipelines.
 

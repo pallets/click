@@ -5,11 +5,7 @@ setup(
     version="1.0",
     py_modules=["termui"],
     include_package_data=True,
-    install_requires=[
-        "click",
-        # Colorama is only required for Windows.
-        "colorama",
-    ],
+    install_requires=["click"],
     entry_points="""
         [console_scripts]
         termui=termui:cli

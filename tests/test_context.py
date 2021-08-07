@@ -4,6 +4,7 @@ import pytest
 
 import click
 from click.core import ParameterSource
+from click.decorators import pass_meta_key
 
 
 def test_ensure_context_objects(runner):
@@ -149,6 +150,28 @@ def test_context_meta(runner):
         assert get_language() == "de_DE"
 
     runner.invoke(cli, [], catch_exceptions=False)
+
+
+def test_make_pass_meta_decorator(runner):
+    @click.group()
+    @click.pass_context
+    def cli(ctx):
+        ctx.meta["value"] = "good"
+
+    @cli.command()
+    @pass_meta_key("value")
+    def show(value):
+        return value
+
+    result = runner.invoke(cli, ["show"], standalone_mode=False)
+    assert result.return_value == "good"
+
+
+def test_make_pass_meta_decorator_doc():
+    pass_value = pass_meta_key("value")
+    assert "the 'value' key from :attr:`click.Context.meta`" in pass_value.__doc__
+    pass_value = pass_meta_key("value", doc_description="the test value")
+    assert "passes the test value" in pass_value.__doc__
 
 
 def test_context_pushing():

@@ -6,9 +6,10 @@
 # compared to the original patches as we do not need to patch
 # the entire interpreter but just work in our little world of
 # echo and prompt.
-import ctypes
 import io
+import sys
 import time
+import typing as t
 from ctypes import byref
 from ctypes import c_char
 from ctypes import c_char_p
@@ -18,25 +19,18 @@ from ctypes import c_ulong
 from ctypes import c_void_p
 from ctypes import POINTER
 from ctypes import py_object
-from ctypes import windll
-from ctypes import WINFUNCTYPE
+from ctypes import Structure
 from ctypes.wintypes import DWORD
 from ctypes.wintypes import HANDLE
 from ctypes.wintypes import LPCWSTR
 from ctypes.wintypes import LPWSTR
 
-import msvcrt
-
 from ._compat import _NonClosingTextIOWrapper
 
-try:
-    from ctypes import pythonapi
-except ImportError:
-    pythonapi = None
-else:
-    PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
-    PyBuffer_Release = pythonapi.PyBuffer_Release
-
+assert sys.platform == "win32"
+import msvcrt  # noqa: E402
+from ctypes import windll  # noqa: E402
+from ctypes import WINFUNCTYPE  # noqa: E402
 
 c_ssize_p = POINTER(c_ssize_t)
 
@@ -50,15 +44,11 @@ GetCommandLineW = WINFUNCTYPE(LPWSTR)(("GetCommandLineW", windll.kernel32))
 CommandLineToArgvW = WINFUNCTYPE(POINTER(LPWSTR), LPCWSTR, POINTER(c_int))(
     ("CommandLineToArgvW", windll.shell32)
 )
-LocalFree = WINFUNCTYPE(ctypes.c_void_p, ctypes.c_void_p)(
-    ("LocalFree", windll.kernel32)
-)
-
+LocalFree = WINFUNCTYPE(c_void_p, c_void_p)(("LocalFree", windll.kernel32))
 
 STDIN_HANDLE = GetStdHandle(-10)
 STDOUT_HANDLE = GetStdHandle(-11)
 STDERR_HANDLE = GetStdHandle(-12)
-
 
 PyBUF_SIMPLE = 0
 PyBUF_WRITABLE = 1
@@ -74,33 +64,37 @@ STDERR_FILENO = 2
 EOF = b"\x1a"
 MAX_BYTES_WRITTEN = 32767
 
-
-class Py_buffer(ctypes.Structure):
-    _fields_ = [
-        ("buf", c_void_p),
-        ("obj", py_object),
-        ("len", c_ssize_t),
-        ("itemsize", c_ssize_t),
-        ("readonly", c_int),
-        ("ndim", c_int),
-        ("format", c_char_p),
-        ("shape", c_ssize_p),
-        ("strides", c_ssize_p),
-        ("suboffsets", c_ssize_p),
-        ("internal", c_void_p),
-    ]
-
-
-# On PyPy we cannot get buffers so our ability to operate here is
-# severely limited.
-if pythonapi is None:
+try:
+    from ctypes import pythonapi
+except ImportError:
+    # On PyPy we cannot get buffers so our ability to operate here is
+    # severely limited.
     get_buffer = None
 else:
+
+    class Py_buffer(Structure):
+        _fields_ = [
+            ("buf", c_void_p),
+            ("obj", py_object),
+            ("len", c_ssize_t),
+            ("itemsize", c_ssize_t),
+            ("readonly", c_int),
+            ("ndim", c_int),
+            ("format", c_char_p),
+            ("shape", c_ssize_p),
+            ("strides", c_ssize_p),
+            ("suboffsets", c_ssize_p),
+            ("internal", c_void_p),
+        ]
+
+    PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
+    PyBuffer_Release = pythonapi.PyBuffer_Release
 
     def get_buffer(obj, writable=False):
         buf = Py_buffer()
         flags = PyBUF_WRITABLE if writable else PyBUF_SIMPLE
         PyObject_GetBuffer(py_object(obj), byref(buf), flags)
+
         try:
             buffer_type = c_char * buf.len
             return buffer_type.from_address(buf.buf)
@@ -185,15 +179,15 @@ class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
 
 
 class ConsoleStream:
-    def __init__(self, text_stream, byte_stream):
+    def __init__(self, text_stream: t.TextIO, byte_stream: t.BinaryIO) -> None:
         self._text_stream = text_stream
         self.buffer = byte_stream
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self.buffer.name
 
-    def write(self, x):
+    def write(self, x: t.AnyStr) -> int:
         if isinstance(x, str):
             return self._text_stream.write(x)
         try:
@@ -202,83 +196,58 @@ class ConsoleStream:
             pass
         return self.buffer.write(x)
 
-    def writelines(self, lines):
+    def writelines(self, lines: t.Iterable[t.AnyStr]) -> None:
         for line in lines:
             self.write(line)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> t.Any:
         return getattr(self._text_stream, name)
 
-    def isatty(self):
+    def isatty(self) -> bool:
         return self.buffer.isatty()
 
     def __repr__(self):
         return f"<ConsoleStream name={self.name!r} encoding={self.encoding!r}>"
 
 
-class WindowsChunkedWriter:
-    """
-    Wraps a stream (such as stdout), acting as a transparent proxy for all
-    attribute access apart from method 'write()' which we wrap to write in
-    limited chunks due to a Windows limitation on binary console streams.
-    """
-
-    def __init__(self, wrapped):
-        # double-underscore everything to prevent clashes with names of
-        # attributes on the wrapped stream object.
-        self.__wrapped = wrapped
-
-    def __getattr__(self, name):
-        return getattr(self.__wrapped, name)
-
-    def write(self, text):
-        total_to_write = len(text)
-        written = 0
-
-        while written < total_to_write:
-            to_write = min(total_to_write - written, MAX_BYTES_WRITTEN)
-            self.__wrapped.write(text[written : written + to_write])
-            written += to_write
-
-
-def _get_text_stdin(buffer_stream):
+def _get_text_stdin(buffer_stream: t.BinaryIO) -> t.TextIO:
     text_stream = _NonClosingTextIOWrapper(
         io.BufferedReader(_WindowsConsoleReader(STDIN_HANDLE)),
         "utf-16-le",
         "strict",
         line_buffering=True,
     )
-    return ConsoleStream(text_stream, buffer_stream)
+    return t.cast(t.TextIO, ConsoleStream(text_stream, buffer_stream))
 
 
-def _get_text_stdout(buffer_stream):
+def _get_text_stdout(buffer_stream: t.BinaryIO) -> t.TextIO:
     text_stream = _NonClosingTextIOWrapper(
         io.BufferedWriter(_WindowsConsoleWriter(STDOUT_HANDLE)),
         "utf-16-le",
         "strict",
         line_buffering=True,
     )
-    return ConsoleStream(text_stream, buffer_stream)
+    return t.cast(t.TextIO, ConsoleStream(text_stream, buffer_stream))
 
 
-def _get_text_stderr(buffer_stream):
+def _get_text_stderr(buffer_stream: t.BinaryIO) -> t.TextIO:
     text_stream = _NonClosingTextIOWrapper(
         io.BufferedWriter(_WindowsConsoleWriter(STDERR_HANDLE)),
         "utf-16-le",
         "strict",
         line_buffering=True,
     )
-    return ConsoleStream(text_stream, buffer_stream)
+    return t.cast(t.TextIO, ConsoleStream(text_stream, buffer_stream))
 
 
-_stream_factories = {
+_stream_factories: t.Mapping[int, t.Callable[[t.BinaryIO], t.TextIO]] = {
     0: _get_text_stdin,
     1: _get_text_stdout,
     2: _get_text_stderr,
 }
 
 
-def _is_console(f):
+def _is_console(f: t.TextIO) -> bool:
     if not hasattr(f, "fileno"):
         return False
 
@@ -291,7 +260,9 @@ def _is_console(f):
     return bool(GetConsoleMode(handle, byref(DWORD())))
 
 
-def _get_windows_console_stream(f, encoding, errors):
+def _get_windows_console_stream(
+    f: t.TextIO, encoding: t.Optional[str], errors: t.Optional[str]
+) -> t.Optional[t.TextIO]:
     if (
         get_buffer is not None
         and encoding in {"utf-16-le", None}
@@ -300,9 +271,9 @@ def _get_windows_console_stream(f, encoding, errors):
     ):
         func = _stream_factories.get(f.fileno())
         if func is not None:
-            f = getattr(f, "buffer", None)
+            b = getattr(f, "buffer", None)
 
-            if f is None:
+            if b is None:
                 return None
 
-            return func(f)
+            return func(b)

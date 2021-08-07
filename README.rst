@@ -70,10 +70,11 @@ donate today`_.
 Links
 -----
 
--   Website: https://palletsprojects.com/p/click/
 -   Documentation: https://click.palletsprojects.com/
--   Releases: https://pypi.org/project/click/
--   Code: https://github.com/pallets/click
--   Issue tracker: https://github.com/pallets/click/issues
--   Test status: https://dev.azure.com/pallets/click/_build
--   Official chat: https://discord.gg/t6rrQZH
+-   Changes: https://click.palletsprojects.com/changes/
+-   PyPI Releases: https://pypi.org/project/click/
+-   Source Code: https://github.com/pallets/click
+-   Issue Tracker: https://github.com/pallets/click/issues
+-   Website: https://palletsprojects.com/p/click
+-   Twitter: https://twitter.com/PalletsTeam
+-   Chat: https://discord.gg/pallets

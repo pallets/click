@@ -64,10 +64,15 @@ def test_echo_custom_file():
         ({"bg": "white"}, "\x1b[47mx y\x1b[0m"),
         ({"bg": 91}, "\x1b[48;5;91mx y\x1b[0m"),
         ({"bg": (135, 0, 175)}, "\x1b[48;2;135;0;175mx y\x1b[0m"),
-        ({"blink": True}, "\x1b[5mx y\x1b[0m"),
-        ({"underline": True}, "\x1b[4mx y\x1b[0m"),
         ({"bold": True}, "\x1b[1mx y\x1b[0m"),
         ({"dim": True}, "\x1b[2mx y\x1b[0m"),
+        ({"underline": True}, "\x1b[4mx y\x1b[0m"),
+        ({"overline": True}, "\x1b[55mx y\x1b[0m"),
+        ({"italic": True}, "\x1b[23mx y\x1b[0m"),
+        ({"blink": True}, "\x1b[5mx y\x1b[0m"),
+        ({"reverse": True}, "\x1b[7mx y\x1b[0m"),
+        ({"strikethrough": True}, "\x1b[9mx y\x1b[0m"),
+        ({"fg": "black", "reset": False}, "\x1b[30mx y"),
     ],
 )
 def test_styling(styles, ref):
@@ -88,7 +93,7 @@ def test_filename_formatting():
 
     # filesystem encoding on windows permits this.
     if not WIN:
-        assert click.format_filename(b"/x/foo\xff.txt", shorten=True) == "foo\ufffd.txt"
+        assert click.format_filename(b"/x/foo\xff.txt", shorten=True) == "foo\udcff.txt"
 
 
 def test_prompts(runner):
@@ -131,6 +136,14 @@ def test_prompts(runner):
     assert result.output == "Foo [Y/n]: n\nno :(\n"
 
 
+def test_confirm_repeat(runner):
+    cli = click.Command(
+        "cli", params=[click.Option(["--a/--no-a"], default=None, prompt=True)]
+    )
+    result = runner.invoke(cli, input="\ny\n")
+    assert result.output == "A [y/n]: \nError: invalid input\nA [y/n]: y\n"
+
+
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
 def test_prompts_abort(monkeypatch, capsys):
     def f(_):
@@ -141,10 +154,10 @@ def test_prompts_abort(monkeypatch, capsys):
     try:
         click.prompt("Password", hide_input=True)
     except click.Abort:
-        click.echo("Screw you.")
+        click.echo("interrupted")
 
     out, err = capsys.readouterr()
-    assert out == "Password: \nScrew you.\n"
+    assert out == "Password:\ninterrupted\n"
 
 
 def _test_gen_func():
@@ -242,8 +255,8 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     emulate_input("asdlkj\n")
     click.prompt("Prompt to stderr", err=True)
     out, err = capfd.readouterr()
-    assert out == ""
-    assert err == "Prompt to stderr: "
+    assert out == " "
+    assert err == "Prompt to stderr:"
 
     emulate_input("y\n")
     click.confirm("Prompt to stdin")
@@ -421,3 +434,49 @@ class MockMain:
 )
 def test_detect_program_name(path, main, expected):
     assert click.utils._detect_program_name(path, _main=main) == expected
+
+
+def test_expand_args(monkeypatch):
+    user = os.path.expanduser("~")
+    assert user in click.utils._expand_args(["~"])
+    monkeypatch.setenv("CLICK_TEST", "hello")
+    assert "hello" in click.utils._expand_args(["$CLICK_TEST"])
+    assert "setup.cfg" in click.utils._expand_args(["*.cfg"])
+    assert os.path.join("docs", "conf.py") in click.utils._expand_args(["**/conf.py"])
+    assert "*.not-found" in click.utils._expand_args(["*.not-found"])
+
+
+@pytest.mark.parametrize(
+    ("value", "max_length", "expect"),
+    [
+        pytest.param("", 10, "", id="empty"),
+        pytest.param("123 567 90", 10, "123 567 90", id="equal length, no dot"),
+        pytest.param("123 567 9. aaaa bbb", 10, "123 567 9.", id="sentence < max"),
+        pytest.param("123 567\n\n 9. aaaa bbb", 10, "123 567", id="paragraph < max"),
+        pytest.param("123 567 90123.", 10, "123 567...", id="truncate"),
+        pytest.param("123 5678 xxxxxx", 10, "123...", id="length includes suffix"),
+        pytest.param(
+            "token in ~/.netrc ciao ciao",
+            20,
+            "token in ~/.netrc...",
+            id="ignore dot in word",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "alter",
+    [
+        pytest.param(None, id=""),
+        pytest.param(
+            lambda text: "\n\b\n" + "  ".join(text.split(" ")) + "\n", id="no-wrap mark"
+        ),
+    ],
+)
+def test_make_default_short_help(value, max_length, alter, expect):
+    assert len(expect) <= max_length
+
+    if alter:
+        value = alter(value)
+
+    out = click.utils.make_default_short_help(value, max_length)
+    assert out == expect

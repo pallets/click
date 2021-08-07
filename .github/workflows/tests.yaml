@@ -2,12 +2,20 @@ name: Tests
 on:
   push:
     branches:
-      - master
+      - main
       - '*.x'
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '*.rst'
   pull_request:
     branches:
-      - master
+      - main
       - '*.x'
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - '*.rst'
 jobs:
   tests:
     name: ${{ matrix.name }}
@@ -23,8 +31,7 @@ jobs:
           - {name: '3.7', python: '3.7', os: ubuntu-latest, tox: py37}
           - {name: '3.6', python: '3.6', os: ubuntu-latest, tox: py36}
           - {name: 'PyPy', python: pypy3, os: ubuntu-latest, tox: pypy3}
-          - {name: Style, python: '3.9', os: ubuntu-latest, tox: style}
-          - {name: Docs, python: '3.9', os: ubuntu-latest, tox: docs}
+          - {name: Typing, python: '3.9', os: ubuntu-latest, tox: typing}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -39,15 +46,15 @@ jobs:
         id: pip-cache
         run: echo "::set-output name=dir::$(pip cache dir)"
       - name: cache pip
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ${{ steps.pip-cache.outputs.dir }}
           key: pip|${{ runner.os }}|${{ matrix.python }}|${{ hashFiles('setup.py') }}|${{ hashFiles('requirements/*.txt') }}
-      - name: cache pre-commit
-        uses: actions/cache@v1
+      - name: cache mypy
+        uses: actions/cache@v2
         with:
-          path: ~/.cache/pre-commit
-          key: pre-commit|${{ matrix.python }}|${{ hashFiles('.pre-commit-config.yaml') }}
-        if: matrix.tox == 'style'
+          path: ./.mypy_cache
+          key: mypy|${{ matrix.python }}|${{ hashFiles('setup.cfg') }}
+        if: matrix.tox == 'typing'
       - run: pip install tox
       - run: tox -e ${{ matrix.tox }}
