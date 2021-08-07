@@ -444,7 +444,7 @@ def _pipepager(cmd: str, color: t.Optional[bool]) -> None:
 
 
 @contextlib.contextmanager
-def _tempfilepager(cmd: str, color: t.Optional[bool]=None):
+def _tempfilepager(cmd: str, color: t.Optional[bool] = None):
     """Page through text by invoking a program on a temporary file."""
     import tempfile
 
@@ -456,7 +456,7 @@ def _tempfilepager(cmd: str, color: t.Optional[bool]=None):
 
 
 @contextlib.contextmanager
-def _nullpager(stream: t.TextIO, color: t.Optional[bool]=None):
+def _nullpager(stream: t.TextIO, color: t.Optional[bool] = None):
     """Simply print unformatted text.  This is the ultimate fallback."""
     encoding = get_best_encoding(stream)
     yield stream, encoding, color
