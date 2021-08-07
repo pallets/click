@@ -352,7 +352,9 @@ class MaybeStripAnsi(io.TextIOWrapper):
         return super().write(text)
 
 
-def _pager_contextmanager(color: t.Optional[bool] = None) ->  t.ContextManager[t.Tuple[t.BinaryIO, str, bool]]:
+def _pager_contextmanager(
+    color: t.Optional[bool] = None,
+) -> t.ContextManager[t.Tuple[t.BinaryIO, str, bool]]:
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
     if not isatty(sys.stdin) or not isatty(stdout):
@@ -398,7 +400,9 @@ def get_pager_file(color: t.Optional[bool] = None) -> t.Generator[t.IO, None, No
 
 
 @contextlib.contextmanager
-def _pipepager(cmd: str, color: t.Optional[bool]) -> t.Generator[t.Tuple[t.BinaryIO, str, bool], None, None]:
+def _pipepager(
+    cmd: str, color: t.Optional[bool]
+) -> t.Generator[t.Tuple[t.BinaryIO, str, bool], None, None]:
     """Page through text by feeding it to another program.  Invoking a
     pager through this might support colors.
     """
@@ -416,7 +420,7 @@ def _pipepager(cmd: str, color: t.Optional[bool]) -> t.Generator[t.Tuple[t.Binar
             color = True
         elif "r" in less_flags or "R" in less_flags:
             color = True
-    
+
     if color is None:
         color = False
 
@@ -447,7 +451,9 @@ def _pipepager(cmd: str, color: t.Optional[bool]) -> t.Generator[t.Tuple[t.Binar
 
 
 @contextlib.contextmanager
-def _tempfilepager(cmd: str, color: t.Optional[bool]=None) -> t.Generator[t.Tuple[t.BinaryIO, str, bool], None, None]:
+def _tempfilepager(
+    cmd: str, color: t.Optional[bool] = None
+) -> t.Generator[t.Tuple[t.BinaryIO, str, bool], None, None]:
     """Page through text by invoking a program on a temporary file."""
     import tempfile
 
@@ -459,7 +465,9 @@ def _tempfilepager(cmd: str, color: t.Optional[bool]=None) -> t.Generator[t.Tupl
 
 
 @contextlib.contextmanager
-def _nullpager(stream: t.TextIO, color: t.Optional[bool]=None) -> t.Generator[t.Tuple[t.BinaryIO, str, bool], None, None]:
+def _nullpager(
+    stream: t.TextIO, color: t.Optional[bool] = None
+) -> t.Generator[t.Tuple[t.BinaryIO, str, bool], None, None]:
     """Simply print unformatted text.  This is the ultimate fallback."""
     encoding = get_best_encoding(stream)
     yield stream, encoding, color
