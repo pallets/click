@@ -1,6 +1,8 @@
+import os.path
 import pathlib
 
 import pytest
+from conftest import check_symlink_impl
 
 import click
 
@@ -100,3 +102,28 @@ def test_path_type(runner, cls, expect):
     result = runner.invoke(cli, ["a/b/c.txt"], standalone_mode=False)
     assert result.exception is None
     assert result.return_value == expect
+
+
+@pytest.mark.skipif(not check_symlink_impl(), reason="symlink not allowed on device")
+@pytest.mark.parametrize(
+    ("sym_file", "abs_fun"),
+    [
+        (("relative_symlink",), os.path.basename),
+        (("test", "absolute_symlink"), lambda x: x),
+    ],
+)
+def test_symlink_resolution(tmpdir, sym_file, abs_fun):
+    """This test ensures symlinks are properly resolved by click"""
+    tempdir = str(tmpdir)
+    real_path = os.path.join(tempdir, "test_file")
+    sym_path = os.path.join(tempdir, *sym_file)
+
+    # create dirs and files
+    os.makedirs(os.path.join(tempdir, "test"), exist_ok=True)
+    open(real_path, "w").close()
+    os.symlink(abs_fun(real_path), sym_path)
+
+    # test
+    ctx = click.Context(click.Command("do_stuff"))
+    rv = click.Path(resolve_path=True).convert(sym_path, None, ctx)
+    assert rv == real_path

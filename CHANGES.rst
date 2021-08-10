@@ -21,6 +21,10 @@ Unreleased
     :issue:`1969`
 -   Fix shell completion for arguments that start with a forward slash
     such as absolute file paths. :issue:`1929`
+-   ``Path`` type with ``resolve_path=True`` resolves relative symlinks
+    to be relative to the containing directory. :issue:`1921`
+-   Completion does not skip Python's resource cleanup when exiting,
+    avoiding some unexpected warning output. :issue:`1738, 2017`
 
 
 Version 8.0.1
