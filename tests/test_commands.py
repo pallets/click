@@ -350,3 +350,47 @@ def test_deprecated_in_invocation(runner):
 
     result = runner.invoke(deprecated_cmd)
     assert "DeprecationWarning:" in result.output
+
+
+def test_disable_double_dash(runner):
+    @click.group(disable_double_dash=True)
+    def cli():
+        pass
+
+    @cli.command("sdist")
+    def sdist():
+        click.echo("sdist called")
+
+    result = runner.invoke(cli, ["--", "sdist"])
+    assert result.exit_code == 2
+    assert (
+        "Error: can't use '--' separator between a command and a subcommand and "
+        "between subcommands" in result.output
+    )
+
+
+def test_multicommand_disable_double_dash(runner):
+    @click.group()
+    def cli1():
+        pass
+
+    @cli1.command()
+    def cmd1():
+        """Command on cli1"""
+
+    @click.group()
+    def cli2():
+        pass
+
+    @cli2.command()
+    def cmd2():
+        """Command on cli2"""
+
+    cli = click.CommandCollection(sources=[cli1, cli2], disable_double_dash=True)
+
+    result = runner.invoke(cli, ["--", "cmd1"])
+    assert result.exit_code == 2
+    assert (
+        "Error: can't use '--' separator between a command and a subcommand and "
+        "between subcommands" in result.output
+    )
