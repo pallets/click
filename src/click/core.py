@@ -1131,6 +1131,8 @@ class Command(BaseCommand):
     Click.  A basic command handles command line parsing and might dispatch
     more parsing to commands nested below it.
 
+    .. versionchanged:: 8.1.0
+       Added `disable_double_dash` parameter.
     .. versionchanged:: 2.0
        Added the `context_settings` parameter.
     .. versionchanged:: 8.0
@@ -1159,6 +1161,11 @@ class Command(BaseCommand):
 
     :param deprecated: issues a message indicating that
                              the command is deprecated.
+    :param disable_double_dash: if this is set to 'True' using '--' separator between
+                                a command and subcommands and between subcommands is
+                                disabled with Group and CommandCollection instances.
+                                The default is 'False' in order to save  the originall
+                                behaviour.
     """
 
     def __init__(
@@ -1175,6 +1182,7 @@ class Command(BaseCommand):
         no_args_is_help: bool = False,
         hidden: bool = False,
         deprecated: bool = False,
+        disable_double_dash: bool = False,
     ) -> None:
         super().__init__(name, context_settings)
         #: the callback to execute when the command fires.  This might be
@@ -1198,6 +1206,7 @@ class Command(BaseCommand):
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
+        self.disable_double_dash = disable_double_dash
 
     def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
         info_dict = super().to_info_dict(ctx)

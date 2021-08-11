@@ -7,6 +7,8 @@ Unreleased
 
 -   Single options boolean flags with ``show_default=True`` only show
     the default if it is ``True``. :issue:`1971`:
+-   Using '--' separator between command and subcommand and between subcommands can be
+    switched off. :issue:`619`
 
 
 Version 8.0.2

@@ -29,6 +29,7 @@ from gettext import ngettext
 from .exceptions import BadArgumentUsage
 from .exceptions import BadOptionUsage
 from .exceptions import NoSuchOption
+from .exceptions import NotAllowedDoubleDash
 from .exceptions import UsageError
 
 if t.TYPE_CHECKING:
@@ -332,6 +333,29 @@ class OptionParser:
         appear on the command line.  If arguments appear multiple times they
         will be memorized multiple times as well.
         """
+        # This part checks the type of self.ctx and if it is a Group or
+        # CommandCollection instance and '--' is used in args with
+        # multicommand.disable_double_dash = True a NotAllowedDoubleDash exception is
+        # raised.
+        TYPECHECKER_TUPLE = (
+            "<class 'click.core.Group'>",
+            "<class 'click.core.CommandCollection'>",
+        )
+        if self.ctx is None:
+            pass
+        else:
+            typechecker = type(self.ctx.command)
+            strtypechecker = str(typechecker)
+            if (
+                strtypechecker in TYPECHECKER_TUPLE
+                and "--" in args
+                and self.ctx.command.disable_double_dash is True
+            ):
+                raise NotAllowedDoubleDash(
+                    "can't use '--' between a command and a subcommand and between"
+                    " subcommands",
+                    self.ctx,
+                )
         state = ParsingState(args)
         try:
             self._process_args_for_options(state)

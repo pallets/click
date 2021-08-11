@@ -427,6 +427,64 @@ the Click repository.  It implements a pipeline based image editing tool
 that has a nice internal structure for the pipelines.
 
 
+Multi Command Switching Off '--' Separator
+------------------------------------------
+
+.. versionadded:: 8.1.0
+
+The default behaviour of Click is that you can use double-dash separator ('--') between
+a multicommand and a subcommand. In order to switch that off you can pass
+``disable_double_dash=True`` to your multicommand:
+
+.. click:example::
+
+    @click.group(disable_double_dash=True)
+    def cli():
+        pass
+
+
+    @cli.command('sdist')
+    def sdist():
+        click.echo('sdist called')
+
+And now when you run that:
+
+.. click:run::
+
+    invoke(cli, args=['--', 'sdist'])
+
+you will have:
+``Error: can't use '--' between a command and a subcommand and between subcommands``
+
+The same error message will be generated when using CommandCollection instance. In that
+case you should pass ``disable_double_dash=True`` to your CommandCollection instance:
+
+.. click:example::
+
+    @click.group()
+    def cli1():
+        pass
+
+    @cli1.command()
+    def cmd1():
+        """Command on cli1"""
+        click.echo('I am cmd1')
+
+    @click.group()
+    def cli2():
+        pass
+
+    @cli2.command()
+    def cmd2():
+        """Command on cli2"""
+        click.echo('I am cmd2')
+
+    cli = click.CommandCollection(sources=[cli1, cli2], disable_double_dash=True)
+
+    if __name__ == '__main__':
+        cli()
+
+
 Overriding Defaults
 -------------------
 
