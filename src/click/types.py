@@ -845,20 +845,11 @@ class Path(ParamType):
                 if os.path.islink(rv):
                     rv = os.readlink(rv)
 
-                    # absolute links
-                    if os.path.isabs(rv):
-                        # os.readlink prepends path prefixes to absolute
-                        # links in windows.
-                        # https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#win32-file-namespaces
-                        # Here we strip prefix from the resolved path
-                        rv_drive, rv_path = os.path.splitdrive(rv)
-                        stripped_rv_drive = rv_drive.split(os.path.sep)[-1]
-                        rv = os.path.join(stripped_rv_drive, rv_path)
-                    else:
-                        # For relative symlinks we join dir_ to the resolved
-                        # symlink. This will make it relative to the original
-                        # containing directory.
-                        rv = os.path.join(dir_, rv)
+                # Join dir_ with the resolved symlink if the resolved
+                # path is relative. This will make it relative to the
+                # original containing directory.
+                if not os.path.isabs(rv):
+                    rv = os.path.join(dir_, rv)
 
             try:
                 st = os.stat(rv)
