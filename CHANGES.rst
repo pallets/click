@@ -7,6 +7,9 @@ Unreleased
 
 -   Single options boolean flags with ``show_default=True`` only show
     the default if it is ``True``. :issue:`1971`:
+-   Add ``click.get_pager_file`` for file-like access to an output
+    pager. :pr:`1572`
+
 
 
 Version 8.0.2
