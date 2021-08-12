@@ -845,11 +845,19 @@ class Path(ParamType):
                 if os.path.islink(rv):
                     rv = os.readlink(rv)
 
-                # Join dir_ with the resolved symlink. If the resolved
-                # path is relative, this will make it relative to the
-                # original containing directory. If it is absolute, this
-                # has no effect.
-                rv = os.path.join(dir_, rv)
+                    # absolute links
+                    if os.path.isabs(rv):
+                        # os.readlink prepends path prefixes to absolute links
+                        # in windows.
+                        # Here we strip prefix from the resolved path
+                        rv_drive, rv_path = os.path.splitdrive(rv)
+                        stripped_rv_drive = rv_drive.split(os.path.sep)[-1]
+                        rv = os.path.join(stripped_rv_drive, rv_path)
+                    else:
+                        # For relative symlinks we join dir_ to the resolved
+                        # symlink. This will make it relative to the original
+                        # containing directory.
+                        rv = os.path.join(dir_, rv)
 
             try:
                 st = os.stat(rv)
