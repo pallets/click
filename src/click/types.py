@@ -847,8 +847,9 @@ class Path(ParamType):
 
                     # absolute links
                     if os.path.isabs(rv):
-                        # os.readlink prepends path prefixes to absolute links
-                        # in windows.
+                        # os.readlink prepends path prefixes to absolute
+                        # links in windows.
+                        # https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#win32-file-namespaces
                         # Here we strip prefix from the resolved path
                         rv_drive, rv_path = os.path.splitdrive(rv)
                         stripped_rv_drive = rv_drive.split(os.path.sep)[-1]
