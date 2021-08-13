@@ -437,8 +437,7 @@ def _tempfilepager(
     try:
         os.system(f'{cmd} "{filename}"')
     finally:
-        if WIN:
-            os.close(fd)
+        os.close(fd)
         os.unlink(filename)
 
 
