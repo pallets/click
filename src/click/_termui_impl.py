@@ -426,7 +426,7 @@ def _tempfilepager(
     """Page through text by invoking a program on a temporary file."""
     import tempfile
 
-    _, filename = tempfile.mkstemp()
+    fd, filename = tempfile.mkstemp()
     # TODO: This never terminates if the passed generator never terminates.
     text = "".join(generator)
     if not color:
@@ -437,6 +437,7 @@ def _tempfilepager(
     try:
         os.system(f'{cmd} "{filename}"')
     finally:
+        os.close(fd)
         os.unlink(filename)
 
 
