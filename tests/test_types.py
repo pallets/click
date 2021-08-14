@@ -126,4 +126,15 @@ def test_symlink_resolution(tmpdir, sym_file, abs_fun):
     # test
     ctx = click.Context(click.Command("do_stuff"))
     rv = click.Path(resolve_path=True).convert(sym_path, None, ctx)
+
+    # os.readlink prepends path prefixes to absolute
+    # links in windows.
+    # https://docs.microsoft.com/en-us/windows/win32/
+    # ... fileio/naming-a-file#win32-file-namespaces
+    #
+    # Here we strip win32 path prefix from the resolved path
+    rv_drive, rv_path = os.path.splitdrive(rv)
+    stripped_rv_drive = rv_drive.split(os.path.sep)[-1]
+    rv = os.path.join(stripped_rv_drive, rv_path)
+
     assert rv == real_path
