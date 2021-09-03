@@ -202,37 +202,36 @@ def test_float_option(runner, args, expect):
         assert result.exception is None
 
 
-def test_boolean_option(runner):
-    for default in True, False:
+@pytest.mark.parametrize("default", [True, False])
+@pytest.mark.parametrize(
+    ("args", "expect"), [(["--on"], True), (["--off"], False), ([], None)]
+)
+def test_boolean_switch(runner, default, args, expect):
+    @click.command()
+    @click.option("--on/--off", default=default)
+    def cli(on):
+        return on
 
-        @click.command()
-        @click.option("--with-foo/--without-foo", default=default)
-        def cli(with_foo):
-            click.echo(with_foo)
+    if expect is None:
+        expect = default
 
-        result = runner.invoke(cli, ["--with-foo"])
-        assert not result.exception
-        assert result.output == "True\n"
-        result = runner.invoke(cli, ["--without-foo"])
-        assert not result.exception
-        assert result.output == "False\n"
-        result = runner.invoke(cli, [])
-        assert not result.exception
-        assert result.output == f"{default}\n"
+    result = runner.invoke(cli, args, standalone_mode=False)
+    assert result.return_value is expect
 
-    for default in True, False:
 
-        @click.command()
-        @click.option("--flag", is_flag=True, default=default)
-        def cli(flag):
-            click.echo(flag)
+@pytest.mark.parametrize("default", [True, False])
+@pytest.mark.parametrize(("args", "expect"), [(["--f"], True), ([], False)])
+def test_boolean_flag(runner, default, args, expect):
+    @click.command()
+    @click.option("--f", is_flag=True, default=default)
+    def cli(f):
+        return f
 
-        result = runner.invoke(cli, ["--flag"])
-        assert not result.exception
-        assert result.output == f"{not default}\n"
-        result = runner.invoke(cli, [])
-        assert not result.exception
-        assert result.output == f"{default}\n"
+    if default:
+        expect = not expect
+
+    result = runner.invoke(cli, args, standalone_mode=False)
+    assert result.return_value is expect
 
 
 @pytest.mark.parametrize(
