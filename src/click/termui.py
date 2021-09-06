@@ -596,9 +596,9 @@ def style(
     if underline is not None:
         bits.append(f"\033[{4 if underline else 24}m")
     if overline is not None:
-        bits.append(f"\033[{53 if underline else 55}m")
+        bits.append(f"\033[{53 if overline else 55}m")
     if italic is not None:
-        bits.append(f"\033[{5 if underline else 23}m")
+        bits.append(f"\033[{3 if italic else 23}m")
     if blink is not None:
         bits.append(f"\033[{5 if blink else 25}m")
     if reverse is not None:
