@@ -695,6 +695,9 @@ def edit(
     :param filenames: for editing multiple files. It opens files in multiple tabs.
                       It will only work if the editor have support for
                       opening multiple tabs.
+
+    .. versionchanged:: 8.1.0
+        Added parameter ``filenames``
     """
     from ._termui_impl import Editor
 
