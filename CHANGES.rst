@@ -7,6 +7,7 @@ Unreleased
 
 -   Single options boolean flags with ``show_default=True`` only show
     the default if it is ``True``. :issue:`1971`:
+-   Edit multiple files using ``click.edit``
 
 
 Version 8.0.2
