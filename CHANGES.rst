@@ -62,6 +62,7 @@ Unreleased
 -   Contexts created during shell completion are closed properly, fixing
     ``ResourceWarning``s when using ``click.File``. :issue:`2644` :pr:`2800`
     :pr:`2767`
+-   Edit multiple files using ``click.edit``
 
 
 Version 8.1.8
