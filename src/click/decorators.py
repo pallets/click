@@ -380,7 +380,7 @@ def version_option(
                 raise RuntimeError(
                     f"{package_name!r} is not installed. Try passing"
                     " 'package_name' instead."
-                )
+                ) from None
 
         if version is None:
             raise RuntimeError(

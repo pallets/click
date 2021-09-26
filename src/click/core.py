@@ -1061,7 +1061,7 @@ class BaseCommand:
                     ctx.exit()
             except (EOFError, KeyboardInterrupt):
                 echo(file=sys.stderr)
-                raise Abort()
+                raise Abort() from None
             except ClickException as e:
                 if not standalone_mode:
                     raise
