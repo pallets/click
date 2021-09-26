@@ -18,6 +18,8 @@ Unreleased
     avoiding some unexpected warning output. :issue:`1738, 2017`
 -   Fix type annotation for ``type`` argument in ``prompt`` function.
     :issue:`2062`
+-   Fix overline and italic styles, which were incorrectly added when
+    adding underline. :pr:`2058`
 
 
 Version 8.0.1
