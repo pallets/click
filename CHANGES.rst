@@ -16,6 +16,8 @@ Unreleased
     to be relative to the containing directory. :issue:`1921`
 -   Completion does not skip Python's resource cleanup when exiting,
     avoiding some unexpected warning output. :issue:`1738, 2017`
+-   Fix type annotation for ``type`` argument in ``prompt`` function.
+    :issue:`2062`
 
 
 Version 8.0.1

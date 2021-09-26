@@ -84,7 +84,7 @@ def prompt(
     default: t.Optional[t.Any] = None,
     hide_input: bool = False,
     confirmation_prompt: t.Union[bool, str] = False,
-    type: t.Optional[ParamType] = None,
+    type: t.Optional[t.Union[ParamType, t.Any]] = None,
     value_proc: t.Optional[t.Callable[[str], t.Any]] = None,
     prompt_suffix: str = ": ",
     show_default: bool = True,
