@@ -498,7 +498,7 @@ class Editor:
         except OSError as e:
             raise ClickException(
                 _("{editor}: Editing failed: {e}").format(editor=editor, e=e)
-            )
+            ) from e
 
     def edit(self, text: t.Optional[t.AnyStr]) -> t.Optional[t.AnyStr]:
         import tempfile
