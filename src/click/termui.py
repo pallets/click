@@ -53,10 +53,12 @@ def visible_prompt_func(prompt: str, err: bool = False) -> str:
 
     """
     try:
-        sys.stdout = sys.__stderr__ if err else sys.__stdout__
+        old_stdout = sys.stdout
+        if err:
+            sys.stdout = sys.stderr
         return input(prompt)
     finally:
-        sys.stdout = sys.__stdout__
+        sys.stdout = old_stdout
 
 
 def hidden_prompt_func(prompt: str, err: bool = False) -> str:
