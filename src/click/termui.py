@@ -67,11 +67,7 @@ def hidden_prompt_func(prompt: str, err: bool = False) -> str:
     """
     import getpass
 
-    try:
-        sys.stdout = sys.__stderr__ if err else sys.__stdout__
-        return getpass.getpass(prompt)
-    finally:
-        sys.stdout = sys.__stdout__
+    return getpass.getpass(prompt, stream=sys.stderr if err else sys.stdout)
 
 
 def _build_prompt(
