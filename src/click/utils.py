@@ -294,9 +294,10 @@ def echo(
                 file = auto_wrap_for_ansi(file)  # type: ignore
             elif not color:
                 out = strip_ansi(out)
-
-    file.write(out)  # type: ignore
-    file.flush()
+    
+    if file is not None:
+        file.write(out)  # type: ignore
+        file.flush()
 
 
 def get_binary_stream(name: "te.Literal['stdin', 'stdout', 'stderr']") -> t.BinaryIO:
