@@ -294,7 +294,7 @@ def echo(
                 file = auto_wrap_for_ansi(file)  # type: ignore
             elif not color:
                 out = strip_ansi(out)
-    
+
     if file is not None:
         file.write(out)  # type: ignore
         file.flush()
