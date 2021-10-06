@@ -6,49 +6,49 @@
 #
 alabaster==0.7.12
     # via sphinx
-appdirs==1.4.4
-    # via virtualenv
 attrs==21.2.0
     # via pytest
 babel==2.9.1
     # via sphinx
-certifi==2020.12.5
+backports.entry-points-selectable==1.1.0
+    # via virtualenv
+certifi==2021.5.30
     # via requests
-cfgv==3.3.0
+cfgv==3.3.1
     # via pre-commit
-chardet==4.0.0
+charset-normalizer==2.0.6
     # via requests
 click==8.0.1
     # via pip-tools
-distlib==0.3.1
+distlib==0.3.3
     # via virtualenv
 docutils==0.16
     # via
     #   sphinx
     #   sphinx-tabs
-filelock==3.0.12
+filelock==3.3.0
     # via
     #   tox
     #   virtualenv
-identify==2.2.4
+identify==2.3.0
     # via pre-commit
-idna==2.10
+idna==3.2
     # via requests
 imagesize==1.2.0
     # via sphinx
 iniconfig==1.1.1
     # via pytest
-jinja2==3.0.1
+jinja2==3.0.2
     # via sphinx
 markupsafe==2.0.1
     # via jinja2
-mypy==0.910
-    # via -r requirements/typing.in
 mypy-extensions==0.4.3
     # via mypy
+mypy==0.910
+    # via -r requirements/typing.in
 nodeenv==1.6.0
     # via pre-commit
-packaging==20.9
+packaging==21.0
     # via
     #   pallets-sphinx-themes
     #   pytest
@@ -56,21 +56,23 @@ packaging==20.9
     #   tox
 pallets-sphinx-themes==2.0.1
     # via -r requirements/docs.in
-pep517==0.10.0
+pep517==0.11.0
     # via pip-tools
-pip-tools==6.2.0
+pip-tools==6.3.0
     # via -r requirements/dev.in
-pluggy==0.13.1
+platformdirs==2.4.0
+    # via virtualenv
+pluggy==1.0.0
     # via
     #   pytest
     #   tox
-pre-commit==2.14.1
+pre-commit==2.15.0
     # via -r requirements/dev.in
 py==1.10.0
     # via
     #   pytest
     #   tox
-pygments==2.9.0
+pygments==2.10.0
     # via
     #   sphinx
     #   sphinx-tabs
@@ -78,11 +80,11 @@ pyparsing==2.4.7
     # via packaging
 pytest==6.2.5
     # via -r requirements/tests.in
-pytz==2021.1
+pytz==2021.3
     # via babel
 pyyaml==5.4.1
     # via pre-commit
-requests==2.25.1
+requests==2.26.0
     # via sphinx
 six==1.16.0
     # via
@@ -90,17 +92,17 @@ six==1.16.0
     #   virtualenv
 snowballstemmer==2.1.0
     # via sphinx
-sphinx==4.1.2
+sphinx-issues==1.2.0
+    # via -r requirements/docs.in
+sphinx-tabs==3.2.0
+    # via -r requirements/docs.in
+sphinx==4.2.0
     # via
     #   -r requirements/docs.in
     #   pallets-sphinx-themes
     #   sphinx-issues
     #   sphinx-tabs
     #   sphinxcontrib-log-cabinet
-sphinx-issues==1.2.0
-    # via -r requirements/docs.in
-sphinx-tabs==3.2.0
-    # via -r requirements/docs.in
 sphinxcontrib-applehelp==1.0.2
     # via sphinx
 sphinxcontrib-devhelp==1.0.2
@@ -118,21 +120,22 @@ sphinxcontrib-serializinghtml==1.1.5
 toml==0.10.2
     # via
     #   mypy
-    #   pep517
     #   pre-commit
     #   pytest
     #   tox
-tox==3.24.3
+tomli==1.2.1
+    # via pep517
+tox==3.24.4
     # via -r requirements/dev.in
-typing-extensions==3.10.0.0
+typing-extensions==3.10.0.2
     # via mypy
-urllib3==1.26.5
+urllib3==1.26.7
     # via requests
-virtualenv==20.4.6
+virtualenv==20.8.1
     # via
     #   pre-commit
     #   tox
-wheel==0.36.2
+wheel==0.37.0
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:

@@ -8,9 +8,9 @@ attrs==21.2.0
     # via pytest
 iniconfig==1.1.1
     # via pytest
-packaging==20.9
+packaging==21.0
     # via pytest
-pluggy==0.13.1
+pluggy==1.0.0
     # via pytest
 py==1.10.0
     # via pytest
