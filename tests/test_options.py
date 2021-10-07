@@ -314,11 +314,19 @@ def test_dynamic_default_help_text(runner):
         (click.IntRange(max=32), "x<=32"),
     ],
 )
-def test_intrange_default_help_text(runner, type, expect):
-    option = click.Option(["--count"], type=type, show_default=True, default=2)
+def test_intrange_default_help_text(type, expect):
+    option = click.Option(["--num"], type=type, show_default=True, default=2)
     context = click.Context(click.Command("test"))
     result = option.get_help_record(context)[1]
     assert expect in result
+
+
+def test_count_default_type_help():
+    """A count option with the default type should not show >=0 in help."""
+    option = click.Option(["--couunt"], count=True, help="some words")
+    context = click.Context(click.Command("test"))
+    result = option.get_help_record(context)[1]
+    assert result == "some words"
 
 
 def test_toupper_envvar_prefix(runner):
