@@ -20,6 +20,8 @@ Unreleased
     :issue:`2062`
 -   Fix overline and italic styles, which were incorrectly added when
     adding underline. :pr:`2058`
+-   An option with ``count=True`` will not show "[x>=0]" in help text.
+    :issue:`2072`
 
 
 Version 8.0.1

@@ -2740,7 +2740,11 @@ class Option(Parameter):
             if default_string:
                 extra.append(_("default: {default}").format(default=default_string))
 
-        if isinstance(self.type, types._NumberRangeBase):
+        if (
+            isinstance(self.type, types._NumberRangeBase)
+            # skip count with default range type
+            and not (self.count and self.type.min == 0 and self.type.max is None)
+        ):
             range_str = self.type._describe_range()
 
             if range_str:
