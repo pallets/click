@@ -12,7 +12,7 @@ Unreleased
 Version 8.0.2
 -------------
 
-Unreleased
+Released 2021-10-08
 
 -   ``is_bool_flag`` is not set to ``True`` if ``is_flag`` is ``False``.
     :issue:`1925`
@@ -29,6 +29,12 @@ Unreleased
     :issue:`2062`
 -   Fix overline and italic styles, which were incorrectly added when
     adding underline. :pr:`2058`
+-   An option with ``count=True`` will not show "[x>=0]" in help text.
+    :issue:`2072`
+-   Default values are not cast to the parameter type twice during
+    processing. :issue:`2085`
+-   Options with ``multiple`` and ``flag_value`` use the flag value
+    instead of leaving an internal placeholder. :issue:`2001`
 
 
 Version 8.0.1

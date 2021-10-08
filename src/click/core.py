@@ -2192,6 +2192,9 @@ class Parameter:
         :param call: If the default is a callable, call it. Disable to
             return the callable instead.
 
+        .. versionchanged:: 8.0.2
+            Type casting is no longer performed when getting a default.
+
         .. versionchanged:: 8.0.1
             Type casting can fail in resilient parsing mode. Invalid
             defaults will not prevent showing help text.
@@ -2207,20 +2210,10 @@ class Parameter:
         if value is None:
             value = self.default
 
-        if callable(value):
-            if not call:
-                # Don't type cast the callable.
-                return value
-
+        if call and callable(value):
             value = value()
 
-        try:
-            return self.type_cast_value(ctx, value)
-        except BadParameter:
-            if ctx.resilient_parsing:
-                return value
-
-            raise
+        return value
 
     def add_to_parser(self, parser: OptionParser, ctx: Context) -> None:
         raise NotImplementedError()
@@ -2305,8 +2298,7 @@ class Parameter:
         return False
 
     def process_value(self, ctx: Context, value: t.Any) -> t.Any:
-        if value is not None:
-            value = self.type_cast_value(ctx, value)
+        value = self.type_cast_value(ctx, value)
 
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)
@@ -2747,7 +2739,11 @@ class Option(Parameter):
             if default_string:
                 extra.append(_("default: {default}").format(default=default_string))
 
-        if isinstance(self.type, types._NumberRangeBase):
+        if (
+            isinstance(self.type, types._NumberRangeBase)
+            # skip count with default range type
+            and not (self.count and self.type.min == 0 and self.type.max is None)
+        ):
             range_str = self.type._describe_range()
 
             if range_str:
@@ -2863,6 +2859,14 @@ class Option(Parameter):
             else:
                 value = self.flag_value
                 source = ParameterSource.COMMANDLINE
+
+        elif (
+            self.multiple
+            and value is not None
+            and any(v is _flag_needs_value for v in value)
+        ):
+            value = [self.flag_value if v is _flag_needs_value else v for v in value]
+            source = ParameterSource.COMMANDLINE
 
         # The value wasn't set, or used the param's default, prompt if
         # prompting is enabled.
