@@ -792,6 +792,29 @@ def test_option_with_optional_value(runner, args, expect):
     assert result.return_value == expect
 
 
+def test_multiple_option_with_optional_value(runner):
+    cli = click.Command(
+        "cli",
+        params=[
+            click.Option(["-f"], is_flag=False, flag_value="flag", multiple=True),
+            click.Option(["-a"]),
+            click.Argument(["b"], nargs=-1),
+        ],
+        callback=lambda **kwargs: kwargs,
+    )
+    result = runner.invoke(
+        cli,
+        ["-f", "-f", "other", "-f", "-a", "1", "a", "b"],
+        standalone_mode=False,
+        catch_exceptions=False,
+    )
+    assert result.return_value == {
+        "f": ("flag", "other", "flag"),
+        "a": "1",
+        "b": ("a", "b"),
+    }
+
+
 def test_type_from_flag_value():
     param = click.Option(["-a", "x"], default=True, flag_value=4)
     assert param.type is click.INT
