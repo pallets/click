@@ -22,6 +22,8 @@ Unreleased
     adding underline. :pr:`2058`
 -   An option with ``count=True`` will not show "[x>=0]" in help text.
     :issue:`2072`
+-   Default values are not cast to the parameter type twice during
+    processing. :issue:`2085`
 
 
 Version 8.0.1
