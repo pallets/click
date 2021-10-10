@@ -2,7 +2,7 @@ import os.path
 import pathlib
 
 import pytest
-from conftest import check_symlink_impl
+from conftest import symlinks_supported
 
 import click
 
@@ -104,37 +104,27 @@ def test_path_type(runner, cls, expect):
     assert result.return_value == expect
 
 
-@pytest.mark.skipif(not check_symlink_impl(), reason="symlink not allowed on device")
-@pytest.mark.parametrize(
-    ("sym_file", "abs_fun"),
-    [
-        (("relative_symlink",), os.path.basename),
-        (("test", "absolute_symlink"), lambda x: x),
-    ],
+@pytest.mark.skipif(
+    not symlinks_supported, reason="The current OS or FS doesn't support symlinks."
 )
-def test_symlink_resolution(tmpdir, sym_file, abs_fun):
-    """This test ensures symlinks are properly resolved by click"""
-    tempdir = str(tmpdir)
-    real_path = os.path.join(tempdir, "test_file")
-    sym_path = os.path.join(tempdir, *sym_file)
+def test_path_resolve_symlink(tmp_path, runner):
+    test_file = tmp_path / "file"
+    test_file_str = os.fsdecode(test_file)
+    test_file.write_text("")
 
-    # create dirs and files
-    os.makedirs(os.path.join(tempdir, "test"), exist_ok=True)
-    open(real_path, "w").close()
-    os.symlink(abs_fun(real_path), sym_path)
+    path_type = click.Path(resolve_path=True)
+    param = click.Argument(["a"], type=path_type)
+    ctx = click.Context(click.Command("cli", params=[param]))
 
-    # test
-    ctx = click.Context(click.Command("do_stuff"))
-    rv = click.Path(resolve_path=True).convert(sym_path, None, ctx)
+    test_dir = tmp_path / "dir"
+    test_dir.mkdir()
 
-    # os.readlink prepends path prefixes to absolute
-    # links in windows.
-    # https://docs.microsoft.com/en-us/windows/win32/
-    # ... fileio/naming-a-file#win32-file-namespaces
-    #
-    # Here we strip win32 path prefix from the resolved path
-    rv_drive, rv_path = os.path.splitdrive(rv)
-    stripped_rv_drive = rv_drive.split(os.path.sep)[-1]
-    rv = os.path.join(stripped_rv_drive, rv_path)
+    abs_link = test_dir / "abs"
+    abs_link.symlink_to(test_file)
+    abs_rv = path_type.convert(os.fsdecode(abs_link), param, ctx)
+    assert abs_rv == test_file_str
 
-    assert rv == real_path
+    rel_link = test_dir / "rel"
+    rel_link.symlink_to(pathlib.Path("..") / "file")
+    rel_rv = path_type.convert(os.fsdecode(rel_link), param, ctx)
+    assert rel_rv == test_file_str

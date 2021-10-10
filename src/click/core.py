@@ -739,7 +739,9 @@ class Context:
 
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
-                    kwargs[param.name] = param.get_default(ctx)  # type: ignore
+                    kwargs[param.name] = param.type_cast_value(  # type: ignore
+                        ctx, param.get_default(ctx)
+                    )
 
             # Track all kwargs as params, so that forward() will pass
             # them on in subsequent calls.

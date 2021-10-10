@@ -231,8 +231,10 @@ def confirm(
         try:
             # Write the prompt separately so that we get nice
             # coloring through colorama on Windows
-            echo(prompt, nl=False, err=err)
-            value = visible_prompt_func("").lower().strip()
+            echo(prompt.rstrip(" "), nl=False, err=err)
+            # Echo a space to stdout to work around an issue where
+            # readline causes backspace to clear the whole line.
+            value = visible_prompt_func(" ").lower().strip()
         except (KeyboardInterrupt, EOFError):
             raise Abort() from None
         if value in ("y", "yes"):
