@@ -9,6 +9,8 @@ Unreleased
     paths. :issue:`2088`
 -   Importing ``readline`` does not cause the ``confirm()`` prompt to
     disappear when pressing backspace. :issue:`2092`
+-   Any default values injected by ``invoke()`` are cast to the
+    corresponding parameter's type. :issue:`2089, 2090`
 
 
 Version 8.0.2
