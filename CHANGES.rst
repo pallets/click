@@ -7,6 +7,8 @@ Unreleased
 
 -   Fix issue with ``Path(resolve_path=True)`` type creating invalid
     paths. :issue:`2088`
+-   Importing ``readline`` does not cause the ``confirm()`` prompt to
+    disappear when pressing backspace. :issue:`2092`
 
 
 Version 8.0.2
