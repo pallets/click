@@ -3,7 +3,7 @@
 Version 8.0.3
 -------------
 
-Unreleased
+Released 2021-10-10
 
 -   Fix issue with ``Path(resolve_path=True)`` type creating invalid
     paths. :issue:`2088`
