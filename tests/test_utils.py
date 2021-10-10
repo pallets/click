@@ -275,8 +275,8 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     emulate_input("y\n")
     click.confirm("Prompt to stderr", err=True)
     out, err = capfd.readouterr()
-    assert out == ""
-    assert err == "Prompt to stderr [y/N]: "
+    assert out == " "
+    assert err == "Prompt to stderr [y/N]:"
 
     monkeypatch.setattr(click.termui, "isatty", lambda x: True)
     monkeypatch.setattr(click.termui, "getchar", lambda: " ")
