@@ -1,5 +1,14 @@
 .. currentmodule:: click
 
+Version 8.0.3
+-------------
+
+Unreleased
+
+-   Fix issue with ``Path(resolve_path=True)`` type creating invalid
+    paths. :issue:`2088`
+
+
 Version 8.0.2
 -------------
 
