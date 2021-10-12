@@ -9,6 +9,8 @@ Unreleased
     same as the string ``"-"``. :issue:`2106`
 -   The ``option`` and ``argument`` decorators preserve the type
     annotation of the decorated function. :pr:`2155`
+-   A callable default value can customize its help text by overriding
+    ``__str__`` instead of always showing ``(dynamic)``. :issue:`2099`
 
 
 Version 8.0.3
