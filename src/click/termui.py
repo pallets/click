@@ -3,7 +3,6 @@ import io
 import itertools
 import os
 import sys
-import typing
 import typing as t
 from gettext import gettext as _
 
