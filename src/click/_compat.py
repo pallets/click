@@ -388,9 +388,9 @@ def open_stream(
 ) -> t.Tuple[t.IO, bool]:
     binary = "b" in mode
 
-    # Standard streams first.  These are simple because they don't need
-    # special handling for the atomic flag.  It's entirely ignored.
-    if filename == "-":
+    # Standard streams first. These are simple because they ignore the
+    # atomic flag. Use fsdecode to handle Path("-").
+    if os.fsdecode(filename) == "-":
         if any(m in mode for m in ["w", "a", "x"]):
             if binary:
                 return get_binary_stdout(), False

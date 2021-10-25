@@ -1,5 +1,14 @@
 .. currentmodule:: click
 
+Version 8.0.4
+-------------
+
+Unreleased
+
+-   ``open_file`` recognizes ``Path("-")`` as a standard stream, the
+    same as the string ``"-"``. :issue:`2106`
+
+
 Version 8.0.3
 -------------
 

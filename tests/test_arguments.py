@@ -120,9 +120,9 @@ def test_file_args(runner):
         assert result.exit_code == 0
 
 
-def test_path_args(runner):
+def test_path_allow_dash(runner):
     @click.command()
-    @click.argument("input", type=click.Path(dir_okay=False, allow_dash=True))
+    @click.argument("input", type=click.Path(allow_dash=True))
     def foo(input):
         click.echo(input)
 
