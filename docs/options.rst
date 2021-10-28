@@ -538,10 +538,10 @@ parameter ``--foo`` was required and defined before, you would need to
 specify it for ``--version`` to work.  For more information, see
 :ref:`callback-evaluation-order`.
 
-A callback is a function that is invoked with two parameters: the current
-:class:`Context` and the value.  The context provides some useful features
-such as quitting the application and gives access to other already
-processed parameters.
+A callback is a function that is invoked with three parameters: the
+current :class:`Context`, the current :class:`Parameter`, and the value.
+The context provides some useful features such as quitting the
+application and gives access to other already processed parameters.
 
 Here an example for a ``--version`` flag:
 
