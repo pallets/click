@@ -538,10 +538,12 @@ parameter ``--foo`` was required and defined before, you would need to
 specify it for ``--version`` to work.  For more information, see
 :ref:`callback-evaluation-order`.
 
-A callback is a function that is invoked with two parameters: the current
-:class:`Context` and the value.  The context provides some useful features
-such as quitting the application and gives access to other already
-processed parameters.
+A callback is a function that is invoked with three parameters: the current
+:class:`Context`, the parameter, and the value.  The context provides some
+useful features such as quitting the application and gives access to other
+already processed parameters. The parameter is the instance of :class:`Option`
+created by the decorator. The value is the value the parameter gets when the
+command is invoked at runtime.
 
 Here an example for a ``--version`` flag:
 
@@ -560,7 +562,7 @@ Here an example for a ``--version`` flag:
         click.echo('Hello World!')
 
 The `expose_value` parameter prevents the pretty pointless ``version``
-parameter from being passed to the callback.  If that was not specified, a
+parameter from being passed to the command.  If that was not specified, a
 boolean would be passed to the `hello` script.  The `resilient_parsing`
 flag is applied to the context if Click wants to parse the command line
 without any destructive behavior that would change the execution flow.  In
