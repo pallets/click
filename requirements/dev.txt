@@ -42,10 +42,10 @@ jinja2==3.0.2
     # via sphinx
 markupsafe==2.0.1
     # via jinja2
-mypy-extensions==0.4.3
-    # via mypy
 mypy==0.910
     # via -r requirements/typing.in
+mypy-extensions==0.4.3
+    # via mypy
 nodeenv==1.6.0
     # via pre-commit
 packaging==21.0
@@ -58,7 +58,7 @@ pallets-sphinx-themes==2.0.1
     # via -r requirements/docs.in
 pep517==0.11.0
     # via pip-tools
-pip-tools==6.3.0
+pip-tools==6.4.0
     # via -r requirements/dev.in
 platformdirs==2.4.0
     # via virtualenv
@@ -92,10 +92,6 @@ six==1.16.0
     #   virtualenv
 snowballstemmer==2.1.0
     # via sphinx
-sphinx-issues==1.2.0
-    # via -r requirements/docs.in
-sphinx-tabs==3.2.0
-    # via -r requirements/docs.in
 sphinx==4.2.0
     # via
     #   -r requirements/docs.in
@@ -103,6 +99,10 @@ sphinx==4.2.0
     #   sphinx-issues
     #   sphinx-tabs
     #   sphinxcontrib-log-cabinet
+sphinx-issues==1.2.0
+    # via -r requirements/docs.in
+sphinx-tabs==3.2.0
+    # via -r requirements/docs.in
 sphinxcontrib-applehelp==1.0.2
     # via sphinx
 sphinxcontrib-devhelp==1.0.2
