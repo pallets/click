@@ -666,6 +666,7 @@ def edit(
     require_save: bool = True,
     extension: str = ".txt",
     filename: t.Optional[str] = None,
+    filenames: t.Optional[t.Sequence[str]] = None,
 ) -> t.Optional[t.AnyStr]:
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
@@ -693,15 +694,24 @@ def edit(
     :param filename: if provided it will edit this file instead of the
                      provided text contents.  It will not use a temporary
                      file as an indirection in that case.
+    :param filenames: for editing multiple files. It opens files in multiple tabs.
+                      It will only work if the editor have support for
+                      opening multiple tabs.
+
+    .. versionchanged:: 8.1.0
+        Added parameter ``filenames``
     """
     from ._termui_impl import Editor
 
     ed = Editor(editor=editor, env=env, require_save=require_save, extension=extension)
 
-    if filename is None:
+    if filename:
+        filenames = (filename,)
+
+    if filenames is None:
         return ed.edit(text)
 
-    ed.edit_file(filename)
+    ed.edit_file(filenames)
     return None
 
 
