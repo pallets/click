@@ -67,11 +67,19 @@ def test_echo_custom_file():
         ({"bold": True}, "\x1b[1mx y\x1b[0m"),
         ({"dim": True}, "\x1b[2mx y\x1b[0m"),
         ({"underline": True}, "\x1b[4mx y\x1b[0m"),
-        ({"overline": True}, "\x1b[55mx y\x1b[0m"),
-        ({"italic": True}, "\x1b[23mx y\x1b[0m"),
+        ({"overline": True}, "\x1b[53mx y\x1b[0m"),
+        ({"italic": True}, "\x1b[3mx y\x1b[0m"),
         ({"blink": True}, "\x1b[5mx y\x1b[0m"),
         ({"reverse": True}, "\x1b[7mx y\x1b[0m"),
         ({"strikethrough": True}, "\x1b[9mx y\x1b[0m"),
+        ({"bold": False}, "\x1b[22mx y\x1b[0m"),
+        ({"dim": False}, "\x1b[22mx y\x1b[0m"),
+        ({"underline": False}, "\x1b[24mx y\x1b[0m"),
+        ({"overline": False}, "\x1b[55mx y\x1b[0m"),
+        ({"italic": False}, "\x1b[23mx y\x1b[0m"),
+        ({"blink": False}, "\x1b[25mx y\x1b[0m"),
+        ({"reverse": False}, "\x1b[27mx y\x1b[0m"),
+        ({"strikethrough": False}, "\x1b[29mx y\x1b[0m"),
         ({"fg": "black", "reset": False}, "\x1b[30mx y"),
     ],
 )
@@ -267,8 +275,8 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     emulate_input("y\n")
     click.confirm("Prompt to stderr", err=True)
     out, err = capfd.readouterr()
-    assert out == ""
-    assert err == "Prompt to stderr [y/N]: "
+    assert out == " "
+    assert err == "Prompt to stderr [y/N]:"
 
     monkeypatch.setattr(click.termui, "isatty", lambda x: True)
     monkeypatch.setattr(click.termui, "getchar", lambda: " ")
@@ -310,6 +318,22 @@ def test_open_file(runner):
         result = runner.invoke(cli, ["-"], input="foobar")
         assert result.exception is None
         assert result.output == "foobar\nmeep\n"
+
+
+def test_open_file_pathlib_dash(runner):
+    @click.command()
+    @click.argument(
+        "filename", type=click.Path(allow_dash=True, path_type=pathlib.Path)
+    )
+    def cli(filename):
+        click.echo(str(type(filename)))
+
+        with click.open_file(filename) as f:
+            click.echo(f.read())
+
+        result = runner.invoke(cli, ["-"], input="value")
+        assert result.exception is None
+        assert result.output == "pathlib.Path\nvalue\n"
 
 
 def test_open_file_ignore_errors_stdin(runner):

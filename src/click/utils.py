@@ -154,7 +154,7 @@ class LazyFile:
         except OSError as e:  # noqa: E402
             from .exceptions import FileError
 
-            raise FileError(self.name, hint=e.strerror)
+            raise FileError(self.name, hint=e.strerror) from e
         self._f = rv
         return rv
 
@@ -340,33 +340,42 @@ def open_file(
     lazy: bool = False,
     atomic: bool = False,
 ) -> t.IO:
-    """This is similar to how the :class:`File` works but for manual
-    usage.  Files are opened non lazy by default.  This can open regular
-    files as well as stdin/stdout if ``'-'`` is passed.
+    """Open a file, with extra behavior to handle ``'-'`` to indicate
+    a standard stream, lazy open on write, and atomic write. Similar to
+    the behavior of the :class:`~click.File` param type.
 
-    If stdin/stdout is returned the stream is wrapped so that the context
-    manager will not close the stream accidentally.  This makes it possible
-    to always use the function like this without having to worry to
-    accidentally close a standard stream::
+    If ``'-'`` is given to open ``stdout`` or ``stdin``, the stream is
+    wrapped so that using it in a context manager will not close it.
+    This makes it possible to use the function without accidentally
+    closing a standard stream:
+
+    .. code-block:: python
 
         with open_file(filename) as f:
             ...
 
-    .. versionadded:: 3.0
+    :param filename: The name of the file to open, or ``'-'`` for
+        ``stdin``/``stdout``.
+    :param mode: The mode in which to open the file.
+    :param encoding: The encoding to decode or encode a file opened in
+        text mode.
+    :param errors: The error handling mode.
+    :param lazy: Wait to open the file until it is accessed. For read
+        mode, the file is temporarily opened to raise access errors
+        early, then closed until it is read again.
+    :param atomic: Write to a temporary file and replace the given file
+        on close.
 
-    :param filename: the name of the file to open (or ``'-'`` for stdin/stdout).
-    :param mode: the mode in which to open the file.
-    :param encoding: the encoding to use.
-    :param errors: the error handling for this file.
-    :param lazy: can be flipped to true to open the file lazily.
-    :param atomic: in atomic mode writes go into a temporary file and it's
-                   moved on close.
+    .. versionadded:: 3.0
     """
     if lazy:
         return t.cast(t.IO, LazyFile(filename, mode, encoding, errors, atomic=atomic))
+
     f, should_close = open_stream(filename, mode, encoding, errors, atomic=atomic)
+
     if not should_close:
         f = t.cast(t.IO, KeepOpenFile(f))
+
     return f
 
 

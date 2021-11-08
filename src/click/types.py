@@ -744,26 +744,23 @@ class File(ParamType):
 
 
 class Path(ParamType):
-    """The path type is similar to the :class:`File` type but it performs
-    different checks.  First of all, instead of returning an open file
-    handle it returns just the filename.  Secondly, it can perform various
-    basic checks about what the file or directory should be.
+    """The ``Path`` type is similar to the :class:`File` type, but
+    returns the filename instead of an open file. Various checks can be
+    enabled to validate the type of file and permissions.
 
-    :param exists: if set to true, the file or directory needs to exist for
-                   this value to be valid.  If this is not required and a
-                   file does indeed not exist, then all further checks are
-                   silently skipped.
-    :param file_okay: controls if a file is a possible value.
-    :param dir_okay: controls if a directory is a possible value.
-    :param writable: if true, a writable check is performed.
-    :param readable: if true, a readable check is performed.
-    :param resolve_path: if this is true, then the path is fully resolved
-                         before the value is passed onwards.  This means
-                         that it's absolute and symlinks are resolved.  It
-                         will not expand a tilde-prefix, as this is
-                         supposed to be done by the shell only.
-    :param allow_dash: If this is set to `True`, a single dash to indicate
-                       standard streams is permitted.
+    :param exists: The file or directory needs to exist for the value to
+        be valid. If this is not set to ``True``, and the file does not
+        exist, then all further checks are silently skipped.
+    :param file_okay: Allow a file as a value value.
+    :param dir_okay: Allow a directory as a value.
+    :param writable: The file or directory must be writable.
+    :param readable: The file or directory must be readable.
+    :param resolve_path: Make the value absolute and resolve any
+        symlinks. A ``~`` is not expanded, as this is supposed to be
+        done by the shell only.
+    :param allow_dash: Allow a single dash as a value, which indicates
+        a standard stream (but does not open it). Use
+        :func:`~click.open_file` to handle opening this value.
     :param path_type: Convert the incoming path value to this type. If
         ``None``, keep Python's default, which is ``str``. Useful to
         convert to :class:`pathlib.Path`.
@@ -836,20 +833,11 @@ class Path(ParamType):
 
         if not is_dash:
             if self.resolve_path:
-                # Get the absolute directory containing the path.
-                dir_ = os.path.dirname(os.path.abspath(rv))
+                # os.path.realpath doesn't resolve symlinks on Windows
+                # until Python 3.8. Use pathlib for now.
+                import pathlib
 
-                # Resolve a symlink. realpath on Windows Python < 3.9
-                # doesn't resolve symlinks. This might return a relative
-                # path even if the path to the link is absolute.
-                if os.path.islink(rv):
-                    rv = os.readlink(rv)
-
-                # Join dir_ with the resolved symlink. If the resolved
-                # path is relative, this will make it relative to the
-                # original containing directory. If it is absolute, this
-                # has no effect.
-                rv = os.path.join(dir_, rv)
+                rv = os.fsdecode(pathlib.Path(rv).resolve())
 
             try:
                 st = os.stat(rv)
