@@ -5,8 +5,9 @@ Version 8.1.0
 
 Unreleased
 
+-   Drop support for Python 3.6. :pr:`2129`
 -   Single options boolean flags with ``show_default=True`` only show
-    the default if it is ``True``. :issue:`1971`:
+    the default if it is ``True``. :issue:`1971`
 
 
 Version 8.0.4
