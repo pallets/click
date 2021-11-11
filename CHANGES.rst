@@ -9,6 +9,8 @@ Unreleased
 -   Remove previously deprecated code. :pr:`2130`
 
     -   ``Group.resultcallback`` is renamed to ``result_callback``.
+    -   ``autocompletion`` parameter to ``Command`` is renamed to
+        ``shell_complete``.
 
 -   Single options boolean flags with ``show_default=True`` only show
     the default if it is ``True``. :issue:`1971`
