@@ -13,6 +13,7 @@ Unreleased
         ``shell_complete``.
     -   ``get_terminal_size`` is removed, use
         ``shutil.get_terminal_size`` instead.
+    -   ``get_os_args`` is removed, use ``sys.argv[1:]`` instead.
 
 -   Single options boolean flags with ``show_default=True`` only show
     the default if it is ``True``. :issue:`1971`
