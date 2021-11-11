@@ -1568,17 +1568,6 @@ class MultiCommand(Command):
 
         return decorator
 
-    def resultcallback(self, replace: bool = False) -> t.Callable[[F], F]:
-        import warnings
-
-        warnings.warn(
-            "'resultcallback' has been renamed to 'result_callback'."
-            " The old name will be removed in Click 8.1.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.result_callback(replace=replace)
-
     def format_commands(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Extra format methods for multi methods that adds all the commands
         after the options.

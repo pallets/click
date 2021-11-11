@@ -6,6 +6,10 @@ Version 8.1.0
 Unreleased
 
 -   Drop support for Python 3.6. :pr:`2129`
+-   Remove previously deprecated code. :pr:`2130`
+
+    -   ``Group.resultcallback`` is renamed to ``result_callback``.
+
 -   Single options boolean flags with ``show_default=True`` only show
     the default if it is ``True``. :issue:`1971`
 
