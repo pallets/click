@@ -1568,17 +1568,6 @@ class MultiCommand(Command):
 
         return decorator
 
-    def resultcallback(self, replace: bool = False) -> t.Callable[[F], F]:
-        import warnings
-
-        warnings.warn(
-            "'resultcallback' has been renamed to 'result_callback'."
-            " The old name will be removed in Click 8.1.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.result_callback(replace=replace)
-
     def format_commands(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Extra format methods for multi methods that adds all the commands
         after the options.
@@ -2020,11 +2009,6 @@ class Parameter:
                 t.Union[t.List["CompletionItem"], t.List[str]],
             ]
         ] = None,
-        autocompletion: t.Optional[
-            t.Callable[
-                [Context, t.List[str], str], t.List[t.Union[t.Tuple[str, str], str]]
-            ]
-        ] = None,
     ) -> None:
         self.name, self.opts, self.secondary_opts = self._parse_decls(
             param_decls or (), expose_value
@@ -2048,36 +2032,6 @@ class Parameter:
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
-
-        if autocompletion is not None:
-            import warnings
-
-            warnings.warn(
-                "'autocompletion' is renamed to 'shell_complete'. The old name is"
-                " deprecated and will be removed in Click 8.1. See the docs about"
-                " 'Parameter' for information about new behavior.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
-            def shell_complete(
-                ctx: Context, param: "Parameter", incomplete: str
-            ) -> t.List["CompletionItem"]:
-                from click.shell_completion import CompletionItem
-
-                out = []
-
-                for c in autocompletion(ctx, [], incomplete):  # type: ignore
-                    if isinstance(c, tuple):
-                        c = CompletionItem(c[0], help=c[1])
-                    elif isinstance(c, str):
-                        c = CompletionItem(c)
-
-                    if c.value.startswith(incomplete):
-                        out.append(c)
-
-                return out
-
         self._custom_shell_complete = shell_complete
 
         if __debug__:

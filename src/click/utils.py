@@ -379,25 +379,6 @@ def open_file(
     return f
 
 
-def get_os_args() -> t.Sequence[str]:
-    """Returns the argument part of ``sys.argv``, removing the first
-    value which is the name of the script.
-
-    .. deprecated:: 8.0
-        Will be removed in Click 8.1. Access ``sys.argv[1:]`` directly
-        instead.
-    """
-    import warnings
-
-    warnings.warn(
-        "'get_os_args' is deprecated and will be removed in Click 8.1."
-        " Access 'sys.argv[1:]' directly instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return sys.argv[1:]
-
-
 def format_filename(
     filename: t.Union[str, bytes, os.PathLike], shorten: bool = False
 ) -> str:
