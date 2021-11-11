@@ -252,26 +252,6 @@ def confirm(
     return rv
 
 
-def get_terminal_size() -> os.terminal_size:
-    """Returns the current size of the terminal as tuple in the form
-    ``(width, height)`` in columns and rows.
-
-    .. deprecated:: 8.0
-        Will be removed in Click 8.1. Use
-        :func:`shutil.get_terminal_size` instead.
-    """
-    import shutil
-    import warnings
-
-    warnings.warn(
-        "'click.get_terminal_size()' is deprecated and will be removed"
-        " in Click 8.1. Use 'shutil.get_terminal_size()' instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return shutil.get_terminal_size()
-
-
 def echo_via_pager(
     text_or_generator: t.Union[t.Iterable[str], t.Callable[[], t.Iterable[str]], str],
     color: t.Optional[bool] = None,

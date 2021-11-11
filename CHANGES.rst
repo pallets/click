@@ -11,6 +11,8 @@ Unreleased
     -   ``Group.resultcallback`` is renamed to ``result_callback``.
     -   ``autocompletion`` parameter to ``Command`` is renamed to
         ``shell_complete``.
+    -   ``get_terminal_size`` is removed, use
+        ``shutil.get_terminal_size`` instead.
 
 -   Single options boolean flags with ``show_default=True`` only show
     the default if it is ``True``. :issue:`1971`
