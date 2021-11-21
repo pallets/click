@@ -198,6 +198,7 @@ When passing a ``default`` with ``multiple=True``, the default value
 must be a list or tuple, otherwise it will be interpreted as a list of
 single characters.
 
+.. autolink-skip::
 .. code-block:: python
 
     @click.option("--format", multiple=True, default=["json"])

@@ -23,10 +23,12 @@ extensions = [
     "pallets_sphinx_themes",
     "sphinx_issues",
     "sphinx_tabs.tabs",
+    "sphinx_codeautolink",
 ]
 autodoc_typehints = "description"
 intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
 issues_github_path = "pallets/click"
+codeautolink_global_preface = "import click"
 
 # HTML -----------------------------------------------------------------
 
