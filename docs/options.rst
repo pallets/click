@@ -265,7 +265,7 @@ Example:
     def info(shout):
         rv = sys.platform
         if shout:
-            rv = rv.upper() + '!!!!111'
+            rv = rv.upper() + '!!!!!!!'
         click.echo(rv)
 
 And on the command line:
@@ -288,7 +288,7 @@ manually inform Click that something is a flag:
     def info(shout):
         rv = sys.platform
         if shout:
-            rv = rv.upper() + '!!!!111'
+            rv = rv.upper() + '!!!!!!!'
         click.echo(rv)
 
 And on the command line:
@@ -328,7 +328,7 @@ Example:
     def info(shout):
         rv = sys.platform
         if shout:
-            rv = rv.upper() + '!!!!111'
+            rv = rv.upper() + '!!!!!!!'
         click.echo(rv)
 
 .. click:run::
