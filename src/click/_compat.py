@@ -561,7 +561,6 @@ if sys.platform.startswith("win") and WIN:
 
         return rv
 
-
 else:
 
     def _get_argv_encoding() -> str:
