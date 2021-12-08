@@ -1161,6 +1161,9 @@ class Command(BaseCommand):
 
     :param deprecated: issues a message indicating that
                              the command is deprecated.
+
+    .. versionchanged:: 8.1
+        Added ``raw_help`` attribute
     """
 
     def __init__(
@@ -1186,6 +1189,9 @@ class Command(BaseCommand):
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
         self.params: t.List["Parameter"] = params or []
+        #: the raw, unadulterated help string, suitable for consumption by
+        #: external tooling
+        self.raw_help = help
 
         # if a form feed (page break) is found in the help text, truncate help
         # text to the content preceding the first form feed

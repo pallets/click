@@ -17,6 +17,8 @@ Unreleased
 
 -   Single options boolean flags with ``show_default=True`` only show
     the default if it is ``True``. :issue:`1971`
+-   Store untruncated help string in ``Command.raw_help`` attribute.
+    :issue:`2149`
 
 
 Version 8.0.4
