@@ -33,6 +33,8 @@ Version 8.1.0
     processed. :issue:`1985`
 -   A flag option with ``required=True`` requires that the flag is
     passed instead of choosing the implicit default value. :issue:`1978`
+-   Store untruncated help string in ``Command.help``, and perform
+    truncation when formatting. :issue:`2149`
 
 
 Version 8.0.4

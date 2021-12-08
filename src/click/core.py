@@ -1156,6 +1156,10 @@ class Command(BaseCommand):
                              the command is deprecated.
 
     .. versionchanged:: 8.1
+        ``help`` is stored untruncated, the formatter applied
+        truncation later.
+
+    .. versionchanged:: 8.1
         Indentation in ``help`` is cleaned here instead of only in the
         ``@command`` decorator. ``epilog`` and ``short_help`` are also
         cleaned.
@@ -1197,12 +1201,6 @@ class Command(BaseCommand):
         if help:
             help = inspect.cleandoc(help)
 
-            # Discard help text after a first form feed (page break)
-            # character, to allow writing longer documentation in
-            # docstrings that does not show in help output.
-            if "\f" in help:
-                help = help.partition("\f")[0]
-
         if epilog:
             epilog = inspect.cleandoc(epilog)
 
@@ -1222,7 +1220,9 @@ class Command(BaseCommand):
         info_dict = super().to_info_dict(ctx)
         info_dict.update(
             params=[param.to_info_dict() for param in self.get_params(ctx)],
-            help=self.help,
+            # truncate help text to the content preceding the first form feed,
+            # if any
+            help=self.help.split("\f", 1)[0] if self.help else self.help,
             epilog=self.epilog,
             short_help=self.short_help,
             hidden=self.hidden,
@@ -1346,6 +1346,10 @@ class Command(BaseCommand):
     def format_help_text(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Writes the help text to the formatter if it exists."""
         text = self.help or ""
+
+        # truncate the help text to the content preceding the first form feed,
+        # if any
+        text = text.split("\f", 1)[0]
 
         if self.deprecated:
             text = _("(Deprecated) {text}").format(text=text)
