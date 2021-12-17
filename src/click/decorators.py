@@ -14,7 +14,7 @@ from .globals import get_current_context
 from .utils import echo
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
-FC = t.TypeVar("FC", t.Callable[..., t.Any], Command)
+FC = t.TypeVar("FC", bound=t.Union[t.Callable[..., t.Any], Command])
 
 
 def pass_context(f: F) -> F:

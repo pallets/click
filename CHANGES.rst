@@ -7,6 +7,8 @@ Unreleased
 
 -   ``open_file`` recognizes ``Path("-")`` as a standard stream, the
     same as the string ``"-"``. :issue:`2106`
+-   The ``option`` and ``argument`` decorators preserve the type
+    annotation of the decorated function. :pr:`2155`
 
 
 Version 8.0.3
