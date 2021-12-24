@@ -36,6 +36,8 @@ Version 8.1.0
 -   Store unprocessed ``Command.help``, ``epilog`` and ``short_help``
     strings. Processing is only done when formatting help text for
     output. :issue:`2149`
+-   Allow empty str input for ``prompt()`` when
+    ``confirmation_prompt=True`` and ``default=""``. :issue:`2157`
 
 
 Version 8.0.4

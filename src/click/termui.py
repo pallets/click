@@ -181,7 +181,8 @@ def prompt(
             return result
         while True:
             value2 = prompt_func(confirmation_prompt)
-            if value2:
+            is_empty = not value and not value2
+            if value2 or is_empty:
                 break
         if value == value2:
             return result
