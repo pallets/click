@@ -2472,7 +2472,7 @@ class Option(Parameter):
         elif prompt is False:
             prompt_text = None
         else:
-            prompt_text = t.cast(str, prompt)
+            prompt_text = prompt
 
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
