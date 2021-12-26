@@ -2,7 +2,6 @@ import enum
 import errno
 import os
 import sys
-import typing
 import typing as t
 from collections import abc
 from contextlib import contextmanager
@@ -632,13 +631,13 @@ class Context:
             self.obj = rv = object_type()
         return rv
 
-    @typing.overload
+    @t.overload
     def lookup_default(
         self, name: str, call: "te.Literal[True]" = True
     ) -> t.Optional[t.Any]:
         ...
 
-    @typing.overload
+    @t.overload
     def lookup_default(
         self, name: str, call: "te.Literal[False]" = ...
     ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
@@ -956,7 +955,7 @@ class BaseCommand:
 
         return results
 
-    @typing.overload
+    @t.overload
     def main(
         self,
         args: t.Optional[t.Sequence[str]] = None,
@@ -967,7 +966,7 @@ class BaseCommand:
     ) -> "te.NoReturn":
         ...
 
-    @typing.overload
+    @t.overload
     def main(
         self,
         args: t.Optional[t.Sequence[str]] = None,
@@ -2126,13 +2125,13 @@ class Parameter:
 
         return metavar
 
-    @typing.overload
+    @t.overload
     def get_default(
         self, ctx: Context, call: "te.Literal[True]" = True
     ) -> t.Optional[t.Any]:
         ...
 
-    @typing.overload
+    @t.overload
     def get_default(
         self, ctx: Context, call: bool = ...
     ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
@@ -2714,13 +2713,13 @@ class Option(Parameter):
 
         return ("; " if any_prefix_is_slash else " / ").join(rv), help
 
-    @typing.overload
+    @t.overload
     def get_default(
         self, ctx: Context, call: "te.Literal[True]" = True
     ) -> t.Optional[t.Any]:
         ...
 
-    @typing.overload
+    @t.overload
     def get_default(
         self, ctx: Context, call: bool = ...
     ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
