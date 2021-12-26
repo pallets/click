@@ -160,7 +160,6 @@ def prompt(
         if confirmation_prompt is True:
             confirmation_prompt = _("Repeat for confirmation")
 
-        confirmation_prompt = t.cast(str, confirmation_prompt)
         confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
 
     while True:
@@ -182,7 +181,6 @@ def prompt(
         if not confirmation_prompt:
             return result
         while True:
-            confirmation_prompt = t.cast(str, confirmation_prompt)
             value2 = prompt_func(confirmation_prompt)
             if value2:
                 break
