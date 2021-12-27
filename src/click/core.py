@@ -2730,7 +2730,7 @@ class Option(Parameter):
     ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
         # If we're a non boolean flag our default is more complex because
         # we need to look at all flags in the same group to figure out
-        # if we're the the default one in which case we return the flag
+        # if we're the default one in which case we return the flag
         # value as default.
         if self.is_flag and not self.is_bool_flag:
             for param in ctx.command.params:

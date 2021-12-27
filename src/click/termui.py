@@ -93,7 +93,7 @@ def prompt(
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
-    If the user aborts the input by sending a interrupt signal, this
+    If the user aborts the input by sending an interrupt signal, this
     function will catch it and raise a :exc:`Abort` exception.
 
     :param text: the text to show for the prompt.

@@ -751,7 +751,7 @@ class Path(ParamType):
     :param exists: The file or directory needs to exist for the value to
         be valid. If this is not set to ``True``, and the file does not
         exist, then all further checks are silently skipped.
-    :param file_okay: Allow a file as a value value.
+    :param file_okay: Allow a file as a value.
     :param dir_okay: Allow a directory as a value.
     :param writable: The file or directory must be writable.
     :param readable: The file or directory must be readable.
