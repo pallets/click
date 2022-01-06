@@ -266,3 +266,10 @@ def test_context():
         "ignore_unknown_options": False,
         "auto_envvar_prefix": None,
     }
+
+
+def test_paramtype_no_name():
+    class TestType(click.ParamType):
+        pass
+
+    assert TestType().to_info_dict()["name"] == "TestType"
