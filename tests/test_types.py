@@ -7,6 +7,12 @@ from conftest import symlinks_supported
 import click
 
 
+def test_paramtype_no_name():
+    class TestType(click.ParamType):
+        pass
+
+    TestType().to_info_dict()
+
 @pytest.mark.parametrize(
     ("type", "value", "expect"),
     [

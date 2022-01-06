@@ -63,7 +63,8 @@ class ParamType:
         # The class name without the "ParamType" suffix.
         param_type = type(self).__name__.partition("ParamType")[0]
         param_type = param_type.partition("ParameterType")[0]
-        return {"param_type": param_type, "name": self.name}
+        name = self.name if hasattr(self, 'name') else param_type
+        return {"param_type": param_type, "name": name}
 
     def __call__(
         self,
