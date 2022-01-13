@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements/tests.in
 #
-attrs==21.2.0
+attrs==21.4.0
     # via pytest
 iniconfig==1.1.1
     # via pytest
