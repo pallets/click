@@ -2,7 +2,7 @@ version: 2
 updates:
 - package-ecosystem: "pip"
   directory: "/requirements"
-  target-branch: "3.0.x"
+  target-branch: "8.0.x"
   versioning-strategy: "lockfile-only"
   schedule:
     interval: "monthly"
