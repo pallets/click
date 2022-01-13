@@ -1,5 +1,6 @@
 import enum
 import errno
+import inspect
 import os
 import sys
 import typing as t
@@ -2678,7 +2679,7 @@ class Option(Parameter):
                 default_string = f"({self.show_default})"
             elif isinstance(default_value, (list, tuple)):
                 default_string = ", ".join(str(d) for d in default_value)
-            elif callable(default_value):
+            elif inspect.isfunction(default_value):
                 default_string = _("(dynamic)")
             elif self.is_bool_flag and self.secondary_opts:
                 # For boolean flags that have distinct True/False opts,

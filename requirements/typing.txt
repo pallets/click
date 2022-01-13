@@ -4,7 +4,7 @@
 #
 #    pip-compile requirements/typing.in
 #
-mypy==0.930
+mypy==0.931
     # via -r requirements/typing.in
 mypy-extensions==0.4.3
     # via mypy
