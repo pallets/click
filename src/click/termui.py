@@ -624,7 +624,7 @@ def unstyle(text: str) -> str:
 
 def secho(
     message: t.Optional[t.Any] = None,
-    file: t.Optional[t.IO] = None,
+    file: t.Optional[t.IO[t.AnyStr]] = None,
     nl: bool = True,
     err: bool = False,
     color: t.Optional[bool] = None,
