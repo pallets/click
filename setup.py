@@ -9,6 +9,4 @@ setup(
 )
 
 
-
-
-# Niyozbek Shu yerda bugan 
+# Niyozbek Shu yerda bugan
