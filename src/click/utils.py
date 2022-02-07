@@ -203,7 +203,7 @@ class KeepOpenFile:
 
 def echo(
     message: t.Optional[t.Any] = None,
-    file: t.Optional[t.IO] = None,
+    file: t.Optional[t.IO[t.Any]] = None,
     nl: bool = True,
     err: bool = False,
     color: t.Optional[bool] = None,
