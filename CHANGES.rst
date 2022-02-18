@@ -3,7 +3,7 @@
 Version 8.0.4
 -------------
 
-Unreleased
+Released 2022-02-18
 
 -   ``open_file`` recognizes ``Path("-")`` as a standard stream, the
     same as the string ``"-"``. :issue:`2106`
