@@ -15,6 +15,9 @@ Unreleased
         ``shutil.get_terminal_size`` instead.
     -   ``get_os_args`` is removed, use ``sys.argv[1:]`` instead.
 
+-   Rely on :pep:`538` and :pep:`540` to handle selecting a UTF-8
+    encoding instead of ASCII for misconfigured systems. Click's UTF-8
+    locale detection is removed. :issue:`2198`
 -   Single options boolean flags with ``show_default=True`` only show
     the default if it is ``True``. :issue:`1971`
 
