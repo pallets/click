@@ -1,5 +1,7 @@
 import re
 
+import pytest
+
 import click
 
 
@@ -119,7 +121,16 @@ def test_default_maps(runner):
     assert result.output == "changed\n"
 
 
-def test_group_with_args(runner):
+@pytest.mark.parametrize(
+    ("args", "exit_code", "expect"),
+    [
+        (["obj1"], 2, "Error: Missing command."),
+        (["obj1", "--help"], 0, "Show this message and exit."),
+        (["obj1", "move"], 0, "obj=obj1\nmove\n"),
+        ([], 0, "Show this message and exit."),
+    ],
+)
+def test_group_with_args(runner, args, exit_code, expect):
     @click.group()
     @click.argument("obj")
     def cli(obj):
@@ -129,21 +140,9 @@ def test_group_with_args(runner):
     def move():
         click.echo("move")
 
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 0
-    assert "Show this message and exit." in result.output
-
-    result = runner.invoke(cli, ["obj1"])
-    assert result.exit_code == 2
-    assert "Error: Missing command." in result.output
-
-    result = runner.invoke(cli, ["obj1", "--help"])
-    assert result.exit_code == 0
-    assert "Show this message and exit." in result.output
-
-    result = runner.invoke(cli, ["obj1", "move"])
-    assert result.exit_code == 0
-    assert result.output == "obj=obj1\nmove\n"
+    result = runner.invoke(cli, args)
+    assert result.exit_code == exit_code
+    assert expect in result.output
 
 
 def test_base_command(runner):
@@ -196,18 +195,12 @@ def test_base_command(runner):
 
     cli.add_command(OptParseCommand("test", parser, test_callback))
 
-    result = runner.invoke(
-        cli, ["test", "-f", "test.txt", "-q", "whatever.txt", "whateverelse.txt"]
-    )
-    assert not result.exception
-    assert result.output.splitlines() == [
-        "whatever.txt whateverelse.txt",
-        "test.txt",
-        "False",
-    ]
+    result = runner.invoke(cli, ["test", "-f", "f.txt", "-q", "q1.txt", "q2.txt"])
+    assert result.exception is None
+    assert result.output.splitlines() == ["q1.txt q2.txt", "f.txt", "False"]
 
     result = runner.invoke(cli, ["test", "--help"])
-    assert not result.exception
+    assert result.exception is None
     assert result.output.splitlines() == [
         "Usage: foo test [OPTIONS]",
         "",
@@ -328,20 +321,13 @@ def test_unprocessed_options(runner):
     ]
 
 
-def test_deprecated_in_help_messages(runner):
-    @click.command(deprecated=True)
-    def cmd_with_help():
-        """CLI HELP"""
+@pytest.mark.parametrize("doc", ["CLI HELP", None])
+def test_deprecated_in_help_messages(runner, doc):
+    @click.command(deprecated=True, help=doc)
+    def cli():
         pass
 
-    result = runner.invoke(cmd_with_help, ["--help"])
-    assert "(Deprecated)" in result.output
-
-    @click.command(deprecated=True)
-    def cmd_without_help():
-        pass
-
-    result = runner.invoke(cmd_without_help, ["--help"])
+    result = runner.invoke(cli, ["--help"])
     assert "(Deprecated)" in result.output
 
 
