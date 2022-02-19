@@ -753,8 +753,9 @@ class Path(ParamType):
         exist, then all further checks are silently skipped.
     :param file_okay: Allow a file as a value.
     :param dir_okay: Allow a directory as a value.
-    :param writable: The file or directory must be writable.
-    :param readable: The file or directory must be readable.
+    :param readable: if true, a readable check is performed.
+    :param writable: if true, a writable check is performed.
+    :param executable: if true, an executable check is performed.
     :param resolve_path: Make the value absolute and resolve any
         symlinks. A ``~`` is not expanded, as this is supposed to be
         done by the shell only.
@@ -764,6 +765,9 @@ class Path(ParamType):
     :param path_type: Convert the incoming path value to this type. If
         ``None``, keep Python's default, which is ``str``. Useful to
         convert to :class:`pathlib.Path`.
+
+    .. versionchanged:: 8.1
+        Added the ``executable`` parameter.
 
     .. versionchanged:: 8.0
         Allow passing ``type=pathlib.Path``.
@@ -779,8 +783,9 @@ class Path(ParamType):
         exists: bool = False,
         file_okay: bool = True,
         dir_okay: bool = True,
-        writable: bool = False,
         readable: bool = True,
+        writable: bool = False,
+        executable: bool = False,
         resolve_path: bool = False,
         allow_dash: bool = False,
         path_type: t.Optional[t.Type] = None,
@@ -788,8 +793,9 @@ class Path(ParamType):
         self.exists = exists
         self.file_okay = file_okay
         self.dir_okay = dir_okay
-        self.writable = writable
         self.readable = readable
+        self.writable = writable
+        self.executable = executable
         self.resolve_path = resolve_path
         self.allow_dash = allow_dash
         self.type = path_type
@@ -862,23 +868,34 @@ class Path(ParamType):
                 )
             if not self.dir_okay and stat.S_ISDIR(st.st_mode):
                 self.fail(
-                    _("{name} {filename!r} is a directory.").format(
+                    _("{name} '{filename}' is a directory.").format(
                         name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
                     ctx,
                 )
-            if self.writable and not os.access(rv, os.W_OK):
-                self.fail(
-                    _("{name} {filename!r} is not writable.").format(
-                        name=self.name.title(), filename=os.fsdecode(value)
-                    ),
-                    param,
-                    ctx,
-                )
+
             if self.readable and not os.access(rv, os.R_OK):
                 self.fail(
-                    _("{name} {filename!r} is not readable.").format(
+                    _("{name} '{filename}' is not executable.").format(
+                        name=self.name.title(), filename=os.fsdecode(value)
+                    ),
+                    param,
+                    ctx,
+                )
+
+            if self.writable and not os.access(rv, os.W_OK):
+                self.fail(
+                    _("{name} '{filename}' is not writable.").format(
+                        name=self.name.title(), filename=os.fsdecode(value)
+                    ),
+                    param,
+                    ctx,
+                )
+
+            if self.executable and not os.access(value, os.X_OK):
+                self.fail(
+                    _("{name} {filename!r} is not executable.").format(
                         name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
