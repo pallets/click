@@ -1797,7 +1797,7 @@ class Group(MultiCommand):
 
     def command(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Command]:
+    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], Command], Command]:
         """A shortcut decorator for declaring and attaching a command to
         the group. This takes the same arguments as :func:`command` and
         immediately registers the created command with this group by
@@ -1805,6 +1805,9 @@ class Group(MultiCommand):
 
         To customize the command class used, set the
         :attr:`command_class` attribute.
+
+        .. versionchanged:: 8.1
+            This decorator can be applied without parentheses.
 
         .. versionchanged:: 8.0
             Added the :attr:`command_class` attribute.
@@ -1814,16 +1817,25 @@ class Group(MultiCommand):
         if self.command_class is not None and "cls" not in kwargs:
             kwargs["cls"] = self.command_class
 
+        func: t.Optional[t.Callable] = None
+
+        if args and callable(args[0]):
+            func = args[0]
+            args = args[1:]
+
         def decorator(f: t.Callable[..., t.Any]) -> Command:
-            cmd = command(*args, **kwargs)(f)
+            cmd: Command = command(*args, **kwargs)(f)
             self.add_command(cmd)
             return cmd
+
+        if func is not None:
+            return decorator(func)
 
         return decorator
 
     def group(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]:
+    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], "Group"], "Group"]:
         """A shortcut decorator for declaring and attaching a group to
         the group. This takes the same arguments as :func:`group` and
         immediately registers the created group with this group by
@@ -1832,10 +1844,19 @@ class Group(MultiCommand):
         To customize the group class used, set the :attr:`group_class`
         attribute.
 
+        .. versionchanged:: 8.1
+            This decorator can be applied without parentheses.
+
         .. versionchanged:: 8.0
             Added the :attr:`group_class` attribute.
         """
         from .decorators import group
+
+        func: t.Optional[t.Callable] = None
+
+        if args and callable(args[0]):
+            func = args[0]
+            args = args[1:]
 
         if self.group_class is not None and "cls" not in kwargs:
             if self.group_class is type:
@@ -1844,9 +1865,12 @@ class Group(MultiCommand):
                 kwargs["cls"] = self.group_class
 
         def decorator(f: t.Callable[..., t.Any]) -> "Group":
-            cmd = group(*args, **kwargs)(f)
+            cmd: Group = group(*args, **kwargs)(f)
             self.add_command(cmd)
             return cmd
+
+        if func is not None:
+            return decorator(func)
 
         return decorator
 

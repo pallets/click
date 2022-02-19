@@ -153,11 +153,29 @@ def _make_command(
     )
 
 
+@t.overload
 def command(
     name: t.Optional[str] = None,
     cls: t.Optional[t.Type[Command]] = None,
     **attrs: t.Any,
 ) -> t.Callable[[F], Command]:
+    ...
+
+
+@t.overload
+def command(
+    name: t.Callable,
+    cls: t.Optional[t.Type[Command]] = None,
+    **attrs: t.Any,
+) -> Command:
+    ...
+
+
+def command(
+    name: t.Union[str, t.Callable, None] = None,
+    cls: t.Optional[t.Type[Command]] = None,
+    **attrs: t.Any,
+) -> t.Union[Command, t.Callable[[F], Command]]:
     r"""Creates a new :class:`Command` and uses the decorated function as
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as parameters to the command.
@@ -176,24 +194,62 @@ def command(
                  name with underscores replaced by dashes.
     :param cls: the command class to instantiate.  This defaults to
                 :class:`Command`.
+
+    .. versionchanged:: 8.1
+        This decorator can be applied without parentheses.
     """
     if cls is None:
         cls = Command
+
+    func: t.Optional[t.Callable] = None
+
+    if callable(name):
+        func = name
+        name = None
 
     def decorator(f: t.Callable[..., t.Any]) -> Command:
         cmd = _make_command(f, name, attrs, cls)  # type: ignore
         cmd.__doc__ = f.__doc__
         return cmd
 
+    if func is not None:
+        return decorator(func)
+
     return decorator
 
 
-def group(name: t.Optional[str] = None, **attrs: t.Any) -> t.Callable[[F], Group]:
+@t.overload
+def group(
+    name: t.Optional[str] = None,
+    **attrs: t.Any,
+) -> t.Callable[[F], Group]:
+    ...
+
+
+@t.overload
+def group(
+    name: t.Callable,
+    **attrs: t.Any,
+) -> Group:
+    ...
+
+
+def group(
+    name: t.Union[str, t.Callable, None] = None, **attrs: t.Any
+) -> t.Union[Group, t.Callable[[F], Group]]:
     """Creates a new :class:`Group` with a function as callback.  This
     works otherwise the same as :func:`command` just that the `cls`
     parameter is set to :class:`Group`.
+
+    .. versionchanged:: 8.1
+        This decorator can be applied without parentheses.
     """
     attrs.setdefault("cls", Group)
+
+    if callable(name):
+        grp: t.Callable[[F], Group] = t.cast(Group, command(**attrs))
+        return grp(name)
+
     return t.cast(Group, command(name, **attrs))
 
 
