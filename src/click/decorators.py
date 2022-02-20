@@ -137,14 +137,9 @@ def _make_command(
     except AttributeError:
         params = []
 
-    help = attrs.get("help")
+    if attrs.get("help") is None:
+        attrs["help"] = inspect.getdoc(f)
 
-    if help is None:
-        help = inspect.getdoc(f)
-    else:
-        help = inspect.cleandoc(help)
-
-    attrs["help"] = help
     return cls(
         name=name or f.__name__.lower().replace("_", "-"),
         callback=f,

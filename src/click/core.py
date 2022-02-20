@@ -1133,13 +1133,6 @@ class Command(BaseCommand):
     Click.  A basic command handles command line parsing and might dispatch
     more parsing to commands nested below it.
 
-    .. versionchanged:: 2.0
-       Added the `context_settings` parameter.
-    .. versionchanged:: 8.0
-       Added repr showing the command name
-    .. versionchanged:: 7.1
-       Added the `no_args_is_help` parameter.
-
     :param name: the name of the command to use unless a group overrides it.
     :param context_settings: an optional dictionary with defaults that are
                              passed to the context object.
@@ -1161,6 +1154,20 @@ class Command(BaseCommand):
 
     :param deprecated: issues a message indicating that
                              the command is deprecated.
+
+    .. versionchanged:: 8.1
+        Indentation in ``help`` is cleaned here instead of only in the
+        ``@command`` decorator. ``epilog`` and ``short_help`` are also
+        cleaned.
+
+    .. versionchanged:: 8.0
+        Added a ``repr`` showing the command name.
+
+    .. versionchanged:: 7.1
+        Added the ``no_args_is_help`` parameter.
+
+    .. versionchanged:: 2.0
+        Added the ``context_settings`` parameter.
     """
 
     def __init__(
@@ -1187,10 +1194,20 @@ class Command(BaseCommand):
         #: will automatically be handled before non eager ones.
         self.params: t.List["Parameter"] = params or []
 
-        # if a form feed (page break) is found in the help text, truncate help
-        # text to the content preceding the first form feed
-        if help and "\f" in help:
-            help = help.split("\f", 1)[0]
+        if help:
+            help = inspect.cleandoc(help)
+
+            # Discard help text after a first form feed (page break)
+            # character, to allow writing longer documentation in
+            # docstrings that does not show in help output.
+            if "\f" in help:
+                help = help.partition("\f")[0]
+
+        if epilog:
+            epilog = inspect.cleandoc(epilog)
+
+        if short_help:
+            short_help = inspect.cleandoc(short_help)
 
         self.help = help
         self.epilog = epilog
