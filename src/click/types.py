@@ -724,7 +724,7 @@ class File(ParamType):
 
             return f
         except OSError as e:  # noqa: B014
-            self.fail(f"{os.fsdecode(value)!r}: {e.strerror}", param, ctx)
+            self.fail(f"'{os.fsdecode(value)}': {e.strerror}", param, ctx)
 
     def shell_complete(
         self, ctx: "Context", param: "Parameter", incomplete: str
@@ -877,7 +877,7 @@ class Path(ParamType):
 
             if self.readable and not os.access(rv, os.R_OK):
                 self.fail(
-                    _("{name} '{filename}' is not executable.").format(
+                    _("{name} {filename!r} is not executable.").format(
                         name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
@@ -886,7 +886,7 @@ class Path(ParamType):
 
             if self.writable and not os.access(rv, os.W_OK):
                 self.fail(
-                    _("{name} '{filename}' is not writable.").format(
+                    _("{name} {filename!r} is not writable.").format(
                         name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
