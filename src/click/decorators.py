@@ -137,14 +137,9 @@ def _make_command(
     except AttributeError:
         params = []
 
-    help = attrs.get("help")
+    if attrs.get("help") is None:
+        attrs["help"] = inspect.getdoc(f)
 
-    if help is None:
-        help = inspect.getdoc(f)
-    else:
-        help = inspect.cleandoc(help)
-
-    attrs["help"] = help
     return cls(
         name=name or f.__name__.lower().replace("_", "-"),
         callback=f,
@@ -297,9 +292,6 @@ def option(*param_decls: str, **attrs: t.Any) -> t.Callable[[FC], FC]:
     def decorator(f: FC) -> FC:
         # Issue 926, copy attrs, so pre-defined options can re-use the same cls=
         option_attrs = attrs.copy()
-
-        if option_attrs.get("help"):
-            option_attrs["help"] = inspect.cleandoc(option_attrs["help"])
         OptionClass = option_attrs.pop("cls", None) or Option
         _param_memo(f, OptionClass(param_decls, **option_attrs))
         return f

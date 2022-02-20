@@ -27,6 +27,10 @@ Version 8.1.0
 -   Parameter decorators and ``@group`` handles ``cls=None`` the same as
     not passing ``cls``. ``@option`` handles ``help=None`` the same as
     not passing ``help``. :issue:`#1959`
+-   Indentation in help text passed to ``Option`` and ``Command`` is
+    cleaned the same as using the ``@option`` and ``@command``
+    decorators does. A command's ``epilog`` and ``short_help`` are also
+    processed. :issue:`1985`
 
 
 Version 8.0.4
