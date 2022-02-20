@@ -223,9 +223,14 @@ class Context:
                   codes are used in texts that Click prints which is by
                   default not the case.  This for instance would affect
                   help output.
-    :param show_default: Show defaults for all options. If not set,
-        defaults to the value from a parent context. Overrides an
-        option's ``show_default`` argument.
+    :param show_default: Show the default value for commands. If this
+        value is not set, it defaults to the value from the parent
+        context. ``Command.show_default`` overrides this default for the
+        specific command.
+
+    .. versionchanged:: 8.1
+        The ``show_default`` parameter is overridden by
+        ``Command.show_default``, instead of the other way around.
 
     .. versionchanged:: 8.0
         The ``show_default`` parameter defaults to the value from the
@@ -2372,14 +2377,15 @@ class Option(Parameter):
 
     All other parameters are passed onwards to the parameter constructor.
 
-    :param show_default: Controls if the default value should be shown
-        on the help page. Normally, defaults are not shown. If this
-        value is a string, it shows that string in parentheses instead
-        of the actual value. This is particularly useful for dynamic
-        options. For single option boolean flags, the default remains
-        hidden if its value is ``False``.
+    :param show_default: Show the default value for this option in its
+        help text. Values are not shown by default, unless
+        :attr:`Context.show_default` is ``True``. If this value is a
+        string, it shows that string in parentheses instead of the
+        actual value. This is particularly useful for dynamic options.
+        For single option boolean flags, the default remains hidden if
+        its value is ``False``.
     :param show_envvar: Controls if an environment variable should be
-        shown on the help page. Normally, environment ariables are not
+        shown on the help page. Normally, environment variables are not
         shown.
     :param prompt: If set to ``True`` or a non empty string then the
         user will be prompted for input. If set to ``True`` the prompt
@@ -2410,6 +2416,10 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
 
     .. versionchanged:: 8.1.0
+        The ``show_default`` parameter overrides
+        ``Context.show_default``.
+
+    .. versionchanged:: 8.1.0
         The default of a single option boolean flag is not shown if the
         default value is ``False``.
 
@@ -2422,7 +2432,7 @@ class Option(Parameter):
     def __init__(
         self,
         param_decls: t.Optional[t.Sequence[str]] = None,
-        show_default: t.Union[bool, str] = False,
+        show_default: t.Union[bool, str, None] = None,
         prompt: t.Union[bool, str] = False,
         confirmation_prompt: t.Union[bool, str] = False,
         prompt_required: bool = True,
@@ -2689,11 +2699,18 @@ class Option(Parameter):
         finally:
             ctx.resilient_parsing = resilient
 
-        show_default_is_str = isinstance(self.show_default, str)
+        show_default = False
+        show_default_is_str = False
 
-        if show_default_is_str or (
-            default_value is not None and (self.show_default or ctx.show_default)
-        ):
+        if self.show_default is not None:
+            if isinstance(self.show_default, str):
+                show_default_is_str = show_default = True
+            else:
+                show_default = self.show_default
+        elif ctx.show_default is not None:
+            show_default = ctx.show_default
+
+        if show_default_is_str or (show_default and (default_value is not None)):
             if show_default_is_str:
                 default_string = f"({self.show_default})"
             elif isinstance(default_value, (list, tuple)):

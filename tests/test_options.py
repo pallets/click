@@ -643,7 +643,6 @@ def test_option_custom_class_reusable(runner):
 
     # Both of the commands should have the --help option now.
     for cmd in (cmd1, cmd2):
-
         result = runner.invoke(cmd, ["--help"])
         assert "I am a help text" in result.output
         assert "you wont see me" not in result.output
@@ -793,6 +792,28 @@ def test_do_not_show_default_empty_multiple():
     ctx = click.Context(click.Command("cli"))
     message = opt.get_help_record(ctx)[1]
     assert message == "values"
+
+
+@pytest.mark.parametrize(
+    ("ctx_value", "opt_value", "expect"),
+    [
+        (None, None, False),
+        (None, False, False),
+        (None, True, True),
+        (False, None, False),
+        (False, False, False),
+        (False, True, True),
+        (True, None, True),
+        (True, False, False),
+        (True, True, True),
+        (False, "one", True),
+    ],
+)
+def test_show_default_precedence(ctx_value, opt_value, expect):
+    ctx = click.Context(click.Command("test"), show_default=ctx_value)
+    opt = click.Option("-a", default=1, help="value", show_default=opt_value)
+    help = opt.get_help_record(ctx)[1]
+    assert ("default:" in help) is expect
 
 
 @pytest.mark.parametrize(
