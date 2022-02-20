@@ -244,7 +244,8 @@ def group(
     .. versionchanged:: 8.1
         This decorator can be applied without parentheses.
     """
-    attrs.setdefault("cls", Group)
+    if attrs.get("cls") is None:
+        attrs["cls"] = Group
 
     if callable(name):
         grp: t.Callable[[F], Group] = t.cast(Group, command(**attrs))
@@ -275,7 +276,7 @@ def argument(*param_decls: str, **attrs: t.Any) -> t.Callable[[FC], FC]:
     """
 
     def decorator(f: FC) -> FC:
-        ArgumentClass = attrs.pop("cls", Argument)
+        ArgumentClass = attrs.pop("cls", None) or Argument
         _param_memo(f, ArgumentClass(param_decls, **attrs))
         return f
 
@@ -297,9 +298,9 @@ def option(*param_decls: str, **attrs: t.Any) -> t.Callable[[FC], FC]:
         # Issue 926, copy attrs, so pre-defined options can re-use the same cls=
         option_attrs = attrs.copy()
 
-        if "help" in option_attrs:
+        if option_attrs.get("help"):
             option_attrs["help"] = inspect.cleandoc(option_attrs["help"])
-        OptionClass = option_attrs.pop("cls", Option)
+        OptionClass = option_attrs.pop("cls", None) or Option
         _param_memo(f, OptionClass(param_decls, **option_attrs))
         return f
 

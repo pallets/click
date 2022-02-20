@@ -1819,7 +1819,7 @@ class Group(MultiCommand):
         """
         from .decorators import command
 
-        if self.command_class is not None and "cls" not in kwargs:
+        if self.command_class and kwargs.get("cls") is None:
             kwargs["cls"] = self.command_class
 
         func: t.Optional[t.Callable] = None
@@ -1863,7 +1863,7 @@ class Group(MultiCommand):
             func = args[0]
             args = args[1:]
 
-        if self.group_class is not None and "cls" not in kwargs:
+        if self.group_class is not None and kwargs.get("cls") is None:
             if self.group_class is type:
                 kwargs["cls"] = type(self)
             else:
