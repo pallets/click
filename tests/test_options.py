@@ -502,6 +502,15 @@ def test_missing_option_string_cast():
     assert str(excinfo.value) == "Missing parameter: a"
 
 
+def test_missing_required_flag(runner):
+    cli = click.Command(
+        "cli", params=[click.Option(["--on/--off"], is_flag=True, required=True)]
+    )
+    result = runner.invoke(cli)
+    assert result.exit_code == 2
+    assert "Error: Missing option '--on'." in result.output
+
+
 def test_missing_choice(runner):
     @click.command()
     @click.option("--foo", type=click.Choice(["foo", "bar"]), required=True)
