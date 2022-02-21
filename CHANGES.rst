@@ -38,6 +38,8 @@ Version 8.1.0
     output. :issue:`2149`
 -   Allow empty str input for ``prompt()`` when
     ``confirmation_prompt=True`` and ``default=""``. :issue:`2157`
+-   Windows glob pattern expansion doesn't fail if a value is an invalid
+    pattern. :issue:`2195`
 
 
 Version 8.0.4

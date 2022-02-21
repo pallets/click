@@ -468,6 +468,8 @@ def test_expand_args(monkeypatch):
     assert "setup.cfg" in click.utils._expand_args(["*.cfg"])
     assert os.path.join("docs", "conf.py") in click.utils._expand_args(["**/conf.py"])
     assert "*.not-found" in click.utils._expand_args(["*.not-found"])
+    # a bad glob pattern, such as a pytest identifier, should return itself
+    assert click.utils._expand_args(["test.py::test_bad"])[0] == "test.py::test_bad"
 
 
 @pytest.mark.parametrize(

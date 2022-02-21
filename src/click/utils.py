@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import typing as t
 from functools import update_wrapper
@@ -536,13 +537,17 @@ def _expand_args(
     See :func:`glob.glob`, :func:`os.path.expanduser`, and
     :func:`os.path.expandvars`.
 
-    This intended for use on Windows, where the shell does not do any
+    This is intended for use on Windows, where the shell does not do any
     expansion. It may not exactly match what a Unix shell would do.
 
     :param args: List of command line arguments to expand.
     :param user: Expand user home directory.
     :param env: Expand environment variables.
     :param glob_recursive: ``**`` matches directories recursively.
+
+    .. versionchanged:: 8.1
+        Invalid glob patterns are treated as empty expansions rather
+        than raising an error.
 
     .. versionadded:: 8.0
 
@@ -559,7 +564,10 @@ def _expand_args(
         if env:
             arg = os.path.expandvars(arg)
 
-        matches = glob(arg, recursive=glob_recursive)
+        try:
+            matches = glob(arg, recursive=glob_recursive)
+        except re.error:
+            matches = []
 
         if not matches:
             out.append(arg)
