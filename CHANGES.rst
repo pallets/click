@@ -27,12 +27,15 @@ Version 8.1.0
 -   Parameter decorators and ``@group`` handles ``cls=None`` the same as
     not passing ``cls``. ``@option`` handles ``help=None`` the same as
     not passing ``help``. :issue:`#1959`
+-   A flag option with ``required=True`` requires that the flag is
+    passed instead of choosing the implicit default value. :issue:`1978`
 -   Indentation in help text passed to ``Option`` and ``Command`` is
     cleaned the same as using the ``@option`` and ``@command``
     decorators does. A command's ``epilog`` and ``short_help`` are also
     processed. :issue:`1985`
--   A flag option with ``required=True`` requires that the flag is
-    passed instead of choosing the implicit default value. :issue:`1978`
+-   Store unprocessed ``Command.help``, ``epilog`` and ``short_help``
+    strings. Processing is only done when formatting help text for
+    output. :issue:`2149`
 
 
 Version 8.0.4

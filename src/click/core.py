@@ -1156,9 +1156,9 @@ class Command(BaseCommand):
                              the command is deprecated.
 
     .. versionchanged:: 8.1
-        Indentation in ``help`` is cleaned here instead of only in the
-        ``@command`` decorator. ``epilog`` and ``short_help`` are also
-        cleaned.
+        ``help``, ``epilog``, and ``short_help`` are stored unprocessed,
+        all formatting is done when outputting help text, not at init,
+        and is done even if not using the ``@command`` decorator.
 
     .. versionchanged:: 8.0
         Added a ``repr`` showing the command name.
@@ -1193,22 +1193,6 @@ class Command(BaseCommand):
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
         self.params: t.List["Parameter"] = params or []
-
-        if help:
-            help = inspect.cleandoc(help)
-
-            # Discard help text after a first form feed (page break)
-            # character, to allow writing longer documentation in
-            # docstrings that does not show in help output.
-            if "\f" in help:
-                help = help.partition("\f")[0]
-
-        if epilog:
-            epilog = inspect.cleandoc(epilog)
-
-        if short_help:
-            short_help = inspect.cleandoc(short_help)
-
         self.help = help
         self.epilog = epilog
         self.options_metavar = options_metavar
@@ -1316,10 +1300,12 @@ class Command(BaseCommand):
         """Gets short help for the command or makes it by shortening the
         long help string.
         """
-        text = self.short_help or ""
-
-        if not text and self.help:
+        if self.short_help:
+            text = inspect.cleandoc(self.short_help)
+        elif self.help:
             text = make_default_short_help(self.help, limit)
+        else:
+            text = ""
 
         if self.deprecated:
             text = _("(Deprecated) {text}").format(text=text)
@@ -1345,12 +1331,13 @@ class Command(BaseCommand):
 
     def format_help_text(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Writes the help text to the formatter if it exists."""
-        text = self.help or ""
+        text = self.help if self.help is not None else ""
 
         if self.deprecated:
             text = _("(Deprecated) {text}").format(text=text)
 
         if text:
+            text = inspect.cleandoc(text).partition("\f")[0]
             formatter.write_paragraph()
 
             with formatter.indentation():
@@ -1371,9 +1358,11 @@ class Command(BaseCommand):
     def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Writes the epilog into the formatter if it exists."""
         if self.epilog:
+            epilog = inspect.cleandoc(self.epilog)
             formatter.write_paragraph()
+
             with formatter.indentation():
-                formatter.write_text(self.epilog)
+                formatter.write_text(epilog)
 
     def parse_args(self, ctx: Context, args: t.List[str]) -> t.List[str]:
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
