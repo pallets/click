@@ -121,33 +121,6 @@ def pass_meta_key(
     return decorator
 
 
-def _make_command(
-    f: F,
-    name: t.Optional[str],
-    attrs: t.MutableMapping[str, t.Any],
-    cls: t.Type[Command],
-) -> Command:
-    if isinstance(f, Command):
-        raise TypeError("Attempted to convert a callback into a command twice.")
-
-    try:
-        params = f.__click_params__  # type: ignore
-        params.reverse()
-        del f.__click_params__  # type: ignore
-    except AttributeError:
-        params = []
-
-    if attrs.get("help") is None:
-        attrs["help"] = inspect.getdoc(f)
-
-    return cls(
-        name=name or f.__name__.lower().replace("_", "-"),
-        callback=f,
-        params=params,
-        **attrs,
-    )
-
-
 @t.overload
 def command(
     name: t.Optional[str] = None,
@@ -203,7 +176,26 @@ def command(
         name = None
 
     def decorator(f: t.Callable[..., t.Any]) -> Command:
-        cmd = _make_command(f, name, attrs, cls)  # type: ignore
+        if isinstance(f, Command):
+            raise TypeError("Attempted to convert a callback into a command twice.")
+
+        try:
+            params = f.__click_params__  # type: ignore
+        except AttributeError:
+            params = []
+        else:
+            params.reverse()
+            del f.__click_params__  # type: ignore
+
+        if attrs.get("help") is None:
+            attrs["help"] = f.__doc__
+
+        cmd = cls(  # type: ignore[misc]
+            name=name or f.__name__.lower().replace("_", "-"),  # type: ignore[arg-type]
+            callback=f,
+            params=params,
+            **attrs,
+        )
         cmd.__doc__ = f.__doc__
         return cmd
 
