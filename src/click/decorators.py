@@ -181,10 +181,11 @@ def command(
 
         try:
             params = f.__click_params__  # type: ignore
-            params.reverse()
-            del f.__click_params__  # type: ignore
         except AttributeError:
             params = []
+        else:
+            params.reverse()
+            del f.__click_params__  # type: ignore
 
         if attrs.get("help") is None:
             attrs["help"] = inspect.getdoc(f)
