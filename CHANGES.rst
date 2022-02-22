@@ -40,6 +40,9 @@ Version 8.1.0
     ``confirmation_prompt=True`` and ``default=""``. :issue:`2157`
 -   Windows glob pattern expansion doesn't fail if a value is an invalid
     pattern. :issue:`2195`
+-   It's possible to pass a list of ``params`` to ``@command``. Any
+    params defined with decorators are appended to the passed params.
+    :issue:`2131`.
 
 
 Version 8.0.4
