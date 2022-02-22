@@ -35,3 +35,17 @@ def test_group_no_parens(runner):
     result = runner.invoke(grp, ["grp2", "cmd2"])
     assert result.exception is None
     assert result.output == "grp1\ngrp2\ncmd2\n"
+
+
+def test_params_argument(runner):
+    opt = click.Argument(["a"])
+
+    @click.command(params=[opt])
+    @click.argument("b")
+    def cli(a, b):
+        click.echo(f"{a} {b}")
+
+    assert cli.params[0].name == "a"
+    assert cli.params[1].name == "b"
+    result = runner.invoke(cli, ["1", "2"])
+    assert result.output == "1 2\n"

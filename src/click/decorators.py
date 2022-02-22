@@ -153,6 +153,8 @@ def command(
     pass the intended name as the first argument.
 
     All keyword arguments are forwarded to the underlying command class.
+    For the ``params`` argument, any decorated params are appended to
+    the end of the list.
 
     Once decorated the function turns into a :class:`Command` instance
     that can be invoked as a command line utility or be attached to a
@@ -165,6 +167,10 @@ def command(
 
     .. versionchanged:: 8.1
         This decorator can be applied without parentheses.
+
+    .. versionchanged:: 8.1
+        The ``params`` argument can be used. Decorated params are
+        appended to the end of the list.
     """
     if cls is None:
         cls = Command
@@ -179,13 +185,16 @@ def command(
         if isinstance(f, Command):
             raise TypeError("Attempted to convert a callback into a command twice.")
 
+        attr_params = attrs.pop("params", None)
+        params = attr_params if attr_params is not None else []
+
         try:
-            params = f.__click_params__  # type: ignore
+            decorator_params = f.__click_params__  # type: ignore
         except AttributeError:
-            params = []
+            pass
         else:
-            params.reverse()
             del f.__click_params__  # type: ignore
+            params.extend(reversed(decorator_params))
 
         if attrs.get("help") is None:
             attrs["help"] = f.__doc__
