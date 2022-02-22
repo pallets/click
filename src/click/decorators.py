@@ -188,7 +188,7 @@ def command(
             del f.__click_params__  # type: ignore
 
         if attrs.get("help") is None:
-            attrs["help"] = inspect.getdoc(f)
+            attrs["help"] = f.__doc__
 
         cmd = cls(  # type: ignore[misc]
             name=name or f.__name__.lower().replace("_", "-"),  # type: ignore[arg-type]
