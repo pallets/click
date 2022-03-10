@@ -1,8 +1,11 @@
+import enum
+
 import pytest
 
 import click.types
 
 # Common (obj, expect) pairs used to construct multiple tests.
+
 STRING_PARAM_TYPE = (click.STRING, {"param_type": "String", "name": "text"})
 INT_PARAM_TYPE = (click.INT, {"param_type": "Int", "name": "integer"})
 BOOL_PARAM_TYPE = (click.BOOL, {"param_type": "Bool", "name": "boolean"})
@@ -91,6 +94,15 @@ HELLO_GROUP = (
 )
 
 
+class MyEnum(enum.Enum):
+    """Dummy enum for unit tests."""
+
+    ONE = "one"
+    TWO = "two"
+    THREE = "three"
+    ONE_ALIAS = ONE
+
+
 @pytest.mark.parametrize(
     ("obj", "expect"),
     [
@@ -111,6 +123,16 @@ HELLO_GROUP = (
                 "param_type": "Choice",
                 "name": "choice",
                 "choices": ["a", "b"],
+                "case_sensitive": True,
+            },
+            id="Choice ParamType",
+        ),
+        pytest.param(
+            click.EnumChoice(MyEnum),
+            {
+                "param_type": "EnumChoice",
+                "name": "choice",
+                "choices": ["ONE", "TWO", "THREE"],
                 "case_sensitive": True,
             },
             id="Choice ParamType",
