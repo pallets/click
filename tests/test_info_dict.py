@@ -135,7 +135,7 @@ class MyEnum(enum.Enum):
                 "choices": ["ONE", "TWO", "THREE"],
                 "case_sensitive": True,
             },
-            id="Choice ParamType",
+            id="EnumChoice ParamType",
         ),
         pytest.param(
             click.DateTime(["%Y-%m-%d"]),
