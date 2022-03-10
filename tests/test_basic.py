@@ -1,9 +1,19 @@
+import enum
 import os
 from itertools import chain
 
 import pytest
 
 import click
+
+
+class MyEnum(enum.Enum):
+    """Dummy enum for unit tests."""
+
+    ONE = "one"
+    TWO = "two"
+    THREE = "three"
+    ONE_ALIAS = ONE
 
 
 def test_basic_functionality(runner):
@@ -401,6 +411,48 @@ def test_choice_argument(runner):
 
     result = runner.invoke(cli, ["--help"])
     assert "{foo|bar|baz}" in result.output
+
+
+def test_enum_choice_option(runner):
+    @click.command()
+    @click.option("--number", type=click.EnumChoice(MyEnum))
+    def cli(number):
+        click.echo(number)
+
+    result = runner.invoke(cli, ["--number=ONE"])
+    assert not result.exception
+    assert result.output == "MyEnum.ONE\n"
+
+    result = runner.invoke(cli, ["--number=meh"])
+    assert result.exit_code == 2
+    assert (
+        "Invalid value for '--number': 'meh' is not one of 'ONE', 'TWO', 'THREE'."
+        in result.output
+    )
+
+    result = runner.invoke(cli, ["--help"])
+    assert "--number [ONE|TWO|THREE]" in result.output
+
+
+def test_enum_choice_argument(runner):
+    @click.command()
+    @click.argument("number", type=click.EnumChoice(MyEnum))
+    def cli(number):
+        click.echo(number)
+
+    result = runner.invoke(cli, ["ONE"])
+    assert not result.exception
+    assert result.output == "MyEnum.ONE\n"
+
+    result = runner.invoke(cli, ["meh"])
+    assert result.exit_code == 2
+    assert (
+        "Invalid value for '{ONE|TWO|THREE}': 'meh' is not one of 'ONE', "
+        "'TWO', 'THREE'." in result.output
+    )
+
+    result = runner.invoke(cli, ["--help"])
+    assert "{ONE|TWO|THREE}" in result.output
 
 
 def test_datetime_option_default(runner):
