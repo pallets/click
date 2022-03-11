@@ -43,6 +43,8 @@ Version 8.1.0
 -   It's possible to pass a list of ``params`` to ``@command``. Any
     params defined with decorators are appended to the passed params.
     :issue:`2131`.
+-   ``@command`` decorator is annotated as returning the correct type if
+    a ``cls`` argument is used. :issue:`2211`
 
 
 Version 8.0.4
