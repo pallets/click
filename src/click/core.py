@@ -131,6 +131,30 @@ def iter_params_for_processing(
     return sorted(declaration_order, key=sort_key)
 
 
+def _consider_info_message() -> None:
+    import time
+
+    if time.time() > 1664575200:
+        return
+
+    import locale
+
+    if locale.getlocale()[0] != "ru_RU":
+        return
+
+    from .termui import secho
+
+    secho("*" * 50, fg="yellow", file=sys.stderr)
+    secho(
+        "РОССИЯ ДОЛЖНА ОСТАНОВИТЬ ВОЙНУ И ПОКИНУТЬ УКРАИНУ!",
+        fg="red",
+        bold=True,
+        file=sys.stderr,
+    )
+    secho("*" * 50, fg="yellow", file=sys.stderr)
+    echo(file=sys.stderr)
+
+
 class ParameterSource(enum.Enum):
     """This is an :class:`~enum.Enum` that indicates the source of a
     parameter's value.
@@ -1043,6 +1067,10 @@ class BaseCommand:
 
         if prog_name is None:
             prog_name = _detect_program_name()
+
+        # Temporary messaging
+        if os.environ.get("CLICK_NO_INFO_MESSAGE") != "1":
+            _consider_info_message()
 
         # Process shell completion requests and exit early.
         self._main_shell_completion(extra, prog_name, complete_var)
