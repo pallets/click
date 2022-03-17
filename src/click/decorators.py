@@ -121,19 +121,38 @@ def pass_meta_key(
     return decorator
 
 
+CmdType = t.TypeVar("CmdType", bound=Command)
+
+
 @t.overload
 def command(
     name: t.Optional[str] = None,
-    cls: t.Optional[t.Type[Command]] = None,
+    cls: t.Type[CmdType] = ...,
     **attrs: t.Any,
-) -> t.Callable[[F], Command]:
+) -> t.Callable[..., CmdType]:
+    ...
+
+
+@t.overload
+def command(
+    name: t.Optional[str] = None,
+    **attrs: t.Any,
+) -> t.Callable[..., Command]:
     ...
 
 
 @t.overload
 def command(
     name: t.Callable,
-    cls: t.Optional[t.Type[Command]] = None,
+    cls: t.Type[CmdType] = ...,
+    **attrs: t.Any,
+) -> CmdType:
+    ...
+
+
+@t.overload
+def command(
+    name: t.Callable,
     **attrs: t.Any,
 ) -> Command:
     ...
@@ -143,7 +162,7 @@ def command(
     name: t.Union[str, t.Callable, None] = None,
     cls: t.Optional[t.Type[Command]] = None,
     **attrs: t.Any,
-) -> t.Union[Command, t.Callable[[F], Command]]:
+) -> t.Union[Command, t.Callable[..., Command]]:
     r"""Creates a new :class:`Command` and uses the decorated function as
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as parameters to the command.
