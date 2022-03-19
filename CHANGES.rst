@@ -45,6 +45,9 @@ Version 8.1.0
     :issue:`2131`.
 -   ``@command`` decorator is annotated as returning the correct type if
     a ``cls`` argument is used. :issue:`2211`
+-   A ``Group`` with ``invoke_without_command=True`` and ``chain=False``
+    will invoke its result callback with the group function's return
+    value. :issue:`2124`
 
 
 Version 8.0.4
