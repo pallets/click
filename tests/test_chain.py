@@ -85,20 +85,20 @@ def test_chaining_with_options(runner):
     assert result.output.splitlines() == ["bdist called 1", "sdist called 2"]
 
 
-@pytest.mark.parametrize(("chain", "expect"), [(False, "None"), (True, "[]")])
+@pytest.mark.parametrize(("chain", "expect"), [(False, "1"), (True, "[]")])
 def test_no_command_result_callback(runner, chain, expect):
     """When a group has ``invoke_without_command=True``, the result
     callback is always invoked. A regular group invokes it with
-    ``None``, a chained group with ``[]``.
+    its return value, a chained group with ``[]``.
     """
 
     @click.group(invoke_without_command=True, chain=chain)
     def cli():
-        pass
+        return 1
 
     @cli.result_callback()
     def process_result(result):
-        click.echo(str(result), nl=False)
+        click.echo(result, nl=False)
 
     result = runner.invoke(cli, [])
     assert result.output == expect

@@ -1626,11 +1626,11 @@ class MultiCommand(Command):
         if not ctx.protected_args:
             if self.invoke_without_command:
                 # No subcommand was invoked, so the result callback is
-                # invoked with None for regular groups, or an empty list
-                # for chained groups.
+                # invoked with the group return value for regular
+                # groups, or an empty list for chained groups.
                 with ctx:
-                    super().invoke(ctx)
-                    return _process_result([] if self.chain else None)
+                    rv = super().invoke(ctx)
+                    return _process_result([] if self.chain else rv)
             ctx.fail(_("Missing command."))
 
         # Fetch args back out
