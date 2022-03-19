@@ -48,6 +48,8 @@ Version 8.1.0
 -   A ``Group`` with ``invoke_without_command=True`` and ``chain=False``
     will invoke its result callback with the group function's return
     value. :issue:`2124`
+-   ``to_info_dict`` will not fail if a ``ParamType`` doesn't define a
+    ``name``. :issue:`2168`
 
 
 Version 8.0.4
