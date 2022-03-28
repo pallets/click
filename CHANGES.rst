@@ -3,6 +3,8 @@
 Version 8.1.0
 -------------
 
+Released 2022-03-28
+
 -   Drop support for Python 3.6. :pr:`2129`
 -   Remove previously deprecated code. :pr:`2130`
 
