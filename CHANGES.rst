@@ -50,6 +50,8 @@ Version 8.1.0
     value. :issue:`2124`
 -   ``to_info_dict`` will not fail if a ``ParamType`` doesn't define a
     ``name``. :issue:`2168`
+-   Shell completion prioritizes option values with option prefixes over
+    new options. :issue:`2040`
 
 
 Version 8.0.4

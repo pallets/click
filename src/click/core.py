@@ -292,6 +292,8 @@ class Context:
         #: must be never propagated to another arguments.  This is used
         #: to implement nested parsing.
         self.protected_args: t.List[str] = []
+        #: the collected prefixes of the command's options.
+        self._opt_prefixes: t.Set[str] = set(parent._opt_prefixes) if parent else set()
 
         if obj is None and parent is not None:
             obj = parent.obj
@@ -1385,6 +1387,7 @@ class Command(BaseCommand):
             )
 
         ctx.args = args
+        ctx._opt_prefixes.update(parser._opt_prefixes)
         return args
 
     def invoke(self, ctx: Context) -> t.Any:

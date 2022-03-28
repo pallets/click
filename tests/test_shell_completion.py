@@ -110,6 +110,45 @@ def test_type_choice():
     assert _get_words(cli, ["-c"], "a2") == ["a2"]
 
 
+def test_choice_special_characters():
+    cli = Command("cli", params=[Option(["-c"], type=Choice(["!1", "!2", "+3"]))])
+    assert _get_words(cli, ["-c"], "") == ["!1", "!2", "+3"]
+    assert _get_words(cli, ["-c"], "!") == ["!1", "!2"]
+    assert _get_words(cli, ["-c"], "!2") == ["!2"]
+
+
+def test_choice_conflicting_prefix():
+    cli = Command(
+        "cli",
+        params=[
+            Option(["-c"], type=Choice(["!1", "!2", "+3"])),
+            Option(["+p"], is_flag=True),
+        ],
+    )
+    assert _get_words(cli, ["-c"], "") == ["!1", "!2", "+3"]
+    assert _get_words(cli, ["-c"], "+") == ["+p"]
+
+
+def test_option_count():
+    cli = Command("cli", params=[Option(["-c"], count=True)])
+    assert _get_words(cli, ["-c"], "") == []
+    assert _get_words(cli, ["-c"], "-") == ["--help"]
+
+
+def test_option_optional():
+    cli = Command(
+        "cli",
+        add_help_option=False,
+        params=[
+            Option(["--name"], is_flag=False, flag_value="value"),
+            Option(["--flag"], is_flag=True),
+        ],
+    )
+    assert _get_words(cli, ["--name"], "") == []
+    assert _get_words(cli, ["--name"], "-") == ["--flag"]
+    assert _get_words(cli, ["--name", "--flag"], "-") == []
+
+
 @pytest.mark.parametrize(
     ("type", "expect"),
     [(File(), "file"), (Path(), "file"), (Path(file_okay=False), "dir")],
