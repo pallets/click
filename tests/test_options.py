@@ -153,14 +153,15 @@ def test_init_bad_default_list(runner, multiple, nargs, default):
         click.Option(["-a"], type=type, multiple=multiple, nargs=nargs, default=default)
 
 
-def test_empty_envvar(runner):
+@pytest.mark.parametrize("env_key", ["MYPATH", "AUTO_MYPATH"])
+def test_empty_envvar(runner, env_key):
     @click.command()
     @click.option("--mypath", type=click.Path(exists=True), envvar="MYPATH")
     def cli(mypath):
         click.echo(f"mypath: {mypath}")
 
-    result = runner.invoke(cli, [], env={"MYPATH": ""})
-    assert result.exit_code == 0
+    result = runner.invoke(cli, env={env_key: ""}, auto_envvar_prefix="AUTO")
+    assert result.exception is None
     assert result.output == "mypath: None\n"
 
 
