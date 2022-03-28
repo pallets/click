@@ -52,6 +52,9 @@ Version 8.1.0
     ``name``. :issue:`2168`
 -   Shell completion prioritizes option values with option prefixes over
     new options. :issue:`2040`
+-   Options that get an environment variable value using
+    ``autoenvvar_prefix`` treat an empty value as ``None``, consistent
+    with a direct ``envvar``. :issue:`2146`
 
 
 Version 8.0.4

@@ -2834,7 +2834,10 @@ class Option(Parameter):
             envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
             rv = os.environ.get(envvar)
 
-        return rv
+            if rv:
+                return rv
+
+        return None
 
     def value_from_envvar(self, ctx: Context) -> t.Optional[t.Any]:
         rv: t.Optional[t.Any] = self.resolve_envvar_value(ctx)
