@@ -3,7 +3,7 @@
 Version 8.1.1
 -------------
 
-Unreleased
+Released 2022-03-30
 
 -   Fix an issue with decorator typing that caused type checking to
     report that a command was not callable. :issue:`2227`
