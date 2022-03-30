@@ -126,10 +126,8 @@ CmdType = t.TypeVar("CmdType", bound=Command)
 
 @t.overload
 def command(
-    name: t.Optional[str] = None,
-    cls: t.Type[CmdType] = ...,
-    **attrs: t.Any,
-) -> t.Callable[..., CmdType]:
+    __func: t.Callable[..., t.Any],
+) -> Command:
     ...
 
 
@@ -143,18 +141,10 @@ def command(
 
 @t.overload
 def command(
-    name: t.Callable,
+    name: t.Optional[str] = None,
     cls: t.Type[CmdType] = ...,
     **attrs: t.Any,
-) -> CmdType:
-    ...
-
-
-@t.overload
-def command(
-    name: t.Callable,
-    **attrs: t.Any,
-) -> Command:
+) -> t.Callable[..., CmdType]:
     ...
 
 
@@ -191,14 +181,17 @@ def command(
         The ``params`` argument can be used. Decorated params are
         appended to the end of the list.
     """
-    if cls is None:
-        cls = Command
 
     func: t.Optional[t.Callable] = None
 
     if callable(name):
         func = name
         name = None
+        assert cls is None, "Use 'command(cls=cls)(callable)' to specify a class."
+        assert not attrs, "Use 'command(**kwargs)(callable)' to provide arguments."
+
+    if cls is None:
+        cls = Command
 
     def decorator(f: t.Callable[..., t.Any]) -> Command:
         if isinstance(f, Command):
@@ -235,17 +228,16 @@ def command(
 
 @t.overload
 def group(
-    name: t.Optional[str] = None,
-    **attrs: t.Any,
-) -> t.Callable[[F], Group]:
+    __func: t.Callable,
+) -> Group:
     ...
 
 
 @t.overload
 def group(
-    name: t.Callable,
+    name: t.Optional[str] = None,
     **attrs: t.Any,
-) -> Group:
+) -> t.Callable[[F], Group]:
     ...
 
 
