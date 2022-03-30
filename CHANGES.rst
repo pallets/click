@@ -5,6 +5,9 @@ Version 8.1.1
 
 Unreleased
 
+-   Fix an issue with decorator typing that caused type checking to
+    report that a command was not callable. :issue:`2227`
+
 
 Version 8.1.0
 -------------
