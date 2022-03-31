@@ -7,6 +7,9 @@ Unreleased
 
 -   Fix error message for readable path check that was mixed up with the
     executable check. :pr:`2236`
+-   Restore parameter order for ``Path``, placing the ``executable``
+    parameter at the end. It is recommended to use keyword arguments
+    instead of positional arguments. :issue:`2235`
 
 
 Version 8.1.1
