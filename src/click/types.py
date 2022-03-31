@@ -790,12 +790,12 @@ class Path(ParamType):
         exists: bool = False,
         file_okay: bool = True,
         dir_okay: bool = True,
-        readable: bool = True,
         writable: bool = False,
-        executable: bool = False,
+        readable: bool = True,
         resolve_path: bool = False,
         allow_dash: bool = False,
         path_type: t.Optional[t.Type] = None,
+        executable: bool = False,
     ):
         self.exists = exists
         self.file_okay = file_okay
@@ -884,7 +884,7 @@ class Path(ParamType):
 
             if self.readable and not os.access(rv, os.R_OK):
                 self.fail(
-                    _("{name} {filename!r} is not executable.").format(
+                    _("{name} {filename!r} is not readable.").format(
                         name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
