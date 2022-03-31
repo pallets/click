@@ -3,7 +3,7 @@
 Version 8.1.2
 -------------
 
-Unreleased
+Released 2022-03-31
 
 -   Fix error message for readable path check that was mixed up with the
     executable check. :pr:`2236`
