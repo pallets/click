@@ -5,6 +5,9 @@ Version 8.1.2
 
 Unreleased
 
+-   Fix error message for readable path check that was mixed up with the
+    executable check. :pr:`2236`
+
 
 Version 8.1.1
 -------------

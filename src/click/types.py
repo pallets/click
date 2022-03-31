@@ -884,7 +884,7 @@ class Path(ParamType):
 
             if self.readable and not os.access(rv, os.R_OK):
                 self.fail(
-                    _("{name} {filename!r} is not executable.").format(
+                    _("{name} {filename!r} is not readable.").format(
                         name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,
