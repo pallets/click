@@ -5,7 +5,7 @@
 #
 #    pip-compile-multi
 #
-mypy==0.931
+mypy==0.942
     # via -r requirements/typing.in
 mypy-extensions==0.4.3
     # via mypy
