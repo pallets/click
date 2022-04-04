@@ -9,7 +9,7 @@ repos:
       - id: reorder-python-imports
         args: ["--application-directories", "src"]
   - repo: https://github.com/ambv/black
-    rev: 19.10b0
+    rev: 22.3.0
     hooks:
       - id: black
   - repo: https://gitlab.com/pycqa/flake8
