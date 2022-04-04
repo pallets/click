@@ -46,8 +46,8 @@ def test_nargs_tup_composite_mult(runner):
     @click.command()
     @click.option("--item", type=(str, int), multiple=True)
     def copy(item):
-        for item in item:
-            click.echo("name={0[0]} id={0[1]:d}".format(item))
+        for name, id in item:
+            click.echo("name={} id={:d}".format(name, id))
 
     result = runner.invoke(copy, ["--item", "peter", "1", "--item", "max", "2"])
     assert not result.exception
