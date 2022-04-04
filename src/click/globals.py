@@ -20,9 +20,9 @@ def get_current_context(silent=False):
     """
     try:
         return _local.stack[-1]
-    except (AttributeError, IndexError):
+    except (AttributeError, IndexError) as e:
         if not silent:
-            raise RuntimeError("There is no active click context.")
+            raise RuntimeError("There is no active click context.") from e
 
 
 def push_context(ctx):

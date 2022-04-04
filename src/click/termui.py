@@ -133,7 +133,7 @@ def prompt(
             # A doc bug has been filed at https://bugs.python.org/issue24711
             if hide_input:
                 echo(None, err=err)
-            raise Abort()
+            raise Abort() from None
 
     if value_proc is None:
         value_proc = convert_type(type, default)
@@ -199,7 +199,7 @@ def confirm(
             echo(prompt, nl=False, err=err)
             value = visible_prompt_func("").lower().strip()
         except (KeyboardInterrupt, EOFError):
-            raise Abort()
+            raise Abort() from None
         if value in ("y", "yes"):
             rv = True
         elif value in ("n", "no"):
@@ -497,12 +497,12 @@ def style(
         try:
             bits.append("\033[{}m".format(_ansi_colors[fg]))
         except KeyError:
-            raise TypeError("Unknown color '{}'".format(fg))
+            raise TypeError("Unknown color '{}'".format(fg)) from None
     if bg:
         try:
             bits.append("\033[{}m".format(_ansi_colors[bg] + 10))
         except KeyError:
-            raise TypeError("Unknown color '{}'".format(bg))
+            raise TypeError("Unknown color '{}'".format(bg)) from None
     if bold is not None:
         bits.append("\033[{}m".format(1 if bold else 22))
     if dim is not None:

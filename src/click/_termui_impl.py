@@ -467,7 +467,7 @@ class Editor(object):
             if exit_code != 0:
                 raise ClickException("{}: Editing failed!".format(editor))
         except OSError as e:
-            raise ClickException("{}: Editing failed: {}".format(editor, e))
+            raise ClickException("{}: Editing failed: {}".format(editor, e)) from e
 
     def edit(self, text):
         import tempfile

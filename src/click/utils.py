@@ -129,7 +129,7 @@ class LazyFile(object):
         except (IOError, OSError) as e:  # noqa: E402
             from .exceptions import FileError
 
-            raise FileError(self.name, hint=get_streerror(e))
+            raise FileError(self.name, hint=get_streerror(e)) from e
         self._f = rv
         return rv
 
