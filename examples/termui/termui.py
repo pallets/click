@@ -71,7 +71,7 @@ def progress(count):
         length=count,
         label="Counting",
         bar_template="%(label)s  %(bar)s | %(info)s",
-        fill_char=click.style(u"█", fg="cyan"),
+        fill_char=click.style("█", fg="cyan"),
         empty_char=" ",
     ) as bar:
         for item in bar:
@@ -94,7 +94,7 @@ def progress(count):
         length=count,
         show_percent=False,
         label="Slowing progress bar",
-        fill_char=click.style(u"█", fg="green"),
+        fill_char=click.style("█", fg="green"),
     ) as bar:
         for item in steps:
             time.sleep(item)

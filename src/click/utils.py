@@ -234,9 +234,9 @@ def echo(message=None, file=None, nl=True, err=False, color=None):
         message = text_type(message)
 
     if nl:
-        message = message or u""
+        message = message or ""
         if isinstance(message, text_type):
-            message += u"\n"
+            message += "\n"
         else:
             message += b"\n"
 

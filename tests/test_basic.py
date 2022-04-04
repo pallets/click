@@ -82,7 +82,7 @@ def test_basic_option(runner):
     @click.command()
     @click.option("--foo", default="no value")
     def cli(foo):
-        click.echo(u"FOO:[{}]".format(foo))
+        click.echo("FOO:[{}]".format(foo))
 
     result = runner.invoke(cli, [])
     assert not result.exception
@@ -100,9 +100,9 @@ def test_basic_option(runner):
     assert not result.exception
     assert "FOO:[]" in result.output
 
-    result = runner.invoke(cli, [u"--foo=\N{SNOWMAN}"])
+    result = runner.invoke(cli, ["--foo=\N{SNOWMAN}"])
     assert not result.exception
-    assert u"FOO:[\N{SNOWMAN}]" in result.output
+    assert "FOO:[\N{SNOWMAN}]" in result.output
 
 
 def test_int_option(runner):

@@ -98,7 +98,7 @@ def test_bytes_args(runner, monkeypatch):
 
     runner.invoke(
         from_bytes,
-        [u"Something outside of ASCII range: 林".encode("UTF-8")],
+        ["Something outside of ASCII range: 林".encode("UTF-8")],
         catch_exceptions=False,
     )
 

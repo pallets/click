@@ -421,7 +421,10 @@ def test_option_help_preserve_paragraphs(runner):
     def cmd(config):
         pass
 
-    result = runner.invoke(cmd, ["--help"],)
+    result = runner.invoke(
+        cmd,
+        ["--help"],
+    )
     assert result.exit_code == 0
     assert (
         "  -C, --config PATH  Configuration file to use.\n"

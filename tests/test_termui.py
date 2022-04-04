@@ -285,7 +285,7 @@ def test_progressbar_update(runner, monkeypatch):
     assert "100%          " in lines[3]
 
 
-@pytest.mark.parametrize("key_char", (u"h", u"H", u"é", u"À", u" ", u"字", u"àH", u"àR"))
+@pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
 def test_getchar_windows(runner, monkeypatch, key_char, echo):
@@ -296,7 +296,7 @@ def test_getchar_windows(runner, monkeypatch, key_char, echo):
 
 
 @pytest.mark.parametrize(
-    "special_key_char, key_char", [(u"\x00", "a"), (u"\x00", "b"), (u"\xe0", "c")]
+    "special_key_char, key_char", [("\x00", "a"), ("\x00", "b"), ("\xe0", "c")]
 )
 @pytest.mark.skipif(
     not WIN, reason="Tests special character inputs using the msvcrt module."
@@ -311,7 +311,8 @@ def test_getchar_special_key_windows(runner, monkeypatch, special_key_char, key_
 
 
 @pytest.mark.parametrize(
-    ("key_char", "exc"), [(u"\x03", KeyboardInterrupt), (u"\x1a", EOFError)],
+    ("key_char", "exc"),
+    [("\x03", KeyboardInterrupt), ("\x1a", EOFError)],
 )
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
 def test_getchar_windows_exceptions(runner, monkeypatch, key_char, exc):
