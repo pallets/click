@@ -904,3 +904,21 @@ def test_type_from_flag_value():
 )
 def test_is_bool_flag_is_correctly_set(option, expected):
     assert option.is_bool_flag is expected
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"count": True, "multiple": True}, "'count' is not valid with 'multiple'."),
+        ({"count": True, "is_flag": True}, "'count' is not valid with 'is_flag'."),
+        (
+            {"multiple": True, "is_flag": True},
+            "'multiple' is not valid with 'is_flag', use 'count'.",
+        ),
+    ],
+)
+def test_invalid_flag_combinations(runner, kwargs, message):
+    with pytest.raises(TypeError) as e:
+        click.Option(["-a"], **kwargs)
+
+    assert message in str(e.value)

@@ -2580,6 +2580,9 @@ class Option(Parameter):
                 if self.is_flag:
                     raise TypeError("'count' is not valid with 'is_flag'.")
 
+            if self.multiple and self.is_flag:
+                raise TypeError("'multiple' is not valid with 'is_flag', use 'count'.")
+
     def to_info_dict(self) -> t.Dict[str, t.Any]:
         info_dict = super().to_info_dict()
         info_dict.update(
