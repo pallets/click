@@ -2532,6 +2532,9 @@ class Option(Parameter):
         if is_flag and default_is_missing and not self.required:
             self.default: t.Union[t.Any, t.Callable[[], t.Any]] = False
 
+            if multiple:
+                self.default = ()
+
         if flag_value is None:
             flag_value = not self.default
 

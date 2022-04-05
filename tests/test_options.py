@@ -904,3 +904,24 @@ def test_type_from_flag_value():
 )
 def test_is_bool_flag_is_correctly_set(option, expected):
     assert option.is_bool_flag is expected
+
+
+def test_flag_multiple_no_default(runner):
+    @click.command()
+    @click.option("--version", "-V", is_flag=True, multiple=True)
+    def cli(version):
+        return version
+
+    result = runner.invoke(cli, [], standalone_mode=False, catch_exceptions=False)
+    assert result.return_value == ()
+
+    result = runner.invoke(
+        cli, ["--version"], standalone_mode=False, catch_exceptions=False
+    )
+    assert result.return_value == (True,)
+
+    result = runner.invoke(cli, ["-V"], standalone_mode=False, catch_exceptions=False)
+    assert result.return_value == (True,)
+
+    result = runner.invoke(cli, ["-VVV"], standalone_mode=False, catch_exceptions=False)
+    assert result.return_value == (True, True, True)
