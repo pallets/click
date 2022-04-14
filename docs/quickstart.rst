@@ -163,7 +163,7 @@ functional at least on a basic level even if everything is completely
 broken.
 
 What this means is that the :func:`echo` function applies some error
-correction in case the terminal is misconfigured instead of dying with an
+correction in case the terminal is misconfigured instead of dying with a
 :exc:`UnicodeError`.
 
 The echo function also supports color and other styles in output. It
