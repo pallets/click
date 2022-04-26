@@ -5,6 +5,9 @@ Version 8.1.3
 
 Unreleased
 
+-   Use verbose form of ``typing.Callable`` for ``@command`` and
+    ``@group``. :issue:`2255`
+
 
 Version 8.1.2
 -------------
