@@ -3,7 +3,7 @@
 Version 8.1.3
 -------------
 
-Unreleased
+Released 2022-04-28
 
 -   Use verbose form of ``typing.Callable`` for ``@command`` and
     ``@group``. :issue:`2255`
