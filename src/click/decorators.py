@@ -149,7 +149,7 @@ def command(
 
 
 def command(
-    name: t.Union[str, t.Callable, None] = None,
+    name: t.Union[str, t.Callable[..., t.Any], None] = None,
     cls: t.Optional[t.Type[Command]] = None,
     **attrs: t.Any,
 ) -> t.Union[Command, t.Callable[..., Command]]:
@@ -182,7 +182,7 @@ def command(
         appended to the end of the list.
     """
 
-    func: t.Optional[t.Callable] = None
+    func: t.Optional[t.Callable[..., t.Any]] = None
 
     if callable(name):
         func = name
@@ -228,7 +228,7 @@ def command(
 
 @t.overload
 def group(
-    __func: t.Callable,
+    __func: t.Callable[..., t.Any],
 ) -> Group:
     ...
 
@@ -242,7 +242,7 @@ def group(
 
 
 def group(
-    name: t.Union[str, t.Callable, None] = None, **attrs: t.Any
+    name: t.Union[str, t.Callable[..., t.Any], None] = None, **attrs: t.Any
 ) -> t.Union[Group, t.Callable[[F], Group]]:
     """Creates a new :class:`Group` with a function as callback.  This
     works otherwise the same as :func:`command` just that the `cls`

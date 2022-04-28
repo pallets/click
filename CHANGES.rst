@@ -6,6 +6,18 @@ Version 8.2.0
 Unreleased
 
 
+Version 8.1.3
+-------------
+
+Released 2022-04-28
+
+-   Use verbose form of ``typing.Callable`` for ``@command`` and
+    ``@group``. :issue:`2255`
+-   Show error when attempting to create an option with
+    ``multiple=True, is_flag=True``. Use ``count`` instead.
+    :issue:`2246`
+
+
 Version 8.1.2
 -------------
 
