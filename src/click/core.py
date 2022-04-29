@@ -1804,7 +1804,9 @@ class Group(MultiCommand):
     def __init__(
         self,
         name: t.Optional[str] = None,
-        commands: t.Optional[t.Union[t.Mapping[str, Command], t.Sequence[Command]]] = None,
+        commands: t.Optional[
+            t.Union[t.Mapping[str, Command], t.Sequence[Command]]
+        ] = None,
         **attrs: t.Any,
     ) -> None:
         super().__init__(name, **attrs)
