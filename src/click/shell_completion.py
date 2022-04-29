@@ -16,7 +16,7 @@ from .utils import echo
 
 def shell_complete(
     cli: BaseCommand,
-    ctx_args: t.Dict[str, t.Any],
+    ctx_args: t.Mapping[str, t.Any],
     prog_name: str,
     complete_var: str,
     instruction: str,
@@ -214,7 +214,7 @@ class ShellComplete:
     def __init__(
         self,
         cli: BaseCommand,
-        ctx_args: t.Dict[str, t.Any],
+        ctx_args: t.Mapping[str, t.Any],
         prog_name: str,
         complete_var: str,
     ) -> None:
@@ -482,7 +482,7 @@ def _is_incomplete_option(ctx: Context, args: t.List[str], param: Parameter) -> 
 
 
 def _resolve_context(
-    cli: BaseCommand, ctx_args: t.Dict[str, t.Any], prog_name: str, args: t.List[str]
+    cli: BaseCommand, ctx_args: t.Mapping[str, t.Any], prog_name: str, args: t.List[str]
 ) -> Context:
     """Produce the context hierarchy starting with the command and
     traversing the complete arguments. This only follows the commands,

@@ -264,7 +264,7 @@ class Context:
         info_name: t.Optional[str] = None,
         obj: t.Optional[t.Any] = None,
         auto_envvar_prefix: t.Optional[str] = None,
-        default_map: t.Optional[t.Dict[str, t.Any]] = None,
+        default_map: t.Optional[t.Mapping[str, t.Any]] = None,
         terminal_width: t.Optional[int] = None,
         max_content_width: t.Optional[int] = None,
         resilient_parsing: bool = False,
@@ -862,7 +862,7 @@ class BaseCommand:
     def __init__(
         self,
         name: t.Optional[str],
-        context_settings: t.Optional[t.Dict[str, t.Any]] = None,
+        context_settings: t.Optional[t.Mapping[str, t.Any]] = None,
     ) -> None:
         #: the name the command thinks it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
@@ -1117,7 +1117,7 @@ class BaseCommand:
 
     def _main_shell_completion(
         self,
-        ctx_args: t.Dict[str, t.Any],
+        ctx_args: t.Mapping[str, t.Any],
         prog_name: str,
         complete_var: t.Optional[str] = None,
     ) -> None:
@@ -1193,7 +1193,7 @@ class Command(BaseCommand):
     def __init__(
         self,
         name: t.Optional[str],
-        context_settings: t.Optional[t.Dict[str, t.Any]] = None,
+        context_settings: t.Optional[t.Mapping[str, t.Any]] = None,
         callback: t.Optional[t.Callable[..., t.Any]] = None,
         params: t.Optional[t.List["Parameter"]] = None,
         help: t.Optional[str] = None,
@@ -1804,7 +1804,7 @@ class Group(MultiCommand):
     def __init__(
         self,
         name: t.Optional[str] = None,
-        commands: t.Optional[t.Union[t.Dict[str, Command], t.Sequence[Command]]] = None,
+        commands: t.Optional[t.Union[t.Mapping[str, Command], t.Sequence[Command]]] = None,
         **attrs: t.Any,
     ) -> None:
         super().__init__(name, **attrs)
