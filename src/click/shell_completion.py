@@ -482,7 +482,10 @@ def _is_incomplete_option(ctx: Context, args: t.List[str], param: Parameter) -> 
 
 
 def _resolve_context(
-    cli: BaseCommand, ctx_args: t.MutableMapping[str, t.Any], prog_name: str, args: t.List[str]
+    cli: BaseCommand,
+    ctx_args: t.MutableMapping[str, t.Any],
+    prog_name: str,
+    args: t.List[str],
 ) -> Context:
     """Produce the context hierarchy starting with the command and
     traversing the complete arguments. This only follows the commands,
