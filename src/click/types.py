@@ -1,3 +1,4 @@
+import enum
 import os
 import stat
 import typing as t
@@ -327,6 +328,49 @@ class Choice(ParamType):
             matched = (c for c in str_choices if c.lower().startswith(incomplete))
 
         return [CompletionItem(c) for c in matched]
+
+
+class EnumChoice(Choice):
+    """The choice type allows a value to be checked against a fixed set
+    of supported values. All of these values have to be strings.
+
+    You should only pass a list or tuple of choices. Other iterables
+    (like generators) may lead to surprising results.
+
+    The resulting value will always be one of the originally passed choices
+    regardless of ``case_sensitive`` or any ``ctx.token_normalize_func``
+    being specified.
+
+    See :ref:`choice-opts` for an example.
+
+    :param case_sensitive: Set to false to make choices case
+        insensitive. Defaults to true.
+    """
+
+    name = "enum_choice"
+
+    def __init__(
+        self,
+        choices: t.Type[enum.Enum],
+        case_sensitive: bool = True,
+        use_value: bool = False,
+    ) -> None:
+        self.use_value: bool = use_value
+        if self.use_value:
+            self.choice_to_enum = {str(enum.value): enum for enum in choices}
+        else:
+            self.choice_to_enum = {str(enum.name): enum for enum in choices}
+        self.choices = list(self.choice_to_enum)
+        self.case_sensitive = case_sensitive
+
+    def convert(
+        self, value: t.Any, param: t.Optional["Parameter"], ctx: t.Optional["Context"]
+    ) -> t.Any:
+        normed_value = super().convert(value, param, ctx)
+        return self.choice_to_enum[normed_value]
+
+    def __repr__(self) -> str:
+        return f"EnumChoice({list(self.choices)})"
 
 
 class DateTime(ParamType):
