@@ -2451,7 +2451,11 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
 
     :param deprecated: issues a message indicating that
-                             the command is deprecated.
+                       the command is deprecated showing help
+
+    .. versionchanged:: 8.2.0
+        Show deprecation warning message running ``--help`` Option
+        for ``@click.option``. :issue:`2263`
 
     .. versionchanged:: 8.1.0
         Help text indentation is cleaned here instead of only in the
