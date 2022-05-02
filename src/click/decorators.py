@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import inspect
 import typing as t
 from functools import update_wrapper
@@ -23,24 +25,24 @@ _AnyCallable = t.Callable[..., t.Any]
 FC = t.TypeVar("FC", bound=t.Union[_AnyCallable, Command])
 
 
-def pass_context(f: "t.Callable[te.Concatenate[Context, P], R]") -> "t.Callable[P, R]":
+def pass_context(f: t.Callable[te.Concatenate[Context, P], R]) -> t.Callable[P, R]:
     """Marks a callback as wanting to receive the current context
     object as first argument.
     """
 
-    def new_func(*args: "P.args", **kwargs: "P.kwargs") -> "R":
+    def new_func(*args: P.args, **kwargs: P.kwargs) -> R:
         return f(get_current_context(), *args, **kwargs)
 
     return update_wrapper(new_func, f)
 
 
-def pass_obj(f: "t.Callable[te.Concatenate[t.Any, P], R]") -> "t.Callable[P, R]":
+def pass_obj(f: t.Callable[te.Concatenate[t.Any, P], R]) -> t.Callable[P, R]:
     """Similar to :func:`pass_context`, but only pass the object on the
     context onwards (:attr:`Context.obj`).  This is useful if that object
     represents the state of a nested system.
     """
 
-    def new_func(*args: "P.args", **kwargs: "P.kwargs") -> "R":
+    def new_func(*args: P.args, **kwargs: P.kwargs) -> R:
         return f(get_current_context().obj, *args, **kwargs)
 
     return update_wrapper(new_func, f)
@@ -48,7 +50,7 @@ def pass_obj(f: "t.Callable[te.Concatenate[t.Any, P], R]") -> "t.Callable[P, R]"
 
 def make_pass_decorator(
     object_type: t.Type[T], ensure: bool = False
-) -> t.Callable[["t.Callable[te.Concatenate[T, P], R]"], "t.Callable[P, R]"]:
+) -> t.Callable[[t.Callable[te.Concatenate[T, P], R]], t.Callable[P, R]]:
     """Given an object type this creates a decorator that will work
     similar to :func:`pass_obj` but instead of passing the object of the
     current context, it will find the innermost context of type
@@ -71,8 +73,8 @@ def make_pass_decorator(
                    remembered on the context if it's not there yet.
     """
 
-    def decorator(f: "t.Callable[te.Concatenate[T, P], R]") -> "t.Callable[P, R]":
-        def new_func(*args: "P.args", **kwargs: "P.kwargs") -> "R":
+    def decorator(f: t.Callable[te.Concatenate[T, P], R]) -> t.Callable[P, R]:
+        def new_func(*args: P.args, **kwargs: P.kwargs) -> R:
             ctx = get_current_context()
 
             obj: t.Optional[T]
@@ -97,7 +99,7 @@ def make_pass_decorator(
 
 def pass_meta_key(
     key: str, *, doc_description: t.Optional[str] = None
-) -> "t.Callable[[t.Callable[te.Concatenate[t.Any, P], R]], t.Callable[P, R]]":
+) -> t.Callable[[t.Callable[te.Concatenate[t.Any, P], R]], t.Callable[P, R]]:
     """Create a decorator that passes a key from
     :attr:`click.Context.meta` as the first argument to the decorated
     function.
@@ -110,8 +112,8 @@ def pass_meta_key(
     .. versionadded:: 8.0
     """
 
-    def decorator(f: "t.Callable[te.Concatenate[t.Any, P], R]") -> "t.Callable[P, R]":
-        def new_func(*args: "P.args", **kwargs: "P.kwargs") -> R:
+    def decorator(f: t.Callable[te.Concatenate[t.Any, P], R]) -> t.Callable[P, R]:
+        def new_func(*args: P.args, **kwargs: P.kwargs) -> R:
             ctx = get_current_context()
             obj = ctx.meta[key]
             return ctx.invoke(f, obj, *args, **kwargs)

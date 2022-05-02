@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import io
 import os
@@ -103,7 +105,7 @@ class Result:
 
     def __init__(
         self,
-        runner: "CliRunner",
+        runner: CliRunner,
         stdout_bytes: bytes,
         stderr_bytes: t.Optional[bytes],
         return_value: t.Any,
@@ -187,7 +189,7 @@ class CliRunner:
         self.echo_stdin = echo_stdin
         self.mix_stderr = mix_stderr
 
-    def get_default_prog_name(self, cli: "Command") -> str:
+    def get_default_prog_name(self, cli: Command) -> str:
         """Given a command object it will return the default program name
         for it.  The default is the `name` attribute or ``"root"`` if not
         set.
@@ -348,7 +350,7 @@ class CliRunner:
 
     def invoke(
         self,
-        cli: "Command",
+        cli: Command,
         args: t.Optional[t.Union[str, t.Sequence[str]]] = None,
         input: t.Optional[t.Union[str, bytes, t.IO[t.Any]]] = None,
         env: t.Optional[t.Mapping[str, t.Optional[str]]] = None,
@@ -449,7 +451,7 @@ class CliRunner:
 
     @contextlib.contextmanager
     def isolated_filesystem(
-        self, temp_dir: t.Optional[t.Union[str, "os.PathLike[str]"]] = None
+        self, temp_dir: t.Optional[t.Union[str, os.PathLike[str]]] = None
     ) -> t.Iterator[str]:
         """A context manager that creates a temporary directory and
         changes the current working directory to it. This isolates tests

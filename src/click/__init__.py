@@ -4,6 +4,8 @@ writing command line scripts fun. Unlike other modules, it's based
 around a simple API that does not come with too much magic and is
 composable.
 """
+from __future__ import annotations
+
 from .core import Argument as Argument
 from .core import Command as Command
 from .core import CommandCollection as CommandCollection

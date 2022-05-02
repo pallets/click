@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import textwrap
 import typing as t
 from contextlib import contextmanager

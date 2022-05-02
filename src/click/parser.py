@@ -21,6 +21,8 @@ Copyright 2002-2006 Python Software Foundation. All rights reserved.
 # maintained by the Python Software Foundation.
 # Copyright 2001-2006 Gregory P. Ward
 # Copyright 2002-2006 Python Software Foundation
+from __future__ import annotations
+
 import typing as t
 from collections import deque
 from gettext import gettext as _
@@ -63,7 +65,7 @@ def _unpack_args(
     rv: t.List[t.Union[str, t.Tuple[t.Optional[str], ...], None]] = []
     spos: t.Optional[int] = None
 
-    def _fetch(c: "te.Deque[V]") -> t.Optional[V]:
+    def _fetch(c: te.Deque[V]) -> t.Optional[V]:
         try:
             if spos is None:
                 return c.popleft()
@@ -115,7 +117,7 @@ def _split_opt(opt: str) -> t.Tuple[str, str]:
     return first, opt[1:]
 
 
-def _normalize_opt(opt: str, ctx: t.Optional["Context"]) -> str:
+def _normalize_opt(opt: str, ctx: t.Optional[Context]) -> str:
     if ctx is None or ctx.token_normalize_func is None:
         return opt
     prefix, opt = _split_opt(opt)
@@ -125,7 +127,7 @@ def _normalize_opt(opt: str, ctx: t.Optional["Context"]) -> str:
 class _Option:
     def __init__(
         self,
-        obj: "CoreOption",
+        obj: CoreOption,
         opts: t.Sequence[str],
         dest: t.Optional[str],
         action: t.Optional[str] = None,
@@ -160,7 +162,7 @@ class _Option:
     def takes_value(self) -> bool:
         return self.action in ("store", "append")
 
-    def process(self, value: t.Any, state: "_ParsingState") -> None:
+    def process(self, value: t.Any, state: _ParsingState) -> None:
         if self.action == "store":
             state.opts[self.dest] = value  # type: ignore
         elif self.action == "store_const":
@@ -177,7 +179,7 @@ class _Option:
 
 
 class _Argument:
-    def __init__(self, obj: "CoreArgument", dest: t.Optional[str], nargs: int = 1):
+    def __init__(self, obj: CoreArgument, dest: t.Optional[str], nargs: int = 1):
         self.dest = dest
         self.nargs = nargs
         self.obj = obj
@@ -185,7 +187,7 @@ class _Argument:
     def process(
         self,
         value: t.Union[t.Optional[str], t.Sequence[t.Optional[str]]],
-        state: "_ParsingState",
+        state: _ParsingState,
     ) -> None:
         if self.nargs > 1:
             assert value is not None
@@ -213,7 +215,7 @@ class _ParsingState:
         self.opts: t.Dict[str, t.Any] = {}
         self.largs: t.List[str] = []
         self.rargs = rargs
-        self.order: t.List["CoreParameter"] = []
+        self.order: t.List[CoreParameter] = []
 
 
 class _OptionParser:
@@ -233,7 +235,7 @@ class _OptionParser:
         Will be removed in Click 9.0.
     """
 
-    def __init__(self, ctx: t.Optional["Context"] = None) -> None:
+    def __init__(self, ctx: t.Optional[Context] = None) -> None:
         #: The :class:`~click.Context` for this parser.  This might be
         #: `None` for some advanced use cases.
         self.ctx = ctx
@@ -259,7 +261,7 @@ class _OptionParser:
 
     def add_option(
         self,
-        obj: "CoreOption",
+        obj: CoreOption,
         opts: t.Sequence[str],
         dest: t.Optional[str],
         action: t.Optional[str] = None,
@@ -283,7 +285,7 @@ class _OptionParser:
             self._long_opt[opt] = option
 
     def add_argument(
-        self, obj: "CoreArgument", dest: t.Optional[str], nargs: int = 1
+        self, obj: CoreArgument, dest: t.Optional[str], nargs: int = 1
     ) -> None:
         """Adds a positional argument named `dest` to the parser.
 
@@ -294,7 +296,7 @@ class _OptionParser:
 
     def parse_args(
         self, args: t.List[str]
-    ) -> t.Tuple[t.Dict[str, t.Any], t.List[str], t.List["CoreParameter"]]:
+    ) -> t.Tuple[t.Dict[str, t.Any], t.List[str], t.List[CoreParameter]]:
         """Parses positional arguments and returns ``(values, args, order)``
         for the parsed options and arguments as well as the leftover
         arguments if there are any.  The order is a list of objects as they

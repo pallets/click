@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 from threading import local
 
@@ -9,16 +11,16 @@ _local = local()
 
 
 @t.overload
-def get_current_context(silent: "te.Literal[False]" = False) -> "Context":
+def get_current_context(silent: te.Literal[False] = False) -> Context:
     ...
 
 
 @t.overload
-def get_current_context(silent: bool = ...) -> t.Optional["Context"]:
+def get_current_context(silent: bool = ...) -> t.Optional[Context]:
     ...
 
 
-def get_current_context(silent: bool = False) -> t.Optional["Context"]:
+def get_current_context(silent: bool = False) -> t.Optional[Context]:
     """Returns the current click context.  This can be used as a way to
     access the current context object from anywhere.  This is a more implicit
     alternative to the :func:`pass_context` decorator.  This function is
@@ -42,7 +44,7 @@ def get_current_context(silent: bool = False) -> t.Optional["Context"]:
     return None
 
 
-def push_context(ctx: "Context") -> None:
+def push_context(ctx: Context) -> None:
     """Pushes a new context to the current stack."""
     _local.__dict__.setdefault("stack", []).append(ctx)
 

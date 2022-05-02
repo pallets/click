@@ -3,6 +3,8 @@ This module contains implementations for the termui module. To keep the
 import time of Click down, some infrequently used functionality is
 placed in this module and only imported as needed.
 """
+from __future__ import annotations
+
 import contextlib
 import math
 import os
@@ -104,7 +106,7 @@ class ProgressBar(t.Generic[V]):
         self.is_hidden: bool = not isatty(self.file)
         self._last_line: t.Optional[str] = None
 
-    def __enter__(self) -> "ProgressBar[V]":
+    def __enter__(self) -> ProgressBar[V]:
         self.entered = True
         self.render_progress()
         return self

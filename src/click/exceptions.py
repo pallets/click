@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as t
 from gettext import gettext as _
 from gettext import ngettext
@@ -55,10 +57,10 @@ class UsageError(ClickException):
 
     exit_code = 2
 
-    def __init__(self, message: str, ctx: t.Optional["Context"] = None) -> None:
+    def __init__(self, message: str, ctx: t.Optional[Context] = None) -> None:
         super().__init__(message)
         self.ctx = ctx
-        self.cmd: t.Optional["Command"] = self.ctx.command if self.ctx else None
+        self.cmd: t.Optional[Command] = self.ctx.command if self.ctx else None
 
     def show(self, file: t.Optional[t.IO[t.Any]] = None) -> None:
         if file is None:
@@ -104,8 +106,8 @@ class BadParameter(UsageError):
     def __init__(
         self,
         message: str,
-        ctx: t.Optional["Context"] = None,
-        param: t.Optional["Parameter"] = None,
+        ctx: t.Optional[Context] = None,
+        param: t.Optional[Parameter] = None,
         param_hint: t.Optional[str] = None,
     ) -> None:
         super().__init__(message, ctx)
@@ -140,8 +142,8 @@ class MissingParameter(BadParameter):
     def __init__(
         self,
         message: t.Optional[str] = None,
-        ctx: t.Optional["Context"] = None,
-        param: t.Optional["Parameter"] = None,
+        ctx: t.Optional[Context] = None,
+        param: t.Optional[Parameter] = None,
         param_hint: t.Optional[str] = None,
         param_type: t.Optional[str] = None,
     ) -> None:
@@ -206,7 +208,7 @@ class NoSuchOption(UsageError):
         option_name: str,
         message: t.Optional[str] = None,
         possibilities: t.Optional[t.Sequence[str]] = None,
-        ctx: t.Optional["Context"] = None,
+        ctx: t.Optional[Context] = None,
     ) -> None:
         if message is None:
             message = _("No such option: {name}").format(name=option_name)
@@ -239,7 +241,7 @@ class BadOptionUsage(UsageError):
     """
 
     def __init__(
-        self, option_name: str, message: str, ctx: t.Optional["Context"] = None
+        self, option_name: str, message: str, ctx: t.Optional[Context] = None
     ) -> None:
         super().__init__(message, ctx)
         self.option_name = option_name

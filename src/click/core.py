@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import enum
 import errno
 import inspect
@@ -46,8 +48,8 @@ V = t.TypeVar("V")
 
 
 def _complete_visible_commands(
-    ctx: "Context", incomplete: str
-) -> t.Iterator[t.Tuple[str, "Command"]]:
+    ctx: Context, incomplete: str
+) -> t.Iterator[t.Tuple[str, Command]]:
     """List all the subcommands of a group that start with the
     incomplete value and aren't hidden.
 
@@ -65,7 +67,7 @@ def _complete_visible_commands(
 
 
 def _check_nested_chain(
-    base_command: "Group", cmd_name: str, cmd: "Command", register: bool = False
+    base_command: Group, cmd_name: str, cmd: Command, register: bool = False
 ) -> None:
     if not base_command.chain or not isinstance(cmd, Group):
         return
@@ -90,7 +92,7 @@ def batch(iterable: t.Iterable[V], batch_size: int) -> t.List[t.Tuple[V, ...]]:
 
 @contextmanager
 def augment_usage_errors(
-    ctx: "Context", param: t.Optional["Parameter"] = None
+    ctx: Context, param: t.Optional[Parameter] = None
 ) -> t.Iterator[None]:
     """Context manager that attaches extra information to exceptions."""
     try:
@@ -108,15 +110,15 @@ def augment_usage_errors(
 
 
 def iter_params_for_processing(
-    invocation_order: t.Sequence["Parameter"],
-    declaration_order: t.Sequence["Parameter"],
-) -> t.List["Parameter"]:
+    invocation_order: t.Sequence[Parameter],
+    declaration_order: t.Sequence[Parameter],
+) -> t.List[Parameter]:
     """Given a sequence of parameters in the order as should be considered
     for processing and an iterable of parameters that exist, this returns
     a list in the correct order as they should be processed.
     """
 
-    def sort_key(item: "Parameter") -> t.Tuple[bool, float]:
+    def sort_key(item: Parameter) -> t.Tuple[bool, float]:
         try:
             idx: float = invocation_order.index(item)
         except ValueError:
@@ -255,12 +257,12 @@ class Context:
     #: The formatter class to create with :meth:`make_formatter`.
     #:
     #: .. versionadded:: 8.0
-    formatter_class: t.Type["HelpFormatter"] = HelpFormatter
+    formatter_class: t.Type[HelpFormatter] = HelpFormatter
 
     def __init__(
         self,
-        command: "Command",
-        parent: t.Optional["Context"] = None,
+        command: Command,
+        parent: t.Optional[Context] = None,
         info_name: t.Optional[str] = None,
         obj: t.Optional[t.Any] = None,
         auto_envvar_prefix: t.Optional[str] = None,
@@ -462,7 +464,7 @@ class Context:
             "auto_envvar_prefix": self.auto_envvar_prefix,
         }
 
-    def __enter__(self) -> "Context":
+    def __enter__(self) -> Context:
         self._depth += 1
         push_context(self)
         return self
@@ -479,7 +481,7 @@ class Context:
         pop_context()
 
     @contextmanager
-    def scope(self, cleanup: bool = True) -> t.Iterator["Context"]:
+    def scope(self, cleanup: bool = True) -> t.Iterator[Context]:
         """This helper method can be used with the context object to promote
         it to the current thread local (see :func:`get_current_context`).
         The default behavior of this is to invoke the cleanup functions which
@@ -627,7 +629,7 @@ class Context:
             rv = f"{' '.join(parent_command_path)} {rv}"
         return rv.lstrip()
 
-    def find_root(self) -> "Context":
+    def find_root(self) -> Context:
         """Finds the outermost context."""
         node = self
         while node.parent is not None:
@@ -636,7 +638,7 @@ class Context:
 
     def find_object(self, object_type: t.Type[V]) -> t.Optional[V]:
         """Finds the closest object of a given type."""
-        node: t.Optional["Context"] = self
+        node: t.Optional[Context] = self
 
         while node is not None:
             if isinstance(node.obj, object_type):
@@ -657,13 +659,13 @@ class Context:
 
     @t.overload
     def lookup_default(
-        self, name: str, call: "te.Literal[True]" = True
+        self, name: str, call: te.Literal[True] = True
     ) -> t.Optional[t.Any]:
         ...
 
     @t.overload
     def lookup_default(
-        self, name: str, call: "te.Literal[False]" = ...
+        self, name: str, call: te.Literal[False] = ...
     ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
         ...
 
@@ -687,7 +689,7 @@ class Context:
 
         return None
 
-    def fail(self, message: str) -> "te.NoReturn":
+    def fail(self, message: str) -> te.NoReturn:
         """Aborts the execution of the program with a specific error
         message.
 
@@ -695,11 +697,11 @@ class Context:
         """
         raise UsageError(message, self)
 
-    def abort(self) -> "te.NoReturn":
+    def abort(self) -> te.NoReturn:
         """Aborts the script."""
         raise Abort()
 
-    def exit(self, code: int = 0) -> "te.NoReturn":
+    def exit(self, code: int = 0) -> te.NoReturn:
         """Exits the application with a given exit code."""
         raise Exit(code)
 
@@ -715,7 +717,7 @@ class Context:
         """
         return self.command.get_help(self)
 
-    def _make_sub_context(self, command: "Command") -> "Context":
+    def _make_sub_context(self, command: Command) -> Context:
         """Create a new context of the same type as this context, but
         for a new command.
 
@@ -726,7 +728,7 @@ class Context:
     @t.overload
     def invoke(
         __self,  # noqa: B902
-        __callback: "t.Callable[..., V]",
+        __callback: t.Callable[..., V],
         *args: t.Any,
         **kwargs: t.Any,
     ) -> V:
@@ -735,7 +737,7 @@ class Context:
     @t.overload
     def invoke(
         __self,  # noqa: B902
-        __callback: "Command",
+        __callback: Command,
         *args: t.Any,
         **kwargs: t.Any,
     ) -> t.Any:
@@ -743,7 +745,7 @@ class Context:
 
     def invoke(
         __self,  # noqa: B902
-        __callback: t.Union["Command", "t.Callable[..., V]"],
+        __callback: t.Union[Command, t.Callable[..., V]],
         *args: t.Any,
         **kwargs: t.Any,
     ) -> t.Union[t.Any, V]:
@@ -795,7 +797,7 @@ class Context:
                 return __callback(*args, **kwargs)
 
     def forward(
-        __self, __cmd: "Command", *args: t.Any, **kwargs: t.Any  # noqa: B902
+        __self, __cmd: Command, *args: t.Any, **kwargs: t.Any  # noqa: B902
     ) -> t.Any:
         """Similar to :meth:`invoke` but fills in default keyword
         arguments from the current context if the other command expects
@@ -907,7 +909,7 @@ class Command:
         name: t.Optional[str],
         context_settings: t.Optional[t.MutableMapping[str, t.Any]] = None,
         callback: t.Optional[t.Callable[..., t.Any]] = None,
-        params: t.Optional[t.List["Parameter"]] = None,
+        params: t.Optional[t.List[Parameter]] = None,
         help: t.Optional[str] = None,
         epilog: t.Optional[str] = None,
         short_help: t.Optional[str] = None,
@@ -935,7 +937,7 @@ class Command:
         #: the list of parameters for this command in the order they
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
-        self.params: t.List["Parameter"] = params or []
+        self.params: t.List[Parameter] = params or []
         self.help = help
         self.epilog = epilog
         self.options_metavar = options_metavar
@@ -968,7 +970,7 @@ class Command:
         self.format_usage(ctx, formatter)
         return formatter.getvalue().rstrip("\n")
 
-    def get_params(self, ctx: Context) -> t.List["Parameter"]:
+    def get_params(self, ctx: Context) -> t.List[Parameter]:
         rv = self.params
         help_option = self.get_help_option(ctx)
 
@@ -1004,14 +1006,14 @@ class Command:
             all_names.difference_update(param.secondary_opts)
         return list(all_names)
 
-    def get_help_option(self, ctx: Context) -> t.Optional["Option"]:
+    def get_help_option(self, ctx: Context) -> t.Optional[Option]:
         """Returns the help option object."""
         help_options = self.get_help_option_names(ctx)
 
         if not help_options or not self.add_help_option:
             return None
 
-        def show_help(ctx: Context, param: "Parameter", value: str) -> None:
+        def show_help(ctx: Context, param: Parameter, value: str) -> None:
             if value and not ctx.resilient_parsing:
                 echo(ctx.get_help(), color=ctx.color)
                 ctx.exit()
@@ -1186,7 +1188,7 @@ class Command:
         if self.callback is not None:
             return ctx.invoke(self.callback, **ctx.params)
 
-    def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
+    def shell_complete(self, ctx: Context, incomplete: str) -> t.List[CompletionItem]:
         """Return a list of completions for the incomplete value. Looks
         at the names of options and chained multi-commands.
 
@@ -1200,7 +1202,7 @@ class Command:
         """
         from click.shell_completion import CompletionItem
 
-        results: t.List["CompletionItem"] = []
+        results: t.List[CompletionItem] = []
 
         if incomplete and not incomplete[0].isalnum():
             for param in self.get_params(ctx):
@@ -1239,9 +1241,9 @@ class Command:
         args: t.Optional[t.Sequence[str]] = None,
         prog_name: t.Optional[str] = None,
         complete_var: t.Optional[str] = None,
-        standalone_mode: "te.Literal[True]" = True,
+        standalone_mode: t.Literal[True] = True,
         **extra: t.Any,
-    ) -> "te.NoReturn":
+    ) -> t.NoReturn:
         ...
 
     @t.overload
@@ -1470,7 +1472,7 @@ class Group(Command):
     #: custom groups.
     #:
     #: .. versionadded:: 8.0
-    group_class: t.Optional[t.Union[t.Type["Group"], t.Type[type]]] = None
+    group_class: t.Optional[t.Union[t.Type[Group], t.Type[type]]] = None
     # Literal[type] isn't valid, so use Type[type]
 
     def __init__(
@@ -1601,18 +1603,18 @@ class Group(Command):
         return decorator
 
     @t.overload
-    def group(self, __func: t.Callable[..., t.Any]) -> "Group":
+    def group(self, __func: t.Callable[..., t.Any]) -> Group:
         ...
 
     @t.overload
     def group(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]:
+    ) -> t.Callable[[t.Callable[..., t.Any]], Group]:
         ...
 
     def group(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], "Group"], "Group"]:
+    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], Group], Group]:
         """A shortcut decorator for declaring and attaching a group to
         the group. This takes the same arguments as :func:`group` and
         immediately registers the created group with this group by
@@ -1644,7 +1646,7 @@ class Group(Command):
             else:
                 kwargs["cls"] = self.group_class
 
-        def decorator(f: t.Callable[..., t.Any]) -> "Group":
+        def decorator(f: t.Callable[..., t.Any]) -> Group:
             cmd: Group = group(*args, **kwargs)(f)
             self.add_command(cmd)
             return cmd
@@ -1856,7 +1858,7 @@ class Group(Command):
             ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
         return cmd_name if cmd else None, cmd, args[1:]
 
-    def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
+    def shell_complete(self, ctx: Context, incomplete: str) -> t.List[CompletionItem]:
         """Return a list of completions for the incomplete value. Looks
         at the names of options, subcommands, and chained
         multi-commands.
@@ -2031,7 +2033,7 @@ class Parameter:
         type: t.Optional[t.Union[types.ParamType, t.Any]] = None,
         required: bool = False,
         default: t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]] = None,
-        callback: t.Optional[t.Callable[[Context, "Parameter", t.Any], t.Any]] = None,
+        callback: t.Optional[t.Callable[[Context, Parameter, t.Any], t.Any]] = None,
         nargs: t.Optional[int] = None,
         multiple: bool = False,
         metavar: t.Optional[str] = None,
@@ -2040,8 +2042,8 @@ class Parameter:
         envvar: t.Optional[t.Union[str, t.Sequence[str]]] = None,
         shell_complete: t.Optional[
             t.Callable[
-                [Context, "Parameter", str],
-                t.Union[t.List["CompletionItem"], t.List[str]],
+                [Context, Parameter, str],
+                t.Union[t.List[CompletionItem], t.List[str]],
             ]
         ] = None,
     ) -> None:
@@ -2166,7 +2168,7 @@ class Parameter:
 
     @t.overload
     def get_default(
-        self, ctx: Context, call: "te.Literal[True]" = True
+        self, ctx: Context, call: te.Literal[True] = True
     ) -> t.Optional[t.Any]:
         ...
 
@@ -2362,7 +2364,7 @@ class Parameter:
         hint_list = self.opts or [self.human_readable_name]
         return " / ".join(f"'{x}'" for x in hint_list)
 
-    def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
+    def shell_complete(self, ctx: Context, incomplete: str) -> t.List[CompletionItem]:
         """Return a list of completions for the incomplete value. If a
         ``shell_complete`` function was given during init, it is used.
         Otherwise, the :attr:`type`
@@ -2781,7 +2783,7 @@ class Option(Parameter):
 
     @t.overload
     def get_default(
-        self, ctx: Context, call: "te.Literal[True]" = True
+        self, ctx: Context, call: te.Literal[True] = True
     ) -> t.Optional[t.Any]:
         ...
 
@@ -2869,7 +2871,7 @@ class Option(Parameter):
         return rv
 
     def consume_value(
-        self, ctx: Context, opts: t.Mapping[str, "Parameter"]
+        self, ctx: Context, opts: t.Mapping[str, Parameter]
     ) -> t.Tuple[t.Any, ParameterSource]:
         value, source = super().consume_value(ctx, opts)
 

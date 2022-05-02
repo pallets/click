@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import re
 import sys
@@ -30,10 +32,10 @@ def _posixify(name: str) -> str:
     return "-".join(name.split()).lower()
 
 
-def safecall(func: "t.Callable[P, R]") -> "t.Callable[P, t.Optional[R]]":
+def safecall(func: t.Callable[P, R]) -> t.Callable[P, t.Optional[R]]:
     """Wraps a function so that it swallows exceptions."""
 
-    def wrapper(*args: "P.args", **kwargs: "P.kwargs") -> t.Optional[R]:
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> t.Optional[R]:
         try:
             return func(*args, **kwargs)
         except Exception:
@@ -112,7 +114,7 @@ class LazyFile:
 
     def __init__(
         self,
-        filename: t.Union[str, "os.PathLike[str]"],
+        filename: t.Union[str, os.PathLike[str]],
         mode: str = "r",
         encoding: t.Optional[str] = None,
         errors: t.Optional[str] = "strict",
@@ -175,7 +177,7 @@ class LazyFile:
         if self.should_close:
             self.close()
 
-    def __enter__(self) -> "LazyFile":
+    def __enter__(self) -> LazyFile:
         return self
 
     def __exit__(
@@ -198,7 +200,7 @@ class KeepOpenFile:
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
 
-    def __enter__(self) -> "KeepOpenFile":
+    def __enter__(self) -> KeepOpenFile:
         return self
 
     def __exit__(
@@ -319,7 +321,7 @@ def echo(
     file.flush()
 
 
-def get_binary_stream(name: "te.Literal['stdin', 'stdout', 'stderr']") -> t.BinaryIO:
+def get_binary_stream(name: te.Literal["stdin", "stdout", "stderr"]) -> t.BinaryIO:
     """Returns a system stream for byte processing.
 
     :param name: the name of the stream to open.  Valid names are ``'stdin'``,
@@ -332,7 +334,7 @@ def get_binary_stream(name: "te.Literal['stdin', 'stdout', 'stderr']") -> t.Bina
 
 
 def get_text_stream(
-    name: "te.Literal['stdin', 'stdout', 'stderr']",
+    name: te.Literal["stdin", "stdout", "stderr"],
     encoding: t.Optional[str] = None,
     errors: t.Optional[str] = "strict",
 ) -> t.TextIO:
@@ -402,7 +404,7 @@ def open_file(
 
 
 def format_filename(
-    filename: "t.Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]",
+    filename: t.Union[str, bytes, os.PathLike[str], os.PathLike[bytes]],
     shorten: bool = False,
 ) -> str:
     """Format a filename as a string for display. Ensures the filename can be

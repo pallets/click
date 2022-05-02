@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import codecs
 import io
 import os
@@ -358,7 +360,7 @@ def get_text_stderr(
 
 
 def _wrap_io_open(
-    file: t.Union[str, "os.PathLike[str]", int],
+    file: t.Union[str, os.PathLike[str], int],
     mode: str,
     encoding: t.Optional[str],
     errors: t.Optional[str],
@@ -371,7 +373,7 @@ def _wrap_io_open(
 
 
 def open_stream(
-    filename: "t.Union[str, os.PathLike[str]]",
+    filename: t.Union[str, os.PathLike[str]],
     mode: str = "r",
     encoding: t.Optional[str] = None,
     errors: t.Optional[str] = "strict",
@@ -472,7 +474,7 @@ class _AtomicFile:
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._f, name)
 
-    def __enter__(self) -> "_AtomicFile":
+    def __enter__(self) -> _AtomicFile:
         return self
 
     def __exit__(self, exc_type: t.Optional[t.Type[BaseException]], *_: t.Any) -> None:

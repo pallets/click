@@ -24,6 +24,9 @@ Unreleased
         unneeded. Parsing works directly without building a separate parser.
     -   ``split_arg_string`` is moved from ``parser`` to ``shell_completion``.
 
+-   Enable deferred evaluation of annotations with
+    ``from __future__ import annotations``. :pr:`2270`
+
 
 Version 8.1.7
 -------------
