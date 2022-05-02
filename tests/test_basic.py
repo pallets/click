@@ -488,6 +488,29 @@ def test_enum_choice_argument_case_insensitive_values(runner):
     assert result.output == "MockEnum.foo\n"
 
 
+def test_enum_choice_argument_non_unique_values(runner):
+    class MockEnum(Enum):
+        foo = 1
+        bar = 2
+        baz = 2
+
+    with pytest.raises(ValueError):
+
+        @click.command()
+        @click.argument("method", type=click.EnumChoice(MockEnum, use_value=True))
+        def bad_cli(method):
+            click.echo(method)
+
+    @click.command()
+    @click.argument("method", type=click.EnumChoice(MockEnum, use_value=False))
+    def cli(method):
+        click.echo(method)
+
+    result = runner.invoke(cli, ["foo"])
+    assert not result.exception, "Values do not need to be unique if using enum names"
+    assert result.output == "MockEnum.foo\n"
+
+
 def test_datetime_option_default(runner):
     @click.command()
     @click.option("--start_date", type=click.DateTime())

@@ -331,20 +331,27 @@ class Choice(ParamType):
 
 
 class EnumChoice(Choice):
-    """The choice type allows a value to be checked against a fixed set
-    of supported values. All of these values have to be strings.
+    """The :class:`EnumChoice` type allows a value to be checked against either the
+    keys or the values of an :class:`~enum.Enum`.
 
-    You should only pass a list or tuple of choices. Other iterables
-    (like generators) may lead to surprising results.
+    If using :param:`use_value` is `True`, all enum values should be unique.
+    The inputted value will then be converted to the corresponding enum object.
 
-    The resulting value will always be one of the originally passed choices
-    regardless of ``case_sensitive`` or any ``ctx.token_normalize_func``
-    being specified.
+    The resulting value will be an instance of the Enum class corresponding
+    to the user's key or value passed in.
 
     See :ref:`choice-opts` for an example.
 
-    :param case_sensitive: Set to false to make choices case
-        insensitive. Defaults to true.
+    :param choices: `enum.Enum` type that will be used to create CLI choices.
+    :param case_sensitive: Set to `False` to make choices case
+        insensitive. Defaults to `True`.
+    :param use_value: Set to `True` to use enum values as choices instead
+        of enum keys. Defaults to `False`.
+
+    :raises ValueError: Raised when `use_value` is True but enum values are not
+        unique.
+
+    .. versionadded:: 8.2
     """
 
     name = "enum_choice"
@@ -357,6 +364,12 @@ class EnumChoice(Choice):
     ) -> None:
         self.use_value: bool = use_value
         if self.use_value:
+            try:
+                enum.unique(choices)
+            except ValueError as err:
+                raise ValueError(
+                    "All values in `choices` must be unique if `use_value` is `True`"
+                ) from err
             self.choice_to_enum = {str(enum.value): enum for enum in choices}
         else:
             self.choice_to_enum = {str(enum.name): enum for enum in choices}
