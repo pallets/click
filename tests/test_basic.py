@@ -1,4 +1,5 @@
 import os
+from enum import Enum
 from itertools import chain
 
 import pytest
@@ -401,6 +402,90 @@ def test_choice_argument(runner):
 
     result = runner.invoke(cli, ["--help"])
     assert "{foo|bar|baz}" in result.output
+
+
+def test_enum_choice_argument(runner):
+    class MockEnum(Enum):
+        foo = 1
+        bar = 2
+        baz = 3
+
+    @click.command()
+    @click.argument("method", type=click.EnumChoice(MockEnum))
+    def cli(method):
+        click.echo(method)
+
+    result = runner.invoke(cli, ["foo"])
+    assert not result.exception
+    assert result.output == "MockEnum.foo\n"
+
+    result = runner.invoke(cli, ["meh"])
+    assert result.exit_code == 2
+    assert (
+        "Invalid value for '{foo|bar|baz}': 'meh' is not one of 'foo',"
+        " 'bar', 'baz'." in result.output
+    )
+
+    result = runner.invoke(cli, ["--help"])
+    assert "{foo|bar|baz}" in result.output
+
+
+def test_enum_choice_argument_using_values(runner):
+    class MockEnum(Enum):
+        foo = 1
+        bar = 2
+        baz = 3
+
+    @click.command()
+    @click.argument("method", type=click.EnumChoice(MockEnum, use_value=True))
+    def cli(method):
+        click.echo(method)
+
+    result = runner.invoke(cli, ["1"])
+    assert not result.exception
+    assert result.output == "MockEnum.foo\n"
+
+    result = runner.invoke(cli, ["4"])
+    assert result.exit_code == 2
+    assert (
+        "Invalid value for '{1|2|3}': '4' is not one of '1',"
+        " '2', '3'." in result.output
+    )
+
+    result = runner.invoke(cli, ["--help"])
+    assert "{1|2|3}" in result.output
+
+
+def test_enum_choice_argument_case_insensitive(runner):
+    class MockEnum(Enum):
+        foo = 1
+        bar = 2
+        baz = 3
+
+    @click.command()
+    @click.argument("method", type=click.EnumChoice(MockEnum, case_sensitive=False))
+    def cli(method):
+        click.echo(method)
+
+    result = runner.invoke(cli, ["FOO"])
+    assert not result.exception
+    assert result.output == "MockEnum.foo\n"
+
+
+def test_enum_choice_argument_case_insensitive_values(runner):
+    class MockEnum(Enum):
+        foo = "foo"
+        bar = "bar"
+        baz = "baz"
+
+    @click.command()
+    @click.argument("method", type=click.EnumChoice(MockEnum, case_sensitive=False))
+    def cli(method):
+        click.echo(method)
+
+    result = runner.invoke(cli, ["FOO"])
+    assert not result.exception
+    assert result.output == "MockEnum.foo\n"
 
 
 def test_datetime_option_default(runner):
