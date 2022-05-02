@@ -414,6 +414,85 @@ Choices should be unique after considering the effects of
 
 .. _option-prompting:
 
+.. _enum-choice-opts:
+
+Enum Choice Options
+--------------
+
+Similar to the :class:`Choice` type, the :class:`EnumChoice` type may
+be used to have the parameter be a choice of :class:`enum.Enum` names or values
+that may to `enum.Enum` objects when parsed.  It can be instantiated
+with an `enum.Enum` class.  The enum object corresponding to the passed name
+or value (depending on settings) will be returned.
+
+Example:
+
+.. click:example::
+
+    class MockEnum(Enum):
+        FOO = "foo"
+        BAR = "bar"
+        BAZ = "baz"
+
+    @click.command()
+    @click.option('--foo-opt',
+                  type=click.EnumChoice(MockEnum)
+    def handle_foo(foo_opt):
+        click.echo(foo_opt)
+
+What it looks like:
+
+.. click:run::
+
+    invoke(handle_foo, args=['--foo-opt=FOO'])
+    println()
+    invoke(handle_foo, args=['--foo-opt=BAR'])
+    println()
+    invoke(handle_foo, args=['--foo-opt=foo'])
+    println()
+    invoke(handle_foo, args=['--foo-opt=other'])
+    println()
+    invoke(handle_foo, args=['--help'])
+
+Using the ``use_value`` parameter will cause the parser to use the enum
+values as choices instead of the names. All enum values must be unique. Example:
+
+.. click:example::
+
+    class MockEnum(Enum):
+        FOO = "foo"
+        BAR = "bar"
+        BAZ = "baz"
+
+    @click.command()
+    @click.option('--foo-opt',
+                  type=click.EnumChoice(MockEnum, use_value=True)
+    def handle_foo(foo_opt):
+        click.echo(foo_opt)
+
+What it looks like:
+
+.. click:run::
+
+    invoke(handle_foo, args=['--foo-opt=foo'])
+    println()
+    invoke(handle_foo, args=['--foo-opt=bar'])
+    println()
+    invoke(handle_foo, args=['--foo-opt=FOO'])
+    println()
+    invoke(handle_foo, args=['--foo-opt=other'])
+    println()
+    invoke(handle_foo, args=['--help'])
+
+Choices work with options that have ``multiple=True``. If a ``default``
+value is given with ``multiple=True``, it should be a list or tuple of
+valid choices.
+
+The ``case_sensitive`` parameter works identically to the :class:`Choice` type,
+operating whatever the choices derived from the enum are.
+
+.. versionadded:: 8.2
+
 Prompting
 ---------
 
