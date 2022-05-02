@@ -33,6 +33,16 @@ def test_invalid_option(runner):
     assert "'--foo'" in message
 
 
+def test_deprecated_option(runner):
+    @click.command()
+    @click.option("--foo", default="bar", deprecated=True)
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd, ["--help"])
+    assert re.search("(DEPRECATED)", result.output)
+
+
 def test_invalid_nargs(runner):
     with pytest.raises(TypeError, match="nargs=-1"):
 

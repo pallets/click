@@ -2428,6 +2428,8 @@ class Option(Parameter):
     :param help: the help string.
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
+    :param deprecated: issues a message indicating that
+                             the command is deprecated.
 
     .. versionchanged:: 8.2
         ``envvar`` used with ``flag_value`` will always use the ``flag_value``,
@@ -2469,6 +2471,7 @@ class Option(Parameter):
         hidden: bool = False,
         show_choices: bool = True,
         show_envvar: bool = False,
+        deprecated: bool = False,
         **attrs: t.Any,
     ) -> None:
         if help:
@@ -2486,6 +2489,9 @@ class Option(Parameter):
             prompt_text = None
         else:
             prompt_text = prompt
+
+        if deprecated:
+            help = help + "(DEPRECATED)" if help is not None else "(DEPRECATED)"
 
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
