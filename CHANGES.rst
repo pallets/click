@@ -79,6 +79,10 @@ Unreleased
         allows the user to search for future output of the generator when
         using less and then aborting the program using ctrl-c.
 
+-   Show deprecation warning message running ``--help`` Option
+    for ``@click.option``. :issue:`2263`
+
+
 Version 8.1.8
 -------------
 

@@ -2429,7 +2429,11 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
     :param deprecated: issues a message indicating that
-                             the command is deprecated.
+                       the command is deprecated showing help
+
+    .. versionchanged:: 8.2.0
+        Show deprecation warning message running ``--help`` Option
+        for ``@click.option``. :issue:`2263`
 
     .. versionchanged:: 8.2
         ``envvar`` used with ``flag_value`` will always use the ``flag_value``,
