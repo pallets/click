@@ -373,14 +373,16 @@ class EnumChoice(Choice):
             self.choice_to_enum = {str(enum.value): enum for enum in choices}
         else:
             self.choice_to_enum = {str(enum.name): enum for enum in choices}
-        self.choices = list(self.choice_to_enum)
-        self.case_sensitive = case_sensitive
+        super().__init__(
+            choices=list(self.choice_to_enum),
+            case_sensitive=case_sensitive,
+        )
 
     def convert(
         self, value: t.Any, param: t.Optional["Parameter"], ctx: t.Optional["Context"]
     ) -> t.Any:
         normed_value = super().convert(value, param, ctx)
-        return self.choice_to_enum[normed_value]
+        return self.choice_to_enum.get(normed_value)
 
     def __repr__(self) -> str:
         return f"EnumChoice({list(self.choices)})"
