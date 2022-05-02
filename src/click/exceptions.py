@@ -5,6 +5,7 @@ from gettext import ngettext
 
 from ._compat import get_text_stderr
 from .utils import echo
+from click.globals import resolve_color_default
 
 if t.TYPE_CHECKING:
     from .core import Context
@@ -28,6 +29,9 @@ class ClickException(Exception):
 
     def __init__(self, message: str) -> None:
         super().__init__(message)
+        # The context will be removed by the time we print the message, so cache
+        # the color settings here to be used later on (in `show`)
+        self.show_color = resolve_color_default()
         self.message = message
 
     def format_message(self) -> str:
@@ -40,7 +44,11 @@ class ClickException(Exception):
         if file is None:
             file = get_text_stderr()
 
-        echo(_("Error: {message}").format(message=self.format_message()), file=file)
+        echo(
+            _("Error: {message}").format(message=self.format_message()),
+            file=file,
+            color=self.show_color,
+        )
 
 
 class UsageError(ClickException):
