@@ -13,6 +13,7 @@ Unreleased
     function. :pr:`2421`
 -   Bash version detection doesn't fail on Windows. :issue:`2461`
 -   Completion works if there is a dot (``.``) in the program name. :issue:`2166`
+-   Improve type annotations for pyright type checker. :issue:`2268`
 
 
 Version 8.1.3

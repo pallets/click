@@ -7,11 +7,11 @@ import typing as t
 from collections import abc
 from contextlib import contextmanager
 from contextlib import ExitStack
-from functools import partial
 from functools import update_wrapper
 from gettext import gettext as _
 from gettext import ngettext
 from itertools import repeat
+from types import TracebackType
 
 from . import types
 from .exceptions import Abort
@@ -455,7 +455,12 @@ class Context:
         push_context(self)
         return self
 
-    def __exit__(self, *_: t.Any) -> None:
+    def __exit__(
+        self,
+        exc_type: t.Optional[t.Type[BaseException]],
+        exc_value: t.Optional[BaseException],
+        tb: t.Optional[TracebackType],
+    ) -> None:
         self._depth -= 1
         if self._depth == 0:
             self.close()
@@ -2097,10 +2102,13 @@ class Parameter:
             ]
         ] = None,
     ) -> None:
+        self.name: t.Optional[str]
+        self.opts: t.List[str]
+        self.secondary_opts: t.List[str]
         self.name, self.opts, self.secondary_opts = self._parse_decls(
             param_decls or (), expose_value
         )
-        self.type = types.convert_type(type, default)
+        self.type: types.ParamType = types.convert_type(type, default)
 
         # Default nargs to what the type tells us if we have that
         # information available.
@@ -2300,17 +2308,18 @@ class Parameter:
                 ) from None
 
         if self.nargs == 1 or self.type.is_composite:
-            convert: t.Callable[[t.Any], t.Any] = partial(
-                self.type, param=self, ctx=ctx
-            )
+
+            def convert(value: t.Any) -> t.Any:
+                return self.type(value, param=self, ctx=ctx)
+
         elif self.nargs == -1:
 
-            def convert(value: t.Any) -> t.Tuple[t.Any, ...]:
+            def convert(value: t.Any) -> t.Any:  # t.Tuple[t.Any, ...]
                 return tuple(self.type(x, self, ctx) for x in check_iter(value))
 
         else:  # nargs > 1
 
-            def convert(value: t.Any) -> t.Tuple[t.Any, ...]:
+            def convert(value: t.Any) -> t.Any:  # t.Tuple[t.Any, ...]
                 value = tuple(check_iter(value))
 
                 if len(value) != self.nargs:
@@ -2564,13 +2573,14 @@ class Option(Parameter):
         if flag_value is None:
             flag_value = not self.default
 
+        self.type: types.ParamType
         if is_flag and type is None:
             # Re-guess the type from the flag value instead of the
             # default.
             self.type = types.convert_type(None, flag_value)
 
         self.is_flag: bool = is_flag
-        self.is_bool_flag = is_flag and isinstance(self.type, types.BoolParamType)
+        self.is_bool_flag: bool = is_flag and isinstance(self.type, types.BoolParamType)
         self.flag_value: t.Any = flag_value
 
         # Counting
