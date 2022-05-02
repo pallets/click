@@ -5,6 +5,10 @@ Version 8.2.0
 
 Unreleased
 
+-   Add ``EnumChoice`` ``ParamType`` that can accept an ``enum.Enum`` type
+    and use its keys or values as choices that map back to the ``Enum``.
+    :issue:`605`
+
 
 Version 8.1.3
 -------------
