@@ -1129,9 +1129,13 @@ class BaseCommand:
         :param complete_var: Name of the environment variable that holds
             the completion instruction. Defaults to
             ``_{PROG_NAME}_COMPLETE``.
+
+        .. versionchanged:: 8.2.0
+            Dots (``.``) in ``prog_name`` are replaced with underscores (``_``).
         """
         if complete_var is None:
-            complete_var = f"_{prog_name}_COMPLETE".replace("-", "_").upper()
+            complete_name = prog_name.replace("-", "_").replace(".", "_")
+            complete_var = f"_{complete_name}_COMPLETE".upper()
 
         instruction = os.environ.get(complete_var)
 
