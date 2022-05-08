@@ -1480,6 +1480,7 @@ class MultiCommand(Command):
     :param result_callback: The result callback to attach to this multi
         command. This can be set or changed later with the
         :meth:`result_callback` decorator.
+    :param attrs: Other command arguments described in :class:`Command`.
     """
 
     allow_extra_args = True
@@ -1944,6 +1945,9 @@ class CommandCollection(MultiCommand):
     commands together into one.  This is a straightforward implementation
     that accepts a list of different multi commands as sources and
     provides all the commands for each of them.
+
+    See :class:`MultiCommand` and :class:`Command` for the description of
+    ``name`` and ``attrs``.
     """
 
     def __init__(
@@ -2467,6 +2471,7 @@ class Option(Parameter):
                                context.
     :param help: the help string.
     :param hidden: hide this option from help outputs.
+    :param attrs: Other command arguments described in :class:`Parameter`.
 
     .. versionchanged:: 8.1.0
         Help text indentation is cleaned here instead of only in the
@@ -2945,7 +2950,7 @@ class Argument(Parameter):
     provide fewer features than options but can have infinite ``nargs``
     and are required by default.
 
-    All parameters are passed onwards to the parameter constructor.
+    All parameters are passed onwards to the constructor of :class:`Parameter`.
     """
 
     param_type_name = "argument"
