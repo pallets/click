@@ -443,10 +443,7 @@ def clear() -> None:
     """
     if not isatty(sys.stdout):
         return
-    if WIN:
-        os.system("cls")
-    else:
-        sys.stdout.write("\033[2J\033[1;1H")
+    echo("\033[2J\033[1;1H", nl=False)
 
 
 def _interpret_color(
