@@ -67,7 +67,7 @@ def _complete_visible_commands(
 def _check_multicommand(
     base_command: "MultiCommand", cmd_name: str, cmd: "Command", register: bool = False
 ) -> None:
-    if not base_command.chain or not isinstance(cmd, MultiCommand):
+    if not isinstance(cmd, MultiCommand) or not base_command.chain:
         return
     if register:
         hint = (

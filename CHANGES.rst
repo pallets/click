@@ -5,6 +5,9 @@ Version 8.2.0
 
 Unreleased
 
+-   Allow `Group.add_command` to be called on non-`MultiCommand`.
+    :issue:`2287`
+
 
 Version 8.1.3
 -------------
