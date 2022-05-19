@@ -4,6 +4,7 @@ import itertools
 import os
 import sys
 import typing as t
+import signal
 from gettext import gettext as _
 
 from ._compat import isatty
@@ -62,10 +63,13 @@ def _build_prompt(
     default: t.Optional[t.Any] = None,
     show_choices: bool = True,
     type: t.Optional[ParamType] = None,
+    timeout_suffix: t.Optional[int] = None,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += f" ({', '.join(map(str, type.choices))})"
+    if default is not None and timeout_suffix is not None:
+        prompt = f"{prompt} [{timeout_suffix}s]"
     if default is not None and show_default:
         prompt = f"{prompt} [{_format_default(default)}]"
     return f"{prompt}{suffix}"
@@ -196,6 +200,7 @@ def confirm(
     prompt_suffix: str = ": ",
     show_default: bool = True,
     err: bool = False,
+    timeout: int = 0,
 ) -> bool:
     """Prompts for confirmation (yes/no question).
 
@@ -211,6 +216,11 @@ def confirm(
     :param show_default: shows or hides the default value in the prompt.
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``, the same as with echo.
+    :param timeout: if set to bigger than `0` input will be set to default after
+                    timeout occurs. default is mandatory when using timeout
+
+    .. versionchanged:: 9.0
+        Added timeout parameter
 
     .. versionchanged:: 8.0
         Repeat until input is given if ``default`` is ``None``.
@@ -218,11 +228,22 @@ def confirm(
     .. versionadded:: 4.0
         Added the ``err`` parameter.
     """
+
+    class TimeoutException(Exception):
+        pass
+
+    def interrupt(signum, frame):
+        raise TimeoutException
+
+    if not (timeout > 0 and default is not None):
+        timeout = None
+
     prompt = _build_prompt(
         text,
         prompt_suffix,
         show_default,
         "y/n" if default is None else ("Y/n" if default else "y/N"),
+        timeout_suffix=timeout,
     )
 
     while True:
@@ -230,11 +251,21 @@ def confirm(
             # Write the prompt separately so that we get nice
             # coloring through colorama on Windows
             echo(prompt.rstrip(" "), nl=False, err=err)
+            if timeout is not None:
+                signal.signal(signal.SIGALRM, interrupt)
+                signal.alarm(timeout)
             # Echo a space to stdout to work around an issue where
             # readline causes backspace to clear the whole line.
             value = visible_prompt_func(" ").lower().strip()
+            if timeout is not None:
+                signal.alarm(0)
         except (KeyboardInterrupt, EOFError):
             raise Abort() from None
+        except TimeoutException:
+            rv = default
+            echo('Y' if default else 'N')
+            signal.alarm(0)
+            break
         if value in ("y", "yes"):
             rv = True
         elif value in ("n", "no"):
