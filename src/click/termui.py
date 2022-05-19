@@ -232,7 +232,7 @@ def confirm(
     class TimeoutException(Exception):
         pass
 
-    def interrupt(signum: int, frame) -> None:
+    def interrupt(signum: int, frame: t.Any) -> None:
         raise TimeoutException
 
     if not (timeout > 0 and default is not None):
