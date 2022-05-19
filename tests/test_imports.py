@@ -34,6 +34,7 @@ ALLOWED_IMPORTS = {
     "sys",
     "contextlib",
     "functools",
+    "signal",
     "stat",
     "re",
     "codecs",
