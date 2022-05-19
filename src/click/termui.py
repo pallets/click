@@ -63,7 +63,7 @@ def _build_prompt(
     default: t.Optional[t.Any] = None,
     show_choices: bool = True,
     type: t.Optional[ParamType] = None,
-    timeout_suffix: t.Optional[int] = 0,
+    timeout_suffix: int = 0,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
@@ -232,7 +232,7 @@ def confirm(
     class TimeoutException(Exception):
         pass
 
-    def interrupt(signum, frame) -> None:
+    def interrupt(signum: int, frame) -> None:
         raise TimeoutException
 
     if not (timeout > 0 and default is not None):
