@@ -2,9 +2,9 @@ import inspect
 import io
 import itertools
 import os
+import signal
 import sys
 import typing as t
-import signal
 from gettext import gettext as _
 
 from ._compat import isatty
@@ -263,7 +263,7 @@ def confirm(
             raise Abort() from None
         except TimeoutException:
             rv = default
-            echo('Y' if default else 'N')
+            echo("Y" if default else "N")
             signal.alarm(0)
             break
         if value in ("y", "yes"):
