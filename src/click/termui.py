@@ -63,12 +63,12 @@ def _build_prompt(
     default: t.Optional[t.Any] = None,
     show_choices: bool = True,
     type: t.Optional[ParamType] = None,
-    timeout_suffix: t.Optional[int] = None,
+    timeout_suffix: t.Optional[int] = 0,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += f" ({', '.join(map(str, type.choices))})"
-    if default is not None and timeout_suffix is not None:
+    if default is not None and timeout_suffix > 0:
         prompt = f"{prompt} [{timeout_suffix}s]"
     if default is not None and show_default:
         prompt = f"{prompt} [{_format_default(default)}]"
@@ -232,11 +232,11 @@ def confirm(
     class TimeoutException(Exception):
         pass
 
-    def interrupt(signum, frame):
+    def interrupt(signum, frame) -> None:
         raise TimeoutException
 
     if not (timeout > 0 and default is not None):
-        timeout = None
+        timeout = 0
 
     prompt = _build_prompt(
         text,
@@ -251,13 +251,13 @@ def confirm(
             # Write the prompt separately so that we get nice
             # coloring through colorama on Windows
             echo(prompt.rstrip(" "), nl=False, err=err)
-            if timeout is not None:
+            if timeout > 0:
                 signal.signal(signal.SIGALRM, interrupt)
                 signal.alarm(timeout)
             # Echo a space to stdout to work around an issue where
             # readline causes backspace to clear the whole line.
             value = visible_prompt_func(" ").lower().strip()
-            if timeout is not None:
+            if timeout > 0:
                 signal.alarm(0)
         except (KeyboardInterrupt, EOFError):
             raise Abort() from None
