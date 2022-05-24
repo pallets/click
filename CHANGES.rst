@@ -22,6 +22,9 @@ Unreleased
     ``standalone_mode`` is disabled. :issue:`2380`
 -   ``@group.command`` does not fail if the group was created with a custom
     ``command_class``. :issue:`2416`
+-   Do not raise an exception when attempting to create an option with
+    ``multiple=True, is_flag=True`` if ``flag_value`` is not a ``bool``.
+    :issue:`2292`
 
 
 Version 8.1.3

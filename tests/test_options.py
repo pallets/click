@@ -913,7 +913,7 @@ def test_is_bool_flag_is_correctly_set(option, expected):
         ({"count": True, "is_flag": True}, "'count' is not valid with 'is_flag'."),
         (
             {"multiple": True, "is_flag": True},
-            "'multiple' is not valid with 'is_flag', use 'count'.",
+            "'multiple' is not valid with 'is_flag' and a bool 'flag_value'",
         ),
     ],
 )
@@ -922,3 +922,36 @@ def test_invalid_flag_combinations(runner, kwargs, message):
         click.Option(["-a"], **kwargs)
 
     assert message in str(e.value)
+
+
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    [
+        ([], "tags= verbosity=0"),
+        (["--foo", "--bar", "--baz"], "tags=foo,bar,baz verbosity=0"),
+        (["--bar", "--foo", "-vv"], "tags=bar,foo verbosity=2"),
+        (["--verbose"], "tags= verbosity=1"),
+        (["--quiet"], "tags= verbosity=-1"),
+        (["--bar", "--foo", "-m", "foo", "-vvvq"], "tags=bar,foo,foo verbosity=2"),
+    ],
+)
+def test_multi_value_flags(runner, args, expected):
+    @click.command()
+    @click.option("--bar", "tags", flag_value="bar", multiple=True)
+    @click.option("--baz", "tags", flag_value="baz", multiple=True)
+    @click.option("--foo", "tags", flag_value="foo", multiple=True)
+    @click.option(
+        "-m", "--tag", "tags", type=click.Choice(["foo", "bar", "baz"]), multiple=True
+    )
+    @click.option(
+        "-q", "--quiet", "verbosity", is_flag=True, flag_value=-1, multiple=True
+    )
+    @click.option(
+        "-v", "--verbose", "verbosity", is_flag=True, flag_value=1, multiple=True
+    )
+    def cli(tags, verbosity):
+        click.echo(f"tags={','.join(tags)} verbosity={sum(verbosity)}", nl=False)
+
+    result = runner.invoke(cli, args)
+    assert not result.exception
+    assert result.output == expected
