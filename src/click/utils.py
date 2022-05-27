@@ -430,7 +430,7 @@ def get_app_dir(app_name: str, roaming: bool = True, force_posix: bool = False) 
     :param app_name: the application name.  This should be properly capitalized
                      and can contain whitespace.
     :param roaming: controls if the folder should be roaming or not on Windows.
-                    Has no affect otherwise.
+                    Has no effect otherwise.
     :param force_posix: if this is set to `True` then on any POSIX system the
                         folder will be stored in the home folder with a leading
                         dot instead of the XDG config home or darwin's
