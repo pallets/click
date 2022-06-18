@@ -381,3 +381,23 @@ def test_nested_subcommand_help(runner):
     result = runner.invoke(cli, ["arg1", "cmd", "arg2", "subcmd", "--help"])
     assert not result.exception
     assert "Usage: cli ARG1 cmd ARG2 subcmd [OPTIONS]" in result.output
+
+
+def test_when_argument_decorator_is_used_multiple_times_cls_is_preserved():
+    class CustomArgument(click.Argument):
+        pass
+
+    reusable_argument = click.argument("art", cls=CustomArgument)
+
+    @click.command()
+    @reusable_argument
+    def foo(arg):
+        pass
+
+    @click.command()
+    @reusable_argument
+    def bar(arg):
+        pass
+
+    assert isinstance(foo.params[0], CustomArgument)
+    assert isinstance(bar.params[0], CustomArgument)
