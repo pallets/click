@@ -59,16 +59,24 @@ folder within::
     Installing setuptools, pip............done.
 
 Now, whenever you want to work on a project, you only have to activate the
-corresponding environment.  On OS X and Linux, do the following::
+corresponding environment.  On Linux, do the following:
 
     $ . venv/bin/activate
+
+If you are a Mac user, do the following:
+
+    $ source venc/bin/active
 
 If you are a Windows user, the following command is for you::
 
     $ venv\scripts\activate
 
 Either way, you should now be using your virtualenv (notice how the prompt of
-your shell has changed to show the active environment).
+your shell has changed to show the active environment).  For more information
+about  venv, see `creating virtual environments`_.
+
+.. _creating virtual environments: https://docs.python.org/3/library/venv.html#creating-virtual-environments/
+
 
 And if you want to go back to the real world, use the following command::
 
