@@ -3,18 +3,18 @@ ci:
   autoupdate_schedule: monthly
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.32.0
+    rev: v2.34.0
     hooks:
       - id: pyupgrade
         args: ["--py37-plus"]
   - repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.1.0
+    rev: v3.3.0
     hooks:
       - id: reorder-python-imports
         args: ["--application-directories", "src"]
         additional_dependencies: ["setuptools>60.9"]
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
@@ -25,7 +25,7 @@ repos:
           - flake8-bugbear
           - flake8-implicit-str-concat
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.2.0
+    rev: v4.3.0
     hooks:
       - id: fix-byte-order-marker
       - id: trailing-whitespace
