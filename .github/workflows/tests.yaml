@@ -46,7 +46,7 @@ jobs:
           pip install -U setuptools
           python -m pip install -U pip
       - name: cache mypy
-        uses: actions/cache@v3.0.4
+        uses: actions/cache@v3.0.5
         with:
           path: ./.mypy_cache
           key: mypy|${{ matrix.python }}|${{ hashFiles('setup.cfg') }}
