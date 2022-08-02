@@ -523,7 +523,8 @@ def _detect_program_name(
     # The value of __package__ indicates how Python was called. It may
     # not exist if a setuptools script is installed as an egg. It may be
     # set incorrectly for entry points created with pip on Windows.
-    if getattr(_main, "__package__", None) is None or (
+    # It is set to "" inside a Shiv or PEX zipapp.
+    if getattr(_main, "__package__", None) in {None, ""} or (
         os.name == "nt"
         and _main.__package__ == ""
         and not os.path.exists(path)
