@@ -107,6 +107,7 @@ def test_help_truncation(runner):
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
     assert "This is a command with truncated help." in result.output
+    assert "This text should be truncated." not in result.output
 
 
 def test_no_args_is_help(runner):
