@@ -350,7 +350,7 @@ class CliRunner:
         self,
         cli: "BaseCommand",
         args: t.Optional[t.Union[str, t.Sequence[str]]] = None,
-        input: t.Optional[t.Union[str, bytes, t.IO]] = None,
+        input: t.Optional[t.Union[str, bytes, t.IO[t.AnyStr]]] = None,
         env: t.Optional[t.Mapping[str, t.Optional[str]]] = None,
         catch_exceptions: bool = True,
         color: bool = False,
