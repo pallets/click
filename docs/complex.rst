@@ -245,7 +245,7 @@ Defining the Lazy Group
 The following :class:`Group` subclass adds an attribute, ``lazy_subcommands``, which
 stores a mapping from subcommand names to the information for importing them.
 
-.. click:example::
+.. code-block:: python
 
     # in lazy_group.py
     import importlib
@@ -292,7 +292,7 @@ Using LazyGroup To Define a CLI
 With ``LazyGroup`` defined, it's now possible to write a group which lazily loads its
 subcommands like so:
 
-.. click:example::
+.. code-block:: python
 
     # in main.py
     import click
