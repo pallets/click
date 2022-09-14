@@ -777,7 +777,7 @@ class Path(ParamType):
         Added the ``executable`` parameter.
 
     .. versionchanged:: 8.0
-        Allow passing ``type=pathlib.Path``.
+        Allow passing ``path_type=pathlib.Path``.
 
     .. versionchanged:: 6.0
         Added the ``allow_dash`` parameter.
