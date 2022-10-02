@@ -259,7 +259,12 @@ class Choice(ParamType):
         return info_dict
 
     def get_metavar(self, param: Parameter) -> str:
-        choices_str = "|".join(self.choices)
+        if param.param_type_name == "option" and not param.show_choices:
+            choices_str = "|".join(
+                {convert_type(type(choice)).name.upper() for choice in self.choices}
+            )
+        else:
+            choices_str = "|".join([str(i) for i in self.choices])
 
         # Use curly braces to indicate a required argument.
         if param.required and param.param_type_name == "argument":
