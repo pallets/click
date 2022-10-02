@@ -1,5 +1,15 @@
 .. currentmodule:: click
 
+Version 8.1.4
+-------------
+
+Unreleased
+
+-   Show the ``types.ParamType.name`` for ``types.Choice`` options within
+    ``--help`` message if ``show_choices=False`` is specified.
+    :issue:`2356`
+
+
 Version 8.1.3
 -------------
 
