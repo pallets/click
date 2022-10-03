@@ -260,9 +260,10 @@ class Choice(ParamType):
 
     def get_metavar(self, param: Parameter) -> str:
         if param.param_type_name == "option" and not param.show_choices:
-            choices_str = "|".join(
-                {convert_type(type(choice)).name.upper() for choice in self.choices}
-            )
+            choice_metavars = [
+                convert_type(type(choice)).name.upper() for choice in self.choices
+            ]
+            choices_str = "|".join([*dict.fromkeys(choice_metavars)])
         else:
             choices_str = "|".join([str(i) for i in self.choices])
 
