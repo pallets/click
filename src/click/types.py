@@ -259,7 +259,7 @@ class Choice(ParamType):
         return info_dict
 
     def get_metavar(self, param: Parameter) -> str:
-        if param.param_type_name == "option" and not param.show_choices:
+        if param.param_type_name == "option" and not param.show_choices:  # type: ignore
             choice_metavars = [
                 convert_type(type(choice)).name.upper() for choice in self.choices
             ]
