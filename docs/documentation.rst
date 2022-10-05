@@ -209,6 +209,24 @@ And what it looks like:
 
     invoke(cli, prog_name='repo.py')
 
+Command Epilog Help
+-------------------
+
+The help epilog is like the help string but it's printed at the end of the help
+page after everything else. Useful for showing example command usages or
+referencing additional help resources.
+
+.. click:example::
+
+    @click.command(epilog='Check out our docs at https://click.palletsprojects.com/ for more details')
+    def init():
+        """Initializes the repository."""
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(init, prog_name='repo.py', args=['--help'])
 
 Help Parameter Customization
 ----------------------------
