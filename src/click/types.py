@@ -259,13 +259,23 @@ class Choice(ParamType):
         return info_dict
 
     def get_metavar(self, param: Parameter) -> str:
+        # Use choice ParamTypes if choices are hidden.
         if param.param_type_name == "option" and not param.show_choices:  # type: ignore
-            choice_metavars = [
+            _choices = [
                 convert_type(type(choice)).name.upper() for choice in self.choices
             ]
-            choices_str = "|".join([*dict.fromkeys(choice_metavars)])
         else:
-            choices_str = "|".join([str(i) for i in self.choices])
+            _choices = [str(i) for i in self.choices]
+
+        # Dedupe choices
+        _choices = [*dict.fromkeys(_choices)]
+
+        # Create choices_str
+        choices_str = "|".join(_choices)
+
+        # Use no braces if single choice
+        if len(_choices) < 2:
+            return choices_str
 
         # Use curly braces to indicate a required argument.
         if param.required and param.param_type_name == "argument":
