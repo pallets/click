@@ -96,7 +96,7 @@ _SOURCE_BASH = """\
     local response
 
     response=$(env COMP_WORDS="${COMP_WORDS[*]}" COMP_CWORD=$COMP_CWORD \
-%(complete_var)s=bash_complete $1)
+%(complete_var)s=bash_complete $1 2> /dev/null)
 
     for completion in $response; do
         IFS=',' read type value <<< "$completion"
@@ -132,7 +132,7 @@ _SOURCE_ZSH = """\
     (( ! $+commands[%(prog_name)s] )) && return 1
 
     response=("${(@f)$(env COMP_WORDS="${words[*]}" COMP_CWORD=$((CURRENT-1)) \
-%(complete_var)s=zsh_complete %(prog_name)s)}")
+%(complete_var)s=zsh_complete %(prog_name)s 2> /dev/null)}")
 
     for type key descr in ${response}; do
         if [[ "$type" == "plain" ]]; then
@@ -165,7 +165,7 @@ function %(complete_func)s;
     set -l response;
 
     for value in (env %(complete_var)s=fish_complete COMP_WORDS=(commandline -cp) \
-COMP_CWORD=(commandline -t) %(prog_name)s);
+COMP_CWORD=(commandline -t) %(prog_name)s 2> /dev/null);
         set response $response $value;
     end;
 
