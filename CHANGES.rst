@@ -5,6 +5,8 @@ Version 8.2.0
 
 Unreleased
 
+-   Fix _SOURCE_ZSH. :issue:`2344`
+
 
 Version 8.1.3
 -------------

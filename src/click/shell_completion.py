@@ -157,7 +157,7 @@ _SOURCE_ZSH = """\
     fi
 }
 
-compdef %(complete_func)s %(prog_name)s;
+%(complete_func)s
 """
 
 _SOURCE_FISH = """\
