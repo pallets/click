@@ -18,6 +18,8 @@ Unreleased
 -   Improve command name detection when using Shiv or PEX. :issue:`2332`
 -   Avoid showing empty lines if command help text is empty. :issue:`2368`
 -   ZSH completion script works when loaded from ``fpath``. :issue:`2344`.
+-   ``EOFError`` and ``KeyboardInterrupt`` tracebacks are not suppressed when
+    ``standalone_mode`` is disabled. :issue:`2380`
 
 
 Version 8.1.3

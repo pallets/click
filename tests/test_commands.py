@@ -397,3 +397,15 @@ def test_group_invoke_collects_used_option_prefixes(runner):
 
     runner.invoke(group, ["command1"])
     assert opt_prefixes == {"-", "--", "~", "+"}
+
+
+@pytest.mark.parametrize("exc", (EOFError, KeyboardInterrupt))
+def test_abort_exceptions_with_disabled_standalone_mode(runner, exc):
+    @click.command()
+    def cli():
+        raise exc("catch me!")
+
+    rv = runner.invoke(cli, standalone_mode=False)
+    assert rv.exit_code == 1
+    assert isinstance(rv.exception.__cause__, exc)
+    assert rv.exception.__cause__.args == ("catch me!",)
