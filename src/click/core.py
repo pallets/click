@@ -916,7 +916,7 @@ class BaseCommand:
         :param info_name: the info name for this invocation.  Generally this
                           is the most descriptive name for the script or
                           command.  For the toplevel script it's usually
-                          the name of the script, for commands below it it's
+                          the name of the script, for commands below it's
                           the name of the command.
         :param args: the arguments to parse as list of strings.
         :param parent: the parent context if available.
