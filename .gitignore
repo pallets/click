@@ -1,11 +1,21 @@
 /.idea/
 /.vscode/
 .DS_Store/
+.env
+.venv
+env/
 /env/
+venv/
 /venv/
+ENV/
+env.bak/
+venv.bak/
 __pycache__/
 *.pyc
+*.py[cod]
+*$py.class
 *.egg-info/
+*.egg
 /build/
 /dist/
 /.pytest_cache/
@@ -14,3 +24,4 @@ __pycache__/
 .coverage.*
 /htmlcov/
 /docs/_build/
+.cache
