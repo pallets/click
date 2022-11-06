@@ -922,3 +922,13 @@ def test_invalid_flag_combinations(runner, kwargs, message):
         click.Option(["-a"], **kwargs)
 
     assert message in str(e.value)
+
+
+def test_overridden_option_triggers_warning(runner):
+    with pytest.warns(UserWarning):
+
+        @click.command()
+        @click.option("-a", "--aardvark")
+        @click.option("-a", "--avocado")
+        def cli(aardvark, avocado):
+            pass
