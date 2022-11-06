@@ -989,3 +989,13 @@ def test_usage_show_choices(runner, choices, metavars):
 
     result = runner.invoke(cli_without_choices, ["--help"])
     assert metavars in result.output
+
+
+def test_overridden_option_triggers_warning(runner):
+    with pytest.warns(UserWarning):
+
+        @click.command()
+        @click.option("-a", "--aardvark")
+        @click.option("-a", "--avocado")
+        def cli(aardvark, avocado):
+            pass
