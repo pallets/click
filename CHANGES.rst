@@ -5,7 +5,7 @@ Version 8.2.0
 
 Unreleased
 
--   Adds a UserWarning when multiple parameters attempt to use the same 
+-   Adds a UserWarning when multiple parameters attempt to use the same
     name. :issue:`2396``
 
 
