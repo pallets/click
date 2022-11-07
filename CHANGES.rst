@@ -49,6 +49,131 @@ Unreleased
     ``Context.call_on_close`` callbacks and context managers added via
     ``Context.with_resource`` to be closed on exit as well. :pr:`2680`
 -   Add ``ProgressBar(hidden: bool)`` to allow hiding the progressbar. :issue:`2609`
+-   Adds a UserWarning when multiple parameters attempt to use the same
+    name. :issue:`2396``
+
+
+Version 8.1.8
+-------------
+
+Unreleased
+
+-   Fix an issue with type hints for ``click.open_file()``. :issue:`2717`
+-   Fix issue where error message for invalid ``click.Path`` displays on
+    multiple lines. :issue:`2697`
+-   Fixed issue that prevented a default value of ``""`` from being displayed in
+    the help for an option. :issue:`2500`
+-   The test runner handles stripping color consistently on Windows.
+    :issue:`2705`
+-   Show correct value for flag default when using ``default_map``.
+    :issue:`2632`
+
+
+Version 8.1.7
+-------------
+
+Released 2023-08-17
+
+-   Fix issue with regex flags in shell completion. :issue:`2581`
+-   Bash version detection issues a warning instead of an error. :issue:`2574`
+-   Fix issue with completion script for Fish shell. :issue:`2567`
+
+
+Version 8.1.6
+-------------
+
+Released 2023-07-18
+
+-   Fix an issue with type hints for ``@click.group()``. :issue:`2558`
+
+
+Version 8.1.5
+-------------
+
+Released 2023-07-13
+
+-   Fix an issue with type hints for ``@click.command()``, ``@click.option()``, and
+    other decorators. Introduce typing tests. :issue:`2558`
+
+
+Version 8.1.4
+-------------
+
+Released 2023-07-06
+
+-   Replace all ``typing.Dict`` occurrences to ``typing.MutableMapping`` for
+    parameter hints. :issue:`2255`
+-   Improve type hinting for decorators and give all generic types parameters.
+    :issue:`2398`
+-   Fix return value and type signature of `shell_completion.add_completion_class`
+    function. :pr:`2421`
+-   Bash version detection doesn't fail on Windows. :issue:`2461`
+-   Completion works if there is a dot (``.``) in the program name. :issue:`2166`
+-   Improve type annotations for pyright type checker. :issue:`2268`
+-   Improve responsiveness of ``click.clear()``. :issue:`2284`
+-   Improve command name detection when using Shiv or PEX. :issue:`2332`
+-   Avoid showing empty lines if command help text is empty. :issue:`2368`
+-   ZSH completion script works when loaded from ``fpath``. :issue:`2344`.
+-   ``EOFError`` and ``KeyboardInterrupt`` tracebacks are not suppressed when
+    ``standalone_mode`` is disabled. :issue:`2380`
+-   ``@group.command`` does not fail if the group was created with a custom
+    ``command_class``. :issue:`2416`
+-   ``multiple=True`` is allowed for flag options again and does not require
+    setting ``default=()``. :issue:`2246, 2292, 2295`
+-   Make the decorators returned by ``@argument()`` and ``@option()`` reusable when the
+    ``cls`` parameter is used. :issue:`2294`
+-   Don't fail when writing filenames to streams with strict errors. Replace invalid
+    bytes with the replacement character (``�``). :issue:`2395`
+-   Remove unnecessary attempt to detect MSYS2 environment. :issue:`2355`
+-   Remove outdated and unnecessary detection of App Engine environment. :pr:`2554`
+-   ``echo()`` does not fail when no streams are attached, such as with ``pythonw`` on
+    Windows. :issue:`2415`
+-   Argument with ``expose_value=False`` do not cause completion to fail. :issue:`2336`
+
+-   Drop support for Python 3.7. :pr:`2588`
+-   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
+    :pr:`326`
+-   Use ``flit_core`` instead of ``setuptools`` as build backend.
+-   Deprecate the ``__version__`` attribute. Use feature detection, or
+    ``importlib.metadata.version("click")``, instead. :issue:`2598`
+-   ``BaseCommand`` is deprecated. ``Command`` is the base class for all
+    commands. :issue:`2589`
+-   ``MultiCommand`` is deprecated. ``Group`` is the base class for all group
+    commands. :issue:`2590`
+-   The current parser and related classes and methods, are deprecated.
+    :issue:`2205`
+
+    -   ``OptionParser`` and the ``parser`` module, which is a modified copy of
+        ``optparse`` in the standard library.
+    -   ``Context.protected_args`` is unneeded. ``Context.args`` contains any
+        remaining arguments while parsing.
+    -   ``Parameter.add_to_parser`` (on both ``Argument`` and ``Option``) is
+        unneeded. Parsing works directly without building a separate parser.
+    -   ``split_arg_string`` is moved from ``parser`` to ``shell_completion``.
+
+-   Enable deferred evaluation of annotations with
+    ``from __future__ import annotations``. :pr:`2270`
+-   When generating a command's name from a decorated function's name, the
+    suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
+    :issue:`2322`
+-   Show the ``types.ParamType.name`` for ``types.Choice`` options within
+    ``--help`` message if ``show_choices=False`` is specified.
+    :issue:`2356`
+-   Do not display default values in prompts when ``Option.show_default`` is
+    ``False``. :pr:`2509`
+-   Add ``get_help_extra`` method on ``Option`` to fetch the generated extra
+    items used in ``get_help_record`` to render help text. :issue:`2516`
+    :pr:`2517`
+-   Keep stdout and stderr streams independent in ``CliRunner``. Always
+    collect stderr output and never raise an exception. Add a new
+    output` stream to simulate what the user sees in its terminal. Removes
+    the ``mix_stderr`` parameter in ``CliRunner``. :issue:`2522` :pr:`2523`
+-   ``Option.show_envvar`` now also shows environment variable in error messages.
+    :issue:`2695` :pr:`2696`
+-   ``Context.close`` will be called on exit. This results in all
+    ``Context.call_on_close`` callbacks and context managers added via
+    ``Context.with_resource`` to be closed on exit as well. :pr:`2680`
+-   Add ``ProgressBar(hidden: bool)`` to allow hiding the progressbar. :issue:`2609`
 
 
 Version 8.1.8
