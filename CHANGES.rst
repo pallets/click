@@ -5,50 +5,6 @@ Version 8.2.0
 
 Unreleased
 
--   Drop support for Python 3.7. :pr:`2588`
--   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
-    :pr:`326`
--   Use ``flit_core`` instead of ``setuptools`` as build backend.
--   Deprecate the ``__version__`` attribute. Use feature detection, or
-    ``importlib.metadata.version("click")``, instead. :issue:`2598`
--   ``BaseCommand`` is deprecated. ``Command`` is the base class for all
-    commands. :issue:`2589`
--   ``MultiCommand`` is deprecated. ``Group`` is the base class for all group
-    commands. :issue:`2590`
--   The current parser and related classes and methods, are deprecated.
-    :issue:`2205`
-
-    -   ``OptionParser`` and the ``parser`` module, which is a modified copy of
-        ``optparse`` in the standard library.
-    -   ``Context.protected_args`` is unneeded. ``Context.args`` contains any
-        remaining arguments while parsing.
-    -   ``Parameter.add_to_parser`` (on both ``Argument`` and ``Option``) is
-        unneeded. Parsing works directly without building a separate parser.
-    -   ``split_arg_string`` is moved from ``parser`` to ``shell_completion``.
-
--   Enable deferred evaluation of annotations with
-    ``from __future__ import annotations``. :pr:`2270`
--   When generating a command's name from a decorated function's name, the
-    suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
-    :issue:`2322`
--   Show the ``types.ParamType.name`` for ``types.Choice`` options within
-    ``--help`` message if ``show_choices=False`` is specified.
-    :issue:`2356`
--   Do not display default values in prompts when ``Option.show_default`` is
-    ``False``. :pr:`2509`
--   Add ``get_help_extra`` method on ``Option`` to fetch the generated extra
-    items used in ``get_help_record`` to render help text. :issue:`2516`
-    :pr:`2517`
--   Keep stdout and stderr streams independent in ``CliRunner``. Always
-    collect stderr output and never raise an exception. Add a new
-    output` stream to simulate what the user sees in its terminal. Removes
-    the ``mix_stderr`` parameter in ``CliRunner``. :issue:`2522` :pr:`2523`
--   ``Option.show_envvar`` now also shows environment variable in error messages.
-    :issue:`2695` :pr:`2696`
--   ``Context.close`` will be called on exit. This results in all
-    ``Context.call_on_close`` callbacks and context managers added via
-    ``Context.with_resource`` to be closed on exit as well. :pr:`2680`
--   Add ``ProgressBar(hidden: bool)`` to allow hiding the progressbar. :issue:`2609`
 -   Adds a UserWarning when multiple parameters attempt to use the same
     name. :issue:`2396``
 
