@@ -1841,7 +1841,7 @@ class Group(MultiCommand):
         if self.command_class and kwargs.get("cls") is None:
             kwargs["cls"] = self.command_class
 
-        func: t.Optional[t.Callable] = None
+        func: t.Optional[t.Callable[..., t.Any]] = None
 
         if args and callable(args[0]):
             assert (
@@ -1889,7 +1889,7 @@ class Group(MultiCommand):
         """
         from .decorators import group
 
-        func: t.Optional[t.Callable] = None
+        func: t.Optional[t.Callable[..., t.Any]] = None
 
         if args and callable(args[0]):
             assert (
@@ -2260,7 +2260,7 @@ class Parameter:
         if value is None:
             return () if self.multiple or self.nargs == -1 else None
 
-        def check_iter(value: t.Any) -> t.Iterator:
+        def check_iter(value: t.Any) -> t.Iterator[t.Any]:
             try:
                 return _check_iter(value)
             except TypeError:
@@ -2277,12 +2277,12 @@ class Parameter:
             )
         elif self.nargs == -1:
 
-            def convert(value: t.Any) -> t.Tuple:
+            def convert(value: t.Any) -> t.Tuple[t.Any, ...]:
                 return tuple(self.type(x, self, ctx) for x in check_iter(value))
 
         else:  # nargs > 1
 
-            def convert(value: t.Any) -> t.Tuple:
+            def convert(value: t.Any) -> t.Tuple[t.Any, ...]:
                 value = tuple(check_iter(value))
 
                 if len(value) != self.nargs:

@@ -41,7 +41,7 @@ def pass_obj(f: F) -> F:
 
 
 def make_pass_decorator(
-    object_type: t.Type, ensure: bool = False
+    object_type: t.Type[t.Any], ensure: bool = False
 ) -> "t.Callable[[F], F]":
     """Given an object type this creates a decorator that will work
     similar to :func:`pass_obj` but instead of passing the object of the

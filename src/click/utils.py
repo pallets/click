@@ -120,7 +120,7 @@ class LazyFile:
         self.encoding = encoding
         self.errors = errors
         self.atomic = atomic
-        self._f: t.Optional[t.IO]
+        self._f: t.Optional[t.IO[t.Any]]
 
         if filename == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
@@ -141,7 +141,7 @@ class LazyFile:
             return repr(self._f)
         return f"<unopened file '{self.name}' {self.mode}>"
 
-    def open(self) -> t.IO:
+    def open(self) -> t.IO[t.Any]:
         """Opens the file if it's not yet open.  This call might fail with
         a :exc:`FileError`.  Not handling this error will produce an error
         that Click shows.
@@ -183,7 +183,7 @@ class LazyFile:
 
 
 class KeepOpenFile:
-    def __init__(self, file: t.IO) -> None:
+    def __init__(self, file: t.IO[t.Any]) -> None:
         self._file = file
 
     def __getattr__(self, name: str) -> t.Any:
@@ -340,7 +340,7 @@ def open_file(
     errors: t.Optional[str] = "strict",
     lazy: bool = False,
     atomic: bool = False,
-) -> t.IO:
+) -> t.IO[t.Any]:
     """Open a file, with extra behavior to handle ``'-'`` to indicate
     a standard stream, lazy open on write, and atomic write. Similar to
     the behavior of the :class:`~click.File` param type.
@@ -370,18 +370,20 @@ def open_file(
     .. versionadded:: 3.0
     """
     if lazy:
-        return t.cast(t.IO, LazyFile(filename, mode, encoding, errors, atomic=atomic))
+        return t.cast(
+            t.IO[t.Any], LazyFile(filename, mode, encoding, errors, atomic=atomic)
+        )
 
     f, should_close = open_stream(filename, mode, encoding, errors, atomic=atomic)
 
     if not should_close:
-        f = t.cast(t.IO, KeepOpenFile(f))
+        f = t.cast(t.IO[t.Any], KeepOpenFile(f))
 
     return f
 
 
 def format_filename(
-    filename: t.Union[str, bytes, os.PathLike], shorten: bool = False
+    filename: t.Union[str, bytes, "os.PathLike[t.AnyStr]"], shorten: bool = False
 ) -> str:
     """Formats a filename for user display.  The main purpose of this
     function is to ensure that the filename can be displayed at all.  This
@@ -458,7 +460,7 @@ class PacifyFlushWrapper:
     pipe, all calls and attributes are proxied.
     """
 
-    def __init__(self, wrapped: t.IO) -> None:
+    def __init__(self, wrapped: t.IO[t.Any]) -> None:
         self.wrapped = wrapped
 
     def flush(self) -> None:
