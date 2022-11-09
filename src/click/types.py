@@ -702,17 +702,14 @@ class File(ParamType):
             lazy = self.resolve_lazy_flag(value)
 
             if lazy:
-                f: t.IO[t.Any] = t.cast(
-                    t.IO[t.Any],
-                    LazyFile(
-                        value, self.mode, self.encoding, self.errors, atomic=self.atomic
-                    ),
+                lf = LazyFile(
+                    value, self.mode, self.encoding, self.errors, atomic=self.atomic
                 )
 
                 if ctx is not None:
-                    ctx.call_on_close(f.close_intelligently)  # type: ignore
+                    ctx.call_on_close(lf.close_intelligently)
 
-                return f
+                return t.cast(t.IO[t.Any], lf)
 
             f, should_close = open_stream(
                 value, self.mode, self.encoding, self.errors, atomic=self.atomic

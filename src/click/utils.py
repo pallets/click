@@ -174,7 +174,7 @@ class LazyFile:
     def __enter__(self) -> "LazyFile":
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):  # type: ignore
+    def __exit__(self, *_: t.Any) -> None:
         self.close_intelligently()
 
     def __iter__(self) -> t.Iterator[t.AnyStr]:
@@ -192,7 +192,7 @@ class KeepOpenFile:
     def __enter__(self) -> "KeepOpenFile":
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):  # type: ignore
+    def __exit__(self, *_: t.Any) -> None:
         pass
 
     def __repr__(self) -> str:

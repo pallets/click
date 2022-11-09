@@ -98,7 +98,7 @@ class ProgressBar(t.Generic[V]):
         self.render_progress()
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):  # type: ignore
+    def __exit__(self, *_: t.Any) -> None:
         self.render_finish()
 
     def __iter__(self) -> t.Iterator[V]:

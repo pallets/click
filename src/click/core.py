@@ -455,7 +455,7 @@ class Context:
         push_context(self)
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):  # type: ignore
+    def __exit__(self, *_: t.Any) -> None:
         self._depth -= 1
         if self._depth == 0:
             self.close()
@@ -2817,7 +2817,7 @@ class Option(Parameter):
         if self.is_flag and not self.is_bool_flag:
             for param in ctx.command.params:
                 if param.name == self.name and param.default:
-                    return param.flag_value  # type: ignore
+                    return t.cast(Option, param).flag_value
 
             return None
 

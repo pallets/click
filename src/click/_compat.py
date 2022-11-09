@@ -483,7 +483,7 @@ class _AtomicFile:
     def __enter__(self) -> "_AtomicFile":
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):  # type: ignore
+    def __exit__(self, exc_type: t.Optional[t.Type[BaseException]], *_: t.Any) -> None:
         self.close(delete=exc_type is not None)
 
     def __repr__(self) -> str:
