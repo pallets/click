@@ -121,29 +121,38 @@ def pass_meta_key(
     return decorator
 
 
-@t.overload
-def command(
-    name: t.Optional[str] = None,
-    cls: t.Optional[t.Type[Command]] = None,
-    **attrs: t.Any,
-) -> t.Callable[[F], Command]:
-    ...
+CmdType = t.TypeVar("CmdType", bound=Command)
 
 
 @t.overload
 def command(
-    name: t.Callable,
-    cls: t.Optional[t.Type[Command]] = None,
-    **attrs: t.Any,
+    __func: t.Callable[..., t.Any],
 ) -> Command:
     ...
 
 
+@t.overload
 def command(
-    name: t.Union[str, t.Callable, None] = None,
+    name: t.Optional[str] = None,
+    **attrs: t.Any,
+) -> t.Callable[..., Command]:
+    ...
+
+
+@t.overload
+def command(
+    name: t.Optional[str] = None,
+    cls: t.Type[CmdType] = ...,
+    **attrs: t.Any,
+) -> t.Callable[..., CmdType]:
+    ...
+
+
+def command(
+    name: t.Union[str, t.Callable[..., t.Any], None] = None,
     cls: t.Optional[t.Type[Command]] = None,
     **attrs: t.Any,
-) -> t.Union[Command, t.Callable[[F], Command]]:
+) -> t.Union[Command, t.Callable[..., Command]]:
     r"""Creates a new :class:`Command` and uses the decorated function as
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as parameters to the command.
@@ -172,14 +181,17 @@ def command(
         The ``params`` argument can be used. Decorated params are
         appended to the end of the list.
     """
-    if cls is None:
-        cls = Command
 
-    func: t.Optional[t.Callable] = None
+    func: t.Optional[t.Callable[..., t.Any]] = None
 
     if callable(name):
         func = name
         name = None
+        assert cls is None, "Use 'command(cls=cls)(callable)' to specify a class."
+        assert not attrs, "Use 'command(**kwargs)(callable)' to provide arguments."
+
+    if cls is None:
+        cls = Command
 
     def decorator(f: t.Callable[..., t.Any]) -> Command:
         if isinstance(f, Command):
@@ -216,22 +228,21 @@ def command(
 
 @t.overload
 def group(
+    __func: t.Callable[..., t.Any],
+) -> Group:
+    ...
+
+
+@t.overload
+def group(
     name: t.Optional[str] = None,
     **attrs: t.Any,
 ) -> t.Callable[[F], Group]:
     ...
 
 
-@t.overload
 def group(
-    name: t.Callable,
-    **attrs: t.Any,
-) -> Group:
-    ...
-
-
-def group(
-    name: t.Union[str, t.Callable, None] = None, **attrs: t.Any
+    name: t.Union[str, t.Callable[..., t.Any], None] = None, **attrs: t.Any
 ) -> t.Union[Group, t.Callable[[F], Group]]:
     """Creates a new :class:`Group` with a function as callback.  This
     works otherwise the same as :func:`command` just that the `cls`

@@ -64,7 +64,14 @@ class ParamType:
         # The class name without the "ParamType" suffix.
         param_type = type(self).__name__.partition("ParamType")[0]
         param_type = param_type.partition("ParameterType")[0]
-        return {"param_type": param_type, "name": self.name}
+
+        # Custom subclasses might not remember to set a name.
+        if hasattr(self, "name"):
+            name = self.name
+        else:
+            name = param_type
+
+        return {"param_type": param_type, "name": name}
 
     def __call__(
         self,
@@ -801,12 +808,12 @@ class Path(ParamType):
         exists: bool = False,
         file_okay: bool = True,
         dir_okay: bool = True,
-        readable: bool = True,
         writable: bool = False,
-        executable: bool = False,
+        readable: bool = True,
         resolve_path: bool = False,
         allow_dash: bool = False,
         path_type: t.Optional[t.Type] = None,
+        executable: bool = False,
     ):
         self.exists = exists
         self.file_okay = file_okay
@@ -895,7 +902,7 @@ class Path(ParamType):
 
             if self.readable and not os.access(rv, os.R_OK):
                 self.fail(
-                    _("{name} {filename!r} is not executable.").format(
+                    _("{name} {filename!r} is not readable.").format(
                         name=self.name.title(), filename=os.fsdecode(value)
                     ),
                     param,

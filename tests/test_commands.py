@@ -352,3 +352,62 @@ def test_deprecated_in_invocation(runner):
 
     result = runner.invoke(deprecated_cmd)
     assert "DeprecationWarning:" in result.output
+
+
+def test_command_parse_args_collects_option_prefixes():
+    @click.command()
+    @click.option("+p", is_flag=True)
+    @click.option("!e", is_flag=True)
+    def test(p, e):
+        pass
+
+    ctx = click.Context(test)
+    test.parse_args(ctx, [])
+
+    assert ctx._opt_prefixes == {"-", "--", "+", "!"}
+
+
+def test_group_parse_args_collects_base_option_prefixes():
+    @click.group()
+    @click.option("~t", is_flag=True)
+    def group(t):
+        pass
+
+    @group.command()
+    @click.option("+p", is_flag=True)
+    def command1(p):
+        pass
+
+    @group.command()
+    @click.option("!e", is_flag=True)
+    def command2(e):
+        pass
+
+    ctx = click.Context(group)
+    group.parse_args(ctx, ["command1", "+p"])
+
+    assert ctx._opt_prefixes == {"-", "--", "~"}
+
+
+def test_group_invoke_collects_used_option_prefixes(runner):
+    opt_prefixes = set()
+
+    @click.group()
+    @click.option("~t", is_flag=True)
+    def group(t):
+        pass
+
+    @group.command()
+    @click.option("+p", is_flag=True)
+    @click.pass_context
+    def command1(ctx, p):
+        nonlocal opt_prefixes
+        opt_prefixes = ctx._opt_prefixes
+
+    @group.command()
+    @click.option("!e", is_flag=True)
+    def command2(e):
+        pass
+
+    runner.invoke(group, ["command1"])
+    assert opt_prefixes == {"-", "--", "~", "+"}

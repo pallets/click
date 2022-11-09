@@ -475,7 +475,7 @@ class PacifyFlushWrapper:
 
 
 def _detect_program_name(
-    path: t.Optional[str] = None, _main: ModuleType = sys.modules["__main__"]
+    path: t.Optional[str] = None, _main: t.Optional[ModuleType] = None
 ) -> str:
     """Determine the command used to run the program, for use in help
     text. If a file or entry point was executed, the file name is
@@ -497,6 +497,9 @@ def _detect_program_name(
 
     :meta private:
     """
+    if _main is None:
+        _main = sys.modules["__main__"]
+
     if not path:
         path = sys.argv[0]
 

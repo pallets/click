@@ -132,6 +132,8 @@ with the incomplete value.
 .. code-block:: python
 
     class EnvVarType(ParamType):
+        name = "envvar"
+
         def shell_complete(self, ctx, param, incomplete):
             return [
                 CompletionItem(name)

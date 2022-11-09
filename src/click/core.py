@@ -292,6 +292,8 @@ class Context:
         #: must be never propagated to another arguments.  This is used
         #: to implement nested parsing.
         self.protected_args: t.List[str] = []
+        #: the collected prefixes of the command's options.
+        self._opt_prefixes: t.Set[str] = set(parent._opt_prefixes) if parent else set()
 
         if obj is None and parent is not None:
             obj = parent.obj
@@ -1385,6 +1387,7 @@ class Command(BaseCommand):
             )
 
         ctx.args = args
+        ctx._opt_prefixes.update(parser._opt_prefixes)
         return args
 
     def invoke(self, ctx: Context) -> t.Any:
@@ -1626,11 +1629,11 @@ class MultiCommand(Command):
         if not ctx.protected_args:
             if self.invoke_without_command:
                 # No subcommand was invoked, so the result callback is
-                # invoked with None for regular groups, or an empty list
-                # for chained groups.
+                # invoked with the group return value for regular
+                # groups, or an empty list for chained groups.
                 with ctx:
-                    super().invoke(ctx)
-                    return _process_result([] if self.chain else None)
+                    rv = super().invoke(ctx)
+                    return _process_result([] if self.chain else rv)
             ctx.fail(_("Missing command."))
 
         # Fetch args back out
@@ -1806,6 +1809,16 @@ class Group(MultiCommand):
         _check_multicommand(self, name, cmd, register=True)
         self.commands[name] = cmd
 
+    @t.overload
+    def command(self, __func: t.Callable[..., t.Any]) -> Command:
+        ...
+
+    @t.overload
+    def command(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Callable[[t.Callable[..., t.Any]], Command]:
+        ...
+
     def command(
         self, *args: t.Any, **kwargs: t.Any
     ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], Command], Command]:
@@ -1831,8 +1844,11 @@ class Group(MultiCommand):
         func: t.Optional[t.Callable] = None
 
         if args and callable(args[0]):
-            func = args[0]
-            args = args[1:]
+            assert (
+                len(args) == 1 and not kwargs
+            ), "Use 'command(**kwargs)(callable)' to provide arguments."
+            (func,) = args
+            args = ()
 
         def decorator(f: t.Callable[..., t.Any]) -> Command:
             cmd: Command = command(*args, **kwargs)(f)
@@ -1843,6 +1859,16 @@ class Group(MultiCommand):
             return decorator(func)
 
         return decorator
+
+    @t.overload
+    def group(self, __func: t.Callable[..., t.Any]) -> "Group":
+        ...
+
+    @t.overload
+    def group(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]:
+        ...
 
     def group(
         self, *args: t.Any, **kwargs: t.Any
@@ -1866,8 +1892,11 @@ class Group(MultiCommand):
         func: t.Optional[t.Callable] = None
 
         if args and callable(args[0]):
-            func = args[0]
-            args = args[1:]
+            assert (
+                len(args) == 1 and not kwargs
+            ), "Use 'group(**kwargs)(callable)' to provide arguments."
+            (func,) = args
+            args = ()
 
         if self.group_class is not None and kwargs.get("cls") is None:
             if self.group_class is type:
@@ -2551,6 +2580,9 @@ class Option(Parameter):
                 if self.is_flag:
                     raise TypeError("'count' is not valid with 'is_flag'.")
 
+            if self.multiple and self.is_flag:
+                raise TypeError("'multiple' is not valid with 'is_flag', use 'count'.")
+
     def to_info_dict(self) -> t.Dict[str, t.Any]:
         info_dict = super().to_info_dict()
         info_dict.update(
@@ -2831,7 +2863,10 @@ class Option(Parameter):
             envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
             rv = os.environ.get(envvar)
 
-        return rv
+            if rv:
+                return rv
+
+        return None
 
     def value_from_envvar(self, ctx: Context) -> t.Optional[t.Any]:
         rv: t.Optional[t.Any] = self.resolve_envvar_value(ctx)

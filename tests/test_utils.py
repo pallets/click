@@ -444,20 +444,12 @@ class MockMain:
         ("example.py", None, "example.py"),
         (str(pathlib.Path("/foo/bar/example.py")), None, "example.py"),
         ("example", None, "example"),
-        (
-            str(pathlib.Path("example/__main__.py")),
-            MockMain(".example"),
-            "python -m example",
-        ),
-        (
-            str(pathlib.Path("example/cli.py")),
-            MockMain(".example"),
-            "python -m example.cli",
-        ),
+        (str(pathlib.Path("example/__main__.py")), "example", "python -m example"),
+        (str(pathlib.Path("example/cli.py")), "example", "python -m example.cli"),
     ],
 )
 def test_detect_program_name(path, main, expected):
-    assert click.utils._detect_program_name(path, _main=main) == expected
+    assert click.utils._detect_program_name(path, _main=MockMain(main)) == expected
 
 
 def test_expand_args(monkeypatch):

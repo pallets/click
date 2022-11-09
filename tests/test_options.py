@@ -163,14 +163,15 @@ def test_init_bad_default_list(runner, multiple, nargs, default):
         click.Option(["-a"], type=type, multiple=multiple, nargs=nargs, default=default)
 
 
-def test_empty_envvar(runner):
+@pytest.mark.parametrize("env_key", ["MYPATH", "AUTO_MYPATH"])
+def test_empty_envvar(runner, env_key):
     @click.command()
     @click.option("--mypath", type=click.Path(exists=True), envvar="MYPATH")
     def cli(mypath):
         click.echo(f"mypath: {mypath}")
 
-    result = runner.invoke(cli, [], env={"MYPATH": ""})
-    assert result.exit_code == 0
+    result = runner.invoke(cli, env={env_key: ""}, auto_envvar_prefix="AUTO")
+    assert result.exception is None
     assert result.output == "mypath: None\n"
 
 
@@ -974,3 +975,21 @@ def test_type_from_flag_value():
 )
 def test_is_bool_flag_is_correctly_set(option, expected):
     assert option.is_bool_flag is expected
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"count": True, "multiple": True}, "'count' is not valid with 'multiple'."),
+        ({"count": True, "is_flag": True}, "'count' is not valid with 'is_flag'."),
+        (
+            {"multiple": True, "is_flag": True},
+            "'multiple' is not valid with 'is_flag', use 'count'.",
+        ),
+    ],
+)
+def test_invalid_flag_combinations(runner, kwargs, message):
+    with pytest.raises(TypeError) as e:
+        click.Option(["-a"], **kwargs)
+
+    assert message in str(e.value)

@@ -365,3 +365,11 @@ def test_parameter_source(runner, option_args, invoke_args, expect):
 
     rv = runner.invoke(cli, standalone_mode=False, **invoke_args)
     assert rv.return_value == expect
+
+
+def test_propagate_opt_prefixes():
+    parent = click.Context(click.Command("test"))
+    parent._opt_prefixes = {"-", "--", "!"}
+    ctx = click.Context(click.Command("test2"), parent=parent)
+
+    assert ctx._opt_prefixes == {"-", "--", "!"}

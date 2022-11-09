@@ -1,7 +1,48 @@
 .. currentmodule:: click
 
+Version 8.2.0
+-------------
+
+Unreleased
+
+
+Version 8.1.3
+-------------
+
+Released 2022-04-28
+
+-   Use verbose form of ``typing.Callable`` for ``@command`` and
+    ``@group``. :issue:`2255`
+-   Show error when attempting to create an option with
+    ``multiple=True, is_flag=True``. Use ``count`` instead.
+    :issue:`2246`
+
+
+Version 8.1.2
+-------------
+
+Released 2022-03-31
+
+-   Fix error message for readable path check that was mixed up with the
+    executable check. :pr:`2236`
+-   Restore parameter order for ``Path``, placing the ``executable``
+    parameter at the end. It is recommended to use keyword arguments
+    instead of positional arguments. :issue:`2235`
+
+
+Version 8.1.1
+-------------
+
+Released 2022-03-30
+
+-   Fix an issue with decorator typing that caused type checking to
+    report that a command was not callable. :issue:`2227`
+
+
 Version 8.1.0
 -------------
+
+Released 2022-03-28
 
 -   Drop support for Python 3.6. :pr:`2129`
 -   Remove previously deprecated code. :pr:`2130`
@@ -43,6 +84,18 @@ Version 8.1.0
 -   It's possible to pass a list of ``params`` to ``@command``. Any
     params defined with decorators are appended to the passed params.
     :issue:`2131`.
+-   ``@command`` decorator is annotated as returning the correct type if
+    a ``cls`` argument is used. :issue:`2211`
+-   A ``Group`` with ``invoke_without_command=True`` and ``chain=False``
+    will invoke its result callback with the group function's return
+    value. :issue:`2124`
+-   ``to_info_dict`` will not fail if a ``ParamType`` doesn't define a
+    ``name``. :issue:`2168`
+-   Shell completion prioritizes option values with option prefixes over
+    new options. :issue:`2040`
+-   Options that get an environment variable value using
+    ``autoenvvar_prefix`` treat an empty value as ``None``, consistent
+    with a direct ``envvar``. :issue:`2146`
 
 
 Version 8.0.4
