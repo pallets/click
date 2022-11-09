@@ -5,6 +5,9 @@ Version 8.1.4
 
 Unreleased
 
+-   Improve type hinting for decorators and give all generic types parameters.
+    :issue:`2398`
+
 
 Version 8.1.3
 -------------
