@@ -706,12 +706,30 @@ class Context:
         """
         return type(self)(command, info_name=command.name, parent=self)
 
+    @t.overload
     def invoke(
         __self,  # noqa: B902
-        __callback: t.Union["Command", t.Callable[..., t.Any]],
+        __callback: "t.Callable[..., V]",
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> V:
+        ...
+
+    @t.overload
+    def invoke(
+        __self,  # noqa: B902
+        __callback: "Command",
         *args: t.Any,
         **kwargs: t.Any,
     ) -> t.Any:
+        ...
+
+    def invoke(
+        __self,  # noqa: B902
+        __callback: t.Union["Command", "t.Callable[..., V]"],
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> t.Union[t.Any, V]:
         """Invokes a command callback in exactly the way it expects.  There
         are two ways to invoke this method:
 
@@ -739,7 +757,7 @@ class Context:
                     "The given command does not have a callback that can be invoked."
                 )
             else:
-                __callback = other_cmd.callback
+                __callback = t.cast("t.Callable[..., V]", other_cmd.callback)
 
             ctx = __self._make_sub_context(other_cmd)
 

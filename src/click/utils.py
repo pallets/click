@@ -21,23 +21,26 @@ from .globals import resolve_color_default
 if t.TYPE_CHECKING:
     import typing_extensions as te
 
-F = t.TypeVar("F", bound=t.Callable[..., t.Any])
+    P = te.ParamSpec("P")
+
+R = t.TypeVar("R")
 
 
 def _posixify(name: str) -> str:
     return "-".join(name.split()).lower()
 
 
-def safecall(func: F) -> F:
+def safecall(func: "t.Callable[P, R]") -> "t.Callable[P, t.Optional[R]]":
     """Wraps a function so that it swallows exceptions."""
 
-    def wrapper(*args, **kwargs):  # type: ignore
+    def wrapper(*args: "P.args", **kwargs: "P.kwargs") -> t.Optional[R]:
         try:
             return func(*args, **kwargs)
         except Exception:
             pass
+        return None
 
-    return update_wrapper(t.cast(F, wrapper), func)
+    return update_wrapper(wrapper, func)
 
 
 def make_str(value: t.Any) -> str:
