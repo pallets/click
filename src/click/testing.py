@@ -352,7 +352,7 @@ class CliRunner:
         args: t.Optional[t.Union[str, t.Sequence[str]]] = None,
         input: t.Optional[t.Union[str, bytes, t.IO]] = None,
         env: t.Optional[t.Mapping[str, t.Optional[str]]] = None,
-        catch_exceptions: bool = True,
+        catch_exceptions: bool = False,
         color: bool = False,
         **extra: t.Any,
     ) -> Result:
