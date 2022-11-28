@@ -13,18 +13,18 @@ Where are Errors Handled?
 Click's main error handling is happening in :meth:`BaseCommand.main`.  In
 there it handles all subclasses of :exc:`ClickException` as well as the
 standard :exc:`EOFError` and :exc:`KeyboardInterrupt` exceptions.  The
-latter are internally translated into a :exc:`Abort`.
+latter are internally translated into an :exc:`Abort`.
 
 The logic applied is the following:
 
 1.  If an :exc:`EOFError` or :exc:`KeyboardInterrupt` happens, reraise it
     as :exc:`Abort`.
-2.  If an :exc:`ClickException` is raised, invoke the
+2.  If a :exc:`ClickException` is raised, invoke the
     :meth:`ClickException.show` method on it to display it and then exit
     the program with :attr:`ClickException.exit_code`.
 3.  If an :exc:`Abort` exception is raised print the string ``Aborted!``
     to standard error and exit the program with exit code ``1``.
-4.  if it goes through well, exit the program with exit code ``0``.
+4.  If it goes through well, exit the program with exit code ``0``.
 
 What if I don't want that?
 --------------------------
