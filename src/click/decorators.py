@@ -319,7 +319,7 @@ def _param_memo(f: t.Callable[..., t.Any], param: Parameter) -> None:
             f.__click_params__ = []  # type: ignore
         else:
             for opt in param.opts:
-                for preexisting_param in f.__click_params__:
+                for preexisting_param in f.__click_params__:  # type: ignore
                     if opt in preexisting_param.opts:
 
                         from warnings import warn
@@ -327,9 +327,9 @@ def _param_memo(f: t.Callable[..., t.Any], param: Parameter) -> None:
                         warn(
                             (
                                 "Duplicate option added to command."
-                                + " The following option appears more than once:\n"
-                                + f"{opt} (used for {param.human_readable_name}"
-                                + f" and {preexisting_param.human_readable_name})"
+                                " The following option appears more than once:\n"
+                                f"{opt} (used for {param.human_readable_name}"
+                                f" and {preexisting_param.human_readable_name})"
                             ),
                             stacklevel=3,
                         )
