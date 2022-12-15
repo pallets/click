@@ -1871,9 +1871,6 @@ class Group(MultiCommand):
         """
         from .decorators import command
 
-        if self.command_class and kwargs.get("cls") is None:
-            kwargs["cls"] = self.command_class
-
         func: t.Optional[t.Callable[..., t.Any]] = None
 
         if args and callable(args[0]):
@@ -1882,6 +1879,9 @@ class Group(MultiCommand):
             ), "Use 'command(**kwargs)(callable)' to provide arguments."
             (func,) = args
             args = ()
+
+        if self.command_class and kwargs.get("cls") is None:
+            kwargs["cls"] = self.command_class
 
         def decorator(f: t.Callable[..., t.Any]) -> Command:
             cmd: Command = command(*args, **kwargs)(f)
