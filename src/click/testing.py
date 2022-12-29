@@ -95,7 +95,7 @@ def make_input_stream(
     elif isinstance(input, str):
         input = input.encode(charset)
 
-    return io.BytesIO(t.cast(bytes, input))
+    return io.BytesIO(input)
 
 
 class Result:
@@ -464,11 +464,11 @@ class CliRunner:
             Added the ``temp_dir`` parameter.
         """
         cwd = os.getcwd()
-        dt = tempfile.mkdtemp(dir=temp_dir)  # type: ignore[type-var]
+        dt = tempfile.mkdtemp(dir=temp_dir)
         os.chdir(dt)
 
         try:
-            yield t.cast(str, dt)
+            yield dt
         finally:
             os.chdir(cwd)
 
