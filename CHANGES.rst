@@ -5,6 +5,9 @@ Version 8.2.0
 
 Unreleased
 
+-   Adds a UserWarning when multiple parameters attempt to use the same
+    name. :issue:`2396``
+
 
 Version 8.1.3
 -------------
