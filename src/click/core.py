@@ -2450,6 +2450,13 @@ class Option(Parameter):
     :param help: the help string.
     :param hidden: hide this option from help outputs.
 
+    :param deprecated: issues a message indicating that
+                       the command is deprecated showing help
+
+    .. versionchanged:: 8.2.0
+        Show deprecation warning message running ``--help`` Option
+        for ``@click.option``. :issue:`2263`
+
     .. versionchanged:: 8.1.0
         Help text indentation is cleaned here instead of only in the
         ``@option`` decorator.
@@ -2486,6 +2493,7 @@ class Option(Parameter):
         hidden: bool = False,
         show_choices: bool = True,
         show_envvar: bool = False,
+        deprecated: bool = False,
         **attrs: t.Any,
     ) -> None:
         if help:
@@ -2503,6 +2511,9 @@ class Option(Parameter):
             prompt_text = None
         else:
             prompt_text = prompt
+
+        if deprecated:
+            help = help + "(DEPRECATED)" if help is not None else "(DEPRECATED)"
 
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt

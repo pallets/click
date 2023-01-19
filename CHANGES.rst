@@ -5,6 +5,9 @@ Version 8.2.0
 
 Unreleased
 
+-   Show deprecation warning message running ``--help`` Option
+    for ``@click.option``. :issue:`2263`
+
 
 Version 8.1.3
 -------------
