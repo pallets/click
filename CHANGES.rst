@@ -5,6 +5,9 @@ Version 8.2.0
 
 Unreleased
 
+-   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
+    :pr:`326`
+
 
 Version 8.1.4
 -------------
