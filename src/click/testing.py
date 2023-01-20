@@ -79,11 +79,11 @@ class _NamedTextIOWrapper(io.TextIOWrapper):
 
 
 def make_input_stream(
-    input: t.Optional[t.Union[str, bytes, t.IO]], charset: str
+    input: t.Optional[t.Union[str, bytes, t.IO[t.Any]]], charset: str
 ) -> t.BinaryIO:
     # Is already an input stream.
     if hasattr(input, "read"):
-        rv = _find_binary_reader(t.cast(t.IO, input))
+        rv = _find_binary_reader(t.cast(t.IO[t.Any], input))
 
         if rv is not None:
             return rv
@@ -206,7 +206,7 @@ class CliRunner:
     @contextlib.contextmanager
     def isolation(
         self,
-        input: t.Optional[t.Union[str, bytes, t.IO]] = None,
+        input: t.Optional[t.Union[str, bytes, t.IO[t.Any]]] = None,
         env: t.Optional[t.Mapping[str, t.Optional[str]]] = None,
         color: bool = False,
     ) -> t.Iterator[t.Tuple[io.BytesIO, t.Optional[io.BytesIO]]]:
@@ -301,7 +301,7 @@ class CliRunner:
         default_color = color
 
         def should_strip_ansi(
-            stream: t.Optional[t.IO] = None, color: t.Optional[bool] = None
+            stream: t.Optional[t.IO[t.Any]] = None, color: t.Optional[bool] = None
         ) -> bool:
             if color is None:
                 return not default_color
@@ -350,7 +350,7 @@ class CliRunner:
         self,
         cli: "BaseCommand",
         args: t.Optional[t.Union[str, t.Sequence[str]]] = None,
-        input: t.Optional[t.Union[str, bytes, t.IO]] = None,
+        input: t.Optional[t.Union[str, bytes, t.IO[t.Any]]] = None,
         env: t.Optional[t.Mapping[str, t.Optional[str]]] = None,
         catch_exceptions: bool = True,
         color: bool = False,
@@ -449,7 +449,7 @@ class CliRunner:
 
     @contextlib.contextmanager
     def isolated_filesystem(
-        self, temp_dir: t.Optional[t.Union[str, os.PathLike]] = None
+        self, temp_dir: t.Optional[t.Union[str, "os.PathLike[str]"]] = None
     ) -> t.Iterator[str]:
         """A context manager that creates a temporary directory and
         changes the current working directory to it. This isolates tests

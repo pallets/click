@@ -397,7 +397,7 @@ class DateTime(ParamType):
 
 
 class _NumberParamTypeBase(ParamType):
-    _number_class: t.ClassVar[t.Type]
+    _number_class: t.ClassVar[t.Type[t.Any]]
 
     def convert(
         self, value: t.Any, param: t.Optional["Parameter"], ctx: t.Optional["Context"]
@@ -702,17 +702,14 @@ class File(ParamType):
             lazy = self.resolve_lazy_flag(value)
 
             if lazy:
-                f: t.IO = t.cast(
-                    t.IO,
-                    LazyFile(
-                        value, self.mode, self.encoding, self.errors, atomic=self.atomic
-                    ),
+                lf = LazyFile(
+                    value, self.mode, self.encoding, self.errors, atomic=self.atomic
                 )
 
                 if ctx is not None:
-                    ctx.call_on_close(f.close_intelligently)  # type: ignore
+                    ctx.call_on_close(lf.close_intelligently)
 
-                return f
+                return t.cast(t.IO[t.Any], lf)
 
             f, should_close = open_stream(
                 value, self.mode, self.encoding, self.errors, atomic=self.atomic
@@ -794,7 +791,7 @@ class Path(ParamType):
         readable: bool = True,
         resolve_path: bool = False,
         allow_dash: bool = False,
-        path_type: t.Optional[t.Type] = None,
+        path_type: t.Optional[t.Type[t.Any]] = None,
         executable: bool = False,
     ):
         self.exists = exists
@@ -944,7 +941,7 @@ class Tuple(CompositeParamType):
     :param types: a list of types that should be used for the tuple items.
     """
 
-    def __init__(self, types: t.Sequence[t.Union[t.Type, ParamType]]) -> None:
+    def __init__(self, types: t.Sequence[t.Union[t.Type[t.Any], ParamType]]) -> None:
         self.types = [convert_type(ty) for ty in types]
 
     def to_info_dict(self) -> t.Dict[str, t.Any]:

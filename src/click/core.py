@@ -455,7 +455,7 @@ class Context:
         push_context(self)
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):  # type: ignore
+    def __exit__(self, *_: t.Any) -> None:
         self._depth -= 1
         if self._depth == 0:
             self.close()
@@ -706,12 +706,30 @@ class Context:
         """
         return type(self)(command, info_name=command.name, parent=self)
 
+    @t.overload
     def invoke(
         __self,  # noqa: B902
-        __callback: t.Union["Command", t.Callable[..., t.Any]],
+        __callback: "t.Callable[..., V]",
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> V:
+        ...
+
+    @t.overload
+    def invoke(
+        __self,  # noqa: B902
+        __callback: "Command",
         *args: t.Any,
         **kwargs: t.Any,
     ) -> t.Any:
+        ...
+
+    def invoke(
+        __self,  # noqa: B902
+        __callback: t.Union["Command", "t.Callable[..., V]"],
+        *args: t.Any,
+        **kwargs: t.Any,
+    ) -> t.Union[t.Any, V]:
         """Invokes a command callback in exactly the way it expects.  There
         are two ways to invoke this method:
 
@@ -739,7 +757,7 @@ class Context:
                     "The given command does not have a callback that can be invoked."
                 )
             else:
-                __callback = other_cmd.callback
+                __callback = t.cast("t.Callable[..., V]", other_cmd.callback)
 
             ctx = __self._make_sub_context(other_cmd)
 
@@ -1841,7 +1859,7 @@ class Group(MultiCommand):
         if self.command_class and kwargs.get("cls") is None:
             kwargs["cls"] = self.command_class
 
-        func: t.Optional[t.Callable] = None
+        func: t.Optional[t.Callable[..., t.Any]] = None
 
         if args and callable(args[0]):
             assert (
@@ -1889,7 +1907,7 @@ class Group(MultiCommand):
         """
         from .decorators import group
 
-        func: t.Optional[t.Callable] = None
+        func: t.Optional[t.Callable[..., t.Any]] = None
 
         if args and callable(args[0]):
             assert (
@@ -2260,7 +2278,7 @@ class Parameter:
         if value is None:
             return () if self.multiple or self.nargs == -1 else None
 
-        def check_iter(value: t.Any) -> t.Iterator:
+        def check_iter(value: t.Any) -> t.Iterator[t.Any]:
             try:
                 return _check_iter(value)
             except TypeError:
@@ -2277,12 +2295,12 @@ class Parameter:
             )
         elif self.nargs == -1:
 
-            def convert(value: t.Any) -> t.Tuple:
+            def convert(value: t.Any) -> t.Tuple[t.Any, ...]:
                 return tuple(self.type(x, self, ctx) for x in check_iter(value))
 
         else:  # nargs > 1
 
-            def convert(value: t.Any) -> t.Tuple:
+            def convert(value: t.Any) -> t.Tuple[t.Any, ...]:
                 value = tuple(check_iter(value))
 
                 if len(value) != self.nargs:
@@ -2817,7 +2835,7 @@ class Option(Parameter):
         if self.is_flag and not self.is_bool_flag:
             for param in ctx.command.params:
                 if param.name == self.name and param.default:
-                    return param.flag_value  # type: ignore
+                    return t.cast(Option, param).flag_value
 
             return None
 

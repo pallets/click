@@ -93,12 +93,12 @@ class ProgressBar(t.Generic[V]):
         self.is_hidden = not isatty(self.file)
         self._last_line: t.Optional[str] = None
 
-    def __enter__(self) -> "ProgressBar":
+    def __enter__(self) -> "ProgressBar[V]":
         self.entered = True
         self.render_progress()
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):  # type: ignore
+    def __exit__(self, *_: t.Any) -> None:
         self.render_finish()
 
     def __iter__(self) -> t.Iterator[V]:
