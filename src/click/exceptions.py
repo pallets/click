@@ -36,7 +36,7 @@ class ClickException(Exception):
     def __str__(self) -> str:
         return self.message
 
-    def show(self, file: t.Optional[t.IO] = None) -> None:
+    def show(self, file: t.Optional[t.IO[t.Any]] = None) -> None:
         if file is None:
             file = get_text_stderr()
 
@@ -59,7 +59,7 @@ class UsageError(ClickException):
         self.ctx = ctx
         self.cmd = self.ctx.command if self.ctx else None
 
-    def show(self, file: t.Optional[t.IO] = None) -> None:
+    def show(self, file: t.Optional[t.IO[t.Any]] = None) -> None:
         if file is None:
             file = get_text_stderr()
         color = None

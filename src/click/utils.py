@@ -21,23 +21,26 @@ from .globals import resolve_color_default
 if t.TYPE_CHECKING:
     import typing_extensions as te
 
-F = t.TypeVar("F", bound=t.Callable[..., t.Any])
+    P = te.ParamSpec("P")
+
+R = t.TypeVar("R")
 
 
 def _posixify(name: str) -> str:
     return "-".join(name.split()).lower()
 
 
-def safecall(func: F) -> F:
+def safecall(func: "t.Callable[P, R]") -> "t.Callable[P, t.Optional[R]]":
     """Wraps a function so that it swallows exceptions."""
 
-    def wrapper(*args, **kwargs):  # type: ignore
+    def wrapper(*args: "P.args", **kwargs: "P.kwargs") -> t.Optional[R]:
         try:
             return func(*args, **kwargs)
         except Exception:
             pass
+        return None
 
-    return update_wrapper(t.cast(F, wrapper), func)
+    return update_wrapper(wrapper, func)
 
 
 def make_str(value: t.Any) -> str:
@@ -120,7 +123,7 @@ class LazyFile:
         self.encoding = encoding
         self.errors = errors
         self.atomic = atomic
-        self._f: t.Optional[t.IO]
+        self._f: t.Optional[t.IO[t.Any]]
 
         if filename == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
@@ -141,7 +144,7 @@ class LazyFile:
             return repr(self._f)
         return f"<unopened file '{self.name}' {self.mode}>"
 
-    def open(self) -> t.IO:
+    def open(self) -> t.IO[t.Any]:
         """Opens the file if it's not yet open.  This call might fail with
         a :exc:`FileError`.  Not handling this error will produce an error
         that Click shows.
@@ -174,7 +177,7 @@ class LazyFile:
     def __enter__(self) -> "LazyFile":
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):  # type: ignore
+    def __exit__(self, *_: t.Any) -> None:
         self.close_intelligently()
 
     def __iter__(self) -> t.Iterator[t.AnyStr]:
@@ -183,7 +186,7 @@ class LazyFile:
 
 
 class KeepOpenFile:
-    def __init__(self, file: t.IO) -> None:
+    def __init__(self, file: t.IO[t.Any]) -> None:
         self._file = file
 
     def __getattr__(self, name: str) -> t.Any:
@@ -192,7 +195,7 @@ class KeepOpenFile:
     def __enter__(self) -> "KeepOpenFile":
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):  # type: ignore
+    def __exit__(self, *_: t.Any) -> None:
         pass
 
     def __repr__(self) -> str:
@@ -340,7 +343,7 @@ def open_file(
     errors: t.Optional[str] = "strict",
     lazy: bool = False,
     atomic: bool = False,
-) -> t.IO:
+) -> t.IO[t.Any]:
     """Open a file, with extra behavior to handle ``'-'`` to indicate
     a standard stream, lazy open on write, and atomic write. Similar to
     the behavior of the :class:`~click.File` param type.
@@ -370,18 +373,20 @@ def open_file(
     .. versionadded:: 3.0
     """
     if lazy:
-        return t.cast(t.IO, LazyFile(filename, mode, encoding, errors, atomic=atomic))
+        return t.cast(
+            t.IO[t.Any], LazyFile(filename, mode, encoding, errors, atomic=atomic)
+        )
 
     f, should_close = open_stream(filename, mode, encoding, errors, atomic=atomic)
 
     if not should_close:
-        f = t.cast(t.IO, KeepOpenFile(f))
+        f = t.cast(t.IO[t.Any], KeepOpenFile(f))
 
     return f
 
 
 def format_filename(
-    filename: t.Union[str, bytes, os.PathLike], shorten: bool = False
+    filename: t.Union[str, bytes, "os.PathLike[t.AnyStr]"], shorten: bool = False
 ) -> str:
     """Formats a filename for user display.  The main purpose of this
     function is to ensure that the filename can be displayed at all.  This
@@ -458,7 +463,7 @@ class PacifyFlushWrapper:
     pipe, all calls and attributes are proxied.
     """
 
-    def __init__(self, wrapped: t.IO) -> None:
+    def __init__(self, wrapped: t.IO[t.Any]) -> None:
         self.wrapped = wrapped
 
     def flush(self) -> None:
