@@ -14,7 +14,7 @@ repos:
         args: ["--application-directories", "src"]
         additional_dependencies: ["setuptools>60.9"]
   - repo: https://github.com/psf/black
-    rev: 22.12.0
+    rev: 23.1.0
     hooks:
       - id: black
   - repo: https://github.com/PyCQA/flake8
