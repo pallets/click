@@ -50,7 +50,7 @@ def is_ascii_encoding(encoding: str) -> bool:
         return False
 
 
-def get_best_encoding(stream: t.IO) -> str:
+def get_best_encoding(stream: t.IO[t.Any]) -> str:
     """Returns the default stream encoding if not found."""
     rv = getattr(stream, "encoding", None) or sys.getdefaultencoding()
     if is_ascii_encoding(rv):
@@ -153,7 +153,7 @@ class _FixupStream:
         return True
 
 
-def _is_binary_reader(stream: t.IO, default: bool = False) -> bool:
+def _is_binary_reader(stream: t.IO[t.Any], default: bool = False) -> bool:
     try:
         return isinstance(stream.read(0), bytes)
     except Exception:
@@ -162,7 +162,7 @@ def _is_binary_reader(stream: t.IO, default: bool = False) -> bool:
         # closed.  In this case, we assume the default.
 
 
-def _is_binary_writer(stream: t.IO, default: bool = False) -> bool:
+def _is_binary_writer(stream: t.IO[t.Any], default: bool = False) -> bool:
     try:
         stream.write(b"")
     except Exception:
@@ -175,7 +175,7 @@ def _is_binary_writer(stream: t.IO, default: bool = False) -> bool:
     return True
 
 
-def _find_binary_reader(stream: t.IO) -> t.Optional[t.BinaryIO]:
+def _find_binary_reader(stream: t.IO[t.Any]) -> t.Optional[t.BinaryIO]:
     # We need to figure out if the given stream is already binary.
     # This can happen because the official docs recommend detaching
     # the streams to get binary streams.  Some code might do this, so
@@ -193,7 +193,7 @@ def _find_binary_reader(stream: t.IO) -> t.Optional[t.BinaryIO]:
     return None
 
 
-def _find_binary_writer(stream: t.IO) -> t.Optional[t.BinaryIO]:
+def _find_binary_writer(stream: t.IO[t.Any]) -> t.Optional[t.BinaryIO]:
     # We need to figure out if the given stream is already binary.
     # This can happen because the official docs recommend detaching
     # the streams to get binary streams.  Some code might do this, so
@@ -241,11 +241,11 @@ def _is_compatible_text_stream(
 
 
 def _force_correct_text_stream(
-    text_stream: t.IO,
+    text_stream: t.IO[t.Any],
     encoding: t.Optional[str],
     errors: t.Optional[str],
-    is_binary: t.Callable[[t.IO, bool], bool],
-    find_binary: t.Callable[[t.IO], t.Optional[t.BinaryIO]],
+    is_binary: t.Callable[[t.IO[t.Any], bool], bool],
+    find_binary: t.Callable[[t.IO[t.Any]], t.Optional[t.BinaryIO]],
     force_readable: bool = False,
     force_writable: bool = False,
 ) -> t.TextIO:
@@ -287,7 +287,7 @@ def _force_correct_text_stream(
 
 
 def _force_correct_text_reader(
-    text_reader: t.IO,
+    text_reader: t.IO[t.Any],
     encoding: t.Optional[str],
     errors: t.Optional[str],
     force_readable: bool = False,
@@ -303,7 +303,7 @@ def _force_correct_text_reader(
 
 
 def _force_correct_text_writer(
-    text_writer: t.IO,
+    text_writer: t.IO[t.Any],
     encoding: t.Optional[str],
     errors: t.Optional[str],
     force_writable: bool = False,
@@ -367,11 +367,11 @@ def get_text_stderr(
 
 
 def _wrap_io_open(
-    file: t.Union[str, os.PathLike, int],
+    file: t.Union[str, "os.PathLike[t.AnyStr]", int],
     mode: str,
     encoding: t.Optional[str],
     errors: t.Optional[str],
-) -> t.IO:
+) -> t.IO[t.Any]:
     """Handles not passing ``encoding`` and ``errors`` in binary mode."""
     if "b" in mode:
         return open(file, mode)
@@ -385,7 +385,7 @@ def open_stream(
     encoding: t.Optional[str] = None,
     errors: t.Optional[str] = "strict",
     atomic: bool = False,
-) -> t.Tuple[t.IO, bool]:
+) -> t.Tuple[t.IO[t.Any], bool]:
     binary = "b" in mode
 
     # Standard streams first. These are simple because they ignore the
@@ -456,11 +456,11 @@ def open_stream(
 
     f = _wrap_io_open(fd, mode, encoding, errors)
     af = _AtomicFile(f, tmp_filename, os.path.realpath(filename))
-    return t.cast(t.IO, af), True
+    return t.cast(t.IO[t.Any], af), True
 
 
 class _AtomicFile:
-    def __init__(self, f: t.IO, tmp_filename: str, real_filename: str) -> None:
+    def __init__(self, f: t.IO[t.Any], tmp_filename: str, real_filename: str) -> None:
         self._f = f
         self._tmp_filename = tmp_filename
         self._real_filename = real_filename
@@ -483,7 +483,7 @@ class _AtomicFile:
     def __enter__(self) -> "_AtomicFile":
         return self
 
-    def __exit__(self, exc_type, exc_value, tb):  # type: ignore
+    def __exit__(self, exc_type: t.Optional[t.Type[BaseException]], *_: t.Any) -> None:
         self.close(delete=exc_type is not None)
 
     def __repr__(self) -> str:
@@ -494,7 +494,7 @@ def strip_ansi(value: str) -> str:
     return _ansi_re.sub("", value)
 
 
-def _is_jupyter_kernel_output(stream: t.IO) -> bool:
+def _is_jupyter_kernel_output(stream: t.IO[t.Any]) -> bool:
     while isinstance(stream, (_FixupStream, _NonClosingTextIOWrapper)):
         stream = stream._stream
 
@@ -502,7 +502,7 @@ def _is_jupyter_kernel_output(stream: t.IO) -> bool:
 
 
 def should_strip_ansi(
-    stream: t.Optional[t.IO] = None, color: t.Optional[bool] = None
+    stream: t.Optional[t.IO[t.Any]] = None, color: t.Optional[bool] = None
 ) -> bool:
     if color is None:
         if stream is None:
@@ -576,7 +576,7 @@ def term_len(x: str) -> int:
     return len(strip_ansi(x))
 
 
-def isatty(stream: t.IO) -> bool:
+def isatty(stream: t.IO[t.Any]) -> bool:
     try:
         return stream.isatty()
     except Exception:

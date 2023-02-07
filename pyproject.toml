@@ -1,0 +1,63 @@
+[project]
+name = "click"
+description = "Composable command line interface toolkit"
+readme = "README.rst"
+license = {text = "BSD-3-Clause"}
+maintainers = [{name = "Pallets", email = "contact@palletsprojects.com"}]
+authors = [{name = "Armin Ronacher", email = "armin.ronacher@active-4.com"}]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "colorama; platform_system == 'Windows'",
+    "importlib-metadata; python_version < '3.8'",
+]
+dynamic = ["version"]
+
+[project.urls]
+Donate = "https://palletsprojects.com/donate"
+Documentation = "https://click.palletsprojects.com/"
+Changes = "https://click.palletsprojects.com/changes/"
+"Source Code" = "https://github.com/pallets/click/"
+"Issue Tracker" = "https://github.com/pallets/click/issues/"
+Twitter = "https://twitter.com/PalletsTeam"
+Chat = "https://discord.gg/pallets"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+version = {attr = "click.__version__"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+branch = true
+source = ["click", "tests"]
+
+[tool.coverage.paths]
+source = ["src", "*/site-packages"]
+
+[tool.mypy]
+python_version = "3.7"
+files = ["src/click"]
+show_error_codes = true
+pretty = true
+strict = true
+local_partial_types = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = [
+    "colorama.*",
+    "importlib_metadata.*"
+]
+ignore_missing_imports = true
