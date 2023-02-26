@@ -33,7 +33,7 @@ Options:
 Bạn có thể lấy thư viện trực tiếp từ PyPI:
 
 pip install click
-Tài liệu 
+Tài liệu
 Phần tài liệu này hướng dẫn bạn qua tất cả các kiểu sử dụng của thư viện.
 
 Tại sao nhấp chuột?
