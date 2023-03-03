@@ -303,7 +303,7 @@ class BashComplete(ShellComplete):
         import subprocess
 
         output = subprocess.run(
-            ["bash", "-c", "echo ${BASH_VERSION}"], stdout=subprocess.PIPE
+            ["bash", "-c", 'echo "${BASH_VERSION}"'], stdout=subprocess.PIPE
         )
         match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
 

@@ -11,6 +11,7 @@ Unreleased
     :issue:`2398`
 -   Fix return value and type signature of `shell_completion.add_completion_class`
     function. :pr:`2421`
+-   Bash version detection doesn't fail on Windows. :issue:`2461`
 
 
 Version 8.1.3
