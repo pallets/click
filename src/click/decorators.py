@@ -226,12 +226,10 @@ def command(
         params = attr_params if attr_params is not None else []
 
         try:
-            decorator_params = f.__click_params__  # type: ignore
+            params.extend(reversed(f.__click_params__))  # type: ignore
+            del f.__click_params__  # type: ignore
         except AttributeError:
             pass
-        else:
-            del f.__click_params__  # type: ignore
-            params.extend(reversed(decorator_params))
 
         if attrs.get("help") is None:
             attrs["help"] = f.__doc__
