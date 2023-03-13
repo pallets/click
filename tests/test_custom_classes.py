@@ -118,11 +118,15 @@ def test_bound_method(runner):
     methods should be registered as commands inside the __init__ so they can capture
     the reference to `self`
     """
+
     class Test(click.MultiCommand):
         def __init__(self, attribute="default"):
             super().__init__()
             self.attribute = attribute
-            self.commands = {"echo": click.command(self.echo), "shout": click.command(self.shout)}
+            self.commands = {
+                "echo": click.command(self.echo),
+                "shout": click.command(self.shout),
+            }
 
         def echo(self):
             click.echo(self.attribute)
@@ -143,9 +147,9 @@ def test_bound_method(runner):
     result = runner.invoke(cli_default, "echo")
     assert result.output == "default\n"
 
-    cli_test = Test("test")
+    cli_test = Test("tester")
     result = runner.invoke(cli_test, "echo")
-    assert result.output == "test\n"
+    assert result.output == "tester\n"
 
     result = runner.invoke(cli_test, ["shout", "testthis"])
     assert result.output == "TESTTHIS\n"
