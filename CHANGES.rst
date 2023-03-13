@@ -1,5 +1,14 @@
 .. currentmodule:: click
 
+Version 8.2.1
+-------------
+
+Unreleased
+
+-   Add support for method based commands
+    :issue:`601`
+
+
 Version 8.2.0
 -------------
 
