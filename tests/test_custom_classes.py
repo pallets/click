@@ -110,3 +110,45 @@ def test_group_group_class_self(runner):
     group = CustomGroup()
     subgroup = group.group()(lambda: None)
     assert type(subgroup) is CustomGroup
+
+
+def test_bound_method(runner):
+    """
+    A custom MultiCommand with ``method Commands``
+    methods should be registered as commands inside the __init__ so they can capture
+    the reference to `self`
+    """
+    class Test(click.MultiCommand):
+        def __init__(self, attribute="default"):
+            super().__init__()
+            self.attribute = attribute
+            self.commands = {"echo": click.command(self.echo), "shout": click.command(self.shout)}
+
+        def echo(self):
+            click.echo(self.attribute)
+
+        @click.argument("message", type=str)
+        @click.option("--capitalize/--no-capitalize", default=False)
+        def shout(self, message, capitalize):
+            loud_message = message.capitalize() if capitalize else message.upper()
+            click.echo(loud_message)
+
+        def get_command(self, ctx, cmd_name):
+            return self.commands.get(cmd_name)
+
+        def list_commands(self, ctx):
+            return [*self.commands.keys()]
+
+    cli_default = Test()
+    result = runner.invoke(cli_default, "echo")
+    assert result.output == "default\n"
+
+    cli_test = Test("test")
+    result = runner.invoke(cli_test, "echo")
+    assert result.output == "test\n"
+
+    result = runner.invoke(cli_test, ["shout", "testthis"])
+    assert result.output == "TESTTHIS\n"
+
+    result = runner.invoke(cli_test, ["shout", "--capitalize", "testthis"])
+    assert result.output == "Testthis\n"
