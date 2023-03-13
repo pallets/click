@@ -1,13 +1,5 @@
 .. currentmodule:: click
 
-Version 8.2.1
--------------
-
-Unreleased
-
--   Add support for method based commands
-    :issue:`601`
-
 
 Version 8.2.0
 -------------
@@ -25,6 +17,8 @@ Unreleased
 
 -   Improve type hinting for decorators and give all generic types parameters.
     :issue:`2398`
+-   Add support for method based commands
+    :issue:`601`
 
 
 Version 8.1.3
