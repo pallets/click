@@ -1,5 +1,6 @@
 import os.path
 import pathlib
+import typing as t
 
 import pytest
 from conftest import symlinks_supported
@@ -128,3 +129,17 @@ def test_path_resolve_symlink(tmp_path, runner):
     rel_link.symlink_to(pathlib.Path("..") / "file")
     rel_rv = path_type.convert(os.fsdecode(rel_link), param, ctx)
     assert rel_rv == test_file_str
+
+
+def test_sensible_error_on_optional():
+    with pytest.raises(TypeError) as err:
+
+        @click.command()
+        @click.option("--f", type=t.Optional[int], default=None)
+        def cli(f):
+            click.echo(f"F:[{f}]")
+
+    assert (
+        err.value.args[0]
+        == "Attempted to use a generic type such as Optional as a type parameter."
+    )

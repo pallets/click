@@ -1024,6 +1024,11 @@ def convert_type(ty: t.Optional[t.Any], default: t.Optional[t.Any] = None) -> Pa
     if guessed_type:
         return STRING
 
+    if hasattr(ty, "__origin__"):  # type is _GenericAlias
+        raise TypeError(
+            "Attempted to use a generic type such as Optional as a type parameter."
+        )
+
     if __debug__:
         try:
             if issubclass(ty, ParamType):
