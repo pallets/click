@@ -851,7 +851,7 @@ class Path(ParamType):
                 # until Python 3.8. Use pathlib for now.
                 import pathlib
 
-                rv = os.fsdecode(pathlib.Path(rv).resolve())
+                rv = os.fspath(pathlib.Path(os.fsdecode(rv)).resolve())
 
             try:
                 st = os.stat(rv)

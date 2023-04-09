@@ -85,23 +85,28 @@ def test_cast_multi_default(runner, nargs, multiple, default, expect):
 
 
 @pytest.mark.parametrize(
-    ("cls", "expect"),
+    ("type", "value", "expect"),
     [
-        (None, "a/b/c.txt"),
-        (str, "a/b/c.txt"),
-        (bytes, b"a/b/c.txt"),
-        (pathlib.Path, pathlib.Path("a", "b", "c.txt")),
+        (click.Path(resolve_path=True), "foo/bar", os.path.realpath("foo/bar")),
+        (click.Path(resolve_path=True), b"foo/bar", os.path.realpath("foo/bar")),
+        (
+            click.Path(resolve_path=True),
+            pathlib.Path("foo/bar"),
+            os.path.realpath("foo/bar"),
+        ),
+        (click.Path(), "foo/bar", "foo/bar"),
+        (click.Path(), b"foo/bar", b"foo/bar"),
+        (click.Path(path_type=None), "foo/bar", "foo/bar"),
+        (click.Path(path_type=None), b"foo/bar", b"foo/bar"),
+        (click.Path(path_type=str), "foo/bar", "foo/bar"),
+        (click.Path(path_type=str), b"foo/bar", "foo/bar"),
+        (click.Path(path_type=bytes), "foo/bar", b"foo/bar"),
+        (click.Path(path_type=bytes), b"foo/bar", b"foo/bar"),
+        (click.Path(path_type=pathlib.Path), "foo/bar", pathlib.Path("foo/bar")),
     ],
 )
-def test_path_type(runner, cls, expect):
-    cli = click.Command(
-        "cli",
-        params=[click.Argument(["p"], type=click.Path(path_type=cls))],
-        callback=lambda p: p,
-    )
-    result = runner.invoke(cli, ["a/b/c.txt"], standalone_mode=False)
-    assert result.exception is None
-    assert result.return_value == expect
+def test_path(type, value, expect):
+    assert type.convert(value, None, None) == expect
 
 
 @pytest.mark.skipif(
