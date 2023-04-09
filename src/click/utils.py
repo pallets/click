@@ -11,7 +11,6 @@ from ._compat import _default_text_stdout
 from ._compat import _find_binary_writer
 from ._compat import auto_wrap_for_ansi
 from ._compat import binary_streams
-from ._compat import get_filesystem_encoding
 from ._compat import open_stream
 from ._compat import should_strip_ansi
 from ._compat import strip_ansi
@@ -48,7 +47,7 @@ def make_str(value: t.Any) -> str:
     """Converts a value into a valid string."""
     if isinstance(value, bytes):
         try:
-            return value.decode(get_filesystem_encoding())
+            return value.decode(sys.getfilesystemencoding())
         except UnicodeError:
             return value.decode("utf-8", "replace")
     return str(value)

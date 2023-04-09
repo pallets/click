@@ -1,12 +1,12 @@
 import os
 import stat
+import sys
 import typing as t
 from datetime import datetime
 from gettext import gettext as _
 from gettext import ngettext
 
 from ._compat import _get_argv_encoding
-from ._compat import get_filesystem_encoding
 from ._compat import open_stream
 from .exceptions import BadParameter
 from .utils import LazyFile
@@ -207,7 +207,7 @@ class StringParamType(ParamType):
             try:
                 value = value.decode(enc)
             except UnicodeError:
-                fs_enc = get_filesystem_encoding()
+                fs_enc = sys.getfilesystemencoding()
                 if fs_enc != enc:
                     try:
                         value = value.decode(fs_enc)

@@ -17,10 +17,6 @@ auto_wrap_for_ansi: t.Optional[t.Callable[[t.TextIO], t.TextIO]] = None
 _ansi_re = re.compile(r"\033\[[;?0-9]*[a-zA-Z]")
 
 
-def get_filesystem_encoding() -> str:
-    return sys.getfilesystemencoding() or sys.getdefaultencoding()
-
-
 def _make_text_stream(
     stream: t.BinaryIO,
     encoding: t.Optional[str],
@@ -564,7 +560,7 @@ if sys.platform.startswith("win") and WIN:
 else:
 
     def _get_argv_encoding() -> str:
-        return getattr(sys.stdin, "encoding", None) or get_filesystem_encoding()
+        return getattr(sys.stdin, "encoding", None) or sys.getfilesystemencoding()
 
     def _get_windows_console_stream(
         f: t.TextIO, encoding: t.Optional[str], errors: t.Optional[str]
