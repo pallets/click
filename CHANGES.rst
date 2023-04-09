@@ -26,6 +26,8 @@ Unreleased
     setting ``default=()``. :issue:`2246, 2292, 2295`
 -   Make the decorators returned by ``@argument()`` and ``@option()`` reusable when the
     ``cls`` parameter is used. :issue:`2294`
+-   Don't fail when writing filenames to streams with strict errors. Replace invalid
+    bytes with the replacement character (``�``). :issue:`2395`
 
 
 Version 8.1.3

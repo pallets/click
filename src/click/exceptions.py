@@ -1,10 +1,10 @@
-import os
 import typing as t
 from gettext import gettext as _
 from gettext import ngettext
 
 from ._compat import get_text_stderr
 from .utils import echo
+from .utils import format_filename
 
 if t.TYPE_CHECKING:
     from .core import Command
@@ -262,7 +262,7 @@ class FileError(ClickException):
             hint = _("unknown error")
 
         super().__init__(hint)
-        self.ui_filename: str = os.fsdecode(filename)
+        self.ui_filename: str = format_filename(filename)
         self.filename = filename
 
     def format_message(self) -> str:
