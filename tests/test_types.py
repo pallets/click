@@ -115,7 +115,7 @@ def test_path(type, value, expect):
 )
 def test_path_resolve_symlink(tmp_path, runner):
     test_file = tmp_path / "file"
-    test_file_str = os.fsdecode(test_file)
+    test_file_str = os.fspath(test_file)
     test_file.write_text("")
 
     path_type = click.Path(resolve_path=True)
@@ -127,10 +127,74 @@ def test_path_resolve_symlink(tmp_path, runner):
 
     abs_link = test_dir / "abs"
     abs_link.symlink_to(test_file)
-    abs_rv = path_type.convert(os.fsdecode(abs_link), param, ctx)
+    abs_rv = path_type.convert(os.fspath(abs_link), param, ctx)
     assert abs_rv == test_file_str
 
     rel_link = test_dir / "rel"
     rel_link.symlink_to(pathlib.Path("..") / "file")
-    rel_rv = path_type.convert(os.fsdecode(rel_link), param, ctx)
+    rel_rv = path_type.convert(os.fspath(rel_link), param, ctx)
     assert rel_rv == test_file_str
+
+
+@pytest.mark.parametrize(
+    "type",
+    [
+        click.File(mode="r"),
+        click.File(mode="r", lazy=True),
+        click.File(mode="rb"),
+        click.File(mode="rb", lazy=True),
+    ],
+)
+def test_file_read(type, tmp_path):
+    filename = tmp_path / "foo"
+    value = "Hello, world!"
+
+    if "b" in type.mode:
+        value = value.encode("utf-8")
+        filename.write_bytes(value)
+    else:
+        filename.write_text(value)
+
+    with type.convert(filename, None, None) as f:
+        assert f.read() == value
+
+    with type.convert(os.fsencode(filename), None, None) as f:
+        assert f.read() == value
+
+    with type.convert(str(filename), None, None) as f:
+        assert f.read() == value
+
+
+@pytest.mark.parametrize("mode", ["w", "wb"])
+@pytest.mark.parametrize("lazy", [True, False], ids=["lazy", "eager"])
+@pytest.mark.parametrize("atomic", [True, False], ids=["atomic", "non-atomic"])
+def test_file_write(tmp_path, mode, lazy, atomic):
+    type = click.File(mode=mode, lazy=lazy, atomic=atomic)
+    value = "Hello, world!"
+    read_mode = "r"
+
+    if "b" in type.mode:
+        value = value.encode("utf-8")
+        read_mode = "rb"
+
+    filename_path = tmp_path / "foo_path"
+    filename_bytes = os.fsencode(tmp_path / "foo_bytes")
+    filename_str = str(tmp_path / "foo_str")
+
+    with type.convert(filename_path, None, None) as f:
+        f.write(value)
+
+    with open(filename_path, read_mode) as f:
+        assert f.read() == value
+
+    with type.convert(filename_bytes, None, None) as f:
+        f.write(value)
+
+    with open(filename_bytes, read_mode) as f:
+        assert f.read() == value
+
+    with type.convert(filename_str, None, None) as f:
+        f.write(value)
+
+    with open(filename_str, read_mode) as f:
+        assert f.read() == value

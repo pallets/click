@@ -103,7 +103,7 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
     return " ".join(words[:i]) + "..."
 
 
-class LazyFile:
+class LazyFile(t.Generic[t.AnyStr]):
     """A lazy file works like a regular file but it does not fully open
     the file but it does perform some basic checks early to see if the
     filename parameter does make sense.  This is useful for safely opening
@@ -112,13 +112,14 @@ class LazyFile:
 
     def __init__(
         self,
-        filename: str,
+        filename: t.Union[t.AnyStr, "os.PathLike[t.AnyStr]"],
         mode: str = "r",
         encoding: t.Optional[str] = None,
         errors: t.Optional[str] = "strict",
         atomic: bool = False,
     ):
-        self.name = filename
+        filename = os.fspath(filename)
+        self.name: t.AnyStr = filename
         self.mode = mode
         self.encoding = encoding
         self.errors = errors
@@ -126,7 +127,7 @@ class LazyFile:
         self._f: t.Optional[t.IO[t.Any]]
         self.should_close: bool
 
-        if filename == "-":
+        if os.fsdecode(filename) == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
         else:
             if "r" in mode:
@@ -143,7 +144,7 @@ class LazyFile:
     def __repr__(self) -> str:
         if self._f is not None:
             return repr(self._f)
-        return f"<unopened file '{self.name}' {self.mode}>"
+        return f"<unopened file '{format_filename(self.name)}' {self.mode}>"
 
     def open(self) -> t.IO[t.Any]:
         """Opens the file if it's not yet open.  This call might fail with
@@ -175,7 +176,7 @@ class LazyFile:
         if self.should_close:
             self.close()
 
-    def __enter__(self) -> "LazyFile":
+    def __enter__(self) -> "LazyFile[t.AnyStr]":
         return self
 
     def __exit__(
@@ -397,7 +398,8 @@ def open_file(
 
 
 def format_filename(
-    filename: t.Union[str, bytes, "os.PathLike[t.AnyStr]"], shorten: bool = False
+    filename: t.Union[str, bytes, "os.PathLike[str]", "os.PathLike[bytes]"],
+    shorten: bool = False,
 ) -> str:
     """Formats a filename for user display.  The main purpose of this
     function is to ensure that the filename can be displayed at all.  This

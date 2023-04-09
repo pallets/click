@@ -363,7 +363,7 @@ def get_text_stderr(
 
 
 def _wrap_io_open(
-    file: t.Union[str, "os.PathLike[str]", int],
+    file: t.Union[t.AnyStr, "os.PathLike[t.AnyStr]", int],
     mode: str,
     encoding: t.Optional[str],
     errors: t.Optional[str],
@@ -376,16 +376,17 @@ def _wrap_io_open(
 
 
 def open_stream(
-    filename: str,
+    filename: t.Union[t.AnyStr, "os.PathLike[t.AnyStr]"],
     mode: str = "r",
     encoding: t.Optional[str] = None,
     errors: t.Optional[str] = "strict",
     atomic: bool = False,
 ) -> t.Tuple[t.IO[t.Any], bool]:
     binary = "b" in mode
+    filename = os.fspath(filename)
 
     # Standard streams first. These are simple because they ignore the
-    # atomic flag. Use fsdecode to handle Path("-").
+    # atomic flag.
     if os.fsdecode(filename) == "-":
         if any(m in mode for m in ["w", "a", "x"]):
             if binary:
@@ -429,10 +430,13 @@ def open_stream(
     if binary:
         flags |= getattr(os, "O_BINARY", 0)
 
+    template: t.AnyStr = (
+        ".__atomic-write%08x" if isinstance(filename, str) else b".__atomic-write%08x"
+    )
     while True:
         tmp_filename = os.path.join(
             os.path.dirname(filename),
-            f".__atomic-write{random.randrange(1 << 32):08x}",
+            template % random.randrange(1 << 32),
         )
         try:
             fd = os.open(tmp_filename, flags, 0o666 if perm is None else perm)
@@ -455,15 +459,17 @@ def open_stream(
     return t.cast(t.IO[t.Any], af), True
 
 
-class _AtomicFile:
-    def __init__(self, f: t.IO[t.Any], tmp_filename: str, real_filename: str) -> None:
+class _AtomicFile(t.Generic[t.AnyStr]):
+    def __init__(
+        self, f: t.IO[t.Any], tmp_filename: t.AnyStr, real_filename: t.AnyStr
+    ) -> None:
         self._f = f
-        self._tmp_filename = tmp_filename
-        self._real_filename = real_filename
+        self._tmp_filename: t.AnyStr = tmp_filename
+        self._real_filename: t.AnyStr = real_filename
         self.closed = False
 
     @property
-    def name(self) -> str:
+    def name(self) -> t.AnyStr:
         return self._real_filename
 
     def close(self, delete: bool = False) -> None:
@@ -476,7 +482,7 @@ class _AtomicFile:
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._f, name)
 
-    def __enter__(self) -> "_AtomicFile":
+    def __enter__(self) -> "_AtomicFile[t.AnyStr]":
         return self
 
     def __exit__(self, exc_type: t.Optional[t.Type[BaseException]], *_: t.Any) -> None:
