@@ -412,8 +412,17 @@ def format_filename(
     """
     if shorten:
         filename = os.path.basename(filename)
+    else:
+        filename = os.fspath(filename)
 
-    return os.fsdecode(filename)
+    if isinstance(filename, bytes):
+        filename = filename.decode(sys.getfilesystemencoding(), "replace")
+    else:
+        filename = filename.encode("utf-8", "surrogateescape").decode(
+            "utf-8", "replace"
+        )
+
+    return filename
 
 
 def get_app_dir(app_name: str, roaming: bool = True, force_posix: bool = False) -> str:

@@ -101,7 +101,12 @@ def test_filename_formatting():
 
     # filesystem encoding on windows permits this.
     if not WIN:
-        assert click.format_filename(b"/x/foo\xff.txt", shorten=True) == "foo\udcff.txt"
+        rv = click.format_filename(b"/x/foo\xff.txt", shorten=True)
+        assert rv == "foo\ufffd.txt"
+
+        # We want format_filename to produce a string that can be printed to
+        # stdout even in errors="strict" mode, check that here.
+        assert rv.encode("utf-8", "strict") == b"foo\xef\xbf\xbd.txt"
 
 
 def test_prompts(runner):
