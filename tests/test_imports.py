@@ -48,6 +48,7 @@ ALLOWED_IMPORTS = {
     "typing",
     "types",
     "gettext",
+    "pathlib",
 }
 
 if WIN:

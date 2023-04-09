@@ -103,6 +103,7 @@ def test_cast_multi_default(runner, nargs, multiple, default, expect):
         (click.Path(path_type=bytes), "foo/bar", b"foo/bar"),
         (click.Path(path_type=bytes), b"foo/bar", b"foo/bar"),
         (click.Path(path_type=pathlib.Path), "foo/bar", pathlib.Path("foo/bar")),
+        (click.Path(path_type=pathlib.Path), b"foo/bar", pathlib.Path("foo/bar")),
     ],
 )
 def test_path(type, value, expect):

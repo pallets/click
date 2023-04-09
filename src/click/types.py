@@ -1,4 +1,5 @@
 import os
+import pathlib
 import stat
 import sys
 import typing as t
@@ -833,6 +834,8 @@ class Path(ParamType):
                 rv = os.fsdecode(rv)
             elif self.type is bytes:
                 rv = os.fsencode(rv)
+            elif issubclass(self.type, pathlib.PurePath):
+                rv = self.type(os.fsdecode(rv))
             else:
                 rv = self.type(rv)
 
@@ -849,8 +852,6 @@ class Path(ParamType):
             if self.resolve_path:
                 # os.path.realpath doesn't resolve symlinks on Windows
                 # until Python 3.8. Use pathlib for now.
-                import pathlib
-
                 rv = os.fspath(pathlib.Path(os.fsdecode(rv)).resolve())
 
             try:
