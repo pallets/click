@@ -2774,6 +2774,7 @@ class Option(Parameter):
             show_default = ctx.show_default
 
         if show_default_is_str or (show_default and (default_value is not None)):
+            default_string = None
             if show_default_is_str:
                 default_string = f"({self.show_default})"
             elif isinstance(default_value, (list, tuple)):
@@ -2787,11 +2788,11 @@ class Option(Parameter):
                     (self.opts if self.default else self.secondary_opts)[0]
                 )[1]
             elif self.is_bool_flag and not self.secondary_opts and not default_value:
-                default_string = ""
+                default_string = None
             else:
                 default_string = str(default_value)
 
-            if default_string:
+            if default_string is not None:
                 extra.append(_("default: {default}").format(default=default_string))
 
         if (
