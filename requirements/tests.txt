@@ -5,17 +5,17 @@
 #
 #    pip-compile-multi
 #
-attrs==22.2.0
+colorama==0.4.6
     # via pytest
-exceptiongroup==1.1.0
+exceptiongroup==1.1.1
     # via pytest
-iniconfig==1.1.1
+iniconfig==2.0.0
     # via pytest
-packaging==22.0
+packaging==23.1
     # via pytest
 pluggy==1.0.0
     # via pytest
-pytest==7.2.0
-    # via -r requirements/tests.in
+pytest==7.3.1
+    # via -r requirements\tests.in
 tomli==2.0.1
     # via pytest

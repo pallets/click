@@ -2003,7 +2003,7 @@ class Parameter:
                         argument.  This is a list of flags or argument
                         names.
     :param type: the type that should be used.  Either a :class:`ParamType`
-                 or a Python type.  The later is converted into the former
+                 or a Python type.  The latter is converted into the former
                  automatically if supported.
     :param required: controls if this is optional or not.
     :param default: the default value if omitted.  This can also be a callable,
