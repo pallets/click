@@ -1,4 +1,5 @@
 import sys
+from unittest import mock
 
 import pytest
 
@@ -86,9 +87,12 @@ def test_bytes_args(runner, monkeypatch):
         ), "UTF-8 encoded argument should be implicitly converted to Unicode"
 
     # Simulate empty locale environment variables
-    monkeypatch.setattr(sys.stdin, "encoding", "utf-8")
     monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "utf-8")
     monkeypatch.setattr(sys, "getdefaultencoding", lambda: "utf-8")
+    # sys.stdin.encoding is readonly, needs some extra effort to patch.
+    stdin = mock.Mock(wraps=sys.stdin)
+    stdin.encoding = "utf-8"
+    monkeypatch.setattr(sys, "stdin", stdin)
 
     runner.invoke(
         from_bytes,
