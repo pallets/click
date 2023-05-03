@@ -5,11 +5,11 @@
 #
 #    pip-compile-multi
 #
-mypy==1.2.0
-    # via -r requirements\typing.in
-mypy-extensions==1.0.0
+mypy==0.991
+    # via -r requirements/typing.in
+mypy-extensions==0.4.3
     # via mypy
 tomli==2.0.1
     # via mypy
-typing-extensions==4.5.0
+typing-extensions==4.4.0
     # via mypy
