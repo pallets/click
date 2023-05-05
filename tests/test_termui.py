@@ -447,3 +447,13 @@ def test_confirmation_prompt(runner, prompt, input, default, expect):
 
     if prompt == "Confirm Password":
         assert "Confirm Password: " in result.output
+
+
+def test_show_default_false_hides_prompt(runner):
+    @click.command()
+    @click.option("--arg1", show_default=False, prompt=True, default="my-default-value")
+    def cmd(arg1):
+        pass
+
+    result = runner.invoke(cmd, input="my-input", standalone_mode=False)
+    assert "my-default-value" not in result.output

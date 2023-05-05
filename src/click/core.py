@@ -2803,6 +2803,7 @@ class Option(Parameter):
             show_choices=self.show_choices,
             confirmation_prompt=self.confirmation_prompt,
             value_proc=lambda x: self.process_value(ctx, x),
+            show_default=(False if self.show_default is False else True),
         )
 
     def resolve_envvar_value(self, ctx: Context) -> str | None:

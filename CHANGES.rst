@@ -34,6 +34,7 @@ Unreleased
 -   Show the ``types.ParamType.name`` for ``types.Choice`` options within
     ``--help`` message if ``show_choices=False`` is specified.
     :issue:`2356`
+-   Do not display values in prompts when `show_default=False` on Options
 
 
 Version 8.1.8
