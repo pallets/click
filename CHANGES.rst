@@ -7,6 +7,7 @@ Unreleased
 
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
     :pr:`326`
+-   Do not display values in prompts when `show_default=False` on Options
 
 
 Version 8.1.4
