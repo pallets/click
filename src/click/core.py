@@ -949,7 +949,7 @@ class BaseCommand:
         """Given a context, this invokes the command.  The default
         implementation is raising a not implemented error.
         """
-        raise NotImplementedError("Base commands are not invokable by default")
+        raise NotImplementedError("Base commands are not invocable by default")
 
     def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
         """Return a list of completions for the incomplete value. Looks
@@ -1778,7 +1778,7 @@ class Group(MultiCommand):
         :class:`BaseCommand`.
 
     .. versionchanged:: 8.0
-        The ``commmands`` argument can be a list of command objects.
+        The ``commands`` argument can be a list of command objects.
     """
 
     #: If set, this is used by the group's :meth:`command` decorator
