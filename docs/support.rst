@@ -2,7 +2,7 @@
 
 =======================
 Support and Stability
-======================= 
+=======================
 
 Click is a mature projects with many uses in production, as such it prioritizes backward capability and stability. For feature requests that fall outside that core project see :ref:`click-contrib`.
 
@@ -30,8 +30,8 @@ organization, they are still projects separate from Click.
 .. _click-contrib: https://github.com/click-contrib/
 
 
-Python Version Support 
+Python Version Support
 --------------------------
 Click supports `the same versions as python <https://devguide.python.org/versions/>`_. Currently, Click supports Python >= 3.7.
 
-Currently, no fixes are backported to earlier versions. 
+Currently, no fixes are backported to earlier versions.
