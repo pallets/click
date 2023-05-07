@@ -4,10 +4,10 @@ from click.core import Argument
 from click.core import Command
 from click.core import Group
 from click.core import Option
+from click.shell_completion import _available_shells
+from click.shell_completion import add_completion_class
 from click.shell_completion import CompletionItem
 from click.shell_completion import ShellComplete
-from click.shell_completion import add_completion_class
-from click.shell_completion import _available_shells
 from click.types import Choice
 from click.types import File
 from click.types import Path
