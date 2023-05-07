@@ -4,7 +4,7 @@
 Contributing
 ======================
 
-We are happy that you are thinking about contributing. 
+We are happy that you are thinking about contributing.
 
 For general information about contributing checkout Beeware_. Their materials are very good and align with our principles. The next sections contains technical details on how to contribute to Click, such as how to build the docs locally.
 
