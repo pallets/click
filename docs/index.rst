@@ -6,7 +6,7 @@ Welcome to Click
 .. image:: _static/click-logo.png
     :align: center
     :scale: 50%
-    :target: https://palletsprojects.com/p/click/
+    :target: https://click.palletsprojects.com/en/8.1.x/
 
 Click is a Python package for creating beautiful command line interfaces
 in a composable way with as little code as necessary.  It's the "Command
@@ -101,7 +101,9 @@ Miscellaneous Pages
 .. toctree::
    :maxdepth: 2
 
-   contrib
-   upgrading
+   contributing
    license
+   support
+   upgrading
    changes
+   
