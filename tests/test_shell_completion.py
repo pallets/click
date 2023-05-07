@@ -6,6 +6,8 @@ from click.core import Group
 from click.core import Option
 from click.shell_completion import CompletionItem
 from click.shell_completion import ShellComplete
+from click.shell_completion import add_completion_class
+from click.shell_completion import _available_shells
 from click.types import Choice
 from click.types import File
 from click.types import Path
@@ -342,3 +344,25 @@ def test_choice_case_sensitive(value, expect):
     )
     completions = _get_words(cli, ["-a"], "a")
     assert completions == expect
+
+
+def test_add_completion_class():
+    _available_shells.clear()
+
+    class MyshComplete(ShellComplete):
+        name = "mysh"
+        source_template = "dummy source"
+
+    assert add_completion_class(MyshComplete) is MyshComplete
+    assert _available_shells[MyshComplete.name] is MyshComplete
+
+
+def test_add_completion_class_decorator():
+    _available_shells.clear()
+
+    @add_completion_class
+    class MyshComplete(ShellComplete):
+        name = "mysh"
+        source_template = "dummy source"
+
+    assert _available_shells[MyshComplete.name] is MyshComplete
