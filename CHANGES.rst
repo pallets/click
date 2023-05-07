@@ -1,5 +1,23 @@
 .. currentmodule:: click
 
+Version 8.2.0
+-------------
+
+Unreleased
+
+-   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
+    :pr:`326`
+
+
+Version 8.1.4
+-------------
+
+Unreleased
+
+-   Improve type hinting for decorators and give all generic types parameters.
+    :issue:`2398`
+
+
 Version 8.1.3
 -------------
 
