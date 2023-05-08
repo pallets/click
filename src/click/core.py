@@ -2795,6 +2795,12 @@ class Option(Parameter):
         if self.is_bool_flag:
             return confirm(self.prompt, default)
 
+        # If show_default is set to True/False, provide this to `prompt` as well. For
+        # non-bool values of `show_default`, we use `prompt`'s default behavior
+        prompt_kwargs: t.Any = {}
+        if type(self.show_default) is bool:
+            prompt_kwargs["show_default"] = self.show_default
+
         return prompt(
             self.prompt,
             default=default,
@@ -2803,7 +2809,7 @@ class Option(Parameter):
             show_choices=self.show_choices,
             confirmation_prompt=self.confirmation_prompt,
             value_proc=lambda x: self.process_value(ctx, x),
-            show_default=(False if self.show_default is False else True),
+            **prompt_kwargs,
         )
 
     def resolve_envvar_value(self, ctx: Context) -> str | None:

@@ -455,6 +455,7 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
     def cmd(arg1):
         pass
 
-    # Confirm that the default value is not included in the output when `show_default` is False
+    # Confirm that the default value is not included in the output when `show_default`
+    # is False
     result = runner.invoke(cmd, input="my-input", standalone_mode=False)
     assert "my-default-value" not in result.output
