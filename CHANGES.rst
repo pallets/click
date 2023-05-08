@@ -5,6 +5,8 @@ Version 8.1.4
 
 Unreleased
 
+-   Replace all ``typing.Dict`` occurrences to ``typing.MutableMapping`` for
+    parameter hints.  :issue:`2255`
 -   Improve type hinting for decorators and give all generic types parameters.
     :issue:`2398`
 
