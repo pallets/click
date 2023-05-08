@@ -4,7 +4,7 @@ from click.core import Argument
 from click.core import Command
 from click.core import Group
 from click.core import Option
-from click.shell_completion import _available_shells
+import click.shell_completion
 from click.shell_completion import add_completion_class
 from click.shell_completion import CompletionItem
 from click.shell_completion import ShellComplete
@@ -346,23 +346,28 @@ def test_choice_case_sensitive(value, expect):
     assert completions == expect
 
 
-def test_add_completion_class():
-    _available_shells.clear()
+@pytest.fixture()
+def _restore_available_shells(tmpdir):
+    prev_available_shells = click.shell_completion._available_shells
+    yield
+    click.shell_completion._available_shells = prev_available_shells
 
+
+@pytest.mark.usefixtures("_restore_available_shells")
+def test_add_completion_class():
     class MyshComplete(ShellComplete):
         name = "mysh"
         source_template = "dummy source"
 
     assert add_completion_class(MyshComplete) is MyshComplete
-    assert _available_shells[MyshComplete.name] is MyshComplete
+    assert click.shell_completion._available_shells[MyshComplete.name] is MyshComplete
 
 
+@pytest.mark.usefixtures("_restore_available_shells")
 def test_add_completion_class_decorator():
-    _available_shells.clear()
-
     @add_completion_class
     class MyshComplete(ShellComplete):
         name = "mysh"
         source_template = "dummy source"
 
-    assert _available_shells[MyshComplete.name] is MyshComplete
+    assert click.shell_completion._available_shells[MyshComplete.name] is MyshComplete
