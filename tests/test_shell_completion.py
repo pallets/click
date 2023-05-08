@@ -348,9 +348,11 @@ def test_choice_case_sensitive(value, expect):
 
 @pytest.fixture()
 def _restore_available_shells(tmpdir):
-    prev_available_shells = click.shell_completion._available_shells
+    prev_available_shells = click.shell_completion._available_shells.copy()
+    click.shell_completion._available_shells.clear()
     yield
-    click.shell_completion._available_shells = prev_available_shells
+    click.shell_completion._available_shells.clear()
+    click.shell_completion._available_shells.update(prev_available_shells)
 
 
 @pytest.mark.usefixtures("_restore_available_shells")
