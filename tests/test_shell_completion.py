@@ -1,10 +1,10 @@
 import pytest
 
+import click.shell_completion
 from click.core import Argument
 from click.core import Command
 from click.core import Group
 from click.core import Option
-import click.shell_completion
 from click.shell_completion import add_completion_class
 from click.shell_completion import CompletionItem
 from click.shell_completion import ShellComplete
