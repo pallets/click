@@ -376,6 +376,32 @@ def test_add_completion_class():
 
 
 @pytest.mark.usefixtures("_restore_available_shells")
+def test_add_completion_class_with_name():
+    # At first, "mysh" is not in available shells
+    assert "mysh" not in click.shell_completion._available_shells
+    assert "not_mysh" not in click.shell_completion._available_shells
+
+    class MyshComplete(ShellComplete):
+        name = "not_mysh"
+        source_template = "dummy source"
+
+    # "mysh" and "not_mysh" are still not in available shells because
+    # it is not registered yet
+    assert "mysh" not in click.shell_completion._available_shells
+    assert "not_mysh" not in click.shell_completion._available_shells
+
+    # Adding a completion class should return that class.
+    # Because we are using the "name" parameter, the name isn't taken
+    # from the class.
+    assert add_completion_class(MyshComplete, name="mysh") is MyshComplete
+
+    # Now, "mysh" is finally in available shells
+    assert "mysh" in click.shell_completion._available_shells
+    assert "not_mysh" not in click.shell_completion._available_shells
+    assert click.shell_completion._available_shells["mysh"] is MyshComplete
+
+
+@pytest.mark.usefixtures("_restore_available_shells")
 def test_add_completion_class_decorator():
     # At first, "mysh" is not in available shells
     assert "mysh" not in click.shell_completion._available_shells
