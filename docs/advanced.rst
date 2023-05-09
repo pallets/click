@@ -79,7 +79,7 @@ object has a :attr:`~Context.params` attribute which is a dictionary of
 all parameters.  Whatever is in that dictionary is being passed to the
 callbacks.
 
-This can be used to make up addition parameters.  Generally this pattern
+This can be used to make up additional parameters.  Generally this pattern
 is not recommended but in some cases it can be useful.  At the very least
 it's good to know that the system works this way.
 
