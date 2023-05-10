@@ -10,7 +10,7 @@ Unreleased
 -   Improve type hinting for decorators and give all generic types parameters.
     :issue:`2398`
 -   Fix return value and type signature of `shell_completion.add_completion_class` function. :pr:`2421`
--   Display empty string defaults. :issue:`2500`
+-   Display empty string defaults for options. :issue:`2500`
 
 
 Version 8.1.3
