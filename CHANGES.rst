@@ -36,6 +36,9 @@ Unreleased
     :issue:`2356`
 -   Do not display default values in prompts when ``Option.show_default`` is
     ``False``. :pr:`2509`
+-   Add ``get_help_extra`` method on ``Option`` to fetch the generated extra
+    items used in ``get_help_record`` to render help text. :issue:`2516`
+    :pr:`2517`
 
 
 Version 8.1.8
