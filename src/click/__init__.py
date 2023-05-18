@@ -36,6 +36,7 @@ from .exceptions import UsageError as UsageError
 from .formatting import HelpFormatter as HelpFormatter
 from .formatting import wrap_text as wrap_text
 from .globals import get_current_context as get_current_context
+from .markdown import markdown
 from .parser import OptionParser as OptionParser
 from .termui import clear as clear
 from .termui import confirm as confirm
@@ -69,6 +70,5 @@ from .utils import get_app_dir as get_app_dir
 from .utils import get_binary_stream as get_binary_stream
 from .utils import get_text_stream as get_text_stream
 from .utils import open_file as open_file
-from .markdown import markdown
 
 __version__ = "8.2.0.dev0"

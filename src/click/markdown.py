@@ -22,6 +22,7 @@ from rich.markdown import Markdown
 
 console = Console()
 
+
 def markdown(content: str, code_theme: str = "monokai"):
     """
     Convert Markdown content to rich console output.
