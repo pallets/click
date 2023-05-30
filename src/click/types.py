@@ -241,7 +241,7 @@ class Choice(ParamType):
 
     name = "choice"
 
-    def __init__(self, choices: t.Sequence[str], case_sensitive: bool = True) -> None:
+    def __init__(self, choices: t.Collection[str], case_sensitive: bool = True) -> None:
         self.choices = choices
         self.case_sensitive = case_sensitive
 

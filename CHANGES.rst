@@ -7,6 +7,7 @@ Unreleased
 
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
     :pr:`326`
+-   Use ``typing.Collection`` to annotate ``choices`` argument to ``Choice``. :pr:`2526`
 
 
 Version 8.1.4

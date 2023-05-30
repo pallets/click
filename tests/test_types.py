@@ -128,3 +128,19 @@ def test_path_resolve_symlink(tmp_path, runner):
     rel_link.symlink_to(pathlib.Path("..") / "file")
     rel_rv = path_type.convert(os.fsdecode(rel_link), param, ctx)
     assert rel_rv == test_file_str
+
+
+@pytest.mark.parametrize(
+    ("choices" , "choice"),
+    [
+        (["a", "b", "c"], "a"),
+        ({"a", "b", "c"}, "a"),
+        (("a", "b", "c"), "a"),
+    ]
+)
+def test_choices_collections(choices, choice, runner):
+    option = click.Option(["-a"], type=click.Choice(choices))
+    cli = click.Command("cli", params=[option], callback=lambda a: a)
+    result = runner.invoke(cli, ["-a", choice], standalone_mode=False)
+    assert result.exception is None
+    assert result.return_value == choice

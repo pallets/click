@@ -398,7 +398,7 @@ What it looks like:
     println()
     invoke(digest, args=['--help'])
 
-Only pass the choices as list or tuple. Other iterables (like
+Only pass the choices as list, tuple or set. Other iterables (like
 generators) may lead to unexpected results.
 
 Choices work with options that have ``multiple=True``. If a ``default``

@@ -512,9 +512,17 @@ def test_missing_required_flag(runner):
     assert "Error: Missing option '--on'." in result.output
 
 
-def test_missing_choice(runner):
+@pytest.mark.parametrize(
+        "choices",
+        [
+            ["foo", "bar"],
+            ("foo", "bar"),
+            {"foo", "bar"},
+        ]
+)
+def test_missing_choice(runner, choices):
     @click.command()
-    @click.option("--foo", type=click.Choice(["foo", "bar"]), required=True)
+    @click.option("--foo", type=click.Choice(choices), required=True)
     def cmd(foo):
         click.echo(foo)
 
