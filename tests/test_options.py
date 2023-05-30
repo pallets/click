@@ -513,12 +513,12 @@ def test_missing_required_flag(runner):
 
 
 @pytest.mark.parametrize(
-        "choices",
-        [
-            ["foo", "bar"],
-            ("foo", "bar"),
-            {"foo", "bar"},
-        ]
+    "choices",
+    [
+        ["foo", "bar"],
+        ("foo", "bar"),
+        {"foo", "bar"},
+    ],
 )
 def test_missing_choice(runner, choices):
     @click.command()

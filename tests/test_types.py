@@ -131,12 +131,12 @@ def test_path_resolve_symlink(tmp_path, runner):
 
 
 @pytest.mark.parametrize(
-    ("choices" , "choice"),
+    ("choices", "choice"),
     [
         (["a", "b", "c"], "a"),
         ({"a", "b", "c"}, "a"),
         (("a", "b", "c"), "a"),
-    ]
+    ],
 )
 def test_choices_collections(choices, choice, runner):
     option = click.Option(["-a"], type=click.Choice(choices))
