@@ -16,7 +16,7 @@ from .utils import echo
 
 def shell_complete(
     cli: BaseCommand,
-    ctx_args: t.Dict[str, t.Any],
+    ctx_args: t.MutableMapping[str, t.Any],
     prog_name: str,
     complete_var: str,
     instruction: str,
@@ -214,7 +214,7 @@ class ShellComplete:
     def __init__(
         self,
         cli: BaseCommand,
-        ctx_args: t.Dict[str, t.Any],
+        ctx_args: t.MutableMapping[str, t.Any],
         prog_name: str,
         complete_var: str,
     ) -> None:
@@ -389,6 +389,9 @@ class FishComplete(ShellComplete):
         return f"{item.type},{item.value}"
 
 
+ShellCompleteType = t.TypeVar("ShellCompleteType", bound=t.Type[ShellComplete])
+
+
 _available_shells: t.Dict[str, t.Type[ShellComplete]] = {
     "bash": BashComplete,
     "fish": FishComplete,
@@ -397,8 +400,8 @@ _available_shells: t.Dict[str, t.Type[ShellComplete]] = {
 
 
 def add_completion_class(
-    cls: t.Type[ShellComplete], name: t.Optional[str] = None
-) -> None:
+    cls: ShellCompleteType, name: t.Optional[str] = None
+) -> ShellCompleteType:
     """Register a :class:`ShellComplete` subclass under the given name.
     The name will be provided by the completion instruction environment
     variable during completion.
@@ -412,6 +415,8 @@ def add_completion_class(
         name = cls.name
 
     _available_shells[name] = cls
+
+    return cls
 
 
 def get_completion_class(shell: str) -> t.Optional[t.Type[ShellComplete]]:
@@ -482,7 +487,10 @@ def _is_incomplete_option(ctx: Context, args: t.List[str], param: Parameter) -> 
 
 
 def _resolve_context(
-    cli: BaseCommand, ctx_args: t.Dict[str, t.Any], prog_name: str, args: t.List[str]
+    cli: BaseCommand,
+    ctx_args: t.MutableMapping[str, t.Any],
+    prog_name: str,
+    args: t.List[str],
 ) -> Context:
     """Produce the context hierarchy starting with the command and
     traversing the complete arguments. This only follows the commands,

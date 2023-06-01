@@ -451,7 +451,7 @@ class OptionParser:
             if stop:
                 break
 
-        # If we got any unknown options we re-combinate the string of the
+        # If we got any unknown options we recombine the string of the
         # remaining options and re-attach the prefix, then report that
         # to the state as new larg.  This way there is basic combinatorics
         # that can be achieved while still ignoring unknown arguments.

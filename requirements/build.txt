@@ -6,9 +6,7 @@
 #    pip-compile-multi
 #
 build==0.10.0
-    # via -r requirements\build.in
-colorama==0.4.6
-    # via build
+    # via -r requirements/build.in
 packaging==23.1
     # via build
 pyproject-hooks==1.0.0

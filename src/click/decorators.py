@@ -94,7 +94,7 @@ def make_pass_decorator(
 
         return update_wrapper(new_func, f)
 
-    return decorator
+    return decorator  # type: ignore[return-value]
 
 
 def pass_meta_key(
@@ -127,7 +127,7 @@ def pass_meta_key(
         f"Decorator that passes {doc_description} as the first argument"
         " to the decorated function."
     )
-    return decorator
+    return decorator  # type: ignore[return-value]
 
 
 CmdType = t.TypeVar("CmdType", bound=Command)
@@ -336,8 +336,14 @@ def argument(*param_decls: str, **attrs: t.Any) -> _Decorator[FC]:
     This is equivalent to creating an :class:`Argument` instance manually
     and attaching it to the :attr:`Command.params` list.
 
+    For the default argument class, refer to :class:`Argument` and
+    :class:`Parameter` for descriptions of parameters.
+
     :param cls: the argument class to instantiate.  This defaults to
                 :class:`Argument`.
+    :param param_decls: Passed as positional arguments to the constructor of
+        ``cls``.
+    :param attrs: Passed as keyword arguments to the constructor of ``cls``.
     """
 
     def decorator(f: FC) -> FC:
@@ -355,8 +361,14 @@ def option(*param_decls: str, **attrs: t.Any) -> _Decorator[FC]:
     This is equivalent to creating an :class:`Option` instance manually
     and attaching it to the :attr:`Command.params` list.
 
+    For the default option class, refer to :class:`Option` and
+    :class:`Parameter` for descriptions of parameters.
+
     :param cls: the option class to instantiate.  This defaults to
                 :class:`Option`.
+    :param param_decls: Passed as positional arguments to the constructor of
+        ``cls``.
+    :param attrs: Passed as keyword arguments to the constructor of ``cls``.
     """
 
     def decorator(f: FC) -> FC:

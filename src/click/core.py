@@ -264,7 +264,7 @@ class Context:
         info_name: t.Optional[str] = None,
         obj: t.Optional[t.Any] = None,
         auto_envvar_prefix: t.Optional[str] = None,
-        default_map: t.Optional[t.Dict[str, t.Any]] = None,
+        default_map: t.Optional[t.MutableMapping[str, t.Any]] = None,
         terminal_width: t.Optional[int] = None,
         max_content_width: t.Optional[int] = None,
         resilient_parsing: bool = False,
@@ -311,7 +311,7 @@ class Context:
         ):
             default_map = parent.default_map.get(info_name)
 
-        self.default_map: t.Optional[t.Dict[str, t.Any]] = default_map
+        self.default_map: t.Optional[t.MutableMapping[str, t.Any]] = default_map
 
         #: This flag indicates if a subcommand is going to be executed. A
         #: group callback can use this information to figure out if it's
@@ -862,7 +862,7 @@ class BaseCommand:
     def __init__(
         self,
         name: t.Optional[str],
-        context_settings: t.Optional[t.Dict[str, t.Any]] = None,
+        context_settings: t.Optional[t.MutableMapping[str, t.Any]] = None,
     ) -> None:
         #: the name the command thinks it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
@@ -874,7 +874,7 @@ class BaseCommand:
             context_settings = {}
 
         #: an optional dictionary with defaults passed to the context.
-        self.context_settings: t.Dict[str, t.Any] = context_settings
+        self.context_settings: t.MutableMapping[str, t.Any] = context_settings
 
     def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
         """Gather information that could be useful for a tool generating
@@ -916,7 +916,7 @@ class BaseCommand:
         :param info_name: the info name for this invocation.  Generally this
                           is the most descriptive name for the script or
                           command.  For the toplevel script it's usually
-                          the name of the script, for commands below it it's
+                          the name of the script, for commands below it's
                           the name of the command.
         :param args: the arguments to parse as list of strings.
         :param parent: the parent context if available.
@@ -949,7 +949,7 @@ class BaseCommand:
         """Given a context, this invokes the command.  The default
         implementation is raising a not implemented error.
         """
-        raise NotImplementedError("Base commands are not invokable by default")
+        raise NotImplementedError("Base commands are not invocable by default")
 
     def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
         """Return a list of completions for the incomplete value. Looks
@@ -1117,7 +1117,7 @@ class BaseCommand:
 
     def _main_shell_completion(
         self,
-        ctx_args: t.Dict[str, t.Any],
+        ctx_args: t.MutableMapping[str, t.Any],
         prog_name: str,
         complete_var: t.Optional[str] = None,
     ) -> None:
@@ -1193,7 +1193,7 @@ class Command(BaseCommand):
     def __init__(
         self,
         name: t.Optional[str],
-        context_settings: t.Optional[t.Dict[str, t.Any]] = None,
+        context_settings: t.Optional[t.MutableMapping[str, t.Any]] = None,
         callback: t.Optional[t.Callable[..., t.Any]] = None,
         params: t.Optional[t.List["Parameter"]] = None,
         help: t.Optional[str] = None,
@@ -1480,6 +1480,7 @@ class MultiCommand(Command):
     :param result_callback: The result callback to attach to this multi
         command. This can be set or changed later with the
         :meth:`result_callback` decorator.
+    :param attrs: Other command arguments described in :class:`Command`.
     """
 
     allow_extra_args = True
@@ -1778,7 +1779,7 @@ class Group(MultiCommand):
         :class:`BaseCommand`.
 
     .. versionchanged:: 8.0
-        The ``commmands`` argument can be a list of command objects.
+        The ``commands`` argument can be a list of command objects.
     """
 
     #: If set, this is used by the group's :meth:`command` decorator
@@ -1804,7 +1805,9 @@ class Group(MultiCommand):
     def __init__(
         self,
         name: t.Optional[str] = None,
-        commands: t.Optional[t.Union[t.Dict[str, Command], t.Sequence[Command]]] = None,
+        commands: t.Optional[
+            t.Union[t.MutableMapping[str, Command], t.Sequence[Command]]
+        ] = None,
         **attrs: t.Any,
     ) -> None:
         super().__init__(name, **attrs)
@@ -1815,7 +1818,7 @@ class Group(MultiCommand):
             commands = {c.name: c for c in commands if c.name is not None}
 
         #: The registered subcommands by their exported names.
-        self.commands: t.Dict[str, Command] = commands
+        self.commands: t.MutableMapping[str, Command] = commands
 
     def add_command(self, cmd: Command, name: t.Optional[str] = None) -> None:
         """Registers another :class:`Command` with this group.  If the name
@@ -1944,6 +1947,9 @@ class CommandCollection(MultiCommand):
     commands together into one.  This is a straightforward implementation
     that accepts a list of different multi commands as sources and
     provides all the commands for each of them.
+
+    See :class:`MultiCommand` and :class:`Command` for the description of
+    ``name`` and ``attrs``.
     """
 
     def __init__(
@@ -2467,6 +2473,7 @@ class Option(Parameter):
                                context.
     :param help: the help string.
     :param hidden: hide this option from help outputs.
+    :param attrs: Other command arguments described in :class:`Parameter`.
 
     .. versionchanged:: 8.1.0
         Help text indentation is cleaned here instead of only in the
@@ -2945,7 +2952,7 @@ class Argument(Parameter):
     provide fewer features than options but can have infinite ``nargs``
     and are required by default.
 
-    All parameters are passed onwards to the parameter constructor.
+    All parameters are passed onwards to the constructor of :class:`Parameter`.
     """
 
     param_type_name = "argument"
