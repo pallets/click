@@ -94,7 +94,7 @@ def make_pass_decorator(
 
         return update_wrapper(new_func, f)
 
-    return decorator
+    return decorator  # type: ignore[return-value]
 
 
 def pass_meta_key(
@@ -127,7 +127,7 @@ def pass_meta_key(
         f"Decorator that passes {doc_description} as the first argument"
         " to the decorated function."
     )
-    return decorator
+    return decorator  # type: ignore[return-value]
 
 
 CmdType = t.TypeVar("CmdType", bound=Command)
