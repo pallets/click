@@ -24,6 +24,9 @@ Unreleased
     ``command_class``. :issue:`2416`
 -   ``multiple=True`` is allowed for flag options again and does not require
     setting ``default=()``. :issue:`2246, 2292, 2295`
+-   Fixed regression in 8.0 that caused :func:`format_filename` to stop replacing
+    undecodable bytes with the unicode REPLACEMENT CHARACTER. Systems where the stdout
+    error handler is `strict` would fail to print such strings. :issue:`2395`
 
 
 Version 8.1.3
