@@ -8,6 +8,8 @@ import pytest
 
 import click._termui_impl
 import click.utils
+from .helpers import assert_no_surrogates
+from .helpers import IMPOSSIBLE_UTF8_BYTE
 from click._compat import WIN
 
 
@@ -99,14 +101,13 @@ def test_filename_formatting():
     assert click.format_filename("/x/foo.txt") == "/x/foo.txt"
     assert click.format_filename("/x/foo.txt", shorten=True) == "foo.txt"
 
-    # filesystem encoding on windows permits this.
-    if not WIN:
-        rv = click.format_filename(b"/x/foo\xff.txt", shorten=True)
-        assert rv == "foo\ufffd.txt"
+    rv = click.format_filename(b"/x/foo%s.txt" % IMPOSSIBLE_UTF8_BYTE, shorten=True)
 
-        # We want format_filename to produce a string that can be printed to
-        # stdout even in errors="strict" mode, check that here.
-        assert rv.encode("utf-8", "strict") == b"foo\xef\xbf\xbd.txt"
+    assert_no_surrogates(rv)
+
+    # There's no need for this assertion to be 3-way, but it demonstrates what the
+    # character looks like when printed.
+    assert rv == "foo\ufffd.txt" == "foo�.txt"
 
 
 def test_prompts(runner):

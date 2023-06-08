@@ -268,7 +268,7 @@ class FileError(ClickException):
         self.filename: t.Union[str, bytes] = filename
 
     def format_message(self) -> str:
-        return _("Could not open file {filename!r}: {message}").format(
+        return _("Could not open file '{filename}': {message}").format(
             filename=self.ui_filename, message=self.message
         )
 

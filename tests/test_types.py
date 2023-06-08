@@ -2,9 +2,12 @@ import os.path
 import pathlib
 
 import pytest
-from conftest import symlinks_supported
 
 import click
+from .helpers import assert_no_surrogates
+from .helpers import IMPOSSIBLE_UTF8_SURROGATE_STR
+from .helpers import non_utf8_filenames_supported
+from .helpers import symlinks_supported
 
 
 @pytest.mark.parametrize(
@@ -136,6 +139,68 @@ def test_path_resolve_symlink(tmp_path, runner):
     assert rel_rv == test_file_str
 
 
+@pytest.mark.skipif(
+    not non_utf8_filenames_supported,
+    reason="The current OS or FS doesn't support non-UTF8 filenames.",
+)
+def test_path_surrogates(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    path = pathlib.Path(IMPOSSIBLE_UTF8_SURROGATE_STR)
+
+    type = click.Path(exists=True)
+    with pytest.raises(click.BadParameter, match="'�' does not exist") as exc_info:
+        type.convert(path, None, None)
+    assert_no_surrogates(str(exc_info.value))
+
+    type = click.Path(file_okay=False)
+    path.touch()
+    with pytest.raises(click.BadParameter, match="'�' is a file") as exc_info:
+        type.convert(path, None, None)
+    assert_no_surrogates(str(exc_info.value))
+    path.unlink()
+
+    type = click.Path(dir_okay=False)
+    path.mkdir()
+    with pytest.raises(click.BadParameter, match="'�' is a directory") as exc_info:
+        type.convert(path, None, None)
+    assert_no_surrogates(str(exc_info.value))
+    path.rmdir()
+
+    def no_access(*args, **kwargs):
+        """Test environments may be running as root, so we have to fake the result of
+        the access tests that use os.access
+        """
+        p = args[0]
+        assert p == path, f"unexpected os.acess call on file not under test: {p!r}"
+        return False
+
+    path.touch()
+
+    type = click.Path(readable=True)
+    with pytest.raises(click.BadParameter, match="'�' is not readable") as exc_info:
+        with monkeypatch.context() as m:
+            m.setattr(os, "access", no_access)
+            type.convert(path, None, None)
+    assert_no_surrogates(str(exc_info.value))
+
+    type = click.Path(readable=False, writable=True)
+    with pytest.raises(click.BadParameter, match="'�' is not writable") as exc_info:
+        with monkeypatch.context() as m:
+            m.setattr(os, "access", no_access)
+            type.convert(path, None, None)
+    assert_no_surrogates(str(exc_info.value))
+
+    type = click.Path(readable=False, executable=True)
+    with pytest.raises(click.BadParameter, match="'�' is not executable") as exc_info:
+        with monkeypatch.context() as m:
+            m.setattr(os, "access", no_access)
+            type.convert(path, None, None)
+    assert_no_surrogates(str(exc_info.value))
+
+    path.unlink()
+
+
 @pytest.mark.parametrize(
     "type",
     [
@@ -163,6 +228,20 @@ def test_file_read(type, tmp_path):
 
     with type.convert(str(filename), None, None) as f:
         assert f.read() == value
+
+
+@pytest.mark.parametrize(
+    "type",
+    [
+        click.File(mode="r"),
+        click.File(mode="r", lazy=True),
+    ],
+)
+def test_file_surrogates(type, tmp_path):
+    path = tmp_path / f"foo{IMPOSSIBLE_UTF8_SURROGATE_STR}.mp3"
+    with pytest.raises(click.BadParameter) as exc_info:
+        type.convert(path, None, None)
+    assert_no_surrogates(str(exc_info.value))
 
 
 @pytest.mark.parametrize("mode", ["w", "wb"])
