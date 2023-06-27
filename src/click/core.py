@@ -1588,7 +1588,7 @@ class MultiCommand(Command):
                 return f
 
             def function(__value, *args, **kwargs):  # type: ignore
-                inner = old_callback(__value, *args, **kwargs)  # type: ignore
+                inner = old_callback(__value, *args, **kwargs)
                 return f(inner, *args, **kwargs)
 
             self._result_callback = rv = update_wrapper(t.cast(F, function), f)
