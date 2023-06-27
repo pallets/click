@@ -3,16 +3,15 @@ ci:
   autoupdate_schedule: monthly
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.4.0
+    rev: v3.7.0
     hooks:
       - id: pyupgrade
         args: ["--py37-plus"]
-  - repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.9.0
+  - repo: https://github.com/asottile/reorder-python-imports
+    rev: v3.10.0
     hooks:
       - id: reorder-python-imports
         args: ["--application-directories", "src"]
-        additional_dependencies: ["setuptools>60.9"]
   - repo: https://github.com/psf/black
     rev: 23.3.0
     hooks:

@@ -519,8 +519,7 @@ def version_option(
             )
 
         echo(
-            t.cast(str, message)
-            % {"prog": prog_name, "package": package_name, "version": version},
+            message % {"prog": prog_name, "package": package_name, "version": version},
             color=ctx.color,
         )
         ctx.exit()
