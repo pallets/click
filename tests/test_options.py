@@ -745,6 +745,20 @@ def test_show_default_boolean_flag_name(runner, default, expect):
     assert f"[default: {expect}]" in message
 
 
+@pytest.mark.parametrize(("default", "expect"), [("", ""), ("value", "value")])
+def test_show_default_empty_string(runner, default, expect):
+    """When an empty string is set as a default value it will show the default value."""
+    opt = click.Option(
+        ("--string-option",),
+        type=str,
+        default=default,
+        show_default=True,
+    )
+    ctx = click.Context(click.Command("test"))
+    message = opt.get_help_record(ctx)[1]
+    assert f"[default: {expect}]" in message
+
+
 def test_show_true_default_boolean_flag_value(runner):
     """When a boolean flag only has one opt and its default is True,
     it will show the default value, not the opt name.
