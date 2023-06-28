@@ -68,7 +68,7 @@ usage patterns.
 
    why
    quickstart
-   setuptools
+   entry-points
    parameters
    options
    arguments
