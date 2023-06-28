@@ -107,12 +107,6 @@ First time setup
 
         > env\Scripts\activate
 
--   Upgrade pip and setuptools.
-
-    .. code-block:: text
-
-        $ python -m pip install --upgrade pip setuptools
-
 -   Install the development dependencies, then install Click in
     editable mode.
 
