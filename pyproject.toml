@@ -2,7 +2,7 @@
 name = "click"
 description = "Composable command line interface toolkit"
 readme = "README.rst"
-license = {text = "BSD-3-Clause"}
+license = {file = "LICENSE.rst"}
 maintainers = [{name = "Pallets", email = "contact@palletsprojects.com"}]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -27,11 +27,24 @@ Changes = "https://click.palletsprojects.com/changes/"
 Chat = "https://discord.gg/pallets"
 
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
 
-[tool.setuptools.dynamic]
-version = {attr = "click.__version__"}
+[tool.flit.module]
+name = "click"
+
+[tool.flit.sdist]
+include = [
+    "docs/",
+    "examples/",
+    "requirements/",
+    "tests/",
+    "CHANGES.rst",
+    "tox.ini",
+]
+exclude = [
+    "docs/_build/",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

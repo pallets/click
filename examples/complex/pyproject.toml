@@ -1,0 +1,18 @@
+[project]
+name = "click-example-complex"
+version = "1.0.0"
+description = "Click complex example"
+requires-python = ">=3.7"
+dependencies = [
+    "click>=8.1",
+]
+
+[project.scripts]
+complex = "complex.cli:cli"
+
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "complex"

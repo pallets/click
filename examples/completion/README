@@ -26,3 +26,8 @@ For Fish:
     eval (env _COMPLETION_COMPLETE=fish_source completion)
 
 Now press tab (maybe twice) after typing something to see completions.
+
+.. code-block:: python
+
+    $ completion <TAB> <TAB>
+    $ completion gr <TAB> <TAB>
