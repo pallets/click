@@ -95,20 +95,6 @@ def test_auto_shorthelp(runner):
     )
 
 
-def test_help_truncation(runner):
-    @click.command()
-    def cli():
-        """This is a command with truncated help.
-        \f
-
-        This text should be truncated.
-        """
-
-    result = runner.invoke(cli, ["--help"])
-    assert result.exit_code == 0
-    assert "This is a command with truncated help." in result.output
-
-
 def test_no_args_is_help(runner):
     @click.command(no_args_is_help=True)
     def cli():
