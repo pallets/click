@@ -157,7 +157,13 @@ _SOURCE_ZSH = """\
     fi
 }
 
-compdef %(complete_func)s %(prog_name)s;
+if [[ $zsh_eval_context[-1] == loadautofunc ]]; then
+    # autoload from fpath, call function directly
+    %(complete_func)s "$@"
+else
+    # eval/source/. command, register function for later
+    compdef %(complete_func)s %(prog_name)s
+fi
 """
 
 _SOURCE_FISH = """\
