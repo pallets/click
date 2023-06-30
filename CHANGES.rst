@@ -15,6 +15,7 @@ Unreleased
 -   Completion works if there is a dot (``.``) in the program name. :issue:`2166`
 -   Improve type annotations for pyright type checker. :issue:`2268`
 -   Improve responsiveness of ``click.clear()``. :issue:`2284`
+-   Improve command name detection when using Shiv or PEX. :issue:`2332`
 
 
 Version 8.1.3
