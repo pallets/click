@@ -367,7 +367,7 @@ def get_text_stderr(
 
 
 def _wrap_io_open(
-    file: t.Union[str, "os.PathLike[t.AnyStr]", int],
+    file: t.Union[str, "os.PathLike[str]", int],
     mode: str,
     encoding: t.Optional[str],
     errors: t.Optional[str],

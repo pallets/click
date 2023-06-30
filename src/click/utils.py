@@ -4,6 +4,7 @@ import sys
 import typing as t
 from functools import update_wrapper
 from types import ModuleType
+from types import TracebackType
 
 from ._compat import _default_text_stderr
 from ._compat import _default_text_stdout
@@ -124,6 +125,7 @@ class LazyFile:
         self.errors = errors
         self.atomic = atomic
         self._f: t.Optional[t.IO[t.Any]]
+        self.should_close: bool
 
         if filename == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
@@ -177,7 +179,12 @@ class LazyFile:
     def __enter__(self) -> "LazyFile":
         return self
 
-    def __exit__(self, *_: t.Any) -> None:
+    def __exit__(
+        self,
+        exc_type: t.Optional[t.Type[BaseException]],
+        exc_value: t.Optional[BaseException],
+        tb: t.Optional[TracebackType],
+    ) -> None:
         self.close_intelligently()
 
     def __iter__(self) -> t.Iterator[t.AnyStr]:
@@ -187,7 +194,7 @@ class LazyFile:
 
 class KeepOpenFile:
     def __init__(self, file: t.IO[t.Any]) -> None:
-        self._file = file
+        self._file: t.IO[t.Any] = file
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
@@ -195,7 +202,12 @@ class KeepOpenFile:
     def __enter__(self) -> "KeepOpenFile":
         return self
 
-    def __exit__(self, *_: t.Any) -> None:
+    def __exit__(
+        self,
+        exc_type: t.Optional[t.Type[BaseException]],
+        exc_value: t.Optional[BaseException],
+        tb: t.Optional[TracebackType],
+    ) -> None:
         pass
 
     def __repr__(self) -> str:

@@ -162,7 +162,7 @@ class CompositeParamType(ParamType):
 
 class FuncParamType(ParamType):
     def __init__(self, func: t.Callable[[t.Any], t.Any]) -> None:
-        self.name = func.__name__
+        self.name: str = func.__name__
         self.func = func
 
     def to_info_dict(self) -> t.Dict[str, t.Any]:
@@ -353,7 +353,11 @@ class DateTime(ParamType):
     name = "datetime"
 
     def __init__(self, formats: t.Optional[t.Sequence[str]] = None):
-        self.formats = formats or ["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"]
+        self.formats: t.Sequence[str] = formats or [
+            "%Y-%m-%d",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d %H:%M:%S",
+        ]
 
     def to_info_dict(self) -> t.Dict[str, t.Any]:
         info_dict = super().to_info_dict()
@@ -662,7 +666,7 @@ class File(ParamType):
     """
 
     name = "filename"
-    envvar_list_splitter = os.path.pathsep
+    envvar_list_splitter: t.ClassVar[str] = os.path.pathsep
 
     def __init__(
         self,
@@ -780,7 +784,7 @@ class Path(ParamType):
         Added the ``allow_dash`` parameter.
     """
 
-    envvar_list_splitter = os.path.pathsep
+    envvar_list_splitter: t.ClassVar[str] = os.path.pathsep
 
     def __init__(
         self,
@@ -805,7 +809,7 @@ class Path(ParamType):
         self.type = path_type
 
         if self.file_okay and not self.dir_okay:
-            self.name = _("file")
+            self.name: str = _("file")
         elif self.dir_okay and not self.file_okay:
             self.name = _("directory")
         else:
@@ -942,7 +946,7 @@ class Tuple(CompositeParamType):
     """
 
     def __init__(self, types: t.Sequence[t.Union[t.Type[t.Any], ParamType]]) -> None:
-        self.types = [convert_type(ty) for ty in types]
+        self.types: t.Sequence[ParamType] = [convert_type(ty) for ty in types]
 
     def to_info_dict(self) -> t.Dict[str, t.Any]:
         info_dict = super().to_info_dict()

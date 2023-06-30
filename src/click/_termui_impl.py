@@ -10,6 +10,7 @@ import sys
 import time
 import typing as t
 from gettext import gettext as _
+from types import TracebackType
 
 from ._compat import _default_text_stdout
 from ._compat import CYGWIN
@@ -59,15 +60,15 @@ class ProgressBar(t.Generic[V]):
         self.show_percent = show_percent
         self.show_pos = show_pos
         self.item_show_func = item_show_func
-        self.label = label or ""
+        self.label: str = label or ""
         if file is None:
             file = _default_text_stdout()
         self.file = file
         self.color = color
         self.update_min_steps = update_min_steps
         self._completed_intervals = 0
-        self.width = width
-        self.autowidth = width == 0
+        self.width: int = width
+        self.autowidth: bool = width == 0
 
         if length is None:
             from operator import length_hint
@@ -80,17 +81,19 @@ class ProgressBar(t.Generic[V]):
             if length is None:
                 raise TypeError("iterable or length is required")
             iterable = t.cast(t.Iterable[V], range(length))
-        self.iter = iter(iterable)
+        self.iter: t.Iterable[V] = iter(iterable)
         self.length = length
         self.pos = 0
         self.avg: t.List[float] = []
+        self.last_eta: float
+        self.start: float
         self.start = self.last_eta = time.time()
-        self.eta_known = False
-        self.finished = False
+        self.eta_known: bool = False
+        self.finished: bool = False
         self.max_width: t.Optional[int] = None
-        self.entered = False
+        self.entered: bool = False
         self.current_item: t.Optional[V] = None
-        self.is_hidden = not isatty(self.file)
+        self.is_hidden: bool = not isatty(self.file)
         self._last_line: t.Optional[str] = None
 
     def __enter__(self) -> "ProgressBar[V]":
@@ -98,7 +101,12 @@ class ProgressBar(t.Generic[V]):
         self.render_progress()
         return self
 
-    def __exit__(self, *_: t.Any) -> None:
+    def __exit__(
+        self,
+        exc_type: t.Optional[t.Type[BaseException]],
+        exc_value: t.Optional[BaseException],
+        tb: t.Optional[TracebackType],
+    ) -> None:
         self.render_finish()
 
     def __iter__(self) -> t.Iterator[V]:

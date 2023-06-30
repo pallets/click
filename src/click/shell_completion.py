@@ -80,9 +80,9 @@ class CompletionItem:
         help: t.Optional[str] = None,
         **kwargs: t.Any,
     ) -> None:
-        self.value = value
-        self.type = type
-        self.help = help
+        self.value: t.Any = value
+        self.type: str = type
+        self.help: t.Optional[str] = help
         self._info = kwargs
 
     def __getattr__(self, name: str) -> t.Any:
@@ -517,6 +517,8 @@ def _resolve_context(
                 ctx = cmd.make_context(name, args, parent=ctx, resilient_parsing=True)
                 args = ctx.protected_args + ctx.args
             else:
+                sub_ctx = ctx
+
                 while args:
                     name, cmd, args = command.resolve_command(ctx, args)
 

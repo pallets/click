@@ -183,7 +183,7 @@ class CliRunner:
         mix_stderr: bool = True,
     ) -> None:
         self.charset = charset
-        self.env = env or {}
+        self.env: t.Mapping[str, t.Optional[str]] = env or {}
         self.echo_stdin = echo_stdin
         self.mix_stderr = mix_stderr
 
