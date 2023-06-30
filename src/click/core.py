@@ -1086,9 +1086,9 @@ class BaseCommand:
                     # even always obvious that `rv` indicates success/failure
                     # by its truthiness/falsiness
                     ctx.exit()
-            except (EOFError, KeyboardInterrupt):
+            except (EOFError, KeyboardInterrupt) as e:
                 echo(file=sys.stderr)
-                raise Abort() from None
+                raise Abort() from e
             except ClickException as e:
                 if not standalone_mode:
                     raise
