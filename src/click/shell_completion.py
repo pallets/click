@@ -161,29 +161,25 @@ compdef %(complete_func)s %(prog_name)s;
 """
 
 _SOURCE_FISH = """\
-function %(complete_func)s;
-    set -l response;
+function %(complete_func)s
+    set -l response (env %(complete_var)s=fish_complete COMP_WORDS=(commandline -cp) \
+COMP_CWORD=(commandline -t) %(prog_name)s)
 
-    for value in (env %(complete_var)s=fish_complete COMP_WORDS=(commandline -cp) \
-COMP_CWORD=(commandline -t) %(prog_name)s);
-        set response $response $value;
-    end;
+    for completion in $response
+        set -l metadata (string split "," $completion)
 
-    for completion in $response;
-        set -l metadata (string split "," $completion);
-
-        if test $metadata[1] = "dir";
-            __fish_complete_directories $metadata[2];
-        else if test $metadata[1] = "file";
-            __fish_complete_path $metadata[2];
-        else if test $metadata[1] = "plain";
-            echo $metadata[2];
-        end;
-    end;
-end;
+        if test $metadata[1] = "dir"
+            __fish_complete_directories $metadata[2]
+        else if test $metadata[1] = "file"
+            __fish_complete_path $metadata[2]
+        else if test $metadata[1] = "plain"
+            echo $metadata[2]
+        end
+    end
+end
 
 complete --no-files --command %(prog_name)s --arguments \
-"(%(complete_func)s)";
+"(%(complete_func)s)"
 """
 
 
