@@ -85,8 +85,9 @@ Preventing Rewrapping
 ---------------------
 
 The default behavior of Click is to rewrap text based on the width of the
-terminal.  In some circumstances, this can become a problem. The main issue
-is when showing code examples, where newlines are significant.
+terminal, to a maximum 80 characters. In some circumstances, this can become
+a problem. The main issue is when showing code examples, where newlines are
+significant.
 
 Rewrapping can be disabled on a per-paragraph basis by adding a line with
 solely the ``\b`` escape marker in it.  This line will be removed from the
@@ -119,6 +120,13 @@ And what it looks like:
 .. click:run::
 
     invoke(cli, args=['--help'])
+
+To change the maximum width, pass ``max_content_width`` when calling the command.
+
+.. code-block:: python
+
+    cli(max_content_width=120)
+
 
 .. _doc-meta-variables:
 
