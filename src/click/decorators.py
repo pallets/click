@@ -329,7 +329,9 @@ def _param_memo(f: t.Callable[..., t.Any], param: Parameter) -> None:
         f.__click_params__.append(param)  # type: ignore
 
 
-def argument(*param_decls: str, **attrs: t.Any) -> _Decorator[FC]:
+def argument(
+    *param_decls: str, cls: t.Optional[t.Type[Argument]] = None, **attrs: t.Any
+) -> _Decorator[FC]:
     """Attaches an argument to the command.  All positional arguments are
     passed as parameter declarations to :class:`Argument`; all keyword
     arguments are forwarded unchanged (except ``cls``).
@@ -345,16 +347,19 @@ def argument(*param_decls: str, **attrs: t.Any) -> _Decorator[FC]:
         ``cls``.
     :param attrs: Passed as keyword arguments to the constructor of ``cls``.
     """
+    if cls is None:
+        cls = Argument
 
     def decorator(f: FC) -> FC:
-        ArgumentClass = attrs.pop("cls", None) or Argument
-        _param_memo(f, ArgumentClass(param_decls, **attrs))
+        _param_memo(f, cls(param_decls, **attrs))
         return f
 
     return decorator
 
 
-def option(*param_decls: str, **attrs: t.Any) -> _Decorator[FC]:
+def option(
+    *param_decls: str, cls: t.Optional[t.Type[Option]] = None, **attrs: t.Any
+) -> _Decorator[FC]:
     """Attaches an option to the command.  All positional arguments are
     passed as parameter declarations to :class:`Option`; all keyword
     arguments are forwarded unchanged (except ``cls``).
@@ -370,12 +375,11 @@ def option(*param_decls: str, **attrs: t.Any) -> _Decorator[FC]:
         ``cls``.
     :param attrs: Passed as keyword arguments to the constructor of ``cls``.
     """
+    if cls is None:
+        cls = Option
 
     def decorator(f: FC) -> FC:
-        # Issue 926, copy attrs, so pre-defined options can re-use the same cls=
-        option_attrs = attrs.copy()
-        OptionClass = option_attrs.pop("cls", None) or Option
-        _param_memo(f, OptionClass(param_decls, **option_attrs))
+        _param_memo(f, cls(param_decls, **attrs))
         return f
 
     return decorator

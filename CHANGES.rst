@@ -24,6 +24,8 @@ Unreleased
     ``command_class``. :issue:`2416`
 -   ``multiple=True`` is allowed for flag options again and does not require
     setting ``default=()``. :issue:`2246, 2292, 2295`
+-   Make the decorators returned by ``@argument()`` and ``@option()`` reusable when the
+    ``cls`` parameter is used. :issue:`2294`
 
 
 Version 8.1.3
