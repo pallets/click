@@ -2570,8 +2570,13 @@ class Option(Parameter):
             # flag if flag_value is set.
             self._flag_needs_value = flag_value is not None
 
+        self.default: t.Union[t.Any, t.Callable[[], t.Any]]
+
         if is_flag and default_is_missing and not self.required:
-            self.default: t.Union[t.Any, t.Callable[[], t.Any]] = False
+            if multiple:
+                self.default = ()
+            else:
+                self.default = False
 
         if flag_value is None:
             flag_value = not self.default
@@ -2621,9 +2626,6 @@ class Option(Parameter):
 
                 if self.is_flag:
                     raise TypeError("'count' is not valid with 'is_flag'.")
-
-            if self.multiple and self.is_flag:
-                raise TypeError("'multiple' is not valid with 'is_flag', use 'count'.")
 
     def to_info_dict(self) -> t.Dict[str, t.Any]:
         info_dict = super().to_info_dict()
