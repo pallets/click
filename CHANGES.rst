@@ -22,6 +22,8 @@ Unreleased
     ``standalone_mode`` is disabled. :issue:`2380`
 -   ``@group.command`` does not fail if the group was created with a custom
     ``command_class``. :issue:`2416`
+-   ``multiple=True`` is allowed for flag options again and does not require
+    setting ``default=()``. :issue:`2246, 2292, 2295`
 
 
 Version 8.1.3
