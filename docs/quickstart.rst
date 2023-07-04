@@ -3,13 +3,13 @@ Quickstart
 
 .. currentmodule:: click
 
-Install 
+Install
 ----------------------
 Install from PyPI::
 
     pip install click
 
-Installing into a virtual environment is highly recommended. We suggest :ref:`virtualenv-heading`. 
+Installing into a virtual environment is highly recommended. We suggest :ref:`virtualenv-heading`.
 
 Screencast and Examples
 -----------------------

@@ -1,18 +1,18 @@
 .. _virtualenv-heading:
 
 Virtualenv
-========================= 
+=========================
 
 Why use virtualenv?
-------------------------- 
+-------------------------
 
-You should use `Virtualenv <https://virtualenv.pypa.io/en/latest/>`_ because: 
+You should use `Virtualenv <https://virtualenv.pypa.io/en/latest/>`_ because:
 
 *   It allows you to install multiple versions of the same dependency.
 
 *   If you have an operating system version of python, it prevents you from changing its dependencies and potentially messing up your os.
 
-How to use virtualenv 
+How to use virtualenv
 -----------------------------
 
 Create your project folder, then a virtualenv within it::
@@ -43,9 +43,3 @@ And if you want to stop using the virtualenv, use the following command::
     $ deactivate
 
 After doing this, the prompt of your shell should be as familiar as before.
- 
-
-
-
-
-
