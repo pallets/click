@@ -34,7 +34,7 @@ On Windows, do the following::
 
 You are now using your virtualenv (notice how the prompt of your shell has changed to show the active environment).
 
-To install in the virtual environment::
+To install packages in the virtual environment::
 
     $ pip install click
 
