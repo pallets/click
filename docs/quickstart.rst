@@ -3,66 +3,13 @@ Quickstart
 
 .. currentmodule:: click
 
-You can get the library directly from PyPI::
+Install 
+----------------------
+Install from PyPI::
 
     pip install click
 
-The installation into a :ref:`virtualenv` is heavily recommended.
-
-.. _virtualenv:
-
-virtualenv
-----------
-
-Virtualenv is probably what you want to use for developing Click
-applications.
-
-What problem does virtualenv solve?  Chances are that you want to use it
-for other projects besides your Click script.  But the more projects you
-have, the more likely it is that you will be working with different
-versions of Python itself, or at least different versions of Python
-libraries.  Let's face it: quite often libraries break backwards
-compatibility, and it's unlikely that any serious application will have
-zero dependencies.  So what do you do if two or more of your projects have
-conflicting dependencies?
-
-Virtualenv to the rescue!  Virtualenv enables multiple side-by-side
-installations of Python, one for each project.  It doesn't actually
-install separate copies of Python, but it does provide a clever way to
-keep different project environments isolated.
-
-Create your project folder, then a virtualenv within it::
-
-    $ mkdir myproject
-    $ cd myproject
-    $ python3 -m venv .venv
-
-Now, whenever you want to work on a project, you only have to activate the
-corresponding environment.  On OS X and Linux, do the following::
-
-    $ . .venv/bin/activate
-    (venv) $
-
-If you are a Windows user, the following command is for you::
-
-    > .venv\scripts\activate
-    (venv) >
-
-Either way, you should now be using your virtualenv (notice how the prompt of
-your shell has changed to show the active environment).
-
-And if you want to stop using the virtualenv, use the following command::
-
-    $ deactivate
-
-After doing this, the prompt of your shell should be as familiar as before.
-
-Now, let's move on. Enter the following command to get Click activated in your
-virtualenv::
-
-    $ pip install click
-
-A few seconds later and you are good to go.
+Installing into a virtual environment is highly recommended. We suggest :ref:`virtualenv-heading`. 
 
 Screencast and Examples
 -----------------------
