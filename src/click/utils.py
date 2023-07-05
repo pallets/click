@@ -11,7 +11,6 @@ from ._compat import _default_text_stdout
 from ._compat import _find_binary_writer
 from ._compat import auto_wrap_for_ansi
 from ._compat import binary_streams
-from ._compat import get_filesystem_encoding
 from ._compat import open_stream
 from ._compat import should_strip_ansi
 from ._compat import strip_ansi
@@ -48,7 +47,7 @@ def make_str(value: t.Any) -> str:
     """Converts a value into a valid string."""
     if isinstance(value, bytes):
         try:
-            return value.decode(get_filesystem_encoding())
+            return value.decode(sys.getfilesystemencoding())
         except UnicodeError:
             return value.decode("utf-8", "replace")
     return str(value)
@@ -113,13 +112,13 @@ class LazyFile:
 
     def __init__(
         self,
-        filename: str,
+        filename: t.Union[str, "os.PathLike[str]"],
         mode: str = "r",
         encoding: t.Optional[str] = None,
         errors: t.Optional[str] = "strict",
         atomic: bool = False,
     ):
-        self.name = filename
+        self.name: str = os.fspath(filename)
         self.mode = mode
         self.encoding = encoding
         self.errors = errors
@@ -127,7 +126,7 @@ class LazyFile:
         self._f: t.Optional[t.IO[t.Any]]
         self.should_close: bool
 
-        if filename == "-":
+        if self.name == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
         else:
             if "r" in mode:
@@ -144,7 +143,7 @@ class LazyFile:
     def __repr__(self) -> str:
         if self._f is not None:
             return repr(self._f)
-        return f"<unopened file '{self.name}' {self.mode}>"
+        return f"<unopened file '{format_filename(self.name)}' {self.mode}>"
 
     def open(self) -> t.IO[t.Any]:
         """Opens the file if it's not yet open.  This call might fail with
@@ -398,13 +397,26 @@ def open_file(
 
 
 def format_filename(
-    filename: t.Union[str, bytes, "os.PathLike[t.AnyStr]"], shorten: bool = False
+    filename: "t.Union[str, bytes, os.PathLike[str], os.PathLike[bytes]]",
+    shorten: bool = False,
 ) -> str:
-    """Formats a filename for user display.  The main purpose of this
-    function is to ensure that the filename can be displayed at all.  This
-    will decode the filename to unicode if necessary in a way that it will
-    not fail.  Optionally, it can shorten the filename to not include the
-    full path to the filename.
+    """Format a filename as a string for display. Ensures the filename can be
+    displayed by replacing any invalid bytes or surrogate escapes in the name
+    with the replacement character ``�``.
+
+    Invalid bytes or surrogate escapes will raise an error when written to a
+    stream with ``errors="strict". This will typically happen with ``stdout``
+    when the locale is something like ``en_GB.UTF-8``.
+
+    Many scenarios *are* safe to write surrogates though, due to PEP 538 and
+    PEP 540, including:
+
+    -   Writing to ``stderr``, which uses ``errors="backslashreplace"``.
+    -   The system has ``LANG=C.UTF-8``, ``C``, or ``POSIX``. Python opens
+        stdout and stderr with ``errors="surrogateescape"``.
+    -   None of ``LANG/LC_*`` are set. Python assumes ``LANG=C.UTF-8``.
+    -   Python is started in UTF-8 mode  with  ``PYTHONUTF8=1`` or ``-X utf8``.
+        Python opens stdout and stderr with ``errors="surrogateescape"``.
 
     :param filename: formats a filename for UI display.  This will also convert
                      the filename into unicode without failing.
@@ -413,8 +425,17 @@ def format_filename(
     """
     if shorten:
         filename = os.path.basename(filename)
+    else:
+        filename = os.fspath(filename)
 
-    return os.fsdecode(filename)
+    if isinstance(filename, bytes):
+        filename = filename.decode(sys.getfilesystemencoding(), "replace")
+    else:
+        filename = filename.encode("utf-8", "surrogateescape").decode(
+            "utf-8", "replace"
+        )
+
+    return filename
 
 
 def get_app_dir(app_name: str, roaming: bool = True, force_posix: bool = False) -> str:
