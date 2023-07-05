@@ -2,17 +2,17 @@
 
 Setuptools Integration
 ======================
-When writing command line utilities, it's recommended to write them as modules that are distributed with setuptools for cross-platform compatibility.  
+When writing command line utilities, it's recommended to write them as modules that are distributed with setuptools for cross-platform compatibility.
 
-#. On windows, setuptools automatically generates executable wrappers for Windows. This is especially useful since Unix shebangs don't work. Unix shebangs are comments at the beginning of the file that give the path to the executable, eg ``#!/usr/bin/env/python``. If the file is set as an executable, then the os will use the shebang to find the executable and run it. On windows you are not able to link a file to a specific Python interpreter so you have to ensure the script in run with the right interpreter. 
+#. On windows, setuptools automatically generates executable wrappers for Windows. This is especially useful since Unix shebangs don't work. Unix shebangs are comments at the beginning of the file that give the path to the executable, eg ``#!/usr/bin/env/python``. If the file is set as an executable, then the os will use the shebang to find the executable and run it. On windows you are not able to link a file to a specific Python interpreter so you have to ensure the script in run with the right interpreter.
 
 #. On linux and osx, setuptools scripts work with virtualenv without the virtualenv having to be activated. This makes it easy to bundle your dependencies as virtualenvs.
 
-In addition, setuptools solves some problem unrelated to platform. 
+In addition, setuptools solves some problem unrelated to platform.
 
-#.  Under certain conditions, you script can be imported and run twice. For example, your script is imported as ``__main__``, which Python does for the first module it imports, and then another piece of code calls your code. You module has been imported as ``__main__``, so it is imported again with its actual name and run again. 
+#.  Under certain conditions, you script can be imported and run twice. For example, your script is imported as ``__main__``, which Python does for the first module it imports, and then another piece of code calls your code. You module has been imported as ``__main__``, so it is imported again with its actual name and run again.
 
-#.  You can avoid the above issue by protecting the script with: 
+#.  You can avoid the above issue by protecting the script with:
 
     .. code-block::
 
