@@ -66,7 +66,7 @@ A few seconds later and you are good to go.
 
 
 
-Basic Concepts - Creating a Command
+Creating a Command
 -----------------------------------
 
 Click is based on declaring commands through decorators.  Internally, there
@@ -223,31 +223,15 @@ What it looks like:
 
 .. _switching-to-setuptools:
 
-Switching to Setuptools
+Using Setuptools
 -----------------------
 
 In the code you wrote so far there is a block at the end of the file which
 looks like this: ``if __name__ == '__main__':``.  This is traditionally
-how a standalone Python file looks like.  With Click you can continue
-doing that, but there are better ways through setuptools.
+what a standalone Python script looks like.  With Click you can continue
+doing that, but there are better ways through setuptools. 
 
-There are two main (and many more) reasons for this:
-
-The first one is that setuptools automatically generates executable
-wrappers for Windows so your command line utilities work on Windows too.
-
-The second reason is that setuptools scripts work with virtualenv on Unix
-without the virtualenv having to be activated.  This is a very useful
-concept which allows you to bundle your scripts with all requirements into
-a virtualenv.
-
-Click is perfectly equipped to work with that and in fact the rest of the
-documentation will assume that you are writing applications through
-setuptools.
-
-I strongly recommend to have a look at the :ref:`setuptools-integration`
-chapter before reading the rest as the examples assume that you will
-be using setuptools. 
+It is highly recommended to look at :ref:`setuptools-integration`. The rest of the documentation assumes you using setuptools. 
 
 Examples
 -----------------------

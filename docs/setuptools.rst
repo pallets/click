@@ -2,43 +2,26 @@
 
 Setuptools Integration
 ======================
+When writing command line utilities, it's recommended to write them as modules that are distributed with setuptools for cross-platform compatibility.  
 
-When writing command line utilities, it's recommended to write them as
-modules that are distributed with setuptools instead of using Unix
-shebangs.
+#. On windows, setuptools automatically generates executable wrappers for Windows. This is especially useful since Unix shebangs don't work. Unix shebangs are comments at the beginning of the file that give the path to the executable, eg ``#!/usr/bin/env/python``. If the file is set as an executable, then the os will use the shebang to find the executable and run it. On windows you are not able to link a file to a specific Python interpreter so you have to ensure the script in run with the right interpreter. 
 
-Why would you want to do that?  There are a bunch of reasons:
+#. On linux and osx, setuptools scripts work with virtualenv without the virtualenv having to be activated. This makes it easy to bundle your dependencies as virtualenvs.
 
-1.  One of the problems with the traditional approach is that the first
-    module the Python interpreter loads has an incorrect name.  This might
-    sound like a small issue but it has quite significant implications.
+In addition, setuptools solves some problem unrelated to platform. 
 
-    The first module is not called by its actual name, but the
-    interpreter renames it to ``__main__``.  While that is a perfectly
-    valid name it means that if another piece of code wants to import from
-    that module it will trigger the import a second time under its real
-    name and all of a sudden your code is imported twice.
+#.  Under certain conditions, you script can be imported and run twice. For example, your script is imported as ``__main__``, which Python does for the first module it imports, and then another piece of code calls your code. You module has been imported as ``__main__``, so it is imported again with its actual name and run again. 
 
-2.  Not on all platforms are things that easy to execute.  On Linux and OS
-    X you can add a comment to the beginning of the file (``#!/usr/bin/env
-    python``) and your script works like an executable (assuming it has
-    the executable bit set).  This however does not work on Windows.
-    While on Windows you can associate interpreters with file extensions
-    (like having everything ending in ``.py`` execute through the Python
-    interpreter) you will then run into issues if you want to use the
-    script in a virtualenv.
+#.  You can avoid the above issue by protecting the script with: 
 
-    In fact running a script in a virtualenv is an issue with OS X and
-    Linux as well.  With the traditional approach you need to have the
-    whole virtualenv activated so that the correct Python interpreter is
-    used.  Not very user friendly.
+    .. code-block::
 
-3.  The main trick only works if the script is a Python module.  If your
-    application grows too large and you want to start using a package you
-    will run into issues.
+        if __name__ = '__main__':
 
-Introduction
-------------
+    But this trick will run into issues if you start using it as a package.
+
+How to Package a Script
+---------------------------------
 
 To bundle your script with setuptools, all you need is the script in a
 Python package and a ``setup.py`` file.
@@ -89,7 +72,7 @@ be generated, the second part is the import path followed by a colon
 
 That's it.
 
-Testing The Script
+Running a Script
 ------------------
 
 To test the script, you can make a new virtualenv and then install your
@@ -107,8 +90,8 @@ Afterwards, your command should be available:
 
     invoke(cli, prog_name='yourscript')
 
-Scripts in Packages
--------------------
+How to package a package
+--------------------------
 
 If your script is growing and you want to switch over to your script being
 contained in a Python package the changes necessary are minimal.  Let's
