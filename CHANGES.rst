@@ -3,7 +3,7 @@
 Version 8.1.4
 -------------
 
-Unreleased
+Released 2023-07-06
 
 -   Replace all ``typing.Dict`` occurrences to ``typing.MutableMapping`` for
     parameter hints. :issue:`2255`
