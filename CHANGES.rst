@@ -29,6 +29,7 @@ Unreleased
 -   Don't fail when writing filenames to streams with strict errors. Replace invalid
     bytes with the replacement character (``�``). :issue:`2395`
 -   Remove unnecessary attempt to detect MSYS2 environment. :issue:`2355`
+-   Remove outdated and unnecessary detection of App Engine environment. :pr:`2554`
 
 
 Version 8.1.3
