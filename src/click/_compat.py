@@ -7,12 +7,11 @@ import typing as t
 from weakref import WeakKeyDictionary
 
 CYGWIN = sys.platform.startswith("cygwin")
-MSYS2 = sys.platform.startswith("win") and ("GCC" in sys.version)
 # Determine local App Engine environment, per Google's own suggestion
 APP_ENGINE = "APPENGINE_RUNTIME" in os.environ and "Development/" in os.environ.get(
     "SERVER_SOFTWARE", ""
 )
-WIN = sys.platform.startswith("win") and not APP_ENGINE and not MSYS2
+WIN = sys.platform.startswith("win") and not APP_ENGINE
 auto_wrap_for_ansi: t.Optional[t.Callable[[t.TextIO], t.TextIO]] = None
 _ansi_re = re.compile(r"\033\[[;?0-9]*[a-zA-Z]")
 
