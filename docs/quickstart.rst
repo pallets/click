@@ -29,47 +29,29 @@ conflicting dependencies?
 Virtualenv to the rescue!  Virtualenv enables multiple side-by-side
 installations of Python, one for each project.  It doesn't actually
 install separate copies of Python, but it does provide a clever way to
-keep different project environments isolated.  Let's see how virtualenv
-works.
+keep different project environments isolated.
 
-If you are on Mac OS X or Linux::
-
-    $ pip install virtualenv --user
-
-One of these will probably install virtualenv on your system.  Maybe it's even
-in your package manager.  If you use Ubuntu, try::
-
-    $ sudo apt-get install python-virtualenv
-
-If you are on Windows (or none of the above methods worked) you must install
-``pip`` first.  For more information about this, see `installing pip`_.
-Once you have it installed, run the ``pip`` command from above, but without
-the `sudo` prefix.
-
-.. _installing pip: https://pip.readthedocs.io/en/latest/installing/
-
-Once you have virtualenv installed, just fire up a shell and create
-your own environment.  I usually create a project folder and a `venv`
-folder within::
+Create your project folder, then a virtualenv within it::
 
     $ mkdir myproject
     $ cd myproject
-    $ virtualenv venv
-    New python executable in venv/bin/python
+    $ python3 -m venv .venv
 
 Now, whenever you want to work on a project, you only have to activate the
 corresponding environment.  On OS X and Linux, do the following::
 
-    $ . venv/bin/activate
+    $ . .venv/bin/activate
+    (venv) $
 
 If you are a Windows user, the following command is for you::
 
-    $ venv\scripts\activate
+    > .venv\scripts\activate
+    (venv) >
 
 Either way, you should now be using your virtualenv (notice how the prompt of
 your shell has changed to show the active environment).
 
-And if you want to go back to the real world, use the following command::
+And if you want to stop using the virtualenv, use the following command::
 
     $ deactivate
 

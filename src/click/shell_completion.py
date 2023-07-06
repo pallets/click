@@ -80,9 +80,9 @@ class CompletionItem:
         help: t.Optional[str] = None,
         **kwargs: t.Any,
     ) -> None:
-        self.value = value
-        self.type = type
-        self.help = help
+        self.value: t.Any = value
+        self.type: str = type
+        self.help: t.Optional[str] = help
         self._info = kwargs
 
     def __getattr__(self, name: str) -> t.Any:
@@ -157,33 +157,35 @@ _SOURCE_ZSH = """\
     fi
 }
 
-compdef %(complete_func)s %(prog_name)s;
+if [[ $zsh_eval_context[-1] == loadautofunc ]]; then
+    # autoload from fpath, call function directly
+    %(complete_func)s "$@"
+else
+    # eval/source/. command, register function for later
+    compdef %(complete_func)s %(prog_name)s
+fi
 """
 
 _SOURCE_FISH = """\
-function %(complete_func)s;
-    set -l response;
+function %(complete_func)s
+    set -l response (env %(complete_var)s=fish_complete COMP_WORDS=(commandline -cp) \
+COMP_CWORD=(commandline -t) %(prog_name)s)
 
-    for value in (env %(complete_var)s=fish_complete COMP_WORDS=(commandline -cp) \
-COMP_CWORD=(commandline -t) %(prog_name)s);
-        set response $response $value;
-    end;
+    for completion in $response
+        set -l metadata (string split "," $completion)
 
-    for completion in $response;
-        set -l metadata (string split "," $completion);
-
-        if test $metadata[1] = "dir";
-            __fish_complete_directories $metadata[2];
-        else if test $metadata[1] = "file";
-            __fish_complete_path $metadata[2];
-        else if test $metadata[1] = "plain";
-            echo $metadata[2];
-        end;
-    end;
-end;
+        if test $metadata[1] = "dir"
+            __fish_complete_directories $metadata[2]
+        else if test $metadata[1] = "file"
+            __fish_complete_path $metadata[2]
+        else if test $metadata[1] = "plain"
+            echo $metadata[2]
+        end
+    end
+end
 
 complete --no-files --command %(prog_name)s --arguments \
-"(%(complete_func)s)";
+"(%(complete_func)s)"
 """
 
 
@@ -303,7 +305,7 @@ class BashComplete(ShellComplete):
         import subprocess
 
         output = subprocess.run(
-            ["bash", "-c", "echo ${BASH_VERSION}"], stdout=subprocess.PIPE
+            ["bash", "-c", 'echo "${BASH_VERSION}"'], stdout=subprocess.PIPE
         )
         match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
 
@@ -441,7 +443,8 @@ def _is_incomplete_argument(ctx: Context, param: Parameter) -> bool:
         return False
 
     assert param.name is not None
-    value = ctx.params[param.name]
+    # Will be None if expose_value is False.
+    value = ctx.params.get(param.name)
     return (
         param.nargs == -1
         or ctx.get_parameter_source(param.name) is not ParameterSource.COMMANDLINE
@@ -517,6 +520,8 @@ def _resolve_context(
                 ctx = cmd.make_context(name, args, parent=ctx, resilient_parsing=True)
                 args = ctx.protected_args + ctx.args
             else:
+                sub_ctx = ctx
+
                 while args:
                     name, cmd, args = command.resolve_command(ctx, args)
 

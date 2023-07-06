@@ -1,11 +1,6 @@
 from pallets_sphinx_themes import get_version
 from pallets_sphinx_themes import ProjectLink
 
-import click._compat
-
-# compat until pallets-sphinx-themes is updated
-click._compat.text_type = str
-
 # Project --------------------------------------------------------------
 
 project = "Click"

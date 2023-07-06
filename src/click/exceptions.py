@@ -1,12 +1,13 @@
-import os
 import typing as t
 from gettext import gettext as _
 from gettext import ngettext
 
 from ._compat import get_text_stderr
 from .utils import echo
+from .utils import format_filename
 
 if t.TYPE_CHECKING:
+    from .core import Command
     from .core import Context
     from .core import Parameter
 
@@ -57,7 +58,7 @@ class UsageError(ClickException):
     def __init__(self, message: str, ctx: t.Optional["Context"] = None) -> None:
         super().__init__(message)
         self.ctx = ctx
-        self.cmd = self.ctx.command if self.ctx else None
+        self.cmd: t.Optional["Command"] = self.ctx.command if self.ctx else None
 
     def show(self, file: t.Optional[t.IO[t.Any]] = None) -> None:
         if file is None:
@@ -261,7 +262,7 @@ class FileError(ClickException):
             hint = _("unknown error")
 
         super().__init__(hint)
-        self.ui_filename = os.fsdecode(filename)
+        self.ui_filename: str = format_filename(filename)
         self.filename = filename
 
     def format_message(self) -> str:
@@ -284,4 +285,4 @@ class Exit(RuntimeError):
     __slots__ = ("exit_code",)
 
     def __init__(self, code: int = 0) -> None:
-        self.exit_code = code
+        self.exit_code: int = code

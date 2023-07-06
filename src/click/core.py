@@ -7,11 +7,11 @@ import typing as t
 from collections import abc
 from contextlib import contextmanager
 from contextlib import ExitStack
-from functools import partial
 from functools import update_wrapper
 from gettext import gettext as _
 from gettext import ngettext
 from itertools import repeat
+from types import TracebackType
 
 from . import types
 from .exceptions import Abort
@@ -455,7 +455,12 @@ class Context:
         push_context(self)
         return self
 
-    def __exit__(self, *_: t.Any) -> None:
+    def __exit__(
+        self,
+        exc_type: t.Optional[t.Type[BaseException]],
+        exc_value: t.Optional[BaseException],
+        tb: t.Optional[TracebackType],
+    ) -> None:
         self._depth -= 1
         if self._depth == 0:
             self.close()
@@ -1081,9 +1086,9 @@ class BaseCommand:
                     # even always obvious that `rv` indicates success/failure
                     # by its truthiness/falsiness
                     ctx.exit()
-            except (EOFError, KeyboardInterrupt):
+            except (EOFError, KeyboardInterrupt) as e:
                 echo(file=sys.stderr)
-                raise Abort() from None
+                raise Abort() from e
             except ClickException as e:
                 if not standalone_mode:
                     raise
@@ -1129,9 +1134,13 @@ class BaseCommand:
         :param complete_var: Name of the environment variable that holds
             the completion instruction. Defaults to
             ``_{PROG_NAME}_COMPLETE``.
+
+        .. versionchanged:: 8.2.0
+            Dots (``.``) in ``prog_name`` are replaced with underscores (``_``).
         """
         if complete_var is None:
-            complete_var = f"_{prog_name}_COMPLETE".replace("-", "_").upper()
+            complete_name = prog_name.replace("-", "_").replace(".", "_")
+            complete_var = f"_{complete_name}_COMPLETE".upper()
 
         instruction = os.environ.get(complete_var)
 
@@ -1351,13 +1360,16 @@ class Command(BaseCommand):
 
     def format_help_text(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Writes the help text to the formatter if it exists."""
-        text = self.help if self.help is not None else ""
+        if self.help is not None:
+            # truncate the help text to the first form feed
+            text = inspect.cleandoc(self.help).partition("\f")[0]
+        else:
+            text = ""
 
         if self.deprecated:
             text = _("(Deprecated) {text}").format(text=text)
 
         if text:
-            text = inspect.cleandoc(text).partition("\f")[0]
             formatter.write_paragraph()
 
             with formatter.indentation():
@@ -1859,9 +1871,6 @@ class Group(MultiCommand):
         """
         from .decorators import command
 
-        if self.command_class and kwargs.get("cls") is None:
-            kwargs["cls"] = self.command_class
-
         func: t.Optional[t.Callable[..., t.Any]] = None
 
         if args and callable(args[0]):
@@ -1870,6 +1879,9 @@ class Group(MultiCommand):
             ), "Use 'command(**kwargs)(callable)' to provide arguments."
             (func,) = args
             args = ()
+
+        if self.command_class and kwargs.get("cls") is None:
+            kwargs["cls"] = self.command_class
 
         def decorator(f: t.Callable[..., t.Any]) -> Command:
             cmd: Command = command(*args, **kwargs)(f)
@@ -2093,10 +2105,13 @@ class Parameter:
             ]
         ] = None,
     ) -> None:
+        self.name: t.Optional[str]
+        self.opts: t.List[str]
+        self.secondary_opts: t.List[str]
         self.name, self.opts, self.secondary_opts = self._parse_decls(
             param_decls or (), expose_value
         )
-        self.type = types.convert_type(type, default)
+        self.type: types.ParamType = types.convert_type(type, default)
 
         # Default nargs to what the type tells us if we have that
         # information available.
@@ -2296,17 +2311,18 @@ class Parameter:
                 ) from None
 
         if self.nargs == 1 or self.type.is_composite:
-            convert: t.Callable[[t.Any], t.Any] = partial(
-                self.type, param=self, ctx=ctx
-            )
+
+            def convert(value: t.Any) -> t.Any:
+                return self.type(value, param=self, ctx=ctx)
+
         elif self.nargs == -1:
 
-            def convert(value: t.Any) -> t.Tuple[t.Any, ...]:
+            def convert(value: t.Any) -> t.Any:  # t.Tuple[t.Any, ...]
                 return tuple(self.type(x, self, ctx) for x in check_iter(value))
 
         else:  # nargs > 1
 
-            def convert(value: t.Any) -> t.Tuple[t.Any, ...]:
+            def convert(value: t.Any) -> t.Any:  # t.Tuple[t.Any, ...]
                 value = tuple(check_iter(value))
 
                 if len(value) != self.nargs:
@@ -2554,19 +2570,25 @@ class Option(Parameter):
             # flag if flag_value is set.
             self._flag_needs_value = flag_value is not None
 
+        self.default: t.Union[t.Any, t.Callable[[], t.Any]]
+
         if is_flag and default_is_missing and not self.required:
-            self.default: t.Union[t.Any, t.Callable[[], t.Any]] = False
+            if multiple:
+                self.default = ()
+            else:
+                self.default = False
 
         if flag_value is None:
             flag_value = not self.default
 
+        self.type: types.ParamType
         if is_flag and type is None:
             # Re-guess the type from the flag value instead of the
             # default.
             self.type = types.convert_type(None, flag_value)
 
         self.is_flag: bool = is_flag
-        self.is_bool_flag = is_flag and isinstance(self.type, types.BoolParamType)
+        self.is_bool_flag: bool = is_flag and isinstance(self.type, types.BoolParamType)
         self.flag_value: t.Any = flag_value
 
         # Counting
@@ -2604,9 +2626,6 @@ class Option(Parameter):
 
                 if self.is_flag:
                     raise TypeError("'count' is not valid with 'is_flag'.")
-
-            if self.multiple and self.is_flag:
-                raise TypeError("'multiple' is not valid with 'is_flag', use 'count'.")
 
     def to_info_dict(self) -> t.Dict[str, t.Any]:
         info_dict = super().to_info_dict()

@@ -13,13 +13,36 @@ Unreleased
 Version 8.1.4
 -------------
 
-Unreleased
+Released 2023-07-06
 
 -   Replace all ``typing.Dict`` occurrences to ``typing.MutableMapping`` for
-    parameter hints.  :issue:`2255`
+    parameter hints. :issue:`2255`
 -   Improve type hinting for decorators and give all generic types parameters.
     :issue:`2398`
--   Fix return value and type signature of `shell_completion.add_completion_class` function. :pr:`2421`
+-   Fix return value and type signature of `shell_completion.add_completion_class`
+    function. :pr:`2421`
+-   Bash version detection doesn't fail on Windows. :issue:`2461`
+-   Completion works if there is a dot (``.``) in the program name. :issue:`2166`
+-   Improve type annotations for pyright type checker. :issue:`2268`
+-   Improve responsiveness of ``click.clear()``. :issue:`2284`
+-   Improve command name detection when using Shiv or PEX. :issue:`2332`
+-   Avoid showing empty lines if command help text is empty. :issue:`2368`
+-   ZSH completion script works when loaded from ``fpath``. :issue:`2344`.
+-   ``EOFError`` and ``KeyboardInterrupt`` tracebacks are not suppressed when
+    ``standalone_mode`` is disabled. :issue:`2380`
+-   ``@group.command`` does not fail if the group was created with a custom
+    ``command_class``. :issue:`2416`
+-   ``multiple=True`` is allowed for flag options again and does not require
+    setting ``default=()``. :issue:`2246, 2292, 2295`
+-   Make the decorators returned by ``@argument()`` and ``@option()`` reusable when the
+    ``cls`` parameter is used. :issue:`2294`
+-   Don't fail when writing filenames to streams with strict errors. Replace invalid
+    bytes with the replacement character (``�``). :issue:`2395`
+-   Remove unnecessary attempt to detect MSYS2 environment. :issue:`2355`
+-   Remove outdated and unnecessary detection of App Engine environment. :pr:`2554`
+-   ``echo()`` does not fail when no streams are attached, such as with ``pythonw`` on
+    Windows. :issue:`2415`
+-   Argument with ``expose_value=False`` do not cause completion to fail. :issue:`2336`
 
 
 Version 8.1.3
