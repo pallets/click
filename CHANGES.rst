@@ -30,6 +30,8 @@ Unreleased
     bytes with the replacement character (``�``). :issue:`2395`
 -   Remove unnecessary attempt to detect MSYS2 environment. :issue:`2355`
 -   Remove outdated and unnecessary detection of App Engine environment. :pr:`2554`
+-   ``echo()`` does not fail when no streams are attached, such as with ``pythonw`` on
+    Windows. :issue:`2415`
 
 
 Version 8.1.3
