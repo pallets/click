@@ -108,7 +108,7 @@ def test_group_from_list(runner):
     [
         ([], "S:[no value]"),
         (["--s=42"], "S:[42]"),
-        (["--s"], "Error: Option '--s' requires an argument."),
+        (["--s"], "Error: Option '--s' requires a value."),
         (["--s="], "S:[]"),
         (["--s=\N{SNOWMAN}"], "S:[\N{SNOWMAN}]"),
     ],

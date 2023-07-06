@@ -319,7 +319,7 @@ def test_defaults_for_nargs(runner):
 
     result = runner.invoke(cmd, ["3"])
     assert result.exception is not None
-    assert "Argument 'a' takes 2 values." in result.output
+    assert "Argument '[A]...' requires 2 values but 1 was given." in result.output
 
 
 def test_multiple_param_decls_not_allowed(runner):

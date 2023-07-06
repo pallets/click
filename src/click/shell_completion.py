@@ -4,7 +4,7 @@ import typing as t
 from gettext import gettext as _
 
 from .core import Argument
-from .core import BaseCommand
+from .core import Command
 from .core import Context
 from .core import MultiCommand
 from .core import Option
@@ -15,7 +15,7 @@ from .utils import echo
 
 
 def shell_complete(
-    cli: BaseCommand,
+    cli: Command,
     ctx_args: t.MutableMapping[str, t.Any],
     prog_name: str,
     complete_var: str,
@@ -215,7 +215,7 @@ class ShellComplete:
 
     def __init__(
         self,
-        cli: BaseCommand,
+        cli: Command,
         ctx_args: t.MutableMapping[str, t.Any],
         prog_name: str,
         complete_var: str,
@@ -490,7 +490,7 @@ def _is_incomplete_option(ctx: Context, args: t.List[str], param: Parameter) -> 
 
 
 def _resolve_context(
-    cli: BaseCommand,
+    cli: Command,
     ctx_args: t.MutableMapping[str, t.Any],
     prog_name: str,
     args: t.List[str],
@@ -505,7 +505,7 @@ def _resolve_context(
     """
     ctx_args["resilient_parsing"] = True
     ctx = cli.make_context(prog_name, args.copy(), **ctx_args)
-    args = ctx.protected_args + ctx.args
+    args = ctx.args
 
     while args:
         command = ctx.command
@@ -518,7 +518,7 @@ def _resolve_context(
                     return ctx
 
                 ctx = cmd.make_context(name, args, parent=ctx, resilient_parsing=True)
-                args = ctx.protected_args + ctx.args
+                args = ctx.args
             else:
                 sub_ctx = ctx
 
@@ -539,7 +539,7 @@ def _resolve_context(
                     args = sub_ctx.args
 
                 ctx = sub_ctx
-                args = [*sub_ctx.protected_args, *sub_ctx.args]
+                args = sub_ctx.args
         else:
             break
 
@@ -548,7 +548,7 @@ def _resolve_context(
 
 def _resolve_incomplete(
     ctx: Context, args: t.List[str], incomplete: str
-) -> t.Tuple[t.Union[BaseCommand, Parameter], str]:
+) -> t.Tuple[t.Union[Command, Parameter], str]:
     """Find the Click object that will handle the completion of the
     incomplete value. Return the object and the incomplete value.
 

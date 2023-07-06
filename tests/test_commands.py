@@ -152,7 +152,7 @@ def test_base_command(runner):
     def cli():
         pass
 
-    class OptParseCommand(click.BaseCommand):
+    class OptParseCommand(click.Command):
         def __init__(self, name, parser, callback):
             super().__init__(name)
             self.parser = parser

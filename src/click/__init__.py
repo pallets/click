@@ -5,7 +5,6 @@ around a simple API that does not come with too much magic and is
 composable.
 """
 from .core import Argument as Argument
-from .core import BaseCommand as BaseCommand
 from .core import Command as Command
 from .core import CommandCollection as CommandCollection
 from .core import Context as Context
@@ -36,7 +35,6 @@ from .exceptions import UsageError as UsageError
 from .formatting import HelpFormatter as HelpFormatter
 from .formatting import wrap_text as wrap_text
 from .globals import get_current_context as get_current_context
-from .parser import OptionParser as OptionParser
 from .termui import clear as clear
 from .termui import confirm as confirm
 from .termui import echo_via_pager as echo_via_pager
