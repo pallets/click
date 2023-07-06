@@ -267,6 +267,11 @@ def echo(
         else:
             file = _default_text_stdout()
 
+        # There are no standard streams attached to write to. For example,
+        # pythonw on Windows.
+        if file is None:
+            return
+
     # Convert non bytes/text into the native string type.
     if message is not None and not isinstance(message, (str, bytes, bytearray)):
         out: t.Optional[t.Union[str, bytes]] = str(message)
