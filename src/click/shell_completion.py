@@ -443,7 +443,8 @@ def _is_incomplete_argument(ctx: Context, param: Parameter) -> bool:
         return False
 
     assert param.name is not None
-    value = ctx.params[param.name]
+    # Will be None if expose_value is False.
+    value = ctx.params.get(param.name)
     return (
         param.nargs == -1
         or ctx.get_parameter_source(param.name) is not ParameterSource.COMMANDLINE

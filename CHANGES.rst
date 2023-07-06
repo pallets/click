@@ -32,6 +32,7 @@ Unreleased
 -   Remove outdated and unnecessary detection of App Engine environment. :pr:`2554`
 -   ``echo()`` does not fail when no streams are attached, such as with ``pythonw`` on
     Windows. :issue:`2415`
+-   Argument with ``expose_value=False`` do not cause completion to fail. :issue:`2336`
 
 
 Version 8.1.3
