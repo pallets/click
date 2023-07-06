@@ -58,15 +58,14 @@ jobs:
     # files in the draft release.
     environment: 'publish'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a
-      # Try uploading to Test PyPI first, in case something fails.
       - uses: pypa/gh-action-pypi-publish@f5622bde02b04381239da3573277701ceca8f6a0
         with:
-          password: ${{ secrets.TEST_PYPI_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
           packages_dir: artifact/
       - uses: pypa/gh-action-pypi-publish@f5622bde02b04381239da3573277701ceca8f6a0
         with:
-          password: ${{ secrets.PYPI_TOKEN }}
-          packages_dir: artifact/
+          packages-dir: artifact/
