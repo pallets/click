@@ -1,5 +1,12 @@
 .. currentmodule:: click
 
+Version 8.1.5
+-------------
+
+Unreleased
+
+- Fix type annotations on the option and argument decorators. :issue:`2558`
+
 Version 8.1.4
 -------------
 
