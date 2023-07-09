@@ -381,7 +381,7 @@ def option(
     return decorator
 
 
-def confirmation_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def confirmation_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--yes`` option which shows a prompt before continuing if
     not passed. If the prompt is declined, the program will exit.
 
