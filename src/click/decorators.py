@@ -21,7 +21,6 @@ if t.TYPE_CHECKING:
 R = t.TypeVar("R")
 T = t.TypeVar("T")
 _AnyCallable = t.Callable[..., t.Any]
-_Decorator: "te.TypeAlias" = t.Callable[[T], T]
 FC = t.TypeVar("FC", bound=t.Union[_AnyCallable, Command])
 
 
@@ -535,7 +534,7 @@ def version_option(
     return option(*param_decls, **kwargs)
 
 
-def help_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--help`` option which immediately prints the help page
     and exits the program.
 
