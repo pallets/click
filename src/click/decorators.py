@@ -327,7 +327,7 @@ def _param_memo(f: t.Callable[..., t.Any], param: Parameter) -> None:
 
 def argument(
     *param_decls: str, cls: t.Optional[t.Type[Argument]] = None, **attrs: t.Any
-) -> _Decorator[FC]:
+) -> t.Callable[[FC], FC]:
     """Attaches an argument to the command.  All positional arguments are
     passed as parameter declarations to :class:`Argument`; all keyword
     arguments are forwarded unchanged (except ``cls``).
