@@ -429,7 +429,7 @@ def version_option(
     prog_name: t.Optional[str] = None,
     message: t.Optional[str] = None,
     **kwargs: t.Any,
-) -> _Decorator[FC]:
+) -> t.Callable[[FC], FC]:
     """Add a ``--version`` option which immediately prints the version
     number and exits the program.
 
