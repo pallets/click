@@ -23,12 +23,12 @@ In addition, setuptools solves some problem unrelated to platform.
 How to Package a Script
 ---------------------------------
 
-To bundle your script with setuptools, all you need is the script in a
-Python package and a ``setup.py`` file.
+To bundle your script with setuptools, all you need is the script and a ``setup.py`` file.
 
 Imagine this directory structure:
 
 .. code-block:: text
+
 
     yourscript.py
     setup.py
@@ -70,13 +70,10 @@ part before the equals sign (``=``) is the name of the script that should
 be generated, the second part is the import path followed by a colon
 (``:``) with the Click command.
 
-That's it.
-
 Running a Script
 ------------------
 
-To test the script, you can make a new virtualenv and then install your
-package:
+To test the script, you make a new virtualenv and editable install your package:
 
 .. code-block:: console
 
@@ -84,7 +81,7 @@ package:
     $ . .venv/bin/activate
     $ pip install --editable .
 
-Afterwards, your command should be available:
+Now, your command should be available:
 
 .. click:run::
 
@@ -93,9 +90,7 @@ Afterwards, your command should be available:
 How to package a package
 --------------------------
 
-If your script is growing and you want to switch over to your script being
-contained in a Python package the changes necessary are minimal.  Let's
-assume your directory structure changed to this:
+Imagine this directory structure:
 
 .. code-block:: text
 
@@ -109,12 +104,10 @@ assume your directory structure changed to this:
                 yourscript.py
         setup.py
 
-In this case instead of using ``py_modules`` in your ``setup.py`` file you
-can use ``packages`` and the automatic package finding support of
-setuptools.  In addition to that it's also recommended to include other
-package data.
+For a package structured like the above, you can use ``packages`` and the automatic package finding support of
+setuptools instead pf ``py_modules`` and manually listing the modules. You should also include other relevant package data.
 
-These would be the modified contents of ``setup.py``:
+The modified contents of ``setup.py``:
 
 .. code-block:: python
 
