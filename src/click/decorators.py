@@ -150,16 +150,12 @@ def command(
     ...
 
 
-# variant: name omitted, cls _must_ be a keyword argument, @command(cmd=CommandCls, ...)
-# The correct way to spell this overload is to use keyword-only argument syntax:
-# def command(*, cls: t.Type[CmdType], **attrs: t.Any) -> ...
-# However, mypy thinks this doesn't fit the overloaded function. Pyright does
-# accept that spelling, and the following work-around makes pyright issue a
-# warning that CmdType could be left unsolved, but mypy sees it as fine. *shrug*
+# variant: name omitted, cls _must_ be a keyword argument, @command(cls=CommandCls, ...)
 @t.overload
 def command(
     name: None = None,
-    cls: t.Type[CmdType] = ...,
+    *,
+    cls: t.Type[CmdType],
     **attrs: t.Any,
 ) -> t.Callable[[_AnyCallable], CmdType]:
     ...
@@ -359,7 +355,7 @@ def argument(
 
 def option(
     *param_decls: str, cls: t.Optional[t.Type[Option]] = None, **attrs: t.Any
-) -> _Decorator[FC]:
+) -> t.Callable[[FC], FC]:
     """Attaches an option to the command.  All positional arguments are
     passed as parameter declarations to :class:`Option`; all keyword
     arguments are forwarded unchanged (except ``cls``).
