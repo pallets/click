@@ -5,19 +5,11 @@
 #
 #    pip-compile-multi
 #
-attrs==21.4.0
+iniconfig==2.0.0
     # via pytest
-iniconfig==1.1.1
+packaging==23.1
     # via pytest
-packaging==21.3
+pluggy==1.2.0
     # via pytest
-pluggy==1.0.0
-    # via pytest
-py==1.11.0
-    # via pytest
-pyparsing==3.0.8
-    # via packaging
-pytest==7.1.2
+pytest==7.4.0
     # via -r requirements/tests.in
-tomli==2.0.1
-    # via pytest

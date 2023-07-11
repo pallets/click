@@ -24,32 +24,28 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {name: Linux, python: '3.10', os: ubuntu-latest, tox: py310}
-          - {name: Windows, python: '3.10', os: windows-latest, tox: py310}
-          - {name: Mac, python: '3.10', os: macos-latest, tox: py310}
-          - {name: '3.11-dev', python: '3.11-dev', os: ubuntu-latest, tox: py311}
+          - {name: Linux, python: '3.11', os: ubuntu-latest, tox: py311}
+          - {name: Windows, python: '3.11', os: windows-latest, tox: py311}
+          - {name: Mac, python: '3.11', os: macos-latest, tox: py311}
+          - {name: '3.12-dev', python: '3.12-dev', os: ubuntu-latest, tox: py312}
+          - {name: '3.10', python: '3.10', os: ubuntu-latest, tox: py310}
           - {name: '3.9', python: '3.9', os: ubuntu-latest, tox: py39}
           - {name: '3.8', python: '3.8', os: ubuntu-latest, tox: py38}
           - {name: '3.7', python: '3.7', os: ubuntu-latest, tox: py37}
-          - {name: 'PyPy', python: 'pypy-3.7', os: ubuntu-latest, tox: pypy37}
-          - {name: Typing, python: '3.10', os: ubuntu-latest, tox: typing}
+          - {name: 'PyPy', python: 'pypy-3.10', os: ubuntu-latest, tox: pypy310}
+          - {name: Typing, python: '3.11', os: ubuntu-latest, tox: typing}
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v3
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      - uses: actions/setup-python@bd6b4b6205c4dbad673328db7b31b7fab9e241c0
         with:
           python-version: ${{ matrix.python }}
           cache: 'pip'
           cache-dependency-path: 'requirements/*.txt'
-      - name: update pip
-        run: |
-          pip install -U wheel
-          pip install -U setuptools
-          python -m pip install -U pip
       - name: cache mypy
-        uses: actions/cache@v2
+        uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
         with:
           path: ./.mypy_cache
-          key: mypy|${{ matrix.python }}|${{ hashFiles('setup.cfg') }}
+          key: mypy|${{ matrix.python }}|${{ hashFiles('pyproject.toml') }}
         if: matrix.tox == 'typing'
       - run: pip install tox
-      - run: tox -e ${{ matrix.tox }}
+      - run: tox run -e ${{ matrix.tox }}

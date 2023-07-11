@@ -43,6 +43,15 @@ def test_echo_custom_file():
     assert f.getvalue() == "hello\n"
 
 
+def test_echo_no_streams(monkeypatch, runner):
+    """echo should not fail when stdout and stderr are None with pythonw on Windows."""
+    with runner.isolation():
+        sys.stdout = None
+        sys.stderr = None
+        click.echo("test")
+        click.echo("test", err=True)
+
+
 @pytest.mark.parametrize(
     ("styles", "ref"),
     [
@@ -98,10 +107,7 @@ def test_filename_formatting():
     assert click.format_filename(b"/x/foo.txt") == "/x/foo.txt"
     assert click.format_filename("/x/foo.txt") == "/x/foo.txt"
     assert click.format_filename("/x/foo.txt", shorten=True) == "foo.txt"
-
-    # filesystem encoding on windows permits this.
-    if not WIN:
-        assert click.format_filename(b"/x/foo\xff.txt", shorten=True) == "foo\udcff.txt"
+    assert click.format_filename(b"/x/\xff.txt", shorten=True) == "�.txt"
 
 
 def test_prompts(runner):
@@ -446,6 +452,7 @@ class MockMain:
         ("example", None, "example"),
         (str(pathlib.Path("example/__main__.py")), "example", "python -m example"),
         (str(pathlib.Path("example/cli.py")), "example", "python -m example.cli"),
+        (str(pathlib.Path("./example")), "", "example"),
     ],
 )
 def test_detect_program_name(path, main, expected):
@@ -457,7 +464,7 @@ def test_expand_args(monkeypatch):
     assert user in click.utils._expand_args(["~"])
     monkeypatch.setenv("CLICK_TEST", "hello")
     assert "hello" in click.utils._expand_args(["$CLICK_TEST"])
-    assert "setup.cfg" in click.utils._expand_args(["*.cfg"])
+    assert "pyproject.toml" in click.utils._expand_args(["*.toml"])
     assert os.path.join("docs", "conf.py") in click.utils._expand_args(["**/conf.py"])
     assert "*.not-found" in click.utils._expand_args(["*.not-found"])
     # a bad glob pattern, such as a pytest identifier, should return itself

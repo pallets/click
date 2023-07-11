@@ -218,3 +218,166 @@ As you can see:
 .. click:run::
 
     invoke(cp, [])
+
+Lazily Loading Subcommands
+--------------------------
+
+Large CLIs and CLIs with slow imports may benefit from deferring the loading of
+subcommands. The interfaces which support this mode of use are
+:meth:`MultiCommand.list_commands` and :meth:`MultiCommand.get_command`. A custom
+:class:`MultiCommand` subclass can implement a lazy loader by storing extra data such
+that :meth:`MultiCommand.get_command` is responsible for running imports.
+
+Since the primary case for this is a :class:`Group` which loads its subcommands lazily,
+the following example shows a lazy-group implementation.
+
+.. warning::
+
+   Lazy loading of python code can result in hard to track down bugs, circular imports
+   in order-dependent codebases, and other surprising behaviors. It is recommended that
+   this technique only be used in concert with testing which will at least run the
+   ``--help`` on each subcommand. That will guarantee that each subcommand can be loaded
+   successfully.
+
+Defining the Lazy Group
+```````````````````````
+
+The following :class:`Group` subclass adds an attribute, ``lazy_subcommands``, which
+stores a mapping from subcommand names to the information for importing them.
+
+.. code-block:: python
+
+    # in lazy_group.py
+    import importlib
+    import click
+
+    class LazyGroup(click.Group):
+        def __init__(self, *args, lazy_subcommands=None, **kwargs):
+            super().__init__(*args, **kwargs)
+            # lazy_subcommands is a map of the form:
+            #
+            #   {command-name} -> {module-name}.{command-object-name}
+            #
+            self.lazy_subcommands = lazy_subcommands or {}
+
+        def list_commands(self, ctx):
+            base = super().list_commands(ctx)
+            lazy = sorted(self.lazy_subcommands.keys())
+            return base + lazy
+
+        def get_command(self, ctx, cmd_name):
+            if cmd_name in self.lazy_subcommands:
+                return self._lazy_load(cmd_name)
+            return super().get_command(ctx, cmd_name)
+
+        def _lazy_load(self, cmd_name):
+            # lazily loading a command, first get the module name and attribute name
+            import_path = self.lazy_subcommands[cmd_name]
+            modname, cmd_object_name = import_path.rsplit(".", 1)
+            # do the import
+            mod = importlib.import_module(modname)
+            # get the Command object from that module
+            cmd_object = getattr(mod, cmd_object_name)
+            # check the result to make debugging easier
+            if not isinstance(cmd_object, click.BaseCommand):
+                raise ValueError(
+                    f"Lazy loading of {import_path} failed by returning "
+                    "a non-command object"
+                )
+            return cmd_object
+
+Using LazyGroup To Define a CLI
+```````````````````````````````
+
+With ``LazyGroup`` defined, it's now possible to write a group which lazily loads its
+subcommands like so:
+
+.. code-block:: python
+
+    # in main.py
+    import click
+    from lazy_group import LazyGroup
+
+    @click.group(
+        cls=LazyGroup,
+        lazy_subcommands={"foo": "foo.cli", "bar": "bar.cli"},
+        help="main CLI command for lazy example",
+    )
+    def cli():
+        pass
+
+    # in foo.py
+    import click
+
+    @click.group(help="foo command for lazy example")
+    def cli():
+        pass
+
+    # in bar.py
+    import click
+    from lazy_group import LazyGroup
+
+    @click.group(
+        cls=LazyGroup,
+        lazy_subcommands={"baz": "baz.cli"},
+        help="bar command for lazy example",
+    )
+    def cli():
+        pass
+
+    # in baz.py
+    import click
+
+    @click.group(help="baz command for lazy example")
+    def cli():
+        pass
+
+
+What triggers Lazy Loading?
+```````````````````````````
+
+There are several events which may trigger lazy loading by running the
+:meth:`MultiCommand.get_command` function.
+Some are intuititve, and some are less so.
+
+All cases are described with respect to the above example, assuming the main program
+name is ``cli``.
+
+1. Command resolution. If a user runs ``cli bar baz``, this must first resolve ``bar``,
+   and then resolve ``baz``. Each subcommand resolution step does a lazy load.
+2. Helptext rendering. In order to get the short help description of subcommands,
+   ``cli --help`` will load ``foo`` and ``bar``. Note that it will still not load
+   ``baz``.
+3. Shell completion. In order to get the subcommands of a lazy command, ``cli <TAB>``
+   will need to resolve the subcommands of ``cli``. This process will trigger the lazy
+   loads.
+
+Further Deferring Imports
+`````````````````````````
+
+It is possible to make the process even lazier, but it is generally more difficult the
+more you want to defer work.
+
+For example, subcommands could be represented as a custom :class:`BaseCommand` subclass
+which defers importing the command until it is invoked, but which provides
+:meth:`BaseCommand.get_short_help_str` in order to support completions and helptext.
+More simply, commands can be constructed whose callback functions defer any actual work
+until after an import.
+
+This command definition provides ``foo``, but any of the work associated with importing
+the "real" callback function is deferred until invocation time:
+
+.. click:example::
+
+    @click.command()
+    @click.option("-n", type=int)
+    @click.option("-w", type=str)
+    def foo(n, w):
+        from mylibrary import foo_concrete
+
+        foo_concrete(n, w)
+
+Because ``click`` builds helptext and usage info from options, arguments, and command
+attributes, it has no awareness that the underlying function is in any way handling a
+deferred import. Therefore, all ``click``-provided utilities and functionality will work
+as normal on such a command.

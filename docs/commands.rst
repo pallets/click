@@ -285,11 +285,9 @@ Multi Command Chaining
 .. versionadded:: 3.0
 
 Sometimes it is useful to be allowed to invoke more than one subcommand in
-one go.  For instance if you have installed a setuptools package before
-you might be familiar with the ``setup.py sdist bdist_wheel upload``
-command chain which invokes ``sdist`` before ``bdist_wheel`` before
-``upload``.  Starting with Click 3.0 this is very simple to implement.
-All you have to do is to pass ``chain=True`` to your multicommand:
+one go. For example, ``my-app validate build upload`` would invoke ``validate``,
+then ``build``, then ``upload``. To implement this in Click, pass ``chain=True``
+when creating a group.
 
 .. click:example::
 

@@ -1,4 +1,5 @@
 import sys
+from unittest import mock
 
 import pytest
 
@@ -86,9 +87,12 @@ def test_bytes_args(runner, monkeypatch):
         ), "UTF-8 encoded argument should be implicitly converted to Unicode"
 
     # Simulate empty locale environment variables
-    monkeypatch.setattr(sys.stdin, "encoding", "utf-8")
     monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "utf-8")
     monkeypatch.setattr(sys, "getdefaultencoding", lambda: "utf-8")
+    # sys.stdin.encoding is readonly, needs some extra effort to patch.
+    stdin = mock.Mock(wraps=sys.stdin)
+    stdin.encoding = "utf-8"
+    monkeypatch.setattr(sys, "stdin", stdin)
 
     runner.invoke(
         from_bytes,
@@ -377,3 +381,23 @@ def test_nested_subcommand_help(runner):
     result = runner.invoke(cli, ["arg1", "cmd", "arg2", "subcmd", "--help"])
     assert not result.exception
     assert "Usage: cli ARG1 cmd ARG2 subcmd [OPTIONS]" in result.output
+
+
+def test_when_argument_decorator_is_used_multiple_times_cls_is_preserved():
+    class CustomArgument(click.Argument):
+        pass
+
+    reusable_argument = click.argument("art", cls=CustomArgument)
+
+    @click.command()
+    @reusable_argument
+    def foo(arg):
+        pass
+
+    @click.command()
+    @reusable_argument
+    def bar(arg):
+        pass
+
+    assert isinstance(foo.params[0], CustomArgument)
+    assert isinstance(bar.params[0], CustomArgument)

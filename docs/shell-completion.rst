@@ -25,7 +25,7 @@ Enabling Completion
 
 Completion is only available if a script is installed and invoked
 through an entry point, not through the ``python`` command. See
-:doc:`/setuptools`. Once the executable is installed, calling it with
+:doc:`entry-points`. Once the executable is installed, calling it with
 a special environment variable will put Click in completion mode.
 
 In order for completion to be used, the user needs to register a special

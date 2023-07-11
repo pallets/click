@@ -79,7 +79,7 @@ object has a :attr:`~Context.params` attribute which is a dictionary of
 all parameters.  Whatever is in that dictionary is being passed to the
 callbacks.
 
-This can be used to make up addition parameters.  Generally this pattern
+This can be used to make up additional parameters.  Generally this pattern
 is not recommended but in some cases it can be useful.  At the very least
 it's good to know that the system works this way.
 
@@ -282,7 +282,7 @@ options:
     command will abort with an error that there are leftover arguments.
     If you go with this solution, the extra arguments will be collected in
     :attr:`Context.args`.
-2.  You can attach a :func:`argument` with ``nargs`` set to `-1` which
+2.  You can attach an :func:`argument` with ``nargs`` set to `-1` which
     will eat up all leftover arguments.  In this case it's recommended to
     set the `type` to :data:`UNPROCESSED` to avoid any string processing
     on those arguments as otherwise they are forced into unicode strings
@@ -339,7 +339,7 @@ are important to know about how this ignoring of unhandled flag happens:
     to not allow arguments and options to be mixed.  Depending on your
     situation this might improve your results.
 
-Generally though the combinated handling of options and arguments from
+Generally though the combined handling of options and arguments from
 your own commands and commands from another application are discouraged
 and if you can avoid it, you should.  It's a much better idea to have
 everything below a subcommand be forwarded to another application than to

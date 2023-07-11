@@ -1,0 +1,18 @@
+[project]
+name = "click-example-validation"
+version = "1.0.0"
+description = "Click validation example"
+requires-python = ">=3.7"
+dependencies = [
+    "click>=8.1",
+]
+
+[project.scripts]
+validation = "validation:cli"
+
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "validation"
