@@ -1,3 +1,4 @@
+from collections import abc
 import inspect
 import types
 import typing as t
@@ -522,32 +523,41 @@ def version_option(
     return option(*param_decls, **kwargs)
 
 
-def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
-    """Add a ``--help`` option which immediately prints the help page
+class HelpOption(Option):
+    """Pre-configured ``--help`` option which immediately prints the help page
     and exits the program.
+    """
 
-    This is usually unnecessary, as the ``--help`` option is added to
-    each command automatically unless ``add_help_option=False`` is
-    passed.
+    def __init__(
+        self,
+        param_decls: abc.Sequence[str] | None = None,
+        **kwargs: t.Any,
+    ) -> None:
+        if not param_decls:
+            param_decls = ("--help",)
+
+        kwargs.setdefault("is_flag", True)
+        kwargs.setdefault("expose_value", False)
+        kwargs.setdefault("is_eager", True)
+        kwargs.setdefault("help", _("Show this message and exit."))
+        kwargs.setdefault("callback", self.show_help)
+
+        super().__init__(param_decls, **kwargs)
+
+    @staticmethod
+    def show_help(ctx: Context, param: Parameter, value: bool) -> None:
+        """Callback that print the help page on ``<stdout>`` and exits."""
+        if value and not ctx.resilient_parsing:
+            echo(ctx.get_help(), color=ctx.color)
+            ctx.exit()
+
+
+def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
+    """Decorator for the pre-configured ``--help`` option defined above.
 
     :param param_decls: One or more option names. Defaults to the single
         value ``"--help"``.
     :param kwargs: Extra arguments are passed to :func:`option`.
     """
-
-    def callback(ctx: Context, param: Parameter, value: bool) -> None:
-        if not value or ctx.resilient_parsing:
-            return
-
-        echo(ctx.get_help(), color=ctx.color)
-        ctx.exit()
-
-    if not param_decls:
-        param_decls = ("--help",)
-
-    kwargs.setdefault("is_flag", True)
-    kwargs.setdefault("expose_value", False)
-    kwargs.setdefault("is_eager", True)
-    kwargs.setdefault("help", _("Show this message and exit."))
-    kwargs["callback"] = callback
+    kwargs.setdefault("cls", HelpOption)
     return option(*param_decls, **kwargs)
