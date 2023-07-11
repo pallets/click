@@ -931,10 +931,10 @@ def test_invalid_flag_combinations(runner, kwargs, message):
 @pytest.mark.parametrize(
     ("choices", "metavars"),
     [
-        pytest.param(["foo", "bar"], "TEXT", id="text choices"),
-        pytest.param([1, 2], "INTEGER", id="int choices"),
-        pytest.param([1.0, 2.0], "FLOAT", id="float choices"),
-        pytest.param([True, False], "BOOLEAN", id="bool choices"),
+        pytest.param(["foo", "bar"], "[TEXT]", id="text choices"),
+        pytest.param([1, 2], "[INTEGER]", id="int choices"),
+        pytest.param([1.0, 2.0], "[FLOAT]", id="float choices"),
+        pytest.param([True, False], "[BOOLEAN]", id="bool choices"),
         pytest.param(["foo", 1], "[TEXT|INTEGER]", id="text/int choices"),
     ],
 )
