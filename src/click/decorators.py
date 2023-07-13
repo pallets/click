@@ -271,15 +271,11 @@ def group(
 
 
 # variant: name omitted, cls _must_ be a keyword argument, @group(cmd=GroupCls, ...)
-# The _correct_ way to spell this overload is to use keyword-only argument syntax:
-# def group(*, cls: t.Type[GrpType], **attrs: t.Any) -> ...
-# However, mypy thinks this doesn't fit the overloaded function. Pyright does
-# accept that spelling, and the following work-around makes pyright issue a
-# warning that GrpType could be left unsolved, but mypy sees it as fine. *shrug*
 @t.overload
 def group(
     name: None = None,
-    cls: t.Type[GrpType] = ...,
+    *,
+    cls: t.Type[GrpType],
     **attrs: t.Any,
 ) -> t.Callable[[_AnyCallable], GrpType]:
     ...

@@ -5,6 +5,8 @@ Version 8.1.6
 
 Unreleased
 
+-   Fix an issue with type hints for ``@click.group()``. :issue:`2558`
+
 
 Version 8.1.5
 -------------
