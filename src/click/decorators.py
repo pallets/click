@@ -21,7 +21,6 @@ if t.TYPE_CHECKING:
 R = t.TypeVar("R")
 T = t.TypeVar("T")
 _AnyCallable = t.Callable[..., t.Any]
-_Decorator: "te.TypeAlias" = t.Callable[[T], T]
 FC = t.TypeVar("FC", bound=t.Union[_AnyCallable, Command])
 
 
@@ -150,16 +149,12 @@ def command(
     ...
 
 
-# variant: name omitted, cls _must_ be a keyword argument, @command(cmd=CommandCls, ...)
-# The correct way to spell this overload is to use keyword-only argument syntax:
-# def command(*, cls: t.Type[CmdType], **attrs: t.Any) -> ...
-# However, mypy thinks this doesn't fit the overloaded function. Pyright does
-# accept that spelling, and the following work-around makes pyright issue a
-# warning that CmdType could be left unsolved, but mypy sees it as fine. *shrug*
+# variant: name omitted, cls _must_ be a keyword argument, @command(cls=CommandCls, ...)
 @t.overload
 def command(
     name: None = None,
-    cls: t.Type[CmdType] = ...,
+    *,
+    cls: t.Type[CmdType],
     **attrs: t.Any,
 ) -> t.Callable[[_AnyCallable], CmdType]:
     ...
@@ -331,7 +326,7 @@ def _param_memo(f: t.Callable[..., t.Any], param: Parameter) -> None:
 
 def argument(
     *param_decls: str, cls: t.Optional[t.Type[Argument]] = None, **attrs: t.Any
-) -> _Decorator[FC]:
+) -> t.Callable[[FC], FC]:
     """Attaches an argument to the command.  All positional arguments are
     passed as parameter declarations to :class:`Argument`; all keyword
     arguments are forwarded unchanged (except ``cls``).
@@ -359,7 +354,7 @@ def argument(
 
 def option(
     *param_decls: str, cls: t.Optional[t.Type[Option]] = None, **attrs: t.Any
-) -> _Decorator[FC]:
+) -> t.Callable[[FC], FC]:
     """Attaches an option to the command.  All positional arguments are
     passed as parameter declarations to :class:`Option`; all keyword
     arguments are forwarded unchanged (except ``cls``).
@@ -385,7 +380,7 @@ def option(
     return decorator
 
 
-def confirmation_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def confirmation_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--yes`` option which shows a prompt before continuing if
     not passed. If the prompt is declined, the program will exit.
 
@@ -409,7 +404,7 @@ def confirmation_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
     return option(*param_decls, **kwargs)
 
 
-def password_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def password_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--password`` option which prompts for a password, hiding
     input and asking to enter the value again for confirmation.
 
@@ -433,7 +428,7 @@ def version_option(
     prog_name: t.Optional[str] = None,
     message: t.Optional[str] = None,
     **kwargs: t.Any,
-) -> _Decorator[FC]:
+) -> t.Callable[[FC], FC]:
     """Add a ``--version`` option which immediately prints the version
     number and exits the program.
 
@@ -539,7 +534,7 @@ def version_option(
     return option(*param_decls, **kwargs)
 
 
-def help_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--help`` option which immediately prints the help page
     and exits the program.
 

@@ -5,6 +5,9 @@ Version 8.1.5
 
 Unreleased
 
+-   Fix type hints for ``@click.command()`` and ``@click.option()``. Introduce typing
+    tests. :issue:`2558`
+
 
 Version 8.1.4
 -------------
