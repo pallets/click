@@ -3,10 +3,10 @@
 Version 8.1.5
 -------------
 
-Unreleased
+Released 2023-07-13
 
--   Fix type hints for ``@click.command()`` and ``@click.option()``. Introduce typing
-    tests. :issue:`2558`
+-   Fix an issue with type hints for ``@click.command()``, ``@click.option()``, and
+    other decorators. Introduce typing tests. :issue:`2558`
 
 
 Version 8.1.4
