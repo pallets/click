@@ -3,7 +3,7 @@
 Version 8.1.6
 -------------
 
-Unreleased
+Released 2023-07-18
 
 -   Fix an issue with type hints for ``@click.group()``. :issue:`2558`
 
