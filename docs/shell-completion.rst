@@ -62,7 +62,7 @@ program name. This uses ``foo-bar`` as an example.
 
         .. code-block:: fish
 
-            eval (env _FOO_BAR_COMPLETE=fish_source foo-bar)
+            _FOO_BAR_COMPLETE=fish_source foo-bar | source
 
         This is the same file used for the activation script method
         below. For Fish it's probably always easier to use that method.
