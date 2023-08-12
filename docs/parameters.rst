@@ -22,15 +22,15 @@ Arguments
 *   are optional with in reason, but not entirely so.
 *   Recommended to use for subcommands, urls, or files.
 *   Can take an arbitrary number of arguments.
-*   Are not fully documented by the help page since they may be too specific to be automatically documented. How to document args is covered in :ref:`documenting args section <documenting-arguments>`.
-*   Can be pulled from environment variables but only explicitly named ones. See :ref:`environment-variables` for further explanation.
+*   Are not fully documented by the help page since they may be too specific to be automatically documented.  For more see :ref:`documenting-arguments`.
+*   Can be pulled from environment variables but only explicitly named ones. For more see :ref:`environment-variables`.
 
 .. _parameter_names:
 
 Parameter Names
 ---------------
 
-Parameters (both options and arguments) have a name that will be used as
+Parameters (options and arguments) have a name that will be used as
 the Python argument name when calling the decorated function with
 values.
 
@@ -40,7 +40,7 @@ values.
     @click.argument('filename')
     @click.option('-t', '--times', type=int)
     def multi_echo(filename, times):
-        """Print value of SRC environment variable."""
+        """Print value filename multiple times."""
         for x in range(times):
             click.echo(filename)
 
