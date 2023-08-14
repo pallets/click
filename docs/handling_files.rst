@@ -1,6 +1,6 @@
 .. _handling-files:
 
-Handling Files 
+Handling Files
 ================
 
 .. currentmodule:: click
