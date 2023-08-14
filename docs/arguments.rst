@@ -68,8 +68,6 @@ Note this example is not how you would handle files and files paths, since it pa
 
    It is not recommended, but you may make at least one argument required by setting ``required=True``.  It is not recommended since we think command line tools should gracefully degrade into becoming noops.  We think this because command line tools are often invoked with wildcard inputs and they should not error out if the wildcard is empty.
 
-
-
 Argument Escape Sequences
 ---------------------------
 
