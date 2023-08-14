@@ -5,17 +5,17 @@ Arguments
 
 .. currentmodule:: click
 
-Arguments : 
+Arguments :
 
-*   are positional in nature 
+*   are positional in nature
 *   are very much like a limited version of :ref:`options <options>`
-*   but also can take an arbitrary number of inputs 
-*   must be :ref:`documented manually <documenting-arguments>` 
+*   but also can take an arbitrary number of inputs
+*   must be :ref:`documented manually <documenting-arguments>`
 
-Useful and often used kwargs are: 
+Useful and often used kwargs are:
 
 *   ``default`` : passes a default
-*   ``nargs`` : Sets the number of arguments. Set to -1 to take an arbitrary number. 
+*   ``nargs`` : Sets the number of arguments. Set to -1 to take an arbitrary number.
 
 Basic Argument
 ---------------
@@ -39,7 +39,7 @@ And what it looks like:
     invoke(touch, args=['foo.txt'])
 
 
-Not sure if should include : If no type is provided, the type of the default value is used, and if no default value is provided, the type is assumed to be STRING. 
+Not sure if should include : If no type is provided, the type of the default value is used, and if no default value is provided, the type is assumed to be STRING.
 
 Multiple Arguments
 -----------------------------------
@@ -71,7 +71,7 @@ Note this example is not how you would handle files and files paths, since it pa
 Argument Escape Sequences
 ---------------------------
 
-If you want to process arguments that look like options, like a file named ``-foo.txt``, you must pass the ``--`` separator first. After you pass the ``--``, you may only pass arguments. This is a common feature for POSIX command line tools. 
+If you want to process arguments that look like options, like a file named ``-foo.txt``, you must pass the ``--`` separator first. After you pass the ``--``, you may only pass arguments. This is a common feature for POSIX command line tools.
 
 Example usage:
 
