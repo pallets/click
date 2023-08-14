@@ -72,6 +72,7 @@ usage patterns.
    parameters
    options
    arguments
+   handling_files
    commands
    prompts
    documentation
