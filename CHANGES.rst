@@ -7,6 +7,7 @@ Unreleased
 
 -   Fix issue with regex flags in shell completion. :issue:`2581`
 -   Bash version detection issues a warning instead of an error. :issue:`2574`
+-   Fix issue with completion script for Fish shell. :issue:`2567`
 
 
 Version 8.1.6
