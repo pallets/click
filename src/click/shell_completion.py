@@ -230,7 +230,7 @@ class ShellComplete:
         """The name of the shell function defined by the completion
         script.
         """
-        safe_name = re.sub(r"\W*", "", self.prog_name.replace("-", "_"), re.ASCII)
+        safe_name = re.sub(r"\W*", "", self.prog_name.replace("-", "_"), flags=re.ASCII)
         return f"_{safe_name}_completion"
 
     def source_vars(self) -> t.Dict[str, t.Any]:
