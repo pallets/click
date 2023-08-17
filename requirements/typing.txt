@@ -5,15 +5,15 @@
 #
 #    pip-compile-multi
 #
-mypy==1.4.1
+mypy==1.5.1
     # via -r requirements/typing.in
 mypy-extensions==1.0.0
     # via mypy
 nodeenv==1.8.0
     # via pyright
-pyright==1.1.317
+pyright==1.1.323
     # via -r requirements/typing.in
-typing-extensions==4.6.3
+typing-extensions==4.7.1
     # via mypy
 
 # The following packages are considered to be unsafe in a requirements file:
