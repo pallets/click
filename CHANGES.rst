@@ -3,7 +3,7 @@
 Version 8.1.7
 -------------
 
-Unreleased
+Released 2023-08-17
 
 -   Fix issue with regex flags in shell completion. :issue:`2581`
 -   Bash version detection issues a warning instead of an error. :issue:`2574`
