@@ -1,5 +1,4 @@
 import inspect
-import types
 import typing as t
 from functools import update_wrapper
 from gettext import gettext as _
@@ -430,8 +429,7 @@ def version_option(
 
     If ``version`` is not provided, Click will try to detect it using
     :func:`importlib.metadata.version` to get the version for the
-    ``package_name``. On Python < 3.8, the ``importlib_metadata``
-    backport must be installed.
+    ``package_name``.
 
     If ``package_name`` is not provided, Click will try to detect it by
     inspecting the stack frames. This will be used to detect the
@@ -492,17 +490,11 @@ def version_option(
             prog_name = ctx.find_root().info_name
 
         if version is None and package_name is not None:
-            metadata: t.Optional[types.ModuleType]
+            import importlib.metadata
 
             try:
-                from importlib import metadata  # type: ignore
-            except ImportError:
-                # Python < 3.8
-                import importlib_metadata as metadata  # type: ignore
-
-            try:
-                version = metadata.version(package_name)  # type: ignore
-            except metadata.PackageNotFoundError:  # type: ignore
+                version = importlib.metadata.version(package_name)
+            except importlib.metadata.PackageNotFoundError:
                 raise RuntimeError(
                     f"{package_name!r} is not installed. Try passing"
                     " 'package_name' instead."
