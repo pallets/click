@@ -301,7 +301,8 @@ class BashComplete(ShellComplete):
     name = "bash"
     source_template = _SOURCE_BASH
 
-    def _check_version(self) -> None:
+    @staticmethod
+    def _check_version() -> None:
         import subprocess
 
         output = subprocess.run(
@@ -313,15 +314,17 @@ class BashComplete(ShellComplete):
             major, minor = match.groups()
 
             if major < "4" or major == "4" and minor < "4":
-                raise RuntimeError(
+                echo(
                     _(
                         "Shell completion is not supported for Bash"
                         " versions older than 4.4."
-                    )
+                    ),
+                    err=True,
                 )
         else:
-            raise RuntimeError(
-                _("Couldn't detect Bash version, shell completion is not supported.")
+            echo(
+                _("Couldn't detect Bash version, shell completion is not supported."),
+                err=True,
             )
 
     def source(self) -> str:
