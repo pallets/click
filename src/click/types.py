@@ -862,11 +862,7 @@ class Path(ParamType):
 
         if not is_dash:
             if self.resolve_path:
-                # os.path.realpath doesn't resolve symlinks on Windows
-                # until Python 3.8. Use pathlib for now.
-                import pathlib
-
-                rv = os.fsdecode(pathlib.Path(rv).resolve())
+                rv = os.path.realpath(rv)
 
             try:
                 st = os.stat(rv)

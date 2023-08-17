@@ -2,7 +2,7 @@
 name = "click-example-completion"
 version = "1.0.0"
 description = "Click completion example"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
     "click>=8.1",
 ]
