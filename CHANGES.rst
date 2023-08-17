@@ -9,6 +9,8 @@ Unreleased
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
     :pr:`326`
 -   Use ``flit_core`` instead of ``setuptools`` as build backend.
+-   ``BaseCommand`` is deprecated. ``Command`` is the base class for all
+    commands. :issue:`2589`
 
 
 Version 8.1.7

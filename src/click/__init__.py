@@ -5,7 +5,6 @@ around a simple API that does not come with too much magic and is
 composable.
 """
 from .core import Argument as Argument
-from .core import BaseCommand as BaseCommand
 from .core import Command as Command
 from .core import CommandCollection as CommandCollection
 from .core import Context as Context
@@ -71,3 +70,20 @@ from .utils import get_text_stream as get_text_stream
 from .utils import open_file as open_file
 
 __version__ = "8.2.0.dev0"
+
+
+def __getattr__(name: str) -> object:
+    import warnings
+
+    if name == "BaseCommand":
+        from .core import _BaseCommand
+
+        warnings.warn(
+            "'BaseCommand' is deprecated and will be removed in Click 9.0. Use"
+            " 'Command' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _BaseCommand
+
+    raise AttributeError(name)
