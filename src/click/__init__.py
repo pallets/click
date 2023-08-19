@@ -9,7 +9,6 @@ from .core import Command as Command
 from .core import CommandCollection as CommandCollection
 from .core import Context as Context
 from .core import Group as Group
-from .core import MultiCommand as MultiCommand
 from .core import Option as Option
 from .core import Parameter as Parameter
 from .decorators import argument as argument
@@ -85,5 +84,16 @@ def __getattr__(name: str) -> object:
             stacklevel=2,
         )
         return _BaseCommand
+
+    if name == "MultiCommand":
+        from .core import _MultiCommand
+
+        warnings.warn(
+            "'MultiCommand' is deprecated and will be removed in Click 9.0. Use"
+            " 'Group' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _MultiCommand
 
     raise AttributeError(name)

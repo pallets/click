@@ -6,7 +6,7 @@ from gettext import gettext as _
 from .core import Argument
 from .core import Command
 from .core import Context
-from .core import MultiCommand
+from .core import Group
 from .core import Option
 from .core import Parameter
 from .core import ParameterSource
@@ -513,7 +513,7 @@ def _resolve_context(
     while args:
         command = ctx.command
 
-        if isinstance(command, MultiCommand):
+        if isinstance(command, Group):
             if not command.chain:
                 name, cmd, args = command.resolve_command(ctx, args)
 

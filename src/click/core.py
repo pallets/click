@@ -54,7 +54,7 @@ def _complete_visible_commands(
     :param ctx: Invocation context for the group.
     :param incomplete: Value being completed. May be empty.
     """
-    multi = t.cast(MultiCommand, ctx.command)
+    multi = t.cast(Group, ctx.command)
 
     for name in multi.list_commands(ctx):
         if name.startswith(incomplete):
@@ -64,10 +64,10 @@ def _complete_visible_commands(
                 yield name, command
 
 
-def _check_multicommand(
-    base_command: "MultiCommand", cmd_name: str, cmd: "Command", register: bool = False
+def _check_nested_chain(
+    base_command: "Group", cmd_name: str, cmd: "Command", register: bool = False
 ) -> None:
-    if not base_command.chain or not isinstance(cmd, MultiCommand):
+    if not base_command.chain or not isinstance(cmd, Group):
         return
     if register:
         hint = (
@@ -1212,7 +1212,7 @@ class Command:
         while ctx.parent is not None:
             ctx = ctx.parent
 
-            if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
+            if isinstance(ctx.command, Group) and ctx.command.chain:
                 results.extend(
                     CompletionItem(name, help=command.get_short_help_str())
                     for name, command in _complete_visible_commands(ctx, incomplete)
@@ -1408,47 +1408,81 @@ class _BaseCommand(Command, metaclass=_FakeSubclassCheck):
     """
 
 
+class Group(Command):
+    """A group is a command that nests other commands (or more groups).
 
-class MultiCommand(Command):
-    """A multi command is the basic implementation of a command that
-    dispatches to subcommands.  The most common version is the
-    :class:`Group`.
+    :param name: The name of the group command.
+    :param commands: Map names to :class:`Command` objects. Can be a list, which
+        will use :attr:`Command.name` as the keys.
+    :param invoke_without_command: Invoke the group's callback even if a
+        subcommand is not given.
+    :param no_args_is_help: If no arguments are given, show the group's help and
+        exit. Defaults to the opposite of ``invoke_without_command``.
+    :param subcommand_metavar: How to represent the subcommand argument in help.
+        The default will represent whether ``chain`` is set or not.
+    :param chain: Allow passing more than one subcommand argument. After parsing
+        a command's arguments, if any arguments remain another command will be
+        matched, and so on.
+    :param result_callback: A function to call after the group's and
+        subcommand's callbacks. The value returned by the subcommand is passed.
+        If ``chain`` is enabled, the value will be a list of values returned by
+        all the commands. If ``invoke_without_command`` is enabled, the value
+        will be the value returned by the group's callback, or an empty list if
+        ``chain`` is enabled.
+    :param kwargs: Other arguments passed to :class:`Command`.
 
-    :param invoke_without_command: this controls how the multi command itself
-                                   is invoked.  By default it's only invoked
-                                   if a subcommand is provided.
-    :param no_args_is_help: this controls what happens if no arguments are
-                            provided.  This option is enabled by default if
-                            `invoke_without_command` is disabled or disabled
-                            if it's enabled.  If enabled this will add
-                            ``--help`` as argument if no arguments are
-                            passed.
-    :param subcommand_metavar: the string that is used in the documentation
-                               to indicate the subcommand place.
-    :param chain: if this is set to `True` chaining of multiple subcommands
-                  is enabled.  This restricts the form of commands in that
-                  they cannot have optional arguments but it allows
-                  multiple commands to be chained together.
-    :param result_callback: The result callback to attach to this multi
-        command. This can be set or changed later with the
-        :meth:`result_callback` decorator.
-    :param attrs: Other command arguments described in :class:`Command`.
+    .. versionchanged:: 8.2
+        Merged with and replaces the ``MultiCommand`` base class.
+
+    .. versionchanged:: 8.0
+        The ``commands`` argument can be a list of command objects.
     """
 
     allow_extra_args = True
     allow_interspersed_args = False
 
+    #: If set, this is used by the group's :meth:`command` decorator
+    #: as the default :class:`Command` class. This is useful to make all
+    #: subcommands use a custom command class.
+    #:
+    #: .. versionadded:: 8.0
+    command_class: t.Optional[t.Type[Command]] = None
+
+    #: If set, this is used by the group's :meth:`group` decorator
+    #: as the default :class:`Group` class. This is useful to make all
+    #: subgroups use a custom group class.
+    #:
+    #: If set to the special value :class:`type` (literally
+    #: ``group_class = type``), this group's class will be used as the
+    #: default class. This makes a custom group class continue to make
+    #: custom groups.
+    #:
+    #: .. versionadded:: 8.0
+    group_class: t.Optional[t.Union[t.Type["Group"], t.Type[type]]] = None
+    # Literal[type] isn't valid, so use Type[type]
+
     def __init__(
         self,
         name: t.Optional[str] = None,
+        commands: t.Optional[
+            t.Union[t.MutableMapping[str, Command], t.Sequence[Command]]
+        ] = None,
         invoke_without_command: bool = False,
         no_args_is_help: t.Optional[bool] = None,
         subcommand_metavar: t.Optional[str] = None,
         chain: bool = False,
         result_callback: t.Optional[t.Callable[..., t.Any]] = None,
-        **attrs: t.Any,
+        **kwargs: t.Any,
     ) -> None:
-        super().__init__(name, **attrs)
+        super().__init__(name, **kwargs)
+
+        if commands is None:
+            commands = {}
+        elif isinstance(commands, abc.Sequence):
+            commands = {c.name: c for c in commands if c.name is not None}
+
+        #: The registered subcommands by their exported names.
+        self.commands: t.MutableMapping[str, Command] = commands
 
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
@@ -1494,14 +1528,120 @@ class MultiCommand(Command):
         info_dict.update(commands=commands, chain=self.chain)
         return info_dict
 
-    def collect_usage_pieces(self, ctx: Context) -> t.List[str]:
-        rv = super().collect_usage_pieces(ctx)
-        rv.append(self.subcommand_metavar)
-        return rv
+    def add_command(self, cmd: Command, name: t.Optional[str] = None) -> None:
+        """Registers another :class:`Command` with this group.  If the name
+        is not provided, the name of the command is used.
+        """
+        name = name or cmd.name
+        if name is None:
+            raise TypeError("Command has no name.")
+        _check_nested_chain(self, name, cmd, register=True)
+        self.commands[name] = cmd
 
-    def format_options(self, ctx: Context, formatter: HelpFormatter) -> None:
-        super().format_options(ctx, formatter)
-        self.format_commands(ctx, formatter)
+    @t.overload
+    def command(self, __func: t.Callable[..., t.Any]) -> Command:
+        ...
+
+    @t.overload
+    def command(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Callable[[t.Callable[..., t.Any]], Command]:
+        ...
+
+    def command(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], Command], Command]:
+        """A shortcut decorator for declaring and attaching a command to
+        the group. This takes the same arguments as :func:`command` and
+        immediately registers the created command with this group by
+        calling :meth:`add_command`.
+
+        To customize the command class used, set the
+        :attr:`command_class` attribute.
+
+        .. versionchanged:: 8.1
+            This decorator can be applied without parentheses.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`command_class` attribute.
+        """
+        from .decorators import command
+
+        func: t.Optional[t.Callable[..., t.Any]] = None
+
+        if args and callable(args[0]):
+            assert (
+                len(args) == 1 and not kwargs
+            ), "Use 'command(**kwargs)(callable)' to provide arguments."
+            (func,) = args
+            args = ()
+
+        if self.command_class and kwargs.get("cls") is None:
+            kwargs["cls"] = self.command_class
+
+        def decorator(f: t.Callable[..., t.Any]) -> Command:
+            cmd: Command = command(*args, **kwargs)(f)
+            self.add_command(cmd)
+            return cmd
+
+        if func is not None:
+            return decorator(func)
+
+        return decorator
+
+    @t.overload
+    def group(self, __func: t.Callable[..., t.Any]) -> "Group":
+        ...
+
+    @t.overload
+    def group(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]:
+        ...
+
+    def group(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], "Group"], "Group"]:
+        """A shortcut decorator for declaring and attaching a group to
+        the group. This takes the same arguments as :func:`group` and
+        immediately registers the created group with this group by
+        calling :meth:`add_command`.
+
+        To customize the group class used, set the :attr:`group_class`
+        attribute.
+
+        .. versionchanged:: 8.1
+            This decorator can be applied without parentheses.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`group_class` attribute.
+        """
+        from .decorators import group
+
+        func: t.Optional[t.Callable[..., t.Any]] = None
+
+        if args and callable(args[0]):
+            assert (
+                len(args) == 1 and not kwargs
+            ), "Use 'group(**kwargs)(callable)' to provide arguments."
+            (func,) = args
+            args = ()
+
+        if self.group_class is not None and kwargs.get("cls") is None:
+            if self.group_class is type:
+                kwargs["cls"] = type(self)
+            else:
+                kwargs["cls"] = self.group_class
+
+        def decorator(f: t.Callable[..., t.Any]) -> "Group":
+            cmd: Group = group(*args, **kwargs)(f)
+            self.add_command(cmd)
+            return cmd
+
+        if func is not None:
+            return decorator(func)
+
+        return decorator
 
     def result_callback(self, replace: bool = False) -> t.Callable[[F], F]:
         """Adds a result callback to the command.  By default if a
@@ -1547,6 +1687,25 @@ class MultiCommand(Command):
             return rv
 
         return decorator
+
+    def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
+        """Given a context and a command name, this returns a :class:`Command`
+        object if it exists or returns ``None``.
+        """
+        return self.commands.get(cmd_name)
+
+    def list_commands(self, ctx: Context) -> t.List[str]:
+        """Returns a list of subcommand names in the order they should appear."""
+        return sorted(self.commands)
+
+    def collect_usage_pieces(self, ctx: Context) -> t.List[str]:
+        rv = super().collect_usage_pieces(ctx)
+        rv.append(self.subcommand_metavar)
+        return rv
+
+    def format_options(self, ctx: Context, formatter: HelpFormatter) -> None:
+        super().format_options(ctx, formatter)
+        self.format_commands(ctx, formatter)
 
     def format_commands(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Extra format methods for multi methods that adds all the commands
@@ -1686,18 +1845,6 @@ class MultiCommand(Command):
             ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
         return cmd_name if cmd else None, cmd, args[1:]
 
-    def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
-        """Given a context and a command name, this returns a
-        :class:`Command` object if it exists or returns `None`.
-        """
-        raise NotImplementedError
-
-    def list_commands(self, ctx: Context) -> t.List[str]:
-        """Returns a list of subcommand names in the order they should
-        appear.
-        """
-        return []
-
     def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
         """Return a list of completions for the incomplete value. Looks
         at the names of options, subcommands, and chained
@@ -1718,220 +1865,62 @@ class MultiCommand(Command):
         return results
 
 
-class Group(MultiCommand):
-    """A group allows a command to have subcommands attached. This is
-    the most common way to implement nesting in Click.
+class _MultiCommand(Group, metaclass=_FakeSubclassCheck):
+    """
+    .. deprecated:: 8.2
+        Will be removed in Click 9.0. Use ``Group`` instead.
+    """
+
+
+class CommandCollection(Group):
+    """A :class:`Group` that looks up subcommands on other groups. If a command
+    is not found on this group, each registered source is checked in order.
+    Parameters on a source are not added to this group, and a source's callback
+    is not invoked when invoking its commands. In other words, this "flattens"
+    commands in many groups into this one group.
 
     :param name: The name of the group command.
-    :param commands: A dict mapping names to :class:`Command` objects.
-        Can also be a list of :class:`Command`, which will use
-        :attr:`Command.name` to create the dict.
-    :param attrs: Other command arguments described in
-        :class:`MultiCommand`, :class:`Command`, and
-        :class:`BaseCommand`.
+    :param sources: A list of :class:`Group` objects to look up commands from.
+    :param kwargs: Other arguments passed to :class:`Group`.
 
-    .. versionchanged:: 8.0
-        The ``commands`` argument can be a list of command objects.
-    """
-
-    #: If set, this is used by the group's :meth:`command` decorator
-    #: as the default :class:`Command` class. This is useful to make all
-    #: subcommands use a custom command class.
-    #:
-    #: .. versionadded:: 8.0
-    command_class: t.Optional[t.Type[Command]] = None
-
-    #: If set, this is used by the group's :meth:`group` decorator
-    #: as the default :class:`Group` class. This is useful to make all
-    #: subgroups use a custom group class.
-    #:
-    #: If set to the special value :class:`type` (literally
-    #: ``group_class = type``), this group's class will be used as the
-    #: default class. This makes a custom group class continue to make
-    #: custom groups.
-    #:
-    #: .. versionadded:: 8.0
-    group_class: t.Optional[t.Union[t.Type["Group"], t.Type[type]]] = None
-    # Literal[type] isn't valid, so use Type[type]
-
-    def __init__(
-        self,
-        name: t.Optional[str] = None,
-        commands: t.Optional[
-            t.Union[t.MutableMapping[str, Command], t.Sequence[Command]]
-        ] = None,
-        **attrs: t.Any,
-    ) -> None:
-        super().__init__(name, **attrs)
-
-        if commands is None:
-            commands = {}
-        elif isinstance(commands, abc.Sequence):
-            commands = {c.name: c for c in commands if c.name is not None}
-
-        #: The registered subcommands by their exported names.
-        self.commands: t.MutableMapping[str, Command] = commands
-
-    def add_command(self, cmd: Command, name: t.Optional[str] = None) -> None:
-        """Registers another :class:`Command` with this group.  If the name
-        is not provided, the name of the command is used.
-        """
-        name = name or cmd.name
-        if name is None:
-            raise TypeError("Command has no name.")
-        _check_multicommand(self, name, cmd, register=True)
-        self.commands[name] = cmd
-
-    @t.overload
-    def command(self, __func: t.Callable[..., t.Any]) -> Command:
-        ...
-
-    @t.overload
-    def command(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Command]:
-        ...
-
-    def command(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], Command], Command]:
-        """A shortcut decorator for declaring and attaching a command to
-        the group. This takes the same arguments as :func:`command` and
-        immediately registers the created command with this group by
-        calling :meth:`add_command`.
-
-        To customize the command class used, set the
-        :attr:`command_class` attribute.
-
-        .. versionchanged:: 8.1
-            This decorator can be applied without parentheses.
-
-        .. versionchanged:: 8.0
-            Added the :attr:`command_class` attribute.
-        """
-        from .decorators import command
-
-        func: t.Optional[t.Callable[..., t.Any]] = None
-
-        if args and callable(args[0]):
-            assert (
-                len(args) == 1 and not kwargs
-            ), "Use 'command(**kwargs)(callable)' to provide arguments."
-            (func,) = args
-            args = ()
-
-        if self.command_class and kwargs.get("cls") is None:
-            kwargs["cls"] = self.command_class
-
-        def decorator(f: t.Callable[..., t.Any]) -> Command:
-            cmd: Command = command(*args, **kwargs)(f)
-            self.add_command(cmd)
-            return cmd
-
-        if func is not None:
-            return decorator(func)
-
-        return decorator
-
-    @t.overload
-    def group(self, __func: t.Callable[..., t.Any]) -> "Group":
-        ...
-
-    @t.overload
-    def group(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]:
-        ...
-
-    def group(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], "Group"], "Group"]:
-        """A shortcut decorator for declaring and attaching a group to
-        the group. This takes the same arguments as :func:`group` and
-        immediately registers the created group with this group by
-        calling :meth:`add_command`.
-
-        To customize the group class used, set the :attr:`group_class`
-        attribute.
-
-        .. versionchanged:: 8.1
-            This decorator can be applied without parentheses.
-
-        .. versionchanged:: 8.0
-            Added the :attr:`group_class` attribute.
-        """
-        from .decorators import group
-
-        func: t.Optional[t.Callable[..., t.Any]] = None
-
-        if args and callable(args[0]):
-            assert (
-                len(args) == 1 and not kwargs
-            ), "Use 'group(**kwargs)(callable)' to provide arguments."
-            (func,) = args
-            args = ()
-
-        if self.group_class is not None and kwargs.get("cls") is None:
-            if self.group_class is type:
-                kwargs["cls"] = type(self)
-            else:
-                kwargs["cls"] = self.group_class
-
-        def decorator(f: t.Callable[..., t.Any]) -> "Group":
-            cmd: Group = group(*args, **kwargs)(f)
-            self.add_command(cmd)
-            return cmd
-
-        if func is not None:
-            return decorator(func)
-
-        return decorator
-
-    def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
-        return self.commands.get(cmd_name)
-
-    def list_commands(self, ctx: Context) -> t.List[str]:
-        return sorted(self.commands)
-
-
-class CommandCollection(MultiCommand):
-    """A command collection is a multi command that merges multiple multi
-    commands together into one.  This is a straightforward implementation
-    that accepts a list of different multi commands as sources and
-    provides all the commands for each of them.
-
-    See :class:`MultiCommand` and :class:`Command` for the description of
-    ``name`` and ``attrs``.
+    .. versionchanged:: 8.2
+        This is a subclass of ``Group``. Commands are looked up first on this
+        group, then each of its sources.
     """
 
     def __init__(
         self,
         name: t.Optional[str] = None,
-        sources: t.Optional[t.List[MultiCommand]] = None,
-        **attrs: t.Any,
+        sources: t.Optional[t.List[Group]] = None,
+        **kwargs: t.Any,
     ) -> None:
-        super().__init__(name, **attrs)
-        #: The list of registered multi commands.
-        self.sources: t.List[MultiCommand] = sources or []
+        super().__init__(name, **kwargs)
+        #: The list of registered groups.
+        self.sources: t.List[Group] = sources or []
 
-    def add_source(self, multi_cmd: MultiCommand) -> None:
-        """Adds a new multi command to the chain dispatcher."""
-        self.sources.append(multi_cmd)
+    def add_source(self, group: Group) -> None:
+        """Add a group as a source of commands."""
+        self.sources.append(group)
 
     def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
+        rv = super().get_command(ctx, cmd_name)
+
+        if rv is not None:
+            return rv
+
         for source in self.sources:
             rv = source.get_command(ctx, cmd_name)
 
             if rv is not None:
                 if self.chain:
-                    _check_multicommand(self, cmd_name, rv)
+                    _check_nested_chain(self, cmd_name, rv)
 
                 return rv
 
         return None
 
     def list_commands(self, ctx: Context) -> t.List[str]:
-        rv: t.Set[str] = set()
+        rv: t.Set[str] = set(super().list_commands(ctx))
 
         for source in self.sources:
             rv.update(source.list_commands(ctx))
@@ -2993,5 +2982,14 @@ def __getattr__(name: str) -> object:
             stacklevel=2,
         )
         return _BaseCommand
+
+    if name == "MultiCommand":
+        warnings.warn(
+            "'MultiCommand' is deprecated and will be removed in Click 9.0. Use"
+            " 'Group' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _MultiCommand
 
     raise AttributeError(name)
