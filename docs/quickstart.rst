@@ -93,7 +93,7 @@ as in the GitHub repository together with readme files:
     <https://github.com/pallets/click/tree/main/examples/colors>`_
 *   ``termui``: `Terminal UI functions demo
     <https://github.com/pallets/click/tree/main/examples/termui>`_
-*   ``imagepipe``: `Multi command chaining demo
+*   ``imagepipe``: `Command chaining demo
     <https://github.com/pallets/click/tree/main/examples/imagepipe>`_
 
 Basic Concepts - Creating a Command

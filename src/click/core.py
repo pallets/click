@@ -69,23 +69,19 @@ def _check_nested_chain(
 ) -> None:
     if not base_command.chain or not isinstance(cmd, Group):
         return
+
     if register:
-        hint = (
-            "It is not possible to add multi commands as children to"
-            " another multi command that is in chain mode."
+        message = (
+            f"It is not possible to add the group {cmd_name!r} to another"
+            f" group {base_command.name!r} that is in chain mode."
         )
     else:
-        hint = (
-            "Found a multi command as subcommand to a multi command"
-            " that is in chain mode. This is not supported."
+        message = (
+            f"Found the group {cmd_name!r} as subcommand to another group "
+            f" {base_command.name!r} that is in chain mode. This is not supported."
         )
-    raise RuntimeError(
-        f"{hint}. Command {base_command.name!r} is set to chain and"
-        f" {cmd_name!r} was added as a subcommand but it in itself is a"
-        f" multi command. ({cmd_name!r} is a {type(cmd).__name__}"
-        f" within a chained {type(base_command).__name__} named"
-        f" {base_command.name!r})."
-    )
+
+    raise RuntimeError(message)
 
 
 def batch(iterable: t.Iterable[V], batch_size: int) -> t.List[t.Tuple[V, ...]]:
@@ -1506,8 +1502,7 @@ class Group(Command):
             for param in self.params:
                 if isinstance(param, Argument) and not param.required:
                     raise RuntimeError(
-                        "Multi commands in chain mode cannot have"
-                        " optional arguments."
+                        "A group in chain mode cannot have optional arguments."
                     )
 
     def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
