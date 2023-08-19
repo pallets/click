@@ -54,7 +54,7 @@ def _complete_visible_commands(
     :param ctx: Invocation context for the group.
     :param incomplete: Value being completed. May be empty.
     """
-    multi = t.cast(MultiCommand, ctx.command)
+    multi = t.cast(Group, ctx.command)
 
     for name in multi.list_commands(ctx):
         if name.startswith(incomplete):
@@ -64,28 +64,24 @@ def _complete_visible_commands(
                 yield name, command
 
 
-def _check_multicommand(
-    base_command: "MultiCommand", cmd_name: str, cmd: "Command", register: bool = False
+def _check_nested_chain(
+    base_command: "Group", cmd_name: str, cmd: "Command", register: bool = False
 ) -> None:
-    if not base_command.chain or not isinstance(cmd, MultiCommand):
+    if not base_command.chain or not isinstance(cmd, Group):
         return
+
     if register:
-        hint = (
-            "It is not possible to add multi commands as children to"
-            " another multi command that is in chain mode."
+        message = (
+            f"It is not possible to add the group {cmd_name!r} to another"
+            f" group {base_command.name!r} that is in chain mode."
         )
     else:
-        hint = (
-            "Found a multi command as subcommand to a multi command"
-            " that is in chain mode. This is not supported."
+        message = (
+            f"Found the group {cmd_name!r} as subcommand to another group "
+            f" {base_command.name!r} that is in chain mode. This is not supported."
         )
-    raise RuntimeError(
-        f"{hint}. Command {base_command.name!r} is set to chain and"
-        f" {cmd_name!r} was added as a subcommand but it in itself is a"
-        f" multi command. ({cmd_name!r} is a {type(cmd).__name__}"
-        f" within a chained {type(base_command).__name__} named"
-        f" {base_command.name!r})."
-    )
+
+    raise RuntimeError(message)
 
 
 def batch(iterable: t.Iterable[V], batch_size: int) -> t.List[t.Tuple[V, ...]]:
@@ -831,36 +827,62 @@ class Context:
         return self._parameter_source.get(name)
 
 
-class BaseCommand:
-    """The base command implements the minimal API contract of commands.
-    Most code will never use this as it does not implement a lot of useful
-    functionality but it can act as the direct subclass of alternative
-    parsing methods that do not depend on the Click parser.
-
-    For instance, this can be used to bridge Click and other systems like
-    argparse or docopt.
-
-    Because base commands do not implement a lot of the API that other
-    parts of Click take for granted, they are not supported for all
-    operations.  For instance, they cannot be used with the decorators
-    usually and they have no built-in callback system.
-
-    .. versionchanged:: 2.0
-       Added the `context_settings` parameter.
+class Command:
+    """Commands are the basic building block of command line interfaces in
+    Click.  A basic command handles command line parsing and might dispatch
+    more parsing to commands nested below it.
 
     :param name: the name of the command to use unless a group overrides it.
     :param context_settings: an optional dictionary with defaults that are
                              passed to the context object.
+    :param callback: the callback to invoke.  This is optional.
+    :param params: the parameters to register with this command.  This can
+                   be either :class:`Option` or :class:`Argument` objects.
+    :param help: the help string to use for this command.
+    :param epilog: like the help string but it's printed at the end of the
+                   help page after everything else.
+    :param short_help: the short help to use for this command.  This is
+                       shown on the command listing of the parent command.
+    :param add_help_option: by default each command registers a ``--help``
+                            option.  This can be disabled by this parameter.
+    :param no_args_is_help: this controls what happens if no arguments are
+                            provided.  This option is disabled by default.
+                            If enabled this will add ``--help`` as argument
+                            if no arguments are passed
+    :param hidden: hide this command from help outputs.
+
+    :param deprecated: issues a message indicating that
+                             the command is deprecated.
+
+    .. versionchanged:: 8.2
+        This is the base class for all commands, not ``BaseCommand``.
+
+    .. versionchanged:: 8.1
+        ``help``, ``epilog``, and ``short_help`` are stored unprocessed,
+        all formatting is done when outputting help text, not at init,
+        and is done even if not using the ``@command`` decorator.
+
+    .. versionchanged:: 8.0
+        Added a ``repr`` showing the command name.
+
+    .. versionchanged:: 7.1
+        Added the ``no_args_is_help`` parameter.
+
+    .. versionchanged:: 2.0
+        Added the ``context_settings`` parameter.
     """
 
     #: The context class to create with :meth:`make_context`.
     #:
     #: .. versionadded:: 8.0
     context_class: t.Type[Context] = Context
+
     #: the default for the :attr:`Context.allow_extra_args` flag.
     allow_extra_args = False
+
     #: the default for the :attr:`Context.allow_interspersed_args` flag.
     allow_interspersed_args = True
+
     #: the default for the :attr:`Context.ignore_unknown_options` flag.
     ignore_unknown_options = False
 
@@ -868,6 +890,16 @@ class BaseCommand:
         self,
         name: t.Optional[str],
         context_settings: t.Optional[t.MutableMapping[str, t.Any]] = None,
+        callback: t.Optional[t.Callable[..., t.Any]] = None,
+        params: t.Optional[t.List["Parameter"]] = None,
+        help: t.Optional[str] = None,
+        epilog: t.Optional[str] = None,
+        short_help: t.Optional[str] = None,
+        options_metavar: t.Optional[str] = "[OPTIONS]",
+        add_help_option: bool = True,
+        no_args_is_help: bool = False,
+        hidden: bool = False,
+        deprecated: bool = False,
     ) -> None:
         #: the name the command thinks it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
@@ -881,28 +913,188 @@ class BaseCommand:
         #: an optional dictionary with defaults passed to the context.
         self.context_settings: t.MutableMapping[str, t.Any] = context_settings
 
+        #: the callback to execute when the command fires.  This might be
+        #: `None` in which case nothing happens.
+        self.callback = callback
+        #: the list of parameters for this command in the order they
+        #: should show up in the help page and execute.  Eager parameters
+        #: will automatically be handled before non eager ones.
+        self.params: t.List["Parameter"] = params or []
+        self.help = help
+        self.epilog = epilog
+        self.options_metavar = options_metavar
+        self.short_help = short_help
+        self.add_help_option = add_help_option
+        self.no_args_is_help = no_args_is_help
+        self.hidden = hidden
+        self.deprecated = deprecated
+
     def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
-        """Gather information that could be useful for a tool generating
-        user-facing documentation. This traverses the entire structure
-        below this command.
-
-        Use :meth:`click.Context.to_info_dict` to traverse the entire
-        CLI structure.
-
-        :param ctx: A :class:`Context` representing this command.
-
-        .. versionadded:: 8.0
-        """
-        return {"name": self.name}
+        return {
+            "name": self.name,
+            "params": [param.to_info_dict() for param in self.get_params(ctx)],
+            "help": self.help,
+            "epilog": self.epilog,
+            "short_help": self.short_help,
+            "hidden": self.hidden,
+            "deprecated": self.deprecated,
+        }
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.name}>"
 
     def get_usage(self, ctx: Context) -> str:
-        raise NotImplementedError("Base commands cannot get usage")
+        """Formats the usage line into a string and returns it.
+
+        Calls :meth:`format_usage` internally.
+        """
+        formatter = ctx.make_formatter()
+        self.format_usage(ctx, formatter)
+        return formatter.getvalue().rstrip("\n")
+
+    def get_params(self, ctx: Context) -> t.List["Parameter"]:
+        rv = self.params
+        help_option = self.get_help_option(ctx)
+
+        if help_option is not None:
+            rv = [*rv, help_option]
+
+        return rv
+
+    def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
+        """Writes the usage line into the formatter.
+
+        This is a low-level method called by :meth:`get_usage`.
+        """
+        pieces = self.collect_usage_pieces(ctx)
+        formatter.write_usage(ctx.command_path, " ".join(pieces))
+
+    def collect_usage_pieces(self, ctx: Context) -> t.List[str]:
+        """Returns all the pieces that go into the usage line and returns
+        it as a list of strings.
+        """
+        rv = [self.options_metavar] if self.options_metavar else []
+
+        for param in self.get_params(ctx):
+            rv.extend(param.get_usage_pieces(ctx))
+
+        return rv
+
+    def get_help_option_names(self, ctx: Context) -> t.List[str]:
+        """Returns the names for the help option."""
+        all_names = set(ctx.help_option_names)
+        for param in self.params:
+            all_names.difference_update(param.opts)
+            all_names.difference_update(param.secondary_opts)
+        return list(all_names)
+
+    def get_help_option(self, ctx: Context) -> t.Optional["Option"]:
+        """Returns the help option object."""
+        help_options = self.get_help_option_names(ctx)
+
+        if not help_options or not self.add_help_option:
+            return None
+
+        def show_help(ctx: Context, param: "Parameter", value: str) -> None:
+            if value and not ctx.resilient_parsing:
+                echo(ctx.get_help(), color=ctx.color)
+                ctx.exit()
+
+        return Option(
+            help_options,
+            is_flag=True,
+            is_eager=True,
+            expose_value=False,
+            callback=show_help,
+            help=_("Show this message and exit."),
+        )
+
+    def make_parser(self, ctx: Context) -> OptionParser:
+        """Creates the underlying option parser for this command."""
+        parser = OptionParser(ctx)
+        for param in self.get_params(ctx):
+            param.add_to_parser(parser, ctx)
+        return parser
 
     def get_help(self, ctx: Context) -> str:
-        raise NotImplementedError("Base commands cannot get help")
+        """Formats the help into a string and returns it.
+
+        Calls :meth:`format_help` internally.
+        """
+        formatter = ctx.make_formatter()
+        self.format_help(ctx, formatter)
+        return formatter.getvalue().rstrip("\n")
+
+    def get_short_help_str(self, limit: int = 45) -> str:
+        """Gets short help for the command or makes it by shortening the
+        long help string.
+        """
+        if self.short_help:
+            text = inspect.cleandoc(self.short_help)
+        elif self.help:
+            text = make_default_short_help(self.help, limit)
+        else:
+            text = ""
+
+        if self.deprecated:
+            text = _("(Deprecated) {text}").format(text=text)
+
+        return text.strip()
+
+    def format_help(self, ctx: Context, formatter: HelpFormatter) -> None:
+        """Writes the help into the formatter if it exists.
+
+        This is a low-level method called by :meth:`get_help`.
+
+        This calls the following methods:
+
+        -   :meth:`format_usage`
+        -   :meth:`format_help_text`
+        -   :meth:`format_options`
+        -   :meth:`format_epilog`
+        """
+        self.format_usage(ctx, formatter)
+        self.format_help_text(ctx, formatter)
+        self.format_options(ctx, formatter)
+        self.format_epilog(ctx, formatter)
+
+    def format_help_text(self, ctx: Context, formatter: HelpFormatter) -> None:
+        """Writes the help text to the formatter if it exists."""
+        if self.help is not None:
+            # truncate the help text to the first form feed
+            text = inspect.cleandoc(self.help).partition("\f")[0]
+        else:
+            text = ""
+
+        if self.deprecated:
+            text = _("(Deprecated) {text}").format(text=text)
+
+        if text:
+            formatter.write_paragraph()
+
+            with formatter.indentation():
+                formatter.write_text(text)
+
+    def format_options(self, ctx: Context, formatter: HelpFormatter) -> None:
+        """Writes all the options into the formatter if they exist."""
+        opts = []
+        for param in self.get_params(ctx):
+            rv = param.get_help_record(ctx)
+            if rv is not None:
+                opts.append(rv)
+
+        if opts:
+            with formatter.section(_("Options")):
+                formatter.write_dl(opts)
+
+    def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
+        """Writes the epilog into the formatter if it exists."""
+        if self.epilog:
+            epilog = inspect.cleandoc(self.epilog)
+            formatter.write_paragraph()
+
+            with formatter.indentation():
+                formatter.write_text(epilog)
 
     def make_context(
         self,
@@ -935,34 +1127,55 @@ class BaseCommand:
             if key not in extra:
                 extra[key] = value
 
-        ctx = self.context_class(
-            self, info_name=info_name, parent=parent, **extra  # type: ignore
-        )
+        ctx = self.context_class(self, info_name=info_name, parent=parent, **extra)
 
         with ctx.scope(cleanup=False):
             self.parse_args(ctx, args)
         return ctx
 
     def parse_args(self, ctx: Context, args: t.List[str]) -> t.List[str]:
-        """Given a context and a list of arguments this creates the parser
-        and parses the arguments, then modifies the context as necessary.
-        This is automatically invoked by :meth:`make_context`.
-        """
-        raise NotImplementedError("Base commands do not know how to parse arguments.")
+        if not args and self.no_args_is_help and not ctx.resilient_parsing:
+            echo(ctx.get_help(), color=ctx.color)
+            ctx.exit()
+
+        parser = self.make_parser(ctx)
+        opts, args, param_order = parser.parse_args(args=args)
+
+        for param in iter_params_for_processing(param_order, self.get_params(ctx)):
+            value, args = param.handle_parse_result(ctx, opts, args)
+
+        if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
+            ctx.fail(
+                ngettext(
+                    "Got unexpected extra argument ({args})",
+                    "Got unexpected extra arguments ({args})",
+                    len(args),
+                ).format(args=" ".join(map(str, args)))
+            )
+
+        ctx.args = args
+        ctx._opt_prefixes.update(parser._opt_prefixes)
+        return args
 
     def invoke(self, ctx: Context) -> t.Any:
-        """Given a context, this invokes the command.  The default
-        implementation is raising a not implemented error.
+        """Given a context, this invokes the attached callback (if it exists)
+        in the right way.
         """
-        raise NotImplementedError("Base commands are not invocable by default")
+        if self.deprecated:
+            message = _(
+                "DeprecationWarning: The command {name!r} is deprecated."
+            ).format(name=self.name)
+            echo(style(message, fg="red"), err=True)
+
+        if self.callback is not None:
+            return ctx.invoke(self.callback, **ctx.params)
 
     def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
         """Return a list of completions for the incomplete value. Looks
-        at the names of chained multi-commands.
+        at the names of options and chained multi-commands.
 
         Any command could be part of a chained multi-command, so sibling
-        commands are valid at any point during command completion. Other
-        command classes will return more completions.
+        commands are valid at any point during command completion.
 
         :param ctx: Invocation context for this command.
         :param incomplete: Value being completed. May be empty.
@@ -973,10 +1186,29 @@ class BaseCommand:
 
         results: t.List["CompletionItem"] = []
 
+        if incomplete and not incomplete[0].isalnum():
+            for param in self.get_params(ctx):
+                if (
+                    not isinstance(param, Option)
+                    or param.hidden
+                    or (
+                        not param.multiple
+                        and ctx.get_parameter_source(param.name)  # type: ignore
+                        is ParameterSource.COMMANDLINE
+                    )
+                ):
+                    continue
+
+                results.extend(
+                    CompletionItem(name, help=param.help)
+                    for name in [*param.opts, *param.secondary_opts]
+                    if name.startswith(incomplete)
+                )
+
         while ctx.parent is not None:
             ctx = ctx.parent
 
-            if isinstance(ctx.command, MultiCommand) and ctx.command.chain:
+            if isinstance(ctx.command, Group) and ctx.command.chain:
                 results.extend(
                     CompletionItem(name, help=command.get_short_help_str())
                     for name, command in _complete_visible_commands(ctx, incomplete)
@@ -1157,358 +1389,96 @@ class BaseCommand:
         return self.main(*args, **kwargs)
 
 
-class Command(BaseCommand):
-    """Commands are the basic building block of command line interfaces in
-    Click.  A basic command handles command line parsing and might dispatch
-    more parsing to commands nested below it.
+class _FakeSubclassCheck(type):
+    def __subclasscheck__(cls, subclass: type) -> bool:
+        return issubclass(subclass, cls.__bases__[0])
 
-    :param name: the name of the command to use unless a group overrides it.
-    :param context_settings: an optional dictionary with defaults that are
-                             passed to the context object.
-    :param callback: the callback to invoke.  This is optional.
-    :param params: the parameters to register with this command.  This can
-                   be either :class:`Option` or :class:`Argument` objects.
-    :param help: the help string to use for this command.
-    :param epilog: like the help string but it's printed at the end of the
-                   help page after everything else.
-    :param short_help: the short help to use for this command.  This is
-                       shown on the command listing of the parent command.
-    :param add_help_option: by default each command registers a ``--help``
-                            option.  This can be disabled by this parameter.
-    :param no_args_is_help: this controls what happens if no arguments are
-                            provided.  This option is disabled by default.
-                            If enabled this will add ``--help`` as argument
-                            if no arguments are passed
-    :param hidden: hide this command from help outputs.
+    def __instancecheck__(cls, instance: t.Any) -> bool:
+        return isinstance(instance, cls.__bases__[0])
 
-    :param deprecated: issues a message indicating that
-                             the command is deprecated.
 
-    .. versionchanged:: 8.1
-        ``help``, ``epilog``, and ``short_help`` are stored unprocessed,
-        all formatting is done when outputting help text, not at init,
-        and is done even if not using the ``@command`` decorator.
-
-    .. versionchanged:: 8.0
-        Added a ``repr`` showing the command name.
-
-    .. versionchanged:: 7.1
-        Added the ``no_args_is_help`` parameter.
-
-    .. versionchanged:: 2.0
-        Added the ``context_settings`` parameter.
+class _BaseCommand(Command, metaclass=_FakeSubclassCheck):
+    """
+    .. deprecated:: 8.2
+        Will be removed in Click 9.0. Use ``Command`` instead.
     """
 
-    def __init__(
-        self,
-        name: t.Optional[str],
-        context_settings: t.Optional[t.MutableMapping[str, t.Any]] = None,
-        callback: t.Optional[t.Callable[..., t.Any]] = None,
-        params: t.Optional[t.List["Parameter"]] = None,
-        help: t.Optional[str] = None,
-        epilog: t.Optional[str] = None,
-        short_help: t.Optional[str] = None,
-        options_metavar: t.Optional[str] = "[OPTIONS]",
-        add_help_option: bool = True,
-        no_args_is_help: bool = False,
-        hidden: bool = False,
-        deprecated: bool = False,
-    ) -> None:
-        super().__init__(name, context_settings)
-        #: the callback to execute when the command fires.  This might be
-        #: `None` in which case nothing happens.
-        self.callback = callback
-        #: the list of parameters for this command in the order they
-        #: should show up in the help page and execute.  Eager parameters
-        #: will automatically be handled before non eager ones.
-        self.params: t.List["Parameter"] = params or []
-        self.help = help
-        self.epilog = epilog
-        self.options_metavar = options_metavar
-        self.short_help = short_help
-        self.add_help_option = add_help_option
-        self.no_args_is_help = no_args_is_help
-        self.hidden = hidden
-        self.deprecated = deprecated
 
-    def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
-        info_dict = super().to_info_dict(ctx)
-        info_dict.update(
-            params=[param.to_info_dict() for param in self.get_params(ctx)],
-            help=self.help,
-            epilog=self.epilog,
-            short_help=self.short_help,
-            hidden=self.hidden,
-            deprecated=self.deprecated,
-        )
-        return info_dict
+class Group(Command):
+    """A group is a command that nests other commands (or more groups).
 
-    def get_usage(self, ctx: Context) -> str:
-        """Formats the usage line into a string and returns it.
+    :param name: The name of the group command.
+    :param commands: Map names to :class:`Command` objects. Can be a list, which
+        will use :attr:`Command.name` as the keys.
+    :param invoke_without_command: Invoke the group's callback even if a
+        subcommand is not given.
+    :param no_args_is_help: If no arguments are given, show the group's help and
+        exit. Defaults to the opposite of ``invoke_without_command``.
+    :param subcommand_metavar: How to represent the subcommand argument in help.
+        The default will represent whether ``chain`` is set or not.
+    :param chain: Allow passing more than one subcommand argument. After parsing
+        a command's arguments, if any arguments remain another command will be
+        matched, and so on.
+    :param result_callback: A function to call after the group's and
+        subcommand's callbacks. The value returned by the subcommand is passed.
+        If ``chain`` is enabled, the value will be a list of values returned by
+        all the commands. If ``invoke_without_command`` is enabled, the value
+        will be the value returned by the group's callback, or an empty list if
+        ``chain`` is enabled.
+    :param kwargs: Other arguments passed to :class:`Command`.
 
-        Calls :meth:`format_usage` internally.
-        """
-        formatter = ctx.make_formatter()
-        self.format_usage(ctx, formatter)
-        return formatter.getvalue().rstrip("\n")
+    .. versionchanged:: 8.2
+        Merged with and replaces the ``MultiCommand`` base class.
 
-    def get_params(self, ctx: Context) -> t.List["Parameter"]:
-        rv = self.params
-        help_option = self.get_help_option(ctx)
-
-        if help_option is not None:
-            rv = [*rv, help_option]
-
-        return rv
-
-    def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
-        """Writes the usage line into the formatter.
-
-        This is a low-level method called by :meth:`get_usage`.
-        """
-        pieces = self.collect_usage_pieces(ctx)
-        formatter.write_usage(ctx.command_path, " ".join(pieces))
-
-    def collect_usage_pieces(self, ctx: Context) -> t.List[str]:
-        """Returns all the pieces that go into the usage line and returns
-        it as a list of strings.
-        """
-        rv = [self.options_metavar] if self.options_metavar else []
-
-        for param in self.get_params(ctx):
-            rv.extend(param.get_usage_pieces(ctx))
-
-        return rv
-
-    def get_help_option_names(self, ctx: Context) -> t.List[str]:
-        """Returns the names for the help option."""
-        all_names = set(ctx.help_option_names)
-        for param in self.params:
-            all_names.difference_update(param.opts)
-            all_names.difference_update(param.secondary_opts)
-        return list(all_names)
-
-    def get_help_option(self, ctx: Context) -> t.Optional["Option"]:
-        """Returns the help option object."""
-        help_options = self.get_help_option_names(ctx)
-
-        if not help_options or not self.add_help_option:
-            return None
-
-        def show_help(ctx: Context, param: "Parameter", value: str) -> None:
-            if value and not ctx.resilient_parsing:
-                echo(ctx.get_help(), color=ctx.color)
-                ctx.exit()
-
-        return Option(
-            help_options,
-            is_flag=True,
-            is_eager=True,
-            expose_value=False,
-            callback=show_help,
-            help=_("Show this message and exit."),
-        )
-
-    def make_parser(self, ctx: Context) -> OptionParser:
-        """Creates the underlying option parser for this command."""
-        parser = OptionParser(ctx)
-        for param in self.get_params(ctx):
-            param.add_to_parser(parser, ctx)
-        return parser
-
-    def get_help(self, ctx: Context) -> str:
-        """Formats the help into a string and returns it.
-
-        Calls :meth:`format_help` internally.
-        """
-        formatter = ctx.make_formatter()
-        self.format_help(ctx, formatter)
-        return formatter.getvalue().rstrip("\n")
-
-    def get_short_help_str(self, limit: int = 45) -> str:
-        """Gets short help for the command or makes it by shortening the
-        long help string.
-        """
-        if self.short_help:
-            text = inspect.cleandoc(self.short_help)
-        elif self.help:
-            text = make_default_short_help(self.help, limit)
-        else:
-            text = ""
-
-        if self.deprecated:
-            text = _("(Deprecated) {text}").format(text=text)
-
-        return text.strip()
-
-    def format_help(self, ctx: Context, formatter: HelpFormatter) -> None:
-        """Writes the help into the formatter if it exists.
-
-        This is a low-level method called by :meth:`get_help`.
-
-        This calls the following methods:
-
-        -   :meth:`format_usage`
-        -   :meth:`format_help_text`
-        -   :meth:`format_options`
-        -   :meth:`format_epilog`
-        """
-        self.format_usage(ctx, formatter)
-        self.format_help_text(ctx, formatter)
-        self.format_options(ctx, formatter)
-        self.format_epilog(ctx, formatter)
-
-    def format_help_text(self, ctx: Context, formatter: HelpFormatter) -> None:
-        """Writes the help text to the formatter if it exists."""
-        if self.help is not None:
-            # truncate the help text to the first form feed
-            text = inspect.cleandoc(self.help).partition("\f")[0]
-        else:
-            text = ""
-
-        if self.deprecated:
-            text = _("(Deprecated) {text}").format(text=text)
-
-        if text:
-            formatter.write_paragraph()
-
-            with formatter.indentation():
-                formatter.write_text(text)
-
-    def format_options(self, ctx: Context, formatter: HelpFormatter) -> None:
-        """Writes all the options into the formatter if they exist."""
-        opts = []
-        for param in self.get_params(ctx):
-            rv = param.get_help_record(ctx)
-            if rv is not None:
-                opts.append(rv)
-
-        if opts:
-            with formatter.section(_("Options")):
-                formatter.write_dl(opts)
-
-    def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
-        """Writes the epilog into the formatter if it exists."""
-        if self.epilog:
-            epilog = inspect.cleandoc(self.epilog)
-            formatter.write_paragraph()
-
-            with formatter.indentation():
-                formatter.write_text(epilog)
-
-    def parse_args(self, ctx: Context, args: t.List[str]) -> t.List[str]:
-        if not args and self.no_args_is_help and not ctx.resilient_parsing:
-            echo(ctx.get_help(), color=ctx.color)
-            ctx.exit()
-
-        parser = self.make_parser(ctx)
-        opts, args, param_order = parser.parse_args(args=args)
-
-        for param in iter_params_for_processing(param_order, self.get_params(ctx)):
-            value, args = param.handle_parse_result(ctx, opts, args)
-
-        if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
-            ctx.fail(
-                ngettext(
-                    "Got unexpected extra argument ({args})",
-                    "Got unexpected extra arguments ({args})",
-                    len(args),
-                ).format(args=" ".join(map(str, args)))
-            )
-
-        ctx.args = args
-        ctx._opt_prefixes.update(parser._opt_prefixes)
-        return args
-
-    def invoke(self, ctx: Context) -> t.Any:
-        """Given a context, this invokes the attached callback (if it exists)
-        in the right way.
-        """
-        if self.deprecated:
-            message = _(
-                "DeprecationWarning: The command {name!r} is deprecated."
-            ).format(name=self.name)
-            echo(style(message, fg="red"), err=True)
-
-        if self.callback is not None:
-            return ctx.invoke(self.callback, **ctx.params)
-
-    def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
-        """Return a list of completions for the incomplete value. Looks
-        at the names of options and chained multi-commands.
-
-        :param ctx: Invocation context for this command.
-        :param incomplete: Value being completed. May be empty.
-
-        .. versionadded:: 8.0
-        """
-        from click.shell_completion import CompletionItem
-
-        results: t.List["CompletionItem"] = []
-
-        if incomplete and not incomplete[0].isalnum():
-            for param in self.get_params(ctx):
-                if (
-                    not isinstance(param, Option)
-                    or param.hidden
-                    or (
-                        not param.multiple
-                        and ctx.get_parameter_source(param.name)  # type: ignore
-                        is ParameterSource.COMMANDLINE
-                    )
-                ):
-                    continue
-
-                results.extend(
-                    CompletionItem(name, help=param.help)
-                    for name in [*param.opts, *param.secondary_opts]
-                    if name.startswith(incomplete)
-                )
-
-        results.extend(super().shell_complete(ctx, incomplete))
-        return results
-
-
-class MultiCommand(Command):
-    """A multi command is the basic implementation of a command that
-    dispatches to subcommands.  The most common version is the
-    :class:`Group`.
-
-    :param invoke_without_command: this controls how the multi command itself
-                                   is invoked.  By default it's only invoked
-                                   if a subcommand is provided.
-    :param no_args_is_help: this controls what happens if no arguments are
-                            provided.  This option is enabled by default if
-                            `invoke_without_command` is disabled or disabled
-                            if it's enabled.  If enabled this will add
-                            ``--help`` as argument if no arguments are
-                            passed.
-    :param subcommand_metavar: the string that is used in the documentation
-                               to indicate the subcommand place.
-    :param chain: if this is set to `True` chaining of multiple subcommands
-                  is enabled.  This restricts the form of commands in that
-                  they cannot have optional arguments but it allows
-                  multiple commands to be chained together.
-    :param result_callback: The result callback to attach to this multi
-        command. This can be set or changed later with the
-        :meth:`result_callback` decorator.
-    :param attrs: Other command arguments described in :class:`Command`.
+    .. versionchanged:: 8.0
+        The ``commands`` argument can be a list of command objects.
     """
 
     allow_extra_args = True
     allow_interspersed_args = False
 
+    #: If set, this is used by the group's :meth:`command` decorator
+    #: as the default :class:`Command` class. This is useful to make all
+    #: subcommands use a custom command class.
+    #:
+    #: .. versionadded:: 8.0
+    command_class: t.Optional[t.Type[Command]] = None
+
+    #: If set, this is used by the group's :meth:`group` decorator
+    #: as the default :class:`Group` class. This is useful to make all
+    #: subgroups use a custom group class.
+    #:
+    #: If set to the special value :class:`type` (literally
+    #: ``group_class = type``), this group's class will be used as the
+    #: default class. This makes a custom group class continue to make
+    #: custom groups.
+    #:
+    #: .. versionadded:: 8.0
+    group_class: t.Optional[t.Union[t.Type["Group"], t.Type[type]]] = None
+    # Literal[type] isn't valid, so use Type[type]
+
     def __init__(
         self,
         name: t.Optional[str] = None,
+        commands: t.Optional[
+            t.Union[t.MutableMapping[str, Command], t.Sequence[Command]]
+        ] = None,
         invoke_without_command: bool = False,
         no_args_is_help: t.Optional[bool] = None,
         subcommand_metavar: t.Optional[str] = None,
         chain: bool = False,
         result_callback: t.Optional[t.Callable[..., t.Any]] = None,
-        **attrs: t.Any,
+        **kwargs: t.Any,
     ) -> None:
-        super().__init__(name, **attrs)
+        super().__init__(name, **kwargs)
+
+        if commands is None:
+            commands = {}
+        elif isinstance(commands, abc.Sequence):
+            commands = {c.name: c for c in commands if c.name is not None}
+
+        #: The registered subcommands by their exported names.
+        self.commands: t.MutableMapping[str, Command] = commands
 
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
@@ -1532,8 +1502,7 @@ class MultiCommand(Command):
             for param in self.params:
                 if isinstance(param, Argument) and not param.required:
                     raise RuntimeError(
-                        "Multi commands in chain mode cannot have"
-                        " optional arguments."
+                        "A group in chain mode cannot have optional arguments."
                     )
 
     def to_info_dict(self, ctx: Context) -> t.Dict[str, t.Any]:
@@ -1554,14 +1523,120 @@ class MultiCommand(Command):
         info_dict.update(commands=commands, chain=self.chain)
         return info_dict
 
-    def collect_usage_pieces(self, ctx: Context) -> t.List[str]:
-        rv = super().collect_usage_pieces(ctx)
-        rv.append(self.subcommand_metavar)
-        return rv
+    def add_command(self, cmd: Command, name: t.Optional[str] = None) -> None:
+        """Registers another :class:`Command` with this group.  If the name
+        is not provided, the name of the command is used.
+        """
+        name = name or cmd.name
+        if name is None:
+            raise TypeError("Command has no name.")
+        _check_nested_chain(self, name, cmd, register=True)
+        self.commands[name] = cmd
 
-    def format_options(self, ctx: Context, formatter: HelpFormatter) -> None:
-        super().format_options(ctx, formatter)
-        self.format_commands(ctx, formatter)
+    @t.overload
+    def command(self, __func: t.Callable[..., t.Any]) -> Command:
+        ...
+
+    @t.overload
+    def command(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Callable[[t.Callable[..., t.Any]], Command]:
+        ...
+
+    def command(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], Command], Command]:
+        """A shortcut decorator for declaring and attaching a command to
+        the group. This takes the same arguments as :func:`command` and
+        immediately registers the created command with this group by
+        calling :meth:`add_command`.
+
+        To customize the command class used, set the
+        :attr:`command_class` attribute.
+
+        .. versionchanged:: 8.1
+            This decorator can be applied without parentheses.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`command_class` attribute.
+        """
+        from .decorators import command
+
+        func: t.Optional[t.Callable[..., t.Any]] = None
+
+        if args and callable(args[0]):
+            assert (
+                len(args) == 1 and not kwargs
+            ), "Use 'command(**kwargs)(callable)' to provide arguments."
+            (func,) = args
+            args = ()
+
+        if self.command_class and kwargs.get("cls") is None:
+            kwargs["cls"] = self.command_class
+
+        def decorator(f: t.Callable[..., t.Any]) -> Command:
+            cmd: Command = command(*args, **kwargs)(f)
+            self.add_command(cmd)
+            return cmd
+
+        if func is not None:
+            return decorator(func)
+
+        return decorator
+
+    @t.overload
+    def group(self, __func: t.Callable[..., t.Any]) -> "Group":
+        ...
+
+    @t.overload
+    def group(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]:
+        ...
+
+    def group(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], "Group"], "Group"]:
+        """A shortcut decorator for declaring and attaching a group to
+        the group. This takes the same arguments as :func:`group` and
+        immediately registers the created group with this group by
+        calling :meth:`add_command`.
+
+        To customize the group class used, set the :attr:`group_class`
+        attribute.
+
+        .. versionchanged:: 8.1
+            This decorator can be applied without parentheses.
+
+        .. versionchanged:: 8.0
+            Added the :attr:`group_class` attribute.
+        """
+        from .decorators import group
+
+        func: t.Optional[t.Callable[..., t.Any]] = None
+
+        if args and callable(args[0]):
+            assert (
+                len(args) == 1 and not kwargs
+            ), "Use 'group(**kwargs)(callable)' to provide arguments."
+            (func,) = args
+            args = ()
+
+        if self.group_class is not None and kwargs.get("cls") is None:
+            if self.group_class is type:
+                kwargs["cls"] = type(self)
+            else:
+                kwargs["cls"] = self.group_class
+
+        def decorator(f: t.Callable[..., t.Any]) -> "Group":
+            cmd: Group = group(*args, **kwargs)(f)
+            self.add_command(cmd)
+            return cmd
+
+        if func is not None:
+            return decorator(func)
+
+        return decorator
 
     def result_callback(self, replace: bool = False) -> t.Callable[[F], F]:
         """Adds a result callback to the command.  By default if a
@@ -1607,6 +1682,25 @@ class MultiCommand(Command):
             return rv
 
         return decorator
+
+    def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
+        """Given a context and a command name, this returns a :class:`Command`
+        object if it exists or returns ``None``.
+        """
+        return self.commands.get(cmd_name)
+
+    def list_commands(self, ctx: Context) -> t.List[str]:
+        """Returns a list of subcommand names in the order they should appear."""
+        return sorted(self.commands)
+
+    def collect_usage_pieces(self, ctx: Context) -> t.List[str]:
+        rv = super().collect_usage_pieces(ctx)
+        rv.append(self.subcommand_metavar)
+        return rv
+
+    def format_options(self, ctx: Context, formatter: HelpFormatter) -> None:
+        super().format_options(ctx, formatter)
+        self.format_commands(ctx, formatter)
 
     def format_commands(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Extra format methods for multi methods that adds all the commands
@@ -1746,18 +1840,6 @@ class MultiCommand(Command):
             ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
         return cmd_name if cmd else None, cmd, args[1:]
 
-    def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
-        """Given a context and a command name, this returns a
-        :class:`Command` object if it exists or returns `None`.
-        """
-        raise NotImplementedError
-
-    def list_commands(self, ctx: Context) -> t.List[str]:
-        """Returns a list of subcommand names in the order they should
-        appear.
-        """
-        return []
-
     def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
         """Return a list of completions for the incomplete value. Looks
         at the names of options, subcommands, and chained
@@ -1778,220 +1860,62 @@ class MultiCommand(Command):
         return results
 
 
-class Group(MultiCommand):
-    """A group allows a command to have subcommands attached. This is
-    the most common way to implement nesting in Click.
+class _MultiCommand(Group, metaclass=_FakeSubclassCheck):
+    """
+    .. deprecated:: 8.2
+        Will be removed in Click 9.0. Use ``Group`` instead.
+    """
+
+
+class CommandCollection(Group):
+    """A :class:`Group` that looks up subcommands on other groups. If a command
+    is not found on this group, each registered source is checked in order.
+    Parameters on a source are not added to this group, and a source's callback
+    is not invoked when invoking its commands. In other words, this "flattens"
+    commands in many groups into this one group.
 
     :param name: The name of the group command.
-    :param commands: A dict mapping names to :class:`Command` objects.
-        Can also be a list of :class:`Command`, which will use
-        :attr:`Command.name` to create the dict.
-    :param attrs: Other command arguments described in
-        :class:`MultiCommand`, :class:`Command`, and
-        :class:`BaseCommand`.
+    :param sources: A list of :class:`Group` objects to look up commands from.
+    :param kwargs: Other arguments passed to :class:`Group`.
 
-    .. versionchanged:: 8.0
-        The ``commands`` argument can be a list of command objects.
-    """
-
-    #: If set, this is used by the group's :meth:`command` decorator
-    #: as the default :class:`Command` class. This is useful to make all
-    #: subcommands use a custom command class.
-    #:
-    #: .. versionadded:: 8.0
-    command_class: t.Optional[t.Type[Command]] = None
-
-    #: If set, this is used by the group's :meth:`group` decorator
-    #: as the default :class:`Group` class. This is useful to make all
-    #: subgroups use a custom group class.
-    #:
-    #: If set to the special value :class:`type` (literally
-    #: ``group_class = type``), this group's class will be used as the
-    #: default class. This makes a custom group class continue to make
-    #: custom groups.
-    #:
-    #: .. versionadded:: 8.0
-    group_class: t.Optional[t.Union[t.Type["Group"], t.Type[type]]] = None
-    # Literal[type] isn't valid, so use Type[type]
-
-    def __init__(
-        self,
-        name: t.Optional[str] = None,
-        commands: t.Optional[
-            t.Union[t.MutableMapping[str, Command], t.Sequence[Command]]
-        ] = None,
-        **attrs: t.Any,
-    ) -> None:
-        super().__init__(name, **attrs)
-
-        if commands is None:
-            commands = {}
-        elif isinstance(commands, abc.Sequence):
-            commands = {c.name: c for c in commands if c.name is not None}
-
-        #: The registered subcommands by their exported names.
-        self.commands: t.MutableMapping[str, Command] = commands
-
-    def add_command(self, cmd: Command, name: t.Optional[str] = None) -> None:
-        """Registers another :class:`Command` with this group.  If the name
-        is not provided, the name of the command is used.
-        """
-        name = name or cmd.name
-        if name is None:
-            raise TypeError("Command has no name.")
-        _check_multicommand(self, name, cmd, register=True)
-        self.commands[name] = cmd
-
-    @t.overload
-    def command(self, __func: t.Callable[..., t.Any]) -> Command:
-        ...
-
-    @t.overload
-    def command(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Command]:
-        ...
-
-    def command(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], Command], Command]:
-        """A shortcut decorator for declaring and attaching a command to
-        the group. This takes the same arguments as :func:`command` and
-        immediately registers the created command with this group by
-        calling :meth:`add_command`.
-
-        To customize the command class used, set the
-        :attr:`command_class` attribute.
-
-        .. versionchanged:: 8.1
-            This decorator can be applied without parentheses.
-
-        .. versionchanged:: 8.0
-            Added the :attr:`command_class` attribute.
-        """
-        from .decorators import command
-
-        func: t.Optional[t.Callable[..., t.Any]] = None
-
-        if args and callable(args[0]):
-            assert (
-                len(args) == 1 and not kwargs
-            ), "Use 'command(**kwargs)(callable)' to provide arguments."
-            (func,) = args
-            args = ()
-
-        if self.command_class and kwargs.get("cls") is None:
-            kwargs["cls"] = self.command_class
-
-        def decorator(f: t.Callable[..., t.Any]) -> Command:
-            cmd: Command = command(*args, **kwargs)(f)
-            self.add_command(cmd)
-            return cmd
-
-        if func is not None:
-            return decorator(func)
-
-        return decorator
-
-    @t.overload
-    def group(self, __func: t.Callable[..., t.Any]) -> "Group":
-        ...
-
-    @t.overload
-    def group(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]:
-        ...
-
-    def group(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Union[t.Callable[[t.Callable[..., t.Any]], "Group"], "Group"]:
-        """A shortcut decorator for declaring and attaching a group to
-        the group. This takes the same arguments as :func:`group` and
-        immediately registers the created group with this group by
-        calling :meth:`add_command`.
-
-        To customize the group class used, set the :attr:`group_class`
-        attribute.
-
-        .. versionchanged:: 8.1
-            This decorator can be applied without parentheses.
-
-        .. versionchanged:: 8.0
-            Added the :attr:`group_class` attribute.
-        """
-        from .decorators import group
-
-        func: t.Optional[t.Callable[..., t.Any]] = None
-
-        if args and callable(args[0]):
-            assert (
-                len(args) == 1 and not kwargs
-            ), "Use 'group(**kwargs)(callable)' to provide arguments."
-            (func,) = args
-            args = ()
-
-        if self.group_class is not None and kwargs.get("cls") is None:
-            if self.group_class is type:
-                kwargs["cls"] = type(self)
-            else:
-                kwargs["cls"] = self.group_class
-
-        def decorator(f: t.Callable[..., t.Any]) -> "Group":
-            cmd: Group = group(*args, **kwargs)(f)
-            self.add_command(cmd)
-            return cmd
-
-        if func is not None:
-            return decorator(func)
-
-        return decorator
-
-    def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
-        return self.commands.get(cmd_name)
-
-    def list_commands(self, ctx: Context) -> t.List[str]:
-        return sorted(self.commands)
-
-
-class CommandCollection(MultiCommand):
-    """A command collection is a multi command that merges multiple multi
-    commands together into one.  This is a straightforward implementation
-    that accepts a list of different multi commands as sources and
-    provides all the commands for each of them.
-
-    See :class:`MultiCommand` and :class:`Command` for the description of
-    ``name`` and ``attrs``.
+    .. versionchanged:: 8.2
+        This is a subclass of ``Group``. Commands are looked up first on this
+        group, then each of its sources.
     """
 
     def __init__(
         self,
         name: t.Optional[str] = None,
-        sources: t.Optional[t.List[MultiCommand]] = None,
-        **attrs: t.Any,
+        sources: t.Optional[t.List[Group]] = None,
+        **kwargs: t.Any,
     ) -> None:
-        super().__init__(name, **attrs)
-        #: The list of registered multi commands.
-        self.sources: t.List[MultiCommand] = sources or []
+        super().__init__(name, **kwargs)
+        #: The list of registered groups.
+        self.sources: t.List[Group] = sources or []
 
-    def add_source(self, multi_cmd: MultiCommand) -> None:
-        """Adds a new multi command to the chain dispatcher."""
-        self.sources.append(multi_cmd)
+    def add_source(self, group: Group) -> None:
+        """Add a group as a source of commands."""
+        self.sources.append(group)
 
     def get_command(self, ctx: Context, cmd_name: str) -> t.Optional[Command]:
+        rv = super().get_command(ctx, cmd_name)
+
+        if rv is not None:
+            return rv
+
         for source in self.sources:
             rv = source.get_command(ctx, cmd_name)
 
             if rv is not None:
                 if self.chain:
-                    _check_multicommand(self, cmd_name, rv)
+                    _check_nested_chain(self, cmd_name, rv)
 
                 return rv
 
         return None
 
     def list_commands(self, ctx: Context) -> t.List[str]:
-        rv: t.Set[str] = set()
+        rv: t.Set[str] = set(super().list_commands(ctx))
 
         for source in self.sources:
             rv.update(source.list_commands(ctx))
@@ -3040,3 +2964,27 @@ class Argument(Parameter):
 
     def add_to_parser(self, parser: OptionParser, ctx: Context) -> None:
         parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)
+
+
+def __getattr__(name: str) -> object:
+    import warnings
+
+    if name == "BaseCommand":
+        warnings.warn(
+            "'BaseCommand' is deprecated and will be removed in Click 9.0. Use"
+            " 'Command' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _BaseCommand
+
+    if name == "MultiCommand":
+        warnings.warn(
+            "'MultiCommand' is deprecated and will be removed in Click 9.0. Use"
+            " 'Group' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _MultiCommand
+
+    raise AttributeError(name)

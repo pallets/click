@@ -14,7 +14,7 @@ from . import utils
 from ._compat import _find_binary_reader
 
 if t.TYPE_CHECKING:
-    from .core import BaseCommand
+    from .core import Command
 
 
 class EchoingStdin:
@@ -187,7 +187,7 @@ class CliRunner:
         self.echo_stdin = echo_stdin
         self.mix_stderr = mix_stderr
 
-    def get_default_prog_name(self, cli: "BaseCommand") -> str:
+    def get_default_prog_name(self, cli: "Command") -> str:
         """Given a command object it will return the default program name
         for it.  The default is the `name` attribute or ``"root"`` if not
         set.
@@ -348,7 +348,7 @@ class CliRunner:
 
     def invoke(
         self,
-        cli: "BaseCommand",
+        cli: "Command",
         args: t.Optional[t.Union[str, t.Sequence[str]]] = None,
         input: t.Optional[t.Union[str, bytes, t.IO[t.Any]]] = None,
         env: t.Optional[t.Mapping[str, t.Optional[str]]] = None,

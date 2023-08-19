@@ -9,6 +9,10 @@ Unreleased
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
     :pr:`326`
 -   Use ``flit_core`` instead of ``setuptools`` as build backend.
+-   ``BaseCommand`` is deprecated. ``Command`` is the base class for all
+    commands. :issue:`2589`
+-   ``MultiCommand`` is deprecated. ``Group`` is the base class for all group
+    commands. :issue:`2590`
 
 
 Version 8.1.7

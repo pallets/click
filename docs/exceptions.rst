@@ -10,7 +10,7 @@ like incorrect usage.
 Where are Errors Handled?
 -------------------------
 
-Click's main error handling is happening in :meth:`BaseCommand.main`.  In
+Click's main error handling is happening in :meth:`Command.main`.  In
 there it handles all subclasses of :exc:`ClickException` as well as the
 standard :exc:`EOFError` and :exc:`KeyboardInterrupt` exceptions.  The
 latter are internally translated into an :exc:`Abort`.

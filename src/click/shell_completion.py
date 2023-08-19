@@ -4,9 +4,9 @@ import typing as t
 from gettext import gettext as _
 
 from .core import Argument
-from .core import BaseCommand
+from .core import Command
 from .core import Context
-from .core import MultiCommand
+from .core import Group
 from .core import Option
 from .core import Parameter
 from .core import ParameterSource
@@ -15,7 +15,7 @@ from .utils import echo
 
 
 def shell_complete(
-    cli: BaseCommand,
+    cli: Command,
     ctx_args: t.MutableMapping[str, t.Any],
     prog_name: str,
     complete_var: str,
@@ -215,7 +215,7 @@ class ShellComplete:
 
     def __init__(
         self,
-        cli: BaseCommand,
+        cli: Command,
         ctx_args: t.MutableMapping[str, t.Any],
         prog_name: str,
         complete_var: str,
@@ -493,7 +493,7 @@ def _is_incomplete_option(ctx: Context, args: t.List[str], param: Parameter) -> 
 
 
 def _resolve_context(
-    cli: BaseCommand,
+    cli: Command,
     ctx_args: t.MutableMapping[str, t.Any],
     prog_name: str,
     args: t.List[str],
@@ -513,7 +513,7 @@ def _resolve_context(
     while args:
         command = ctx.command
 
-        if isinstance(command, MultiCommand):
+        if isinstance(command, Group):
             if not command.chain:
                 name, cmd, args = command.resolve_command(ctx, args)
 
@@ -551,7 +551,7 @@ def _resolve_context(
 
 def _resolve_incomplete(
     ctx: Context, args: t.List[str], incomplete: str
-) -> t.Tuple[t.Union[BaseCommand, Parameter], str]:
+) -> t.Tuple[t.Union[Command, Parameter], str]:
     """Find the Click object that will handle the completion of the
     incomplete value. Return the object and the incomplete value.
 

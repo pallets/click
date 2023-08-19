@@ -145,14 +145,14 @@ def test_group_with_args(runner, args, exit_code, expect):
     assert expect in result.output
 
 
-def test_base_command(runner):
+def test_custom_parser(runner):
     import optparse
 
     @click.group()
     def cli():
         pass
 
-    class OptParseCommand(click.BaseCommand):
+    class OptParseCommand(click.Command):
         def __init__(self, name, parser, callback):
             super().__init__(name)
             self.parser = parser
