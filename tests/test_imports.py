@@ -32,6 +32,7 @@ ALLOWED_IMPORTS = {
     "os",
     "struct",
     "collections",
+    "collections.abc",
     "sys",
     "contextlib",
     "functools",

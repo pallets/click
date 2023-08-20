@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections.abc as cabc
 import typing as t
 from gettext import gettext as _
 from gettext import ngettext
@@ -14,9 +15,7 @@ if t.TYPE_CHECKING:
     from .core import Parameter
 
 
-def _join_param_hints(
-    param_hint: t.Optional[t.Union[t.Sequence[str], str]]
-) -> t.Optional[str]:
+def _join_param_hints(param_hint: cabc.Sequence[str] | str | None) -> str | None:
     if param_hint is not None and not isinstance(param_hint, str):
         return " / ".join(repr(x) for x in param_hint)
 
@@ -39,7 +38,7 @@ class ClickException(Exception):
     def __str__(self) -> str:
         return self.message
 
-    def show(self, file: t.Optional[t.IO[t.Any]] = None) -> None:
+    def show(self, file: t.IO[t.Any] | None = None) -> None:
         if file is None:
             file = get_text_stderr()
 
@@ -57,12 +56,12 @@ class UsageError(ClickException):
 
     exit_code = 2
 
-    def __init__(self, message: str, ctx: t.Optional[Context] = None) -> None:
+    def __init__(self, message: str, ctx: Context | None = None) -> None:
         super().__init__(message)
         self.ctx = ctx
-        self.cmd: t.Optional[Command] = self.ctx.command if self.ctx else None
+        self.cmd: Command | None = self.ctx.command if self.ctx else None
 
-    def show(self, file: t.Optional[t.IO[t.Any]] = None) -> None:
+    def show(self, file: t.IO[t.Any] | None = None) -> None:
         if file is None:
             file = get_text_stderr()
         color = None
@@ -106,9 +105,9 @@ class BadParameter(UsageError):
     def __init__(
         self,
         message: str,
-        ctx: t.Optional[Context] = None,
-        param: t.Optional[Parameter] = None,
-        param_hint: t.Optional[str] = None,
+        ctx: Context | None = None,
+        param: Parameter | None = None,
+        param_hint: str | None = None,
     ) -> None:
         super().__init__(message, ctx)
         self.param = param
@@ -141,18 +140,18 @@ class MissingParameter(BadParameter):
 
     def __init__(
         self,
-        message: t.Optional[str] = None,
-        ctx: t.Optional[Context] = None,
-        param: t.Optional[Parameter] = None,
-        param_hint: t.Optional[str] = None,
-        param_type: t.Optional[str] = None,
+        message: str | None = None,
+        ctx: Context | None = None,
+        param: Parameter | None = None,
+        param_hint: str | None = None,
+        param_type: str | None = None,
     ) -> None:
         super().__init__(message or "", ctx, param, param_hint)
         self.param_type = param_type
 
     def format_message(self) -> str:
         if self.param_hint is not None:
-            param_hint: t.Optional[str] = self.param_hint
+            param_hint: str | None = self.param_hint
         elif self.param is not None:
             param_hint = self.param.get_error_hint(self.ctx)  # type: ignore
         else:
@@ -206,9 +205,9 @@ class NoSuchOption(UsageError):
     def __init__(
         self,
         option_name: str,
-        message: t.Optional[str] = None,
-        possibilities: t.Optional[t.Sequence[str]] = None,
-        ctx: t.Optional[Context] = None,
+        message: str | None = None,
+        possibilities: cabc.Sequence[str] | None = None,
+        ctx: Context | None = None,
     ) -> None:
         if message is None:
             message = _("No such option: {name}").format(name=option_name)
@@ -241,7 +240,7 @@ class BadOptionUsage(UsageError):
     """
 
     def __init__(
-        self, option_name: str, message: str, ctx: t.Optional[Context] = None
+        self, option_name: str, message: str, ctx: Context | None = None
     ) -> None:
         super().__init__(message, ctx)
         self.option_name = option_name
@@ -259,7 +258,7 @@ class BadArgumentUsage(UsageError):
 class FileError(ClickException):
     """Raised if a file cannot be opened."""
 
-    def __init__(self, filename: str, hint: t.Optional[str] = None) -> None:
+    def __init__(self, filename: str, hint: str | None = None) -> None:
         if hint is None:
             hint = _("unknown error")
 

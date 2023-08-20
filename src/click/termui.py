@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import collections.abc as cabc
 import inspect
 import io
 import itertools
 import sys
 import typing as t
+from contextlib import AbstractContextManager
 from gettext import gettext as _
 
 from ._compat import isatty
@@ -59,9 +61,9 @@ def _build_prompt(
     text: str,
     suffix: str,
     show_default: bool = False,
-    default: t.Optional[t.Any] = None,
+    default: t.Any | None = None,
     show_choices: bool = True,
-    type: t.Optional[ParamType] = None,
+    type: ParamType | None = None,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
@@ -80,11 +82,11 @@ def _format_default(default: t.Any) -> t.Any:
 
 def prompt(
     text: str,
-    default: t.Optional[t.Any] = None,
+    default: t.Any | None = None,
     hide_input: bool = False,
-    confirmation_prompt: t.Union[bool, str] = False,
-    type: t.Optional[t.Union[ParamType, t.Any]] = None,
-    value_proc: t.Optional[t.Callable[[str], t.Any]] = None,
+    confirmation_prompt: bool | str = False,
+    type: ParamType | t.Any | None = None,
+    value_proc: t.Callable[[str], t.Any] | None = None,
     prompt_suffix: str = ": ",
     show_default: bool = True,
     err: bool = False,
@@ -191,7 +193,7 @@ def prompt(
 
 def confirm(
     text: str,
-    default: t.Optional[bool] = False,
+    default: bool | None = False,
     abort: bool = False,
     prompt_suffix: str = ": ",
     show_default: bool = True,
@@ -251,8 +253,8 @@ def confirm(
 
 
 def echo_via_pager(
-    text_or_generator: t.Union[t.Iterable[str], t.Callable[[], t.Iterable[str]], str],
-    color: t.Optional[bool] = None,
+    text_or_generator: cabc.Iterable[str] | t.Callable[[], cabc.Iterable[str]] | str,
+    color: bool | None = None,
 ) -> None:
     """This function takes a text and shows it via an environment specific
     pager on stdout.
@@ -268,11 +270,11 @@ def echo_via_pager(
     color = resolve_color_default(color)
 
     if inspect.isgeneratorfunction(text_or_generator):
-        i = t.cast(t.Callable[[], t.Iterable[str]], text_or_generator)()
+        i = t.cast("t.Callable[[], cabc.Iterable[str]]", text_or_generator)()
     elif isinstance(text_or_generator, str):
         i = [text_or_generator]
     else:
-        i = iter(t.cast(t.Iterable[str], text_or_generator))
+        i = iter(t.cast("cabc.Iterable[str]", text_or_generator))
 
     # convert every element of i to a text type if necessary
     text_generator = (el if isinstance(el, str) else str(el) for el in i)
@@ -283,20 +285,20 @@ def echo_via_pager(
 
 
 def progressbar(
-    iterable: t.Optional[t.Iterable[V]] = None,
-    length: t.Optional[int] = None,
-    label: t.Optional[str] = None,
+    iterable: cabc.Iterable[V] | None = None,
+    length: int | None = None,
+    label: str | None = None,
     show_eta: bool = True,
-    show_percent: t.Optional[bool] = None,
+    show_percent: bool | None = None,
     show_pos: bool = False,
-    item_show_func: t.Optional[t.Callable[[t.Optional[V]], t.Optional[str]]] = None,
+    item_show_func: t.Callable[[V | None], str | None] | None = None,
     fill_char: str = "#",
     empty_char: str = "-",
     bar_template: str = "%(label)s  [%(bar)s]  %(info)s",
     info_sep: str = "  ",
     width: int = 36,
-    file: t.Optional[t.TextIO] = None,
-    color: t.Optional[bool] = None,
+    file: t.TextIO | None = None,
+    color: bool | None = None,
     update_min_steps: int = 1,
 ) -> ProgressBar[V]:
     """This function creates an iterable context manager that can be used
@@ -448,9 +450,7 @@ def clear() -> None:
     echo("\033[2J\033[1;1H", nl=False)
 
 
-def _interpret_color(
-    color: t.Union[int, t.Tuple[int, int, int], str], offset: int = 0
-) -> str:
+def _interpret_color(color: int | tuple[int, int, int] | str, offset: int = 0) -> str:
     if isinstance(color, int):
         return f"{38 + offset};5;{color:d}"
 
@@ -463,16 +463,16 @@ def _interpret_color(
 
 def style(
     text: t.Any,
-    fg: t.Optional[t.Union[int, t.Tuple[int, int, int], str]] = None,
-    bg: t.Optional[t.Union[int, t.Tuple[int, int, int], str]] = None,
-    bold: t.Optional[bool] = None,
-    dim: t.Optional[bool] = None,
-    underline: t.Optional[bool] = None,
-    overline: t.Optional[bool] = None,
-    italic: t.Optional[bool] = None,
-    blink: t.Optional[bool] = None,
-    reverse: t.Optional[bool] = None,
-    strikethrough: t.Optional[bool] = None,
+    fg: int | tuple[int, int, int] | str | None = None,
+    bg: int | tuple[int, int, int] | str | None = None,
+    bold: bool | None = None,
+    dim: bool | None = None,
+    underline: bool | None = None,
+    overline: bool | None = None,
+    italic: bool | None = None,
+    blink: bool | None = None,
+    reverse: bool | None = None,
+    strikethrough: bool | None = None,
     reset: bool = True,
 ) -> str:
     """Styles a text with ANSI styles and returns the new string.  By
@@ -603,11 +603,11 @@ def unstyle(text: str) -> str:
 
 
 def secho(
-    message: t.Optional[t.Any] = None,
-    file: t.Optional[t.IO[t.AnyStr]] = None,
+    message: t.Any | None = None,
+    file: t.IO[t.AnyStr] | None = None,
     nl: bool = True,
     err: bool = False,
-    color: t.Optional[bool] = None,
+    color: bool | None = None,
     **styles: t.Any,
 ) -> None:
     """This function combines :func:`echo` and :func:`style` into one
@@ -637,13 +637,13 @@ def secho(
 
 
 def edit(
-    text: t.Optional[t.AnyStr] = None,
-    editor: t.Optional[str] = None,
-    env: t.Optional[t.Mapping[str, str]] = None,
+    text: t.AnyStr | None = None,
+    editor: str | None = None,
+    env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-    filename: t.Optional[str] = None,
-) -> t.Optional[t.AnyStr]:
+    filename: str | None = None,
+) -> t.AnyStr | None:
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
     system search path is used for finding the executable) it overrides
@@ -713,7 +713,7 @@ def launch(url: str, wait: bool = False, locate: bool = False) -> int:
 
 # If this is provided, getchar() calls into this instead.  This is used
 # for unittesting purposes.
-_getchar: t.Optional[t.Callable[[bool], str]] = None
+_getchar: t.Callable[[bool], str] | None = None
 
 
 def getchar(echo: bool = False) -> str:
@@ -746,13 +746,13 @@ def getchar(echo: bool = False) -> str:
     return _getchar(echo)
 
 
-def raw_terminal() -> t.ContextManager[int]:
+def raw_terminal() -> AbstractContextManager[int]:
     from ._termui_impl import raw_terminal as f
 
     return f()
 
 
-def pause(info: t.Optional[str] = None, err: bool = False) -> None:
+def pause(info: str | None = None, err: bool = False) -> None:
     """This command stops execution and waits for the user to press any
     key to continue.  This is similar to the Windows batch "pause"
     command.  If the program is not run through a terminal, this command

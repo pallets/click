@@ -5,6 +5,7 @@ placed in this module and only imported as needed.
 """
 from __future__ import annotations
 
+import collections.abc as cabc
 import contextlib
 import math
 import os
@@ -39,19 +40,19 @@ else:
 class ProgressBar(t.Generic[V]):
     def __init__(
         self,
-        iterable: t.Optional[t.Iterable[V]],
-        length: t.Optional[int] = None,
+        iterable: cabc.Iterable[V] | None,
+        length: int | None = None,
         fill_char: str = "#",
         empty_char: str = " ",
         bar_template: str = "%(bar)s",
         info_sep: str = "  ",
         show_eta: bool = True,
-        show_percent: t.Optional[bool] = None,
+        show_percent: bool | None = None,
         show_pos: bool = False,
-        item_show_func: t.Optional[t.Callable[[t.Optional[V]], t.Optional[str]]] = None,
-        label: t.Optional[str] = None,
-        file: t.Optional[t.TextIO] = None,
-        color: t.Optional[bool] = None,
+        item_show_func: t.Callable[[V | None], str | None] | None = None,
+        label: str | None = None,
+        file: t.TextIO | None = None,
+        color: bool | None = None,
         update_min_steps: int = 1,
         width: int = 30,
     ) -> None:
@@ -90,21 +91,21 @@ class ProgressBar(t.Generic[V]):
         if iterable is None:
             if length is None:
                 raise TypeError("iterable or length is required")
-            iterable = t.cast(t.Iterable[V], range(length))
-        self.iter: t.Iterable[V] = iter(iterable)
+            iterable = t.cast("cabc.Iterable[V]", range(length))
+        self.iter: cabc.Iterable[V] = iter(iterable)
         self.length = length
         self.pos = 0
-        self.avg: t.List[float] = []
+        self.avg: list[float] = []
         self.last_eta: float
         self.start: float
         self.start = self.last_eta = time.time()
         self.eta_known: bool = False
         self.finished: bool = False
-        self.max_width: t.Optional[int] = None
+        self.max_width: int | None = None
         self.entered: bool = False
-        self.current_item: t.Optional[V] = None
+        self.current_item: V | None = None
         self.is_hidden: bool = not isatty(self.file)
-        self._last_line: t.Optional[str] = None
+        self._last_line: str | None = None
 
     def __enter__(self) -> ProgressBar[V]:
         self.entered = True
@@ -113,13 +114,13 @@ class ProgressBar(t.Generic[V]):
 
     def __exit__(
         self,
-        exc_type: t.Optional[t.Type[BaseException]],
-        exc_value: t.Optional[BaseException],
-        tb: t.Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        tb: TracebackType | None,
     ) -> None:
         self.render_finish()
 
-    def __iter__(self) -> t.Iterator[V]:
+    def __iter__(self) -> cabc.Iterator[V]:
         if not self.entered:
             raise RuntimeError("You need to use progress bars in a with block.")
         self.render_progress()
@@ -294,7 +295,7 @@ class ProgressBar(t.Generic[V]):
 
         self.eta_known = self.length is not None
 
-    def update(self, n_steps: int, current_item: t.Optional[V] = None) -> None:
+    def update(self, n_steps: int, current_item: V | None = None) -> None:
         """Update the progress bar by advancing a specified number of
         steps, and optionally set the ``current_item`` for this new
         position.
@@ -325,7 +326,7 @@ class ProgressBar(t.Generic[V]):
         self.current_item = None
         self.finished = True
 
-    def generator(self) -> t.Iterator[V]:
+    def generator(self) -> cabc.Iterator[V]:
         """Return a generator which yields the items added to the bar
         during construction, and updates the progress bar *after* the
         yielded block returns.
@@ -359,7 +360,7 @@ class ProgressBar(t.Generic[V]):
             self.render_progress()
 
 
-def pager(generator: t.Iterable[str], color: t.Optional[bool] = None) -> None:
+def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
 
@@ -394,7 +395,7 @@ def pager(generator: t.Iterable[str], color: t.Optional[bool] = None) -> None:
         os.unlink(filename)
 
 
-def _pipepager(generator: t.Iterable[str], cmd: str, color: t.Optional[bool]) -> None:
+def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> None:
     """Page through text by feeding it to another program.  Invoking a
     pager through this might support colors.
     """
@@ -444,9 +445,7 @@ def _pipepager(generator: t.Iterable[str], cmd: str, color: t.Optional[bool]) ->
             break
 
 
-def _tempfilepager(
-    generator: t.Iterable[str], cmd: str, color: t.Optional[bool]
-) -> None:
+def _tempfilepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> None:
     """Page through text by invoking a program on a temporary file."""
     import tempfile
 
@@ -466,7 +465,7 @@ def _tempfilepager(
 
 
 def _nullpager(
-    stream: t.TextIO, generator: t.Iterable[str], color: t.Optional[bool]
+    stream: t.TextIO, generator: cabc.Iterable[str], color: bool | None
 ) -> None:
     """Simply print unformatted text.  This is the ultimate fallback."""
     for text in generator:
@@ -478,8 +477,8 @@ def _nullpager(
 class Editor:
     def __init__(
         self,
-        editor: t.Optional[str] = None,
-        env: t.Optional[t.Mapping[str, str]] = None,
+        editor: str | None = None,
+        env: cabc.Mapping[str, str] | None = None,
         require_save: bool = True,
         extension: str = ".txt",
     ) -> None:
@@ -506,7 +505,7 @@ class Editor:
         import subprocess
 
         editor = self.get_editor()
-        environ: t.Optional[t.Dict[str, str]] = None
+        environ: dict[str, str] | None = None
 
         if self.env:
             environ = os.environ.copy()
@@ -524,7 +523,7 @@ class Editor:
                 _("{editor}: Editing failed: {e}").format(editor=editor, e=e)
             ) from e
 
-    def edit(self, text: t.Optional[t.AnyStr]) -> t.Optional[t.AnyStr]:
+    def edit(self, text: t.AnyStr | None) -> t.AnyStr | None:
         import tempfile
 
         if not text:
@@ -632,7 +631,7 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
         return 1
 
 
-def _translate_ch_to_exc(ch: str) -> t.Optional[BaseException]:
+def _translate_ch_to_exc(ch: str) -> None:
     if ch == "\x03":
         raise KeyboardInterrupt()
 
@@ -649,7 +648,7 @@ if WIN:
     import msvcrt
 
     @contextlib.contextmanager
-    def raw_terminal() -> t.Iterator[int]:
+    def raw_terminal() -> cabc.Iterator[int]:
         yield -1
 
     def getchar(echo: bool) -> str:
@@ -704,8 +703,8 @@ else:
     import termios
 
     @contextlib.contextmanager
-    def raw_terminal() -> t.Iterator[int]:
-        f: t.Optional[t.TextIO]
+    def raw_terminal() -> cabc.Iterator[int]:
+        f: t.TextIO | None
         fd: int
 
         if not isatty(sys.stdin):

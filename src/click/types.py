@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections.abc as cabc
 import os
 import stat
 import sys
@@ -52,9 +53,9 @@ class ParamType:
     #: whitespace splits them up.  The exception are paths and files which
     #: are split by ``os.path.pathsep`` by default (":" on Unix and ";" on
     #: Windows).
-    envvar_list_splitter: t.ClassVar[t.Optional[str]] = None
+    envvar_list_splitter: t.ClassVar[str | None] = None
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
+    def to_info_dict(self) -> dict[str, t.Any]:
         """Gather information that could be useful for a tool generating
         user-facing documentation.
 
@@ -78,16 +79,16 @@ class ParamType:
     def __call__(
         self,
         value: t.Any,
-        param: t.Optional[Parameter] = None,
-        ctx: t.Optional[Context] = None,
+        param: Parameter | None = None,
+        ctx: Context | None = None,
     ) -> t.Any:
         if value is not None:
             return self.convert(value, param, ctx)
 
-    def get_metavar(self, param: Parameter) -> t.Optional[str]:
+    def get_metavar(self, param: Parameter) -> str | None:
         """Returns the metavar default for this param if it provides one."""
 
-    def get_missing_message(self, param: Parameter) -> t.Optional[str]:
+    def get_missing_message(self, param: Parameter) -> str | None:
         """Optionally might return extra information about a missing
         parameter.
 
@@ -95,7 +96,7 @@ class ParamType:
         """
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         """Convert the value to the correct type. This is not called if
         the value is ``None`` (the missing value).
@@ -118,7 +119,7 @@ class ParamType:
         """
         return value
 
-    def split_envvar_value(self, rv: str) -> t.Sequence[str]:
+    def split_envvar_value(self, rv: str) -> cabc.Sequence[str]:
         """Given a value from an environment variable this splits it up
         into small chunks depending on the defined envvar list splitter.
 
@@ -131,15 +132,15 @@ class ParamType:
     def fail(
         self,
         message: str,
-        param: t.Optional[Parameter] = None,
-        ctx: t.Optional[Context] = None,
+        param: Parameter | None = None,
+        ctx: Context | None = None,
     ) -> t.NoReturn:
         """Helper method to fail with an invalid value message."""
         raise BadParameter(message, ctx=ctx, param=param)
 
     def shell_complete(
         self, ctx: Context, param: Parameter, incomplete: str
-    ) -> t.List[CompletionItem]:
+    ) -> list[CompletionItem]:
         """Return a list of
         :class:`~click.shell_completion.CompletionItem` objects for the
         incomplete value. Most types do not provide completions, but
@@ -168,13 +169,13 @@ class FuncParamType(ParamType):
         self.name: str = func.__name__
         self.func = func
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
+    def to_info_dict(self) -> dict[str, t.Any]:
         info_dict = super().to_info_dict()
         info_dict["func"] = self.func
         return info_dict
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         try:
             return self.func(value)
@@ -191,7 +192,7 @@ class UnprocessedParamType(ParamType):
     name = "text"
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         return value
 
@@ -203,7 +204,7 @@ class StringParamType(ParamType):
     name = "text"
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         if isinstance(value, bytes):
             enc = _get_argv_encoding()
@@ -244,11 +245,13 @@ class Choice(ParamType):
 
     name = "choice"
 
-    def __init__(self, choices: t.Sequence[str], case_sensitive: bool = True) -> None:
+    def __init__(
+        self, choices: cabc.Sequence[str], case_sensitive: bool = True
+    ) -> None:
         self.choices = choices
         self.case_sensitive = case_sensitive
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
+    def to_info_dict(self) -> dict[str, t.Any]:
         info_dict = super().to_info_dict()
         info_dict["choices"] = self.choices
         info_dict["case_sensitive"] = self.case_sensitive
@@ -268,7 +271,7 @@ class Choice(ParamType):
         return _("Choose from:\n\t{choices}").format(choices=",\n\t".join(self.choices))
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         # Match through normalization and case sensitivity
         # first do token_normalize_func, then lowercase
@@ -310,7 +313,7 @@ class Choice(ParamType):
 
     def shell_complete(
         self, ctx: Context, param: Parameter, incomplete: str
-    ) -> t.List[CompletionItem]:
+    ) -> list[CompletionItem]:
         """Complete choices that start with the incomplete value.
 
         :param ctx: Invocation context for this command.
@@ -355,14 +358,14 @@ class DateTime(ParamType):
 
     name = "datetime"
 
-    def __init__(self, formats: t.Optional[t.Sequence[str]] = None):
-        self.formats: t.Sequence[str] = formats or [
+    def __init__(self, formats: cabc.Sequence[str] | None = None):
+        self.formats: cabc.Sequence[str] = formats or [
             "%Y-%m-%d",
             "%Y-%m-%dT%H:%M:%S",
             "%Y-%m-%d %H:%M:%S",
         ]
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
+    def to_info_dict(self) -> dict[str, t.Any]:
         info_dict = super().to_info_dict()
         info_dict["formats"] = self.formats
         return info_dict
@@ -370,14 +373,14 @@ class DateTime(ParamType):
     def get_metavar(self, param: Parameter) -> str:
         return f"[{'|'.join(self.formats)}]"
 
-    def _try_to_convert_date(self, value: t.Any, format: str) -> t.Optional[datetime]:
+    def _try_to_convert_date(self, value: t.Any, format: str) -> datetime | None:
         try:
             return datetime.strptime(value, format)
         except ValueError:
             return None
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         if isinstance(value, datetime):
             return value
@@ -404,10 +407,10 @@ class DateTime(ParamType):
 
 
 class _NumberParamTypeBase(ParamType):
-    _number_class: t.ClassVar[t.Type[t.Any]]
+    _number_class: t.ClassVar[type[t.Any]]
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         try:
             return self._number_class(value)
@@ -424,8 +427,8 @@ class _NumberParamTypeBase(ParamType):
 class _NumberRangeBase(_NumberParamTypeBase):
     def __init__(
         self,
-        min: t.Optional[float] = None,
-        max: t.Optional[float] = None,
+        min: float | None = None,
+        max: float | None = None,
         min_open: bool = False,
         max_open: bool = False,
         clamp: bool = False,
@@ -436,7 +439,7 @@ class _NumberRangeBase(_NumberParamTypeBase):
         self.max_open = max_open
         self.clamp = clamp
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
+    def to_info_dict(self) -> dict[str, t.Any]:
         info_dict = super().to_info_dict()
         info_dict.update(
             min=self.min,
@@ -448,7 +451,7 @@ class _NumberRangeBase(_NumberParamTypeBase):
         return info_dict
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         import operator
 
@@ -478,7 +481,7 @@ class _NumberRangeBase(_NumberParamTypeBase):
 
         return rv
 
-    def _clamp(self, bound: float, dir: te.Literal[1, -1], open: bool) -> float:
+    def _clamp(self, bound: float, dir: t.Literal[1, -1], open: bool) -> float:
         """Find the valid value to clamp to bound in the given
         direction.
 
@@ -533,7 +536,7 @@ class IntRange(_NumberRangeBase, IntParamType):
     name = "integer range"
 
     def _clamp(  # type: ignore
-        self, bound: int, dir: te.Literal[1, -1], open: bool
+        self, bound: int, dir: t.Literal[1, -1], open: bool
     ) -> int:
         if not open:
             return bound
@@ -569,8 +572,8 @@ class FloatRange(_NumberRangeBase, FloatParamType):
 
     def __init__(
         self,
-        min: t.Optional[float] = None,
-        max: t.Optional[float] = None,
+        min: float | None = None,
+        max: float | None = None,
         min_open: bool = False,
         max_open: bool = False,
         clamp: bool = False,
@@ -582,7 +585,7 @@ class FloatRange(_NumberRangeBase, FloatParamType):
         if (min_open or max_open) and clamp:
             raise TypeError("Clamping is not supported for open bounds.")
 
-    def _clamp(self, bound: float, dir: te.Literal[1, -1], open: bool) -> float:
+    def _clamp(self, bound: float, dir: t.Literal[1, -1], open: bool) -> float:
         if not open:
             return bound
 
@@ -596,7 +599,7 @@ class BoolParamType(ParamType):
     name = "boolean"
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         if value in {False, True}:
             return bool(value)
@@ -621,7 +624,7 @@ class UUIDParameterType(ParamType):
     name = "uuid"
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         import uuid
 
@@ -674,9 +677,9 @@ class File(ParamType):
     def __init__(
         self,
         mode: str = "r",
-        encoding: t.Optional[str] = None,
-        errors: t.Optional[str] = "strict",
-        lazy: t.Optional[bool] = None,
+        encoding: str | None = None,
+        errors: str | None = "strict",
+        lazy: bool | None = None,
         atomic: bool = False,
     ) -> None:
         self.mode = mode
@@ -685,12 +688,12 @@ class File(ParamType):
         self.lazy = lazy
         self.atomic = atomic
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
+    def to_info_dict(self) -> dict[str, t.Any]:
         info_dict = super().to_info_dict()
         info_dict.update(mode=self.mode, encoding=self.encoding)
         return info_dict
 
-    def resolve_lazy_flag(self, value: t.Union[str, os.PathLike[str]]) -> bool:
+    def resolve_lazy_flag(self, value: str | os.PathLike[str]) -> bool:
         if self.lazy is not None:
             return self.lazy
         if os.fspath(value) == "-":
@@ -701,14 +704,14 @@ class File(ParamType):
 
     def convert(
         self,
-        value: t.Union[str, os.PathLike[str], t.IO[t.Any]],
-        param: t.Optional[Parameter],
-        ctx: t.Optional[Context],
+        value: str | os.PathLike[str] | t.IO[t.Any],
+        param: Parameter | None,
+        ctx: Context | None,
     ) -> t.IO[t.Any]:
         if _is_file_like(value):
             return value
 
-        value = t.cast("t.Union[str, os.PathLike[str]]", value)
+        value = t.cast("str | os.PathLike[str]", value)
 
         try:
             lazy = self.resolve_lazy_flag(value)
@@ -721,7 +724,7 @@ class File(ParamType):
                 if ctx is not None:
                     ctx.call_on_close(lf.close_intelligently)
 
-                return t.cast(t.IO[t.Any], lf)
+                return t.cast("t.IO[t.Any]", lf)
 
             f, should_close = open_stream(
                 value, self.mode, self.encoding, self.errors, atomic=self.atomic
@@ -744,7 +747,7 @@ class File(ParamType):
 
     def shell_complete(
         self, ctx: Context, param: Parameter, incomplete: str
-    ) -> t.List[CompletionItem]:
+    ) -> list[CompletionItem]:
         """Return a special completion marker that tells the completion
         system to use the shell to provide file path completions.
 
@@ -807,7 +810,7 @@ class Path(ParamType):
         readable: bool = True,
         resolve_path: bool = False,
         allow_dash: bool = False,
-        path_type: t.Optional[t.Type[t.Any]] = None,
+        path_type: type[t.Any] | None = None,
         executable: bool = False,
     ):
         self.exists = exists
@@ -827,7 +830,7 @@ class Path(ParamType):
         else:
             self.name = _("path")
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
+    def to_info_dict(self) -> dict[str, t.Any]:
         info_dict = super().to_info_dict()
         info_dict.update(
             exists=self.exists,
@@ -840,8 +843,8 @@ class Path(ParamType):
         return info_dict
 
     def coerce_path_result(
-        self, value: t.Union[str, os.PathLike[str]]
-    ) -> t.Union[str, bytes, os.PathLike[str]]:
+        self, value: str | os.PathLike[str]
+    ) -> str | bytes | os.PathLike[str]:
         if self.type is not None and not isinstance(value, self.type):
             if self.type is str:
                 return os.fsdecode(value)
@@ -854,10 +857,10 @@ class Path(ParamType):
 
     def convert(
         self,
-        value: t.Union[str, os.PathLike[str]],
-        param: t.Optional[Parameter],
-        ctx: t.Optional[Context],
-    ) -> t.Union[str, bytes, os.PathLike[str]]:
+        value: str | os.PathLike[str],
+        param: Parameter | None,
+        ctx: Context | None,
+    ) -> str | bytes | os.PathLike[str]:
         rv = value
 
         is_dash = self.file_okay and self.allow_dash and rv in (b"-", "-")
@@ -927,7 +930,7 @@ class Path(ParamType):
 
     def shell_complete(
         self, ctx: Context, param: Parameter, incomplete: str
-    ) -> t.List[CompletionItem]:
+    ) -> list[CompletionItem]:
         """Return a special completion marker that tells the completion
         system to use the shell to provide path completions for only
         directories or any paths.
@@ -958,10 +961,10 @@ class Tuple(CompositeParamType):
     :param types: a list of types that should be used for the tuple items.
     """
 
-    def __init__(self, types: t.Sequence[t.Union[t.Type[t.Any], ParamType]]) -> None:
-        self.types: t.Sequence[ParamType] = [convert_type(ty) for ty in types]
+    def __init__(self, types: cabc.Sequence[type[t.Any] | ParamType]) -> None:
+        self.types: cabc.Sequence[ParamType] = [convert_type(ty) for ty in types]
 
-    def to_info_dict(self) -> t.Dict[str, t.Any]:
+    def to_info_dict(self) -> dict[str, t.Any]:
         info_dict = super().to_info_dict()
         info_dict["types"] = [t.to_info_dict() for t in self.types]
         return info_dict
@@ -975,7 +978,7 @@ class Tuple(CompositeParamType):
         return len(self.types)
 
     def convert(
-        self, value: t.Any, param: t.Optional[Parameter], ctx: t.Optional[Context]
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
     ) -> t.Any:
         len_type = len(self.types)
         len_value = len(value)
@@ -994,7 +997,7 @@ class Tuple(CompositeParamType):
         return tuple(ty(x, param, ctx) for ty, x in zip(self.types, value))
 
 
-def convert_type(ty: t.Optional[t.Any], default: t.Optional[t.Any] = None) -> ParamType:
+def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType:
     """Find the most appropriate :class:`ParamType` for the given Python
     type. If the type isn't provided, it can be inferred from a default
     value.
