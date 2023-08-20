@@ -34,7 +34,6 @@ from .exceptions import UsageError as UsageError
 from .formatting import HelpFormatter as HelpFormatter
 from .formatting import wrap_text as wrap_text
 from .globals import get_current_context as get_current_context
-from .parser import OptionParser as OptionParser
 from .termui import clear as clear
 from .termui import confirm as confirm
 from .termui import echo_via_pager as echo_via_pager
@@ -95,5 +94,16 @@ def __getattr__(name: str) -> object:
             stacklevel=2,
         )
         return _MultiCommand
+
+    if name == "OptionParser":
+        from .parser import _OptionParser
+
+        warnings.warn(
+            "'OptionParser' is deprecated and will be removed in Click 9.0. The"
+            " old parser is available in 'optparse'.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _OptionParser
 
     raise AttributeError(name)
