@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import collections.abc as cabc
 import contextlib
 import io
 import os
@@ -41,10 +44,10 @@ class EchoingStdin:
     def readline(self, n: int = -1) -> bytes:
         return self._echo(self._input.readline(n))
 
-    def readlines(self) -> t.List[bytes]:
+    def readlines(self) -> list[bytes]:
         return [self._echo(x) for x in self._input.readlines()]
 
-    def __iter__(self) -> t.Iterator[bytes]:
+    def __iter__(self) -> cabc.Iterator[bytes]:
         return iter(self._echo(x) for x in self._input)
 
     def __repr__(self) -> str:
@@ -52,7 +55,7 @@ class EchoingStdin:
 
 
 @contextlib.contextmanager
-def _pause_echo(stream: t.Optional[EchoingStdin]) -> t.Iterator[None]:
+def _pause_echo(stream: EchoingStdin | None) -> cabc.Iterator[None]:
     if stream is None:
         yield
     else:
@@ -79,11 +82,11 @@ class _NamedTextIOWrapper(io.TextIOWrapper):
 
 
 def make_input_stream(
-    input: t.Optional[t.Union[str, bytes, t.IO[t.Any]]], charset: str
+    input: str | bytes | t.IO[t.Any] | None, charset: str
 ) -> t.BinaryIO:
     # Is already an input stream.
     if hasattr(input, "read"):
-        rv = _find_binary_reader(t.cast(t.IO[t.Any], input))
+        rv = _find_binary_reader(t.cast("t.IO[t.Any]", input))
 
         if rv is not None:
             return rv
@@ -103,15 +106,14 @@ class Result:
 
     def __init__(
         self,
-        runner: "CliRunner",
+        runner: CliRunner,
         stdout_bytes: bytes,
-        stderr_bytes: t.Optional[bytes],
+        stderr_bytes: bytes | None,
         return_value: t.Any,
         exit_code: int,
-        exception: t.Optional[BaseException],
-        exc_info: t.Optional[
-            t.Tuple[t.Type[BaseException], BaseException, TracebackType]
-        ] = None,
+        exception: BaseException | None,
+        exc_info: tuple[type[BaseException], BaseException, TracebackType]
+        | None = None,
     ):
         #: The runner that created the result
         self.runner = runner
@@ -178,16 +180,16 @@ class CliRunner:
     def __init__(
         self,
         charset: str = "utf-8",
-        env: t.Optional[t.Mapping[str, t.Optional[str]]] = None,
+        env: cabc.Mapping[str, str | None] | None = None,
         echo_stdin: bool = False,
         mix_stderr: bool = True,
     ) -> None:
         self.charset = charset
-        self.env: t.Mapping[str, t.Optional[str]] = env or {}
+        self.env: cabc.Mapping[str, str | None] = env or {}
         self.echo_stdin = echo_stdin
         self.mix_stderr = mix_stderr
 
-    def get_default_prog_name(self, cli: "Command") -> str:
+    def get_default_prog_name(self, cli: Command) -> str:
         """Given a command object it will return the default program name
         for it.  The default is the `name` attribute or ``"root"`` if not
         set.
@@ -195,8 +197,8 @@ class CliRunner:
         return cli.name or "root"
 
     def make_env(
-        self, overrides: t.Optional[t.Mapping[str, t.Optional[str]]] = None
-    ) -> t.Mapping[str, t.Optional[str]]:
+        self, overrides: cabc.Mapping[str, str | None] | None = None
+    ) -> cabc.Mapping[str, str | None]:
         """Returns the environment overrides for invoking a script."""
         rv = dict(self.env)
         if overrides:
@@ -206,10 +208,10 @@ class CliRunner:
     @contextlib.contextmanager
     def isolation(
         self,
-        input: t.Optional[t.Union[str, bytes, t.IO[t.Any]]] = None,
-        env: t.Optional[t.Mapping[str, t.Optional[str]]] = None,
+        input: str | bytes | t.IO[t.Any] | None = None,
+        env: cabc.Mapping[str, str | None] | None = None,
         color: bool = False,
-    ) -> t.Iterator[t.Tuple[io.BytesIO, t.Optional[io.BytesIO]]]:
+    ) -> cabc.Iterator[tuple[io.BytesIO, io.BytesIO | None]]:
         """A context manager that sets up the isolation for invoking of a
         command line tool.  This sets up stdin with the given input data
         and `os.environ` with the overrides from the given dictionary.
@@ -275,7 +277,7 @@ class CliRunner:
             )
 
         @_pause_echo(echo_input)  # type: ignore
-        def visible_input(prompt: t.Optional[str] = None) -> str:
+        def visible_input(prompt: str | None = None) -> str:
             sys.stdout.write(prompt or "")
             val = text_input.readline().rstrip("\r\n")
             sys.stdout.write(f"{val}\n")
@@ -283,7 +285,7 @@ class CliRunner:
             return val
 
         @_pause_echo(echo_input)  # type: ignore
-        def hidden_input(prompt: t.Optional[str] = None) -> str:
+        def hidden_input(prompt: str | None = None) -> str:
             sys.stdout.write(f"{prompt or ''}\n")
             sys.stdout.flush()
             return text_input.readline().rstrip("\r\n")
@@ -301,7 +303,7 @@ class CliRunner:
         default_color = color
 
         def should_strip_ansi(
-            stream: t.Optional[t.IO[t.Any]] = None, color: t.Optional[bool] = None
+            stream: t.IO[t.Any] | None = None, color: bool | None = None
         ) -> bool:
             if color is None:
                 return not default_color
@@ -348,10 +350,10 @@ class CliRunner:
 
     def invoke(
         self,
-        cli: "Command",
-        args: t.Optional[t.Union[str, t.Sequence[str]]] = None,
-        input: t.Optional[t.Union[str, bytes, t.IO[t.Any]]] = None,
-        env: t.Optional[t.Mapping[str, t.Optional[str]]] = None,
+        cli: Command,
+        args: str | cabc.Sequence[str] | None = None,
+        input: str | bytes | t.IO[t.Any] | None = None,
+        env: cabc.Mapping[str, str | None] | None = None,
         catch_exceptions: bool = True,
         color: bool = False,
         **extra: t.Any,
@@ -393,7 +395,7 @@ class CliRunner:
         exc_info = None
         with self.isolation(input=input, env=env, color=color) as outstreams:
             return_value = None
-            exception: t.Optional[BaseException] = None
+            exception: BaseException | None = None
             exit_code = 0
 
             if isinstance(args, str):
@@ -408,7 +410,7 @@ class CliRunner:
                 return_value = cli.main(args=args or (), prog_name=prog_name, **extra)
             except SystemExit as e:
                 exc_info = sys.exc_info()
-                e_code = t.cast(t.Optional[t.Union[int, t.Any]], e.code)
+                e_code = t.cast("int | t.Any | None", e.code)
 
                 if e_code is None:
                     e_code = 0
@@ -449,8 +451,8 @@ class CliRunner:
 
     @contextlib.contextmanager
     def isolated_filesystem(
-        self, temp_dir: t.Optional[t.Union[str, "os.PathLike[str]"]] = None
-    ) -> t.Iterator[str]:
+        self, temp_dir: str | os.PathLike[str] | None = None
+    ) -> cabc.Iterator[str]:
         """A context manager that creates a temporary directory and
         changes the current working directory to it. This isolates tests
         that affect the contents of the CWD to prevent them from

@@ -21,6 +21,9 @@ Copyright 2002-2006 Python Software Foundation. All rights reserved.
 # maintained by the Python Software Foundation.
 # Copyright 2001-2006 Gregory P. Ward
 # Copyright 2002-2006 Python Software Foundation
+from __future__ import annotations
+
+import collections.abc as cabc
 import typing as t
 from collections import deque
 from gettext import gettext as _
@@ -32,7 +35,6 @@ from .exceptions import NoSuchOption
 from .exceptions import UsageError
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
     from .core import Argument as CoreArgument
     from .core import Context
     from .core import Option as CoreOption
@@ -47,8 +49,8 @@ _flag_needs_value = object()
 
 
 def _unpack_args(
-    args: t.Sequence[str], nargs_spec: t.Sequence[int]
-) -> t.Tuple[t.Sequence[t.Union[str, t.Sequence[t.Optional[str]], None]], t.List[str]]:
+    args: cabc.Sequence[str], nargs_spec: cabc.Sequence[int]
+) -> tuple[cabc.Sequence[str | cabc.Sequence[str | None] | None], list[str]]:
     """Given an iterable of arguments and an iterable of nargs specifications,
     it returns a tuple with all the unpacked arguments at the first index
     and all remaining arguments as the second.
@@ -60,10 +62,10 @@ def _unpack_args(
     """
     args = deque(args)
     nargs_spec = deque(nargs_spec)
-    rv: t.List[t.Union[str, t.Tuple[t.Optional[str], ...], None]] = []
-    spos: t.Optional[int] = None
+    rv: list[str | tuple[str | None, ...] | None] = []
+    spos: int | None = None
 
-    def _fetch(c: "te.Deque[V]") -> t.Optional[V]:
+    def _fetch(c: deque[V]) -> V | None:
         try:
             if spos is None:
                 return c.popleft()
@@ -106,7 +108,7 @@ def _unpack_args(
     return tuple(rv), list(args)
 
 
-def _split_opt(opt: str) -> t.Tuple[str, str]:
+def _split_opt(opt: str) -> tuple[str, str]:
     first = opt[:1]
     if first.isalnum():
         return "", opt
@@ -115,7 +117,7 @@ def _split_opt(opt: str) -> t.Tuple[str, str]:
     return first, opt[1:]
 
 
-def _normalize_opt(opt: str, ctx: t.Optional["Context"]) -> str:
+def _normalize_opt(opt: str, ctx: Context | None) -> str:
     if ctx is None or ctx.token_normalize_func is None:
         return opt
     prefix, opt = _split_opt(opt)
@@ -125,16 +127,16 @@ def _normalize_opt(opt: str, ctx: t.Optional["Context"]) -> str:
 class _Option:
     def __init__(
         self,
-        obj: "CoreOption",
-        opts: t.Sequence[str],
-        dest: t.Optional[str],
-        action: t.Optional[str] = None,
+        obj: CoreOption,
+        opts: cabc.Sequence[str],
+        dest: str | None,
+        action: str | None = None,
         nargs: int = 1,
-        const: t.Optional[t.Any] = None,
+        const: t.Any | None = None,
     ):
         self._short_opts = []
         self._long_opts = []
-        self.prefixes: t.Set[str] = set()
+        self.prefixes: set[str] = set()
 
         for opt in opts:
             prefix, value = _split_opt(opt)
@@ -160,7 +162,7 @@ class _Option:
     def takes_value(self) -> bool:
         return self.action in ("store", "append")
 
-    def process(self, value: t.Any, state: "_ParsingState") -> None:
+    def process(self, value: t.Any, state: _ParsingState) -> None:
         if self.action == "store":
             state.opts[self.dest] = value  # type: ignore
         elif self.action == "store_const":
@@ -177,15 +179,15 @@ class _Option:
 
 
 class _Argument:
-    def __init__(self, obj: "CoreArgument", dest: t.Optional[str], nargs: int = 1):
+    def __init__(self, obj: CoreArgument, dest: str | None, nargs: int = 1):
         self.dest = dest
         self.nargs = nargs
         self.obj = obj
 
     def process(
         self,
-        value: t.Union[t.Optional[str], t.Sequence[t.Optional[str]]],
-        state: "_ParsingState",
+        value: str | cabc.Sequence[str | None] | None,
+        state: _ParsingState,
     ) -> None:
         if self.nargs > 1:
             assert value is not None
@@ -209,11 +211,11 @@ class _Argument:
 
 
 class _ParsingState:
-    def __init__(self, rargs: t.List[str]) -> None:
-        self.opts: t.Dict[str, t.Any] = {}
-        self.largs: t.List[str] = []
+    def __init__(self, rargs: list[str]) -> None:
+        self.opts: dict[str, t.Any] = {}
+        self.largs: list[str] = []
         self.rargs = rargs
-        self.order: t.List["CoreParameter"] = []
+        self.order: list[CoreParameter] = []
 
 
 class _OptionParser:
@@ -233,7 +235,7 @@ class _OptionParser:
         Will be removed in Click 9.0.
     """
 
-    def __init__(self, ctx: t.Optional["Context"] = None) -> None:
+    def __init__(self, ctx: Context | None = None) -> None:
         #: The :class:`~click.Context` for this parser.  This might be
         #: `None` for some advanced use cases.
         self.ctx = ctx
@@ -252,19 +254,19 @@ class _OptionParser:
             self.allow_interspersed_args = ctx.allow_interspersed_args
             self.ignore_unknown_options = ctx.ignore_unknown_options
 
-        self._short_opt: t.Dict[str, _Option] = {}
-        self._long_opt: t.Dict[str, _Option] = {}
+        self._short_opt: dict[str, _Option] = {}
+        self._long_opt: dict[str, _Option] = {}
         self._opt_prefixes = {"-", "--"}
-        self._args: t.List[_Argument] = []
+        self._args: list[_Argument] = []
 
     def add_option(
         self,
-        obj: "CoreOption",
-        opts: t.Sequence[str],
-        dest: t.Optional[str],
-        action: t.Optional[str] = None,
+        obj: CoreOption,
+        opts: cabc.Sequence[str],
+        dest: str | None,
+        action: str | None = None,
         nargs: int = 1,
-        const: t.Optional[t.Any] = None,
+        const: t.Any | None = None,
     ) -> None:
         """Adds a new option named `dest` to the parser.  The destination
         is not inferred (unlike with optparse) and needs to be explicitly
@@ -282,9 +284,7 @@ class _OptionParser:
         for opt in option._long_opts:
             self._long_opt[opt] = option
 
-    def add_argument(
-        self, obj: "CoreArgument", dest: t.Optional[str], nargs: int = 1
-    ) -> None:
+    def add_argument(self, obj: CoreArgument, dest: str | None, nargs: int = 1) -> None:
         """Adds a positional argument named `dest` to the parser.
 
         The `obj` can be used to identify the option in the order list
@@ -293,8 +293,8 @@ class _OptionParser:
         self._args.append(_Argument(obj, dest=dest, nargs=nargs))
 
     def parse_args(
-        self, args: t.List[str]
-    ) -> t.Tuple[t.Dict[str, t.Any], t.List[str], t.List["CoreParameter"]]:
+        self, args: list[str]
+    ) -> tuple[dict[str, t.Any], list[str], list[CoreParameter]]:
         """Parses positional arguments and returns ``(values, args, order)``
         for the parsed options and arguments as well as the leftover
         arguments if there are any.  The order is a list of objects as they
@@ -358,7 +358,7 @@ class _OptionParser:
         # not a very interesting subset!
 
     def _match_long_opt(
-        self, opt: str, explicit_value: t.Optional[str], state: _ParsingState
+        self, opt: str, explicit_value: str | None, state: _ParsingState
     ) -> None:
         if opt not in self._long_opt:
             from difflib import get_close_matches

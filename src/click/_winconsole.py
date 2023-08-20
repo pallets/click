@@ -6,6 +6,9 @@
 # compared to the original patches as we do not need to patch
 # the entire interpreter but just work in our little world of
 # echo and prompt.
+from __future__ import annotations
+
+import collections.abc as cabc
 import io
 import sys
 import time
@@ -196,7 +199,7 @@ class ConsoleStream:
             pass
         return self.buffer.write(x)
 
-    def writelines(self, lines: t.Iterable[t.AnyStr]) -> None:
+    def writelines(self, lines: cabc.Iterable[t.AnyStr]) -> None:
         for line in lines:
             self.write(line)
 
@@ -240,7 +243,7 @@ def _get_text_stderr(buffer_stream: t.BinaryIO) -> t.TextIO:
     return t.cast(t.TextIO, ConsoleStream(text_stream, buffer_stream))
 
 
-_stream_factories: t.Mapping[int, t.Callable[[t.BinaryIO], t.TextIO]] = {
+_stream_factories: cabc.Mapping[int, t.Callable[[t.BinaryIO], t.TextIO]] = {
     0: _get_text_stdin,
     1: _get_text_stdout,
     2: _get_text_stderr,
@@ -261,8 +264,8 @@ def _is_console(f: t.TextIO) -> bool:
 
 
 def _get_windows_console_stream(
-    f: t.TextIO, encoding: t.Optional[str], errors: t.Optional[str]
-) -> t.Optional[t.TextIO]:
+    f: t.TextIO, encoding: str | None, errors: str | None
+) -> t.TextIO | None:
     if (
         get_buffer is not None
         and encoding in {"utf-16-le", None}

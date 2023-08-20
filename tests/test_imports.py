@@ -27,10 +27,12 @@ click.echo(json.dumps(rv))
 """
 
 ALLOWED_IMPORTS = {
+    "__future__",
     "weakref",
     "os",
     "struct",
     "collections",
+    "collections.abc",
     "sys",
     "contextlib",
     "functools",
