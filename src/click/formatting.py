@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from gettext import gettext as _
 
 from ._compat import term_len
-from .parser import split_opt
+from .parser import _split_opt
 
 # Can force a width.  This is used by the test system
 FORCED_WIDTH: t.Optional[int] = None
@@ -290,7 +290,7 @@ def join_options(options: t.Sequence[str]) -> t.Tuple[str, bool]:
     any_prefix_is_slash = False
 
     for opt in options:
-        prefix = split_opt(opt)[0]
+        prefix = _split_opt(opt)[0]
 
         if prefix == "/":
             any_prefix_is_slash = True

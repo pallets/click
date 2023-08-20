@@ -10,7 +10,6 @@ from .core import Group
 from .core import Option
 from .core import Parameter
 from .core import ParameterSource
-from .parser import split_arg_string
 from .utils import echo
 
 
@@ -434,6 +433,43 @@ def get_completion_class(shell: str) -> t.Optional[t.Type[ShellComplete]]:
     return _available_shells.get(shell)
 
 
+def split_arg_string(string: str) -> t.List[str]:
+    """Split an argument string as with :func:`shlex.split`, but don't
+    fail if the string is incomplete. Ignores a missing closing quote or
+    incomplete escape sequence and uses the partial token as-is.
+
+    .. code-block:: python
+
+        split_arg_string("example 'my file")
+        ["example", "my file"]
+
+        split_arg_string("example my\\")
+        ["example", "my"]
+
+    :param string: String to split.
+
+    .. versionchanged:: 8.2
+        Moved to ``shell_completion`` from ``parser``.
+    """
+    import shlex
+
+    lex = shlex.shlex(string, posix=True)
+    lex.whitespace_split = True
+    lex.commenters = ""
+    out = []
+
+    try:
+        for token in lex:
+            out.append(token)
+    except ValueError:
+        # Raised when end-of-string is reached in an invalid state. Use
+        # the partial token as-is. The quote or escape character is in
+        # lex.state, not lex.token.
+        out.append(lex.token)
+
+    return out
+
+
 def _is_incomplete_argument(ctx: Context, param: Parameter) -> bool:
     """Determine if the given parameter is an argument that can still
     accept values.
@@ -508,7 +544,7 @@ def _resolve_context(
     """
     ctx_args["resilient_parsing"] = True
     ctx = cli.make_context(prog_name, args.copy(), **ctx_args)
-    args = ctx.protected_args + ctx.args
+    args = ctx._protected_args + ctx.args
 
     while args:
         command = ctx.command
@@ -521,7 +557,7 @@ def _resolve_context(
                     return ctx
 
                 ctx = cmd.make_context(name, args, parent=ctx, resilient_parsing=True)
-                args = ctx.protected_args + ctx.args
+                args = ctx._protected_args + ctx.args
             else:
                 sub_ctx = ctx
 
@@ -542,7 +578,7 @@ def _resolve_context(
                     args = sub_ctx.args
 
                 ctx = sub_ctx
-                args = [*sub_ctx.protected_args, *sub_ctx.args]
+                args = [*sub_ctx._protected_args, *sub_ctx.args]
         else:
             break
 

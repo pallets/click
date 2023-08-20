@@ -13,6 +13,16 @@ Unreleased
     commands. :issue:`2589`
 -   ``MultiCommand`` is deprecated. ``Group`` is the base class for all group
     commands. :issue:`2590`
+-   The current parser and related classes and methods, are deprecated.
+    :issue:`2205`
+
+    -   ``OptionParser`` and the ``parser`` module, which is a modified copy of
+        ``optparse`` in the standard library.
+    -   ``Context.protected_args`` is unneeded. ``Context.args`` contains any
+        remaining arguments while parsing.
+    -   ``Parameter.add_to_parser`` (on both ``Argument`` and ``Option``) is
+        unneeded. Parsing works directly without building a separate parser.
+    -   ``split_arg_string`` is moved from ``parser`` to ``shell_completion``.
 
 
 Version 8.1.7

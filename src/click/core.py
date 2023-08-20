@@ -25,8 +25,8 @@ from .formatting import join_options
 from .globals import pop_context
 from .globals import push_context
 from .parser import _flag_needs_value
-from .parser import OptionParser
-from .parser import split_opt
+from .parser import _OptionParser
+from .parser import _split_opt
 from .termui import confirm
 from .termui import prompt
 from .termui import style
@@ -224,6 +224,10 @@ class Context:
         context. ``Command.show_default`` overrides this default for the
         specific command.
 
+    .. versionchanged:: 8.2
+        The ``protected_args`` attribute is deprecated and will be removed in
+        Click 9.0. ``args`` will contain remaining unparsed tokens.
+
     .. versionchanged:: 8.1
         The ``show_default`` parameter is overridden by
         ``Command.show_default``, instead of the other way around.
@@ -287,7 +291,7 @@ class Context:
         #: to `args` when certain parsing scenarios are encountered but
         #: must be never propagated to another arguments.  This is used
         #: to implement nested parsing.
-        self.protected_args: t.List[str] = []
+        self._protected_args: t.List[str] = []
         #: the collected prefixes of the command's options.
         self._opt_prefixes: t.Set[str] = set(parent._opt_prefixes) if parent else set()
 
@@ -424,6 +428,18 @@ class Context:
         self._depth = 0
         self._parameter_source: t.Dict[str, ParameterSource] = {}
         self._exit_stack = ExitStack()
+
+    @property
+    def protected_args(self) -> t.List[str]:
+        import warnings
+
+        warnings.warn(
+            "'protected_args' is deprecated and will be removed in Click 9.0."
+            " 'args' will contain remaining unparsed tokens.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self._protected_args
 
     def to_info_dict(self) -> t.Dict[str, t.Any]:
         """Gather information that could be useful for a tool generating
@@ -1009,9 +1025,9 @@ class Command:
             help=_("Show this message and exit."),
         )
 
-    def make_parser(self, ctx: Context) -> OptionParser:
+    def make_parser(self, ctx: Context) -> _OptionParser:
         """Creates the underlying option parser for this command."""
-        parser = OptionParser(ctx)
+        parser = _OptionParser(ctx)
         for param in self.get_params(ctx):
             param.add_to_parser(parser, ctx)
         return parser
@@ -1212,7 +1228,7 @@ class Command:
                 results.extend(
                     CompletionItem(name, help=command.get_short_help_str())
                     for name, command in _complete_visible_commands(ctx, incomplete)
-                    if name not in ctx.protected_args
+                    if name not in ctx._protected_args
                 )
 
         return results
@@ -1738,10 +1754,10 @@ class Group(Command):
         rest = super().parse_args(ctx, args)
 
         if self.chain:
-            ctx.protected_args = rest
+            ctx._protected_args = rest
             ctx.args = []
         elif rest:
-            ctx.protected_args, ctx.args = rest[:1], rest[1:]
+            ctx._protected_args, ctx.args = rest[:1], rest[1:]
 
         return ctx.args
 
@@ -1751,7 +1767,7 @@ class Group(Command):
                 value = ctx.invoke(self._result_callback, value, **ctx.params)
             return value
 
-        if not ctx.protected_args:
+        if not ctx._protected_args:
             if self.invoke_without_command:
                 # No subcommand was invoked, so the result callback is
                 # invoked with the group return value for regular
@@ -1762,9 +1778,9 @@ class Group(Command):
             ctx.fail(_("Missing command."))
 
         # Fetch args back out
-        args = [*ctx.protected_args, *ctx.args]
+        args = [*ctx._protected_args, *ctx.args]
         ctx.args = []
-        ctx.protected_args = []
+        ctx._protected_args = []
 
         # If we're not in chain mode, we only allow the invocation of a
         # single command but we also inform the current context about the
@@ -1835,7 +1851,7 @@ class Group(Command):
         # resolve things like --help which now should go to the main
         # place.
         if cmd is None and not ctx.resilient_parsing:
-            if split_opt(cmd_name)[0]:
+            if _split_opt(cmd_name)[0]:
                 self.parse_args(ctx, ctx.args)
             ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
         return cmd_name if cmd else None, cmd, args[1:]
@@ -2193,7 +2209,7 @@ class Parameter:
 
         return value
 
-    def add_to_parser(self, parser: OptionParser, ctx: Context) -> None:
+    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
         raise NotImplementedError()
 
     def consume_value(
@@ -2582,7 +2598,7 @@ class Option(Parameter):
                     first, second = decl.split(split_char, 1)
                     first = first.rstrip()
                     if first:
-                        possible_names.append(split_opt(first))
+                        possible_names.append(_split_opt(first))
                         opts.append(first)
                     second = second.lstrip()
                     if second:
@@ -2593,7 +2609,7 @@ class Option(Parameter):
                             " same flag for true/false."
                         )
                 else:
-                    possible_names.append(split_opt(decl))
+                    possible_names.append(_split_opt(decl))
                     opts.append(decl)
 
         if name is None and possible_names:
@@ -2616,7 +2632,7 @@ class Option(Parameter):
 
         return name, opts, secondary_opts
 
-    def add_to_parser(self, parser: OptionParser, ctx: Context) -> None:
+    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
         if self.multiple:
             action = "append"
         elif self.count:
@@ -2733,7 +2749,7 @@ class Option(Parameter):
             elif self.is_bool_flag and self.secondary_opts:
                 # For boolean flags that have distinct True/False opts,
                 # use the opt without prefix instead of the value.
-                default_string = split_opt(
+                default_string = _split_opt(
                     (self.opts if self.default else self.secondary_opts)[0]
                 )[1]
             elif self.is_bool_flag and not self.secondary_opts and not default_value:
@@ -2962,7 +2978,7 @@ class Argument(Parameter):
     def get_error_hint(self, ctx: Context) -> str:
         return f"'{self.make_metavar()}'"
 
-    def add_to_parser(self, parser: OptionParser, ctx: Context) -> None:
+    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
         parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)
 
 
