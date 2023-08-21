@@ -1,7 +1,7 @@
 $ imagepipe_
 
   imagepipe is an example application that implements some
-  multi commands that chain image processing instructions
+  commands that chain image processing instructions
   together.
 
   This requires pillow.

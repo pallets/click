@@ -42,7 +42,7 @@ to address this:
 Upgrading to 3.2
 ----------------
 
-Click 3.2 had to perform two changes to multi commands which were
+Click 3.2 had to perform two changes to groups which were
 triggered by a change between Click 2 and Click 3 that had bigger
 consequences than anticipated.
 
@@ -72,10 +72,10 @@ The correct invocation for the above command is the following::
 This also allowed us to fix the issue that defaults were not handled
 properly by this function.
 
-Multicommand Chaining API
-`````````````````````````
+Command Chaining API
+````````````````````
 
-Click 3 introduced multicommand chaining.  This required a change in how
+Click 3 introduced command chaining.  This required a change in how
 Click internally dispatches.  Unfortunately this change was not correctly
 implemented and it appeared that it was possible to provide an API that
 can inform the super command about all the subcommands that will be

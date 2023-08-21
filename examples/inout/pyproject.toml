@@ -1,0 +1,18 @@
+[project]
+name = "click-example-inout"
+version = "1.0.0"
+description = "Click inout example"
+requires-python = ">=3.8"
+dependencies = [
+    "click>=8.1",
+]
+
+[project.scripts]
+inout = "inout:cli"
+
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "inout"

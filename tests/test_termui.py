@@ -175,8 +175,9 @@ def test_progressbar_init_exceptions(runner):
 
 
 def test_progressbar_iter_outside_with_exceptions(runner):
+    progress = click.progressbar(length=2)
+
     with pytest.raises(RuntimeError, match="with block"):
-        progress = click.progressbar(length=2)
         iter(progress)
 
 

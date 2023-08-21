@@ -3,10 +3,3 @@ Click Examples
   This folder contains various Click examples.  Note that
   all of these are not runnable by themselves but should be
   installed into a virtualenv.
-
-  This is done this way so that scripts also properly work
-  on Windows and in virtualenvs without accidentally executing
-  through the wrong interpreter.
-
-  For more information about this see the documentation:
-    https://click.palletsprojects.com/setuptools/

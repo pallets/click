@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import inspect
-import types
 import typing as t
 from functools import update_wrapper
 from gettext import gettext as _
@@ -21,36 +22,35 @@ if t.TYPE_CHECKING:
 R = t.TypeVar("R")
 T = t.TypeVar("T")
 _AnyCallable = t.Callable[..., t.Any]
-_Decorator: "te.TypeAlias" = t.Callable[[T], T]
-FC = t.TypeVar("FC", bound=t.Union[_AnyCallable, Command])
+FC = t.TypeVar("FC", bound="_AnyCallable | Command")
 
 
-def pass_context(f: "t.Callable[te.Concatenate[Context, P], R]") -> "t.Callable[P, R]":
+def pass_context(f: t.Callable[te.Concatenate[Context, P], R]) -> t.Callable[P, R]:
     """Marks a callback as wanting to receive the current context
     object as first argument.
     """
 
-    def new_func(*args: "P.args", **kwargs: "P.kwargs") -> "R":
+    def new_func(*args: P.args, **kwargs: P.kwargs) -> R:
         return f(get_current_context(), *args, **kwargs)
 
     return update_wrapper(new_func, f)
 
 
-def pass_obj(f: "t.Callable[te.Concatenate[t.Any, P], R]") -> "t.Callable[P, R]":
+def pass_obj(f: t.Callable[te.Concatenate[T, P], R]) -> t.Callable[P, R]:
     """Similar to :func:`pass_context`, but only pass the object on the
     context onwards (:attr:`Context.obj`).  This is useful if that object
     represents the state of a nested system.
     """
 
-    def new_func(*args: "P.args", **kwargs: "P.kwargs") -> "R":
+    def new_func(*args: P.args, **kwargs: P.kwargs) -> R:
         return f(get_current_context().obj, *args, **kwargs)
 
     return update_wrapper(new_func, f)
 
 
 def make_pass_decorator(
-    object_type: t.Type[T], ensure: bool = False
-) -> t.Callable[["t.Callable[te.Concatenate[T, P], R]"], "t.Callable[P, R]"]:
+    object_type: type[T], ensure: bool = False
+) -> t.Callable[[t.Callable[te.Concatenate[T, P], R]], t.Callable[P, R]]:
     """Given an object type this creates a decorator that will work
     similar to :func:`pass_obj` but instead of passing the object of the
     current context, it will find the innermost context of type
@@ -73,11 +73,11 @@ def make_pass_decorator(
                    remembered on the context if it's not there yet.
     """
 
-    def decorator(f: "t.Callable[te.Concatenate[T, P], R]") -> "t.Callable[P, R]":
-        def new_func(*args: "P.args", **kwargs: "P.kwargs") -> "R":
+    def decorator(f: t.Callable[te.Concatenate[T, P], R]) -> t.Callable[P, R]:
+        def new_func(*args: P.args, **kwargs: P.kwargs) -> R:
             ctx = get_current_context()
 
-            obj: t.Optional[T]
+            obj: T | None
             if ensure:
                 obj = ctx.ensure_object(object_type)
             else:
@@ -94,12 +94,12 @@ def make_pass_decorator(
 
         return update_wrapper(new_func, f)
 
-    return decorator
+    return decorator  # type: ignore[return-value]
 
 
 def pass_meta_key(
-    key: str, *, doc_description: t.Optional[str] = None
-) -> "t.Callable[[t.Callable[te.Concatenate[t.Any, P], R]], t.Callable[P, R]]":
+    key: str, *, doc_description: str | None = None
+) -> t.Callable[[t.Callable[te.Concatenate[T, P], R]], t.Callable[P, R]]:
     """Create a decorator that passes a key from
     :attr:`click.Context.meta` as the first argument to the decorated
     function.
@@ -112,8 +112,8 @@ def pass_meta_key(
     .. versionadded:: 8.0
     """
 
-    def decorator(f: "t.Callable[te.Concatenate[t.Any, P], R]") -> "t.Callable[P, R]":
-        def new_func(*args: "P.args", **kwargs: "P.kwargs") -> R:
+    def decorator(f: t.Callable[te.Concatenate[T, P], R]) -> t.Callable[P, R]:
+        def new_func(*args: P.args, **kwargs: P.kwargs) -> R:
             ctx = get_current_context()
             obj = ctx.meta[key]
             return ctx.invoke(f, obj, *args, **kwargs)
@@ -127,7 +127,7 @@ def pass_meta_key(
         f"Decorator that passes {doc_description} as the first argument"
         " to the decorated function."
     )
-    return decorator
+    return decorator  # type: ignore[return-value]
 
 
 CmdType = t.TypeVar("CmdType", bound=Command)
@@ -143,23 +143,19 @@ def command(name: _AnyCallable) -> Command:
 # @command(namearg, CommandCls, ...) or @command(namearg, cls=CommandCls, ...)
 @t.overload
 def command(
-    name: t.Optional[str],
-    cls: t.Type[CmdType],
+    name: str | None,
+    cls: type[CmdType],
     **attrs: t.Any,
 ) -> t.Callable[[_AnyCallable], CmdType]:
     ...
 
 
-# variant: name omitted, cls _must_ be a keyword argument, @command(cmd=CommandCls, ...)
-# The correct way to spell this overload is to use keyword-only argument syntax:
-# def command(*, cls: t.Type[CmdType], **attrs: t.Any) -> ...
-# However, mypy thinks this doesn't fit the overloaded function. Pyright does
-# accept that spelling, and the following work-around makes pyright issue a
-# warning that CmdType could be left unsolved, but mypy sees it as fine. *shrug*
+# variant: name omitted, cls _must_ be a keyword argument, @command(cls=CommandCls, ...)
 @t.overload
 def command(
     name: None = None,
-    cls: t.Type[CmdType] = ...,
+    *,
+    cls: type[CmdType],
     **attrs: t.Any,
 ) -> t.Callable[[_AnyCallable], CmdType]:
     ...
@@ -168,16 +164,16 @@ def command(
 # variant: with optional string name, no cls argument provided.
 @t.overload
 def command(
-    name: t.Optional[str] = ..., cls: None = None, **attrs: t.Any
+    name: str | None = ..., cls: None = None, **attrs: t.Any
 ) -> t.Callable[[_AnyCallable], Command]:
     ...
 
 
 def command(
-    name: t.Union[t.Optional[str], _AnyCallable] = None,
-    cls: t.Optional[t.Type[CmdType]] = None,
+    name: str | _AnyCallable | None = None,
+    cls: type[CmdType] | None = None,
     **attrs: t.Any,
-) -> t.Union[Command, t.Callable[[_AnyCallable], t.Union[Command, CmdType]]]:
+) -> Command | t.Callable[[_AnyCallable], Command | CmdType]:
     r"""Creates a new :class:`Command` and uses the decorated function as
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as parameters to the command.
@@ -207,7 +203,7 @@ def command(
         appended to the end of the list.
     """
 
-    func: t.Optional[t.Callable[[_AnyCallable], t.Any]] = None
+    func: t.Callable[[_AnyCallable], t.Any] | None = None
 
     if callable(name):
         func = name
@@ -216,7 +212,7 @@ def command(
         assert not attrs, "Use 'command(**kwargs)(callable)' to provide arguments."
 
     if cls is None:
-        cls = t.cast(t.Type[CmdType], Command)
+        cls = t.cast("type[CmdType]", Command)
 
     def decorator(f: _AnyCallable) -> CmdType:
         if isinstance(f, Command):
@@ -268,23 +264,19 @@ def group(name: _AnyCallable) -> Group:
 # @group(namearg, GroupCls, ...) or @group(namearg, cls=GroupCls, ...)
 @t.overload
 def group(
-    name: t.Optional[str],
-    cls: t.Type[GrpType],
+    name: str | None,
+    cls: type[GrpType],
     **attrs: t.Any,
 ) -> t.Callable[[_AnyCallable], GrpType]:
     ...
 
 
 # variant: name omitted, cls _must_ be a keyword argument, @group(cmd=GroupCls, ...)
-# The _correct_ way to spell this overload is to use keyword-only argument syntax:
-# def group(*, cls: t.Type[GrpType], **attrs: t.Any) -> ...
-# However, mypy thinks this doesn't fit the overloaded function. Pyright does
-# accept that spelling, and the following work-around makes pyright issue a
-# warning that GrpType could be left unsolved, but mypy sees it as fine. *shrug*
 @t.overload
 def group(
     name: None = None,
-    cls: t.Type[GrpType] = ...,
+    *,
+    cls: type[GrpType],
     **attrs: t.Any,
 ) -> t.Callable[[_AnyCallable], GrpType]:
     ...
@@ -293,16 +285,16 @@ def group(
 # variant: with optional string name, no cls argument provided.
 @t.overload
 def group(
-    name: t.Optional[str] = ..., cls: None = None, **attrs: t.Any
+    name: str | None = ..., cls: None = None, **attrs: t.Any
 ) -> t.Callable[[_AnyCallable], Group]:
     ...
 
 
 def group(
-    name: t.Union[str, _AnyCallable, None] = None,
-    cls: t.Optional[t.Type[GrpType]] = None,
+    name: str | _AnyCallable | None = None,
+    cls: type[GrpType] | None = None,
     **attrs: t.Any,
-) -> t.Union[Group, t.Callable[[_AnyCallable], t.Union[Group, GrpType]]]:
+) -> Group | t.Callable[[_AnyCallable], Group | GrpType]:
     """Creates a new :class:`Group` with a function as callback.  This
     works otherwise the same as :func:`command` just that the `cls`
     parameter is set to :class:`Group`.
@@ -311,7 +303,7 @@ def group(
         This decorator can be applied without parentheses.
     """
     if cls is None:
-        cls = t.cast(t.Type[GrpType], Group)
+        cls = t.cast("type[GrpType]", Group)
 
     if callable(name):
         return command(cls=cls, **attrs)(name)
@@ -329,47 +321,63 @@ def _param_memo(f: t.Callable[..., t.Any], param: Parameter) -> None:
         f.__click_params__.append(param)  # type: ignore
 
 
-def argument(*param_decls: str, **attrs: t.Any) -> _Decorator[FC]:
+def argument(
+    *param_decls: str, cls: type[Argument] | None = None, **attrs: t.Any
+) -> t.Callable[[FC], FC]:
     """Attaches an argument to the command.  All positional arguments are
     passed as parameter declarations to :class:`Argument`; all keyword
     arguments are forwarded unchanged (except ``cls``).
     This is equivalent to creating an :class:`Argument` instance manually
     and attaching it to the :attr:`Command.params` list.
 
+    For the default argument class, refer to :class:`Argument` and
+    :class:`Parameter` for descriptions of parameters.
+
     :param cls: the argument class to instantiate.  This defaults to
                 :class:`Argument`.
+    :param param_decls: Passed as positional arguments to the constructor of
+        ``cls``.
+    :param attrs: Passed as keyword arguments to the constructor of ``cls``.
     """
+    if cls is None:
+        cls = Argument
 
     def decorator(f: FC) -> FC:
-        ArgumentClass = attrs.pop("cls", None) or Argument
-        _param_memo(f, ArgumentClass(param_decls, **attrs))
+        _param_memo(f, cls(param_decls, **attrs))
         return f
 
     return decorator
 
 
-def option(*param_decls: str, **attrs: t.Any) -> _Decorator[FC]:
+def option(
+    *param_decls: str, cls: type[Option] | None = None, **attrs: t.Any
+) -> t.Callable[[FC], FC]:
     """Attaches an option to the command.  All positional arguments are
     passed as parameter declarations to :class:`Option`; all keyword
     arguments are forwarded unchanged (except ``cls``).
     This is equivalent to creating an :class:`Option` instance manually
     and attaching it to the :attr:`Command.params` list.
 
+    For the default option class, refer to :class:`Option` and
+    :class:`Parameter` for descriptions of parameters.
+
     :param cls: the option class to instantiate.  This defaults to
                 :class:`Option`.
+    :param param_decls: Passed as positional arguments to the constructor of
+        ``cls``.
+    :param attrs: Passed as keyword arguments to the constructor of ``cls``.
     """
+    if cls is None:
+        cls = Option
 
     def decorator(f: FC) -> FC:
-        # Issue 926, copy attrs, so pre-defined options can re-use the same cls=
-        option_attrs = attrs.copy()
-        OptionClass = option_attrs.pop("cls", None) or Option
-        _param_memo(f, OptionClass(param_decls, **option_attrs))
+        _param_memo(f, cls(param_decls, **attrs))
         return f
 
     return decorator
 
 
-def confirmation_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def confirmation_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--yes`` option which shows a prompt before continuing if
     not passed. If the prompt is declined, the program will exit.
 
@@ -393,7 +401,7 @@ def confirmation_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
     return option(*param_decls, **kwargs)
 
 
-def password_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def password_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--password`` option which prompts for a password, hiding
     input and asking to enter the value again for confirmation.
 
@@ -411,20 +419,19 @@ def password_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
 
 
 def version_option(
-    version: t.Optional[str] = None,
+    version: str | None = None,
     *param_decls: str,
-    package_name: t.Optional[str] = None,
-    prog_name: t.Optional[str] = None,
-    message: t.Optional[str] = None,
+    package_name: str | None = None,
+    prog_name: str | None = None,
+    message: str | None = None,
     **kwargs: t.Any,
-) -> _Decorator[FC]:
+) -> t.Callable[[FC], FC]:
     """Add a ``--version`` option which immediately prints the version
     number and exits the program.
 
     If ``version`` is not provided, Click will try to detect it using
     :func:`importlib.metadata.version` to get the version for the
-    ``package_name``. On Python < 3.8, the ``importlib_metadata``
-    backport must be installed.
+    ``package_name``.
 
     If ``package_name`` is not provided, Click will try to detect it by
     inspecting the stack frames. This will be used to detect the
@@ -485,17 +492,11 @@ def version_option(
             prog_name = ctx.find_root().info_name
 
         if version is None and package_name is not None:
-            metadata: t.Optional[types.ModuleType]
+            import importlib.metadata
 
             try:
-                from importlib import metadata  # type: ignore
-            except ImportError:
-                # Python < 3.8
-                import importlib_metadata as metadata  # type: ignore
-
-            try:
-                version = metadata.version(package_name)  # type: ignore
-            except metadata.PackageNotFoundError:  # type: ignore
+                version = importlib.metadata.version(package_name)
+            except importlib.metadata.PackageNotFoundError:
                 raise RuntimeError(
                     f"{package_name!r} is not installed. Try passing"
                     " 'package_name' instead."
@@ -507,8 +508,7 @@ def version_option(
             )
 
         echo(
-            t.cast(str, message)
-            % {"prog": prog_name, "package": package_name, "version": version},
+            message % {"prog": prog_name, "package": package_name, "version": version},
             color=ctx.color,
         )
         ctx.exit()
@@ -524,7 +524,7 @@ def version_option(
     return option(*param_decls, **kwargs)
 
 
-def help_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--help`` option which immediately prints the help page
     and exits the program.
 

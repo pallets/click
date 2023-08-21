@@ -31,21 +31,15 @@ jobs:
           - {name: '3.10', python: '3.10', os: ubuntu-latest, tox: py310}
           - {name: '3.9', python: '3.9', os: ubuntu-latest, tox: py39}
           - {name: '3.8', python: '3.8', os: ubuntu-latest, tox: py38}
-          - {name: '3.7', python: '3.7', os: ubuntu-latest, tox: py37}
-          - {name: 'PyPy', python: 'pypy-3.9', os: ubuntu-latest, tox: pypy39}
+          - {name: 'PyPy', python: 'pypy-3.10', os: ubuntu-latest, tox: pypy310}
           - {name: Typing, python: '3.11', os: ubuntu-latest, tox: typing}
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
-      - uses: actions/setup-python@57ded4d7d5e986d7296eab16560982c6dd7c923b
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1
         with:
           python-version: ${{ matrix.python }}
           cache: 'pip'
           cache-dependency-path: 'requirements/*.txt'
-      - name: update pip
-        run: |
-          pip install -U wheel
-          pip install -U setuptools
-          python -m pip install -U pip
       - name: cache mypy
         uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
         with:

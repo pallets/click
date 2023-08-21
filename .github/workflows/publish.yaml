@@ -9,8 +9,8 @@ jobs:
     outputs:
       hash: ${{ steps.hash.outputs.hash }}
     steps:
-      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
-      - uses: actions/setup-python@57ded4d7d5e986d7296eab16560982c6dd7c923b
+      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      - uses: actions/setup-python@61a6322f88396a6271a6ee3565807d608ecaddd1
         with:
           python-version: '3.x'
           cache: 'pip'
@@ -33,7 +33,7 @@ jobs:
       id-token: write
       contents: write
     # Can't pin with hash due to how this workflow works.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.5.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.7.0
     with:
       base64-subjects: ${{ needs.build.outputs.hash }}
   create-release:
@@ -58,15 +58,14 @@ jobs:
     # files in the draft release.
     environment: 'publish'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
       - uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a
-      # Try uploading to Test PyPI first, in case something fails.
-      - uses: pypa/gh-action-pypi-publish@0bf742be3ebe032c25dd15117957dc15d0cfc38d
+      - uses: pypa/gh-action-pypi-publish@f8c70e705ffc13c3b4d1221169b84f12a75d6ca8
         with:
-          password: ${{ secrets.TEST_PYPI_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
           packages_dir: artifact/
-      - uses: pypa/gh-action-pypi-publish@0bf742be3ebe032c25dd15117957dc15d0cfc38d
+      - uses: pypa/gh-action-pypi-publish@f8c70e705ffc13c3b4d1221169b84f12a75d6ca8
         with:
-          password: ${{ secrets.PYPI_TOKEN }}
-          packages_dir: artifact/
+          packages-dir: artifact/

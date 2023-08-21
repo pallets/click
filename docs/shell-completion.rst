@@ -25,7 +25,7 @@ Enabling Completion
 
 Completion is only available if a script is installed and invoked
 through an entry point, not through the ``python`` command. See
-:doc:`/setuptools`. Once the executable is installed, calling it with
+:doc:`entry-points`. Once the executable is installed, calling it with
 a special environment variable will put Click in completion mode.
 
 In order for completion to be used, the user needs to register a special
@@ -62,7 +62,7 @@ program name. This uses ``foo-bar`` as an example.
 
         .. code-block:: fish
 
-            eval (env _FOO_BAR_COMPLETE=fish_source foo-bar)
+            _FOO_BAR_COMPLETE=fish_source foo-bar | source
 
         This is the same file used for the activation script method
         below. For Fish it's probably always easier to use that method.

@@ -29,48 +29,29 @@ conflicting dependencies?
 Virtualenv to the rescue!  Virtualenv enables multiple side-by-side
 installations of Python, one for each project.  It doesn't actually
 install separate copies of Python, but it does provide a clever way to
-keep different project environments isolated.  Let's see how virtualenv
-works.
+keep different project environments isolated.
 
-If you are on Mac OS X or Linux::
-
-    $ pip install virtualenv --user
-
-One of these will probably install virtualenv on your system.  Maybe it's even
-in your package manager.  If you use Ubuntu, try::
-
-    $ sudo apt-get install python-virtualenv
-
-If you are on Windows (or none of the above methods worked) you must install
-``pip`` first.  For more information about this, see `installing pip`_.
-Once you have it installed, run the ``pip`` command from above, but without
-the `sudo` prefix.
-
-.. _installing pip: https://pip.readthedocs.io/en/latest/installing/
-
-Once you have virtualenv installed, just fire up a shell and create
-your own environment.  I usually create a project folder and a `venv`
-folder within::
+Create your project folder, then a virtualenv within it::
 
     $ mkdir myproject
     $ cd myproject
-    $ virtualenv venv
-    New python executable in venv/bin/python
-    Installing setuptools, pip............done.
+    $ python3 -m venv .venv
 
 Now, whenever you want to work on a project, you only have to activate the
 corresponding environment.  On OS X and Linux, do the following::
 
-    $ . venv/bin/activate
+    $ . .venv/bin/activate
+    (venv) $
 
 If you are a Windows user, the following command is for you::
 
-    $ venv\scripts\activate
+    > .venv\scripts\activate
+    (venv) >
 
 Either way, you should now be using your virtualenv (notice how the prompt of
 your shell has changed to show the active environment).
 
-And if you want to go back to the real world, use the following command::
+And if you want to stop using the virtualenv, use the following command::
 
     $ deactivate
 
@@ -112,7 +93,7 @@ as in the GitHub repository together with readme files:
     <https://github.com/pallets/click/tree/main/examples/colors>`_
 *   ``termui``: `Terminal UI functions demo
     <https://github.com/pallets/click/tree/main/examples/termui>`_
-*   ``imagepipe``: `Multi command chaining demo
+*   ``imagepipe``: `Command chaining demo
     <https://github.com/pallets/click/tree/main/examples/imagepipe>`_
 
 Basic Concepts - Creating a Command
@@ -220,8 +201,7 @@ script can instead be written like this:
     def dropdb():
         click.echo('Dropped the database')
 
-You would then invoke the :class:`Group` in your setuptools entry points or
-other invocations::
+You would then invoke the :class:`Group` in your entry points or other invocations::
 
     if __name__ == '__main__':
         cli()
@@ -270,30 +250,27 @@ What it looks like:
 
     invoke(hello, args=['--help'], prog_name='python hello.py')
 
-.. _switching-to-setuptools:
-
-Switching to Setuptools
------------------------
+Switching to Entry Points
+-------------------------
 
 In the code you wrote so far there is a block at the end of the file which
 looks like this: ``if __name__ == '__main__':``.  This is traditionally
 how a standalone Python file looks like.  With Click you can continue
-doing that, but there are better ways through setuptools.
+doing that, but a better way is to package your app with an entry point.
 
 There are two main (and many more) reasons for this:
 
-The first one is that setuptools automatically generates executable
+The first one is that installers automatically generate executable
 wrappers for Windows so your command line utilities work on Windows too.
 
-The second reason is that setuptools scripts work with virtualenv on Unix
+The second reason is that entry point scripts work with virtualenv on Unix
 without the virtualenv having to be activated.  This is a very useful
 concept which allows you to bundle your scripts with all requirements into
 a virtualenv.
 
 Click is perfectly equipped to work with that and in fact the rest of the
-documentation will assume that you are writing applications through
-setuptools.
+documentation will assume that you are writing applications as distributed
+packages.
 
-I strongly recommend to have a look at the :ref:`setuptools-integration`
-chapter before reading the rest as the examples assume that you will
-be using setuptools.
+Look at the :doc:`entry-points` chapter before reading the rest as the examples
+assume that you will be using entry points.
