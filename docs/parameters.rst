@@ -8,7 +8,7 @@ Click supports only two types  of parameters for scripts (by design): options an
 Options
 ----------------
 
-*   are optional.
+*   Are optional.
 *   Recommended to use for everything except subcommands, urls, or files.
 *   Can take a fixed number of arguments. The default is 1. They may be specified multiple times using :ref:`multiple-options`.
 *   Are fully documented by the help page.
@@ -19,7 +19,7 @@ Options
 Arguments
 ----------------
 
-*   are optional with in reason, but not entirely so.
+*   Are optional with in reason, but not entirely so.
 *   Recommended to use for subcommands, urls, or files.
 *   Can take an arbitrary number of arguments.
 *   Are not fully documented by the help page since they may be too specific to be automatically documented.  For more see :ref:`documenting-arguments`.
