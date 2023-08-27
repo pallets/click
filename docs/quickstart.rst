@@ -67,7 +67,7 @@ A few seconds later and you are good to go.
 Examples
 -----------------------
 
-Some stand alone examples of Click applications are packaged with Click. They are available in the `examples folder <https://github.com/pallets/click/tree/main/examples>`_ of the repo.
+Some standalone examples of Click applications are packaged with Click. They are available in the `examples folder <https://github.com/pallets/click/tree/main/examples>`_ of the repo.
 
 *   `inout <https://github.com/pallets/click/tree/main/examples/inout>`_ : A very simple example of an application that can read from files and write to files and also accept input from stdin or write to stdout.
 *   `validation <https://github.com/pallets/click/tree/main/examples/validation>`_ : A simple example of an application that performs custom validation of parameters in different ways.
@@ -78,11 +78,6 @@ Some stand alone examples of Click applications are packaged with Click. They ar
 *   `repo <https://github.com/pallets/click/tree/main/examples/repo>`_ : An advanced example that implements a Git-/Mercurial-like command line interface.
 *   `complex <https://github.com/pallets/click/tree/main/examples/complex>`_ : A very advanced example that implements loading subcommands dynamically from a plugin folder.
 *   `termui <https://github.com/pallets/click/tree/main/examples/termui>`_ : A simple example that showcases terminal UI helpers provided by click.
-
-If you prefer video, an older screencast (2014) is available. It shows shows the basics of Click, how to build simple applications with it, and how to build commands with subcommands.
-
-*   `Building Command Line Applications with Click
-    <https://www.youtube.com/watch?v=kNke39OZ2k0>`_
 
 Basic Concepts - Creating a Command
 -----------------------------------
