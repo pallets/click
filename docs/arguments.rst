@@ -5,16 +5,16 @@ Arguments
 
 .. currentmodule:: click
 
-Arguments :
 
-*   are positional in nature
-*   are very much like a limited version of :ref:`options <options>`
-*   but also can take an arbitrary number of inputs
-*   must be :ref:`documented manually <documenting-arguments>`
+
+*   Are positional in nature
+*   Are very much like a limited version of :ref:`options <options>`
+*   But also can take an arbitrary number of inputs
+*   Must be :ref:`documented manually <documenting-arguments>`
 
 Useful and often used kwargs are:
 
-*   ``default`` : passes a default
+*   ``default`` : Passes a default
 *   ``nargs`` : Sets the number of arguments. Set to -1 to take an arbitrary number.
 
 Basic Argument
