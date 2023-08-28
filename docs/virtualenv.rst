@@ -3,16 +3,16 @@
 Virtualenv
 =========================
 
-Why use virtualenv?
+Why Use Virtualenv?
 -------------------------
 
 You should use `Virtualenv <https://virtualenv.pypa.io/en/latest/>`_ because:
 
 *   It allows you to install multiple versions of the same dependency.
 
-*   If you have an operating system version of python, it prevents you from changing its dependencies and potentially messing up your os.
+*   If you have an operating system version of Python, it prevents you from changing its dependencies and potentially messing up your os.
 
-How to use virtualenv
+How to Use Virtualenv
 -----------------------------
 
 Create your project folder, then a virtualenv within it::
@@ -22,15 +22,24 @@ Create your project folder, then a virtualenv within it::
     $ python3 -m venv .venv
 
 Now, whenever you want to work on a project, you only have to activate the
-corresponding environment.  On OS X and Linux, do the following::
+corresponding environment.
 
-    $ . .venv/bin/activate
-    (venv) $
+.. tabs::
 
-On Windows, do the following::
+    .. group-tab:: OSX/Linux
 
-    > .venv\scripts\activate
-    (venv) >
+        .. code-block:: text
+
+            $ . .venv/bin/activate
+            (venv) $
+
+    .. group-tab:: Windows
+
+        .. code-block:: text
+
+            > .venv\scripts\activate
+            (venv) >
+
 
 You are now using your virtualenv (notice how the prompt of your shell has changed to show the active environment).
 
