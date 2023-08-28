@@ -10,6 +10,7 @@ import sys
 import time
 import typing as t
 from gettext import gettext as _
+from io import StringIO
 from types import TracebackType
 
 from ._compat import _default_text_stdout
@@ -61,8 +62,15 @@ class ProgressBar(t.Generic[V]):
         self.show_pos = show_pos
         self.item_show_func = item_show_func
         self.label: str = label or ""
+
         if file is None:
             file = _default_text_stdout()
+
+            # There are no standard streams attached to write to. For example,
+            # pythonw on Windows.
+            if file is None:
+                file = StringIO()
+
         self.file = file
         self.color = color
         self.update_min_steps = update_min_steps
@@ -352,6 +360,12 @@ class ProgressBar(t.Generic[V]):
 def pager(generator: t.Iterable[str], color: t.Optional[bool] = None) -> None:
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
+
+    # There are no standard streams attached to write to. For example,
+    # pythonw on Windows.
+    if stdout is None:
+        stdout = StringIO()
+
     if not isatty(sys.stdin) or not isatty(stdout):
         return _nullpager(stdout, generator, color)
     pager_cmd = (os.environ.get("PAGER", None) or "").strip()

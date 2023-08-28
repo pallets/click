@@ -7,18 +7,9 @@ import typing as t
 from weakref import WeakKeyDictionary
 
 CYGWIN = sys.platform.startswith("cygwin")
-MSYS2 = sys.platform.startswith("win") and ("GCC" in sys.version)
-# Determine local App Engine environment, per Google's own suggestion
-APP_ENGINE = "APPENGINE_RUNTIME" in os.environ and "Development/" in os.environ.get(
-    "SERVER_SOFTWARE", ""
-)
-WIN = sys.platform.startswith("win") and not APP_ENGINE and not MSYS2
+WIN = sys.platform.startswith("win")
 auto_wrap_for_ansi: t.Optional[t.Callable[[t.TextIO], t.TextIO]] = None
 _ansi_re = re.compile(r"\033\[[;?0-9]*[a-zA-Z]")
-
-
-def get_filesystem_encoding() -> str:
-    return sys.getfilesystemencoding() or sys.getdefaultencoding()
 
 
 def _make_text_stream(
@@ -380,13 +371,14 @@ def _wrap_io_open(
 
 
 def open_stream(
-    filename: str,
+    filename: "t.Union[str, os.PathLike[str]]",
     mode: str = "r",
     encoding: t.Optional[str] = None,
     errors: t.Optional[str] = "strict",
     atomic: bool = False,
 ) -> t.Tuple[t.IO[t.Any], bool]:
     binary = "b" in mode
+    filename = os.fspath(filename)
 
     # Standard streams first. These are simple because they ignore the
     # atomic flag. Use fsdecode to handle Path("-").
@@ -524,7 +516,7 @@ if sys.platform.startswith("win") and WIN:
 
     _ansi_stream_wrappers: t.MutableMapping[t.TextIO, t.TextIO] = WeakKeyDictionary()
 
-    def auto_wrap_for_ansi(
+    def auto_wrap_for_ansi(  # noqa: F811
         stream: t.TextIO, color: t.Optional[bool] = None
     ) -> t.TextIO:
         """Support ANSI color and style codes on Windows by wrapping a
@@ -564,7 +556,7 @@ if sys.platform.startswith("win") and WIN:
 else:
 
     def _get_argv_encoding() -> str:
-        return getattr(sys.stdin, "encoding", None) or get_filesystem_encoding()
+        return getattr(sys.stdin, "encoding", None) or sys.getfilesystemencoding()
 
     def _get_windows_console_stream(
         f: t.TextIO, encoding: t.Optional[str], errors: t.Optional[str]
@@ -584,12 +576,17 @@ def isatty(stream: t.IO[t.Any]) -> bool:
 
 
 def _make_cached_stream_func(
-    src_func: t.Callable[[], t.TextIO], wrapper_func: t.Callable[[], t.TextIO]
-) -> t.Callable[[], t.TextIO]:
+    src_func: t.Callable[[], t.Optional[t.TextIO]],
+    wrapper_func: t.Callable[[], t.TextIO],
+) -> t.Callable[[], t.Optional[t.TextIO]]:
     cache: t.MutableMapping[t.TextIO, t.TextIO] = WeakKeyDictionary()
 
-    def func() -> t.TextIO:
+    def func() -> t.Optional[t.TextIO]:
         stream = src_func()
+
+        if stream is None:
+            return None
+
         try:
             rv = cache.get(stream)
         except Exception:

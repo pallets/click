@@ -1,9 +1,36 @@
 .. currentmodule:: click
 
+Version 8.1.7
+-------------
+
+Released 2023-08-17
+
+-   Fix issue with regex flags in shell completion. :issue:`2581`
+-   Bash version detection issues a warning instead of an error. :issue:`2574`
+-   Fix issue with completion script for Fish shell. :issue:`2567`
+
+
+Version 8.1.6
+-------------
+
+Released 2023-07-18
+
+-   Fix an issue with type hints for ``@click.group()``. :issue:`2558`
+
+
+Version 8.1.5
+-------------
+
+Released 2023-07-13
+
+-   Fix an issue with type hints for ``@click.command()``, ``@click.option()``, and
+    other decorators. Introduce typing tests. :issue:`2558`
+
+
 Version 8.1.4
 -------------
 
-Unreleased
+Released 2023-07-06
 
 -   Replace all ``typing.Dict`` occurrences to ``typing.MutableMapping`` for
     parameter hints. :issue:`2255`
@@ -26,6 +53,13 @@ Unreleased
     setting ``default=()``. :issue:`2246, 2292, 2295`
 -   Make the decorators returned by ``@argument()`` and ``@option()`` reusable when the
     ``cls`` parameter is used. :issue:`2294`
+-   Don't fail when writing filenames to streams with strict errors. Replace invalid
+    bytes with the replacement character (``�``). :issue:`2395`
+-   Remove unnecessary attempt to detect MSYS2 environment. :issue:`2355`
+-   Remove outdated and unnecessary detection of App Engine environment. :pr:`2554`
+-   ``echo()`` does not fail when no streams are attached, such as with ``pythonw`` on
+    Windows. :issue:`2415`
+-   Argument with ``expose_value=False`` do not cause completion to fail. :issue:`2336`
 
 
 Version 8.1.3
