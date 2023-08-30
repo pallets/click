@@ -952,12 +952,10 @@ Released 2014-08-22
     function.
 -   Fixed default parameters not being handled properly by the context
     invoke method. This is a backwards incompatible change if the
-    function was used improperly. See :ref:`upgrade-to-3.2` for more
-    information.
+    function was used improperly.
 -   Removed the ``invoked_subcommands`` attribute largely. It is not
     possible to provide it to work error free due to how the parsing
-    works so this API has been deprecated. See :ref:`upgrade-to-3.2` for
-    more information.
+    works so this API has been deprecated.
 -   Restored the functionality of ``invoked_subcommand`` which was
     broken as a regression in 3.1.
 
