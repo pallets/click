@@ -69,8 +69,6 @@ from .utils import get_binary_stream as get_binary_stream
 from .utils import get_text_stream as get_text_stream
 from .utils import open_file as open_file
 
-__version__ = "8.2.0.dev0"
-
 
 def __getattr__(name: str) -> object:
     import warnings
@@ -107,5 +105,18 @@ def __getattr__(name: str) -> object:
             stacklevel=2,
         )
         return _OptionParser
+
+    if name == "__version__":
+        import importlib.metadata
+        import warnings
+
+        warnings.warn(
+            "The '__version__' attribute is deprecated and will be removed in"
+            " Click 9.1. Use feature detection or"
+            " 'importlib.metadata.version(\"click\")' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return importlib.metadata.version("click")
 
     raise AttributeError(name)
