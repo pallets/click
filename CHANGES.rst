@@ -28,6 +28,9 @@ Unreleased
 
 -   Enable deferred evaluation of annotations with
     ``from __future__ import annotations``. :pr:`2270`
+-   When generating a command's name from a decorated function's name, the
+    suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
+    :issue:`2322`
 
 
 Version 8.1.7
