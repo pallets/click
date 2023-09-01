@@ -178,9 +178,10 @@ def command(
     callback.  This will also automatically attach all decorated
     :func:`option`\s and :func:`argument`\s as parameters to the command.
 
-    The name of the command defaults to the name of the function with
-    underscores replaced by dashes.  If you want to change that, you can
-    pass the intended name as the first argument.
+    The name of the command defaults to the name of the function, converted to
+    lowercase, with underscores ``_`` replaced by dashes ``-``, and the suffixes
+    ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed. For example,
+    ``init_data_command`` becomes ``init-data``.
 
     All keyword arguments are forwarded to the underlying command class.
     For the ``params`` argument, any decorated params are appended to
@@ -190,10 +191,13 @@ def command(
     that can be invoked as a command line utility or be attached to a
     command :class:`Group`.
 
-    :param name: the name of the command.  This defaults to the function
-                 name with underscores replaced by dashes.
-    :param cls: the command class to instantiate.  This defaults to
-                :class:`Command`.
+    :param name: The name of the command. Defaults to modifying the function's
+        name as described above.
+    :param cls: The command class to create. Defaults to :class:`Command`.
+
+    .. versionchanged:: 8.2
+        The suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are
+        removed when generating the name.
 
     .. versionchanged:: 8.1
         This decorator can be applied without parentheses.
@@ -236,12 +240,16 @@ def command(
             assert cls is not None
             assert not callable(name)
 
-        cmd = cls(
-            name=name or f.__name__.lower().replace("_", "-"),
-            callback=f,
-            params=params,
-            **attrs,
-        )
+        if name is not None:
+            cmd_name = name
+        else:
+            cmd_name = f.__name__.lower().replace("_", "-")
+            cmd_left, sep, suffix = cmd_name.rpartition("-")
+
+            if sep and suffix in {"command", "cmd", "group", "grp"}:
+                cmd_name = cmd_left
+
+        cmd = cls(name=cmd_name, callback=f, params=params, **attrs)
         cmd.__doc__ = f.__doc__
         return cmd
 
