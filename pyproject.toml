@@ -1,5 +1,6 @@
 [project]
 name = "click"
+version = "8.2.0.dev"
 description = "Composable command line interface toolkit"
 readme = "README.rst"
 license = {file = "LICENSE.rst"}
@@ -15,7 +16,6 @@ requires-python = ">=3.8"
 dependencies = [
     "colorama; platform_system == 'Windows'",
 ]
-dynamic = ["version"]
 
 [project.urls]
 Donate = "https://palletsprojects.com/donate"

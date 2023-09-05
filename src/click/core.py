@@ -756,14 +756,12 @@ class Context:
             (options and click arguments) must be keyword arguments and Click
             will fill in defaults.
 
-        Note that before Click 3.2 keyword arguments were not properly filled
-        in against the intention of this code and no context was created.  For
-        more information about this change and why it was done in a bugfix
-        release see :ref:`upgrade-to-3.2`.
-
         .. versionchanged:: 8.0
             All ``kwargs`` are tracked in :attr:`params` so they will be
             passed if :meth:`forward` is called at multiple levels.
+
+        .. versionchanged:: 3.2
+            A new context is created, and missing arguments use default values.
         """
         if isinstance(__callback, Command):
             other_cmd = __callback
