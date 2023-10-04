@@ -304,16 +304,15 @@ class Choice(ParamType):
         if normed_value in normed_choices:
             return normed_choices[normed_value]
 
+        self.fail(self.get_missing_message(value), param, ctx)
+
+    def get_invalid_choice_fail_message(self, value: t.Any) -> str:
         choices_str = ", ".join(map(repr, self.choices))
-        self.fail(
-            ngettext(
-                "{value!r} is not {choice}.",
-                "{value!r} is not one of {choices}.",
-                len(self.choices),
-            ).format(value=value, choice=choices_str, choices=choices_str),
-            param,
-            ctx,
-        )
+        return ngettext(
+            "{value!r} is not {choice}.",
+            "{value!r} is not one of {choices}.",
+            len(self.choices),
+        ).format(value=value, choice=choices_str, choices=choices_str)
 
     def __repr__(self) -> str:
         return f"Choice({list(self.choices)})"
