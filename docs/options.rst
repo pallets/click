@@ -564,7 +564,7 @@ current :class:`Context`, the current :class:`Parameter`, and the value.
 The context provides some useful features such as quitting the
 application and gives access to other already processed parameters.
 
-Here an example for a ``--version`` flag:
+Here's an example for a ``--version`` flag:
 
 .. click:example::
 
@@ -594,10 +594,6 @@ What it looks like:
     invoke(hello)
     invoke(hello, args=['--version'])
 
-.. admonition:: Callback Signature Changes
-
-    In Click 2.0 the signature for callbacks changed.  For more
-    information about these changes see :ref:`upgrade-to-2.0`.
 
 Yes Parameters
 --------------
@@ -637,10 +633,6 @@ replaced with the :func:`confirmation_option` decorator:
     def dropdb():
         click.echo('Dropped all tables!')
 
-.. admonition:: Callback Signature Changes
-
-    In Click 2.0 the signature for callbacks changed.  For more
-    information about these changes see :ref:`upgrade-to-2.0`.
 
 Values from Environment Variables
 ---------------------------------

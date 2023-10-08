@@ -8,9 +8,59 @@ Unreleased
 -   Show the ``types.ParamType.name`` for ``types.Choice`` options within
     ``--help`` message if ``show_choices=False`` is specified.
     :issue:`2356`
+-   Drop support for Python 3.7. :pr:`2588`
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
     :pr:`326`
 -   Use ``flit_core`` instead of ``setuptools`` as build backend.
+-   Deprecate the ``__version__`` attribute. Use feature detection, or
+    ``importlib.metadata.version("click")``, instead. :issue:`2598`
+-   ``BaseCommand`` is deprecated. ``Command`` is the base class for all
+    commands. :issue:`2589`
+-   ``MultiCommand`` is deprecated. ``Group`` is the base class for all group
+    commands. :issue:`2590`
+-   The current parser and related classes and methods, are deprecated.
+    :issue:`2205`
+
+    -   ``OptionParser`` and the ``parser`` module, which is a modified copy of
+        ``optparse`` in the standard library.
+    -   ``Context.protected_args`` is unneeded. ``Context.args`` contains any
+        remaining arguments while parsing.
+    -   ``Parameter.add_to_parser`` (on both ``Argument`` and ``Option``) is
+        unneeded. Parsing works directly without building a separate parser.
+    -   ``split_arg_string`` is moved from ``parser`` to ``shell_completion``.
+
+-   Enable deferred evaluation of annotations with
+    ``from __future__ import annotations``. :pr:`2270`
+-   When generating a command's name from a decorated function's name, the
+    suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
+    :issue:`2322`
+
+
+Version 8.1.7
+-------------
+
+Released 2023-08-17
+
+-   Fix issue with regex flags in shell completion. :issue:`2581`
+-   Bash version detection issues a warning instead of an error. :issue:`2574`
+-   Fix issue with completion script for Fish shell. :issue:`2567`
+
+
+Version 8.1.6
+-------------
+
+Released 2023-07-18
+
+-   Fix an issue with type hints for ``@click.group()``. :issue:`2558`
+
+
+Version 8.1.5
+-------------
+
+Released 2023-07-13
+
+-   Fix an issue with type hints for ``@click.command()``, ``@click.option()``, and
+    other decorators. Introduce typing tests. :issue:`2558`
 
 
 Version 8.1.4
@@ -910,12 +960,10 @@ Released 2014-08-22
     function.
 -   Fixed default parameters not being handled properly by the context
     invoke method. This is a backwards incompatible change if the
-    function was used improperly. See :ref:`upgrade-to-3.2` for more
-    information.
+    function was used improperly.
 -   Removed the ``invoked_subcommands`` attribute largely. It is not
     possible to provide it to work error free due to how the parsing
-    works so this API has been deprecated. See :ref:`upgrade-to-3.2` for
-    more information.
+    works so this API has been deprecated.
 -   Restored the functionality of ``invoked_subcommand`` which was
     broken as a regression in 3.1.
 

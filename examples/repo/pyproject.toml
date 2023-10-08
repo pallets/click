@@ -2,7 +2,7 @@
 name = "click-example-repo"
 version = "1.0.0"
 description = "Click repo example"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
     "click>=8.1",
 ]

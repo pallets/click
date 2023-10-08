@@ -7,44 +7,46 @@ In addition to common functionality that is implemented in the library
 itself, there are countless patterns that can be implemented by extending
 Click.  This page should give some insight into what can be accomplished.
 
+
 .. _aliases:
 
 Command Aliases
 ---------------
 
-Many tools support aliases for commands (see `Command alias example
-<https://github.com/pallets/click/tree/main/examples/aliases>`_).
-For instance, you can configure ``git`` to accept ``git ci`` as alias for
-``git commit``.  Other tools also support auto-discovery for aliases by
-automatically shortening them.
+Many tools support aliases for commands. For example, you can configure
+``git`` to accept ``git ci`` as alias for ``git commit``. Other tools also
+support auto-discovery for aliases by automatically shortening them.
 
-Click does not support this out of the box, but it's very easy to customize
-the :class:`Group` or any other :class:`MultiCommand` to provide this
-functionality.
+It's possible to customize :class:`Group` to provide this functionality. As
+explained in :ref:`custom-groups`, a group provides two methods:
+:meth:`~Group.list_commands` and :meth:`~Group.get_command`. In this particular
+case, you only need to override the latter as you generally don't want to
+enumerate the aliases on the help page in order to avoid confusion.
 
-As explained in :ref:`custom-multi-commands`, a multi command can provide
-two methods: :meth:`~MultiCommand.list_commands` and
-:meth:`~MultiCommand.get_command`.  In this particular case, you only need
-to override the latter as you generally don't want to enumerate the
-aliases on the help page in order to avoid confusion.
-
-This following example implements a subclass of :class:`Group` that
-accepts a prefix for a command.  If there were a command called ``push``,
-it would accept ``pus`` as an alias (so long as it was unique):
+The following example implements a subclass of :class:`Group` that accepts a
+prefix for a command. If there was a command called ``push``, it would accept
+``pus`` as an alias (so long as it was unique):
 
 .. click:example::
 
     class AliasedGroup(click.Group):
         def get_command(self, ctx, cmd_name):
-            rv = click.Group.get_command(self, ctx, cmd_name)
+            rv = super().get_command(ctx, cmd_name)
+
             if rv is not None:
                 return rv
-            matches = [x for x in self.list_commands(ctx)
-                       if x.startswith(cmd_name)]
+
+            matches = [
+                x for x in self.list_commands(ctx)
+                if x.startswith(cmd_name)
+            ]
+
             if not matches:
                 return None
-            elif len(matches) == 1:
+
+            if len(matches) == 1:
                 return click.Group.get_command(self, ctx, matches[0])
+
             ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
 
         def resolve_command(self, ctx, args):
@@ -52,21 +54,26 @@ it would accept ``pus`` as an alias (so long as it was unique):
             _, cmd, args = super().resolve_command(ctx, args)
             return cmd.name, cmd, args
 
-And it can then be used like this:
+It can be used like this:
 
 .. click:example::
 
-    @click.command(cls=AliasedGroup)
+    @click.group(cls=AliasedGroup)
     def cli():
         pass
 
-    @cli.command()
+    @cli.command
     def push():
         pass
 
-    @cli.command()
+    @cli.command
     def pop():
         pass
+
+See the `alias example`_ in Click's repository for another example.
+
+.. _alias example: https://github.com/pallets/click/tree/main/examples/aliases
+
 
 Parameter Modifications
 -----------------------
@@ -266,7 +273,7 @@ triggering a parsing error.
 This can generally be activated in two different ways:
 
 1.  It can be enabled on custom :class:`Command` subclasses by changing
-    the :attr:`~BaseCommand.ignore_unknown_options` attribute.
+    the :attr:`~Command.ignore_unknown_options` attribute.
 2.  It can be enabled by changing the attribute of the same name on the
     context class (:attr:`Context.ignore_unknown_options`).  This is best
     changed through the ``context_settings`` dictionary on the command.
