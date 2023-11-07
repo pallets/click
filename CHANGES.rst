@@ -1,4 +1,4 @@
-.. currentmodule:: click
+2630.. currentmodule:: click
 
 Version 8.2.0
 -------------
@@ -66,6 +66,8 @@ Unreleased
     case the editor supports editing multiple files at once. Its return type
     is now also typed: ``AnyStr`` if ``text`` is passed, otherwise ``None``.
     :issue:`2067` :pr:`2068`
+-   Specialized typing of ``progressbar(length=...)`` as ``ProgressBar[int]``.
+    :pr:`2630`
 
 
 Version 8.1.8
