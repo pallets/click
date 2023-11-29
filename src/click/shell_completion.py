@@ -306,7 +306,7 @@ class BashComplete(ShellComplete):
         import subprocess
         import shutil
 
-        bash_exe = shutil.which('bash')
+        bash_exe = shutil.which("bash")
 
         output = subprocess.run(
             [bash_exe, "--norc", "-c", 'echo "${BASH_VERSION}"'], stdout=subprocess.PIPE
