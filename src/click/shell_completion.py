@@ -308,10 +308,13 @@ class BashComplete(ShellComplete):
 
         bash_exe = shutil.which("bash")
 
-        output = subprocess.run(
-            [bash_exe, "--norc", "-c", 'echo "${BASH_VERSION}"'], stdout=subprocess.PIPE
-        )
-        match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
+        if bash_exe is None:
+            match = None
+        else:
+            output = subprocess.run(
+                [bash_exe, "--norc", "-c", 'echo "${BASH_VERSION}"'], stdout=subprocess.PIPE
+            )
+            match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
 
         if match is not None:
             major, minor = match.groups()
