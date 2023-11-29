@@ -312,7 +312,8 @@ class BashComplete(ShellComplete):
             match = None
         else:
             output = subprocess.run(
-                [bash_exe, "--norc", "-c", 'echo "${BASH_VERSION}"'], stdout=subprocess.PIPE
+                [bash_exe, "--norc", "-c", 'echo "${BASH_VERSION}"'],
+                stdout=subprocess.PIPE,
             )
             match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
 
