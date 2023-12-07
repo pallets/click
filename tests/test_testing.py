@@ -1,5 +1,6 @@
 import os
 import sys
+import typing as t
 from io import BytesIO
 
 import pytest
@@ -300,11 +301,16 @@ def test_env():
     assert os.environ == env_orig
 
 
-def test_stderr():
+@pytest.mark.parametrize("method", ["click", "python"])
+def test_stderr(method: t.Literal["click", "python"]):
     @click.command()
     def cli_stderr():
-        click.echo("stdout")
-        click.echo("stderr", err=True)
+        if method == "click":
+            click.echo("stdout")
+            click.echo("stderr", err=True)
+        elif method == "python":
+            print("stdout")
+            print("stderr", file=sys.stderr)
 
     runner = CliRunner(mix_stderr=False)
 
@@ -325,7 +331,10 @@ def test_stderr():
 
     @click.command()
     def cli_empty_stderr():
-        click.echo("stdout")
+        if method == "click":
+            click.echo("stdout")
+        elif method == "python":
+            print("stdout")
 
     runner = CliRunner(mix_stderr=False)
 

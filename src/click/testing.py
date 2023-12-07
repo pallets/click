@@ -437,6 +437,7 @@ class CliRunner:
                 if self.mix_stderr:
                     stderr = None
                 else:
+                    sys.stderr.flush()
                     stderr = outstreams[1].getvalue()  # type: ignore
 
         return Result(
