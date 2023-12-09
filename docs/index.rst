@@ -68,6 +68,7 @@ usage patterns.
 
    why
    quickstart
+   virtualenv
    setuptools
    parameters
    options
