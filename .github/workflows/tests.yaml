@@ -31,8 +31,8 @@ jobs:
           - {name: 'PyPy', python: 'pypy-3.10', os: ubuntu-latest, tox: pypy310}
           - {name: Typing, python: '3.12', os: ubuntu-latest, tox: typing}
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-      - uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: actions/setup-python@0a5c61591373683505ea898e09a3ea4f39ef2b9c
         with:
           python-version: ${{ matrix.python }}
           cache: pip
@@ -43,7 +43,7 @@ jobs:
           pip install -U setuptools
           python -m pip install -U pip
       - name: cache mypy
-        uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
         with:
           path: ./.mypy_cache
           key: mypy|${{ matrix.python }}|${{ hashFiles('setup.cfg') }}
