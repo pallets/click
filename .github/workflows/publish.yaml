@@ -45,6 +45,9 @@ jobs:
       contents: write
     steps:
       - uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110
+        with:
+          pattern: *
+          merge-multiple: true
       - name: create release
         run: >
           gh release create --draft --repo ${{ github.repository }}
@@ -62,6 +65,9 @@ jobs:
       id-token: write
     steps:
       - uses: actions/download-artifact@f44cd7b40bfd40b6aa1cc1b9b5b7bf03d3c67110
+        with:
+          pattern: *
+          merge-multiple: true
       - uses: pypa/gh-action-pypi-publish@2f6f737ca5f74c637829c0f5c3acd0e29ea5e8bf
         with:
           repository-url: https://test.pypi.org/legacy/
