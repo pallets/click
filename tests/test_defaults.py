@@ -5,7 +5,7 @@ def test_basic_defaults(runner):
     @click.command()
     @click.option("--foo", default=42, type=click.FLOAT)
     def cli(foo):
-        assert type(foo) is float
+        assert isinstance(foo, float)
         click.echo(f"FOO:[{foo}]")
 
     result = runner.invoke(cli, [])
@@ -18,7 +18,7 @@ def test_multiple_defaults(runner):
     @click.option("--foo", default=[23, 42], type=click.FLOAT, multiple=True)
     def cli(foo):
         for item in foo:
-            assert type(item) is float
+            assert isinstance(item, float)
             click.echo(item)
 
     result = runner.invoke(cli, [])

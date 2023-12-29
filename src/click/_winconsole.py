@@ -76,7 +76,7 @@ except ImportError:
 else:
 
     class Py_buffer(Structure):
-        _fields_ = [
+        _fields_ = [  # noqa: RUF012
             ("buf", c_void_p),
             ("obj", py_object),
             ("len", c_ssize_t),

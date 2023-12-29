@@ -519,9 +519,7 @@ if sys.platform.startswith("win") and WIN:
 
     _ansi_stream_wrappers: cabc.MutableMapping[t.TextIO, t.TextIO] = WeakKeyDictionary()
 
-    def auto_wrap_for_ansi(  # noqa: F811
-        stream: t.TextIO, color: bool | None = None
-    ) -> t.TextIO:
+    def auto_wrap_for_ansi(stream: t.TextIO, color: bool | None = None) -> t.TextIO:
         """Support ANSI color and style codes on Windows by wrapping a
         stream with colorama.
         """

@@ -511,7 +511,9 @@ def __getattr__(name: str) -> object:
     }:
         warnings.warn(
             f"'parser.{name}' is deprecated and will be removed in Click 9.0."
-            " The old parser is available in 'optparse'."
+            " The old parser is available in 'optparse'.",
+            DeprecationWarning,
+            stacklevel=2,
         )
         return globals()[f"_{name}"]
 
