@@ -724,27 +724,16 @@ class Context:
 
     @t.overload
     def invoke(
-        __self,  # noqa: B902
-        __callback: t.Callable[..., V],
-        *args: t.Any,
-        **kwargs: t.Any,
+        __self, __callback: t.Callable[..., V], *args: t.Any, **kwargs: t.Any
     ) -> V:
         ...
 
     @t.overload
-    def invoke(
-        __self,  # noqa: B902
-        __callback: Command,
-        *args: t.Any,
-        **kwargs: t.Any,
-    ) -> t.Any:
+    def invoke(__self, __callback: Command, *args: t.Any, **kwargs: t.Any) -> t.Any:
         ...
 
     def invoke(
-        __self,  # noqa: B902
-        __callback: Command | t.Callable[..., V],
-        *args: t.Any,
-        **kwargs: t.Any,
+        __self, __callback: Command | t.Callable[..., V], *args: t.Any, **kwargs: t.Any
     ) -> t.Any | V:
         """Invokes a command callback in exactly the way it expects.  There
         are two ways to invoke this method:
@@ -791,9 +780,7 @@ class Context:
             with ctx:
                 return __callback(*args, **kwargs)
 
-    def forward(
-        __self, __cmd: Command, *args: t.Any, **kwargs: t.Any  # noqa: B902
-    ) -> t.Any:
+    def forward(__self, __cmd: Command, *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Similar to :meth:`invoke` but fills in default keyword
         arguments from the current context if the other command expects
         it.  This cannot invoke callbacks directly, only other commands.

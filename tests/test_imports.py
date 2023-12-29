@@ -4,7 +4,6 @@ import sys
 
 from click._compat import WIN
 
-
 IMPORT_TEST = b"""\
 import builtins
 

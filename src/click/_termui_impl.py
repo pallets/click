@@ -699,8 +699,8 @@ if WIN:
         return rv
 
 else:
-    import tty
     import termios
+    import tty
 
     @contextlib.contextmanager
     def raw_terminal() -> cabc.Iterator[int]:
