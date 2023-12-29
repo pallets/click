@@ -724,16 +724,16 @@ class Context:
 
     @t.overload
     def invoke(
-        __self, __callback: t.Callable[..., V], *args: t.Any, **kwargs: t.Any
+        self, callback: t.Callable[..., V], /, *args: t.Any, **kwargs: t.Any
     ) -> V:
         ...
 
     @t.overload
-    def invoke(__self, __callback: Command, *args: t.Any, **kwargs: t.Any) -> t.Any:
+    def invoke(self, callback: Command, /, *args: t.Any, **kwargs: t.Any) -> t.Any:
         ...
 
     def invoke(
-        __self, __callback: Command | t.Callable[..., V], *args: t.Any, **kwargs: t.Any
+        self, callback: Command | t.Callable[..., V], /, *args: t.Any, **kwargs: t.Any
     ) -> t.Any | V:
         """Invokes a command callback in exactly the way it expects.  There
         are two ways to invoke this method:
@@ -752,17 +752,17 @@ class Context:
         .. versionchanged:: 3.2
             A new context is created, and missing arguments use default values.
         """
-        if isinstance(__callback, Command):
-            other_cmd = __callback
+        if isinstance(callback, Command):
+            other_cmd = callback
 
             if other_cmd.callback is None:
                 raise TypeError(
                     "The given command does not have a callback that can be invoked."
                 )
             else:
-                __callback = t.cast("t.Callable[..., V]", other_cmd.callback)
+                callback = t.cast("t.Callable[..., V]", other_cmd.callback)
 
-            ctx = __self._make_sub_context(other_cmd)
+            ctx = self._make_sub_context(other_cmd)
 
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
@@ -774,13 +774,13 @@ class Context:
             # them on in subsequent calls.
             ctx.params.update(kwargs)
         else:
-            ctx = __self
+            ctx = self
 
-        with augment_usage_errors(__self):
+        with augment_usage_errors(self):
             with ctx:
-                return __callback(*args, **kwargs)
+                return callback(*args, **kwargs)
 
-    def forward(__self, __cmd: Command, *args: t.Any, **kwargs: t.Any) -> t.Any:
+    def forward(self, cmd: Command, /, *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Similar to :meth:`invoke` but fills in default keyword
         arguments from the current context if the other command expects
         it.  This cannot invoke callbacks directly, only other commands.
@@ -790,14 +790,14 @@ class Context:
             passed if ``forward`` is called at multiple levels.
         """
         # Can only forward to other commands, not direct callbacks.
-        if not isinstance(__cmd, Command):
+        if not isinstance(cmd, Command):
             raise TypeError("Callback is not a command.")
 
-        for param in __self.params:
+        for param in self.params:
             if param not in kwargs:
-                kwargs[param] = __self.params[param]
+                kwargs[param] = self.params[param]
 
-        return __self.invoke(__cmd, *args, **kwargs)
+        return self.invoke(cmd, *args, **kwargs)
 
     def set_parameter_source(self, name: str, source: ParameterSource) -> None:
         """Set the source of a parameter. This indicates the location
@@ -1674,8 +1674,8 @@ class Group(Command):
                 self._result_callback = f
                 return f
 
-            def function(__value, *args, **kwargs):  # type: ignore
-                inner = old_callback(__value, *args, **kwargs)
+            def function(value: t.Any, /, *args: t.Any, **kwargs: t.Any) -> t.Any:
+                inner = old_callback(value, *args, **kwargs)
                 return f(inner, *args, **kwargs)
 
             self._result_callback = rv = update_wrapper(t.cast(F, function), f)
