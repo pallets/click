@@ -31,6 +31,8 @@ Unreleased
 -   When generating a command's name from a decorated function's name, the
     suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
     :issue:`2322`
+-   Add new method to `` Choice`` for getting a fail message and refactor
+    the convert method to use it.
 
 
 Version 8.1.7
