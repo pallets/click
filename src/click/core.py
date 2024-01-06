@@ -44,7 +44,13 @@ from .utils import make_str
 from .utils import PacifyFlushWrapper
 
 if t.TYPE_CHECKING:
+    import typing_extensions as te
+
     from .shell_completion import CompletionItem
+
+    ObjT = te.TypeVar("ObjT", default=t.Any)
+else:
+    ObjT = t.TypeVar("ObjT")
 
 F = t.TypeVar("F", bound="t.Callable[..., t.Any]")
 V = t.TypeVar("V")
@@ -158,7 +164,7 @@ class ParameterSource(enum.Enum):
     """Used a prompt to confirm a default or provide a value."""
 
 
-class Context:
+class Context(t.Generic[ObjT]):
     """The context is a special internal object that holds state relevant
     for the script execution at every single level.  It's normally invisible
     to commands unless they opt-in to getting access to it.
@@ -267,7 +273,7 @@ class Context:
         command: Command,
         parent: Context | None = None,
         info_name: str | None = None,
-        obj: t.Any | None = None,
+        obj: ObjT | None = None,
         auto_envvar_prefix: str | None = None,
         default_map: cabc.MutableMapping[str, t.Any] | None = None,
         terminal_width: int | None = None,
@@ -304,7 +310,7 @@ class Context:
             obj = parent.obj
 
         #: the user object stored.
-        self.obj: t.Any = obj
+        self.obj: ObjT | None = obj
         self._meta: dict[str, t.Any] = getattr(parent, "meta", {})
 
         #: A dictionary (-like object) with defaults for parameters.
