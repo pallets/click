@@ -84,9 +84,9 @@ pyproject-api==1.6.1
     # via tox
 pyproject-hooks==1.0.0
     # via build
-pyright==1.1.343
+pyright==1.1.349
     # via -r typing.in
-pytest==7.4.3
+pytest==8.0.0
     # via -r tests.in
 pyyaml==6.0.1
     # via pre-commit
@@ -106,9 +106,9 @@ sphinx==7.2.6
     #   sphinxcontrib-log-cabinet
     #   sphinxcontrib-qthelp
     #   sphinxcontrib-serializinghtml
-sphinx-issues==3.0.1
+sphinx-issues==4.0.0
     # via -r docs.in
-sphinx-tabs==3.4.4
+sphinx-tabs==3.4.5
     # via -r docs.in
 sphinxcontrib-applehelp==1.0.7
     # via sphinx
@@ -124,7 +124,7 @@ sphinxcontrib-qthelp==1.0.6
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.9
     # via sphinx
-tox==4.11.4
+tox==4.12.1
     # via -r dev.in
 typing-extensions==4.9.0
     # via mypy
