@@ -45,6 +45,8 @@ Unreleased
     the ``mix_stderr`` parameter in ``CliRunner``. :issue:`2522` :pr:`2523`
 -   ``Option.show_envvar`` now also shows environment variable in error messages.
     :issue:`2695` :pr:`2696`
+-   Force closing of context on CLI exits to fix missing callbacks invocation.
+    :pr:`2680`
 
 
 Version 8.1.8

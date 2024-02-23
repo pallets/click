@@ -699,7 +699,13 @@ class Context:
         raise Abort()
 
     def exit(self, code: int = 0) -> t.NoReturn:
-        """Exits the application with a given exit code."""
+        """Exits the application with a given exit code.
+
+        .. versionchanged:: 8.2
+            Force closing of callbacks registered with
+            :meth:`call_on_close` before exiting the CLI.
+        """
+        self.close()
         raise Exit(code)
 
     def get_usage(self) -> str:
