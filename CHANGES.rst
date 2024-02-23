@@ -31,6 +31,8 @@ Unreleased
 -   When generating a command's name from a decorated function's name, the
     suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
     :issue:`2322`
+-   Force closing of context on CLI exits to fix missing callbacks invocation.
+    :pr:`2680`
 
 
 Version 8.1.7
