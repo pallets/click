@@ -454,8 +454,8 @@ def version_option(
     :param prog_name: The name of the CLI to show in the message. If not
         provided, it will be detected from the command.
     :param message: The message to show. The values ``%(prog)s``,
-        ``%(package)s``, and ``%(version)s`` are available. Defaults to
-        ``"%(prog)s, version %(version)s"``.
+        ``%(package)s``, ``%(version)s`` and ``%(python_version)`` are
+        available. Defaults to ``"%(prog)s, version %(version)s"``.
     :param kwargs: Extra arguments are passed to :func:`option`.
     :raise RuntimeError: ``version`` could not be detected.
 
@@ -514,9 +514,17 @@ def version_option(
             raise RuntimeError(
                 f"Could not determine the version for {package_name!r} automatically."
             )
+        import platform
 
+        python_version = platform.python_version()
         echo(
-            message % {"prog": prog_name, "package": package_name, "version": version},
+            message
+            % {
+                "prog": prog_name,
+                "package": package_name,
+                "version": version,
+                "python_version": python_version,
+            },
             color=ctx.color,
         )
         ctx.exit()
