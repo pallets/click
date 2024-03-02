@@ -201,6 +201,18 @@ class UnprocessedParamType(ParamType):
         return "UNPROCESSED"
 
 
+class ForwardParamType(ParamType):
+    name = "text"
+
+    def convert(
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
+    ) -> t.Any:
+        return value
+
+    def __repr__(self) -> str:
+        return "FORWARD"
+
+
 class StringParamType(ParamType):
     name = "text"
 
@@ -1070,6 +1082,10 @@ def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType:
 #:
 #: .. versionadded:: 4.0
 UNPROCESSED = UnprocessedParamType()
+
+#: A dummy parameter type that just does nothing except stops parsing options
+#: and arguments when this argument is getting parsed.
+FORWARD = ForwardParamType()
 
 #: A unicode string parameter type which is the implicit default.  This
 #: can also be selected by using ``str`` as type.

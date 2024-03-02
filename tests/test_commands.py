@@ -321,6 +321,44 @@ def test_unprocessed_options(runner):
     ]
 
 
+def test_forward_options(runner):
+    @click.command()
+    @click.option("-f")
+    @click.argument("files", nargs=-1, type=click.FORWARD)
+    def cmd(f, files):
+        click.echo(f)
+        for filename in files:
+            click.echo(filename)
+
+    args = ["echo", "-foo", "bar", "-f", "-h", "--help"]
+    result = runner.invoke(cmd, args)
+    assert result.output.splitlines() == [''] + args
+
+
+def test_forward_options_group(runner):
+    @click.group()
+    @click.option("-f")
+    def cmd(f):
+        click.echo(f)
+
+    @cmd.command()
+    @click.option("-a")
+    @click.argument("src", nargs=1)
+    @click.argument("dsts", nargs=-1, type=click.FORWARD)
+    def cp(a, src, dsts):
+        click.echo(a)
+        click.echo(src)
+        for dst in dsts:
+            click.echo(dst)
+
+
+    result = runner.invoke(cmd, ["-f", "f", "cp", "-a", "a", "src", "dst1",
+                                 "-a", "dst2", "-h", "--help", "-f"])
+    assert result.output.splitlines() == ["f", "a", "src", "dst1", "-a", "dst2",
+                                          "-h", "--help", "-f"]
+
+
+
 @pytest.mark.parametrize("doc", ["CLI HELP", None])
 def test_deprecated_in_help_messages(runner, doc):
     @click.command(deprecated=True, help=doc)

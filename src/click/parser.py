@@ -33,6 +33,7 @@ from .exceptions import BadArgumentUsage
 from .exceptions import BadOptionUsage
 from .exceptions import NoSuchOption
 from .exceptions import UsageError
+from .types import FORWARD
 
 if t.TYPE_CHECKING:
     from .core import Argument as CoreArgument
@@ -321,6 +322,16 @@ class _OptionParser:
         state.largs = args
         state.rargs = []
 
+    def _stop_process_args_for_options(self, state: _ParsingState) -> bool:
+        largs: t.Sequence[str] = state.largs
+        for args in self._args:
+            if args.obj.type == FORWARD and args.nargs < 0:
+                return True
+            if not largs:
+                break
+            largs = largs[args.nargs:]
+        return False
+
     def _process_args_for_options(self, state: _ParsingState) -> None:
         while state.rargs:
             arg = state.rargs.pop(0)
@@ -331,6 +342,9 @@ class _OptionParser:
                 return
             elif arg[:1] in self._opt_prefixes and arglen > 1:
                 self._process_opts(arg, state)
+            elif self._stop_process_args_for_options(state):
+                state.rargs.insert(0, arg)
+                return
             elif self.allow_interspersed_args:
                 state.largs.append(arg)
             else:

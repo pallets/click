@@ -61,6 +61,7 @@ from .types import Path as Path
 from .types import STRING as STRING
 from .types import Tuple as Tuple
 from .types import UNPROCESSED as UNPROCESSED
+from .types import FORWARD as FORWARD
 from .types import UUID as UUID
 from .utils import echo as echo
 from .utils import format_filename as format_filename
