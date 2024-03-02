@@ -332,7 +332,7 @@ def test_forward_options(runner):
 
     args = ["echo", "-foo", "bar", "-f", "-h", "--help"]
     result = runner.invoke(cmd, args)
-    assert result.output.splitlines() == [''] + args
+    assert result.output.splitlines() == [""] + args
 
 
 def test_forward_options_group(runner):
@@ -351,12 +351,21 @@ def test_forward_options_group(runner):
         for dst in dsts:
             click.echo(dst)
 
-
-    result = runner.invoke(cmd, ["-f", "f", "cp", "-a", "a", "src", "dst1",
-                                 "-a", "dst2", "-h", "--help", "-f"])
-    assert result.output.splitlines() == ["f", "a", "src", "dst1", "-a", "dst2",
-                                          "-h", "--help", "-f"]
-
+    result = runner.invoke(
+        cmd,
+        ["-f", "f", "cp", "-a", "a", "src", "dst1", "-a", "dst2", "-h", "--help", "-f"],
+    )
+    assert result.output.splitlines() == [
+        "f",
+        "a",
+        "src",
+        "dst1",
+        "-a",
+        "dst2",
+        "-h",
+        "--help",
+        "-f",
+    ]
 
 
 @pytest.mark.parametrize("doc", ["CLI HELP", None])

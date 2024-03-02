@@ -329,7 +329,7 @@ class _OptionParser:
                 return True
             if not largs:
                 break
-            largs = largs[args.nargs:]
+            largs = largs[args.nargs :]
         return False
 
     def _process_args_for_options(self, state: _ParsingState) -> None:

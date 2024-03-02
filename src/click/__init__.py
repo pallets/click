@@ -54,6 +54,7 @@ from .types import DateTime as DateTime
 from .types import File as File
 from .types import FLOAT as FLOAT
 from .types import FloatRange as FloatRange
+from .types import FORWARD as FORWARD
 from .types import INT as INT
 from .types import IntRange as IntRange
 from .types import ParamType as ParamType
@@ -61,7 +62,6 @@ from .types import Path as Path
 from .types import STRING as STRING
 from .types import Tuple as Tuple
 from .types import UNPROCESSED as UNPROCESSED
-from .types import FORWARD as FORWARD
 from .types import UUID as UUID
 from .utils import echo as echo
 from .utils import format_filename as format_filename
