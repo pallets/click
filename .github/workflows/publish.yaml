@@ -33,7 +33,7 @@ jobs:
       id-token: write
       contents: write
     # Can't pin with hash due to how this workflow works.
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@c747fe7769adf3656dc7d588b161cb614d7abfee # v1.10.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@1fee7c6fdaf1b8532bd4cad778556e42ac27affa # main with new upload/download
     with:
       base64-subjects: ${{ needs.build.outputs.hash }}
   create-release:
