@@ -135,8 +135,7 @@ CmdType = t.TypeVar("CmdType", bound=Command)
 
 # variant: no call, directly as decorator for a function.
 @t.overload
-def command(name: _AnyCallable) -> Command:
-    ...
+def command(name: _AnyCallable) -> Command: ...
 
 
 # variant: with positional name and with positional or keyword cls argument:
@@ -146,8 +145,7 @@ def command(
     name: str | None,
     cls: type[CmdType],
     **attrs: t.Any,
-) -> t.Callable[[_AnyCallable], CmdType]:
-    ...
+) -> t.Callable[[_AnyCallable], CmdType]: ...
 
 
 # variant: name omitted, cls _must_ be a keyword argument, @command(cls=CommandCls, ...)
@@ -157,16 +155,14 @@ def command(
     *,
     cls: type[CmdType],
     **attrs: t.Any,
-) -> t.Callable[[_AnyCallable], CmdType]:
-    ...
+) -> t.Callable[[_AnyCallable], CmdType]: ...
 
 
 # variant: with optional string name, no cls argument provided.
 @t.overload
 def command(
     name: str | None = ..., cls: None = None, **attrs: t.Any
-) -> t.Callable[[_AnyCallable], Command]:
-    ...
+) -> t.Callable[[_AnyCallable], Command]: ...
 
 
 def command(
@@ -264,8 +260,7 @@ GrpType = t.TypeVar("GrpType", bound=Group)
 
 # variant: no call, directly as decorator for a function.
 @t.overload
-def group(name: _AnyCallable) -> Group:
-    ...
+def group(name: _AnyCallable) -> Group: ...
 
 
 # variant: with positional name and with positional or keyword cls argument:
@@ -275,8 +270,7 @@ def group(
     name: str | None,
     cls: type[GrpType],
     **attrs: t.Any,
-) -> t.Callable[[_AnyCallable], GrpType]:
-    ...
+) -> t.Callable[[_AnyCallable], GrpType]: ...
 
 
 # variant: name omitted, cls _must_ be a keyword argument, @group(cmd=GroupCls, ...)
@@ -286,16 +280,14 @@ def group(
     *,
     cls: type[GrpType],
     **attrs: t.Any,
-) -> t.Callable[[_AnyCallable], GrpType]:
-    ...
+) -> t.Callable[[_AnyCallable], GrpType]: ...
 
 
 # variant: with optional string name, no cls argument provided.
 @t.overload
 def group(
     name: str | None = ..., cls: None = None, **attrs: t.Any
-) -> t.Callable[[_AnyCallable], Group]:
-    ...
+) -> t.Callable[[_AnyCallable], Group]: ...
 
 
 def group(

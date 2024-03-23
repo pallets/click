@@ -657,14 +657,14 @@ class Context:
         return rv
 
     @t.overload
-    def lookup_default(self, name: str, call: t.Literal[True] = True) -> t.Any | None:
-        ...
+    def lookup_default(
+        self, name: str, call: t.Literal[True] = True
+    ) -> t.Any | None: ...
 
     @t.overload
     def lookup_default(
         self, name: str, call: t.Literal[False] = ...
-    ) -> t.Any | t.Callable[[], t.Any] | None:
-        ...
+    ) -> t.Any | t.Callable[[], t.Any] | None: ...
 
     def lookup_default(self, name: str, call: bool = True) -> t.Any | None:
         """Get the default for a parameter from :attr:`default_map`.
@@ -725,12 +725,10 @@ class Context:
     @t.overload
     def invoke(
         self, callback: t.Callable[..., V], /, *args: t.Any, **kwargs: t.Any
-    ) -> V:
-        ...
+    ) -> V: ...
 
     @t.overload
-    def invoke(self, callback: Command, /, *args: t.Any, **kwargs: t.Any) -> t.Any:
-        ...
+    def invoke(self, callback: Command, /, *args: t.Any, **kwargs: t.Any) -> t.Any: ...
 
     def invoke(
         self, callback: Command | t.Callable[..., V], /, *args: t.Any, **kwargs: t.Any
@@ -1225,8 +1223,7 @@ class Command:
         complete_var: str | None = None,
         standalone_mode: t.Literal[True] = True,
         **extra: t.Any,
-    ) -> t.NoReturn:
-        ...
+    ) -> t.NoReturn: ...
 
     @t.overload
     def main(
@@ -1236,8 +1233,7 @@ class Command:
         complete_var: str | None = None,
         standalone_mode: bool = ...,
         **extra: t.Any,
-    ) -> t.Any:
-        ...
+    ) -> t.Any: ...
 
     def main(
         self,
@@ -1534,14 +1530,12 @@ class Group(Command):
         self.commands[name] = cmd
 
     @t.overload
-    def command(self, __func: t.Callable[..., t.Any]) -> Command:
-        ...
+    def command(self, __func: t.Callable[..., t.Any]) -> Command: ...
 
     @t.overload
     def command(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Command]:
-        ...
+    ) -> t.Callable[[t.Callable[..., t.Any]], Command]: ...
 
     def command(
         self, *args: t.Any, **kwargs: t.Any
@@ -1585,14 +1579,12 @@ class Group(Command):
         return decorator
 
     @t.overload
-    def group(self, __func: t.Callable[..., t.Any]) -> Group:
-        ...
+    def group(self, __func: t.Callable[..., t.Any]) -> Group: ...
 
     @t.overload
     def group(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Group]:
-        ...
+    ) -> t.Callable[[t.Callable[..., t.Any]], Group]: ...
 
     def group(
         self, *args: t.Any, **kwargs: t.Any
@@ -2147,14 +2139,14 @@ class Parameter:
         return metavar
 
     @t.overload
-    def get_default(self, ctx: Context, call: t.Literal[True] = True) -> t.Any | None:
-        ...
+    def get_default(
+        self, ctx: Context, call: t.Literal[True] = True
+    ) -> t.Any | None: ...
 
     @t.overload
     def get_default(
         self, ctx: Context, call: bool = ...
-    ) -> t.Any | t.Callable[[], t.Any] | None:
-        ...
+    ) -> t.Any | t.Callable[[], t.Any] | None: ...
 
     def get_default(
         self, ctx: Context, call: bool = True
@@ -2760,14 +2752,14 @@ class Option(Parameter):
         return ("; " if any_prefix_is_slash else " / ").join(rv), help
 
     @t.overload
-    def get_default(self, ctx: Context, call: t.Literal[True] = True) -> t.Any | None:
-        ...
+    def get_default(
+        self, ctx: Context, call: t.Literal[True] = True
+    ) -> t.Any | None: ...
 
     @t.overload
     def get_default(
         self, ctx: Context, call: bool = ...
-    ) -> t.Any | t.Callable[[], t.Any] | None:
-        ...
+    ) -> t.Any | t.Callable[[], t.Any] | None: ...
 
     def get_default(
         self, ctx: Context, call: bool = True

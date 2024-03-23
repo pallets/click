@@ -76,7 +76,7 @@ extend-exclude = ["examples/"]
 src = ["src"]
 fix = true
 show-fixes = true
-show-source = true
+output-format = "full"
 
 [tool.ruff.lint]
 select = [

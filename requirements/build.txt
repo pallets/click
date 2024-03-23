@@ -4,9 +4,9 @@
 #
 #    pip-compile build.in
 #
-build==1.0.3
+build==1.1.1
     # via -r build.in
-packaging==23.2
+packaging==24.0
     # via build
 pyproject-hooks==1.0.0
     # via build

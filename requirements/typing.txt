@@ -4,15 +4,15 @@
 #
 #    pip-compile typing.in
 #
-mypy==1.8.0
+mypy==1.9.0
     # via -r typing.in
 mypy-extensions==1.0.0
     # via mypy
 nodeenv==1.8.0
     # via pyright
-pyright==1.1.343
+pyright==1.1.355
     # via -r typing.in
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via mypy
 
 # The following packages are considered to be unsafe in a requirements file:

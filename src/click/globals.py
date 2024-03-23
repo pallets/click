@@ -10,13 +10,11 @@ _local = local()
 
 
 @t.overload
-def get_current_context(silent: t.Literal[False] = False) -> Context:
-    ...
+def get_current_context(silent: t.Literal[False] = False) -> Context: ...
 
 
 @t.overload
-def get_current_context(silent: bool = ...) -> Context | None:
-    ...
+def get_current_context(silent: bool = ...) -> Context | None: ...
 
 
 def get_current_context(silent: bool = False) -> Context | None:

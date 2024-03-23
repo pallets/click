@@ -3,6 +3,7 @@ This module contains implementations for the termui module. To keep the
 import time of Click down, some infrequently used functionality is
 placed in this module and only imported as needed.
 """
+
 from __future__ import annotations
 
 import collections.abc as cabc
