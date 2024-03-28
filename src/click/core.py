@@ -2372,8 +2372,8 @@ class Option(Parameter):
         For single option boolean flags, the default remains hidden if
         its value is ``False``.
     :param show_envvar: Controls if an environment variable should be
-        shown on the help page. Normally, environment variables are not
-        shown.
+        shown on the help page and error messages.
+        Normally, environment variables are not shown.
     :param prompt: If set to ``True`` or a non empty string then the
         user will be prompted for input. If set to ``True`` the prompt
         will be the option name capitalized.
@@ -2550,6 +2550,12 @@ class Option(Parameter):
             hidden=self.hidden,
         )
         return info_dict
+
+    def get_error_hint(self, ctx: Context) -> str:
+        result = super().get_error_hint(ctx)
+        if self.show_envvar:
+            result += f" (env var: '{self.envvar}')"
+        return result
 
     def _parse_decls(
         self, decls: cabc.Sequence[str], expose_value: bool
