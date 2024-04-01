@@ -8,7 +8,7 @@ alabaster==0.7.16
     # via sphinx
 babel==2.14.0
     # via sphinx
-build==1.1.1
+build==1.2.1
     # via pip-tools
 cachetools==5.3.3
     # via tox
@@ -74,7 +74,7 @@ pluggy==1.4.0
     # via
     #   pytest
     #   tox
-pre-commit==3.6.2
+pre-commit==3.7.0
     # via -r dev.in
 pygments==2.17.2
     # via
@@ -86,7 +86,7 @@ pyproject-hooks==1.0.0
     # via
     #   build
     #   pip-tools
-pyright==1.1.355
+pyright==1.1.356
     # via -r typing.in
 pytest==8.1.1
     # via -r tests.in
