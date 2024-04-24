@@ -1671,7 +1671,7 @@ class Group(Command):
                 return f(inner, *args, **kwargs)
 
             self._result_callback = rv = update_wrapper(t.cast(F, function), f)
-            return rv
+            return rv  # type: ignore[return-value]
 
         return decorator
 
