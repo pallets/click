@@ -241,7 +241,7 @@ def test_prompt_cast_default(capfd, monkeypatch):
     monkeypatch.setattr(sys, "stdin", StringIO("\n"))
     value = click.prompt("value", default="100", type=int)
     capfd.readouterr()
-    assert type(value) is int
+    assert type(value) is int  # noqa E721
 
 
 @pytest.mark.skipif(WIN, reason="Test too complex to make work windows.")
@@ -464,7 +464,7 @@ def test_expand_args(monkeypatch):
     assert user in click.utils._expand_args(["~"])
     monkeypatch.setenv("CLICK_TEST", "hello")
     assert "hello" in click.utils._expand_args(["$CLICK_TEST"])
-    assert "setup.cfg" in click.utils._expand_args(["*.cfg"])
+    assert "pyproject.toml" in click.utils._expand_args(["*.toml"])
     assert os.path.join("docs", "conf.py") in click.utils._expand_args(["**/conf.py"])
     assert "*.not-found" in click.utils._expand_args(["*.not-found"])
     # a bad glob pattern, such as a pytest identifier, should return itself

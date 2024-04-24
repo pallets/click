@@ -1,11 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Security issue
-    url: security@palletsprojects.com
-    about: Do not report security issues publicly. Email our security contact.
-  - name: Questions
-    url: https://stackoverflow.com/questions/tagged/python-click?tab=Frequent
-    about: Search for and ask questions about your code on Stack Overflow.
-  - name: Questions and discussions
+  - name: Questions on Discussions
+    url: https://github.com/pallets/click/discussions/
+    about: Ask questions about your own code on the Discussions tab.
+  - name: Questions on Chat
     url: https://discord.gg/pallets
-    about: Discuss questions about your code on our Discord chat.
+    about: Ask questions about your own code on our Discord chat.

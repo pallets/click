@@ -475,5 +475,5 @@ class CliRunner:
             if temp_dir is None:
                 try:
                     shutil.rmtree(dt)
-                except OSError:  # noqa: B014
+                except OSError:
                     pass

@@ -3,6 +3,7 @@ This module contains implementations for the termui module. To keep the
 import time of Click down, some infrequently used functionality is
 placed in this module and only imported as needed.
 """
+
 import contextlib
 import math
 import os
@@ -698,8 +699,8 @@ if WIN:
         return rv
 
 else:
-    import tty
     import termios
+    import tty
 
     @contextlib.contextmanager
     def raw_terminal() -> t.Iterator[int]:

@@ -48,7 +48,7 @@ sphinx==7.0.1
     #   sphinxcontrib-log-cabinet
 sphinx-issues==3.0.1
     # via -r requirements/docs.in
-sphinx-tabs==3.4.1
+sphinx-tabs==3.4.5
     # via -r requirements/docs.in
 sphinxcontrib-applehelp==1.0.4
     # via sphinx

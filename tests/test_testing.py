@@ -321,7 +321,7 @@ def test_stderr():
     assert result_mix.stdout == "stdout\nstderr\n"
 
     with pytest.raises(ValueError):
-        result_mix.stderr
+        result_mix.stderr  # noqa B018
 
     @click.command()
     def cli_empty_stderr():

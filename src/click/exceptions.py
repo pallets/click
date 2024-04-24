@@ -13,7 +13,7 @@ if t.TYPE_CHECKING:
 
 
 def _join_param_hints(
-    param_hint: t.Optional[t.Union[t.Sequence[str], str]]
+    param_hint: t.Optional[t.Union[t.Sequence[str], str]],
 ) -> t.Optional[str]:
     if param_hint is not None and not isinstance(param_hint, str):
         return " / ".join(repr(x) for x in param_hint)

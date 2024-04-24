@@ -39,6 +39,7 @@ from .utils import PacifyFlushWrapper
 
 if t.TYPE_CHECKING:
     import typing_extensions as te
+
     from .shell_completion import CompletionItem
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
@@ -383,9 +384,9 @@ class Context:
 
         #: An optional normalization function for tokens.  This is
         #: options, choices, commands etc.
-        self.token_normalize_func: t.Optional[
-            t.Callable[[str], str]
-        ] = token_normalize_func
+        self.token_normalize_func: t.Optional[t.Callable[[str], str]] = (
+            token_normalize_func
+        )
 
         #: Indicates if resilient parsing is enabled.  In that case Click
         #: will do its best to not cause any failures and default values
@@ -646,14 +647,12 @@ class Context:
     @t.overload
     def lookup_default(
         self, name: str, call: "te.Literal[True]" = True
-    ) -> t.Optional[t.Any]:
-        ...
+    ) -> t.Optional[t.Any]: ...
 
     @t.overload
     def lookup_default(
         self, name: str, call: "te.Literal[False]" = ...
-    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
-        ...
+    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]: ...
 
     def lookup_default(self, name: str, call: bool = True) -> t.Optional[t.Any]:
         """Get the default for a parameter from :attr:`default_map`.
@@ -713,24 +712,22 @@ class Context:
 
     @t.overload
     def invoke(
-        __self,  # noqa: B902
+        __self,
         __callback: "t.Callable[..., V]",
         *args: t.Any,
         **kwargs: t.Any,
-    ) -> V:
-        ...
+    ) -> V: ...
 
     @t.overload
     def invoke(
-        __self,  # noqa: B902
+        __self,
         __callback: "Command",
         *args: t.Any,
         **kwargs: t.Any,
-    ) -> t.Any:
-        ...
+    ) -> t.Any: ...
 
     def invoke(
-        __self,  # noqa: B902
+        __self,
         __callback: t.Union["Command", "t.Callable[..., V]"],
         *args: t.Any,
         **kwargs: t.Any,
@@ -782,9 +779,7 @@ class Context:
             with ctx:
                 return __callback(*args, **kwargs)
 
-    def forward(
-        __self, __cmd: "Command", *args: t.Any, **kwargs: t.Any  # noqa: B902
-    ) -> t.Any:
+    def forward(__self, __cmd: "Command", *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Similar to :meth:`invoke` but fills in default keyword
         arguments from the current context if the other command expects
         it.  This cannot invoke callbacks directly, only other commands.
@@ -936,7 +931,10 @@ class BaseCommand:
                 extra[key] = value
 
         ctx = self.context_class(
-            self, info_name=info_name, parent=parent, **extra  # type: ignore
+            self,  # type: ignore[arg-type]
+            info_name=info_name,
+            parent=parent,
+            **extra,
         )
 
         with ctx.scope(cleanup=False):
@@ -993,8 +991,7 @@ class BaseCommand:
         complete_var: t.Optional[str] = None,
         standalone_mode: "te.Literal[True]" = True,
         **extra: t.Any,
-    ) -> "te.NoReturn":
-        ...
+    ) -> "te.NoReturn": ...
 
     @t.overload
     def main(
@@ -1004,8 +1001,7 @@ class BaseCommand:
         complete_var: t.Optional[str] = None,
         standalone_mode: bool = ...,
         **extra: t.Any,
-    ) -> t.Any:
-        ...
+    ) -> t.Any: ...
 
     def main(
         self,
@@ -1843,14 +1839,12 @@ class Group(MultiCommand):
         self.commands[name] = cmd
 
     @t.overload
-    def command(self, __func: t.Callable[..., t.Any]) -> Command:
-        ...
+    def command(self, __func: t.Callable[..., t.Any]) -> Command: ...
 
     @t.overload
     def command(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Command]:
-        ...
+    ) -> t.Callable[[t.Callable[..., t.Any]], Command]: ...
 
     def command(
         self, *args: t.Any, **kwargs: t.Any
@@ -1894,14 +1888,12 @@ class Group(MultiCommand):
         return decorator
 
     @t.overload
-    def group(self, __func: t.Callable[..., t.Any]) -> "Group":
-        ...
+    def group(self, __func: t.Callable[..., t.Any]) -> "Group": ...
 
     @t.overload
     def group(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]:
-        ...
+    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]: ...
 
     def group(
         self, *args: t.Any, **kwargs: t.Any
@@ -2227,14 +2219,12 @@ class Parameter:
     @t.overload
     def get_default(
         self, ctx: Context, call: "te.Literal[True]" = True
-    ) -> t.Optional[t.Any]:
-        ...
+    ) -> t.Optional[t.Any]: ...
 
     @t.overload
     def get_default(
         self, ctx: Context, call: bool = ...
-    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
-        ...
+    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]: ...
 
     def get_default(
         self, ctx: Context, call: bool = True
@@ -2842,14 +2832,12 @@ class Option(Parameter):
     @t.overload
     def get_default(
         self, ctx: Context, call: "te.Literal[True]" = True
-    ) -> t.Optional[t.Any]:
-        ...
+    ) -> t.Optional[t.Any]: ...
 
     @t.overload
     def get_default(
         self, ctx: Context, call: bool = ...
-    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
-        ...
+    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]: ...
 
     def get_default(
         self, ctx: Context, call: bool = True
