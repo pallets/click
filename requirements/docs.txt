@@ -42,11 +42,8 @@ sphinx==7.3.7
     # via
     #   -r docs.in
     #   pallets-sphinx-themes
-    #   sphinx-issues
     #   sphinx-tabs
     #   sphinxcontrib-log-cabinet
-sphinx-issues==4.1.0
-    # via -r docs.in
 sphinx-tabs==3.4.5
     # via -r docs.in
 sphinxcontrib-applehelp==1.0.8
