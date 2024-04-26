@@ -23,8 +23,8 @@ autodoc_member_order = "bysource"
 autodoc_typehints = "description"
 autodoc_preserve_defaults = True
 extlinks = {
-    "issue": ("https://github.com/pallets/flask/issues/%s", "#%s"),
-    "pr": ("https://github.com/pallets/flask/pull/%s", "#%s"),
+    "issue": ("https://github.com/pallets/click/issues/%s", "#%s"),
+    "pr": ("https://github.com/pallets/click/pull/%s", "#%s"),
 }
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
