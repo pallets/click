@@ -48,6 +48,7 @@ Unreleased
 -   ``Context.close`` will be called on exit. This results in all
     ``Context.call_on_close`` callbacks and context managers added via
     ``Context.with_resource`` to be closed on exit as well. :pr:`2680`
+-   Allow users to hide progressbar output with ``show=False`` argument :issue:`2609`
 
 
 Version 8.1.8
