@@ -232,3 +232,12 @@ def test_file_surrogates(type, tmp_path):
 def test_file_error_surrogates():
     message = FileError(filename="\udcff").format_message()
     assert message == "Could not open file '�': unknown error"
+
+
+def test_path_type_with_esc_sequence():
+    with pytest.raises(click.BadParameter) as exc_info:
+        with tempfile.TemporaryDirectory(prefix=r"my\ndir") as tempdir:
+            click.Path(dir_okay=False, resolve_path=True).convert(tempdir, None, None)
+
+    expected = "my\\\\ndir"
+    assert expected in exc_info.value.message

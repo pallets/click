@@ -892,7 +892,7 @@ class Path(ParamType):
                 )
             if not self.dir_okay and stat.S_ISDIR(st.st_mode):
                 self.fail(
-                    _("{name} '{filename}' is a directory.").format(
+                    _("{name} {filename!r} is a directory.").format(
                         name=self.name.title(), filename=format_filename(value)
                     ),
                     param,
