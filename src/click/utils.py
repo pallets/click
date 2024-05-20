@@ -353,7 +353,7 @@ def get_text_stream(
 
 
 def open_file(
-    filename: str,
+    filename: t.Union[str, "os.PathLike[str]"],
     mode: str = "r",
     encoding: t.Optional[str] = None,
     errors: t.Optional[str] = "strict",
@@ -374,7 +374,7 @@ def open_file(
         with open_file(filename) as f:
             ...
 
-    :param filename: The name of the file to open, or ``'-'`` for
+    :param filename: The name or Path of the file to open, or ``'-'`` for
         ``stdin``/``stdout``.
     :param mode: The mode in which to open the file.
     :param encoding: The encoding to decode or encode a file opened in
