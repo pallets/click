@@ -89,8 +89,8 @@ def test_progressbar_show(runner, monkeypatch):
             for _ in progress:
                 pass
 
-    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
-    assert runner.invoke(cli, []).output == ""
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
+    assert runner.invoke(cli, []).output == "working\n"
 
 
 @pytest.mark.parametrize("avg, expected", [([], 0.0), ([1, 4], 2.5)])
