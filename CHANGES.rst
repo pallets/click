@@ -1,5 +1,12 @@
 .. currentmodule:: click
 
+Version 8.1.8
+-------------
+
+Unreleased
+
+-   Fix an issue with type hints for ``click.open_file()``. :issue:`2717`
+
 Version 8.1.7
 -------------
 
