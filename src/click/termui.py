@@ -288,6 +288,7 @@ def progressbar(
     iterable: cabc.Iterable[V] | None = None,
     length: int | None = None,
     label: str | None = None,
+    show: bool = True,
     show_eta: bool = True,
     show_percent: bool | None = None,
     show_pos: bool = False,
@@ -363,6 +364,8 @@ def progressbar(
                    length.  If an iterable is not provided the progress bar
                    will iterate over a range of that length.
     :param label: the label to show next to the progress bar.
+    :param show: enables or disables the progress bar display.  This is
+                     automatically enable.
     :param show_eta: enables or disables the estimated time display.  This is
                      automatically disabled if the length cannot be
                      determined.
@@ -420,6 +423,7 @@ def progressbar(
     return ProgressBar(
         iterable=iterable,
         length=length,
+        show=show,
         show_eta=show_eta,
         show_percent=show_percent,
         show_pos=show_pos,

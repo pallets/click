@@ -47,6 +47,7 @@ class ProgressBar(t.Generic[V]):
         empty_char: str = " ",
         bar_template: str = "%(bar)s",
         info_sep: str = "  ",
+        show: bool = True,
         show_eta: bool = True,
         show_percent: bool | None = None,
         show_pos: bool = False,
@@ -61,6 +62,7 @@ class ProgressBar(t.Generic[V]):
         self.empty_char = empty_char
         self.bar_template = bar_template
         self.info_sep = info_sep
+        self.show = show
         self.show_eta = show_eta
         self.show_percent = show_percent
         self.show_pos = show_pos
@@ -136,6 +138,8 @@ class ProgressBar(t.Generic[V]):
         return next(iter(self))
 
     def render_finish(self) -> None:
+        if not self.show:
+            return
         if self.is_hidden:
             return
         self.file.write(AFTER_BAR)
@@ -231,6 +235,9 @@ class ProgressBar(t.Generic[V]):
 
     def render_progress(self) -> None:
         import shutil
+
+        if not self.show:
+            return
 
         if self.is_hidden:
             # Only output the label as it changes if the output is not a
