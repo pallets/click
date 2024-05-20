@@ -85,11 +85,10 @@ def test_progressbar_hidden(runner, monkeypatch):
 def test_progressbar_show(runner, monkeypatch):
     @click.command()
     def cli():
-        with _create_progress() as progress:
+        with _create_progress(show=False) as progress:
             for _ in progress:
                 pass
 
-    monkeypatch.setattr(click._termui_impl, "show", lambda _: False)
     assert runner.invoke(cli, []).output == ""
 
 
