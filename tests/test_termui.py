@@ -82,6 +82,17 @@ def test_progressbar_hidden(runner, monkeypatch):
     assert runner.invoke(cli, []).output == "working\n"
 
 
+def test_progressbar_show(runner, monkeypatch):
+    @click.command()
+    def cli():
+        with _create_progress() as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "show", lambda _: False)
+    assert runner.invoke(cli, []).output == ""
+
+
 @pytest.mark.parametrize("avg, expected", [([], 0.0), ([1, 4], 2.5)])
 def test_progressbar_time_per_iteration(runner, avg, expected):
     with _create_progress(2, avg=avg) as progress:
