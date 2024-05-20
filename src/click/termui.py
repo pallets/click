@@ -365,7 +365,7 @@ def progressbar(
                    will iterate over a range of that length.
     :param label: the label to show next to the progress bar.
     :param show: enables or disables the progress bar display.  This is
-                     automatically enable.
+                     automatically enabled.
     :param show_eta: enables or disables the estimated time display.  This is
                      automatically disabled if the length cannot be
                      determined.
