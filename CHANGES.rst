@@ -8,6 +8,8 @@ Unreleased
 -   Fix an issue with type hints for ``click.open_file()``. :issue:`2717`
 -   Fix issue where error message for invalid ``click.Path`` displays on
     multiple lines. :issue:`2697`
+-   Fixed issue that prevented a default value of ``""`` from being displayed in
+    the help for an option. :issue:`2500`
 
 
 Version 8.1.7
