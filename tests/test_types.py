@@ -238,7 +238,7 @@ def test_file_error_surrogates():
 @pytest.mark.skipif(
     platform.system() == "Windows", reason="Filepath syntax differences."
 )
-def test_path_type_with_esc_sequence():
+def test_invalid_path_with_esc_sequence():
     with pytest.raises(click.BadParameter) as exc_info:
         with tempfile.TemporaryDirectory(prefix=r"my\ndir") as tempdir:
             click.Path(dir_okay=False).convert(tempdir, None, None)
