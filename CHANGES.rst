@@ -12,7 +12,10 @@ Unreleased
     the help for an option. :issue:`2500`
 -   The test runner handles stripping color consistently on Windows.
     :issue:`2705`
-
+-   Fix/Changed the way ``color=True`` is applied when the OS is windows,
+    additionally changed ``test_utils.py`` by removing the old version of
+    ``test_echo_color_flag`` with three different versions to test multiple
+    cases of ``click.echo()``. :issue:`2606`
 
 Version 8.1.7
 -------------

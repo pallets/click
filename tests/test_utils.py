@@ -209,32 +209,167 @@ def test_echo_via_pager(monkeypatch, capfd, cat, test):
     assert out == expected_output
 
 
-@pytest.mark.skipif(WIN, reason="Test does not make sense on Windows.")
-def test_echo_color_flag(monkeypatch, capfd):
+"""
+    These variables are used for the next three tests.
+
+    _text_str is guranteeing that each color test is using the same
+    string.
+
+    _styled_text_str is running _text_str through click.style with fg
+    set to red. This gurantees that each test is getting the same styled text.
+
+    expected_stripped_text is using an fstring on _text_str to add a newline chracter
+    to the end of it.
+
+    expected_unstripped_text is using an fstring on_styled_text_str to add a newline
+    character to the end of it.
+
+    Each expected variable is what is being used in the asserts to gurantee the output
+    is correct.
+
+    The unstripped version is for when an the ANSI style should stay applied.
+    The stripped version is for when the ANSI style should be removed from the text.
+
+    These can be removed if you would rather have the parametrize values be explict
+    in the following tests. The variables could also be extended and the tests truncated
+    by adding isatty and jupyter_kernel variables here. Expanding the parametrize
+    matrix to use those within the test instead of it being explict based on tests.
+"""
+_text_str = "test"
+_styled_text_str = click.style(_text_str, fg="red")
+expected_stripped_text = f"{_text_str}\n"
+expected_unstripped_text = f"{_styled_text_str}\n"
+
+
+@pytest.mark.parametrize(
+    "color, text, stylized_text, expected",
+    [
+        (False, _text_str, _styled_text_str, expected_stripped_text),
+        (True, _text_str, _styled_text_str, expected_unstripped_text),
+        (None, _text_str, _styled_text_str, expected_unstripped_text),
+    ],
+)
+def test_echo_color_flag_atty_and_not_jupyter_kernel(
+    monkeypatch, capfd, color, text, stylized_text, expected
+):
+    """
+    This is the test for echo color when the stream is a tty and
+    not a jupyter kernel output.
+
+    If color is set to False, then the text should strip the ANSI values regardless
+    of operating system.
+
+    If color is set to True, then we are forcing click to not care about
+    the type of stream or operating system. This means ANSI style codes will be applied
+    even if the output would not support them. Instances of this would be piping an
+    echo to a file.
+
+    If color is set to None / not set, then click will check if the stream is a tty.
+    This test is forcing that to always be true, and will then mean that the output
+    should keep the ANSI style.
+
+    The mocking of _is_jupyter_kernel_output is not needed, but was added to keep it
+    consistent with the other tests.
+    """
     isatty = True
     monkeypatch.setattr(click._compat, "isatty", lambda x: isatty)
 
-    text = "foo"
+    jupyter_kernel = False
+    monkeypatch.setattr(
+        click._compat, "_is_jupyter_kernel_output", lambda x: jupyter_kernel
+    )
+
     styled_text = click.style(text, fg="red")
-    assert styled_text == "\x1b[31mfoo\x1b[0m"
+    assert styled_text == stylized_text
 
-    click.echo(styled_text, color=False)
+    click.echo(styled_text, color=color)
     out, err = capfd.readouterr()
-    assert out == f"{text}\n"
+    assert out == expected
 
-    click.echo(styled_text, color=True)
-    out, err = capfd.readouterr()
-    assert out == f"{styled_text}\n"
 
-    isatty = True
-    click.echo(styled_text)
-    out, err = capfd.readouterr()
-    assert out == f"{styled_text}\n"
+@pytest.mark.parametrize(
+    "color, text, stylized_text, expected",
+    [
+        (False, _text_str, _styled_text_str, expected_stripped_text),
+        (True, _text_str, _styled_text_str, expected_unstripped_text),
+        (None, _text_str, _styled_text_str, expected_unstripped_text),
+    ],
+)
+def test_echo_color_flag_jupyter_kernel_and_not_atty(
+    monkeypatch, capfd, color, text, stylized_text, expected
+):
+    """
+    This is the test for echo color when the stream is not a tty and
+    is a jupyter kernel output.
 
+    If color is set to False, then the text should strip the ANSI values regardless
+    of operating system.
+
+    If color is set to True, then we are forcing click to not care about
+    the type of stream or operating system. This means ANSI style codes will be applied
+    even if the output would not support them. Instances of this would be piping an
+    echo to a file.
+
+    If color is set to None / not set, then click will check if the stream is a tty.
+    Which is being forced to be False so, the strip function will next check if
+    the stream is a jupyter kernel output which is being set as True. This means
+    that the ANSI style should not be stripped.
+    """
+    jupyter_kernel = True
+    monkeypatch.setattr(
+        click._compat, "_is_jupyter_kernel_output", lambda x: jupyter_kernel
+    )
     isatty = False
-    click.echo(styled_text)
+    monkeypatch.setattr(click._compat, "isatty", lambda x: isatty)
+
+    styled_text = click.style(text, fg="red")
+    assert styled_text == stylized_text
+
+    click.echo(styled_text, color=color)
     out, err = capfd.readouterr()
-    assert out == f"{text}\n"
+    assert out == expected
+
+
+@pytest.mark.parametrize(
+    "color, text, stylized_text, expected",
+    [
+        (False, _text_str, _styled_text_str, expected_stripped_text),
+        (True, _text_str, _styled_text_str, expected_unstripped_text),
+        (None, _text_str, _styled_text_str, expected_stripped_text),
+    ],
+)
+def test_echo_color_flag_not_atty_and_not_jupyter_kernel(
+    monkeypatch, capfd, color, text, stylized_text, expected
+):
+    """
+    This is the test for echo color when the stream is not a tty nor a jupyter kernel
+    output.
+
+    If color is set to False, then the text should strip the ANSI values regardless
+    of operating system.
+
+    If color is set to True, then we are forcing click to not care about
+    the type of stream or operating system. This means ANSI style codes will be applied
+    even if the output would not support them. Instances of this would be piping an
+    echo to a file.
+
+    If color is set to None / not set, then click will check that the stream is neither
+    a tty nor a jupyter notebook. This means the styling should be stripped regardless
+    of the operating system.
+    """
+    isatty = False
+    monkeypatch.setattr(click._compat, "isatty", lambda x: isatty)
+    jupyter_kernel = False
+    monkeypatch.setattr(
+        click._compat, "_is_jupyter_kernel_output", lambda x: jupyter_kernel
+    )
+
+    styled_text = click.style(text, fg="red")
+    assert styled_text == stylized_text
+
+    click.echo(styled_text, color=color)
+    out, err = capfd.readouterr()
+    assert out == expected
 
 
 def test_prompt_cast_default(capfd, monkeypatch):
