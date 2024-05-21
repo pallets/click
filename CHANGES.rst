@@ -10,6 +10,8 @@ Unreleased
     multiple lines. :issue:`2697`
 -   Fixed issue that prevented a default value of ``""`` from being displayed in
     the help for an option. :issue:`2500`
+-   The test runner handles stripping color consistently on Windows.
+    :issue:`2705`
 
 
 Version 8.1.7

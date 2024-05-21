@@ -5,7 +5,6 @@ from io import BytesIO
 import pytest
 
 import click
-from click._compat import WIN
 from click.testing import CliRunner
 
 
@@ -184,7 +183,6 @@ def test_catch_exceptions():
     assert result.exit_code == 1
 
 
-@pytest.mark.skipif(WIN, reason="Test does not make sense on Windows.")
 def test_with_color():
     @click.command()
     def cli():
