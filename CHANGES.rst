@@ -6,6 +6,9 @@ Version 8.1.8
 Unreleased
 
 -   Fix an issue with type hints for ``click.open_file()``. :issue:`2717`
+-   Fix issue where error message for invalid ``click.Path`` displays on
+    multiple lines. :issue:`2697`
+
 
 Version 8.1.7
 -------------
