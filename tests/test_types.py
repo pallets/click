@@ -1,5 +1,6 @@
 import os.path
 import pathlib
+import platform
 import tempfile
 
 import pytest
@@ -234,6 +235,9 @@ def test_file_error_surrogates():
     assert message == "Could not open file '�': unknown error"
 
 
+@pytest.mark.skipif(
+    platform.system() == "Windows", reason="Filepath syntax differences."
+)
 def test_invalid_path_with_esc_sequence():
     with pytest.raises(click.BadParameter) as exc_info:
         with tempfile.TemporaryDirectory(prefix="my\ndir") as tempdir:
