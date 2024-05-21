@@ -12,6 +12,8 @@ Unreleased
     the help for an option. :issue:`2500`
 -   The test runner handles stripping color consistently on Windows.
     :issue:`2705`
+-   Show correct value for flag default when using ``default_map``.
+    :issue:`2632`
 
 
 Version 8.1.7
