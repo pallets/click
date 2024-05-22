@@ -410,7 +410,7 @@ def format_filename(
     with the replacement character ``�``.
 
     Invalid bytes or surrogate escapes will raise an error when written to a
-    stream with ``errors="strict". This will typically happen with ``stdout``
+    stream with ``errors="strict"``. This will typically happen with ``stdout``
     when the locale is something like ``en_GB.UTF-8``.
 
     Many scenarios *are* safe to write surrogates though, due to PEP 538 and
