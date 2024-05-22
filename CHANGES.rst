@@ -27,6 +27,8 @@ Unreleased
     :issue:`2452`
 -   Refactor code generating default ``--help`` option to deduplicate code.
     :pr:`2563`
+-   Test ``CLIRunner`` resets patched ``_compat.should_strip_ansi``.
+    :issue:`2732`
 
 
 Version 8.1.7
