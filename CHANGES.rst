@@ -14,6 +14,8 @@ Unreleased
     :issue:`2705`
 -   Show correct value for flag default when using ``default_map``.
     :issue:`2632`
+-   Fixed error caused by earlier fix where the ``_compat.should_strip_ansi`` was
+    not reset. :issue:`2732`
 
 
 Version 8.1.7
