@@ -47,7 +47,7 @@ class ProgressBar(t.Generic[V]):
         empty_char: str = " ",
         bar_template: str = "%(bar)s",
         info_sep: str = "  ",
-        show: bool = True,
+        hidden: bool = False,
         show_eta: bool = True,
         show_percent: bool | None = None,
         show_pos: bool = False,
@@ -62,7 +62,7 @@ class ProgressBar(t.Generic[V]):
         self.empty_char = empty_char
         self.bar_template = bar_template
         self.info_sep = info_sep
-        self.show = show
+        self.hidden = hidden
         self.show_eta = show_eta
         self.show_percent = show_percent
         self.show_pos = show_pos
@@ -107,7 +107,7 @@ class ProgressBar(t.Generic[V]):
         self.max_width: int | None = None
         self.entered: bool = False
         self.current_item: V | None = None
-        self.is_hidden: bool = not isatty(self.file)
+        self._is_hidden: bool = (not isatty(self.file)) | hidden
         self._last_line: str | None = None
 
     def __enter__(self) -> ProgressBar[V]:
@@ -138,9 +138,7 @@ class ProgressBar(t.Generic[V]):
         return next(iter(self))
 
     def render_finish(self) -> None:
-        if not self.show:
-            return
-        if self.is_hidden:
+        if self._is_hidden:
             return
         self.file.write(AFTER_BAR)
         self.file.flush()
@@ -236,16 +234,12 @@ class ProgressBar(t.Generic[V]):
     def render_progress(self) -> None:
         import shutil
 
-        if not self.show:
-            return
-
-        if self.is_hidden:
+        if self._is_hidden:
             # Only output the label as it changes if the output is not a
             # TTY. Use file=stderr if you expect to be piping stdout.
             if self._last_line != self.label:
                 self._last_line = self.label
                 echo(self.label, file=self.file, color=self.color)
-
             return
 
         buf = []
@@ -349,7 +343,7 @@ class ProgressBar(t.Generic[V]):
         if not self.entered:
             raise RuntimeError("You need to use progress bars in a with block.")
 
-        if self.is_hidden:
+        if self._is_hidden:
             yield from self.iter
         else:
             for rv in self.iter:
