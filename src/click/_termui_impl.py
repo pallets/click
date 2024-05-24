@@ -107,7 +107,7 @@ class ProgressBar(t.Generic[V]):
         self.max_width: int | None = None
         self.entered: bool = False
         self.current_item: V | None = None
-        self._is_hidden: bool = (not isatty(self.file)) | hidden
+        self._is_hidden = not isatty(self.file)
         self._last_line: str | None = None
 
     def __enter__(self) -> ProgressBar[V]:
@@ -139,6 +139,8 @@ class ProgressBar(t.Generic[V]):
 
     def render_finish(self) -> None:
         if self._is_hidden:
+            return
+        if self.hidden:
             return
         self.file.write(AFTER_BAR)
         self.file.flush()
@@ -240,6 +242,8 @@ class ProgressBar(t.Generic[V]):
             if self._last_line != self.label:
                 self._last_line = self.label
                 echo(self.label, file=self.file, color=self.color)
+            return
+        if self.hidden:
             return
 
         buf = []
