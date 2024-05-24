@@ -107,7 +107,7 @@ class ProgressBar(t.Generic[V]):
         self.max_width: int | None = None
         self.entered: bool = False
         self.current_item: V | None = None
-        self._is_hidden = not isatty(self.file)
+        self._is_hidden: bool = not isatty(self.file)
         self._last_line: str | None = None
 
     def __enter__(self) -> ProgressBar[V]:
