@@ -36,7 +36,7 @@ And what it looks like:
 .. _documenting-arguments:
 
 Documenting Arguments
-~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 :func:`click.argument` does not take a ``help`` parameter. This is to
 follow the general convention of Unix tools of using arguments for only
