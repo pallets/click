@@ -31,6 +31,9 @@ Unreleased
 -   When generating a command's name from a decorated function's name, the
     suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
     :issue:`2322`
+-   Add ``get_help_extra`` method on ``Option`` to fetch the generated extra
+    items used in ``get_help_record`` to render help text. :issue:`2516`
+    :pr:`2517`
 
 
 Version 8.1.7
