@@ -31,6 +31,8 @@ Unreleased
 -   When generating a command's name from a decorated function's name, the
     suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
     :issue:`2322`
+-   If ``show_envvar`` then show env var in error messages.
+    :issue:`2695`
 
 
 Version 8.1.7
