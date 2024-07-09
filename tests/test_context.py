@@ -1,9 +1,14 @@
+import logging
 from contextlib import contextmanager
 
 import pytest
 
 import click
+from click import Context
+from click import Option
+from click import Parameter
 from click.core import ParameterSource
+from click.decorators import help_option
 from click.decorators import pass_meta_key
 
 
@@ -235,6 +240,171 @@ def test_close_before_pop(runner):
     assert not result.exception
     assert result.output == "aha!\n"
     assert called == [True]
+
+
+def test_close_before_exit(runner):
+    called = []
+
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        ctx.obj = "test"
+
+        @ctx.call_on_close
+        def foo():
+            assert click.get_current_context().obj == "test"
+            called.append(True)
+
+        ctx.exit()
+
+        click.echo("aha!")
+
+    result = runner.invoke(cli, [])
+    assert not result.exception
+    assert not result.output
+    assert called == [True]
+
+
+@pytest.mark.parametrize(
+    ("cli_args", "expect"),
+    [
+        pytest.param(
+            ("--option-with-callback", "--force-exit"),
+            ["ExitingOption", "NonExitingOption"],
+            id="natural_order",
+        ),
+        pytest.param(
+            ("--force-exit", "--option-with-callback"),
+            ["ExitingOption"],
+            id="eagerness_precedence",
+        ),
+    ],
+)
+def test_multiple_eager_callbacks(runner, cli_args, expect):
+    """Checks all callbacks are called on exit, even the nasty ones hidden within
+    callbacks.
+
+    Also checks the order in which they're called.
+    """
+    # Keeps track of callback calls.
+    called = []
+
+    class NonExitingOption(Option):
+        def reset_state(self):
+            called.append(self.__class__.__name__)
+
+        def set_state(self, ctx: Context, param: Parameter, value: str) -> str:
+            ctx.call_on_close(self.reset_state)
+            return value
+
+        def __init__(self, *args, **kwargs) -> None:
+            kwargs.setdefault("expose_value", False)
+            kwargs.setdefault("callback", self.set_state)
+            super().__init__(*args, **kwargs)
+
+    class ExitingOption(NonExitingOption):
+        def set_state(self, ctx: Context, param: Parameter, value: str) -> str:
+            value = super().set_state(ctx, param, value)
+            ctx.exit()
+            return value
+
+    @click.command()
+    @click.option("--option-with-callback", is_eager=True, cls=NonExitingOption)
+    @click.option("--force-exit", is_eager=True, cls=ExitingOption)
+    def cli():
+        click.echo("This will never be printed as we forced exit via --force-exit")
+
+    result = runner.invoke(cli, cli_args)
+    assert not result.exception
+    assert not result.output
+
+    assert called == expect
+
+
+def test_no_state_leaks(runner):
+    """Demonstrate state leaks with a specific case of the generic test above.
+
+    Use a logger as a real-world example of a common fixture which, due to its global
+    nature, can leak state if not clean-up properly in a callback.
+    """
+    # Keeps track of callback calls.
+    called = []
+
+    class DebugLoggerOption(Option):
+        """A custom option to set the name of the debug logger."""
+
+        logger_name: str
+        """The ID of the logger to use."""
+
+        def reset_loggers(self):
+            """Forces logger managed by the option to be reset to the default level."""
+            logger = logging.getLogger(self.logger_name)
+            logger.setLevel(logging.NOTSET)
+
+            # Logger has been properly reset to its initial state.
+            assert logger.level == logging.NOTSET
+            assert logger.getEffectiveLevel() == logging.WARNING
+
+            called.append(True)
+
+        def set_level(self, ctx: Context, param: Parameter, value: str) -> None:
+            """Set the logger to DEBUG level."""
+            # Keep the logger name around so we can reset it later when winding down
+            # the option.
+            self.logger_name = value
+
+            # Get the global logger object.
+            logger = logging.getLogger(self.logger_name)
+
+            # Check pre-conditions: new logger is not set, but inherits its level from
+            # default <root> logger. That's the exact same state we are expecting our
+            # logger to be in after being messed with by the CLI.
+            assert logger.level == logging.NOTSET
+            assert logger.getEffectiveLevel() == logging.WARNING
+
+            logger.setLevel(logging.DEBUG)
+            ctx.call_on_close(self.reset_loggers)
+            return value
+
+        def __init__(self, *args, **kwargs) -> None:
+            kwargs.setdefault("callback", self.set_level)
+            super().__init__(*args, **kwargs)
+
+    @click.command()
+    @click.option("--debug-logger-name", is_eager=True, cls=DebugLoggerOption)
+    @help_option()
+    @click.pass_context
+    def messing_with_logger(ctx, debug_logger_name):
+        # Introspect context to make sure logger name are aligned.
+        assert debug_logger_name == ctx.command.params[0].logger_name
+
+        logger = logging.getLogger(debug_logger_name)
+
+        # Logger's level has been properly set to DEBUG by DebugLoggerOption.
+        assert logger.level == logging.DEBUG
+        assert logger.getEffectiveLevel() == logging.DEBUG
+
+        logger.debug("Blah blah blah")
+
+        ctx.exit()
+
+        click.echo("This will never be printed as we exited early")
+
+    # Call the CLI to mess with the custom logger.
+    result = runner.invoke(
+        messing_with_logger, ["--debug-logger-name", "my_logger", "--help"]
+    )
+
+    assert called == [True]
+
+    # Check the custom logger has been reverted to it initial state by the option
+    # callback after being messed with by the CLI.
+    logger = logging.getLogger("my_logger")
+    assert logger.level == logging.NOTSET
+    assert logger.getEffectiveLevel() == logging.WARNING
+
+    assert not result.exception
+    assert result.output.startswith("Usage: messing-with-logger [OPTIONS]")
 
 
 def test_with_resource():
