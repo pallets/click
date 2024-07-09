@@ -284,6 +284,47 @@ def echo_via_pager(
     return pager(itertools.chain(text_generator, "\n"), color)
 
 
+@t.overload
+def progressbar(
+    *,
+    length: int,
+    label: str | None = None,
+    show_eta: bool = True,
+    show_percent: bool | None = None,
+    show_pos: bool = False,
+    fill_char: str = "#",
+    empty_char: str = "-",
+    bar_template: str = "%(label)s  [%(bar)s]  %(info)s",
+    info_sep: str = "  ",
+    width: int = 36,
+    file: t.TextIO | None = None,
+    color: bool | None = None,
+    update_min_steps: int = 1,
+) -> ProgressBar[int]:
+    ...
+
+
+@t.overload
+def progressbar(
+    iterable: cabc.Iterable[V] | None = None,
+    length: int | None = None,
+    label: str | None = None,
+    show_eta: bool = True,
+    show_percent: bool | None = None,
+    show_pos: bool = False,
+    item_show_func: t.Callable[[V | None], str | None] | None = None,
+    fill_char: str = "#",
+    empty_char: str = "-",
+    bar_template: str = "%(label)s  [%(bar)s]  %(info)s",
+    info_sep: str = "  ",
+    width: int = 36,
+    file: t.TextIO | None = None,
+    color: bool | None = None,
+    update_min_steps: int = 1,
+) -> ProgressBar[V]:
+    ...
+
+
 def progressbar(
     iterable: cabc.Iterable[V] | None = None,
     length: int | None = None,
