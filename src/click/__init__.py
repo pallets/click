@@ -19,6 +19,7 @@ from .decorators import command as command
 from .decorators import confirmation_option as confirmation_option
 from .decorators import group as group
 from .decorators import help_option as help_option
+from .decorators import HelpOption as HelpOption
 from .decorators import make_pass_decorator as make_pass_decorator
 from .decorators import option as option
 from .decorators import pass_context as pass_context
