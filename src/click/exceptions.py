@@ -58,7 +58,7 @@ class UsageError(ClickException):
     def __init__(self, message: str, ctx: t.Optional["Context"] = None) -> None:
         super().__init__(message)
         self.ctx = ctx
-        self.cmd: t.Optional["Command"] = self.ctx.command if self.ctx else None
+        self.cmd: t.Optional[Command] = self.ctx.command if self.ctx else None
 
     def show(self, file: t.Optional[t.IO[t.Any]] = None) -> None:
         if file is None:

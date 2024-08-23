@@ -625,7 +625,7 @@ class Context:
 
     def find_object(self, object_type: t.Type[V]) -> t.Optional[V]:
         """Finds the closest object of a given type."""
-        node: t.Optional["Context"] = self
+        node: t.Optional[Context] = self
 
         while node is not None:
             if isinstance(node.obj, object_type):
@@ -969,7 +969,7 @@ class BaseCommand:
         """
         from click.shell_completion import CompletionItem
 
-        results: t.List["CompletionItem"] = []
+        results: t.List[CompletionItem] = []
 
         while ctx.parent is not None:
             ctx = ctx.parent
@@ -1217,7 +1217,7 @@ class Command(BaseCommand):
         #: the list of parameters for this command in the order they
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
-        self.params: t.List["Parameter"] = params or []
+        self.params: t.List[Parameter] = params or []
         self.help = help
         self.epilog = epilog
         self.options_metavar = options_metavar
@@ -1440,7 +1440,7 @@ class Command(BaseCommand):
         """
         from click.shell_completion import CompletionItem
 
-        results: t.List["CompletionItem"] = []
+        results: t.List[CompletionItem] = []
 
         if incomplete and not incomplete[0].isalnum():
             for param in self.get_params(ctx):
