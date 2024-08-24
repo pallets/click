@@ -356,7 +356,7 @@ def get_text_stream(
 
 
 def open_file(
-    filename: str,
+    filename: str | os.PathLike[str],
     mode: str = "r",
     encoding: str | None = None,
     errors: str | None = "strict",
@@ -377,7 +377,7 @@ def open_file(
         with open_file(filename) as f:
             ...
 
-    :param filename: The name of the file to open, or ``'-'`` for
+    :param filename: The name or Path of the file to open, or ``'-'`` for
         ``stdin``/``stdout``.
     :param mode: The mode in which to open the file.
     :param encoding: The encoding to decode or encode a file opened in
@@ -413,7 +413,7 @@ def format_filename(
     with the replacement character ``�``.
 
     Invalid bytes or surrogate escapes will raise an error when written to a
-    stream with ``errors="strict". This will typically happen with ``stdout``
+    stream with ``errors="strict"``. This will typically happen with ``stdout``
     when the locale is something like ``en_GB.UTF-8``.
 
     Many scenarios *are* safe to write surrogates though, due to PEP 538 and

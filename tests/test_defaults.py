@@ -59,3 +59,28 @@ def test_multiple_flag_default(runner):
 
     result = runner.invoke(cli, ["-y", "-n", "-f", "-v", "-q"], standalone_mode=False)
     assert result.return_value == ((True, False), (True,), (1, -1))
+
+
+def test_flag_default_map(runner):
+    """test flag with default map"""
+
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command()
+    @click.option("--name/--no-name", is_flag=True, show_default=True, help="name flag")
+    def foo(name):
+        click.echo(name)
+
+    result = runner.invoke(cli, ["foo"])
+    assert "False" in result.output
+
+    result = runner.invoke(cli, ["foo", "--help"])
+    assert "default: no-name" in result.output
+
+    result = runner.invoke(cli, ["foo"], default_map={"foo": {"name": True}})
+    assert "True" in result.output
+
+    result = runner.invoke(cli, ["foo", "--help"], default_map={"foo": {"name": True}})
+    assert "default: name" in result.output

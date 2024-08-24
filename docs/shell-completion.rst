@@ -28,12 +28,16 @@ through an entry point, not through the ``python`` command. See
 :doc:`entry-points`. Once the executable is installed, calling it with
 a special environment variable will put Click in completion mode.
 
-In order for completion to be used, the user needs to register a special
-function with their shell. The script is different for every shell, and
-Click will output it when called with ``_{PROG_NAME}_COMPLETE`` set to
-``{shell}_source``. ``{PROG_NAME}`` is the executable name in uppercase
-with dashes replaced by underscores. The built-in shells are ``bash``,
-``zsh``, and ``fish``.
+To enable shell completion, the user needs to register a special
+function with their shell. The exact script varies depending on the
+shell you are using. Click will output it when called with
+``_{FOO_BAR}_COMPLETE`` set to ``{shell}_source``. ``{FOO_BAR}`` is
+the executable name in uppercase with dashes replaced by underscores.
+It is conventional but not strictly required for environment variable
+names to be in upper case. This convention helps distinguish environment
+variables from regular shell variables and commands, making scripts
+and configuration files more readable and easier to maintain. The
+built-in shells are ``bash``, ``zsh``, and ``fish``.
 
 Provide your users with the following instructions customized to your
 program name. This uses ``foo-bar`` as an example.
@@ -194,7 +198,7 @@ require implementing some smaller parts.
 
 First, you'll need to figure out how your shell's completion system
 works and write a script to integrate it with Click. It must invoke your
-program with the environment variable ``_{PROG_NAME}_COMPLETE`` set to
+program with the environment variable ``_{FOO_BAR}_COMPLETE`` set to
 ``{shell}_complete`` and pass the complete args and incomplete value.
 How it passes those values, and the format of the completion response
 from Click is up to you.
@@ -207,7 +211,7 @@ formatting with the following variables:
     in the script.
 -   ``complete_var`` - The environment variable name for passing the
     ``{shell}_complete`` instruction.
--   ``prog_name`` - The name of the executable being completed.
+-   ``foo_bar`` - The name of the executable being completed.
 
 The example code is for a made up shell "My Shell" or "mysh" for short.
 
@@ -218,10 +222,10 @@ The example code is for a made up shell "My Shell" or "mysh" for short.
 
     _mysh_source = """\
     %(complete_func)s {
-        response=$(%(complete_var)s=mysh_complete %(prog_name)s)
+        response=$(%(complete_var)s=mysh_complete %(foo_bar)s)
         # parse response and set completions somehow
     }
-    call-on-complete %(prog_name)s %(complete_func)s
+    call-on-complete %(foo_bar)s %(complete_func)s
     """
 
     @add_completion_class

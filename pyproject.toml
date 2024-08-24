@@ -91,8 +91,12 @@ select = [
     "UP",  # pyupgrade
     "W",  # pycodestyle warning
 ]
-ignore-init-module-imports = true
 
 [tool.ruff.lint.isort]
 force-single-line = true
 order-by-type = false
+
+[tool.gha-update]
+tag-only = [
+    "slsa-framework/slsa-github-generator",
+]

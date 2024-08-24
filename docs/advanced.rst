@@ -442,6 +442,7 @@ defined as a context manager:
         def __enter__(self):
             path = os.path.join(self.home, "repo.db")
             self.db = open_database(path)
+            return self
 
         def __exit__(self, exc_type, exc_value, tb):
             self.db.close()

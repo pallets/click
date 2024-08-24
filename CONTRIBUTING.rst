@@ -138,7 +138,7 @@ Start coding
     .. code-block:: text
 
         $ git fetch origin
-        $ git checkout -b your-branch-name origin/8.0.x
+        $ git checkout -b your-branch-name origin/8.1.x
 
     If you're submitting a feature addition or change, branch off of the
     "main" branch.

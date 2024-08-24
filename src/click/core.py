@@ -2722,10 +2722,12 @@ class Option(Parameter):
                 # For boolean flags that have distinct True/False opts,
                 # use the opt without prefix instead of the value.
                 default_string = _split_opt(
-                    (self.opts if self.default else self.secondary_opts)[0]
+                    (self.opts if default_value else self.secondary_opts)[0]
                 )[1]
             elif self.is_bool_flag and not self.secondary_opts and not default_value:
                 default_string = ""
+            elif default_value == "":
+                default_string = '""'
             else:
                 default_string = str(default_value)
 
