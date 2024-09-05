@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import collections.abc as cabc
 import inspect
 import io
@@ -9,16 +7,12 @@ import typing as t
 from contextlib import AbstractContextManager
 from gettext import gettext as _
 
-from ._compat import isatty
-from ._compat import strip_ansi
-from .exceptions import Abort
-from .exceptions import UsageError
+# Simplified imports for better readability and to reduce clutter.
+from ._compat import isatty, strip_ansi
+from .exceptions import Abort, UsageError
 from .globals import resolve_color_default
-from .types import Choice
-from .types import convert_type
-from .types import ParamType
-from .utils import echo
-from .utils import LazyFile
+from .types import Choice, convert_type, ParamType
+from .utils import echo, LazyFile
 
 if t.TYPE_CHECKING:
     from ._termui_impl import ProgressBar
@@ -58,12 +52,12 @@ def hidden_prompt_func(prompt: str) -> str:
 
 
 def _build_prompt(
-    text: str,
-    suffix: str,
-    show_default: bool = False,
-    default: t.Any | None = None,
-    show_choices: bool = True,
-    type: ParamType | None = None,
+        text: str,
+        suffix: str,
+        show_default: bool = False,
+        default: t.Any | None = None,
+        show_choices: bool = True,
+        type: ParamType | None = None,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
@@ -81,16 +75,16 @@ def _format_default(default: t.Any) -> t.Any:
 
 
 def prompt(
-    text: str,
-    default: t.Any | None = None,
-    hide_input: bool = False,
-    confirmation_prompt: bool | str = False,
-    type: ParamType | t.Any | None = None,
-    value_proc: t.Callable[[str], t.Any] | None = None,
-    prompt_suffix: str = ": ",
-    show_default: bool = True,
-    err: bool = False,
-    show_choices: bool = True,
+        text: str,
+        default: t.Any | None = None,
+        hide_input: bool = False,
+        confirmation_prompt: bool | str = False,
+        type: ParamType | t.Any | None = None,
+        value_proc: t.Callable[[str], t.Any] | None = None,
+        prompt_suffix: str = ": ",
+        show_default: bool = True,
+        err: bool = False,
+        show_choices: bool = True,
 ) -> t.Any:
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
@@ -192,12 +186,12 @@ def prompt(
 
 
 def confirm(
-    text: str,
-    default: bool | None = False,
-    abort: bool = False,
-    prompt_suffix: str = ": ",
-    show_default: bool = True,
-    err: bool = False,
+        text: str,
+        default: bool | None = False,
+        abort: bool = False,
+        prompt_suffix: str = ": ",
+        show_default: bool = True,
+        err: bool = False,
 ) -> bool:
     """Prompts for confirmation (yes/no question).
 
@@ -227,6 +221,8 @@ def confirm(
         "y/n" if default is None else ("Y/n" if default else "y/N"),
     )
 
+    # Initialise rv to avoid a `variable might be referenced before assignment` warning on line 246
+    rv: bool = False
     while True:
         try:
             # Write the prompt separately so that we get nice
@@ -253,8 +249,8 @@ def confirm(
 
 
 def echo_via_pager(
-    text_or_generator: cabc.Iterable[str] | t.Callable[[], cabc.Iterable[str]] | str,
-    color: bool | None = None,
+        text_or_generator: cabc.Iterable[str] | t.Callable[[], cabc.Iterable[str]] | str,
+        color: bool | None = None,
 ) -> None:
     """This function takes a text and shows it via an environment specific
     pager on stdout.
@@ -285,21 +281,21 @@ def echo_via_pager(
 
 
 def progressbar(
-    iterable: cabc.Iterable[V] | None = None,
-    length: int | None = None,
-    label: str | None = None,
-    show_eta: bool = True,
-    show_percent: bool | None = None,
-    show_pos: bool = False,
-    item_show_func: t.Callable[[V | None], str | None] | None = None,
-    fill_char: str = "#",
-    empty_char: str = "-",
-    bar_template: str = "%(label)s  [%(bar)s]  %(info)s",
-    info_sep: str = "  ",
-    width: int = 36,
-    file: t.TextIO | None = None,
-    color: bool | None = None,
-    update_min_steps: int = 1,
+        iterable: cabc.Iterable[V] | None = None,
+        length: int | None = None,
+        label: str | None = None,
+        show_eta: bool = True,
+        show_percent: bool | None = None,
+        show_pos: bool = False,
+        item_show_func: t.Callable[[V | None], str | None] | None = None,
+        fill_char: str = "#",
+        empty_char: str = "-",
+        bar_template: str = "%(label)s  [%(bar)s]  %(info)s",
+        info_sep: str = "  ",
+        width: int = 36,
+        file: t.TextIO | None = None,
+        color: bool | None = None,
+        update_min_steps: int = 1,
 ) -> ProgressBar[V]:
     """This function creates an iterable context manager that can be used
     to iterate over something while showing a progress bar.  It will
@@ -462,18 +458,18 @@ def _interpret_color(color: int | tuple[int, int, int] | str, offset: int = 0) -
 
 
 def style(
-    text: t.Any,
-    fg: int | tuple[int, int, int] | str | None = None,
-    bg: int | tuple[int, int, int] | str | None = None,
-    bold: bool | None = None,
-    dim: bool | None = None,
-    underline: bool | None = None,
-    overline: bool | None = None,
-    italic: bool | None = None,
-    blink: bool | None = None,
-    reverse: bool | None = None,
-    strikethrough: bool | None = None,
-    reset: bool = True,
+        text: t.Any,
+        fg: int | tuple[int, int, int] | str | None = None,
+        bg: int | tuple[int, int, int] | str | None = None,
+        bold: bool | None = None,
+        dim: bool | None = None,
+        underline: bool | None = None,
+        overline: bool | None = None,
+        italic: bool | None = None,
+        blink: bool | None = None,
+        reverse: bool | None = None,
+        strikethrough: bool | None = None,
+        reset: bool = True,
 ) -> str:
     """Styles a text with ANSI styles and returns the new string.  By
     default the styling is self contained which means that at the end
@@ -603,12 +599,12 @@ def unstyle(text: str) -> str:
 
 
 def secho(
-    message: t.Any | None = None,
-    file: t.IO[t.AnyStr] | None = None,
-    nl: bool = True,
-    err: bool = False,
-    color: bool | None = None,
-    **styles: t.Any,
+        message: t.Any | None = None,
+        file: t.IO[t.AnyStr] | None = None,
+        nl: bool = True,
+        err: bool = False,
+        color: bool | None = None,
+        **styles: t.Any,
 ) -> None:
     """This function combines :func:`echo` and :func:`style` into one
     call.  As such the following two calls are the same::
@@ -637,12 +633,12 @@ def secho(
 
 
 def edit(
-    text: t.AnyStr | None = None,
-    editor: str | None = None,
-    env: cabc.Mapping[str, str] | None = None,
-    require_save: bool = True,
-    extension: str = ".txt",
-    filename: str | None = None,
+        text: t.AnyStr | None = None,
+        editor: str | None = None,
+        env: cabc.Mapping[str, str] | None = None,
+        require_save: bool = True,
+        extension: str = ".txt",
+        filename: str | None = None,
 ) -> t.AnyStr | None:
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
@@ -746,13 +742,15 @@ def getchar(echo: bool = False) -> str:
     return _getchar(echo)
 
 
+# This raises `Expected type 'AbstractContextManager[int]', got 'Iterator[int]' instead`
+# Is this warning expected?
 def raw_terminal() -> AbstractContextManager[int]:
     from ._termui_impl import raw_terminal as f
 
     return f()
 
 
-def pause(info: str | None = None, err: bool = False) -> None:
+def pause(info: str = "Press any key to continue...", err: bool = False) -> None:
     """This command stops execution and waits for the user to press any
     key to continue.  This is similar to the Windows batch "pause"
     command.  If the program is not run through a terminal, this command
@@ -771,16 +769,12 @@ def pause(info: str | None = None, err: bool = False) -> None:
     if not isatty(sys.stdin) or not isatty(sys.stdout):
         return
 
-    if info is None:
-        info = _("Press any key to continue...")
-
+    # No need to check 'if info' since it has a default value now
     try:
-        if info:
-            echo(info, nl=False, err=err)
+        echo(info, nl=False, err=err)
         try:
             getchar()
         except (KeyboardInterrupt, EOFError):
             pass
     finally:
-        if info:
-            echo(err=err)
+        echo(err=err)
