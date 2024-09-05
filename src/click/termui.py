@@ -225,7 +225,9 @@ def confirm(
         "y/n" if default is None else ("Y/n" if default else "y/N"),
     )
 
-    # Initialise rv to avoid a `variable might be referenced before assignment` warning on line 246
+    # Initialise rv to avoid a 
+    # `variable might be referenced before assignment` warning 
+    # on line 246
     rv: bool = False
     while True:
         try:
