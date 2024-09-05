@@ -30,7 +30,10 @@ from collections import deque
 from gettext import gettext as _
 from gettext import ngettext
 
-from .exceptions import BadArgumentUsage, BadOptionUsage, NoSuchOption, UsageError
+from .exceptions import BadArgumentUsage
+from .exceptions import BadOptionUsage
+from .exceptions import NoSuchOption
+from .exceptions import UsageError
 
 if t.TYPE_CHECKING:
     from .core import Argument as CoreArgument

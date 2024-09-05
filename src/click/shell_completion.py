@@ -6,7 +6,13 @@ import re
 import typing as t
 from gettext import gettext as _
 
-from .core import Argument, Command, Context, Group, Option, Parameter, ParameterSource
+from .core import Argument
+from .core import Command
+from .core import Context
+from .core import Group
+from .core import Option
+from .core import Parameter
+from .core import ParameterSource
 from .utils import echo
 
 

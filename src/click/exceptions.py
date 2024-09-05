@@ -6,10 +6,13 @@ from gettext import gettext as _
 from gettext import ngettext
 
 from ._compat import get_text_stderr
-from .utils import echo, format_filename
+from .utils import echo
+from .utils import format_filename
 
 if t.TYPE_CHECKING:
-    from .core import Command, Context, Parameter
+    from .core import Command
+    from .core import Context
+    from .core import Parameter
 
 
 def _join_param_hints(param_hint: cabc.Sequence[str] | str | None) -> str | None:

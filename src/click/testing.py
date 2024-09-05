@@ -11,7 +11,10 @@ import tempfile
 import typing as t
 from types import TracebackType
 
-from . import _compat, formatting, termui, utils
+from . import _compat
+from . import formatting
+from . import termui
+from . import utils
 from ._compat import _find_binary_reader
 
 if t.TYPE_CHECKING:
