@@ -7,7 +7,7 @@ import typing as t
 from contextlib import AbstractContextManager
 from gettext import gettext as _
 
-# Simplified imports for better readability and to reduce clutter.
+
 from ._compat import isatty, strip_ansi
 from .exceptions import Abort, UsageError
 from .globals import resolve_color_default
@@ -742,8 +742,6 @@ def getchar(echo: bool = False) -> str:
     return _getchar(echo)
 
 
-# This raises `Expected type 'AbstractContextManager[int]', got 'Iterator[int]' instead`
-# Is this warning expected?
 def raw_terminal() -> AbstractContextManager[int]:
     from ._termui_impl import raw_terminal as f
 
@@ -769,7 +767,6 @@ def pause(info: str = "Press any key to continue...", err: bool = False) -> None
     if not isatty(sys.stdin) or not isatty(sys.stdout):
         return
 
-    # No need to check 'if info' since it has a default value now
     try:
         echo(info, nl=False, err=err)
         try:
