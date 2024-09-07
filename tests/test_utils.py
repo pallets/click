@@ -2,7 +2,9 @@ import os
 import pathlib
 import stat
 import sys
+from collections import namedtuple
 from io import StringIO
+from tempfile import tempdir
 
 import pytest
 
@@ -179,32 +181,172 @@ def _test_gen_func():
     yield "abc"
 
 
+def _test_gen_func_fails():
+    yield "test"
+    raise RuntimeError("This is a test.")
+
+
+def _test_gen_func_echo(file=None):
+    yield "test"
+    click.echo("hello", file=file)
+    yield "test"
+
+
+def _test_simulate_keyboard_interrupt(file=None):
+    yield "output_before_keyboard_interrupt"
+    raise KeyboardInterrupt()
+
+
+EchoViaPagerTest = namedtuple(
+    "EchoViaPagerTest",
+    (
+        "description",
+        "test_input",
+        "expected_pager",
+        "expected_stdout",
+        "expected_stderr",
+        "expected_error",
+    ),
+)
+
+
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
-@pytest.mark.parametrize("cat", ["cat", "cat ", "cat "])
 @pytest.mark.parametrize(
     "test",
     [
-        # We need lambda here, because pytest will
-        # reuse the parameters, and then the generators
-        # are already used and will not yield anymore
-        ("just text\n", lambda: "just text"),
-        ("iterable\n", lambda: ["itera", "ble"]),
-        ("abcabc\n", lambda: _test_gen_func),
-        ("abcabc\n", lambda: _test_gen_func()),
-        ("012345\n", lambda: (c for c in range(6))),
+        # We need to pass a parameter function instead of a plain param
+        # as pytest.mark.parametrize will reuse the parameters causing the
+        # generators to be used up so they will not yield anymore
+        EchoViaPagerTest(
+            description="Plain string argument",
+            test_input=lambda: "just text",
+            expected_pager="just text\n",
+            expected_stdout="",
+            expected_stderr="",
+            expected_error=None,
+        ),
+        EchoViaPagerTest(
+            description="Iterable argument",
+            test_input=lambda: ["itera", "ble"],
+            expected_pager="iterable\n",
+            expected_stdout="",
+            expected_stderr="",
+            expected_error=None,
+        ),
+        EchoViaPagerTest(
+            description="Generator function argument",
+            test_input=lambda: _test_gen_func,
+            expected_pager="abcabc\n",
+            expected_stdout="",
+            expected_stderr="",
+            expected_error=None,
+        ),
+        EchoViaPagerTest(
+            description="String generator argument",
+            test_input=lambda: _test_gen_func(),
+            expected_pager="abcabc\n",
+            expected_stdout="",
+            expected_stderr="",
+            expected_error=None,
+        ),
+        EchoViaPagerTest(
+            description="Number generator expression argument",
+            test_input=lambda: (c for c in range(6)),
+            expected_pager="012345\n",
+            expected_stdout="",
+            expected_stderr="",
+            expected_error=None,
+        ),
+        EchoViaPagerTest(
+            description="Exception in generator function argument",
+            test_input=lambda: _test_gen_func_fails,
+            # Because generator throws early on, the pager did not have
+            # a chance yet to write the file.
+            expected_pager=None,
+            expected_stdout="",
+            expected_stderr="",
+            expected_error=RuntimeError,
+        ),
+        EchoViaPagerTest(
+            description="Exception in generator argument",
+            test_input=lambda: _test_gen_func_fails,
+            # Because generator throws early on, the pager did not have a
+            # chance yet to write the file.
+            expected_pager=None,
+            expected_stdout="",
+            expected_stderr="",
+            expected_error=RuntimeError,
+        ),
+        EchoViaPagerTest(
+            description="Keyboard interrupt should not terminate the pager",
+            test_input=lambda: _test_simulate_keyboard_interrupt(),
+            # Due to the keyboard interrupt during pager execution, click program
+            # should abort, but the pager should stay open.
+            # This allows users to cancel the program and search in the pager
+            # output, before they decide to terminate the pager.
+            expected_pager="output_before_keyboard_interrupt",
+            expected_stdout="",
+            expected_stderr="",
+            expected_error=KeyboardInterrupt,
+        ),
+        EchoViaPagerTest(
+            description="Writing to stdout during generator execution",
+            test_input=lambda: _test_gen_func_echo(),
+            expected_pager="testtest\n",
+            expected_stdout="hello\n",
+            expected_stderr="",
+            expected_error=None,
+        ),
+        EchoViaPagerTest(
+            description="Writing to stderr during generator execution",
+            test_input=lambda: _test_gen_func_echo(file=sys.stderr),
+            expected_pager="testtest\n",
+            expected_stdout="",
+            expected_stderr="hello\n",
+            expected_error=None,
+        ),
     ],
 )
-def test_echo_via_pager(monkeypatch, capfd, cat, test):
-    monkeypatch.setitem(os.environ, "PAGER", cat)
+def test_echo_via_pager(monkeypatch, capfd, test):
+    pager_out_tmp = f"{tempdir}/pager_out.txt"
+
+    if os.path.exists(pager_out_tmp):
+        os.remove(pager_out_tmp)
+
+    monkeypatch.setitem(os.environ, "PAGER", f"cat > {pager_out_tmp}")
     monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
 
-    expected_output = test[0]
-    test_input = test[1]()
+    test_input = test.test_input()
+    expected_pager = test.expected_pager
+    expected_stdout = test.expected_stdout
+    expected_stderr = test.expected_stderr
+    expected_error = test.expected_error
 
-    click.echo_via_pager(test_input)
+    if expected_error:
+        with pytest.raises(expected_error):
+            click.echo_via_pager(test_input)
+    else:
+        click.echo_via_pager(test_input)
 
     out, err = capfd.readouterr()
-    assert out == expected_output
+
+    if os.path.exists(pager_out_tmp):
+        with open(pager_out_tmp) as f:
+            pager = f.read()
+    else:
+        # The pager process was not started or has been
+        # terminated before it could finish writing
+        pager = None
+
+    assert (
+        pager == expected_pager
+    ), f"Unexpected pager output in test case '{test.description}'"
+    assert (
+        out == expected_stdout
+    ), f"Unexpected stdout in test case '{test.description}'"
+    assert (
+        err == expected_stderr
+    ), f"Unexpected stderr in test case '{test.description}'"
 
 
 def test_echo_color_flag(monkeypatch, capfd):

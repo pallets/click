@@ -68,7 +68,16 @@ Unreleased
     :issue:`2067` :pr:`2068`
 -   Specialized typing of ``progressbar(length=...)`` as ``ProgressBar[int]``.
     :pr:`2630`
+-   Improve ``echo_via_pager`` behaviour in face of errors.
+    :issue:`2674`
 
+    -   Terminate the pager in case a generator passed to ``echo_via_pager``
+        raises an exception.
+    -   Ensure to always close the pipe to the pager process and wait for it
+        to terminate.
+    -   ``echo_via_pager`` will not ignore ``KeyboardInterrupt`` anymore. This
+        allows the user to search for future output of the generator when
+        using less and then aborting the program using ctrl-c.
 
 Version 8.1.8
 -------------
