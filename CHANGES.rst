@@ -31,6 +31,10 @@ Unreleased
 -   When generating a command's name from a decorated function's name, the
     suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
     :issue:`2322`
+-   Keep `<stdout>` and `<stderr>` streams independent in `CliRunner`. Always
+    collect `<stderr>` output and never raise an exception. Add a new
+    `<output>` stream to simulate what the user sees in its terminal. Removes
+    the ``mix_stderr`` parameter in ``CliRunner``. :issue:`2522` :pr:`2523`
 
 
 Version 8.1.8
