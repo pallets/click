@@ -3,39 +3,60 @@ Parameters
 
 .. currentmodule:: click
 
-Click supports two types of parameters for scripts: options and arguments.
-There is generally some confusion among authors of command line scripts of
-when to use which, so here is a quick overview of the differences.  As its
-name indicates, an option is optional.  While arguments can be optional
-within reason, they are much more restricted in how optional they can be.
+Click supports only two types  of parameters for scripts (by design): options and arguments.
 
-To help you decide between options and arguments, the recommendation is
-to use arguments exclusively for things like going to subcommands or input
-filenames / URLs, and have everything else be an option instead.
+Options
+----------------
 
-Differences
------------
+*   Are optional.
+*   Recommended to use for everything except subcommands, urls, or files.
+*   Can take a fixed number of arguments. The default is 1. They may be specified multiple times using :ref:`multiple-options`.
+*   Are fully documented by the help page.
+*   Have automatic prompting for missing input.
+*   Can act as flags (boolean or otherwise).
+*   Can be pulled from environment variables.
 
-Arguments can do less than options.  The following features are only
-available for options:
+Arguments
+----------------
 
-*   automatic prompting for missing input
-*   act as flags (boolean or otherwise)
-*   option values can be pulled from environment variables, arguments can not
-*   options are fully documented in the help page, arguments are not
-    (:ref:`this is intentional <documenting-arguments>` as arguments
-    might be too specific to be automatically documented)
+*   Are optional with in reason, but not entirely so.
+*   Recommended to use for subcommands, urls, or files.
+*   Can take an arbitrary number of arguments.
+*   Are not fully documented by the help page since they may be too specific to be automatically documented.  For more see :ref:`documenting-arguments`.
+*   Can be pulled from environment variables but only explicitly named ones. For more see :ref:`environment-variables`.
 
-On the other hand arguments, unlike options, can accept an arbitrary number
-of arguments.  Options can strictly ever only accept a fixed number of
-arguments (defaults to 1), or they may be specified multiple times using
-:ref:`multiple-options`.
+.. _parameter_names:
+
+Parameter Names
+---------------
+
+Parameters (options and arguments) have a name that will be used as
+the Python argument name when calling the decorated function with
+values.
+
+.. click:example::
+
+    @click.command()
+    @click.argument('filename')
+    @click.option('-t', '--times', type=int)
+    def multi_echo(filename, times):
+        """Print value filename multiple times."""
+        for x in range(times):
+            click.echo(filename)
+
+In the above example the argument's name is ``filename``. The name must match the python arg name. To provide a different name for use in help text, see :ref:`doc-meta-variables`.
+The option's names are ``-t`` and ``--times``. More names are available for options and are covered in :ref:`options`.
+
+And what it looks like when run:
+
+.. click:run::
+
+    invoke(multi_echo, ['--times=3', 'index.txt'], prog_name='multi_echo')
 
 Parameter Types
 ---------------
 
-Parameters can be of different types.  Types can be implemented with
-different behavior and some are supported out of the box:
+The supported parameter types are:
 
 ``str`` / :data:`click.STRING`:
     The default parameter type which indicates unicode strings.
@@ -74,37 +95,10 @@ different behavior and some are supported out of the box:
 .. autoclass:: DateTime
    :noindex:
 
-Custom parameter types can be implemented by subclassing
-:class:`click.ParamType`.  For simple cases, passing a Python function that
-fails with a `ValueError` is also supported, though discouraged.
+How to Implement Custom Types
+-------------------------------
 
-.. _parameter_names:
-
-Parameter Names
----------------
-
-Parameters (both options and arguments) have a name that will be used as
-the Python argument name when calling the decorated function with
-values.
-
-Arguments take only one positional name. To provide a different name for
-use in help text, see :ref:`doc-meta-variables`.
-
-Options can have many names that may be prefixed with one or two dashes.
-Names with one dash are parsed as short options, names with two are
-parsed as long options. If a name is not prefixed, it is used as the
-Python argument name and not parsed as an option name. Otherwise, the
-first name with a two dash prefix is used, or the first with a one dash
-prefix if there are none with two. The prefix is removed and dashes are
-converted to underscores to get the Python argument name.
-
-
-Implementing Custom Types
--------------------------
-
-To implement a custom type, you need to subclass the :class:`ParamType`
-class. Override the :meth:`~ParamType.convert` method to convert the
-value from a string to the correct type.
+To implement a custom type, you need to subclass the :class:`ParamType` class. For simple cases, passing a Python function that fails with a `ValueError` is also supported, though discouraged. Override the :meth:`~ParamType.convert` method to convert the value from a string to the correct type.
 
 The following code implements an integer type that accepts hex and octal
 numbers in addition to normal integers, and converts them into regular
