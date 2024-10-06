@@ -226,6 +226,11 @@ class Context:
         value is not set, it defaults to the value from the parent
         context. ``Command.show_default`` overrides this default for the
         specific command.
+    :param dynamic_params: A list of :class:`Parameter` objects that the
+        attached command will use.
+
+    .. versionchanged:: 8.2
+       Added the ``dynamic_params`` parameter.
 
     .. versionchanged:: 8.2
         The ``protected_args`` attribute is deprecated and will be removed in
@@ -278,6 +283,7 @@ class Context:
         token_normalize_func: t.Callable[[str], str] | None = None,
         color: bool | None = None,
         show_default: bool | None = None,
+        dynamic_params: list[Parameter] | None = None,
     ) -> None:
         #: the parent context or `None` if none exists.
         self.parent = parent
@@ -424,6 +430,12 @@ class Context:
 
         #: Show option default values when formatting help text.
         self.show_default: bool | None = show_default
+
+        if dynamic_params is None:
+            dynamic_params = []
+
+        #: Allow for dynamic parameters.
+        self.dynamic_params: list[Parameter] = dynamic_params
 
         self._close_callbacks: list[t.Callable[[], t.Any]] = []
         self._depth = 0
@@ -951,11 +963,11 @@ class Command:
         return formatter.getvalue().rstrip("\n")
 
     def get_params(self, ctx: Context) -> list[Parameter]:
-        rv = self.params
-        help_option = self.get_help_option(ctx)
+        rv = [*self.params, *ctx.dynamic_params]
 
+        help_option = self.get_help_option(ctx)
         if help_option is not None:
-            rv = [*rv, help_option]
+            rv.append(help_option)
 
         return rv
 

@@ -409,3 +409,17 @@ def test_abort_exceptions_with_disabled_standalone_mode(runner, exc):
     assert rv.exit_code == 1
     assert isinstance(rv.exception.__cause__, exc)
     assert rv.exception.__cause__.args == ("catch me!",)
+
+
+def test_dynamic_params(runner):
+    def callback(ctx, p, v):
+        ctx.dynamic_params.append(click.Option([f"--{v}"]))
+        return v
+
+    @click.command()
+    @click.option("--dyn", required=True, is_eager=True, callback=callback)
+    def command(dyn, **kwargs):
+        assert dyn in kwargs
+        assert kwargs[dyn] == "bar"
+
+    runner.invoke(command, ["--dyn", "foo", "--foo", "bar"])
