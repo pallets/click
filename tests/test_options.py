@@ -316,6 +316,7 @@ def test_dynamic_default_help_special_method(runner):
 
     opt = click.Option(["-a"], default=Value(), show_default=True)
     ctx = click.Context(click.Command("cli"))
+    assert opt.get_help_extra(ctx) == {"default": "special value"}
     assert "special value" in opt.get_help_record(ctx)[1]
 
 
@@ -331,6 +332,7 @@ def test_dynamic_default_help_special_method(runner):
 def test_intrange_default_help_text(type, expect):
     option = click.Option(["--num"], type=type, show_default=True, default=2)
     context = click.Context(click.Command("test"))
+    assert option.get_help_extra(context) == {"default": "2", "range": expect}
     result = option.get_help_record(context)[1]
     assert expect in result
 
@@ -339,6 +341,7 @@ def test_count_default_type_help():
     """A count option with the default type should not show >=0 in help."""
     option = click.Option(["--count"], count=True, help="some words")
     context = click.Context(click.Command("test"))
+    assert option.get_help_extra(context) == {}
     result = option.get_help_record(context)[1]
     assert result == "some words"
 
@@ -354,6 +357,7 @@ def test_file_type_help_default():
         ["--in"], type=click.File(), default=__file__, show_default=True
     )
     context = click.Context(click.Command("test"))
+    assert option.get_help_extra(context) == {"default": __file__}
     result = option.get_help_record(context)[1]
     assert __file__ in result
 
@@ -741,6 +745,7 @@ def test_show_default_boolean_flag_name(runner, default, expect):
         help="Enable/Disable the cache.",
     )
     ctx = click.Context(click.Command("test"))
+    assert opt.get_help_extra(ctx) == {"default": expect}
     message = opt.get_help_record(ctx)[1]
     assert f"[default: {expect}]" in message
 
@@ -757,6 +762,7 @@ def test_show_true_default_boolean_flag_value(runner):
         help="Enable the cache.",
     )
     ctx = click.Context(click.Command("test"))
+    assert opt.get_help_extra(ctx) == {"default": "True"}
     message = opt.get_help_record(ctx)[1]
     assert "[default: True]" in message
 
@@ -774,6 +780,7 @@ def test_hide_false_default_boolean_flag_value(runner, default):
         help="Enable the cache.",
     )
     ctx = click.Context(click.Command("test"))
+    assert opt.get_help_extra(ctx) == {}
     message = opt.get_help_record(ctx)[1]
     assert "[default: " not in message
 
@@ -782,6 +789,7 @@ def test_show_default_string(runner):
     """When show_default is a string show that value as default."""
     opt = click.Option(["--limit"], show_default="unlimited")
     ctx = click.Context(click.Command("cli"))
+    assert opt.get_help_extra(ctx) == {"default": "(unlimited)"}
     message = opt.get_help_record(ctx)[1]
     assert "[default: (unlimited)]" in message
 
@@ -798,6 +806,7 @@ def test_do_not_show_no_default(runner):
     """When show_default is True and no default is set do not show None."""
     opt = click.Option(["--limit"], show_default=True)
     ctx = click.Context(click.Command("cli"))
+    assert opt.get_help_extra(ctx) == {}
     message = opt.get_help_record(ctx)[1]
     assert "[default: None]" not in message
 
@@ -808,28 +817,30 @@ def test_do_not_show_default_empty_multiple():
     """
     opt = click.Option(["-a"], multiple=True, help="values", show_default=True)
     ctx = click.Context(click.Command("cli"))
+    assert opt.get_help_extra(ctx) == {}
     message = opt.get_help_record(ctx)[1]
     assert message == "values"
 
 
 @pytest.mark.parametrize(
-    ("ctx_value", "opt_value", "expect"),
+    ("ctx_value", "opt_value", "extra_value", "expect"),
     [
-        (None, None, False),
-        (None, False, False),
-        (None, True, True),
-        (False, None, False),
-        (False, False, False),
-        (False, True, True),
-        (True, None, True),
-        (True, False, False),
-        (True, True, True),
-        (False, "one", True),
+        (None, None, {}, False),
+        (None, False, {}, False),
+        (None, True, {"default": "1"}, True),
+        (False, None, {}, False),
+        (False, False, {}, False),
+        (False, True, {"default": "1"}, True),
+        (True, None, {"default": "1"}, True),
+        (True, False, {}, False),
+        (True, True, {"default": "1"}, True),
+        (False, "one", {"default": "(one)"}, True),
     ],
 )
-def test_show_default_precedence(ctx_value, opt_value, expect):
+def test_show_default_precedence(ctx_value, opt_value, extra_value, expect):
     ctx = click.Context(click.Command("test"), show_default=ctx_value)
     opt = click.Option("-a", default=1, help="value", show_default=opt_value)
+    assert opt.get_help_extra(ctx) == extra_value
     help = opt.get_help_record(ctx)[1]
     assert ("default:" in help) is expect
 
