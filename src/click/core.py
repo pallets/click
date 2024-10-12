@@ -1127,7 +1127,7 @@ class Command:
 
         ctx = self.context_class(self, info_name=info_name, parent=parent, **extra)
 
-        with ctx.scope(cleanup=False):
+        with ctx:
             self.parse_args(ctx, args)
         return ctx
 
