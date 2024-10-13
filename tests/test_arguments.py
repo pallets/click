@@ -197,6 +197,19 @@ def test_nargs_envvar(runner, nargs, value, expect):
     else:
         assert result.return_value == expect
 
+def test_envvar_flag_value(runner):
+    @click.command()
+    # is_flag is implicitly true
+    @click.option('--upper', flag_value='upper', envvar='UPPER')
+    def cmd(upper):
+        click.echo(upper)
+        return upper
+
+    # For whatever value of the `env` variable, if it exists, the flag should be `upper`
+    result = runner.invoke(cmd, env={"UPPER": "whatever"})
+    assert result.output.strip() == 'upper'
+
+    
 
 def test_nargs_envvar_only_if_values_empty(runner):
     @click.command()
