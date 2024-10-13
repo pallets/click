@@ -2887,6 +2887,8 @@ class Option(Parameter):
         rv = super().resolve_envvar_value(ctx)
 
         if rv is not None:
+            if self.is_flag and self.flag_value:
+                return str(self.flag_value)
             return rv
 
         if (
