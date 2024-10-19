@@ -228,6 +228,9 @@ class Context:
         specific command.
 
     .. versionchanged:: 8.2
+       Added the ``dynamic_params`` attribute.
+
+    .. versionchanged:: 8.2
         The ``protected_args`` attribute is deprecated and will be removed in
         Click 9.0. ``args`` will contain remaining unparsed tokens.
 
@@ -424,6 +427,12 @@ class Context:
 
         #: Show option default values when formatting help text.
         self.show_default: bool | None = show_default
+
+        #: A list of :class:`Parameter` objects that the attached command will
+        #: use.  These will be stored in the :attr:`args` attribute if both the
+        #: :attr:`allow_extra_args` and :attr:`ignore_unknown_options` flags
+        #: are set to ``True``.
+        self.dynamic_params: list[Parameter] = []
 
         self._close_callbacks: list[t.Callable[[], t.Any]] = []
         self._depth = 0
@@ -951,11 +960,11 @@ class Command:
         return formatter.getvalue().rstrip("\n")
 
     def get_params(self, ctx: Context) -> list[Parameter]:
-        rv = self.params
-        help_option = self.get_help_option(ctx)
+        rv = [*self.params, *ctx.dynamic_params]
 
+        help_option = self.get_help_option(ctx)
         if help_option is not None:
-            rv = [*rv, help_option]
+            rv.append(help_option)
 
         return rv
 
@@ -1130,6 +1139,22 @@ class Command:
         with ctx.scope(cleanup=False):
             self.parse_args(ctx, args)
         return ctx
+
+    @classmethod
+    def make_dynamic_context(cls, ctx: Context, **extra: t.Any) -> Context:
+        """This function creates a new context based on the given context's
+        :attr:`Context.dynamic_params` attribute.  This is useful for parsing the
+        collected dynamic arguments using the new context's :attr:`Context.params`.
+
+        :param ctx: the context to inherit dynamic parameters from.
+        :param extra: extra keyword arguments forwarded to the context
+                      constructor.
+
+        .. versionchanged:: 8.2
+            Added the ``make_dynamic_context`` classmethod.
+        """
+        cmd = cls(name=None, params=ctx.dynamic_params)
+        return cmd.make_context(info_name=None, args=ctx.args, parent=ctx, **extra)
 
     def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
         if not args and self.no_args_is_help and not ctx.resilient_parsing:

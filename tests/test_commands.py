@@ -409,3 +409,38 @@ def test_abort_exceptions_with_disabled_standalone_mode(runner, exc):
     assert rv.exit_code == 1
     assert isinstance(rv.exception.__cause__, exc)
     assert rv.exception.__cause__.args == ("catch me!",)
+
+
+def test_dynamic_params(runner):
+    def callback(ctx, p, v):
+        ctx.dynamic_params.append(click.Option([f"--{v}"]))
+        return v
+
+    @click.command(
+        context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+    )
+    @click.option("--dyn", required=True, is_eager=True, callback=callback)
+    @click.pass_context
+    def command(ctx, dyn):
+        dynamic_context = command.make_dynamic_context(ctx)
+        assert dynamic_context.params == {dyn: "bar"}
+
+    rv = runner.invoke(command, ["--dyn", "foo", "--foo", "bar"])
+    assert rv.exit_code == 0, rv.output
+
+
+def test_dynamic_params_help(runner):
+    def callback(ctx, p, v):
+        ctx.dynamic_params.append(click.Option([f"--{v}"]))
+        return v
+
+    @click.command(
+        context_settings={"allow_extra_args": True, "ignore_unknown_options": True}
+    )
+    @click.option("--dyn", default="foo", is_eager=True, callback=callback)
+    @click.pass_context
+    def command(ctx, dyn):
+        pass
+
+    rv = runner.invoke(command, ["--help"])
+    assert "--foo" in rv.output, rv.output
