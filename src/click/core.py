@@ -434,7 +434,9 @@ class Context:
         if dynamic_params is None:
             dynamic_params = []
 
-        #: Allow for dynamic parameters.
+        #: Allow for dynamic parameters. These will be stored in the
+        #: :attr:`args` attribute if both :attr:`Context.allow_extra_args` and
+        #: :attr:`ignore_unknown_options` flags are set to ``True``.
         self.dynamic_params: list[Parameter] = dynamic_params
 
         self._close_callbacks: list[t.Callable[[], t.Any]] = []
@@ -1142,6 +1144,22 @@ class Command:
         with ctx.scope(cleanup=False):
             self.parse_args(ctx, args)
         return ctx
+
+    @classmethod
+    def make_dynamic_context(cls, ctx: Context, **extra: t.Any) -> Context:
+        """This function creates a new context based on the given context's
+        :attr:`Context.dynamic_params` attribute.  This is useful for parsing the
+        collected dynamic arguments using the new context's :attr:`Context.params`.
+
+        :param ctx: the context to inherit dynamic parameters from.
+        :param extra: extra keyword arguments forwarded to the context
+                      constructor.
+
+        .. versionchanged:: 8.2
+            Added.
+        """
+        cmd = cls(name=None, params=ctx.dynamic_params)
+        return cmd.make_context(info_name=None, args=ctx.args, parent=ctx, **extra)
 
     def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
