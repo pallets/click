@@ -429,9 +429,9 @@ class Context:
         self.show_default: bool | None = show_default
 
         #: A list of :class:`Parameter` objects that the attached command will
-        #: use.  These will be stored in the :attr:`args` attribute if both
-        #: :attr:`Context.allow_extra_args` and :attr:`ignore_unknown_options`
-        #: flags are set to ``True``.
+        #: use.  These will be stored in the :attr:`args` attribute if both the
+        #: :attr:`allow_extra_args` and :attr:`ignore_unknown_options` flags
+        #: are set to ``True``.
         self.dynamic_params: list[Parameter] = []
 
         self._close_callbacks: list[t.Callable[[], t.Any]] = []
