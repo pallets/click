@@ -31,7 +31,8 @@ Unreleased
 -   When generating a command's name from a decorated function's name, the
     suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
     :issue:`2322`
--   Add ``dynamic_params`` property to ``Context``. :pr:`2784`
+-   Add ``dynamic_params`` property to ``Context`` and ``make_dynamic_context``
+    classmethod to ``Command``. :pr:`2784`
 
 
 Version 8.1.8
