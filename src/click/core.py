@@ -1151,7 +1151,7 @@ class Command:
                       constructor.
 
         .. versionchanged:: 8.2
-            Added.
+            Added the ``make_dynamic_context`` classmethod.
         """
         cmd = cls(name=None, params=ctx.dynamic_params)
         return cmd.make_context(info_name=None, args=ctx.args, parent=ctx, **extra)
