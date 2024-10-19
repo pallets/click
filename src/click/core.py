@@ -226,11 +226,9 @@ class Context:
         value is not set, it defaults to the value from the parent
         context. ``Command.show_default`` overrides this default for the
         specific command.
-    :param dynamic_params: A list of :class:`Parameter` objects that the
-        attached command will use.
 
     .. versionchanged:: 8.2
-       Added the ``dynamic_params`` parameter.
+       Added the ``dynamic_params`` attribute.
 
     .. versionchanged:: 8.2
         The ``protected_args`` attribute is deprecated and will be removed in
@@ -283,7 +281,6 @@ class Context:
         token_normalize_func: t.Callable[[str], str] | None = None,
         color: bool | None = None,
         show_default: bool | None = None,
-        dynamic_params: list[Parameter] | None = None,
     ) -> None:
         #: the parent context or `None` if none exists.
         self.parent = parent
@@ -431,13 +428,11 @@ class Context:
         #: Show option default values when formatting help text.
         self.show_default: bool | None = show_default
 
-        if dynamic_params is None:
-            dynamic_params = []
-
-        #: Allow for dynamic parameters. These will be stored in the
-        #: :attr:`args` attribute if both :attr:`Context.allow_extra_args` and
-        #: :attr:`ignore_unknown_options` flags are set to ``True``.
-        self.dynamic_params: list[Parameter] = dynamic_params
+        #: A list of :class:`Parameter` objects that the attached command will
+        #: use.  These will be stored in the :attr:`args` attribute if both
+        #: :attr:`Context.allow_extra_args` and :attr:`ignore_unknown_options`
+        #: flags are set to ``True``.
+        self.dynamic_params: list[Parameter] = []
 
         self._close_callbacks: list[t.Callable[[], t.Any]] = []
         self._depth = 0
