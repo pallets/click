@@ -41,6 +41,8 @@ Utilities
 
 .. autofunction:: echo_via_pager
 
+.. autofunction:: get_pager_file
+
 .. autofunction:: prompt
 
 .. autofunction:: confirm
