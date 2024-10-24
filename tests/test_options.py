@@ -1,3 +1,4 @@
+import enum
 import os
 import re
 
@@ -5,6 +6,15 @@ import pytest
 
 import click
 from click import Option
+
+
+class MyEnum(enum.Enum):
+    """Dummy enum for unit tests."""
+
+    ONE = "one"
+    TWO = "two"
+    THREE = "three"
+    ONE_ALIAS = ONE
 
 
 def test_prefixes(runner):
@@ -569,6 +579,67 @@ def test_case_insensitive_choice_returned_exactly(runner):
     result = runner.invoke(cmd, ["--foo", "apple"])
     assert result.exit_code == 0
     assert result.output == "Apple\n"
+
+
+def test_missing_enum_choice(runner):
+    @click.command()
+    @click.option("--foo", type=click.EnumChoice(MyEnum), required=True)
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd)
+    assert result.exit_code == 2
+    error, separator, choices = result.output.partition("Choose from")
+    assert "Error: Missing option '--foo'. " in error
+    assert "Choose from" in separator
+    assert "ONE" in choices
+    assert "TWO" in choices
+    assert "THREE" in choices
+    assert "ONE_ALIAS" not in choices
+
+
+def test_case_insensitive_enum_choice(runner):
+    @click.command()
+    @click.option("--foo", type=click.EnumChoice(MyEnum, case_sensitive=False))
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd, ["--foo", "one"])
+    assert result.exit_code == 0
+    assert result.output == "MyEnum.ONE\n"
+
+    result = runner.invoke(cmd, ["--foo", "tHREE"])
+    assert result.exit_code == 0
+    assert result.output == "MyEnum.THREE\n"
+
+    result = runner.invoke(cmd, ["--foo", "Two"])
+    assert result.exit_code == 0
+    assert result.output == "MyEnum.TWO\n"
+
+    @click.command()
+    @click.option("--foo", type=click.EnumChoice(MyEnum))
+    def cmd2(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd2, ["--foo", "one"])
+    assert result.exit_code == 2
+
+    result = runner.invoke(cmd2, ["--foo", "tHREE"])
+    assert result.exit_code == 2
+
+    result = runner.invoke(cmd2, ["--foo", "TWO"])
+    assert result.exit_code == 0
+
+
+def test_case_insensitive_enum_choice_returned_exactly(runner):
+    @click.command()
+    @click.option("--foo", type=click.EnumChoice(MyEnum, case_sensitive=False))
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd, ["--foo", "ONE"])
+    assert result.exit_code == 0
+    assert result.output == "MyEnum.ONE\n"
 
 
 def test_option_help_preserve_paragraphs(runner):
