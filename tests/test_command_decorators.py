@@ -11,6 +11,26 @@ def test_command_no_parens(runner):
     assert result.output == "hello\n"
 
 
+def test_custom_command_no_parens(runner):
+    class CustomCommand(click.Command):
+        pass
+
+    class CustomGroup(click.Group):
+        command_class = CustomCommand
+
+    @click.group(cls=CustomGroup)
+    def grp():
+        pass
+
+    @grp.command
+    def cli():
+        click.echo("hello custom command class")
+
+    result = runner.invoke(cli)
+    assert result.exception is None
+    assert result.output == "hello custom command class\n"
+
+
 def test_group_no_parens(runner):
     @click.group
     def grp():

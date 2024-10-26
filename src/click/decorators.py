@@ -21,7 +21,6 @@ if t.TYPE_CHECKING:
 R = t.TypeVar("R")
 T = t.TypeVar("T")
 _AnyCallable = t.Callable[..., t.Any]
-_Decorator: "te.TypeAlias" = t.Callable[[T], T]
 FC = t.TypeVar("FC", bound=t.Union[_AnyCallable, Command])
 
 
@@ -135,8 +134,7 @@ CmdType = t.TypeVar("CmdType", bound=Command)
 
 # variant: no call, directly as decorator for a function.
 @t.overload
-def command(name: _AnyCallable) -> Command:
-    ...
+def command(name: _AnyCallable) -> Command: ...
 
 
 # variant: with positional name and with positional or keyword cls argument:
@@ -146,31 +144,24 @@ def command(
     name: t.Optional[str],
     cls: t.Type[CmdType],
     **attrs: t.Any,
-) -> t.Callable[[_AnyCallable], CmdType]:
-    ...
+) -> t.Callable[[_AnyCallable], CmdType]: ...
 
 
-# variant: name omitted, cls _must_ be a keyword argument, @command(cmd=CommandCls, ...)
-# The correct way to spell this overload is to use keyword-only argument syntax:
-# def command(*, cls: t.Type[CmdType], **attrs: t.Any) -> ...
-# However, mypy thinks this doesn't fit the overloaded function. Pyright does
-# accept that spelling, and the following work-around makes pyright issue a
-# warning that CmdType could be left unsolved, but mypy sees it as fine. *shrug*
+# variant: name omitted, cls _must_ be a keyword argument, @command(cls=CommandCls, ...)
 @t.overload
 def command(
     name: None = None,
-    cls: t.Type[CmdType] = ...,
+    *,
+    cls: t.Type[CmdType],
     **attrs: t.Any,
-) -> t.Callable[[_AnyCallable], CmdType]:
-    ...
+) -> t.Callable[[_AnyCallable], CmdType]: ...
 
 
 # variant: with optional string name, no cls argument provided.
 @t.overload
 def command(
     name: t.Optional[str] = ..., cls: None = None, **attrs: t.Any
-) -> t.Callable[[_AnyCallable], Command]:
-    ...
+) -> t.Callable[[_AnyCallable], Command]: ...
 
 
 def command(
@@ -260,8 +251,7 @@ GrpType = t.TypeVar("GrpType", bound=Group)
 
 # variant: no call, directly as decorator for a function.
 @t.overload
-def group(name: _AnyCallable) -> Group:
-    ...
+def group(name: _AnyCallable) -> Group: ...
 
 
 # variant: with positional name and with positional or keyword cls argument:
@@ -271,31 +261,24 @@ def group(
     name: t.Optional[str],
     cls: t.Type[GrpType],
     **attrs: t.Any,
-) -> t.Callable[[_AnyCallable], GrpType]:
-    ...
+) -> t.Callable[[_AnyCallable], GrpType]: ...
 
 
 # variant: name omitted, cls _must_ be a keyword argument, @group(cmd=GroupCls, ...)
-# The _correct_ way to spell this overload is to use keyword-only argument syntax:
-# def group(*, cls: t.Type[GrpType], **attrs: t.Any) -> ...
-# However, mypy thinks this doesn't fit the overloaded function. Pyright does
-# accept that spelling, and the following work-around makes pyright issue a
-# warning that GrpType could be left unsolved, but mypy sees it as fine. *shrug*
 @t.overload
 def group(
     name: None = None,
-    cls: t.Type[GrpType] = ...,
+    *,
+    cls: t.Type[GrpType],
     **attrs: t.Any,
-) -> t.Callable[[_AnyCallable], GrpType]:
-    ...
+) -> t.Callable[[_AnyCallable], GrpType]: ...
 
 
 # variant: with optional string name, no cls argument provided.
 @t.overload
 def group(
     name: t.Optional[str] = ..., cls: None = None, **attrs: t.Any
-) -> t.Callable[[_AnyCallable], Group]:
-    ...
+) -> t.Callable[[_AnyCallable], Group]: ...
 
 
 def group(
@@ -329,47 +312,63 @@ def _param_memo(f: t.Callable[..., t.Any], param: Parameter) -> None:
         f.__click_params__.append(param)  # type: ignore
 
 
-def argument(*param_decls: str, **attrs: t.Any) -> _Decorator[FC]:
+def argument(
+    *param_decls: str, cls: t.Optional[t.Type[Argument]] = None, **attrs: t.Any
+) -> t.Callable[[FC], FC]:
     """Attaches an argument to the command.  All positional arguments are
     passed as parameter declarations to :class:`Argument`; all keyword
     arguments are forwarded unchanged (except ``cls``).
     This is equivalent to creating an :class:`Argument` instance manually
     and attaching it to the :attr:`Command.params` list.
 
+    For the default argument class, refer to :class:`Argument` and
+    :class:`Parameter` for descriptions of parameters.
+
     :param cls: the argument class to instantiate.  This defaults to
                 :class:`Argument`.
+    :param param_decls: Passed as positional arguments to the constructor of
+        ``cls``.
+    :param attrs: Passed as keyword arguments to the constructor of ``cls``.
     """
+    if cls is None:
+        cls = Argument
 
     def decorator(f: FC) -> FC:
-        ArgumentClass = attrs.pop("cls", None) or Argument
-        _param_memo(f, ArgumentClass(param_decls, **attrs))
+        _param_memo(f, cls(param_decls, **attrs))
         return f
 
     return decorator
 
 
-def option(*param_decls: str, **attrs: t.Any) -> _Decorator[FC]:
+def option(
+    *param_decls: str, cls: t.Optional[t.Type[Option]] = None, **attrs: t.Any
+) -> t.Callable[[FC], FC]:
     """Attaches an option to the command.  All positional arguments are
     passed as parameter declarations to :class:`Option`; all keyword
     arguments are forwarded unchanged (except ``cls``).
     This is equivalent to creating an :class:`Option` instance manually
     and attaching it to the :attr:`Command.params` list.
 
+    For the default option class, refer to :class:`Option` and
+    :class:`Parameter` for descriptions of parameters.
+
     :param cls: the option class to instantiate.  This defaults to
                 :class:`Option`.
+    :param param_decls: Passed as positional arguments to the constructor of
+        ``cls``.
+    :param attrs: Passed as keyword arguments to the constructor of ``cls``.
     """
+    if cls is None:
+        cls = Option
 
     def decorator(f: FC) -> FC:
-        # Issue 926, copy attrs, so pre-defined options can re-use the same cls=
-        option_attrs = attrs.copy()
-        OptionClass = option_attrs.pop("cls", None) or Option
-        _param_memo(f, OptionClass(param_decls, **option_attrs))
+        _param_memo(f, cls(param_decls, **attrs))
         return f
 
     return decorator
 
 
-def confirmation_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def confirmation_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--yes`` option which shows a prompt before continuing if
     not passed. If the prompt is declined, the program will exit.
 
@@ -393,7 +392,7 @@ def confirmation_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
     return option(*param_decls, **kwargs)
 
 
-def password_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def password_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--password`` option which prompts for a password, hiding
     input and asking to enter the value again for confirmation.
 
@@ -417,7 +416,7 @@ def version_option(
     prog_name: t.Optional[str] = None,
     message: t.Optional[str] = None,
     **kwargs: t.Any,
-) -> _Decorator[FC]:
+) -> t.Callable[[FC], FC]:
     """Add a ``--version`` option which immediately prints the version
     number and exits the program.
 
@@ -488,7 +487,7 @@ def version_option(
             metadata: t.Optional[types.ModuleType]
 
             try:
-                from importlib import metadata  # type: ignore
+                from importlib import metadata
             except ImportError:
                 # Python < 3.8
                 import importlib_metadata as metadata  # type: ignore
@@ -507,8 +506,7 @@ def version_option(
             )
 
         echo(
-            t.cast(str, message)
-            % {"prog": prog_name, "package": package_name, "version": version},
+            message % {"prog": prog_name, "package": package_name, "version": version},
             color=ctx.color,
         )
         ctx.exit()
@@ -524,7 +522,7 @@ def version_option(
     return option(*param_decls, **kwargs)
 
 
-def help_option(*param_decls: str, **kwargs: t.Any) -> _Decorator[FC]:
+def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Add a ``--help`` option which immediately prints the help page
     and exits the program.
 

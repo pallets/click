@@ -5,7 +5,7 @@ from io import BytesIO
 import pytest
 
 import click
-from click._compat import WIN
+from click.exceptions import ClickException
 from click.testing import CliRunner
 
 
@@ -184,7 +184,6 @@ def test_catch_exceptions():
     assert result.exit_code == 1
 
 
-@pytest.mark.skipif(WIN, reason="Test does not make sense on Windows.")
 def test_with_color():
     @click.command()
     def cli():
@@ -199,6 +198,26 @@ def test_with_color():
     result = runner.invoke(cli, color=True)
     assert result.output == f"{click.style('hello world', fg='blue')}\n"
     assert not result.exception
+
+
+def test_with_color_errors():
+    class CLIError(ClickException):
+        def format_message(self) -> str:
+            return click.style(self.message, fg="red")
+
+    @click.command()
+    def cli():
+        raise CLIError("Red error")
+
+    runner = CliRunner()
+
+    result = runner.invoke(cli)
+    assert result.output == "Error: Red error\n"
+    assert result.exception
+
+    result = runner.invoke(cli, color=True)
+    assert result.output == f"Error: {click.style('Red error', fg='red')}\n"
+    assert result.exception
 
 
 def test_with_color_but_pause_not_blocking():
@@ -321,7 +340,7 @@ def test_stderr():
     assert result_mix.stdout == "stdout\nstderr\n"
 
     with pytest.raises(ValueError):
-        result_mix.stderr
+        result_mix.stderr  # noqa B018
 
     @click.command()
     def cli_empty_stderr():

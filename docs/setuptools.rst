@@ -81,10 +81,12 @@ Contents of ``setup.py``:
         },
     )
 
-The magic is in the ``entry_points`` parameter.  Below
-``console_scripts``, each line identifies one console script.  The first
-part before the equals sign (``=``) is the name of the script that should
-be generated, the second part is the import path followed by a colon
+The magic is in the ``entry_points`` parameter.  Read the full
+`entry_points <https://packaging.python.org/en/latest/specifications/entry-points/>`_
+specification for more details.  Below ``console_scripts``, each
+line identifies one console script.  The first part before the
+equals sign (``=``) is the name of the script that should be
+generated, the second part is the import path followed by a colon
 (``:``) with the Click command.
 
 That's it.
@@ -97,8 +99,8 @@ package:
 
 .. code-block:: console
 
-    $ virtualenv venv
-    $ . venv/bin/activate
+    $ python3 -m venv .venv
+    $ . .venv/bin/activate
     $ pip install --editable .
 
 Afterwards, your command should be available:
