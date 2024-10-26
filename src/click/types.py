@@ -304,7 +304,7 @@ class Choice(ParamType):
         if normed_value in normed_choices:
             return normed_choices[normed_value]
 
-        self.fail(self.get_missing_message(value), param, ctx)
+        self.fail(self.get_invalid_choice_message(value), param, ctx)
 
     def get_invalid_choice_message(self, value: t.Any) -> str:
         choices_str = ", ".join(map(repr, self.choices))
