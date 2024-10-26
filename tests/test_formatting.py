@@ -296,6 +296,26 @@ def test_truncating_docstring(runner):
     ]
 
 
+def test_truncating_docstring_no_help(runner):
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        """
+        \f
+
+        This text should be truncated.
+        """
+
+    result = runner.invoke(cli, ["--help"], terminal_width=60)
+    assert not result.exception
+    assert result.output.splitlines() == [
+        "Usage: cli [OPTIONS]",
+        "",
+        "Options:",
+        "  --help  Show this message and exit.",
+    ]
+
+
 def test_removing_multiline_marker(runner):
     @click.group()
     def cli():

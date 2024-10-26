@@ -4,6 +4,7 @@ writing command line scripts fun. Unlike other modules, it's based
 around a simple API that does not come with too much magic and is
 composable.
 """
+
 from .core import Argument as Argument
 from .core import BaseCommand as BaseCommand
 from .core import Command as Command
@@ -70,4 +71,4 @@ from .utils import get_binary_stream as get_binary_stream
 from .utils import get_text_stream as get_text_stream
 from .utils import open_file as open_file
 
-__version__ = "8.2.0.dev0"
+__version__ = "8.1.7"

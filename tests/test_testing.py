@@ -5,7 +5,6 @@ from io import BytesIO
 import pytest
 
 import click
-from click._compat import WIN
 from click.exceptions import ClickException
 from click.testing import CliRunner
 
@@ -185,7 +184,6 @@ def test_catch_exceptions():
     assert result.exit_code == 1
 
 
-@pytest.mark.skipif(WIN, reason="Test does not make sense on Windows.")
 def test_with_color():
     @click.command()
     def cli():
@@ -202,7 +200,6 @@ def test_with_color():
     assert not result.exception
 
 
-@pytest.mark.skipif(WIN, reason="Test does not make sense on Windows.")
 def test_with_color_errors():
     class CLIError(ClickException):
         def format_message(self) -> str:
@@ -343,7 +340,7 @@ def test_stderr():
     assert result_mix.stdout == "stdout\nstderr\n"
 
     with pytest.raises(ValueError):
-        result_mix.stderr
+        result_mix.stderr  # noqa B018
 
     @click.command()
     def cli_empty_stderr():
