@@ -378,7 +378,7 @@ def pager(generator: t.Iterable[str], color: t.Optional[bool] = None) -> None:
     if os.environ.get("TERM") in ("dumb", "emacs"):
         return _nullpager(stdout, generator, color)
     if WIN or sys.platform.startswith("os2"):
-        return _pipetempfilepager(generator, "more", color)
+        return _tempfilepager(generator, "more", color, pipe=True)
     if which("less") is not None:
         return _pipepager(generator, "less", color)
 
@@ -445,34 +445,15 @@ def _pipepager(generator: t.Iterable[str], cmd: str, color: t.Optional[bool]) ->
 
 
 def _tempfilepager(
-    generator: t.Iterable[str], cmd: str, color: t.Optional[bool]
+    generator: t.Iterable[str],
+    cmd: str,
+    color: t.Optional[bool],
+    pipe: bool = False,
 ) -> None:
-    """Page through text by invoking a program on a temporary file."""
-    import subprocess
-    import tempfile
+    """Page through text by invoking a program on a temporary file.
 
-    fd, filename = tempfile.mkstemp()
-    # TODO: This never terminates if the passed generator never terminates.
-    text = "".join(generator)
-    if not color:
-        text = strip_ansi(text)
-    encoding = get_best_encoding(sys.stdout)
-    with open_stream(filename, "wb")[0] as f:
-        f.write(text.encode(encoding))
-    try:
-        subprocess.call([cmd, filename])
-    except OSError:
-        # Command not found
-        pass
-    finally:
-        os.close(fd)
-        os.unlink(filename)
-
-
-def _pipetempfilepager(generator, cmd, color):
-    """
-    Page through text by invoking a program with a temporary file redirected
-    as input.
+    By default executes `cmd` as `cmd tmpfile`. If `pipe` is `True`, it will
+    instead pipe the text via stdin like `cat tmpfile | cmd`.
     """
     import subprocess
     import tempfile
@@ -486,8 +467,11 @@ def _pipetempfilepager(generator, cmd, color):
     with open_stream(filename, "wb")[0] as f:
         f.write(text.encode(encoding))
     try:
-        with open_stream(filename, "rb")[0] as f:
-            subprocess.call([cmd], stdin=f)
+        if pipe:
+            with open_stream(filename, "rb")[0] as f:
+                subprocess.call([cmd], stdin=f)
+        else:
+            subprocess.call([cmd, filename])
     except OSError:
         # Command not found
         pass
@@ -629,7 +613,7 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
     elif WIN:
         if locate:
             url = _unquote_file(url)
-            args = ["explorer", f"/select,{_unquote_file(url)}"]
+            args = ["explorer", f"/select,{url}"]
         else:
             args = ["start"]
             if wait:
