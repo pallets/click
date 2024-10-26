@@ -2671,7 +2671,9 @@ class Option(Parameter):
         if name is None:
             if not expose_value:
                 return None, opts, secondary_opts
-            raise TypeError("Could not determine name for option")
+            raise TypeError(
+                f"Could not determine name for option with declarations {decls!r}"
+            )
 
         if not opts and not secondary_opts:
             raise TypeError(
@@ -3011,7 +3013,7 @@ class Argument(Parameter):
         if not decls:
             if not expose_value:
                 return None, [], []
-            raise TypeError("Could not determine name for argument")
+            raise TypeError("Argument is marked as exposed, but does not have a name.")
         if len(decls) == 1:
             name = arg = decls[0]
             name = name.replace("-", "_").lower()
