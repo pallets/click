@@ -306,7 +306,7 @@ class Choice(ParamType):
 
         self.fail(self.get_missing_message(value), param, ctx)
 
-    def get_invalid_choice_fail_message(self, value: t.Any) -> str:
+    def get_invalid_choice_message(self, value: t.Any) -> str:
         choices_str = ", ".join(map(repr, self.choices))
         return ngettext(
             "{value!r} is not {choice}.",
