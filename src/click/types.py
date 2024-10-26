@@ -307,6 +307,12 @@ class Choice(ParamType):
         self.fail(self.get_invalid_choice_message(value), param, ctx)
 
     def get_invalid_choice_message(self, value: t.Any) -> str:
+        """Get the error message when the given choice is invalid.
+
+        :param value: The invalid value.
+
+        :return: Error message for the invalid choice.
+        """
         choices_str = ", ".join(map(repr, self.choices))
         return ngettext(
             "{value!r} is not {choice}.",
