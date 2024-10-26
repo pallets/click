@@ -30,7 +30,7 @@ data, exit code, and optional exception attached:
    @click.command()
    @click.argument('name')
    def hello(name):
-      click.echo('Hello %s!' % name)
+      click.echo(f'Hello {name}!')
 
 .. code-block:: python
    :caption: test_hello.py
@@ -54,7 +54,7 @@ For subcommand testing, a subcommand name must be specified in the `args` parame
    @click.group()
    @click.option('--debug/--no-debug', default=False)
    def cli(debug):
-      click.echo('Debug mode is %s' % ('on' if debug else 'off'))
+      click.echo(f"Debug mode is {'on' if debug else 'off'}")
 
    @cli.command()
    def sync():
@@ -112,6 +112,19 @@ current working directory to a new, empty folder.
          assert result.exit_code == 0
          assert result.output == 'Hello World!\n'
 
+Pass ``temp_dir`` to control where the temporary directory is created.
+The directory will not be removed by Click in this case. This is useful
+to integrate with a framework like Pytest that manages temporary files.
+
+.. code-block:: python
+
+    def test_keep_dir(tmp_path):
+        runner = CliRunner()
+
+        with runner.isolated_filesystem(temp_dir=tmp_path) as td:
+            ...
+
+
 Input Streams
 -------------
 
@@ -126,7 +139,7 @@ stream (stdin).  This is very useful for testing prompts, for instance:
    @click.command()
    @click.option('--foo', prompt=True)
    def prompt(foo):
-      click.echo('foo=%s' % foo)
+      click.echo(f"foo={foo}")
 
 .. code-block:: python
    :caption: test_prompt.py

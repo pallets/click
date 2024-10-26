@@ -55,7 +55,7 @@ Example:
     def copy(src, dst):
         """Move file SRC to DST."""
         for fn in src:
-            click.echo('move %s to folder %s' % (fn, dst))
+            click.echo(f"move {fn} to folder {dst}")
 
 And what it looks like:
 
@@ -124,15 +124,9 @@ File Path Arguments
 
 In the previous example, the files were opened immediately.  But what if
 we just want the filename?  The naïve way is to use the default string
-argument type.  However, remember that Click is Unicode-based, so the string
-will always be a Unicode value.  Unfortunately, filenames can be Unicode or
-bytes depending on which operating system is being used.  As such, the type
-is insufficient.
-
-Instead, you should be using the :class:`Path` type, which automatically
-handles this ambiguity.  Not only will it return either bytes or Unicode
-depending on what makes more sense, but it will also be able to do some
-basic checks for you such as existence checks.
+argument type. The :class:`Path` type has several checks available which raise nice
+errors if they fail, such as existence. Filenames in these error messages are formatted
+with :func:`format_filename`, so any undecodable bytes will be printed nicely.
 
 Example:
 
@@ -267,4 +261,3 @@ And from the command line:
 .. click:run::
 
     invoke(touch, ['-foo.txt', 'bar.txt'])
-

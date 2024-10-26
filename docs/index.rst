@@ -36,7 +36,7 @@ What does it look like?  Here is an example of a simple Click program:
     def hello(count, name):
         """Simple program that greets NAME for a total of COUNT times."""
         for x in range(count):
-            click.echo('Hello %s!' % name)
+            click.echo(f"Hello {name}!")
 
     if __name__ == '__main__':
         hello()
@@ -79,9 +79,9 @@ usage patterns.
    advanced
    testing
    utils
-   bashcomplete
+   shell-completion
    exceptions
-   python3
+   unicode-support
    wincmd
 
 API Reference
@@ -102,6 +102,6 @@ Miscellaneous Pages
    :maxdepth: 2
 
    contrib
-   changelog
    upgrading
    license
+   changes

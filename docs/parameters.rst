@@ -28,7 +28,8 @@ available for options:
 
 On the other hand arguments, unlike options, can accept an arbitrary number
 of arguments.  Options can strictly ever only accept a fixed number of
-arguments (defaults to 1).
+arguments (defaults to 1), or they may be specified multiple times using
+:ref:`multiple-options`.
 
 Parameter Types
 ---------------
@@ -46,10 +47,10 @@ different behavior and some are supported out of the box:
     A parameter that only accepts floating point values.
 
 ``bool`` / :data:`click.BOOL`:
-    A parameter that accepts boolean values.  This is automatically used
-    for boolean flags.  If used with string values ``1``, ``yes``, ``y``, ``t``
-    and ``true`` convert to `True` and ``0``, ``no``, ``n``, ``f`` and ``false``
-    convert to `False`.
+    A parameter that accepts boolean values. This is automatically used
+    for boolean flags. The string values "1", "true", "t", "yes", "y",
+    and "on" convert to ``True``. "0", "false", "f", "no", "n", and
+    "off" convert to ``False``.
 
 :data:`click.UUID`:
     A parameter that accepts UUID values.  This is not automatically
@@ -82,29 +83,21 @@ fails with a `ValueError` is also supported, though discouraged.
 Parameter Names
 ---------------
 
-Parameters (both options and arguments) accept a number of positional arguments
-which are passed to the command function as parameters. Each string with a
-single dash is added as a short argument; each string starting with a double
-dash as a long one.
+Parameters (both options and arguments) have a name that will be used as
+the Python argument name when calling the decorated function with
+values.
 
-If a string is added without any dashes, it becomes the internal parameter name
-which is also used as variable name.
+Arguments take only one positional name. To provide a different name for
+use in help text, see :ref:`doc-meta-variables`.
 
-If all names for a parameter contain dashes, the internal name is generated
-automatically by taking the longest argument and converting all dashes to
-underscores.
+Options can have many names that may be prefixed with one or two dashes.
+Names with one dash are parsed as short options, names with two are
+parsed as long options. If a name is not prefixed, it is used as the
+Python argument name and not parsed as an option name. Otherwise, the
+first name with a two dash prefix is used, or the first with a one dash
+prefix if there are none with two. The prefix is removed and dashes are
+converted to underscores to get the Python argument name.
 
-The internal name is converted to lowercase.
-
-Examples:
-
-* For an option with ``('-f', '--foo-bar')``, the parameter name is `foo_bar`.
-* For an option with ``('-x',)``, the parameter is `x`.
-* For an option with ``('-f', '--filename', 'dest')``, the parameter name is  `dest`.
-* For an option with ``('--CamelCaseOption',)``, the parameter is `camelcaseoption`.
-* For an arguments with ``(`foogle`)``, the parameter name is `foogle`. To
-  provide a different human readable name for use in help text, see the section
-  about :ref:`doc-meta-variables`.
 
 Implementing Custom Types
 -------------------------
@@ -125,19 +118,15 @@ integers.
         name = "integer"
 
         def convert(self, value, param, ctx):
+            if isinstance(value, int):
+                return value
+
             try:
                 if value[:2].lower() == "0x":
                     return int(value[2:], 16)
                 elif value[:1] == "0":
                     return int(value, 8)
                 return int(value, 10)
-            except TypeError:
-                self.fail(
-                    "expected string for int() conversion, got "
-                    f"{value!r} of type {type(value).__name__}",
-                    param,
-                    ctx,
-                )
             except ValueError:
                 self.fail(f"{value!r} is not a valid integer", param, ctx)
 
@@ -147,3 +136,8 @@ The :attr:`~ParamType.name` attribute is optional and is used for
 documentation. Call :meth:`~ParamType.fail` if conversion fails. The
 ``param`` and ``ctx`` arguments may be ``None`` in some cases such as
 prompts.
+
+Values from user input or the command line will be strings, but default
+values and Python arguments may already be the correct type. The custom
+type should check at the top if the value is already valid and pass it
+through to support those cases.

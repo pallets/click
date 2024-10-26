@@ -31,6 +31,9 @@ Decorators
 
 .. autofunction:: make_pass_decorator
 
+.. autofunction:: click.decorators.pass_meta_key
+
+
 Utilities
 ---------
 
@@ -59,8 +62,6 @@ Utilities
 .. autofunction:: getchar
 
 .. autofunction:: pause
-
-.. autofunction:: get_terminal_size
 
 .. autofunction:: get_binary_stream
 
@@ -108,6 +109,11 @@ Context
 
 .. autofunction:: get_current_context
 
+.. autoclass:: click.core.ParameterSource
+    :members:
+    :member-order: bysource
+
+
 Types
 -----
 
@@ -130,6 +136,10 @@ Types
 .. autoclass:: Choice
 
 .. autoclass:: IntRange
+
+.. autoclass:: FloatRange
+
+.. autoclass:: DateTime
 
 .. autoclass:: Tuple
 
@@ -168,6 +178,24 @@ Parsing
 
 .. autoclass:: OptionParser
    :members:
+
+
+Shell Completion
+----------------
+
+See :doc:`/shell-completion` for information about enabling and
+customizing Click's shell completion system.
+
+.. currentmodule:: click.shell_completion
+
+.. autoclass:: CompletionItem
+
+.. autoclass:: ShellComplete
+    :members:
+    :member-order: bysource
+
+.. autofunction:: add_completion_class
+
 
 Testing
 -------

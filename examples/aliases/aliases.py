@@ -1,13 +1,10 @@
+import configparser
 import os
+
 import click
 
-try:
-    import ConfigParser as configparser
-except ImportError:
-    import configparser
 
-
-class Config(object):
+class Config:
     """The config in this example only holds aliases."""
 
     def __init__(self):
@@ -21,16 +18,16 @@ class Config(object):
         parser = configparser.RawConfigParser()
         parser.read([filename])
         try:
-            self.aliases.update(parser.items('aliases'))
+            self.aliases.update(parser.items("aliases"))
         except configparser.NoSectionError:
             pass
 
     def write_config(self, filename):
         parser = configparser.RawConfigParser()
-        parser.add_section('aliases')
+        parser.add_section("aliases")
         for key, value in self.aliases.items():
-            parser.set('aliases', key, value)
-        with open(filename, 'wb') as file:
+            parser.set("aliases", key, value)
+        with open(filename, "wb") as file:
             parser.write(file)
 
 
@@ -61,13 +58,19 @@ class AliasedGroup(click.Group):
         # allow automatic abbreviation of the command.  "status" for
         # instance will match "st".  We only allow that however if
         # there is only one command.
-        matches = [x for x in self.list_commands(ctx)
-                   if x.lower().startswith(cmd_name.lower())]
+        matches = [
+            x for x in self.list_commands(ctx) if x.lower().startswith(cmd_name.lower())
+        ]
         if not matches:
             return None
         elif len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
-        ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
+        ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
+
+    def resolve_command(self, ctx, args):
+        # always return the command's name, not the alias
+        _, cmd, args = super().resolve_command(ctx, args)
+        return cmd.name, cmd, args
 
 
 def read_config(ctx, param, value):
@@ -78,15 +81,19 @@ def read_config(ctx, param, value):
     """
     cfg = ctx.ensure_object(Config)
     if value is None:
-        value = os.path.join(os.path.dirname(__file__), 'aliases.ini')
+        value = os.path.join(os.path.dirname(__file__), "aliases.ini")
     cfg.read_config(value)
     return value
 
 
 @click.command(cls=AliasedGroup)
-@click.option('--config', type=click.Path(exists=True, dir_okay=False),
-              callback=read_config, expose_value=False,
-              help='The config file to use instead of the default.')
+@click.option(
+    "--config",
+    type=click.Path(exists=True, dir_okay=False),
+    callback=read_config,
+    expose_value=False,
+    help="The config file to use instead of the default.",
+)
 def cli():
     """An example application that supports aliases."""
 
@@ -94,42 +101,43 @@ def cli():
 @cli.command()
 def push():
     """Pushes changes."""
-    click.echo('Push')
+    click.echo("Push")
 
 
 @cli.command()
 def pull():
     """Pulls changes."""
-    click.echo('Pull')
+    click.echo("Pull")
 
 
 @cli.command()
 def clone():
     """Clones a repository."""
-    click.echo('Clone')
+    click.echo("Clone")
 
 
 @cli.command()
 def commit():
     """Commits pending changes."""
-    click.echo('Commit')
+    click.echo("Commit")
 
 
 @cli.command()
 @pass_config
 def status(config):
     """Shows the status."""
-    click.echo('Status for %s' % config.path)
+    click.echo(f"Status for {config.path}")
 
 
 @cli.command()
 @pass_config
-@click.argument("alias_", metavar='ALIAS', type=click.STRING)
+@click.argument("alias_", metavar="ALIAS", type=click.STRING)
 @click.argument("cmd", type=click.STRING)
-@click.option('--config_file', type=click.Path(exists=True, dir_okay=False),
-              default="aliases.ini")
+@click.option(
+    "--config_file", type=click.Path(exists=True, dir_okay=False), default="aliases.ini"
+)
 def alias(config, alias_, cmd, config_file):
     """Adds an alias to the specified configuration file."""
     config.add_alias(alias_, cmd)
     config.write_config(config_file)
-    click.echo('Added %s as alias for %s' % (alias_, cmd))
+    click.echo(f"Added '{alias_}' as alias for '{cmd}'")

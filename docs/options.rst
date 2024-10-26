@@ -13,24 +13,44 @@ distinct from :ref:`positional arguments <arguments>`.
 Name Your Options
 -----------------
 
-The naming rules can be found in :ref:`parameter_names`. In short, you
-can refer the option **implicitly** by the longest dash-prefixed argument:
+Options have a name that will be used as the Python argument name when
+calling the decorated function. This can be inferred from the option
+names or given explicitly. Names are given as position arguments to the
+decorator.
 
-.. click:example::
+A name is chosen in the following order
+
+1.  If a name is not prefixed, it is used as the Python argument name
+    and not treated as an option name on the command line.
+2.  If there is at least one name prefixed with two dashes, the first
+    one given is used as the name.
+3.  The first name prefixed with one dash is used otherwise.
+
+To get the Python argument name, the chosen name is converted to lower
+case, up to two dashes are removed as the prefix, and other dashes are
+converted to underscores.
+
+.. code-block:: python
 
     @click.command()
     @click.option('-s', '--string-to-echo')
     def echo(string_to_echo):
         click.echo(string_to_echo)
 
-Or, **explicitly**, by giving one non-dash-prefixed argument:
-
-.. click:example::
+.. code-block:: python
 
     @click.command()
     @click.option('-s', '--string-to-echo', 'string')
     def echo(string):
         click.echo(string)
+
+-   ``"-f", "--foo-bar"``, the name is ``foo_bar``
+-   ``"-x"``, the name is ``x``
+-   ``"-f", "--filename", "dest"``, the name is  ``dest``
+-   ``"--CamelCase"``, the name is ``camelcase``
+-   ``"-f", "-fb"``, the name is ``f``
+-   ``"--f", "--foo-bar"``, the name is ``f``
+-   ``"---f"``, the name is ``_f``
 
 Basic Value Options
 -------------------
@@ -65,7 +85,7 @@ simply pass in `required=True` as an argument to the decorator.
     @click.option('--from', '-f', 'from_')
     @click.option('--to', '-t')
     def reserved_param_name(from_, to):
-        click.echo('from %s to %s' % (from_, to))
+        click.echo(f"from {from_} to {to}")
 
 And on the command line:
 
@@ -89,6 +109,27 @@ To show the default values when showing command help, use ``show_default=True``
 
    invoke(dots, args=['--help'])
 
+For single option boolean flags, the default remains hidden if the default
+value is False.
+
+.. click:example::
+
+    @click.command()
+    @click.option('--n', default=1, show_default=True)
+    @click.option("--gr", is_flag=True, show_default=True, default=False, help="Greet the world.")
+    @click.option("--br", is_flag=True, show_default=True, default=True, help="Add a thematic break")
+    def dots(n, gr, br):
+        if gr:
+            click.echo('Hello world!')
+        click.echo('.' * n)
+        if br:
+            click.echo('-' * n)
+
+.. click:run::
+
+   invoke(dots, args=['--help'])
+
+
 Multi Value Options
 -------------------
 
@@ -101,7 +142,8 @@ the ``nargs`` parameter.  The values are then stored as a tuple.
     @click.command()
     @click.option('--pos', nargs=2, type=float)
     def findme(pos):
-        click.echo('%s / %s' % pos)
+        a, b = pos
+        click.echo(f"{a} / {b}")
 
 And on the command line:
 
@@ -126,7 +168,8 @@ the tuple.  For this you can directly specify a tuple as type:
     @click.command()
     @click.option('--item', type=(str, int))
     def putitem(item):
-        click.echo('name=%s id=%d' % item)
+        name, id = item
+        click.echo(f"name={name} id={id}")
 
 And on the command line:
 
@@ -143,7 +186,10 @@ used.  The above example is thus equivalent to this:
     @click.command()
     @click.option('--item', nargs=2, type=click.Tuple([str, int]))
     def putitem(item):
-        click.echo('name=%s id=%d' % item)
+        name, id = item
+        click.echo(f"name={name} id={id}")
+
+.. _multiple-options:
 
 Multiple Options
 ----------------
@@ -190,7 +236,7 @@ for instance:
     @click.command()
     @click.option('-v', '--verbose', count=True)
     def log(verbose):
-        click.echo('Verbosity: %s' % verbose)
+        click.echo(f"Verbosity: {verbose}")
 
 And on the command line:
 
@@ -228,6 +274,7 @@ And on the command line:
 
     invoke(info, args=['--shout'])
     invoke(info, args=['--no-shout'])
+    invoke(info)
 
 If you really don't want an off-switch, you can just define one and
 manually inform Click that something is a flag:
@@ -249,6 +296,7 @@ And on the command line:
 .. click:run::
 
     invoke(info, args=['--shout'])
+    invoke(info)
 
 Note that if a slash is contained in your option already (for instance, if
 you use Windows-style parameters where ``/`` is the prefix character), you
@@ -259,7 +307,7 @@ can alternatively split the parameters through ``;`` instead:
     @click.command()
     @click.option('/debug;/no-debug')
     def log(debug):
-        click.echo('debug=%s' % debug)
+        click.echo(f"debug={debug}")
 
     if __name__ == '__main__':
         log()
@@ -361,7 +409,7 @@ Choices should be unique after considering the effects of
 ``case_sensitive`` and any specified token normalization function.
 
 .. versionchanged:: 7.1
-    The resulting value from an option will always be on the of the
+    The resulting value from an option will always be one of the
     originally passed choices regardless of ``case_sensitive``.
 
 .. _option-prompting:
@@ -380,7 +428,7 @@ Example:
     @click.command()
     @click.option('--name', prompt=True)
     def hello(name):
-        click.echo('Hello %s!' % name)
+        click.echo(f"Hello {name}!")
 
 And what it looks like:
 
@@ -397,7 +445,7 @@ a different one:
     @click.command()
     @click.option('--name', prompt='Your name please')
     def hello(name):
-        click.echo('Hello %s!' % name)
+        click.echo(f"Hello {name}!")
 
 What it looks like:
 
@@ -408,6 +456,10 @@ What it looks like:
 It is advised that prompt not be used in conjunction with the multiple
 flag set to True. Instead, prompt in the function interactively.
 
+By default, the user will be prompted for an input if one was not passed
+through the command line. To turn this behavior off, see
+:ref:`optional-value`.
+
 
 Password Prompts
 ----------------
@@ -417,27 +469,30 @@ useful for password input:
 
 .. click:example::
 
-    @click.command()
-    @click.option('--password', prompt=True, hide_input=True,
-                  confirmation_prompt=True)
-    def encrypt(password):
-        click.echo('Encrypting password to %s' % password.encode('rot13'))
+    import codecs
 
-What it looks like:
+    @click.command()
+    @click.option(
+        "--password", prompt=True, hide_input=True,
+        confirmation_prompt=True
+    )
+    def encode(password):
+        click.echo(f"encoded: {codecs.encode(password, 'rot13')}")
 
 .. click:run::
 
-    invoke(encrypt, input=['secret', 'secret'])
+    invoke(encode, input=['secret', 'secret'])
 
 Because this combination of parameters is quite common, this can also be
 replaced with the :func:`password_option` decorator:
 
-.. click:example::
+.. code-block:: python
 
     @click.command()
     @click.password_option()
     def encrypt(password):
-        click.echo('Encrypting password to %s' % password.encode('rot13'))
+        click.echo(f"encoded: to {codecs.encode(password, 'rot13')}")
+
 
 Dynamic Defaults for Prompts
 ----------------------------
@@ -452,28 +507,37 @@ prompted if the option isn't specified on the command line, you can do so
 by supplying a callable as the default value. For example, to get a default
 from the environment:
 
-.. click:example::
+.. code-block:: python
+
+    import os
 
     @click.command()
-    @click.option('--username', prompt=True,
-                  default=lambda: os.environ.get('USER', ''))
+    @click.option(
+        "--username", prompt=True,
+        default=lambda: os.environ.get("USER", "")
+    )
     def hello(username):
-        print("Hello,", username)
+        click.echo(f"Hello, {username}!")
 
 To describe what the default value will be, set it in ``show_default``.
 
 .. click:example::
 
+    import os
+
     @click.command()
-    @click.option('--username', prompt=True,
-                  default=lambda: os.environ.get('USER', ''),
-                  show_default='current user')
+    @click.option(
+        "--username", prompt=True,
+        default=lambda: os.environ.get("USER", ""),
+        show_default="current user"
+    )
     def hello(username):
-        print("Hello,", username)
+        click.echo(f"Hello, {username}!")
 
 .. click:run::
 
-   invoke(hello, args=['--help'])
+   invoke(hello, args=["--help"])
+
 
 Callbacks and Eager Options
 ---------------------------
@@ -495,10 +559,10 @@ parameter ``--foo`` was required and defined before, you would need to
 specify it for ``--version`` to work.  For more information, see
 :ref:`callback-evaluation-order`.
 
-A callback is a function that is invoked with two parameters: the current
-:class:`Context` and the value.  The context provides some useful features
-such as quitting the application and gives access to other already
-processed parameters.
+A callback is a function that is invoked with three parameters: the
+current :class:`Context`, the current :class:`Parameter`, and the value.
+The context provides some useful features such as quitting the
+application and gives access to other already processed parameters.
 
 Here an example for a ``--version`` flag:
 
@@ -593,8 +657,8 @@ environment variables which is supported for options only.  To enable this
 feature, the ``auto_envvar_prefix`` parameter needs to be passed to the
 script that is invoked.  Each command and parameter is then added as an
 uppercase underscore-separated variable.  If you have a subcommand
-called ``foo`` taking an option called ``bar`` and the prefix is
-``MY_TOOL``, then the variable is ``MY_TOOL_FOO_BAR``.
+called ``run`` taking an option called ``reload`` and the prefix is
+``WEB``, then the variable is ``WEB_RUN_RELOAD``.
 
 Example usage:
 
@@ -603,7 +667,7 @@ Example usage:
     @click.command()
     @click.option('--username')
     def greet(username):
-        click.echo('Hello %s!' % username)
+        click.echo(f'Hello {username}!')
 
     if __name__ == '__main__':
         greet(auto_envvar_prefix='GREETER')
@@ -615,8 +679,11 @@ And from the command line:
     invoke(greet, env={'GREETER_USERNAME': 'john'},
            auto_envvar_prefix='GREETER')
 
-When using ``auto_envvar_prefix`` with command groups, the command name needs
-to be included in the environment variable, between the prefix and the parameter name, *i.e.* *PREFIX_COMMAND_VARIABLE*.
+When using ``auto_envvar_prefix`` with command groups, the command name
+needs to be included in the environment variable, between the prefix and
+the parameter name, *i.e.* ``PREFIX_COMMAND_VARIABLE``. If you have a
+subcommand called ``run-server`` taking an option called ``host`` and
+the prefix is ``WEB``, then the variable is ``WEB_RUN_SERVER_HOST``.
 
 Example:
 
@@ -625,12 +692,12 @@ Example:
    @click.group()
    @click.option('--debug/--no-debug')
    def cli(debug):
-       click.echo('Debug mode is %s' % ('on' if debug else 'off'))
+       click.echo(f"Debug mode is {'on' if debug else 'off'}")
 
    @cli.command()
    @click.option('--username')
    def greet(username):
-       click.echo('Hello %s!' % username)
+       click.echo(f"Hello {username}!")
 
    if __name__ == '__main__':
        cli(auto_envvar_prefix='GREETER')
@@ -652,7 +719,7 @@ Example usage:
     @click.command()
     @click.option('--username', envvar='USERNAME')
     def greet(username):
-        click.echo('Hello %s!' % username)
+       click.echo(f"Hello {username}!")
 
     if __name__ == '__main__':
         greet()
@@ -701,7 +768,7 @@ And from the command line:
 .. click:run::
 
     import os
-    invoke(perform, env={'PATHS': './foo/bar%s./test' % os.path.pathsep})
+    invoke(perform, env={"PATHS": f"./foo/bar{os.path.pathsep}./test"})
 
 Other Prefix Characters
 -----------------------
@@ -717,7 +784,7 @@ POSIX semantics.  However in certain situations this can be useful:
     @click.command()
     @click.option('+w/-w')
     def chmod(w):
-        click.echo('writable=%s' % w)
+        click.echo(f"writable={w}")
 
     if __name__ == '__main__':
         chmod()
@@ -737,7 +804,7 @@ boolean flag you need to separate it with ``;`` instead of ``/``:
     @click.command()
     @click.option('/debug;/no-debug')
     def log(debug):
-        click.echo('debug=%s' % debug)
+        click.echo(f"debug={debug}")
 
     if __name__ == '__main__':
         log()
@@ -747,39 +814,34 @@ boolean flag you need to separate it with ``;`` instead of ``/``:
 Range Options
 -------------
 
-A special mention should go to the :class:`IntRange` type, which works very
-similarly to the :data:`INT` type, but restricts the value to fall into a
-specific range (inclusive on both edges).  It has two modes:
+The :class:`IntRange` type extends the :data:`INT` type to ensure the
+value is contained in the given range. The :class:`FloatRange` type does
+the same for :data:`FLOAT`.
 
--   the default mode (non-clamping mode) where a value that falls outside
-    of the range will cause an error.
--   an optional clamping mode where a value that falls outside of the
-    range will be clamped.  This means that a range of ``0-5`` would
-    return ``5`` for the value ``10`` or ``0`` for the value ``-1`` (for
-    example).
+If ``min`` or ``max`` is omitted, that side is *unbounded*. Any value in
+that direction is accepted. By default, both bounds are *closed*, which
+means the boundary value is included in the accepted range. ``min_open``
+and ``max_open`` can be used to exclude that boundary from the range.
 
-Example:
+If ``clamp`` mode is enabled, a value that is outside the range is set
+to the boundary instead of failing. For example, the range ``0, 5``
+would return ``5`` for the value ``10``, or ``0`` for the value ``-1``.
+When using :class:`FloatRange`, ``clamp`` can only be enabled if both
+bounds are *closed* (the default).
 
 .. click:example::
 
     @click.command()
-    @click.option('--count', type=click.IntRange(0, 20, clamp=True))
-    @click.option('--digit', type=click.IntRange(0, 10))
+    @click.option("--count", type=click.IntRange(0, 20, clamp=True))
+    @click.option("--digit", type=click.IntRange(0, 9))
     def repeat(count, digit):
         click.echo(str(digit) * count)
 
-    if __name__ == '__main__':
-        repeat()
-
-And from the command line:
-
 .. click:run::
 
-    invoke(repeat, args=['--count=1000', '--digit=5'])
-    invoke(repeat, args=['--count=1000', '--digit=12'])
+    invoke(repeat, args=['--count=100', '--digit=5'])
+    invoke(repeat, args=['--count=6', '--digit=12'])
 
-If you pass ``None`` for any of the edges, it means that the range is open
-at that side.
 
 Callbacks for Validation
 ------------------------
@@ -787,37 +849,87 @@ Callbacks for Validation
 .. versionchanged:: 2.0
 
 If you want to apply custom validation logic, you can do this in the
-parameter callbacks.  These callbacks can both modify values as well as
-raise errors if the validation does not work.
+parameter callbacks. These callbacks can both modify values as well as
+raise errors if the validation does not work. The callback runs after
+type conversion. It is called for all sources, including prompts.
 
 In Click 1.0, you can only raise the :exc:`UsageError` but starting with
 Click 2.0, you can also raise the :exc:`BadParameter` error, which has the
 added advantage that it will automatically format the error message to
 also contain the parameter name.
 
-Example:
-
 .. click:example::
 
     def validate_rolls(ctx, param, value):
+        if isinstance(value, tuple):
+            return value
+
         try:
-            rolls, dice = map(int, value.split('d', 2))
-            return (dice, rolls)
+            rolls, _, dice = value.partition("d")
+            return int(dice), int(rolls)
         except ValueError:
-            raise click.BadParameter('rolls need to be in format NdM')
+            raise click.BadParameter("format must be 'NdM'")
 
     @click.command()
-    @click.option('--rolls', callback=validate_rolls, default='1d6')
+    @click.option(
+        "--rolls", type=click.UNPROCESSED, callback=validate_rolls,
+        default="1d6", prompt=True,
+    )
     def roll(rolls):
-        click.echo('Rolling a %d-sided dice %d time(s)' % rolls)
-
-    if __name__ == '__main__':
-        roll()
-
-And what it looks like:
+        sides, times = rolls
+        click.echo(f"Rolling a {sides}-sided dice {times} time(s)")
 
 .. click:run::
 
-    invoke(roll, args=['--rolls=42'])
+    invoke(roll, args=["--rolls=42"])
     println()
-    invoke(roll, args=['--rolls=2d12'])
+    invoke(roll, args=["--rolls=2d12"])
+    println()
+    invoke(roll, input=["42", "2d12"])
+
+
+.. _optional-value:
+
+Optional Value
+--------------
+
+Providing the value to an option can be made optional, in which case
+providing only the option's flag without a value will either show a
+prompt or use its ``flag_value``.
+
+Setting ``is_flag=False, flag_value=value`` tells Click that the option
+can still be passed a value, but if only the flag is given the
+``flag_value`` is used.
+
+.. click:example::
+
+    @click.command()
+    @click.option("--name", is_flag=False, flag_value="Flag", default="Default")
+    def hello(name):
+        click.echo(f"Hello, {name}!")
+
+.. click:run::
+
+    invoke(hello, args=[])
+    invoke(hello, args=["--name", "Value"])
+    invoke(hello, args=["--name"])
+
+If the option has ``prompt`` enabled, then setting
+``prompt_required=False`` tells Click to only show the prompt if the
+option's flag is given, instead of if the option is not provided at all.
+
+.. click:example::
+
+    @click.command()
+    @click.option('--name', prompt=True, prompt_required=False, default="Default")
+    def hello(name):
+        click.echo(f"Hello {name}!")
+
+.. click:run::
+
+    invoke(hello)
+    invoke(hello, args=["--name", "Value"])
+    invoke(hello, args=["--name"], input="Prompt")
+
+If ``required=True``, then the option will still prompt if it is not
+given, but it will also prompt if only the flag is given.

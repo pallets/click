@@ -24,7 +24,7 @@ Simple example:
     def hello(count, name):
         """This script prints hello NAME COUNT times."""
         for x in range(count):
-            click.echo('Hello %s!' % name)
+            click.echo(f"Hello {name}!")
 
 And what it looks like:
 
@@ -85,8 +85,9 @@ Preventing Rewrapping
 ---------------------
 
 The default behavior of Click is to rewrap text based on the width of the
-terminal.  In some circumstances, this can become a problem. The main issue
-is when showing code examples, where newlines are significant.
+terminal, to a maximum 80 characters. In some circumstances, this can become
+a problem. The main issue is when showing code examples, where newlines are
+significant.
 
 Rewrapping can be disabled on a per-paragraph basis by adding a line with
 solely the ``\b`` escape marker in it.  This line will be removed from the
@@ -119,6 +120,13 @@ And what it looks like:
 .. click:run::
 
     invoke(cli, args=['--help'])
+
+To change the maximum width, pass ``max_content_width`` when calling the command.
+
+.. code-block:: python
+
+    cli(max_content_width=120)
+
 
 .. _doc-meta-variables:
 
@@ -173,7 +181,7 @@ desired.  This can be customized at all levels:
     def hello(count, name):
         """This script prints hello <name> <int> times."""
         for x in range(count):
-            click.echo('Hello %s!' % name)
+            click.echo(f"Hello {name}!")
 
 Example:
 
@@ -209,6 +217,24 @@ And what it looks like:
 
     invoke(cli, prog_name='repo.py')
 
+Command Epilog Help
+-------------------
+
+The help epilog is like the help string but it's printed at the end of the help
+page after everything else. Useful for showing example command usages or
+referencing additional help resources.
+
+.. click:example::
+
+    @click.command(epilog='Check out our docs at https://click.palletsprojects.com/ for more details')
+    def init():
+        """Initializes the repository."""
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(init, prog_name='repo.py', args=['--help'])
 
 Help Parameter Customization
 ----------------------------

@@ -13,7 +13,7 @@ Command Aliases
 ---------------
 
 Many tools support aliases for commands (see `Command alias example
-<https://github.com/pallets/click/tree/master/examples/aliases>`_).
+<https://github.com/pallets/click/tree/main/examples/aliases>`_).
 For instance, you can configure ``git`` to accept ``git ci`` as alias for
 ``git commit``.  Other tools also support auto-discovery for aliases by
 automatically shortening them.
@@ -35,7 +35,6 @@ it would accept ``pus`` as an alias (so long as it was unique):
 .. click:example::
 
     class AliasedGroup(click.Group):
-
         def get_command(self, ctx, cmd_name):
             rv = click.Group.get_command(self, ctx, cmd_name)
             if rv is not None:
@@ -46,7 +45,12 @@ it would accept ``pus`` as an alias (so long as it was unique):
                 return None
             elif len(matches) == 1:
                 return click.Group.get_command(self, ctx, matches[0])
-            ctx.fail('Too many matches: %s' % ', '.join(sorted(matches)))
+            ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
+
+        def resolve_command(self, ctx, args):
+            # always return the full command name
+            _, cmd, args = super().resolve_command(ctx, args)
+            return cmd.name, cmd, args
 
 And it can then be used like this:
 
@@ -75,7 +79,7 @@ object has a :attr:`~Context.params` attribute which is a dictionary of
 all parameters.  Whatever is in that dictionary is being passed to the
 callbacks.
 
-This can be used to make up addition parameters.  Generally this pattern
+This can be used to make up additional parameters.  Generally this pattern
 is not recommended but in some cases it can be useful.  At the very least
 it's good to know that the system works this way.
 
@@ -92,7 +96,7 @@ it's good to know that the system works this way.
     @click.option('--url', callback=open_url)
     def cli(url, fp=None):
         if fp is not None:
-            click.echo('%s: %s' % (url, fp.code))
+            click.echo(f"{url}: {fp.code}")
 
 In this case the callback returns the URL unchanged but also passes a
 second ``fp`` value to the callback.  What's more recommended is to pass
@@ -116,7 +120,7 @@ the information in a wrapper however:
     @click.option('--url', callback=open_url)
     def cli(url):
         if url is not None:
-            click.echo('%s: %s' % (url.url, url.fp.code))
+            click.echo(f"{url.url}: {url.fp.code}")
 
 
 Token Normalization
@@ -140,7 +144,7 @@ function that converts the token to lowercase:
     @click.command(context_settings=CONTEXT_SETTINGS)
     @click.option('--name', default='Pete')
     def cli(name):
-        click.echo('Name: %s' % name)
+        click.echo(f"Name: {name}")
 
 And how it works on the command line:
 
@@ -171,7 +175,7 @@ Example:
     @cli.command()
     @click.option('--count', default=1)
     def test(count):
-        click.echo('Count: %d' % count)
+        click.echo(f'Count: {count}')
 
     @cli.command()
     @click.option('--count', default=1)
@@ -278,7 +282,7 @@ options:
     command will abort with an error that there are leftover arguments.
     If you go with this solution, the extra arguments will be collected in
     :attr:`Context.args`.
-2.  You can attach a :func:`argument` with ``nargs`` set to `-1` which
+2.  You can attach an :func:`argument` with ``nargs`` set to `-1` which
     will eat up all leftover arguments.  In this case it's recommended to
     set the `type` to :data:`UNPROCESSED` to avoid any string processing
     on those arguments as otherwise they are forced into unicode strings
@@ -300,7 +304,7 @@ In the end you end up with something like this:
         """A fake wrapper around Python's timeit."""
         cmdline = ['echo', 'python', '-mtimeit'] + list(timeit_args)
         if verbose:
-            click.echo('Invoking: %s' % ' '.join(cmdline))
+            click.echo(f"Invoking: {' '.join(cmdline)}")
         call(cmdline)
 
 And what it looks like:
@@ -335,7 +339,7 @@ are important to know about how this ignoring of unhandled flag happens:
     to not allow arguments and options to be mixed.  Depending on your
     situation this might improve your results.
 
-Generally though the combinated handling of options and arguments from
+Generally though the combined handling of options and arguments from
 your own commands and commands from another application are discouraged
 and if you can avoid it, you should.  It's a much better idea to have
 everything below a subcommand be forwarded to another application than to
@@ -386,8 +390,10 @@ Detecting the Source of a Parameter
 
 In some situations it's helpful to understand whether or not an option
 or parameter came from the command line, the environment, the default
-value, or the default_map. The :meth:`Context.get_parameter_source`
-method can be used to find this out.
+value, or :attr:`Context.default_map`. The
+:meth:`Context.get_parameter_source` method can be used to find this
+out. It will return a member of the :class:`~click.core.ParameterSource`
+enum.
 
 .. click:example::
 
@@ -396,7 +402,7 @@ method can be used to find this out.
     @click.pass_context
     def cli(ctx, port):
         source = ctx.get_parameter_source("port")
-        click.echo("Port came from {}".format(source))
+        click.echo(f"Port came from {source.name}")
 
 .. click:run::
 
@@ -406,3 +412,78 @@ method can be used to find this out.
     println()
     invoke(cli, prog_name='cli', args=[])
     println()
+
+
+Managing Resources
+------------------
+
+It can be useful to open a resource in a group, to be made available to
+subcommands. Many types of resources need to be closed or otherwise
+cleaned up after use. The standard way to do this in Python is by using
+a context manager with the ``with`` statement.
+
+For example, the ``Repo`` class from :doc:`complex` might actually be
+defined as a context manager:
+
+.. code-block:: python
+
+    class Repo:
+        def __init__(self, home=None):
+            self.home = os.path.abspath(home or ".")
+            self.db = None
+
+        def __enter__(self):
+            path = os.path.join(self.home, "repo.db")
+            self.db = open_database(path)
+            return self
+
+        def __exit__(self, exc_type, exc_value, tb):
+            self.db.close()
+
+Ordinarily, it would be used with the ``with`` statement:
+
+.. code-block:: python
+
+    with Repo() as repo:
+        repo.db.query(...)
+
+However, a ``with`` block in a group would exit and close the database
+before it could be used by a subcommand.
+
+Instead, use the context's :meth:`~click.Context.with_resource` method
+to enter the context manager and return the resource. When the group and
+any subcommands finish, the context's resources are cleaned up.
+
+.. code-block:: python
+
+    @click.group()
+    @click.option("--repo-home", default=".repo")
+    @click.pass_context
+    def cli(ctx, repo_home):
+        ctx.obj = ctx.with_resource(Repo(repo_home))
+
+    @cli.command()
+    @click.pass_obj
+    def log(obj):
+        # obj is the repo opened in the cli group
+        for entry in obj.db.query(...):
+            click.echo(entry)
+
+If the resource isn't a context manager, usually it can be wrapped in
+one using something from :mod:`contextlib`. If that's not possible, use
+the context's :meth:`~click.Context.call_on_close` method to register a
+cleanup function.
+
+.. code-block:: python
+
+    @click.group()
+    @click.option("--name", default="repo.db")
+    @click.pass_context
+    def cli(ctx, repo_home):
+        ctx.obj = db = open_db(repo_home)
+
+        @ctx.call_on_close
+        def close_db():
+            db.record_use()
+            db.save()
+            db.close()

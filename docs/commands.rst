@@ -25,7 +25,7 @@ when an inner command runs:
     @click.group()
     @click.option('--debug/--no-debug', default=False)
     def cli(debug):
-        click.echo('Debug mode is %s' % ('on' if debug else 'off'))
+        click.echo(f"Debug mode is {'on' if debug else 'off'}")
 
     @cli.command()  # @cli, not @click!
     def sync():
@@ -96,7 +96,7 @@ script like this:
     @cli.command()
     @click.pass_context
     def sync(ctx):
-        click.echo('Debug is %s' % (ctx.obj['DEBUG'] and 'on' or 'off'))
+        click.echo(f"Debug is {'on' if ctx.obj['DEBUG'] else 'off'}")
 
     if __name__ == '__main__':
         cli(obj={})
@@ -166,7 +166,7 @@ Example:
         if ctx.invoked_subcommand is None:
             click.echo('I was invoked without subcommand')
         else:
-            click.echo('I am about to invoke %s' % ctx.invoked_subcommand)
+            click.echo(f"I am about to invoke {ctx.invoked_subcommand}")
 
     @cli.command()
     def sync():
@@ -202,7 +202,7 @@ A custom multi command just needs to implement a list and load method:
         def list_commands(self, ctx):
             rv = []
             for filename in os.listdir(plugin_folder):
-                if filename.endswith('.py'):
+                if filename.endswith('.py') and filename != '__init__.py':
                     rv.append(filename[:-3])
             rv.sort()
             return rv
@@ -351,7 +351,7 @@ how to do its processing.  At that point it then returns a processing
 function and returns.
 
 Where do the returned functions go?  The chained multicommand can register
-a callback with :meth:`MultiCommand.resultcallback` that goes over all
+a callback with :meth:`MultiCommand.result_callback` that goes over all
 these functions and then invoke them.
 
 To make this a bit more concrete consider this example:
@@ -363,7 +363,7 @@ To make this a bit more concrete consider this example:
     def cli(input):
         pass
 
-    @cli.resultcallback()
+    @cli.result_callback()
     def process_pipeline(processors, input):
         iterator = (x.rstrip('\r\n') for x in input)
         for processor in processors:
@@ -422,7 +422,7 @@ to not use the file type and manually open the file through
 
 For a more complex example that also improves upon handling of the
 pipelines have a look at the `imagepipe multi command chaining demo
-<https://github.com/pallets/click/tree/master/examples/imagepipe>`__ in
+<https://github.com/pallets/click/tree/main/examples/imagepipe>`__ in
 the Click repository.  It implements a pipeline based image editing tool
 that has a nice internal structure for the pipelines.
 
@@ -466,7 +466,7 @@ Example usage:
     @cli.command()
     @click.option('--port', default=8000)
     def runserver(port):
-        click.echo('Serving on http://127.0.0.1:%d/' % port)
+        click.echo(f"Serving on http://127.0.0.1:{port}/")
 
     if __name__ == '__main__':
         cli(default_map={
@@ -512,7 +512,7 @@ This example does the same as the previous example:
     @cli.command()
     @click.option('--port', default=8000)
     def runserver(port):
-        click.echo('Serving on http://127.0.0.1:%d/' % port)
+        click.echo(f"Serving on http://127.0.0.1:{port}/")
 
     if __name__ == '__main__':
         cli()

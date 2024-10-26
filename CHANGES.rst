@@ -1,24 +1,515 @@
 .. currentmodule:: click
 
-Version 8.0
------------
+Version 8.1.8
+-------------
 
 Unreleased
 
--   Fix autoloading for ZSH completion and add error handling.
-    :pr:`1348`
+-   Fix an issue with type hints for ``click.open_file()``. :issue:`2717`
+-   Fix issue where error message for invalid ``click.Path`` displays on
+    multiple lines. :issue:`2697`
+-   Fixed issue that prevented a default value of ``""`` from being displayed in
+    the help for an option. :issue:`2500`
+-   The test runner handles stripping color consistently on Windows.
+    :issue:`2705`
+-   Show correct value for flag default when using ``default_map``.
+    :issue:`2632`
+-   Fix ``click.echo(color=...)`` passing ``color`` to coloroma so it can be
+    forced on Windows. :issue:`2606`.
+
+
+Version 8.1.7
+-------------
+
+Released 2023-08-17
+
+-   Fix issue with regex flags in shell completion. :issue:`2581`
+-   Bash version detection issues a warning instead of an error. :issue:`2574`
+-   Fix issue with completion script for Fish shell. :issue:`2567`
+
+
+Version 8.1.6
+-------------
+
+Released 2023-07-18
+
+-   Fix an issue with type hints for ``@click.group()``. :issue:`2558`
+
+
+Version 8.1.5
+-------------
+
+Released 2023-07-13
+
+-   Fix an issue with type hints for ``@click.command()``, ``@click.option()``, and
+    other decorators. Introduce typing tests. :issue:`2558`
+
+
+Version 8.1.4
+-------------
+
+Released 2023-07-06
+
+-   Replace all ``typing.Dict`` occurrences to ``typing.MutableMapping`` for
+    parameter hints. :issue:`2255`
+-   Improve type hinting for decorators and give all generic types parameters.
+    :issue:`2398`
+-   Fix return value and type signature of `shell_completion.add_completion_class`
+    function. :pr:`2421`
+-   Bash version detection doesn't fail on Windows. :issue:`2461`
+-   Completion works if there is a dot (``.``) in the program name. :issue:`2166`
+-   Improve type annotations for pyright type checker. :issue:`2268`
+-   Improve responsiveness of ``click.clear()``. :issue:`2284`
+-   Improve command name detection when using Shiv or PEX. :issue:`2332`
+-   Avoid showing empty lines if command help text is empty. :issue:`2368`
+-   ZSH completion script works when loaded from ``fpath``. :issue:`2344`.
+-   ``EOFError`` and ``KeyboardInterrupt`` tracebacks are not suppressed when
+    ``standalone_mode`` is disabled. :issue:`2380`
+-   ``@group.command`` does not fail if the group was created with a custom
+    ``command_class``. :issue:`2416`
+-   ``multiple=True`` is allowed for flag options again and does not require
+    setting ``default=()``. :issue:`2246, 2292, 2295`
+-   Make the decorators returned by ``@argument()`` and ``@option()`` reusable when the
+    ``cls`` parameter is used. :issue:`2294`
+-   Don't fail when writing filenames to streams with strict errors. Replace invalid
+    bytes with the replacement character (``�``). :issue:`2395`
+-   Remove unnecessary attempt to detect MSYS2 environment. :issue:`2355`
+-   Remove outdated and unnecessary detection of App Engine environment. :pr:`2554`
+-   ``echo()`` does not fail when no streams are attached, such as with ``pythonw`` on
+    Windows. :issue:`2415`
+-   Argument with ``expose_value=False`` do not cause completion to fail. :issue:`2336`
+
+
+Version 8.1.3
+-------------
+
+Released 2022-04-28
+
+-   Use verbose form of ``typing.Callable`` for ``@command`` and
+    ``@group``. :issue:`2255`
+-   Show error when attempting to create an option with
+    ``multiple=True, is_flag=True``. Use ``count`` instead.
+    :issue:`2246`
+
+
+Version 8.1.2
+-------------
+
+Released 2022-03-31
+
+-   Fix error message for readable path check that was mixed up with the
+    executable check. :pr:`2236`
+-   Restore parameter order for ``Path``, placing the ``executable``
+    parameter at the end. It is recommended to use keyword arguments
+    instead of positional arguments. :issue:`2235`
+
+
+Version 8.1.1
+-------------
+
+Released 2022-03-30
+
+-   Fix an issue with decorator typing that caused type checking to
+    report that a command was not callable. :issue:`2227`
+
+
+Version 8.1.0
+-------------
+
+Released 2022-03-28
+
+-   Drop support for Python 3.6. :pr:`2129`
+-   Remove previously deprecated code. :pr:`2130`
+
+    -   ``Group.resultcallback`` is renamed to ``result_callback``.
+    -   ``autocompletion`` parameter to ``Command`` is renamed to
+        ``shell_complete``.
+    -   ``get_terminal_size`` is removed, use
+        ``shutil.get_terminal_size`` instead.
+    -   ``get_os_args`` is removed, use ``sys.argv[1:]`` instead.
+
+-   Rely on :pep:`538` and :pep:`540` to handle selecting UTF-8 encoding
+    instead of ASCII. Click's locale encoding detection is removed.
+    :issue:`2198`
+-   Single options boolean flags with ``show_default=True`` only show
+    the default if it is ``True``. :issue:`1971`
+-   The ``command`` and ``group`` decorators can be applied with or
+    without parentheses. :issue:`1359`
+-   The ``Path`` type can check whether the target is executable.
+    :issue:`1961`
+-   ``Command.show_default`` overrides ``Context.show_default``, instead
+    of the other way around. :issue:`1963`
+-   Parameter decorators and ``@group`` handles ``cls=None`` the same as
+    not passing ``cls``. ``@option`` handles ``help=None`` the same as
+    not passing ``help``. :issue:`#1959`
+-   A flag option with ``required=True`` requires that the flag is
+    passed instead of choosing the implicit default value. :issue:`1978`
+-   Indentation in help text passed to ``Option`` and ``Command`` is
+    cleaned the same as using the ``@option`` and ``@command``
+    decorators does. A command's ``epilog`` and ``short_help`` are also
+    processed. :issue:`1985`
+-   Store unprocessed ``Command.help``, ``epilog`` and ``short_help``
+    strings. Processing is only done when formatting help text for
+    output. :issue:`2149`
+-   Allow empty str input for ``prompt()`` when
+    ``confirmation_prompt=True`` and ``default=""``. :issue:`2157`
+-   Windows glob pattern expansion doesn't fail if a value is an invalid
+    pattern. :issue:`2195`
+-   It's possible to pass a list of ``params`` to ``@command``. Any
+    params defined with decorators are appended to the passed params.
+    :issue:`2131`.
+-   ``@command`` decorator is annotated as returning the correct type if
+    a ``cls`` argument is used. :issue:`2211`
+-   A ``Group`` with ``invoke_without_command=True`` and ``chain=False``
+    will invoke its result callback with the group function's return
+    value. :issue:`2124`
+-   ``to_info_dict`` will not fail if a ``ParamType`` doesn't define a
+    ``name``. :issue:`2168`
+-   Shell completion prioritizes option values with option prefixes over
+    new options. :issue:`2040`
+-   Options that get an environment variable value using
+    ``autoenvvar_prefix`` treat an empty value as ``None``, consistent
+    with a direct ``envvar``. :issue:`2146`
+
+
+Version 8.0.4
+-------------
+
+Released 2022-02-18
+
+-   ``open_file`` recognizes ``Path("-")`` as a standard stream, the
+    same as the string ``"-"``. :issue:`2106`
+-   The ``option`` and ``argument`` decorators preserve the type
+    annotation of the decorated function. :pr:`2155`
+-   A callable default value can customize its help text by overriding
+    ``__str__`` instead of always showing ``(dynamic)``. :issue:`2099`
+-   Fix a typo in the Bash completion script that affected file and
+    directory completion. If this script was generated by a previous
+    version, it should be regenerated. :issue:`2163`
+-   Fix typing for ``echo`` and ``secho`` file argument.
+    :issue:`2174, 2185`
+
+
+Version 8.0.3
+-------------
+
+Released 2021-10-10
+
+-   Fix issue with ``Path(resolve_path=True)`` type creating invalid
+    paths. :issue:`2088`
+-   Importing ``readline`` does not cause the ``confirm()`` prompt to
+    disappear when pressing backspace. :issue:`2092`
+-   Any default values injected by ``invoke()`` are cast to the
+    corresponding parameter's type. :issue:`2089, 2090`
+
+
+Version 8.0.2
+-------------
+
+Released 2021-10-08
+
+-   ``is_bool_flag`` is not set to ``True`` if ``is_flag`` is ``False``.
+    :issue:`1925`
+-   Bash version detection is locale independent. :issue:`1940`
+-   Empty ``default`` value is not shown for ``multiple=True``.
+    :issue:`1969`
+-   Fix shell completion for arguments that start with a forward slash
+    such as absolute file paths. :issue:`1929`
+-   ``Path`` type with ``resolve_path=True`` resolves relative symlinks
+    to be relative to the containing directory. :issue:`1921`
+-   Completion does not skip Python's resource cleanup when exiting,
+    avoiding some unexpected warning output. :issue:`1738, 2017`
+-   Fix type annotation for ``type`` argument in ``prompt`` function.
+    :issue:`2062`
+-   Fix overline and italic styles, which were incorrectly added when
+    adding underline. :pr:`2058`
+-   An option with ``count=True`` will not show "[x>=0]" in help text.
+    :issue:`2072`
+-   Default values are not cast to the parameter type twice during
+    processing. :issue:`2085`
+-   Options with ``multiple`` and ``flag_value`` use the flag value
+    instead of leaving an internal placeholder. :issue:`2001`
+
+
+Version 8.0.1
+-------------
+
+Released 2021-05-19
+
+-   Mark top-level names as exported so type checking understand imports
+    in user projects. :issue:`1879`
+-   Annotate ``Context.obj`` as ``Any`` so type checking allows all
+    operations on the arbitrary object. :issue:`1885`
+-   Fix some types that weren't available in Python 3.6.0. :issue:`1882`
+-   Fix type checking for iterating over ``ProgressBar`` object.
+    :issue:`1892`
+-   The ``importlib_metadata`` backport package is installed on Python <
+    3.8. :issue:`1889`
+-   Arguments with ``nargs=-1`` only use env var value if no command
+    line values are given. :issue:`1903`
+-   Flag options guess their type from ``flag_value`` if given, like
+    regular options do from ``default``. :issue:`1886`
+-   Added documentation that custom parameter types may be passed
+    already valid values in addition to strings. :issue:`1898`
+-   Resolving commands returns the name that was given, not
+    ``command.name``, fixing an unintended change to help text and
+    ``default_map`` lookups. When using patterns like ``AliasedGroup``,
+    override ``resolve_command`` to change the name that is returned if
+    needed. :issue:`1895`
+-   If a default value is invalid, it does not prevent showing help
+    text. :issue:`1889`
+-   Pass ``windows_expand_args=False`` when calling the main command to
+    disable pattern expansion on Windows. There is no way to escape
+    patterns in CMD, so if the program needs to pass them on as-is then
+    expansion must be disabled. :issue:`1901`
+
+
+Version 8.0.0
+-------------
+
+Released 2021-05-11
+
+-   Drop support for Python 2 and 3.5.
+-   Colorama is always installed on Windows in order to provide style
+    and color support. :pr:`1784`
 -   Adds a repr to Command, showing the command name for friendlier
     debugging. :issue:`1267`, :pr:`1295`
 -   Add support for distinguishing the source of a command line
     parameter. :issue:`1264`, :pr:`1329`
 -   Add an optional parameter to ``ProgressBar.update`` to set the
     ``current_item``. :issue:`1226`, :pr:`1332`
+-   ``version_option`` uses ``importlib.metadata`` (or the
+    ``importlib_metadata`` backport) instead of ``pkg_resources``. The
+    version is detected based on the package name, not the entry point
+    name. The Python package name must match the installed package
+    name, or be passed with ``package_name=``. :issue:`1582`
+-   If validation fails for a prompt with ``hide_input=True``, the value
+    is not shown in the error message. :issue:`1460`
+-   An ``IntRange`` or ``FloatRange`` option shows the accepted range in
+    its help text. :issue:`1525`, :pr:`1303`
+-   ``IntRange`` and ``FloatRange`` bounds can be open (``<``) instead
+    of closed (``<=``) by setting ``min_open`` and ``max_open``. Error
+    messages have changed to reflect this. :issue:`1100`
+-   An option defined with duplicate flag names (``"--foo/--foo"``)
+    raises a ``ValueError``. :issue:`1465`
+-   ``echo()`` will not fail when using pytest's ``capsys`` fixture on
+    Windows. :issue:`1590`
+-   Resolving commands returns the canonical command name instead of the
+    matched name. This makes behavior such as help text and
+    ``Context.invoked_subcommand`` consistent when using patterns like
+    ``AliasedGroup``. :issue:`1422`
+-   The ``BOOL`` type accepts the values "on" and "off". :issue:`1629`
+-   A ``Group`` with ``invoke_without_command=True`` will always invoke
+    its result callback. :issue:`1178`
+-   ``nargs == -1`` and ``nargs > 1`` is parsed and validated for
+    values from environment variables and defaults. :issue:`729`
+-   Detect the program name when executing a module or package with
+    ``python -m name``. :issue:`1603`
+-   Include required parent arguments in help synopsis of subcommands.
+    :issue:`1475`
+-   Help for boolean flags with ``show_default=True`` shows the flag
+    name instead of ``True`` or ``False``. :issue:`1538`
+-   Non-string objects passed to ``style()`` and ``secho()`` will be
+    converted to string. :pr:`1146`
+-   ``edit(require_save=True)`` will detect saves for editors that exit
+    very fast on filesystems with 1 second resolution. :pr:`1050`
+-   New class attributes make it easier to use custom core objects
+    throughout an entire application. :pr:`938`
+
+    -   ``Command.context_class`` controls the context created when
+        running the command.
+    -   ``Context.invoke`` creates new contexts of the same type, so a
+        custom type will persist to invoked subcommands.
+    -   ``Context.formatter_class`` controls the formatter used to
+        generate help and usage.
+    -   ``Group.command_class`` changes the default type for
+        subcommands with ``@group.command()``.
+    -   ``Group.group_class`` changes the default type for subgroups
+        with ``@group.group()``. Setting it to ``type`` will create
+        subgroups of the same type as the group itself.
+    -   Core objects use ``super()`` consistently for better support of
+        subclassing.
+
+-   Use ``Context.with_resource()`` to manage resources that would
+    normally be used in a ``with`` statement, allowing them to be used
+    across subcommands and callbacks, then cleaned up when the context
+    ends. :pr:`1191`
+-   The result object returned by the test runner's ``invoke()`` method
+    has a ``return_value`` attribute with the value returned by the
+    invoked command. :pr:`1312`
+-   Required arguments with the ``Choice`` type show the choices in
+    curly braces to indicate that one is required (``{a|b|c}``).
+    :issue:`1272`
+-   If only a name is passed to ``option()``, Click suggests renaming it
+    to ``--name``. :pr:`1355`
+-   A context's ``show_default`` parameter defaults to the value from
+    the parent context. :issue:`1565`
+-   ``click.style()`` can output 256 and RGB color codes. Most modern
+    terminals support these codes. :pr:`1429`
+-   When using ``CliRunner.invoke()``, the replaced ``stdin`` file has
+    ``name`` and ``mode`` attributes. This lets ``File`` options with
+    the ``-`` value match non-testing behavior. :issue:`1064`
+-   When creating a ``Group``, allow passing a list of commands instead
+    of a dict. :issue:`1339`
+-   When a long option name isn't valid, use ``difflib`` to make better
+    suggestions for possible corrections. :issue:`1446`
+-   Core objects have a ``to_info_dict()`` method. This gathers
+    information about the object's structure that could be useful for a
+    tool generating user-facing documentation. To get the structure of
+    an entire CLI, use ``Context(cli).to_info_dict()``. :issue:`461`
+-   Redesign the shell completion system. :issue:`1484`, :pr:`1622`
+
+    -   Support Bash >= 4.4, Zsh, and Fish, with the ability for
+        extensions to add support for other shells.
+    -   Allow commands, groups, parameters, and types to override their
+        completions suggestions.
+    -   Groups complete the names commands were registered with, which
+        can differ from the name they were created with.
+    -   The ``autocompletion`` parameter for options and arguments is
+        renamed to ``shell_complete``. The function must take
+        ``ctx, param, incomplete``, must do matching rather than return
+        all values, and must return a list of strings or a list of
+        ``CompletionItem``. The old name and behavior is deprecated and
+        will be removed in 8.1.
+    -   The env var values used to start completion have changed order.
+        The shell now comes first, such as ``{shell}_source`` rather
+        than ``source_{shell}``, and is always required.
+
+-   Completion correctly parses command line strings with incomplete
+    quoting or escape sequences. :issue:`1708`
+-   Extra context settings (``obj=...``, etc.) are passed on to the
+    completion system. :issue:`942`
+-   Include ``--help`` option in completion. :pr:`1504`
+-   ``ParameterSource`` is an ``enum.Enum`` subclass. :issue:`1530`
+-   Boolean and UUID types strip surrounding space before converting.
+    :issue:`1605`
+-   Adjusted error message from parameter type validation to be more
+    consistent. Quotes are used to distinguish the invalid value.
+    :issue:`1605`
+-   The default value for a parameter with ``nargs`` > 1 and
+    ``multiple=True`` must be a list of tuples. :issue:`1649`
+-   When getting the value for a parameter, the default is tried in the
+    same section as other sources to ensure consistent processing.
+    :issue:`1649`
+-   All parameter types accept a value that is already the correct type.
+    :issue:`1649`
+-   For shell completion, an argument is considered incomplete if its
+    value did not come from the command line args. :issue:`1649`
+-   Added ``ParameterSource.PROMPT`` to track parameter values that were
+    prompted for. :issue:`1649`
+-   Options with ``nargs`` > 1 no longer raise an error if a default is
+    not given. Parameters with ``nargs`` > 1 default to ``None``, and
+    parameters with ``multiple=True`` or ``nargs=-1`` default to an
+    empty tuple. :issue:`472`
+-   Handle empty env vars as though the option were not passed. This
+    extends the change introduced in 7.1 to be consistent in more cases.
+    :issue:`1285`
+-   ``Parameter.get_default()`` checks ``Context.default_map`` to
+    handle overrides consistently in help text, ``invoke()``, and
+    prompts. :issue:`1548`
+-   Add ``prompt_required`` param to ``Option``. When set to ``False``,
+    the user will only be prompted for an input if no value was passed.
+    :issue:`736`
+-   Providing the value to an option can be made optional through
+    ``is_flag=False``, and the value can instead be prompted for or
+    passed in as a default value.
+    :issue:`549, 736, 764, 921, 1015, 1618`
+-   Fix formatting when ``Command.options_metavar`` is empty. :pr:`1551`
+-   Revert adding space between option help text that wraps.
+    :issue:`1831`
+-   The default value passed to ``prompt`` will be cast to the correct
+    type like an input value would be. :pr:`1517`
+-   Automatically generated short help messages will stop at the first
+    ending of a phrase or double linebreak. :issue:`1082`
+-   Skip progress bar render steps for efficiency with very fast
+    iterators by setting ``update_min_steps``. :issue:`676`
+-   Respect ``case_sensitive=False`` when doing shell completion for
+    ``Choice`` :issue:`1692`
+-   Use ``mkstemp()`` instead of ``mktemp()`` in pager implementation.
+    :issue:`1752`
+-   If ``Option.show_default`` is a string, it is displayed even if
+    ``default`` is ``None``. :issue:`1732`
+-   ``click.get_terminal_size()`` is deprecated and will be removed in
+    8.1. Use :func:`shutil.get_terminal_size` instead. :issue:`1736`
+-   Control the location of the temporary directory created by
+    ``CLIRunner.isolated_filesystem`` by passing ``temp_dir``. A custom
+    directory will not be removed automatically. :issue:`395`
+-   ``click.confirm()`` will prompt until input is given if called with
+    ``default=None``. :issue:`1381`
+-   Option prompts validate the value with the option's callback in
+    addition to its type. :issue:`457`
+-   ``confirmation_prompt`` can be set to a custom string. :issue:`723`
+-   Allow styled output in Jupyter on Windows. :issue:`1271`
+-   ``style()`` supports the ``strikethrough``, ``italic``, and
+    ``overline`` styles. :issue:`805, 1821`
+-   Multiline marker is removed from short help text. :issue:`1597`
+-   Restore progress bar behavior of echoing only the label if the file
+    is not a TTY. :issue:`1138`
+-   Progress bar output is shown even if execution time is less than 0.5
+    seconds. :issue:`1648`
+-   Progress bar ``item_show_func`` shows the current item, not the
+    previous item. :issue:`1353`
+-   The ``Path`` param type can be passed ``path_type=pathlib.Path`` to
+    return a path object instead of a string. :issue:`405`
+-   ``TypeError`` is raised when parameter with ``multiple=True`` or
+    ``nargs > 1`` has non-iterable default. :issue:`1749`
+-   Add a ``pass_meta_key`` decorator for passing a key from
+    ``Context.meta``. This is useful for extensions using ``meta`` to
+    store information. :issue:`1739`
+-   ``Path`` ``resolve_path`` resolves symlinks on Windows Python < 3.8.
+    :issue:`1813`
+-   Command deprecation notice appears at the start of the help text, as
+    well as in the short help. The notice is not in all caps.
+    :issue:`1791`
+-   When taking arguments from ``sys.argv`` on Windows, glob patterns,
+    user dir, and env vars are expanded. :issue:`1096`
+-   Marked messages shown by the CLI with ``gettext()`` to allow
+    applications to translate Click's built-in strings. :issue:`303`
+-   Writing invalid characters  to ``stderr`` when using the test runner
+    does not raise a ``UnicodeEncodeError``. :issue:`848`
+-   Fix an issue where ``readline`` would clear the entire ``prompt()``
+    line instead of only the input when pressing backspace. :issue:`665`
+-   Add all kwargs passed to ``Context.invoke()`` to ``ctx.params``.
+    Fixes an inconsistency when nesting ``Context.forward()`` calls.
+    :issue:`1568`
+-   The ``MultiCommand.resultcallback`` decorator is renamed to
+    ``result_callback``. The old name is deprecated. :issue:`1160`
+-   Fix issues with ``CliRunner`` output when using ``echo_stdin=True``.
+    :issue:`1101`
+-   Fix a bug of ``click.utils.make_default_short_help`` for which the
+    returned string could be as long as ``max_width + 3``. :issue:`1849`
+-   When defining a parameter, ``default`` is validated with
+    ``multiple`` and ``nargs``. More validation is done for values being
+    processed as well. :issue:`1806`
+-   ``HelpFormatter.write_text`` uses the full line width when wrapping
+    text. :issue:`1871`
+
+
+Version 7.1.2
+-------------
+
+Released 2020-04-27
+
+-   Revert applying shell quoting to commands for ``echo_with_pager``
+    and ``edit``. This was intended to allows spaces in commands, but
+    caused issues if the string was actually a command and arguments, or
+    on Windows. Instead, the string must be quoted manually as it should
+    appear on the command line. :issue:`1514`
+
+
+Version 7.1.1
+-------------
+
+Released 2020-03-09
+
+-   Fix ``ClickException`` output going to stdout instead of stderr.
+    :issue:`1495`
 
 
 Version 7.1
 -----------
 
-Unreleased
+Released 2020-03-09
 
 -   Fix PyPI package name, "click" is lowercase again.
 -   Fix link in ``unicode_literals`` error message. :pr:`1151`
@@ -33,12 +524,14 @@ Unreleased
 -   Fix ``OSError`` when running in MSYS2. :issue:`1338`
 -   Fix ``OSError`` when redirecting to ``NUL`` stream on Windows.
     :issue:`1065`
+-   Fix memory leak when parsing Unicode arguments on Windows.
+    :issue:`1136`
 -   Fix error in new AppEngine environments. :issue:`1462`
 -   Always return one of the passed choices for ``click.Choice``
     :issue:`1277`, :pr:`1318`
 -   Add ``no_args_is_help`` option to ``click.Command``, defaults to
     False :pr:`1167`
--   Add ``show_defaults`` parameter to ``Context`` to enable showing
+-   Add ``show_default`` parameter to ``Context`` to enable showing
     defaults globally. :issue:`1018`
 -   Handle ``env MYPATH=''`` as though the option were not passed.
     :issue:`1196`
@@ -59,8 +552,31 @@ Unreleased
     interpreter. :issue:`1139`
 -   Fix how default values for file-type options are shown during
     prompts. :issue:`914`
+-   Fix environment variable automatic generation for commands
+    containing ``-``. :issue:`1253`
+-   Option help text replaces newlines with spaces when rewrapping, but
+    preserves paragraph breaks, fixing multiline formatting.
+    :issue:`834, 1066, 1397`
+-   Option help text that is wrapped adds an extra newline at the end to
+    distinguish it from the next option. :issue:`1075`
 -   Consider ``sensible-editor`` when determining the editor to use for
     ``click.edit()``. :pr:`1469`
+-   Arguments to system calls such as the executable path passed to
+    ``click.edit`` can contains spaces. :pr:`1470`
+-   Add ZSH completion autoloading and error handling. :issue:`1348`
+-   Add a repr to ``Command``, ``Group``, ``Option``, and ``Argument``,
+    showing the name for friendlier debugging. :issue:`1267`
+-   Completion doesn't consider option names if a value starts with
+    ``-`` after the ``--`` separator. :issue:`1247`
+-   ZSH completion escapes special characters in values. :pr:`1418`
+-   Add completion support for Fish shell. :pr:`1423`
+-   Decoding bytes option values falls back to UTF-8 in more cases.
+    :pr:`1468`
+-   Make the warning about old 2-arg parameter callbacks a deprecation
+    warning, to be removed in 8.0. This has been a warning since Click
+    2.0. :pr:`1492`
+-   Adjust error messages to standardize the types of quotes used so
+    they match error messages from Python.
 
 
 Version 7.0

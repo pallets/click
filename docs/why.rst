@@ -7,16 +7,15 @@ why does Click exist?
 This question is easy to answer: because there is not a single command
 line utility for Python out there which ticks the following boxes:
 
-*   is lazily composable without restrictions
-*   supports implementation of Unix/POSIX command line conventions
-*   supports loading values from environment variables out of the box
-*   support for prompting of custom values
-*   is fully nestable and composable
-*   works the same in Python 2 and 3
-*   supports file handling out of the box
-*   comes with useful common helpers (getting terminal dimensions,
+*   Is lazily composable without restrictions.
+*   Supports implementation of Unix/POSIX command line conventions.
+*   Supports loading values from environment variables out of the box.
+*   Support for prompting of custom values.
+*   Is fully nestable and composable.
+*   Supports file handling out of the box.
+*   Comes with useful common helpers (getting terminal dimensions,
     ANSI colors, fetching direct keyboard input, screen clearing,
-    finding config paths, launching apps and editors, etc.)
+    finding config paths, launching apps and editors, etc.).
 
 There are many alternatives to Click; the obvious ones are ``optparse``
 and ``argparse`` from the standard library. Have a look to see if something
@@ -47,15 +46,15 @@ Why not Argparse?
 
 Click is internally based on ``optparse`` instead of ``argparse``. This
 is an implementation detail that a user does not have to be concerned
-with. Click is not based on argparse because it has some behaviors that
+with. Click is not based on ``argparse`` because it has some behaviors that
 make handling arbitrary command line interfaces hard:
 
-*   argparse has built-in behavior to guess if something is an
+*   ``argparse`` has built-in behavior to guess if something is an
     argument or an option. This becomes a problem when dealing with
     incomplete command lines; the behaviour becomes unpredictable
     without full knowledge of a command line. This goes against Click's
     ambitions of dispatching to subparsers.
-*   argparse does not support disabling interspersed arguments. Without
+*   ``argparse`` does not support disabling interspersed arguments. Without
     this feature, it's not possible to safely implement Click's nested
     parsing.
 
@@ -135,7 +134,7 @@ Why No Auto Correction?
 -----------------------
 
 The question came up why Click does not auto correct parameters given that
-even optparse and argparse support automatic expansion of long arguments.
+even optparse and ``argparse`` support automatic expansion of long arguments.
 The reason for this is that it's a liability for backwards compatibility.
 If people start relying on automatically modified parameters and someone
 adds a new parameter in the future, the script might stop working.  These

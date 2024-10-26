@@ -6,6 +6,37 @@ this is not entirely possible.  In case we need to break backwards
 compatibility this document gives you information about how to upgrade or
 handle backwards compatibility properly.
 
+.. _upgrade-to-7.0:
+
+Upgrading to 7.0
+----------------
+
+Commands that take their name from the decorated function now replace
+underscores with dashes. For example, the Python function ``run_server``
+will get the command name ``run-server`` now. There are a few options
+to address this:
+
+-   To continue with the new behavior, pin your dependency to
+    ``Click>=7`` and update any documentation to use dashes.
+-   To keep existing behavior, add an explicit command name with
+    underscores, like ``@click.command("run_server")``.
+-   To try a name with dashes if the name with underscores was not
+    found, pass a ``token_normalize_func`` to the context:
+
+    .. code-block:: python
+
+        def normalize(name):
+            return name.replace("_", "-")
+
+        @click.group(context_settings={"token_normalize_func": normalize})
+        def group():
+            ...
+
+        @group.command()
+        def run_server():
+            ...
+
+
 .. _upgrade-to-3.2:
 
 Upgrading to 3.2
@@ -59,7 +90,7 @@ restored.
 If you do require the know which exact commands will be invoked there are
 different ways to cope with this.  The first one is to let the subcommands
 all return functions and then to invoke the functions in a
-:meth:`Context.resultcallback`.
+:meth:`Context.result_callback`.
 
 
 .. _upgrade-to-2.0:

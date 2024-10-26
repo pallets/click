@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions on Discussions
+    url: https://github.com/pallets/click/discussions/
+    about: Ask questions about your own code on the Discussions tab.
+  - name: Questions on Chat
+    url: https://discord.gg/pallets
+    about: Ask questions about your own code on our Discord chat.
