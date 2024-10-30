@@ -11,37 +11,20 @@ Install from PyPI::
 
 Installing into a virtual environment is highly recommended. We suggest :ref:`virtualenv-heading`.
 
-Screencast and Examples
+Examples
 -----------------------
 
-There is a screencast available which shows the basic API of Click and
-how to build simple applications with it.  It also explores how to build
-commands with subcommands.
+Some standalone examples of Click applications are packaged with Click. They are available in the `examples folder <https://github.com/pallets/click/tree/main/examples>`_ of the repo.
 
-*   `Building Command Line Applications with Click
-    <https://www.youtube.com/watch?v=kNke39OZ2k0>`_
-
-Examples of Click applications can be found in the documentation as well
-as in the GitHub repository together with readme files:
-
-*   ``inout``: `File input and output
-    <https://github.com/pallets/click/tree/main/examples/inout>`_
-*   ``naval``: `Port of docopt naval example
-    <https://github.com/pallets/click/tree/main/examples/naval>`_
-*   ``aliases``: `Command alias example
-    <https://github.com/pallets/click/tree/main/examples/aliases>`_
-*   ``repo``: `Git-/Mercurial-like command line interface
-    <https://github.com/pallets/click/tree/main/examples/repo>`_
-*   ``complex``: `Complex example with plugin loading
-    <https://github.com/pallets/click/tree/main/examples/complex>`_
-*   ``validation``: `Custom parameter validation example
-    <https://github.com/pallets/click/tree/main/examples/validation>`_
-*   ``colors``: `Color support demo
-    <https://github.com/pallets/click/tree/main/examples/colors>`_
-*   ``termui``: `Terminal UI functions demo
-    <https://github.com/pallets/click/tree/main/examples/termui>`_
-*   ``imagepipe``: `Multi command chaining demo
-    <https://github.com/pallets/click/tree/main/examples/imagepipe>`_
+*   `inout <https://github.com/pallets/click/tree/main/examples/inout>`_ : A very simple example of an application that can read from files and write to files and also accept input from stdin or write to stdout.
+*   `validation <https://github.com/pallets/click/tree/main/examples/validation>`_ : A simple example of an application that performs custom validation of parameters in different ways.
+*   `naval <https://github.com/pallets/click/tree/main/examples/naval>`_ : Port of the `docopt <http://docopt.org/>`_ naval example.
+*   `colors <https://github.com/pallets/click/tree/main/examples/colors>`_ : A simple example that colorizes text. Uses colorama on Windows.
+*   `aliases <https://github.com/pallets/click/tree/main/examples/aliases>`_ : An advanced example that implements :ref:`aliases`.
+*   `imagepipe <https://github.com/pallets/click/tree/main/examples/imagepipe>`_ : A complex example that implements some :ref:`multi-command-chaining` . It chains together image processing instructions. Requires pillow.
+*   `repo <https://github.com/pallets/click/tree/main/examples/repo>`_ : An advanced example that implements a Git-/Mercurial-like command line interface.
+*   `complex <https://github.com/pallets/click/tree/main/examples/complex>`_ : A very advanced example that implements loading subcommands dynamically from a plugin folder.
+*   `termui <https://github.com/pallets/click/tree/main/examples/termui>`_ : A simple example that showcases terminal UI helpers provided by click.
 
 Basic Concepts - Creating a Command
 -----------------------------------
