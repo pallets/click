@@ -1285,25 +1285,19 @@ class Command(BaseCommand):
         return list(all_names)
 
     def get_help_option(self, ctx: Context) -> t.Optional["Option"]:
-        """Returns the help option object."""
+        """Returns the help option object.
+
+        Unless ``add_help_option`` is ``False``.
+        """
         help_options = self.get_help_option_names(ctx)
 
         if not help_options or not self.add_help_option:
             return None
 
-        def show_help(ctx: Context, param: "Parameter", value: str) -> None:
-            if value and not ctx.resilient_parsing:
-                echo(ctx.get_help(), color=ctx.color)
-                ctx.exit()
+        # Avoid circular import.
+        from .decorators import HelpOption
 
-        return Option(
-            help_options,
-            is_flag=True,
-            is_eager=True,
-            expose_value=False,
-            callback=show_help,
-            help=_("Show this message and exit."),
-        )
+        return HelpOption(help_options)
 
     def make_parser(self, ctx: Context) -> OptionParser:
         """Creates the underlying option parser for this command."""
