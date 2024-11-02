@@ -1,3 +1,5 @@
+import pytest
+
 import click
 
 
@@ -69,3 +71,22 @@ def test_params_argument(runner):
     assert cli.params[1].name == "b"
     result = runner.invoke(cli, ["1", "2"])
     assert result.output == "1 2\n"
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "init_data",
+        "init_data_command",
+        "init_data_cmd",
+        "init_data_group",
+        "init_data_grp",
+    ],
+)
+def test_generate_name(name: str) -> None:
+    def f():
+        pass
+
+    f.__name__ = name
+    f = click.command(f)
+    assert f.name == "init-data"

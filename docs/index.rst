@@ -70,6 +70,7 @@ usage patterns.
    quickstart
    virtualenv
    setuptools
+   entry-points
    parameters
    options
    arguments
@@ -103,6 +104,5 @@ Miscellaneous Pages
    :maxdepth: 2
 
    contrib
-   upgrading
    license
    changes

@@ -145,14 +145,14 @@ def test_group_with_args(runner, args, exit_code, expect):
     assert expect in result.output
 
 
-def test_base_command(runner):
+def test_custom_parser(runner):
     import optparse
 
     @click.group()
     def cli():
         pass
 
-    class OptParseCommand(click.BaseCommand):
+    class OptParseCommand(click.Command):
         def __init__(self, name, parser, callback):
             super().__init__(name)
             self.parser = parser
@@ -249,7 +249,7 @@ def test_other_command_invoke_with_defaults(runner):
     result = runner.invoke(cli, standalone_mode=False)
     # invoke should type cast default values, str becomes int, empty
     # multiple should be empty tuple instead of None
-    assert result.return_value == ("other-cmd", 42, 15, ())
+    assert result.return_value == ("other", 42, 15, ())
 
 
 def test_invoked_subcommand(runner):

@@ -1,5 +1,6 @@
 [project]
 name = "click"
+version = "8.2.0.dev"
 description = "Composable command line interface toolkit"
 readme = "README.md"
 license = {file = "LICENSE.txt"}
@@ -12,12 +13,10 @@ classifiers = [
     "Programming Language :: Python",
     "Typing :: Typed",
 ]
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 dependencies = [
     "colorama; platform_system == 'Windows'",
-    "importlib-metadata; python_version < '3.8'",
 ]
-dynamic = ["version"]
 
 [project.urls]
 Donate = "https://palletsprojects.com/donate"
