@@ -2688,8 +2688,8 @@ class Option(Parameter):
 
         return ("; " if any_prefix_is_slash else " / ").join(rv), help
 
-    def get_help_extra(self, ctx: Context) -> dict[str, t.Any]:
-        extra: dict[str, t.Any] = {}
+    def get_help_extra(self, ctx: Context) -> types.OptionHelpExtra:
+        extra: types.OptionHelpExtra = {}
 
         if self.show_envvar:
             envvar = self.envvar
