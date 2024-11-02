@@ -79,9 +79,14 @@ Unreleased
         allows the user to search for future output of the generator when
         using less and then aborting the program using ctrl-c.
 
--   Parameters can now be deprecated using ``deprecated: bool | str``. These cannot
-    be required nor prompted and are highlighted in usage output. Using them
-    will result in a warning being printed. :issue:`2263` :pr:`2271`
+-   ``deprecated: bool | str`` can now be used on options and arguments. This
+    previously was only available for ``Command``. The message can now also be
+    customised by using a ``str`` instead of a ``bool``. :issue:`2263` :pr:`2271`
+
+    -   ``Command.deprecated`` formatting in ``--help`` changed from
+        ``(Deprecated) help`` to ``help (DEPRECATED)``.
+    -   Parameters cannot be required nor prompted or an error is raised.
+    -   A warning will be printed when something deprecated is used.
 
 
 Version 8.1.8
