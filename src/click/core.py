@@ -1988,10 +1988,11 @@ class Parameter:
         given. Takes ``ctx, param, incomplete`` and must return a list
         of :class:`~click.shell_completion.CompletionItem` or a list of
         strings.
-    :param deprecated: issues a message indicating that
-                       the argument is deprecated and highlights its deprecation
-                       in --help. A deprecated parameter cannot be required nor, a
-                       ValueError will be raised otherwise.
+    :param deprecated: If ``True`` or non-empty string, issues a message
+                        indicating that the argument is deprecated and highlights
+                        its deprecation in --help. The message can be customized
+                        by using a string as the value. A deprecated parameter
+                        cannot be required, a ValueError will be raised otherwise.
 
     .. versionchanged:: 8.2.0
         Introduction of ``deprecated``.
@@ -2055,7 +2056,7 @@ class Parameter:
             [Context, Parameter, str], list[CompletionItem] | list[str]
         ]
         | None = None,
-        deprecated: bool = False,
+        deprecated: bool | str = False,
     ) -> None:
         self.name: str | None
         self.opts: list[str]
@@ -2362,9 +2363,17 @@ class Parameter:
                     ParameterSource.DEFAULT_MAP,
                 )
             ):
+                extra_message = (
+                    f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
+                )
                 message = _(
                     "DeprecationWarning: The {param_type} {name!r} is deprecated."
-                ).format(param_type=self.param_type_name, name=self.human_readable_name)
+                    "{extra_message}"
+                ).format(
+                    param_type=self.param_type_name,
+                    name=self.human_readable_name,
+                    extra_message=extra_message,
+                )
                 echo(style(message, fg="red"), err=True)
 
             ctx.set_parameter_source(self.name, source)  # type: ignore
@@ -2505,7 +2514,7 @@ class Option(Parameter):
         hidden: bool = False,
         show_choices: bool = True,
         show_envvar: bool = False,
-        deprecated: bool = False,
+        deprecated: bool | str = False,
         **attrs: t.Any,
     ) -> None:
         if help:
@@ -2527,7 +2536,12 @@ class Option(Parameter):
             prompt_text = prompt
 
         if deprecated:
-            help = help + "(DEPRECATED)" if help is not None else "(DEPRECATED)"
+            deprecated_message = (
+                f"(DEPRECATED: {deprecated})"
+                if isinstance(deprecated, str)
+                else "(DEPRECATED)"
+            )
+            help = help + deprecated_message if help is not None else deprecated_message
 
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt

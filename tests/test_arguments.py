@@ -286,10 +286,11 @@ def test_deprecated_usage(runner):
     assert "[F!]" in result.output
 
 
-def test_deprecated_warning(runner):
+@pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])
+def test_deprecated_warning(runner, deprecated):
     @click.command()
     @click.argument(
-        "my-argument", required=False, deprecated=True, default="default argument"
+        "my-argument", required=False, deprecated=deprecated, default="default argument"
     )
     def cli(my_argument: str):
         click.echo(f"{my_argument}")
@@ -302,6 +303,9 @@ def test_deprecated_warning(runner):
     result = runner.invoke(cli, ["hello"])
     assert result.exit_code == 0, result.output
     assert "argument 'MY_ARGUMENT' is deprecated" in result.output
+
+    if isinstance(deprecated, str):
+        assert deprecated in result.output
 
 
 def test_deprecated_required(runner):

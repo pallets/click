@@ -33,19 +33,26 @@ def test_invalid_option(runner):
     assert "'--foo'" in message
 
 
-def test_deprecated_usage(runner):
+@pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])
+def test_deprecated_usage(runner, deprecated):
     @click.command()
-    @click.option("--foo", default="bar", deprecated=True)
+    @click.option("--foo", default="bar", deprecated=deprecated)
     def cmd(foo):
         click.echo(foo)
 
     result = runner.invoke(cmd, ["--help"])
-    assert re.search("(DEPRECATED)", result.output)
+    assert "(DEPRECATED" in result.output
+
+    if isinstance(deprecated, str):
+        assert deprecated in result.output
 
 
-def test_deprecated_warning(runner):
+@pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])
+def test_deprecated_warning(runner, deprecated):
     @click.command()
-    @click.option("--my-option", required=False, deprecated=True)
+    @click.option(
+        "--my-option", required=False, deprecated=deprecated, default="default option"
+    )
     def cli(my_option: str):
         click.echo(f"{my_option}")
 
@@ -57,6 +64,9 @@ def test_deprecated_warning(runner):
     result = runner.invoke(cli, ["--my-option", "hello"])
     assert result.exit_code == 0, result.output
     assert "option 'my_option' is deprecated" in result.output
+
+    if isinstance(deprecated, str):
+        assert deprecated in result.output
 
 
 def test_deprecated_required(runner):
