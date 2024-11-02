@@ -1988,6 +1988,17 @@ class Parameter:
         given. Takes ``ctx, param, incomplete`` and must return a list
         of :class:`~click.shell_completion.CompletionItem` or a list of
         strings.
+    :param deprecated: issues a message indicating that
+                       the argument is deprecated and highlights its deprecation
+                       in --help. A deprecated parameter cannot be required nor, a
+                       ValueError will be raised otherwise.
+
+    .. versionchanged:: 8.2.0
+        Introduction of ``deprecated``.
+
+    .. versionchanged:: 8.2
+        Adding duplicate parameter names to a :class:`~click.core.Command` will
+        result in a ``UserWarning`` being shown.
 
     .. versionchanged:: 8.2
         Adding duplicate parameter names to a :class:`~click.core.Command` will
@@ -2044,6 +2055,7 @@ class Parameter:
             [Context, Parameter, str], list[CompletionItem] | list[str]
         ]
         | None = None,
+        deprecated: bool = False,
     ) -> None:
         self.name: str | None
         self.opts: list[str]
@@ -2071,6 +2083,7 @@ class Parameter:
         self.metavar = metavar
         self.envvar = envvar
         self._custom_shell_complete = shell_complete
+        self.deprecated = deprecated
 
         if __debug__:
             if self.type.is_composite and nargs != self.type.arity:
@@ -2112,6 +2125,13 @@ class Parameter:
                         raise ValueError(
                             f"'default' {subject} must match nargs={nargs}."
                         )
+
+            if required and deprecated:
+                raise ValueError(
+                    f"The {self.param_type_name} '{self.human_readable_name}' "
+                    "is deprecated and still required. A deprecated "
+                    f"{self.param_type_name} cannot be required."
+                )
 
     def to_info_dict(self) -> dict[str, t.Any]:
         """Gather information that could be useful for a tool generating
@@ -2332,6 +2352,21 @@ class Parameter:
     ) -> tuple[t.Any, list[str]]:
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
+
+            if (
+                self.deprecated
+                and value is not None
+                and source
+                not in (
+                    ParameterSource.DEFAULT,
+                    ParameterSource.DEFAULT_MAP,
+                )
+            ):
+                message = _(
+                    "DeprecationWarning: The {param_type} {name!r} is deprecated."
+                ).format(param_type=self.param_type_name, name=self.human_readable_name)
+                echo(style(message, fg="red"), err=True)
+
             ctx.set_parameter_source(self.name, source)  # type: ignore
 
             try:
@@ -2402,7 +2437,8 @@ class Option(Parameter):
         Normally, environment variables are not shown.
     :param prompt: If set to ``True`` or a non empty string then the
         user will be prompted for input. If set to ``True`` the prompt
-        will be the option name capitalized.
+        will be the option name capitalized. A deprecated option cannot be
+        prompted.
     :param confirmation_prompt: Prompt a second time to confirm the
         value if it was prompted for. Can be set to a string instead of
         ``True`` to customize the message.
@@ -2428,12 +2464,6 @@ class Option(Parameter):
     :param help: the help string.
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
-    :param deprecated: issues a message indicating that
-                       the command is deprecated showing help
-
-    .. versionchanged:: 8.2.0
-        Show deprecation warning message running ``--help`` Option
-        for ``@click.option``. :issue:`2263`
 
     .. versionchanged:: 8.2
         ``envvar`` used with ``flag_value`` will always use the ``flag_value``,
@@ -2482,7 +2512,9 @@ class Option(Parameter):
             help = inspect.cleandoc(help)
 
         default_is_missing = "default" not in attrs
-        super().__init__(param_decls, type=type, multiple=multiple, **attrs)
+        super().__init__(
+            param_decls, type=type, multiple=multiple, deprecated=deprecated, **attrs
+        )
 
         if prompt is True:
             if self.name is None:
@@ -2558,6 +2590,9 @@ class Option(Parameter):
         self.show_envvar = show_envvar
 
         if __debug__:
+            if deprecated and prompt:
+                raise ValueError("`deprecated` options cannot use `prompt`.")
+
             if self.nargs == -1:
                 raise TypeError("nargs=-1 is not supported for options.")
 
@@ -2993,6 +3028,8 @@ class Argument(Parameter):
         var = self.type.get_metavar(self)
         if not var:
             var = self.name.upper()  # type: ignore
+        if self.deprecated:
+            var += "!"
         if not self.required:
             var = f"[{var}]"
         if self.nargs != 1:

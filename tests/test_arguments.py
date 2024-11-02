@@ -275,6 +275,40 @@ def test_implicit_non_required(runner):
     assert result.output == "test\n"
 
 
+def test_deprecated_usage(runner):
+    @click.command()
+    @click.argument("f", required=False, deprecated=True)
+    def cli(f):
+        click.echo(f)
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert "[F!]" in result.output
+
+
+def test_deprecated_warning(runner):
+    @click.command()
+    @click.argument(
+        "my-argument", required=False, deprecated=True, default="default argument"
+    )
+    def cli(my_argument: str):
+        click.echo(f"{my_argument}")
+
+    # defaults should not give a deprecated warning
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0, result.output
+    assert "is deprecated" not in result.output
+
+    result = runner.invoke(cli, ["hello"])
+    assert result.exit_code == 0, result.output
+    assert "argument 'MY_ARGUMENT' is deprecated" in result.output
+
+
+def test_deprecated_required(runner):
+    with pytest.raises(ValueError, match="is deprecated and still required"):
+        click.Argument(["a"], required=True, deprecated=True)
+
+
 def test_eat_options(runner):
     @click.command()
     @click.option("-f")

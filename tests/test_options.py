@@ -33,7 +33,7 @@ def test_invalid_option(runner):
     assert "'--foo'" in message
 
 
-def test_deprecated_option(runner):
+def test_deprecated_usage(runner):
     @click.command()
     @click.option("--foo", default="bar", deprecated=True)
     def cmd(foo):
@@ -41,6 +41,32 @@ def test_deprecated_option(runner):
 
     result = runner.invoke(cmd, ["--help"])
     assert re.search("(DEPRECATED)", result.output)
+
+
+def test_deprecated_warning(runner):
+    @click.command()
+    @click.option("--my-option", required=False, deprecated=True)
+    def cli(my_option: str):
+        click.echo(f"{my_option}")
+
+    # defaults should not give a deprecated warning
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0, result.output
+    assert "is deprecated" not in result.output
+
+    result = runner.invoke(cli, ["--my-option", "hello"])
+    assert result.exit_code == 0, result.output
+    assert "option 'my_option' is deprecated" in result.output
+
+
+def test_deprecated_required(runner):
+    with pytest.raises(ValueError, match="is deprecated and still required"):
+        click.Option(["--a"], required=True, deprecated=True)
+
+
+def test_deprecated_prompt(runner):
+    with pytest.raises(ValueError, match="`deprecated` options cannot use `prompt`"):
+        click.Option(["--a"], prompt=True, deprecated=True)
 
 
 def test_invalid_nargs(runner):
