@@ -2798,7 +2798,7 @@ class Option(Parameter):
         # If show_default is set to True/False, provide this to `prompt` as well. For
         # non-bool values of `show_default`, we use `prompt`'s default behavior
         prompt_kwargs: t.Any = {}
-        if type(self.show_default) is bool:
+        if isinstance(self.show_default, bool):
             prompt_kwargs["show_default"] = self.show_default
 
         return prompt(
