@@ -1429,7 +1429,8 @@ class Group(Command):
     .. versionchanged:: 8.2
         Merged with and replaces the ``MultiCommand`` base class.
     """
-    def get_params(self, ctx: Context) -> t.List["Parameter"]:
+
+    def get_params(self, ctx: Context) -> t.List[Parameter]:
         rv = self.params
         help_option = self.get_help_option(ctx)
 
@@ -1465,7 +1466,7 @@ class Group(Command):
             all_names.difference_update(param.secondary_opts)
         return list(all_names)
 
-    def get_help_option(self, ctx: Context) -> t.Optional["Option"]:
+    def get_help_option(self, ctx: Context) -> t.Optional[Option]:
         """Returns the help option object.
 
         Unless ``add_help_option`` is ``False``.
@@ -1604,7 +1605,7 @@ class Group(Command):
         if self.callback is not None:
             return ctx.invoke(self.callback, **ctx.params)
 
-    def shell_complete(self, ctx: Context, incomplete: str) -> t.List["CompletionItem"]:
+    def shell_complete(self, ctx: Context, incomplete: str) -> t.List[CompletionItem]:
         """Return a list of completions for the incomplete value. Looks
         at the names of options and chained multi-commands.
 
@@ -1664,7 +1665,7 @@ class MultiCommand(Command):
         command. This can be set or changed later with the
         :meth:`result_callback` decorator.
     :param attrs: Other command arguments described in :class:`Command`.
-    
+
     """
 
     allow_extra_args = True
