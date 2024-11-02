@@ -1095,3 +1095,10 @@ BOOL = BoolParamType()
 
 #: A UUID parameter.
 UUID = UUIDParameterType()
+
+
+class OptionHelpExtra(t.TypedDict, total=False):
+    envvars: tuple[str, ...]
+    default: str
+    range: str
+    required: str

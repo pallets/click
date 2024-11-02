@@ -2668,7 +2668,28 @@ class Option(Parameter):
             rv.append(_write_opts(self.secondary_opts))
 
         help = self.help or ""
-        extra = []
+
+        extra = self.get_help_extra(ctx)
+        extra_items = []
+        if "envvars" in extra:
+            extra_items.append(
+                _("env var: {var}").format(var=", ".join(extra["envvars"]))
+            )
+        if "default" in extra:
+            extra_items.append(_("default: {default}").format(default=extra["default"]))
+        if "range" in extra:
+            extra_items.append(extra["range"])
+        if "required" in extra:
+            extra_items.append(_(extra["required"]))
+
+        if extra_items:
+            extra_str = "; ".join(extra_items)
+            help = f"{help}  [{extra_str}]" if help else f"[{extra_str}]"
+
+        return ("; " if any_prefix_is_slash else " / ").join(rv), help
+
+    def get_help_extra(self, ctx: Context) -> types.OptionHelpExtra:
+        extra: types.OptionHelpExtra = {}
 
         if self.show_envvar:
             envvar = self.envvar
@@ -2682,12 +2703,10 @@ class Option(Parameter):
                     envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
 
             if envvar is not None:
-                var_str = (
-                    envvar
-                    if isinstance(envvar, str)
-                    else ", ".join(str(d) for d in envvar)
-                )
-                extra.append(_("env var: {var}").format(var=var_str))
+                if isinstance(envvar, str):
+                    extra["envvars"] = (envvar,)
+                else:
+                    extra["envvars"] = tuple(str(d) for d in envvar)
 
         # Temporarily enable resilient parsing to avoid type casting
         # failing for the default. Might be possible to extend this to
@@ -2732,7 +2751,7 @@ class Option(Parameter):
                 default_string = str(default_value)
 
             if default_string:
-                extra.append(_("default: {default}").format(default=default_string))
+                extra["default"] = default_string
 
         if (
             isinstance(self.type, types._NumberRangeBase)
@@ -2742,16 +2761,12 @@ class Option(Parameter):
             range_str = self.type._describe_range()
 
             if range_str:
-                extra.append(range_str)
+                extra["range"] = range_str
 
         if self.required:
-            extra.append(_("required"))
+            extra["required"] = "required"
 
-        if extra:
-            extra_str = "; ".join(extra)
-            help = f"{help}  [{extra_str}]" if help else f"[{extra_str}]"
-
-        return ("; " if any_prefix_is_slash else " / ").join(rv), help
+        return extra
 
     @t.overload
     def get_default(
