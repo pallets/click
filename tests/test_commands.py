@@ -318,22 +318,30 @@ def test_unprocessed_options(runner):
 
 
 @pytest.mark.parametrize("doc", ["CLI HELP", None])
-def test_deprecated_in_help_messages(runner, doc):
-    @click.command(deprecated=True, help=doc)
+@pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])
+def test_deprecated_in_help_messages(runner, doc, deprecated):
+    @click.command(deprecated=deprecated, help=doc)
     def cli():
         pass
 
     result = runner.invoke(cli, ["--help"])
-    assert "(Deprecated)" in result.output
+    assert "(DEPRECATED" in result.output
+
+    if isinstance(deprecated, str):
+        assert deprecated in result.output
 
 
-def test_deprecated_in_invocation(runner):
-    @click.command(deprecated=True)
+@pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])
+def test_deprecated_in_invocation(runner, deprecated):
+    @click.command(deprecated=deprecated)
     def deprecated_cmd():
         pass
 
     result = runner.invoke(deprecated_cmd)
     assert "DeprecationWarning:" in result.output
+
+    if isinstance(deprecated, str):
+        assert deprecated in result.output
 
 
 def test_command_parse_args_collects_option_prefixes():

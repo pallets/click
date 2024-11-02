@@ -856,12 +856,15 @@ class Command:
                             If enabled this will add ``--help`` as argument
                             if no arguments are passed
     :param hidden: hide this command from help outputs.
-
-    :param deprecated: issues a message indicating that
-                             the command is deprecated.
+    :param deprecated: If ``True`` or non-empty string, issues a message
+                        indicating that the command is deprecated and highlights
+                        its deprecation in --help. The message can be customized
+                        by using a string as the value.
 
     .. versionchanged:: 8.2
         This is the base class for all commands, not ``BaseCommand``.
+        ``deprecated`` can be set to a string as well to customize the
+        deprecation message.
 
     .. versionchanged:: 8.1
         ``help``, ``epilog``, and ``short_help`` are stored unprocessed,
@@ -905,7 +908,7 @@ class Command:
         add_help_option: bool = True,
         no_args_is_help: bool = False,
         hidden: bool = False,
-        deprecated: bool = False,
+        deprecated: bool | str = False,
     ) -> None:
         #: the name the command thinks it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
@@ -1059,7 +1062,14 @@ class Command:
             text = ""
 
         if self.deprecated:
-            text = _("(Deprecated) {text}").format(text=text)
+            deprecated_message = (
+                f"(DEPRECATED: {self.deprecated})"
+                if isinstance(self.deprecated, str)
+                else "(DEPRECATED)"
+            )
+            text = _("{text} {deprecated_message}").format(
+                text=text, deprecated_message=deprecated_message
+            )
 
         return text.strip()
 
@@ -1089,7 +1099,14 @@ class Command:
             text = ""
 
         if self.deprecated:
-            text = _("(Deprecated) {text}").format(text=text)
+            deprecated_message = (
+                f"(DEPRECATED: {self.deprecated})"
+                if isinstance(self.deprecated, str)
+                else "(DEPRECATED)"
+            )
+            text = _("{text} {deprecated_message}").format(
+                text=text, deprecated_message=deprecated_message
+            )
 
         if text:
             formatter.write_paragraph()
@@ -1183,9 +1200,13 @@ class Command:
         in the right way.
         """
         if self.deprecated:
+            extra_message = (
+                f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
+            )
             message = _(
                 "DeprecationWarning: The command {name!r} is deprecated."
-            ).format(name=self.name)
+                "{extra_message}"
+            ).format(name=self.name, extra_message=extra_message)
             echo(style(message, fg="red"), err=True)
 
         if self.callback is not None:
