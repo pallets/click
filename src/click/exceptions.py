@@ -174,7 +174,9 @@ class MissingParameter(BadParameter):
 
         msg = self.message
         if self.param is not None:
-            msg_extra = self.param.type.get_missing_message(self.param)
+            msg_extra = self.param.type.get_missing_message(
+                param=self.param, ctx=self.ctx
+            )
             if msg_extra:
                 if msg:
                     msg += f". {msg_extra}"
