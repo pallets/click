@@ -926,3 +926,39 @@ def test_invalid_flag_combinations(runner, kwargs, message):
         click.Option(["-a"], **kwargs)
 
     assert message in str(e.value)
+
+
+@pytest.mark.parametrize(
+    ("choices", "metavars"),
+    [
+        pytest.param(["foo", "bar"], "[TEXT]", id="text choices"),
+        pytest.param([1, 2], "[INTEGER]", id="int choices"),
+        pytest.param([1.0, 2.0], "[FLOAT]", id="float choices"),
+        pytest.param([True, False], "[BOOLEAN]", id="bool choices"),
+        pytest.param(["foo", 1], "[TEXT|INTEGER]", id="text/int choices"),
+    ],
+)
+def test_usage_show_choices(runner, choices, metavars):
+    """When show_choices=False is set, the --help output
+    should print choice metavars instead of values.
+    """
+
+    @click.command()
+    @click.option("-g", type=click.Choice(choices))
+    def cli_with_choices(g):
+        pass
+
+    @click.command()
+    @click.option(
+        "-g",
+        type=click.Choice(choices),
+        show_choices=False,
+    )
+    def cli_without_choices(g):
+        pass
+
+    result = runner.invoke(cli_with_choices, ["--help"])
+    assert f"[{'|'.join([str(i) for i in choices])}]" in result.output
+
+    result = runner.invoke(cli_without_choices, ["--help"])
+    assert metavars in result.output

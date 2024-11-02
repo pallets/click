@@ -31,6 +31,9 @@ Unreleased
 -   When generating a command's name from a decorated function's name, the
     suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
     :issue:`2322`
+-   Show the ``types.ParamType.name`` for ``types.Choice`` options within
+    ``--help`` message if ``show_choices=False`` is specified.
+    :issue:`2356`
 
 
 Version 8.1.8
