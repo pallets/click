@@ -382,6 +382,32 @@ def test_choice_option(runner):
     assert "--method [foo|bar|baz]" in result.output
 
 
+def test_choice_option_normalization(runner):
+    @click.command()
+    @click.option(
+        "--method",
+        type=click.Choice(
+            ["SCREAMING_SNAKE_CASE", "snake_case", "PascalCase", "kebab-case"]
+        ),
+    )
+    def cli(method):
+        click.echo(method)
+
+    result = runner.invoke(cli, ["--method=foo"])
+    assert not result.exception
+    assert result.output == "foo\n"
+
+    result = runner.invoke(cli, ["--method=meh"])
+    assert result.exit_code == 2
+    assert (
+        "Invalid value for '--method': 'meh' is not one of "
+        "'screaming-snake-case', 'snake-case', 'pascalcase', 'kebab-case'."
+    ) in result.output
+
+    result = runner.invoke(cli, ["--help"])
+    assert "--method [foo|bar|baz]" in result.output
+
+
 def test_choice_argument(runner):
     @click.command()
     @click.argument("method", type=click.Choice(["foo", "bar", "baz"]))
