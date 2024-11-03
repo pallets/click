@@ -138,7 +138,25 @@ def make_input_stream(
 
 
 class Result:
-    """Holds the captured result of an invoked CLI script."""
+    """Holds the captured result of an invoked CLI script.
+
+    :param runner: The runner that created the result
+    :param stdout_bytes: The standard output as bytes.
+    :param stderr_bytes: The standard error as bytes.
+    :param output_bytes: A mix of ``stdout_bytes`` and ``stderr_bytes``, as the
+        user would see  it in its terminal.
+    :param return_value: The value returned from the invoked command.
+    :param exit_code: The exit code as integer.
+    :param exception: The exception that happened if one did.
+    :param exc_info: Exception information (exception type, exception instance,
+        traceback type).
+
+    .. versionchanged:: 8.2
+        ``stderr_bytes`` no longer optional, ``output_bytes`` introduced.
+
+    .. versionadded:: 8.0
+        Added ``return_value``.
+    """
 
     def __init__(
         self,
@@ -152,29 +170,13 @@ class Result:
         exc_info: tuple[type[BaseException], BaseException, TracebackType]
         | None = None,
     ):
-        #: The runner that created the result
         self.runner = runner
-        #: The standard output as bytes.
         self.stdout_bytes = stdout_bytes
-        #: The standard error as bytes.
-        #:
-        #: .. versionchanged:: 8.2
-        #:     No longer optional.
         self.stderr_bytes = stderr_bytes
-        #: A mix of `stdout_bytes` and `stderr_bytes``, as the user would see
-        # it in its terminal.
-        #:
-        #: .. versionadded:: 8.2
         self.output_bytes = output_bytes
-        #: The value returned from the invoked command.
-        #:
-        #: .. versionadded:: 8.0
         self.return_value = return_value
-        #: The exit code as integer.
         self.exit_code = exit_code
-        #: The exception that happened if one did.
         self.exception = exception
-        #: The traceback
         self.exc_info = exc_info
 
     @property
