@@ -234,15 +234,14 @@ class ProgressBar(t.Generic[V]):
     def render_progress(self) -> None:
         import shutil
 
+        if self.hidden:
+            return
+
         if not self._is_atty:
-            # Only output the label as it changes if the output is not a
-            # TTY. Use file=stderr if you expect to be piping stdout.
+            # Only output the label once if the output is not a TTY.
             if self._last_line != self.label:
                 self._last_line = self.label
                 echo(self.label, file=self.file, color=self.color)
-            return
-
-        if self.hidden:
             return
 
         buf = []
