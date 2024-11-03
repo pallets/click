@@ -494,3 +494,8 @@ cleanup function.
             db.record_use()
             db.save()
             db.close()
+
+
+.. versionchanged:: 8.2 ``Context.call_on_close`` and context managers registered
+    via ``Context.with_resource`` will be closed when the CLI exits. These were
+    previously not called on exit.

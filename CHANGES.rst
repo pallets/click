@@ -45,6 +45,9 @@ Unreleased
     the ``mix_stderr`` parameter in ``CliRunner``. :issue:`2522` :pr:`2523`
 -   ``Option.show_envvar`` now also shows environment variable in error messages.
     :issue:`2695` :pr:`2696`
+-   ``Context.close`` will be called on exit. This results in all
+    ``Context.call_on_close`` callbacks and context managers added via
+    ``Context.with_resource`` to be closed on exit as well. :pr:`2680`
 
 
 Version 8.1.8
