@@ -321,7 +321,6 @@ def _param_memo(f: t.Callable[..., t.Any], param: Parameter) -> None:
             for opt in param.opts:
                 for preexisting_param in f.__click_params__:  # type: ignore
                     if opt in preexisting_param.opts:
-
                         from warnings import warn
 
                         warn(
