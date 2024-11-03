@@ -2430,15 +2430,19 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
 
-    .. versionchanged:: 8.1.0
+    .. versionchanged:: 8.2
+        ``envvar`` used with ``flag_value`` will always use the ``flag_value``,
+        previously it would use the value of the environment variable.
+
+    .. versionchanged:: 8.1
         Help text indentation is cleaned here instead of only in the
         ``@option`` decorator.
 
-    .. versionchanged:: 8.1.0
+    .. versionchanged:: 8.1
         The ``show_default`` parameter overrides
         ``Context.show_default``.
 
-    .. versionchanged:: 8.1.0
+    .. versionchanged:: 8.1
         The default of a single option boolean flag is not shown if the
         default value is ``False``.
 
