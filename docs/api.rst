@@ -134,6 +134,7 @@ Types
 .. autoclass:: Path
 
 .. autoclass:: Choice
+   :members:
 
 .. autoclass:: IntRange
 

@@ -311,7 +311,7 @@ class Choice(ParamType):
 
         :param value: The invalid value.
 
-        :return: Error message for the invalid choice.
+        .. versionadded:: 8.2
         """
         choices_str = ", ".join(map(repr, self.choices))
         return ngettext(

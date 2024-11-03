@@ -54,8 +54,8 @@ Unreleased
 -   When using ``Option.envvar`` with ``Option.flag_value``, the ``flag_value``
     will always be used instead of the value of the environment variable.
     :issue:`2746` :pr:`2788`
--   Add new method to ``Choice`` for getting a fail message and refactor
-    the convert method to use it.
+-   Add ``Choice.get_invalid_choice_message`` method for customizing the
+    invalid choice message.
 
 
 Version 8.1.8
