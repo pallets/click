@@ -59,6 +59,9 @@ Unreleased
 -   If help is shown because ``no_args_is_help`` is enabled (defaults to ``True``
     for groups, ``False`` for commands), the exit code is 2 instead of 0.
     :issue:`1489` :pr:`1489`
+-   Contexts created during shell completion are closed properly, fixing
+    ``ResourceWarning``s when using ``click.File``. :issue:`2644` :pr:`2800`
+    :pr:`2767`
 
 
 Version 8.1.8

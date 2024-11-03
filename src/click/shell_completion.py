@@ -544,44 +544,48 @@ def _resolve_context(
     :param args: List of complete args before the incomplete value.
     """
     ctx_args["resilient_parsing"] = True
-    ctx = cli.make_context(prog_name, args.copy(), **ctx_args)
-    args = ctx._protected_args + ctx.args
+    with cli.make_context(prog_name, args.copy(), **ctx_args) as ctx:
+        args = ctx._protected_args + ctx.args
 
-    while args:
-        command = ctx.command
+        while args:
+            command = ctx.command
 
-        if isinstance(command, Group):
-            if not command.chain:
-                name, cmd, args = command.resolve_command(ctx, args)
-
-                if cmd is None:
-                    return ctx
-
-                ctx = cmd.make_context(name, args, parent=ctx, resilient_parsing=True)
-                args = ctx._protected_args + ctx.args
-            else:
-                sub_ctx = ctx
-
-                while args:
+            if isinstance(command, Group):
+                if not command.chain:
                     name, cmd, args = command.resolve_command(ctx, args)
 
                     if cmd is None:
                         return ctx
 
-                    sub_ctx = cmd.make_context(
-                        name,
-                        args,
-                        parent=ctx,
-                        allow_extra_args=True,
-                        allow_interspersed_args=False,
-                        resilient_parsing=True,
-                    )
-                    args = sub_ctx.args
+                    with cmd.make_context(
+                        name, args, parent=ctx, resilient_parsing=True
+                    ) as sub_ctx:
+                        args = ctx._protected_args + ctx.args
+                        ctx = sub_ctx
+                else:
+                    sub_ctx = ctx
 
-                ctx = sub_ctx
-                args = [*sub_ctx._protected_args, *sub_ctx.args]
-        else:
-            break
+                    while args:
+                        name, cmd, args = command.resolve_command(ctx, args)
+
+                        if cmd is None:
+                            return ctx
+
+                        with cmd.make_context(
+                            name,
+                            args,
+                            parent=ctx,
+                            allow_extra_args=True,
+                            allow_interspersed_args=False,
+                            resilient_parsing=True,
+                        ) as sub_sub_ctx:
+                            args = sub_ctx.args
+                            sub_ctx = sub_sub_ctx
+
+                    ctx = sub_ctx
+                    args = [*sub_ctx._protected_args, *sub_ctx.args]
+            else:
+                break
 
     return ctx
 
