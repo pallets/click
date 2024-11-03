@@ -531,6 +531,22 @@ def test_missing_choice(runner):
     assert "bar" in choices
 
 
+def test_missing_envvar(runner):
+    cli = click.Command(
+        "cli", params=[click.Option(["--foo"], envvar="bar", required=True)]
+    )
+    result = runner.invoke(cli)
+    assert result.exit_code == 2
+    assert "Error: Missing option '--foo'." in result.output
+    cli = click.Command(
+        "cli",
+        params=[click.Option(["--foo"], envvar="bar", show_envvar=True, required=True)],
+    )
+    result = runner.invoke(cli)
+    assert result.exit_code == 2
+    assert "Error: Missing option '--foo' (env var: 'bar')." in result.output
+
+
 def test_case_insensitive_choice(runner):
     @click.command()
     @click.option("--foo", type=click.Choice(["Orange", "Apple"], case_sensitive=False))
