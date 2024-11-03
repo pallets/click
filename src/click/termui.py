@@ -288,6 +288,7 @@ def progressbar(
     iterable: cabc.Iterable[V] | None = None,
     length: int | None = None,
     label: str | None = None,
+    hidden: bool = False,
     show_eta: bool = True,
     show_percent: bool | None = None,
     show_pos: bool = False,
@@ -363,6 +364,9 @@ def progressbar(
                    length.  If an iterable is not provided the progress bar
                    will iterate over a range of that length.
     :param label: the label to show next to the progress bar.
+    :param hidden: hide the progressbar. Defaults to ``False``. When no tty is
+        detected, it will only print the progressbar label. Setting this to
+        ``False`` also disables that.
     :param show_eta: enables or disables the estimated time display.  This is
                      automatically disabled if the length cannot be
                      determined.
@@ -395,6 +399,9 @@ def progressbar(
     :param update_min_steps: Render only when this many updates have
         completed. This allows tuning for very fast iterators.
 
+    .. versionadded:: 8.2
+        The ``hidden`` argument.
+
     .. versionchanged:: 8.0
         Output is shown even if execution time is less than 0.5 seconds.
 
@@ -406,11 +413,10 @@ def progressbar(
         in 7.0 that removed all output.
 
     .. versionadded:: 8.0
-       Added the ``update_min_steps`` parameter.
+       The ``update_min_steps`` parameter.
 
-    .. versionchanged:: 4.0
-        Added the ``color`` parameter. Added the ``update`` method to
-        the object.
+    .. versionadded:: 4.0
+        The ``color`` parameter and ``update`` method.
 
     .. versionadded:: 2.0
     """
@@ -420,6 +426,7 @@ def progressbar(
     return ProgressBar(
         iterable=iterable,
         length=length,
+        hidden=hidden,
         show_eta=show_eta,
         show_percent=show_percent,
         show_pos=show_pos,

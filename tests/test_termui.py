@@ -71,7 +71,7 @@ def test_progressbar_length_hint(runner, monkeypatch):
     assert result.exception is None
 
 
-def test_progressbar_hidden(runner, monkeypatch):
+def test_progressbar_no_tty(runner, monkeypatch):
     @click.command()
     def cli():
         with _create_progress(label="working") as progress:
@@ -80,6 +80,17 @@ def test_progressbar_hidden(runner, monkeypatch):
 
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
     assert runner.invoke(cli, []).output == "working\n"
+
+
+def test_progressbar_hidden_manual(runner, monkeypatch):
+    @click.command()
+    def cli():
+        with _create_progress(label="see nothing", hidden=True) as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    assert runner.invoke(cli, []).output == ""
 
 
 @pytest.mark.parametrize("avg, expected", [([], 0.0), ([1, 4], 2.5)])
