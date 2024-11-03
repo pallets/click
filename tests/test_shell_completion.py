@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 import click.shell_completion
@@ -414,3 +416,18 @@ def test_add_completion_class_decorator():
     # Using `add_completion_class` as a decorator adds the new shell immediately
     assert "mysh" in click.shell_completion._available_shells
     assert click.shell_completion._available_shells["mysh"] is MyshComplete
+
+
+def test_files_closed() -> None:
+    @click.group()
+    @click.option(
+        "--config_file", default="CONFIG", type=click.File(mode="r"), help="help"
+    )
+    @click.pass_context
+    def cli(ctx, config_file):
+        pass
+
+    with warnings.catch_warnings(record=True) as current_warnings:
+        assert not current_warnings, "There should be no warnings to start"
+        _get_completions(cli, args=[], incomplete="")
+        assert not current_warnings, "There should be no warnings after either"

@@ -704,8 +704,8 @@ class Context:
         """Exits the application with a given exit code.
 
         .. versionchanged:: 8.2
-            Force closing of callbacks registered with
-            :meth:`call_on_close` before exiting the CLI.
+            Callbacks and context managers registered with :meth:`call_on_close`
+            and :meth:`with_resource` are closed before exiting.
         """
         self.close()
         raise Exit(code)
