@@ -55,7 +55,7 @@ Unreleased
     will always be used instead of the value of the environment variable.
     :issue:`2746` :pr:`2788`
 -   Add ``Choice.get_invalid_choice_message`` method for customizing the
-    invalid choice message.
+    invalid choice message. :issue:`2621` :pr:`2622`
 
 
 Version 8.1.8
