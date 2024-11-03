@@ -531,7 +531,7 @@ class HelpOption(Option):
 
     def __init__(
         self,
-        param_decls: t.Optional | t.Sequence[str] = None,
+        param_decls: t.Optional[t.Sequence[str]] = None,
         **kwargs: t.Any,
     ) -> None:
         if not param_decls:
