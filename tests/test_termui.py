@@ -246,7 +246,7 @@ def test_secho(runner):
     ("value", "expect"), [(123, b"\x1b[45m123\x1b[0m"), (b"test", b"test")]
 )
 def test_secho_non_text(runner, value, expect):
-    with runner.isolation() as (out, _):
+    with runner.isolation() as (out, _, _):
         click.secho(value, nl=False, color=True, bg="magenta")
         result = out.getvalue()
         assert result == expect
