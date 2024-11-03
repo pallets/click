@@ -974,8 +974,8 @@ class Command:
             for duplicate_opt in duplicate_opts:
                 warnings.warn(
                     (
-                        f"The option {duplicate_opt} is used more than once. "
-                        "Remove it as an option should be unique."
+                        f"The parameter {duplicate_opt} is used more than once. "
+                        "Remove its duplicate as parameters should be unique."
                     ),
                     stacklevel=3,
                 )
