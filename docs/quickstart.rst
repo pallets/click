@@ -21,7 +21,7 @@ Some standalone examples of Click applications are packaged with Click. They are
 *   `naval <https://github.com/pallets/click/tree/main/examples/naval>`_ : Port of the `docopt <http://docopt.org/>`_ naval example.
 *   `colors <https://github.com/pallets/click/tree/main/examples/colors>`_ : A simple example that colorizes text. Uses colorama on Windows.
 *   `aliases <https://github.com/pallets/click/tree/main/examples/aliases>`_ : An advanced example that implements :ref:`aliases`.
-*   `imagepipe <https://github.com/pallets/click/tree/main/examples/imagepipe>`_ : A complex example that implements some :ref:`multi-command-chaining` . It chains together image processing instructions. Requires pillow.
+*   `imagepipe <https://github.com/pallets/click/tree/main/examples/imagepipe>`_ : A complex example that implements some :ref:`command-pipelines` . It chains together image processing instructions. Requires pillow.
 *   `repo <https://github.com/pallets/click/tree/main/examples/repo>`_ : An advanced example that implements a Git-/Mercurial-like command line interface.
 *   `complex <https://github.com/pallets/click/tree/main/examples/complex>`_ : A very advanced example that implements loading subcommands dynamically from a plugin folder.
 *   `termui <https://github.com/pallets/click/tree/main/examples/termui>`_ : A simple example that showcases terminal UI helpers provided by click.
