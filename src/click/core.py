@@ -8,6 +8,7 @@ import os
 import sys
 import typing as t
 from collections import abc
+from collections import Counter
 from contextlib import AbstractContextManager
 from contextlib import contextmanager
 from contextlib import ExitStack
@@ -957,13 +958,29 @@ class Command:
         return formatter.getvalue().rstrip("\n")
 
     def get_params(self, ctx: Context) -> list[Parameter]:
-        rv = self.params
+        params = self.params
         help_option = self.get_help_option(ctx)
 
         if help_option is not None:
-            rv = [*rv, help_option]
+            params = [*params, help_option]
 
-        return rv
+        if __debug__:
+            import warnings
+
+            opts = [opt for param in params for opt in param.opts]
+            opts_counter = Counter(opts)
+            duplicate_opts = (opt for opt, count in opts_counter.items() if count > 1)
+
+            for duplicate_opt in duplicate_opts:
+                warnings.warn(
+                    (
+                        f"The parameter {duplicate_opt} is used more than once. "
+                        "Remove its duplicate as parameters should be unique."
+                    ),
+                    stacklevel=3,
+                )
+
+        return params
 
     def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Writes the usage line into the formatter.
@@ -1973,6 +1990,10 @@ class Parameter:
         of :class:`~click.shell_completion.CompletionItem` or a list of
         strings.
 
+    .. versionchanged:: 8.2
+        Adding duplicate parameter names to a :class:`~click.core.Command` will
+        result in a ``UserWarning`` being shown.
+
     .. versionchanged:: 8.0
         ``process_value`` validates required parameters and bounded
         ``nargs``, and invokes the parameter callback before returning
@@ -2974,7 +2995,7 @@ class Argument(Parameter):
         else:
             raise TypeError(
                 "Arguments take exactly one parameter declaration, got"
-                f" {len(decls)}."
+                f" {len(decls)}: {decls}."
             )
         return name, [arg], []
 

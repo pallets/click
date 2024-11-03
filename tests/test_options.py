@@ -989,3 +989,29 @@ def test_usage_show_choices(runner, choices, metavars):
 
     result = runner.invoke(cli_without_choices, ["--help"])
     assert metavars in result.output
+
+
+@pytest.mark.parametrize(
+    "opts_one,opts_two",
+    [
+        # No duplicate shortnames
+        (
+            ("-a", "--aardvark"),
+            ("-a", "--avocado"),
+        ),
+        # No duplicate long names
+        (
+            ("-a", "--aardvark"),
+            ("-b", "--aardvark"),
+        ),
+    ],
+)
+def test_duplicate_names_warning(runner, opts_one, opts_two):
+    @click.command()
+    @click.option(*opts_one)
+    @click.option(*opts_two)
+    def cli(one, two):
+        pass
+
+    with pytest.warns(UserWarning):
+        runner.invoke(cli, [])
