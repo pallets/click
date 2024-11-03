@@ -2991,7 +2991,7 @@ class Argument(Parameter):
         else:
             raise TypeError(
                 "Arguments take exactly one parameter declaration, got"
-                f" {len(decls)}."
+                f" {len(decls)}: {decls}."
             )
         return name, [arg], []
 

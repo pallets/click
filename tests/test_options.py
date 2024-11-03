@@ -991,11 +991,26 @@ def test_usage_show_choices(runner, choices, metavars):
     assert metavars in result.output
 
 
-def test_overridden_option_triggers_warning(runner):
+@pytest.mark.parametrize(
+    "opts_one,opts_two",
+    [
+        # No duplicate shortnames
+        (
+            ("-a", "--aardvark"),
+            ("-a", "--avocado"),
+        ),
+        # No duplicate long names
+        (
+            ("-a", "--aardvark"),
+            ("-b", "--aardvark"),
+        ),
+    ],
+)
+def test_duplicate_names_warning(runner, opts_one, opts_two):
     @click.command()
-    @click.option("-a", "--aardvark")
-    @click.option("-a", "--avocado")
-    def cli(aardvark, avocado):
+    @click.option(*opts_one)
+    @click.option(*opts_two)
+    def cli(one, two):
         pass
 
     with pytest.warns(UserWarning):

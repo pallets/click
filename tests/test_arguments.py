@@ -401,3 +401,23 @@ def test_when_argument_decorator_is_used_multiple_times_cls_is_preserved():
 
     assert isinstance(foo.params[0], CustomArgument)
     assert isinstance(bar.params[0], CustomArgument)
+
+
+@pytest.mark.parametrize(
+    "args_one,args_two",
+    [
+        (
+            ("aardvark",),
+            ("aardvark",),
+        ),
+    ],
+)
+def test_duplicate_names_warning(runner, args_one, args_two):
+    @click.command()
+    @click.argument(*args_one)
+    @click.argument(*args_two)
+    def cli(one, two):
+        pass
+
+    with pytest.warns(UserWarning):
+        runner.invoke(cli, [])
