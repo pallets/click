@@ -246,7 +246,7 @@ def test_secho(runner):
     ("value", "expect"), [(123, b"\x1b[45m123\x1b[0m"), (b"test", b"test")]
 )
 def test_secho_non_text(runner, value, expect):
-    with runner.isolation() as (out, _):
+    with runner.isolation() as (out, _, _):
         click.secho(value, nl=False, color=True, bg="magenta")
         result = out.getvalue()
         assert result == expect
@@ -447,3 +447,15 @@ def test_confirmation_prompt(runner, prompt, input, default, expect):
 
     if prompt == "Confirm Password":
         assert "Confirm Password: " in result.output
+
+
+def test_false_show_default_cause_no_default_display_in_prompt(runner):
+    @click.command()
+    @click.option("--arg1", show_default=False, prompt=True, default="my-default-value")
+    def cmd(arg1):
+        pass
+
+    # Confirm that the default value is not included in the output when `show_default`
+    # is False
+    result = runner.invoke(cmd, input="my-input", standalone_mode=False)
+    assert "my-default-value" not in result.output
