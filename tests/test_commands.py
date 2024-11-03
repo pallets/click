@@ -95,13 +95,9 @@ def test_auto_shorthelp(runner):
     )
 
 
-def test_no_args_is_help(runner):
-    @click.command(no_args_is_help=True)
-    def cli():
-        pass
-
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 0
+def test_command_no_args_is_help(runner):
+    result = runner.invoke(click.Command("test", no_args_is_help=True))
+    assert result.exit_code == 2
     assert "Show this message and exit." in result.output
 
 
@@ -127,7 +123,7 @@ def test_default_maps(runner):
         (["obj1"], 2, "Error: Missing command."),
         (["obj1", "--help"], 0, "Show this message and exit."),
         (["obj1", "move"], 0, "obj=obj1\nmove\n"),
-        ([], 0, "Show this message and exit."),
+        ([], 2, "Show this message and exit."),
     ],
 )
 def test_group_with_args(runner, args, exit_code, expect):
