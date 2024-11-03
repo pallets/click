@@ -51,6 +51,9 @@ Unreleased
 -   Add ``ProgressBar(hidden: bool)`` to allow hiding the progressbar. :issue:`2609`
 -   A ``UserWarning`` will be shown when multiple parameters attempt to use the
     same name. :issue:`2396``
+-   When using ``Option.envvar`` with ``Option.flag_value``, the ``flag_value``
+    will always be used instead of the value of the environment variable.
+    :issue:`2746` :pr:`2788`
 
 
 Version 8.1.8
