@@ -1990,6 +1990,10 @@ class Parameter:
         of :class:`~click.shell_completion.CompletionItem` or a list of
         strings.
 
+    .. versionchanged:: 8.2
+        Adding duplicate parameter names to a :class:`~click.core.Command` will
+        result in a ``UserWarning`` being shown.
+
     .. versionchanged:: 8.0
         ``process_value`` validates required parameters and bounded
         ``nargs``, and invokes the parameter callback before returning
