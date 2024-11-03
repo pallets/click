@@ -43,8 +43,8 @@ Unreleased
     collect stderr output and never raise an exception. Add a new
     output` stream to simulate what the user sees in its terminal. Removes
     the ``mix_stderr`` parameter in ``CliRunner``. :issue:`2522` :pr:`2523`
--   If ``show_envvar`` then show env var in error messages.
-    :issue:`2695`
+-   ``Option.show_envvar`` now also shows environment variable in error messages.
+    :issue:`2695` :pr:`2696`
 
 
 Version 8.1.8
