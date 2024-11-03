@@ -123,7 +123,7 @@ def test_default_maps(runner):
         (["obj1"], 2, "Error: Missing command."),
         (["obj1", "--help"], 0, "Show this message and exit."),
         (["obj1", "move"], 0, "obj=obj1\nmove\n"),
-        ([], 0, "Show this message and exit."),
+        ([], 2, "Show this message and exit."),
     ],
 )
 def test_group_with_args(runner, args, exit_code, expect):
@@ -136,21 +136,9 @@ def test_group_with_args(runner, args, exit_code, expect):
     def move():
         click.echo("move")
 
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 2
-    assert "Show this message and exit." in result.output
-
-    result = runner.invoke(cli, ["obj1"])
-    assert result.exit_code == 2
-    assert "Error: Missing command." in result.output
-
-    result = runner.invoke(cli, ["obj1", "--help"])
-    assert result.exit_code == 0
-    assert "Show this message and exit." in result.output
-
-    result = runner.invoke(cli, ["obj1", "move"])
-    assert result.exit_code == 0
-    assert result.output == "obj=obj1\nmove\n"
+    result = runner.invoke(cli, args)
+    assert result.exit_code == exit_code
+    assert expect in result.output
 
 
 def test_custom_parser(runner):

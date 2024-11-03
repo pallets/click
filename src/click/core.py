@@ -1850,7 +1850,7 @@ class Group(Command):
         # place.
         if cmd is None and not ctx.resilient_parsing:
             if _split_opt(cmd_name)[0]:
-                self.parse_args(ctx, ctx.args)
+                self.parse_args(ctx, args)
             ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
         return cmd_name if cmd else None, cmd, args[1:]
 

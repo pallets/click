@@ -256,10 +256,11 @@ class BadArgumentUsage(UsageError):
 
 
 class NoArgsIsHelpError(UsageError):
-    def __init__(self, ctx):
+    def __init__(self, ctx: Context) -> None:
+        self.ctx: Context
         super().__init__(ctx.get_help(), ctx=ctx)
 
-    def show(self, file=None):
+    def show(self, file: t.IO[t.Any] | None = None) -> None:
         echo(self.format_message(), file=file, err=True, color=self.ctx.color)
 
 
