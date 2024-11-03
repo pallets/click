@@ -31,8 +31,36 @@ Unreleased
 -   When generating a command's name from a decorated function's name, the
     suffixes ``_command``, ``_cmd``, ``_group``, and ``_grp`` are removed.
     :issue:`2322`
+-   Show the ``types.ParamType.name`` for ``types.Choice`` options within
+    ``--help`` message if ``show_choices=False`` is specified.
+    :issue:`2356`
+-   Do not display default values in prompts when ``Option.show_default`` is
+    ``False``. :pr:`2509`
+-   Add ``get_help_extra`` method on ``Option`` to fetch the generated extra
+    items used in ``get_help_record`` to render help text. :issue:`2516`
+    :pr:`2517`
+-   Keep stdout and stderr streams independent in ``CliRunner``. Always
+    collect stderr output and never raise an exception. Add a new
+    output` stream to simulate what the user sees in its terminal. Removes
+    the ``mix_stderr`` parameter in ``CliRunner``. :issue:`2522` :pr:`2523`
 -   If ``show_envvar`` then show env var in error messages.
     :issue:`2695`
+
+
+Version 8.1.8
+-------------
+
+Unreleased
+
+-   Fix an issue with type hints for ``click.open_file()``. :issue:`2717`
+-   Fix issue where error message for invalid ``click.Path`` displays on
+    multiple lines. :issue:`2697`
+-   Fixed issue that prevented a default value of ``""`` from being displayed in
+    the help for an option. :issue:`2500`
+-   The test runner handles stripping color consistently on Windows.
+    :issue:`2705`
+-   Show correct value for flag default when using ``default_map``.
+    :issue:`2632`
 
 
 Version 8.1.7

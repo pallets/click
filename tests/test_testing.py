@@ -5,7 +5,6 @@ from io import BytesIO
 import pytest
 
 import click
-from click._compat import WIN
 from click.testing import CliRunner
 
 
@@ -184,7 +183,6 @@ def test_catch_exceptions():
     assert result.exit_code == 1
 
 
-@pytest.mark.skipif(WIN, reason="Test does not make sense on Windows.")
 def test_with_color():
     @click.command()
     def cli():
@@ -303,32 +301,23 @@ def test_env():
 def test_stderr():
     @click.command()
     def cli_stderr():
-        click.echo("stdout")
-        click.echo("stderr", err=True)
+        click.echo("1 - stdout")
+        click.echo("2 - stderr", err=True)
+        click.echo("3 - stdout")
+        click.echo("4 - stderr", err=True)
 
-    runner = CliRunner(mix_stderr=False)
-
-    result = runner.invoke(cli_stderr)
-
-    assert result.output == "stdout\n"
-    assert result.stdout == "stdout\n"
-    assert result.stderr == "stderr\n"
-
-    runner_mix = CliRunner(mix_stderr=True)
+    runner_mix = CliRunner()
     result_mix = runner_mix.invoke(cli_stderr)
 
-    assert result_mix.output == "stdout\nstderr\n"
-    assert result_mix.stdout == "stdout\nstderr\n"
-
-    with pytest.raises(ValueError):
-        assert result_mix.stderr
+    assert result_mix.output == "1 - stdout\n2 - stderr\n3 - stdout\n4 - stderr\n"
+    assert result_mix.stdout == "1 - stdout\n3 - stdout\n"
+    assert result_mix.stderr == "2 - stderr\n4 - stderr\n"
 
     @click.command()
     def cli_empty_stderr():
         click.echo("stdout")
 
-    runner = CliRunner(mix_stderr=False)
-
+    runner = CliRunner()
     result = runner.invoke(cli_empty_stderr)
 
     assert result.output == "stdout\n"
@@ -412,9 +401,9 @@ def test_isolation_stderr_errors():
     """Writing to stderr should escape invalid characters instead of
     raising a UnicodeEncodeError.
     """
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
 
-    with runner.isolation() as (_, err):
+    with runner.isolation() as (_, err, _):
         click.echo("\udce2", err=True, nl=False)
 
     assert err.getvalue() == b"\\udce2"
