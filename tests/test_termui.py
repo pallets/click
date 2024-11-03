@@ -71,7 +71,7 @@ def test_progressbar_length_hint(runner, monkeypatch):
     assert result.exception is None
 
 
-def test_progressbar_hidden(runner, monkeypatch):
+def test_progressbar_no_tty(runner, monkeypatch):
     @click.command()
     def cli():
         with _create_progress(label="working") as progress:

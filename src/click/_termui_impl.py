@@ -107,7 +107,7 @@ class ProgressBar(t.Generic[V]):
         self.max_width: int | None = None
         self.entered: bool = False
         self.current_item: V | None = None
-        self._is_hidden: bool = not isatty(self.file)
+        self._is_atty = isatty(self.file)
         self._last_line: str | None = None
 
     def __enter__(self) -> ProgressBar[V]:
@@ -138,9 +138,7 @@ class ProgressBar(t.Generic[V]):
         return next(iter(self))
 
     def render_finish(self) -> None:
-        if self._is_hidden:
-            return
-        if self.hidden:
+        if self.hidden or not self._is_atty:
             return
         self.file.write(AFTER_BAR)
         self.file.flush()
@@ -236,13 +234,14 @@ class ProgressBar(t.Generic[V]):
     def render_progress(self) -> None:
         import shutil
 
-        if self._is_hidden:
+        if not self._is_atty:
             # Only output the label as it changes if the output is not a
             # TTY. Use file=stderr if you expect to be piping stdout.
             if self._last_line != self.label:
                 self._last_line = self.label
                 echo(self.label, file=self.file, color=self.color)
             return
+
         if self.hidden:
             return
 
@@ -347,7 +346,7 @@ class ProgressBar(t.Generic[V]):
         if not self.entered:
             raise RuntimeError("You need to use progress bars in a with block.")
 
-        if self._is_hidden:
+        if not self._is_atty:
             yield from self.iter
         else:
             for rv in self.iter:
