@@ -39,9 +39,9 @@ Unreleased
 -   Add ``get_help_extra`` method on ``Option`` to fetch the generated extra
     items used in ``get_help_record`` to render help text. :issue:`2516`
     :pr:`2517`
--   Keep `<stdout>` and `<stderr>` streams independent in `CliRunner`. Always
-    collect `<stderr>` output and never raise an exception. Add a new
-    `<output>` stream to simulate what the user sees in its terminal. Removes
+-   Keep stdout and stderr streams independent in ``CliRunner``. Always
+    collect stderr output and never raise an exception. Add a new
+    output` stream to simulate what the user sees in its terminal. Removes
     the ``mix_stderr`` parameter in ``CliRunner``. :issue:`2522` :pr:`2523`
 
 

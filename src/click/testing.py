@@ -152,7 +152,8 @@ class Result:
         traceback type).
 
     .. versionchanged:: 8.2
-        ``stderr_bytes`` no longer optional, ``output_bytes`` introduced.
+        ``stderr_bytes`` no longer optional, ``output_bytes`` introduced and
+        ``mix_stderr`` has been removed.
 
     .. versionadded:: 8.0
         Added ``return_value``.
