@@ -275,9 +275,10 @@ When using chaining, there are a few restrictions:
 -   The :attr:`Context.invoked_subcommand` attribute will be ``'*'`` because the
     parser doesn't know the full list of commands that will run yet.
 
+.. _command-pipelines:
 
 Command Pipelines
------------------
+------------------
 
 When using chaining, a common pattern is to have each command process the
 result of the previous command.

@@ -69,6 +69,8 @@ usage patterns.
    why
    quickstart
    entry-points
+   virtualenv
+   setuptools
    parameters
    options
    arguments
