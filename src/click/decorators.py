@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import inspect
 import typing as t
+from collections import abc
 from functools import update_wrapper
 from gettext import gettext as _
 
@@ -531,7 +532,7 @@ class HelpOption(Option):
 
     def __init__(
         self,
-        param_decls: t.Optional[t.Sequence[str]] = None,
+        param_decls: abc.Sequence[str] | None = None,
         **kwargs: t.Any,
     ) -> None:
         if not param_decls:
