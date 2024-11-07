@@ -383,14 +383,14 @@ def test_fast_edit(runner):
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="No sed on Windows.")
 def test_edit(runner):
-    with tempfile.NamedTemporaryFile(mode="w", delete_on_close=False) as named_tempfile:
+    with tempfile.NamedTemporaryFile(mode="w") as named_tempfile:
         named_tempfile.write("a\nb")
         named_tempfile.flush()
-        named_tempfile.close()
 
         result = click.edit(filename=named_tempfile.name, editor="sed -i~ 's/$/Test/'")
         assert result is None
 
+        # We need ot reopen the file as it becomes unreadable after the edit.
         with open(named_tempfile.name) as reopened_file:
             assert reopened_file.read() == "aTest\nbTest"
 
