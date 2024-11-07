@@ -643,13 +643,34 @@ def secho(
     return echo(message, file=file, nl=nl, err=err, color=color)
 
 
+@t.overload
+def edit(
+    text: t.AnyStr,
+    editor: str | None = None,
+    env: cabc.Mapping[str, str] | None = None,
+    require_save: bool = True,
+    extension: str = ".txt",
+) -> t.AnyStr: ...
+
+
+@t.overload
+def edit(
+    text: None = None,
+    editor: str | None = None,
+    env: cabc.Mapping[str, str] | None = None,
+    require_save: bool = True,
+    extension: str = ".txt",
+    filename: str | cabc.Iterable[str] | None = None,
+) -> None: ...
+
+
 def edit(
     text: t.AnyStr | None = None,
     editor: str | None = None,
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-    filename: str | None = None,
+    filename: str | cabc.Iterable[str] | None = None,
 ) -> t.AnyStr | None:
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
@@ -676,7 +697,16 @@ def edit(
                       highlighting.
     :param filename: if provided it will edit this file instead of the
                      provided text contents.  It will not use a temporary
-                     file as an indirection in that case.
+                     file as an indirection in that case. If the editor supports
+                     editing multiple files at once, a sequence of files may be
+                     passed as well. Invoke `click.file` once per file instead
+                     if multiple files cannot be managed at once or editing the
+                     files serially is desired.
+
+    .. versionchanged:: 8.2.0
+        ``filename`` now accepts any ``Iterable[str]`` in addition to a ``str``
+        if the ``editor`` supports editing multiple files at once.
+
     """
     from ._termui_impl import Editor
 
@@ -685,7 +715,10 @@ def edit(
     if filename is None:
         return ed.edit(text)
 
-    ed.edit_file(filename)
+    if isinstance(filename, str):
+        filename = (filename,)
+
+    ed.edit_files(filenames=filename)
     return None
 
 

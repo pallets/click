@@ -505,7 +505,7 @@ class Editor:
                 return editor
         return "vi"
 
-    def edit_file(self, filename: str) -> None:
+    def edit_files(self, filenames: cabc.Iterable[str]) -> None:
         import subprocess
 
         editor = self.get_editor()
@@ -515,8 +515,12 @@ class Editor:
             environ = os.environ.copy()
             environ.update(self.env)
 
+        exc_filename = " ".join(f'"{filename}"' for filename in filenames)
+
         try:
-            c = subprocess.Popen(f'{editor} "{filename}"', env=environ, shell=True)
+            c = subprocess.Popen(
+                args=f"{editor} {exc_filename}", env=environ, shell=True
+            )
             exit_code = c.wait()
             if exit_code != 0:
                 raise ClickException(
@@ -559,7 +563,7 @@ class Editor:
             # recorded, so get the new recorded value.
             timestamp = os.path.getmtime(name)
 
-            self.edit_file(name)
+            self.edit_files((name,))
 
             if self.require_save and os.path.getmtime(name) == timestamp:
                 return None

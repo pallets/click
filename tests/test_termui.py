@@ -1,4 +1,5 @@
 import platform
+import tempfile
 import time
 
 import pytest
@@ -378,6 +379,20 @@ def test_getchar_windows_exceptions(runner, monkeypatch, key_char, exc):
 def test_fast_edit(runner):
     result = click.edit("a\nb", editor="sed -i~ 's/$/Test/'")
     assert result == "aTest\nbTest\n"
+
+
+@pytest.mark.skipif(platform.system() == "Windows", reason="No sed on Windows.")
+def test_edit(runner):
+    with tempfile.NamedTemporaryFile(mode="w") as named_tempfile:
+        named_tempfile.write("a\nb")
+        named_tempfile.flush()
+
+        result = click.edit(filename=named_tempfile.name, editor="sed -i~ 's/$/Test/'")
+        assert result is None
+
+        # We need ot reopen the file as it becomes unreadable after the edit.
+        with open(named_tempfile.name) as reopened_file:
+            assert reopened_file.read() == "aTest\nbTest"
 
 
 @pytest.mark.parametrize(
