@@ -505,7 +505,7 @@ class Editor:
                 return editor
         return "vi"
 
-    def edit_files(self, filenames: cabc.Sequence[str]) -> None:
+    def edit_files(self, filenames: cabc.Iterable[str]) -> None:
         import subprocess
 
         editor = self.get_editor()
