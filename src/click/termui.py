@@ -682,8 +682,13 @@ def edit(
                       It will only work if the editor have support for
                       opening multiple tabs.
 
-    .. versionchanged:: 8.1.0
-        Added parameter ``filenames``
+    .. versionchanged:: 8.2.0
+        Added ``filenames`` to replace ``filename``.
+
+    .. deprecated:: 8.2
+        ``filename`` is deprecated, ``filenames`` should be used instead.
+        ``filename`` will be deleted in 8.3.
+
     """
     from ._termui_impl import Editor
 
@@ -692,10 +697,21 @@ def edit(
     if filename:
         filenames = (filename,)
 
+        import warnings
+
+        warnings.warn(
+            message=(
+                "`termui.edit(filename: str)` will be removed in 8.3. Please use "
+                "`termui.edit(filenames: Sequence[str])` instead."
+            ),
+            category=DeprecationWarning,
+            stacklevel=2,
+        )
+
     if filenames is None:
         return ed.edit(text)
 
-    ed.edit_file(filenames)
+    ed.edit_files(filenames)
     return None
 
 
