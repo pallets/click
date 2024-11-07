@@ -62,7 +62,10 @@ Unreleased
 -   Contexts created during shell completion are closed properly, fixing
     ``ResourceWarning``s when using ``click.File``. :issue:`2644` :pr:`2800`
     :pr:`2767`
--   Edit multiple files using ``click.edit``
+-   ``click.edit(filename)`` now supports passing an iterable of filenames in
+    case the editor supports editing multiple files at once. Its return type
+    is now also typed: ``AnyStr`` if ``text`` is passed, otherwise ``None``.
+    :issue:`2067` :pr:`2068`
 
 
 Version 8.1.8
