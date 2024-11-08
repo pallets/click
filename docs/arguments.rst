@@ -66,6 +66,7 @@ And what it looks like:
     invoke(copy, args=['foo.txt', 'usr/david/foo.txt', 'usr/mitsuko/foo.txt'])
 
 .. admonition:: Note on Handling Files.
+
     This is not how you would handle files and files paths, since it passes them in as strings. For more see :ref:`handling-files`.
 
 Argument Escape Sequences
