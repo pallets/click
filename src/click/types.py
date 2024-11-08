@@ -15,6 +15,7 @@ from .utils import safecall
 
 if t.TYPE_CHECKING:
     import typing_extensions as te
+
     from .core import Context
     from .core import Parameter
     from .shell_completion import CompletionItem
@@ -737,7 +738,7 @@ class File(ParamType):
                     ctx.call_on_close(safecall(f.flush))
 
             return f
-        except OSError as e:  # noqa: B014
+        except OSError as e:
             self.fail(f"'{format_filename(value)}': {e.strerror}", param, ctx)
 
     def shell_complete(
@@ -891,7 +892,7 @@ class Path(ParamType):
                 )
             if not self.dir_okay and stat.S_ISDIR(st.st_mode):
                 self.fail(
-                    _("{name} '{filename}' is a directory.").format(
+                    _("{name} {filename!r} is a directory.").format(
                         name=self.name.title(), filename=format_filename(value)
                     ),
                     param,

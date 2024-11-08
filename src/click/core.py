@@ -39,6 +39,7 @@ from .utils import PacifyFlushWrapper
 
 if t.TYPE_CHECKING:
     import typing_extensions as te
+
     from .shell_completion import CompletionItem
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
@@ -383,9 +384,9 @@ class Context:
 
         #: An optional normalization function for tokens.  This is
         #: options, choices, commands etc.
-        self.token_normalize_func: t.Optional[
-            t.Callable[[str], str]
-        ] = token_normalize_func
+        self.token_normalize_func: t.Optional[t.Callable[[str], str]] = (
+            token_normalize_func
+        )
 
         #: Indicates if resilient parsing is enabled.  In that case Click
         #: will do its best to not cause any failures and default values
@@ -624,7 +625,7 @@ class Context:
 
     def find_object(self, object_type: t.Type[V]) -> t.Optional[V]:
         """Finds the closest object of a given type."""
-        node: t.Optional["Context"] = self
+        node: t.Optional[Context] = self
 
         while node is not None:
             if isinstance(node.obj, object_type):
@@ -646,14 +647,12 @@ class Context:
     @t.overload
     def lookup_default(
         self, name: str, call: "te.Literal[True]" = True
-    ) -> t.Optional[t.Any]:
-        ...
+    ) -> t.Optional[t.Any]: ...
 
     @t.overload
     def lookup_default(
         self, name: str, call: "te.Literal[False]" = ...
-    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
-        ...
+    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]: ...
 
     def lookup_default(self, name: str, call: bool = True) -> t.Optional[t.Any]:
         """Get the default for a parameter from :attr:`default_map`.
@@ -713,24 +712,22 @@ class Context:
 
     @t.overload
     def invoke(
-        __self,  # noqa: B902
+        __self,
         __callback: "t.Callable[..., V]",
         *args: t.Any,
         **kwargs: t.Any,
-    ) -> V:
-        ...
+    ) -> V: ...
 
     @t.overload
     def invoke(
-        __self,  # noqa: B902
+        __self,
         __callback: "Command",
         *args: t.Any,
         **kwargs: t.Any,
-    ) -> t.Any:
-        ...
+    ) -> t.Any: ...
 
     def invoke(
-        __self,  # noqa: B902
+        __self,
         __callback: t.Union["Command", "t.Callable[..., V]"],
         *args: t.Any,
         **kwargs: t.Any,
@@ -782,9 +779,7 @@ class Context:
             with ctx:
                 return __callback(*args, **kwargs)
 
-    def forward(
-        __self, __cmd: "Command", *args: t.Any, **kwargs: t.Any  # noqa: B902
-    ) -> t.Any:
+    def forward(__self, __cmd: "Command", *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Similar to :meth:`invoke` but fills in default keyword
         arguments from the current context if the other command expects
         it.  This cannot invoke callbacks directly, only other commands.
@@ -936,7 +931,10 @@ class BaseCommand:
                 extra[key] = value
 
         ctx = self.context_class(
-            self, info_name=info_name, parent=parent, **extra  # type: ignore
+            self,  # type: ignore[arg-type]
+            info_name=info_name,
+            parent=parent,
+            **extra,
         )
 
         with ctx.scope(cleanup=False):
@@ -971,7 +969,7 @@ class BaseCommand:
         """
         from click.shell_completion import CompletionItem
 
-        results: t.List["CompletionItem"] = []
+        results: t.List[CompletionItem] = []
 
         while ctx.parent is not None:
             ctx = ctx.parent
@@ -993,8 +991,7 @@ class BaseCommand:
         complete_var: t.Optional[str] = None,
         standalone_mode: "te.Literal[True]" = True,
         **extra: t.Any,
-    ) -> "te.NoReturn":
-        ...
+    ) -> "te.NoReturn": ...
 
     @t.overload
     def main(
@@ -1004,8 +1001,7 @@ class BaseCommand:
         complete_var: t.Optional[str] = None,
         standalone_mode: bool = ...,
         **extra: t.Any,
-    ) -> t.Any:
-        ...
+    ) -> t.Any: ...
 
     def main(
         self,
@@ -1221,7 +1217,7 @@ class Command(BaseCommand):
         #: the list of parameters for this command in the order they
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
-        self.params: t.List["Parameter"] = params or []
+        self.params: t.List[Parameter] = params or []
         self.help = help
         self.epilog = epilog
         self.options_metavar = options_metavar
@@ -1289,25 +1285,19 @@ class Command(BaseCommand):
         return list(all_names)
 
     def get_help_option(self, ctx: Context) -> t.Optional["Option"]:
-        """Returns the help option object."""
+        """Returns the help option object.
+
+        Unless ``add_help_option`` is ``False``.
+        """
         help_options = self.get_help_option_names(ctx)
 
         if not help_options or not self.add_help_option:
             return None
 
-        def show_help(ctx: Context, param: "Parameter", value: str) -> None:
-            if value and not ctx.resilient_parsing:
-                echo(ctx.get_help(), color=ctx.color)
-                ctx.exit()
+        # Avoid circular import.
+        from .decorators import HelpOption
 
-        return Option(
-            help_options,
-            is_flag=True,
-            is_eager=True,
-            expose_value=False,
-            callback=show_help,
-            help=_("Show this message and exit."),
-        )
+        return HelpOption(help_options)
 
     def make_parser(self, ctx: Context) -> OptionParser:
         """Creates the underlying option parser for this command."""
@@ -1444,7 +1434,7 @@ class Command(BaseCommand):
         """
         from click.shell_completion import CompletionItem
 
-        results: t.List["CompletionItem"] = []
+        results: t.List[CompletionItem] = []
 
         if incomplete and not incomplete[0].isalnum():
             for param in self.get_params(ctx):
@@ -1604,7 +1594,7 @@ class MultiCommand(Command):
                 return f(inner, *args, **kwargs)
 
             self._result_callback = rv = update_wrapper(t.cast(F, function), f)
-            return rv
+            return rv  # type: ignore[return-value]
 
         return decorator
 
@@ -1843,14 +1833,12 @@ class Group(MultiCommand):
         self.commands[name] = cmd
 
     @t.overload
-    def command(self, __func: t.Callable[..., t.Any]) -> Command:
-        ...
+    def command(self, __func: t.Callable[..., t.Any]) -> Command: ...
 
     @t.overload
     def command(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Command]:
-        ...
+    ) -> t.Callable[[t.Callable[..., t.Any]], Command]: ...
 
     def command(
         self, *args: t.Any, **kwargs: t.Any
@@ -1894,14 +1882,12 @@ class Group(MultiCommand):
         return decorator
 
     @t.overload
-    def group(self, __func: t.Callable[..., t.Any]) -> "Group":
-        ...
+    def group(self, __func: t.Callable[..., t.Any]) -> "Group": ...
 
     @t.overload
     def group(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]:
-        ...
+    ) -> t.Callable[[t.Callable[..., t.Any]], "Group"]: ...
 
     def group(
         self, *args: t.Any, **kwargs: t.Any
@@ -2227,14 +2213,12 @@ class Parameter:
     @t.overload
     def get_default(
         self, ctx: Context, call: "te.Literal[True]" = True
-    ) -> t.Optional[t.Any]:
-        ...
+    ) -> t.Optional[t.Any]: ...
 
     @t.overload
     def get_default(
         self, ctx: Context, call: bool = ...
-    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
-        ...
+    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]: ...
 
     def get_default(
         self, ctx: Context, call: bool = True
@@ -2681,7 +2665,9 @@ class Option(Parameter):
         if name is None:
             if not expose_value:
                 return None, opts, secondary_opts
-            raise TypeError("Could not determine name for option")
+            raise TypeError(
+                f"Could not determine name for option with declarations {decls!r}"
+            )
 
         if not opts and not secondary_opts:
             raise TypeError(
@@ -2810,10 +2796,12 @@ class Option(Parameter):
                 # For boolean flags that have distinct True/False opts,
                 # use the opt without prefix instead of the value.
                 default_string = split_opt(
-                    (self.opts if self.default else self.secondary_opts)[0]
+                    (self.opts if default_value else self.secondary_opts)[0]
                 )[1]
             elif self.is_bool_flag and not self.secondary_opts and not default_value:
                 default_string = ""
+            elif default_value == "":
+                default_string = '""'
             else:
                 default_string = str(default_value)
 
@@ -2842,14 +2830,12 @@ class Option(Parameter):
     @t.overload
     def get_default(
         self, ctx: Context, call: "te.Literal[True]" = True
-    ) -> t.Optional[t.Any]:
-        ...
+    ) -> t.Optional[t.Any]: ...
 
     @t.overload
     def get_default(
         self, ctx: Context, call: bool = ...
-    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]:
-        ...
+    ) -> t.Optional[t.Union[t.Any, t.Callable[[], t.Any]]]: ...
 
     def get_default(
         self, ctx: Context, call: bool = True
@@ -3021,7 +3007,7 @@ class Argument(Parameter):
         if not decls:
             if not expose_value:
                 return None, [], []
-            raise TypeError("Could not determine name for argument")
+            raise TypeError("Argument is marked as exposed, but does not have a name.")
         if len(decls) == 1:
             name = arg = decls[0]
             name = name.replace("-", "_").lower()

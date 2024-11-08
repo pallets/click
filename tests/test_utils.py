@@ -36,9 +36,7 @@ def test_echo(runner):
 
 
 def test_echo_custom_file():
-    import io
-
-    f = io.StringIO()
+    f = StringIO()
     click.echo("hello", file=f)
     assert f.getvalue() == "hello\n"
 
@@ -209,7 +207,6 @@ def test_echo_via_pager(monkeypatch, capfd, cat, test):
     assert out == expected_output
 
 
-@pytest.mark.skipif(WIN, reason="Test does not make sense on Windows.")
 def test_echo_color_flag(monkeypatch, capfd):
     isatty = True
     monkeypatch.setattr(click._compat, "isatty", lambda x: isatty)
@@ -232,16 +229,23 @@ def test_echo_color_flag(monkeypatch, capfd):
     assert out == f"{styled_text}\n"
 
     isatty = False
-    click.echo(styled_text)
-    out, err = capfd.readouterr()
-    assert out == f"{text}\n"
+    # Faking isatty() is not enough on Windows;
+    # the implementation caches the colorama wrapped stream
+    # so we have to use a new stream for each test
+    stream = StringIO()
+    click.echo(styled_text, file=stream)
+    assert stream.getvalue() == f"{text}\n"
+
+    stream = StringIO()
+    click.echo(styled_text, file=stream, color=True)
+    assert stream.getvalue() == f"{styled_text}\n"
 
 
 def test_prompt_cast_default(capfd, monkeypatch):
     monkeypatch.setattr(sys, "stdin", StringIO("\n"))
     value = click.prompt("value", default="100", type=int)
     capfd.readouterr()
-    assert type(value) is int
+    assert type(value) is int  # noqa E721
 
 
 @pytest.mark.skipif(WIN, reason="Test too complex to make work windows.")
@@ -464,7 +468,7 @@ def test_expand_args(monkeypatch):
     assert user in click.utils._expand_args(["~"])
     monkeypatch.setenv("CLICK_TEST", "hello")
     assert "hello" in click.utils._expand_args(["$CLICK_TEST"])
-    assert "setup.cfg" in click.utils._expand_args(["*.cfg"])
+    assert "pyproject.toml" in click.utils._expand_args(["*.toml"])
     assert os.path.join("docs", "conf.py") in click.utils._expand_args(["**/conf.py"])
     assert "*.not-found" in click.utils._expand_args(["*.not-found"])
     # a bad glob pattern, such as a pytest identifier, should return itself

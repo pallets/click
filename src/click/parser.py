@@ -17,6 +17,7 @@ by the Python Software Foundation. This is limited to code in parser.py.
 Copyright 2001-2006 Gregory P. Ward. All rights reserved.
 Copyright 2002-2006 Python Software Foundation. All rights reserved.
 """
+
 # This code uses parts of optparse written by Gregory P. Ward and
 # maintained by the Python Software Foundation.
 # Copyright 2001-2006 Gregory P. Ward
@@ -33,6 +34,7 @@ from .exceptions import UsageError
 
 if t.TYPE_CHECKING:
     import typing_extensions as te
+
     from .core import Argument as CoreArgument
     from .core import Context
     from .core import Option as CoreOption
@@ -247,7 +249,7 @@ class ParsingState:
         self.opts: t.Dict[str, t.Any] = {}
         self.largs: t.List[str] = []
         self.rargs = rargs
-        self.order: t.List["CoreParameter"] = []
+        self.order: t.List[CoreParameter] = []
 
 
 class OptionParser:

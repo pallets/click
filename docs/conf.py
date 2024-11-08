@@ -10,18 +10,25 @@ release, version = get_version("Click")
 
 # General --------------------------------------------------------------
 
-master_doc = "index"
+default_role = "code"
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
+    "sphinx_tabs.tabs",
     "sphinxcontrib.log_cabinet",
     "pallets_sphinx_themes",
-    "sphinx_issues",
-    "sphinx_tabs.tabs",
 ]
+autodoc_member_order = "bysource"
 autodoc_typehints = "description"
-intersphinx_mapping = {"python": ("https://docs.python.org/3/", None)}
-issues_github_path = "pallets/click"
+autodoc_preserve_defaults = True
+extlinks = {
+    "issue": ("https://github.com/pallets/click/issues/%s", "#%s"),
+    "pr": ("https://github.com/pallets/click/pull/%s", "#%s"),
+}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+}
 
 # HTML -----------------------------------------------------------------
 
@@ -46,7 +53,3 @@ html_favicon = "_static/click-icon.png"
 html_logo = "_static/click-logo-sidebar.png"
 html_title = f"Click Documentation ({version})"
 html_show_sourcelink = False
-
-# LaTeX ----------------------------------------------------------------
-
-latex_documents = [(master_doc, f"Click-{version}.tex", html_title, author, "manual")]

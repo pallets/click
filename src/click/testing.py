@@ -8,6 +8,7 @@ import tempfile
 import typing as t
 from types import TracebackType
 
+from . import _compat
 from . import formatting
 from . import termui
 from . import utils
@@ -315,6 +316,7 @@ class CliRunner:
         termui.hidden_prompt_func = hidden_input
         termui._getchar = _getchar
         utils.should_strip_ansi = should_strip_ansi  # type: ignore
+        _compat.should_strip_ansi = should_strip_ansi
 
         old_env = {}
         try:
@@ -475,5 +477,5 @@ class CliRunner:
             if temp_dir is None:
                 try:
                     shutil.rmtree(dt)
-                except OSError:  # noqa: B014
+                except OSError:
                     pass

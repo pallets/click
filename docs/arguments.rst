@@ -107,6 +107,9 @@ And from the command line:
 
     invoke(touch, ['-foo.txt', 'bar.txt'])
 
+
+.. _environment-variables:
+
 Environment Variables
 ---------------------
 

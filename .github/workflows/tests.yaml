@@ -1,56 +1,51 @@
 name: Tests
 on:
   push:
-    branches:
-      - main
-      - '*.x'
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - '*.rst'
+    branches: [main, stable]
+    paths-ignore: ['docs/**', '*.md', '*.rst']
   pull_request:
-    branches:
-      - main
-      - '*.x'
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
-      - '*.rst'
+    paths-ignore: [ 'docs/**', '*.md', '*.rst' ]
 jobs:
   tests:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name || matrix.python }}
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {name: Linux, python: '3.11', os: ubuntu-latest, tox: py311}
-          - {name: Windows, python: '3.11', os: windows-latest, tox: py311}
-          - {name: Mac, python: '3.11', os: macos-latest, tox: py311}
-          - {name: '3.12-dev', python: '3.12-dev', os: ubuntu-latest, tox: py312}
-          - {name: '3.10', python: '3.10', os: ubuntu-latest, tox: py310}
-          - {name: '3.9', python: '3.9', os: ubuntu-latest, tox: py39}
-          - {name: '3.8', python: '3.8', os: ubuntu-latest, tox: py38}
-          - {name: '3.7', python: '3.7', os: ubuntu-latest, tox: py37}
-          - {name: 'PyPy', python: 'pypy-3.10', os: ubuntu-latest, tox: pypy310}
-          - {name: Typing, python: '3.11', os: ubuntu-latest, tox: typing}
+          - {python: '3.13'}
+          - {python: '3.12'}
+          - {name: Windows, python: '3.12', os: windows-latest}
+          - {name: Mac, python: '3.12', os: macos-latest}
+          - {python: '3.11'}
+          - {python: '3.10'}
+          - {python: '3.9'}
+          - {python: '3.8'}
+          - {python: '3.7'}
+          - {name: PyPy, python: 'pypy-3.10', tox: pypy310}
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-      - uses: actions/setup-python@5ccb29d8773c3f3f653e1705f474dfaa8a06a912
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
         with:
           python-version: ${{ matrix.python }}
-          cache: 'pip'
-          cache-dependency-path: 'requirements/*.txt'
-      - name: update pip
-        run: |
-          pip install -U wheel
-          pip install -U setuptools
-          python -m pip install -U pip
+          allow-prereleases: true
+          cache: pip
+          cache-dependency-path: requirements*/*.txt
+      - run: pip install tox
+      - run: tox run -e ${{ matrix.tox || format('py{0}', matrix.python) }}
+  typing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.x'
+          cache: pip
+          cache-dependency-path: requirements*/*.txt
       - name: cache mypy
-        uses: actions/cache@58c146cc91c5b9e778e71775dfe9bf1442ad9a12
+        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: ./.mypy_cache
-          key: mypy|${{ matrix.python }}|${{ hashFiles('setup.cfg') }}
-        if: matrix.tox == 'typing'
+          key: mypy|${{ hashFiles('pyproject.toml') }}
       - run: pip install tox
-      - run: tox run -e ${{ matrix.tox }}
+      - run: tox run -e typing

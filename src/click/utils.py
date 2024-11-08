@@ -156,7 +156,7 @@ class LazyFile:
             rv, self.should_close = open_stream(
                 self.name, self.mode, self.encoding, self.errors, atomic=self.atomic
             )
-        except OSError as e:  # noqa: E402
+        except OSError as e:
             from .exceptions import FileError
 
             raise FileError(self.name, hint=e.strerror) from e
@@ -311,7 +311,7 @@ def echo(
             out = strip_ansi(out)
         elif WIN:
             if auto_wrap_for_ansi is not None:
-                file = auto_wrap_for_ansi(file)  # type: ignore
+                file = auto_wrap_for_ansi(file, color)  # type: ignore
             elif not color:
                 out = strip_ansi(out)
 
@@ -353,7 +353,7 @@ def get_text_stream(
 
 
 def open_file(
-    filename: str,
+    filename: t.Union[str, "os.PathLike[str]"],
     mode: str = "r",
     encoding: t.Optional[str] = None,
     errors: t.Optional[str] = "strict",
@@ -374,7 +374,7 @@ def open_file(
         with open_file(filename) as f:
             ...
 
-    :param filename: The name of the file to open, or ``'-'`` for
+    :param filename: The name or Path of the file to open, or ``'-'`` for
         ``stdin``/``stdout``.
     :param mode: The mode in which to open the file.
     :param encoding: The encoding to decode or encode a file opened in
@@ -410,7 +410,7 @@ def format_filename(
     with the replacement character ``�``.
 
     Invalid bytes or surrogate escapes will raise an error when written to a
-    stream with ``errors="strict". This will typically happen with ``stdout``
+    stream with ``errors="strict"``. This will typically happen with ``stdout``
     when the locale is something like ``en_GB.UTF-8``.
 
     Many scenarios *are* safe to write surrogates though, due to PEP 538 and

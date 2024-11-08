@@ -1,5 +1,23 @@
 .. currentmodule:: click
 
+Version 8.1.8
+-------------
+
+Unreleased
+
+-   Fix an issue with type hints for ``click.open_file()``. :issue:`2717`
+-   Fix issue where error message for invalid ``click.Path`` displays on
+    multiple lines. :issue:`2697`
+-   Fixed issue that prevented a default value of ``""`` from being displayed in
+    the help for an option. :issue:`2500`
+-   The test runner handles stripping color consistently on Windows.
+    :issue:`2705`
+-   Show correct value for flag default when using ``default_map``.
+    :issue:`2632`
+-   Fix ``click.echo(color=...)`` passing ``color`` to coloroma so it can be
+    forced on Windows. :issue:`2606`.
+
+
 Version 8.1.7
 -------------
 
