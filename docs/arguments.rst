@@ -5,12 +5,11 @@ Arguments
 
 .. currentmodule:: click
 
-
+Arguments are:
 
 *   Are positional in nature
-*   Are very much like a limited version of :ref:`options <options>`
-*   But also can take an arbitrary number of inputs
-*   Must be :ref:`documented manually <documenting-arguments>`
+*   Similar to a limited version of :ref:`options <options>` that can take an arbitrary number of inputs
+*   :ref:`documented manually <documenting-arguments>`
 
 Useful and often used kwargs are:
 
@@ -39,7 +38,11 @@ And what it looks like:
     invoke(touch, args=['foo.txt'])
 
 
-Not sure if should include : If no type is provided, the type of the default value is used, and if no default value is provided, the type is assumed to be STRING.
+An argument may be assigned a :ref:`parameter type <parameter-types>`. If no type is provided, the type of the default value is used. If no default value is provided, the type is assumed to be STRING.
+
+.. admonition:: Note on Required Arguments
+
+   It is possible to make an argument required by setting ``required=True``.  It is not recommended since we think command line tools should gracefully degrade into becoming no ops.  We think this because command line tools are often invoked with wildcard inputs and they should not error out if the wildcard is empty.
 
 Multiple Arguments
 -----------------------------------
@@ -62,16 +65,13 @@ And what it looks like:
 
     invoke(copy, args=['foo.txt', 'usr/david/foo.txt', 'usr/mitsuko/foo.txt'])
 
-Note this example is not how you would handle files and files paths, since it passes them in as strings. For more see :ref:`handling-files`.
-
-.. admonition:: Note on Required Arguments
-
-   It is not recommended, but you may make at least one argument required by setting ``required=True``.  It is not recommended since we think command line tools should gracefully degrade into becoming noops.  We think this because command line tools are often invoked with wildcard inputs and they should not error out if the wildcard is empty.
+.. admonition:: Note on Handling Files.
+    This is not how you would handle files and files paths, since it passes them in as strings. For more see :ref:`handling-files`.
 
 Argument Escape Sequences
 ---------------------------
 
-If you want to process arguments that look like options, like a file named ``-foo.txt``, you must pass the ``--`` separator first. After you pass the ``--``, you may only pass arguments. This is a common feature for POSIX command line tools.
+If you want to process arguments that look like options, like a file named ``-foo.txt`` or ``--foo.txt`` , you must pass the ``--`` separator first. After you pass the ``--``, you may only pass arguments. This is a common feature for POSIX command line tools.
 
 Example usage:
 
