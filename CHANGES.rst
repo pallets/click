@@ -1,4 +1,4 @@
-2630.. currentmodule:: click
+.. currentmodule:: click
 
 Version 8.2.0
 -------------

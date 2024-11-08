@@ -289,6 +289,7 @@ def progressbar(
     *,
     length: int,
     label: str | None = None,
+    hidden: bool = False,
     show_eta: bool = True,
     show_percent: bool | None = None,
     show_pos: bool = False,
@@ -300,8 +301,7 @@ def progressbar(
     file: t.TextIO | None = None,
     color: bool | None = None,
     update_min_steps: int = 1,
-) -> ProgressBar[int]:
-    ...
+) -> ProgressBar[int]: ...
 
 
 @t.overload
@@ -309,6 +309,7 @@ def progressbar(
     iterable: cabc.Iterable[V] | None = None,
     length: int | None = None,
     label: str | None = None,
+    hidden: bool = False,
     show_eta: bool = True,
     show_percent: bool | None = None,
     show_pos: bool = False,
@@ -321,8 +322,7 @@ def progressbar(
     file: t.TextIO | None = None,
     color: bool | None = None,
     update_min_steps: int = 1,
-) -> ProgressBar[V]:
-    ...
+) -> ProgressBar[V]: ...
 
 
 def progressbar(
