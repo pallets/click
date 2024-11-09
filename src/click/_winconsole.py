@@ -70,6 +70,8 @@ MAX_BYTES_WRITTEN = 32767
 
 if t.TYPE_CHECKING:
     try:
+        # Using `typing_extensions.Buffer` instead of `collections.abc`
+        # on Windows for some reason does not have `Sized` implemented.
         from collections.abc import Buffer  # type: ignore
     except ImportError:
         from typing_extensions import Buffer
