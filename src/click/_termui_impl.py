@@ -427,26 +427,40 @@ def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> N
                 text = strip_ansi(text)
 
             stdin.write(text.encode(encoding, "replace"))
-    except (OSError, KeyboardInterrupt):
+    except BrokenPipeError:
+        # In case the pager exited unexpectedly, ignore the broken pipe error.
         pass
-    else:
-        stdin.close()
-
-    # Less doesn't respect ^C, but catches it for its own UI purposes (aborting
-    # search or other commands inside less).
-    #
-    # That means when the user hits ^C, the parent process (click) terminates,
-    # but less is still alive, paging the output and messing up the terminal.
-    #
-    # If the user wants to make the pager exit on ^C, they should set
-    # `LESS='-K'`. It's not our decision to make.
-    while True:
+    except Exception as e:
+        # In case there is an exception we want to close the pager immediately
+        # and let the caller handle it.
+        # Otherwise the pager will keep running, and the user may not notice
+        # the error message, or worse yet it may leave the terminal in a broken state.
+        c.terminate()
+        raise e
+    finally:
+        # We must close stdin and wait for the pager to exit before we continue
         try:
-            c.wait()
-        except KeyboardInterrupt:
+            stdin.close()
+        # Close implies flush, so it might throw a BrokenPipeError if the pager
+        # process exited already.
+        except BrokenPipeError:
             pass
-        else:
-            break
+
+        # Less doesn't respect ^C, but catches it for its own UI purposes (aborting
+        # search or other commands inside less).
+        #
+        # That means when the user hits ^C, the parent process (click) terminates,
+        # but less is still alive, paging the output and messing up the terminal.
+        #
+        # If the user wants to make the pager exit on ^C, they should set
+        # `LESS='-K'`. It's not our decision to make.
+        while True:
+            try:
+                c.wait()
+            except KeyboardInterrupt:
+                pass
+            else:
+                break
 
 
 def _tempfilepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> None:
