@@ -79,6 +79,18 @@ Unreleased
         allows the user to search for future output of the generator when
         using less and then aborting the program using ctrl-c.
 
+- ``Parameter`` typing changes. :pr:`2805`
+
+    -   It has been made clear in typing that ``Parameter`` is an abstract
+        base class.
+    - ``ctx`` in ``get_error_hint`` has been clarified to be  ``Context | None``
+        instead of ``Context``. Previously this typing error was ignored and it
+        could have been ``None``.
+    -  ``name`` can no longer be ``None``. Previously using
+        ``expose_value=False`` resulted in it being ``None``. It will now result
+        in being ``""`` in this case.
+
+
 Version 8.1.8
 -------------
 
