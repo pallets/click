@@ -387,25 +387,34 @@ def test_choice_option_normalization(runner):
     @click.option(
         "--method",
         type=click.Choice(
-            ["SCREAMING_SNAKE_CASE", "snake_case", "PascalCase", "kebab-case"]
+            ["SCREAMING_SNAKE_CASE", "snake_case", "PascalCase", "kebab-case"],
+            case_sensitive=False,
         ),
     )
     def cli(method):
         click.echo(method)
 
-    result = runner.invoke(cli, ["--method=foo"])
-    assert not result.exception
-    assert result.output == "foo\n"
+    result = runner.invoke(cli, ["--method=snake_case"])
+    assert not result.exception, result.output
+    assert result.output == "snake_case\n"
+
+    # Even though it's case sensitive, the choice's original value is preserved
+    result = runner.invoke(cli, ["--method=pascalcase"])
+    assert not result.exception, result.output
+    assert result.output == "PascalCase\n"
 
     result = runner.invoke(cli, ["--method=meh"])
     assert result.exit_code == 2
     assert (
         "Invalid value for '--method': 'meh' is not one of "
-        "'screaming-snake-case', 'snake-case', 'pascalcase', 'kebab-case'."
+        "'screaming_snake_case', 'snake_case', 'pascalcase', 'kebab-case'."
     ) in result.output
 
     result = runner.invoke(cli, ["--help"])
-    assert "--method [foo|bar|baz]" in result.output
+    assert (
+        "--method [screaming_snake_case|snake_case|pascalcase|kebab-case]"
+        in result.output
+    )
 
 
 def test_choice_argument(runner):
