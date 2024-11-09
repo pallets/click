@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import collections.abc as cabc
 import contextlib
+import io
 import math
 import os
 import sys
@@ -21,7 +22,6 @@ from ._compat import _default_text_stdout
 from ._compat import CYGWIN
 from ._compat import get_best_encoding
 from ._compat import isatty
-from ._compat import open_stream
 from ._compat import strip_ansi
 from ._compat import term_len
 from ._compat import WIN
@@ -364,7 +364,20 @@ class ProgressBar(t.Generic[V]):
             self.render_progress()
 
 
-def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
+class MaybeStripAnsi(io.TextIOWrapper):
+    def __init__(self, stream: t.IO[bytes], *, color: bool, **kwargs: t.Any):
+        super().__init__(stream, **kwargs)
+        self.color = color
+
+    def write(self, text: str) -> int:
+        if not self.color:
+            text = strip_ansi(text)
+        return super().write(text)
+
+
+def _pager_contextmanager(
+    color: bool | None = None,
+) -> t.ContextManager[t.Tuple[t.BinaryIO, str, bool]]:
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
 
@@ -374,18 +387,18 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
         stdout = StringIO()
 
     if not isatty(sys.stdin) or not isatty(stdout):
-        return _nullpager(stdout, generator, color)
+        return _nullpager(stdout, color)
     pager_cmd = (os.environ.get("PAGER", None) or "").strip()
     if pager_cmd:
         if WIN:
-            return _tempfilepager(generator, pager_cmd, color)
-        return _pipepager(generator, pager_cmd, color)
+            return _tempfilepager(pager_cmd, color)
+        return _pipepager(pager_cmd, color)
     if os.environ.get("TERM") in ("dumb", "emacs"):
-        return _nullpager(stdout, generator, color)
+        return _nullpager(stdout, color)
     if WIN or sys.platform.startswith("os2"):
-        return _tempfilepager(generator, "more <", color)
+        return _tempfilepager("more <", color)
     if hasattr(os, "system") and os.system("(less) 2>/dev/null") == 0:
-        return _pipepager(generator, "less", color)
+        return _pipepager("less", color)
 
     import tempfile
 
@@ -393,13 +406,32 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
     os.close(fd)
     try:
         if hasattr(os, "system") and os.system(f'more "{filename}"') == 0:
-            return _pipepager(generator, "more", color)
-        return _nullpager(stdout, generator, color)
+            return _pipepager("more", color)
+        return _nullpager(stdout, color)
     finally:
         os.unlink(filename)
 
 
-def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> None:
+@contextlib.contextmanager
+def get_pager_file(color: bool | None = None) -> t.Generator[t.IO, None, None]:
+    """Context manager.
+    Yields a writable file-like object which can be used as an output pager.
+    .. versionadded:: 8.2
+    :param color: controls if the pager supports ANSI colors or not.  The
+                  default is autodetection.
+    """
+    with _pager_contextmanager(color=color) as (stream, encoding, color):
+        if not getattr(stream, "encoding", None):
+            # wrap in a text stream
+            stream = MaybeStripAnsi(stream, color=color, encoding=encoding)
+        yield stream
+        stream.flush()
+
+
+@contextlib.contextmanager
+def _pipepager(
+    cmd: str, color: bool | None
+) -> t.Iterator[t.Tuple[t.BinaryIO, str, bool]]:
     """Page through text by feeding it to another program.  Invoking a
     pager through this might support colors.
     """
@@ -418,15 +450,14 @@ def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> N
         elif "r" in less_flags or "R" in less_flags:
             color = True
 
+    if color is None:
+        color = False
+
     c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, env=env)
     stdin = t.cast(t.BinaryIO, c.stdin)
     encoding = get_best_encoding(stdin)
     try:
-        for text in generator:
-            if not color:
-                text = strip_ansi(text)
-
-            stdin.write(text.encode(encoding, "replace"))
+        yield stdin, encoding, color
     except BrokenPipeError:
         # In case the pager exited unexpectedly, ignore the broken pipe error.
         pass
@@ -463,33 +494,27 @@ def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> N
                 break
 
 
-def _tempfilepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> None:
+@contextlib.contextmanager
+def _tempfilepager(
+    cmd: str, color: bool | None = None
+) -> t.Iterator[t.Tuple[t.BinaryIO, str, bool]]:
     """Page through text by invoking a program on a temporary file."""
     import tempfile
 
-    fd, filename = tempfile.mkstemp()
-    # TODO: This never terminates if the passed generator never terminates.
-    text = "".join(generator)
-    if not color:
-        text = strip_ansi(text)
     encoding = get_best_encoding(sys.stdout)
-    with open_stream(filename, "wb")[0] as f:
-        f.write(text.encode(encoding))
-    try:
-        os.system(f'{cmd} "{filename}"')
-    finally:
-        os.close(fd)
-        os.unlink(filename)
+    with tempfile.NamedTemporaryFile(mode="wb") as f:
+        yield f, encoding, color
+        f.flush()
+        os.system(f'{cmd} "{f.name}"')
 
 
+@contextlib.contextmanager
 def _nullpager(
-    stream: t.TextIO, generator: cabc.Iterable[str], color: bool | None
-) -> None:
+    stream: t.TextIO, color: bool | None = None
+) -> t.Iterator[t.Tuple[t.BinaryIO, str, bool]]:
     """Simply print unformatted text.  This is the ultimate fallback."""
-    for text in generator:
-        if not color:
-            text = strip_ansi(text)
-        stream.write(text)
+    encoding = get_best_encoding(stream)
+    yield stream, encoding, color
 
 
 class Editor:
@@ -634,23 +659,23 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
             wait_str = "-w" if wait else ""
             args = f'cygstart {wait_str} "{url}"'
         return os.system(args)
-
-    try:
-        if locate:
-            url = os.path.dirname(_unquote_file(url)) or "."
-        else:
-            url = _unquote_file(url)
-        c = subprocess.Popen(["xdg-open", url])
-        if wait:
-            return c.wait()
-        return 0
-    except OSError:
-        if url.startswith(("http://", "https://")) and not locate and not wait:
-            import webbrowser
-
-            webbrowser.open(url)
+    else:
+        try:
+            if locate:
+                url = os.path.dirname(_unquote_file(url)) or "."
+            else:
+                url = _unquote_file(url)
+            c = subprocess.Popen(["xdg-open", url])
+            if wait:
+                return c.wait()
             return 0
-        return 1
+        except OSError:
+            if url.startswith(("http://", "https://")) and not locate and not wait:
+                import webbrowser
+
+                webbrowser.open(url)
+                return 0
+            return 1
 
 
 def _translate_ch_to_exc(ch: str) -> None:

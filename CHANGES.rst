@@ -79,6 +79,10 @@ Unreleased
         allows the user to search for future output of the generator when
         using less and then aborting the program using ctrl-c.
 
+-   Add ``click.get_pager_file`` for file-like access to an output
+    pager. :pr:`1572`
+
+
 Version 8.1.8
 -------------
 

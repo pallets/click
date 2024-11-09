@@ -113,6 +113,18 @@ If you want to use the pager for a lot of text, especially if generating everyth
         click.echo_via_pager(_generate_output())
 
 
+For more complex programs, which can't easily use a simple generator, you
+can get access to a writable file-like object for the pager, and write to
+that instead:
+
+.. click:example::
+    @click.command()
+    def less():
+        with click.get_pager_file() as pager:
+            for idx in range(50000):
+                print(idx, file=pager)
+
+
 Screen Clearing
 ---------------
 
