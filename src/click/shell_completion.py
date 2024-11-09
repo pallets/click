@@ -303,8 +303,8 @@ class BashComplete(ShellComplete):
 
     @staticmethod
     def _check_version() -> None:
-        import subprocess
         import shutil
+        import subprocess
 
         bash_exe = shutil.which("bash")
 
