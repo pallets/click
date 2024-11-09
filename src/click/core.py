@@ -2349,8 +2349,8 @@ class Parameter(ABC):
 
         return value, args
 
-    @abstractmethod
-    def get_help_record(self, ctx: Context) -> tuple[str, str] | None: ...
+    def get_help_record(self, ctx: Context) -> tuple[str, str] | None:
+        return None
 
     def get_usage_pieces(self, ctx: Context) -> list[str]:
         return []
