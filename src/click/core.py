@@ -2356,8 +2356,13 @@ class Parameter(ABC):
         return []
 
     def get_error_hint(self, ctx: Context | None) -> str:
-        """Get a stringified version of the param for use in error messages to
+        """
+        Get a stringified version of the param for use in error messages to
         indicate which param caused the error.
+
+        .. versionchanged:: 8.2
+            ``ctx`` can be ``None``. This has technically always been the case,
+            but has been made explicit via typing.
         """
         hint_list = self.opts or [self.human_readable_name]
         return " / ".join(f"'{x}'" for x in hint_list)
