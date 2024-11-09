@@ -10,8 +10,8 @@ import typing as t
 from types import TracebackType
 from weakref import WeakKeyDictionary
 
-CYGWIN = sys.platform.startswith("cygwin")
-WIN = sys.platform.startswith("win")
+CYGWIN = sys.platform == "cygwin"
+WIN = sys.platform == "win32"
 auto_wrap_for_ansi: t.Callable[[t.TextIO], t.TextIO] | None = None
 _ansi_re = re.compile(r"\033\[[;?0-9]*[a-zA-Z]")
 
