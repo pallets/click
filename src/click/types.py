@@ -354,16 +354,12 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
 
         .. versionadded:: 8.2
         """
-        choices_str = ", ".join(self.normalized_mapping(ctx=ctx).values())
-        self.fail(
-            message=ngettext(
-                "{value!r} is not {choice}.",
-                "{value!r} is not one of {choices}.",
-                len(self.choices),
-            ).format(value=value, choice=choices_str, choices=choices_str),
-            param=value,
-            ctx=ctx,
-        )
+        choices_str = ", ".join(map(repr, self.normalized_mapping(ctx=ctx).values()))
+        return ngettext(
+            "{value!r} is not {choice}.",
+            "{value!r} is not one of {choices}.",
+            len(self.choices),
+        ).format(value=value, choice=choices_str, choices=choices_str)
 
     def __repr__(self) -> str:
         return f"Choice({list(self.choices)})"
