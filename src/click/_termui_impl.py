@@ -251,9 +251,9 @@ class ProgressBar(t.Generic[V]):
             self.width = 0
             clutter_length = term_len(self.format_progress_line())
             new_width = max(0, shutil.get_terminal_size().columns - clutter_length)
-            if new_width < old_width:
+            if new_width < old_width and self.max_width is not None:
                 buf.append(BEFORE_BAR)
-                buf.append(" " * self.max_width)  # type: ignore
+                buf.append(" " * self.max_width)
                 self.max_width = new_width
             self.width = new_width
 

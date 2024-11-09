@@ -129,7 +129,7 @@ class _FixupStream:
         if x is not None:
             return t.cast(bool, x())
         try:
-            self._stream.write("")  # type: ignore
+            self._stream.write(b"")
         except Exception:
             try:
                 self._stream.write(b"")
