@@ -13,7 +13,6 @@ from .utils import format_filename
 if t.TYPE_CHECKING:
     from .core import Command
     from .core import Context
-    from .core import ObjT
     from .core import Parameter
 
 
