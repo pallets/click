@@ -10,6 +10,7 @@ from .core import Argument
 from .core import Command
 from .core import Context
 from .core import Group
+from .core import ObjT
 from .core import Option
 from .core import Parameter
 from .core import ParameterSource
@@ -17,7 +18,7 @@ from .utils import echo
 
 
 def shell_complete(
-    cli: Command,
+    cli: Command[ObjT],
     ctx_args: cabc.MutableMapping[str, t.Any],
     prog_name: str,
     complete_var: str,
@@ -217,7 +218,7 @@ class ShellComplete:
 
     def __init__(
         self,
-        cli: Command,
+        cli: Command[ObjT],
         ctx_args: cabc.MutableMapping[str, t.Any],
         prog_name: str,
         complete_var: str,
@@ -530,11 +531,11 @@ def _is_incomplete_option(ctx: Context, args: list[str], param: Parameter) -> bo
 
 
 def _resolve_context(
-    cli: Command,
+    cli: Command[ObjT],
     ctx_args: cabc.MutableMapping[str, t.Any],
     prog_name: str,
     args: list[str],
-) -> Context:
+) -> Context[ObjT]:
     """Produce the context hierarchy starting with the command and
     traversing the complete arguments. This only follows the commands,
     it doesn't trigger input prompts or callbacks.

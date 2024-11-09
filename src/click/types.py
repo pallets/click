@@ -20,11 +20,12 @@ if t.TYPE_CHECKING:
     import typing_extensions as te
 
     from .core import Context
+    from .core import ObjT
     from .core import Parameter
     from .shell_completion import CompletionItem
 
 
-class ParamType:
+class ParamType(t.Generic[ObjT]):
     """Represents the type of a parameter. Validates and converts values
     from the command line or Python into the correct type.
 
@@ -81,7 +82,7 @@ class ParamType:
         self,
         value: t.Any,
         param: Parameter | None = None,
-        ctx: Context | None = None,
+        ctx: Context[ObjT] | None = None,
     ) -> t.Any:
         if value is not None:
             return self.convert(value, param, ctx)
@@ -97,7 +98,7 @@ class ParamType:
         """
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         """Convert the value to the correct type. This is not called if
         the value is ``None`` (the missing value).
@@ -134,13 +135,13 @@ class ParamType:
         self,
         message: str,
         param: Parameter | None = None,
-        ctx: Context | None = None,
+        ctx: Context[ObjT] | None = None,
     ) -> t.NoReturn:
         """Helper method to fail with an invalid value message."""
         raise BadParameter(message, ctx=ctx, param=param)
 
     def shell_complete(
-        self, ctx: Context, param: Parameter, incomplete: str
+        self, ctx: Context[ObjT], param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
         """Return a list of
         :class:`~click.shell_completion.CompletionItem` objects for the
@@ -157,7 +158,7 @@ class ParamType:
         return []
 
 
-class CompositeParamType(ParamType):
+class CompositeParamType(ParamType[ObjT]):
     is_composite = True
 
     @property
@@ -165,7 +166,7 @@ class CompositeParamType(ParamType):
         raise NotImplementedError()
 
 
-class FuncParamType(ParamType):
+class FuncParamType(ParamType[ObjT]):
     def __init__(self, func: t.Callable[[t.Any], t.Any]) -> None:
         self.name: str = func.__name__
         self.func = func
@@ -176,7 +177,7 @@ class FuncParamType(ParamType):
         return info_dict
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         try:
             return self.func(value)
@@ -189,11 +190,11 @@ class FuncParamType(ParamType):
             self.fail(value, param, ctx)
 
 
-class UnprocessedParamType(ParamType):
+class UnprocessedParamType(ParamType[ObjT]):
     name = "text"
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         return value
 
@@ -201,11 +202,11 @@ class UnprocessedParamType(ParamType):
         return "UNPROCESSED"
 
 
-class StringParamType(ParamType):
+class StringParamType(ParamType[ObjT]):
     name = "text"
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         if isinstance(value, bytes):
             enc = _get_argv_encoding()
@@ -227,7 +228,7 @@ class StringParamType(ParamType):
         return "STRING"
 
 
-class Choice(ParamType):
+class Choice(ParamType[ObjT]):
     """The choice type allows a value to be checked against a fixed set
     of supported values. All of these values have to be strings.
 
@@ -278,7 +279,7 @@ class Choice(ParamType):
         return _("Choose from:\n\t{choices}").format(choices=",\n\t".join(self.choices))
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         # Match through normalization and case sensitivity
         # first do token_normalize_func, then lowercase
@@ -324,7 +325,7 @@ class Choice(ParamType):
         return f"Choice({list(self.choices)})"
 
     def shell_complete(
-        self, ctx: Context, param: Parameter, incomplete: str
+        self, ctx: Context[ObjT], param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
         """Complete choices that start with the incomplete value.
 
@@ -347,7 +348,7 @@ class Choice(ParamType):
         return [CompletionItem(c) for c in matched]
 
 
-class DateTime(ParamType):
+class DateTime(ParamType[ObjT]):
     """The DateTime type converts date strings into `datetime` objects.
 
     The format strings which are checked are configurable, but default to some
@@ -392,7 +393,7 @@ class DateTime(ParamType):
             return None
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         if isinstance(value, datetime):
             return value
@@ -418,11 +419,11 @@ class DateTime(ParamType):
         return "DateTime"
 
 
-class _NumberParamTypeBase(ParamType):
+class _NumberParamTypeBase(ParamType[ObjT]):
     _number_class: t.ClassVar[type[t.Any]]
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         try:
             return self._number_class(value)
@@ -436,7 +437,7 @@ class _NumberParamTypeBase(ParamType):
             )
 
 
-class _NumberRangeBase(_NumberParamTypeBase):
+class _NumberRangeBase(_NumberParamTypeBase[ObjT]):
     def __init__(
         self,
         min: float | None = None,
@@ -463,7 +464,7 @@ class _NumberRangeBase(_NumberParamTypeBase):
         return info_dict
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         import operator
 
@@ -522,7 +523,7 @@ class _NumberRangeBase(_NumberParamTypeBase):
         return f"<{type(self).__name__} {self._describe_range()}{clamp}>"
 
 
-class IntParamType(_NumberParamTypeBase):
+class IntParamType(_NumberParamTypeBase[ObjT]):
     name = "integer"
     _number_class = int
 
@@ -530,7 +531,7 @@ class IntParamType(_NumberParamTypeBase):
         return "INT"
 
 
-class IntRange(_NumberRangeBase, IntParamType):
+class IntRange(_NumberRangeBase[ObjT], IntParamType[ObjT]):
     """Restrict an :data:`click.INT` value to a range of accepted
     values. See :ref:`ranges`.
 
@@ -556,7 +557,7 @@ class IntRange(_NumberRangeBase, IntParamType):
         return bound + dir
 
 
-class FloatParamType(_NumberParamTypeBase):
+class FloatParamType(_NumberParamTypeBase[ObjT]):
     name = "float"
     _number_class = float
 
@@ -564,7 +565,7 @@ class FloatParamType(_NumberParamTypeBase):
         return "FLOAT"
 
 
-class FloatRange(_NumberRangeBase, FloatParamType):
+class FloatRange(_NumberRangeBase[ObjT], FloatParamType[ObjT]):
     """Restrict a :data:`click.FLOAT` value to a range of accepted
     values. See :ref:`ranges`.
 
@@ -607,11 +608,11 @@ class FloatRange(_NumberRangeBase, FloatParamType):
         raise RuntimeError("Clamping is not supported for open bounds.")
 
 
-class BoolParamType(ParamType):
+class BoolParamType(ParamType[ObjT]):
     name = "boolean"
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         if value in {False, True}:
             return bool(value)
@@ -632,11 +633,11 @@ class BoolParamType(ParamType):
         return "BOOL"
 
 
-class UUIDParameterType(ParamType):
+class UUIDParameterType(ParamType[ObjT]):
     name = "uuid"
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         import uuid
 
@@ -656,7 +657,7 @@ class UUIDParameterType(ParamType):
         return "UUID"
 
 
-class File(ParamType):
+class File(ParamType[ObjT]):
     """Declares a parameter to be a file for reading or writing.  The file
     is automatically closed once the context tears down (after the command
     finished working).
@@ -718,7 +719,7 @@ class File(ParamType):
         self,
         value: str | os.PathLike[str] | t.IO[t.Any],
         param: Parameter | None,
-        ctx: Context | None,
+        ctx: Context[ObjT] | None,
     ) -> t.IO[t.Any]:
         if _is_file_like(value):
             return value
@@ -758,7 +759,7 @@ class File(ParamType):
             self.fail(f"'{format_filename(value)}': {e.strerror}", param, ctx)
 
     def shell_complete(
-        self, ctx: Context, param: Parameter, incomplete: str
+        self, ctx: Context[ObjT], param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
         """Return a special completion marker that tells the completion
         system to use the shell to provide file path completions.
@@ -778,7 +779,7 @@ def _is_file_like(value: t.Any) -> te.TypeGuard[t.IO[t.Any]]:
     return hasattr(value, "read") or hasattr(value, "write")
 
 
-class Path(ParamType):
+class Path(ParamType[ObjT]):
     """The ``Path`` type is similar to the :class:`File` type, but
     returns the filename instead of an open file. Various checks can be
     enabled to validate the type of file and permissions.
@@ -871,7 +872,7 @@ class Path(ParamType):
         self,
         value: str | os.PathLike[str],
         param: Parameter | None,
-        ctx: Context | None,
+        ctx: Context[ObjT] | None,
     ) -> str | bytes | os.PathLike[str]:
         rv = value
 
@@ -941,7 +942,7 @@ class Path(ParamType):
         return self.coerce_path_result(rv)
 
     def shell_complete(
-        self, ctx: Context, param: Parameter, incomplete: str
+        self, ctx: Context[ObjT], param: Parameter, incomplete: str
     ) -> list[CompletionItem]:
         """Return a special completion marker that tells the completion
         system to use the shell to provide path completions for only
@@ -959,7 +960,7 @@ class Path(ParamType):
         return [CompletionItem(incomplete, type=type)]
 
 
-class Tuple(CompositeParamType):
+class Tuple(CompositeParamType[ObjT]):
     """The default behavior of Click is to apply a type on a value directly.
     This works well in most cases, except for when `nargs` is set to a fixed
     count and different types should be used for different items.  In this
@@ -973,8 +974,8 @@ class Tuple(CompositeParamType):
     :param types: a list of types that should be used for the tuple items.
     """
 
-    def __init__(self, types: cabc.Sequence[type[t.Any] | ParamType]) -> None:
-        self.types: cabc.Sequence[ParamType] = [convert_type(ty) for ty in types]
+    def __init__(self, types: cabc.Sequence[type[t.Any] | ParamType[ObjT]]) -> None:
+        self.types: cabc.Sequence[ParamType[ObjT]] = [convert_type(ty) for ty in types]
 
     def to_info_dict(self) -> dict[str, t.Any]:
         info_dict = super().to_info_dict()
@@ -990,7 +991,7 @@ class Tuple(CompositeParamType):
         return len(self.types)
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: t.Any, param: Parameter | None, ctx: Context[ObjT] | None
     ) -> t.Any:
         len_type = len(self.types)
         len_value = len(value)
@@ -1009,7 +1010,7 @@ class Tuple(CompositeParamType):
         return tuple(ty(x, param, ctx) for ty, x in zip(self.types, value))
 
 
-def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType:
+def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType[ObjT]:
     """Find the most appropriate :class:`ParamType` for the given Python
     type. If the type isn't provided, it can be inferred from a default
     value.
@@ -1058,7 +1059,7 @@ def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType:
 
     if __debug__:
         try:
-            if issubclass(ty, ParamType):
+            if issubclass(ty, ParamType[ObjT]):
                 raise AssertionError(
                     f"Attempted to use an uninstantiated parameter type ({ty})."
                 )

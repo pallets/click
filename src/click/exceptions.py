@@ -13,6 +13,7 @@ from .utils import format_filename
 if t.TYPE_CHECKING:
     from .core import Command
     from .core import Context
+    from .core import ObjT
     from .core import Parameter
 
 
@@ -64,7 +65,7 @@ class UsageError(ClickException):
 
     exit_code = 2
 
-    def __init__(self, message: str, ctx: Context | None = None) -> None:
+    def __init__(self, message: str, ctx: Context[t.Any] | None = None) -> None:
         super().__init__(message)
         self.ctx = ctx
         self.cmd: Command | None = self.ctx.command if self.ctx else None
@@ -113,7 +114,7 @@ class BadParameter(UsageError):
     def __init__(
         self,
         message: str,
-        ctx: Context | None = None,
+        ctx: Context[t.Any] | None = None,
         param: Parameter | None = None,
         param_hint: str | None = None,
     ) -> None:
@@ -149,7 +150,7 @@ class MissingParameter(BadParameter):
     def __init__(
         self,
         message: str | None = None,
-        ctx: Context | None = None,
+        ctx: Context[t.Any] | None = None,
         param: Parameter | None = None,
         param_hint: str | None = None,
         param_type: str | None = None,
@@ -215,7 +216,7 @@ class NoSuchOption(UsageError):
         option_name: str,
         message: str | None = None,
         possibilities: cabc.Sequence[str] | None = None,
-        ctx: Context | None = None,
+        ctx: Context[t.Any] | None = None,
     ) -> None:
         if message is None:
             message = _("No such option: {name}").format(name=option_name)
@@ -248,7 +249,7 @@ class BadOptionUsage(UsageError):
     """
 
     def __init__(
-        self, option_name: str, message: str, ctx: Context | None = None
+        self, option_name: str, message: str, ctx: Context[t.Any] | None = None
     ) -> None:
         super().__init__(message, ctx)
         self.option_name = option_name
@@ -264,9 +265,9 @@ class BadArgumentUsage(UsageError):
 
 
 class NoArgsIsHelpError(UsageError):
-    def __init__(self, ctx: Context) -> None:
-        self.ctx: Context
+    def __init__(self, ctx: Context[t.Any]) -> None:
         super().__init__(ctx.get_help(), ctx=ctx)
+        self.ctx: Context[t.Any]
 
     def show(self, file: t.IO[t.Any] | None = None) -> None:
         echo(self.format_message(), file=file, err=True, color=self.ctx.color)

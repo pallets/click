@@ -48,24 +48,25 @@ if t.TYPE_CHECKING:
 
     from .shell_completion import CompletionItem
 
-    ObjT = te.TypeVar("ObjT", default=t.Any)
+    ObjT = te.TypeVar("ObjT", default=None)
 else:
-    ObjT = t.TypeVar("ObjT")
+    ObjT = te.TypeVar("ObjT", default=None)
+# ObjT = t.TypeVar("ObjT")
 
 F = t.TypeVar("F", bound="t.Callable[..., t.Any]")
 V = t.TypeVar("V")
 
 
 def _complete_visible_commands(
-    ctx: Context, incomplete: str
-) -> cabc.Iterator[tuple[str, Command]]:
+    ctx: Context[ObjT], incomplete: str
+) -> cabc.Iterator[tuple[str, Command[ObjT]]]:
     """List all the subcommands of a group that start with the
     incomplete value and aren't hidden.
 
     :param ctx: Invocation context for the group.
     :param incomplete: Value being completed. May be empty.
     """
-    multi = t.cast(Group, ctx.command)
+    multi = t.cast(Group[ObjT], ctx.command)
 
     for name in multi.list_commands(ctx):
         if name.startswith(incomplete):
@@ -76,9 +77,9 @@ def _complete_visible_commands(
 
 
 def _check_nested_chain(
-    base_command: Group, cmd_name: str, cmd: Command, register: bool = False
+    base_command: Group[ObjT], cmd_name: str, cmd: Command[ObjT], register: bool = False
 ) -> None:
-    if not base_command.chain or not isinstance(cmd, Group):
+    if not base_command.chain or not isinstance(cmd, Group[ObjT]):
         return
 
     if register:
@@ -101,9 +102,9 @@ def batch(iterable: cabc.Iterable[V], batch_size: int) -> list[tuple[V, ...]]:
 
 @contextmanager
 def augment_usage_errors(
-    ctx: Context, param: Parameter | None = None
+    ctx: Context[ObjT], param: Parameter | None = None
 ) -> cabc.Iterator[None]:
-    """Context manager that attaches extra information to exceptions."""
+    """Context[ObjT] manager that attaches extra information to exceptions."""
     try:
         yield
     except BadParameter as e:
@@ -142,7 +143,7 @@ class ParameterSource(enum.Enum):
     """This is an :class:`~enum.Enum` that indicates the source of a
     parameter's value.
 
-    Use :meth:`click.Context.get_parameter_source` to get the
+    Use :meth:`click.Context[ObjT].get_parameter_source` to get the
     source for a parameter by name.
 
     .. versionchanged:: 8.0
@@ -159,7 +160,7 @@ class ParameterSource(enum.Enum):
     DEFAULT = enum.auto()
     """Used the default specified by the parameter."""
     DEFAULT_MAP = enum.auto()
-    """Used a default provided by :attr:`Context.default_map`."""
+    """Used a default provided by :attr:`Context[ObjT].default_map`."""
     PROMPT = enum.auto()
     """Used a prompt to confirm a default or provide a value."""
 
@@ -270,10 +271,10 @@ class Context(t.Generic[ObjT]):
 
     def __init__(
         self,
-        command: Command,
-        parent: Context | None = None,
+        command: Command[ObjT],
+        parent: Context[ObjT] | None = None,
         info_name: str | None = None,
-        obj: ObjT | None = None,
+        obj: ObjT = None,
         auto_envvar_prefix: str | None = None,
         default_map: cabc.MutableMapping[str, t.Any] | None = None,
         terminal_width: int | None = None,
@@ -310,7 +311,7 @@ class Context(t.Generic[ObjT]):
             obj = parent.obj
 
         #: the user object stored.
-        self.obj: ObjT | None = obj
+        self.obj: ObjT = obj
         self._meta: dict[str, t.Any] = getattr(parent, "meta", {})
 
         #: A dictionary (-like object) with defaults for parameters.
@@ -457,7 +458,7 @@ class Context(t.Generic[ObjT]):
 
         .. code-block:: python
 
-            with Context(cli) as ctx:
+            with Context[ObjT](cli) as ctx:
                 info = ctx.to_info_dict()
 
         .. versionadded:: 8.0
@@ -471,7 +472,7 @@ class Context(t.Generic[ObjT]):
             "auto_envvar_prefix": self.auto_envvar_prefix,
         }
 
-    def __enter__(self) -> Context:
+    def __enter__(self) -> Context[ObjT]:
         self._depth += 1
         push_context(self)
         return self
@@ -488,7 +489,7 @@ class Context(t.Generic[ObjT]):
         pop_context()
 
     @contextmanager
-    def scope(self, cleanup: bool = True) -> cabc.Iterator[Context]:
+    def scope(self, cleanup: bool = True) -> cabc.Iterator[Context[ObjT]]:
         """This helper method can be used with the context object to promote
         it to the current thread local (see :func:`get_current_context`).
         The default behavior of this is to invoke the cleanup functions which
@@ -636,7 +637,7 @@ class Context(t.Generic[ObjT]):
             rv = f"{' '.join(parent_command_path)} {rv}"
         return rv.lstrip()
 
-    def find_root(self) -> Context:
+    def find_root(self) -> Context[ObjT]:
         """Finds the outermost context."""
         node = self
         while node.parent is not None:
@@ -645,7 +646,7 @@ class Context(t.Generic[ObjT]):
 
     def find_object(self, object_type: type[V]) -> V | None:
         """Finds the closest object of a given type."""
-        node: Context | None = self
+        node: Context[ObjT] | None = self
 
         while node is not None:
             if isinstance(node.obj, object_type):
@@ -655,7 +656,7 @@ class Context(t.Generic[ObjT]):
 
         return None
 
-    def ensure_object(self, object_type: type[V]) -> V:
+    def ensure_object(self, object_type: type[ObjT]) -> ObjT:
         """Like :meth:`find_object` but sets the innermost object to a
         new instance of `object_type` if it does not exist.
         """
@@ -728,7 +729,7 @@ class Context(t.Generic[ObjT]):
         """
         return self.command.get_help(self)
 
-    def _make_sub_context(self, command: Command) -> Context:
+    def _make_sub_context(self, command: Command[ObjT]) -> Context[t.Any]:
         """Create a new context of the same type as this context, but
         for a new command.
 
@@ -742,10 +743,16 @@ class Context(t.Generic[ObjT]):
     ) -> V: ...
 
     @t.overload
-    def invoke(self, callback: Command, /, *args: t.Any, **kwargs: t.Any) -> t.Any: ...
+    def invoke(
+        self, callback: Command[ObjT], /, *args: t.Any, **kwargs: t.Any
+    ) -> t.Any: ...
 
     def invoke(
-        self, callback: Command | t.Callable[..., V], /, *args: t.Any, **kwargs: t.Any
+        self,
+        callback: Command[ObjT] | t.Callable[..., V],
+        /,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> t.Any | V:
         """Invokes a command callback in exactly the way it expects.  There
         are two ways to invoke this method:
@@ -792,7 +799,7 @@ class Context(t.Generic[ObjT]):
             with ctx:
                 return callback(*args, **kwargs)
 
-    def forward(self, cmd: Command, /, *args: t.Any, **kwargs: t.Any) -> t.Any:
+    def forward(self, cmd: Command[ObjT], /, *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Similar to :meth:`invoke` but fills in default keyword
         arguments from the current context if the other command expects
         it.  This cannot invoke callbacks directly, only other commands.
@@ -839,7 +846,7 @@ class Context(t.Generic[ObjT]):
         return self._parameter_source.get(name)
 
 
-class Command:
+class Command(t.Generic[ObjT]):
     """Commands are the basic building block of command line interfaces in
     Click.  A basic command handles command line parsing and might dispatch
     more parsing to commands nested below it.
@@ -887,15 +894,15 @@ class Command:
     #: The context class to create with :meth:`make_context`.
     #:
     #: .. versionadded:: 8.0
-    context_class: type[Context] = Context
+    context_class: type[Context[ObjT]] = Context[ObjT]
 
-    #: the default for the :attr:`Context.allow_extra_args` flag.
+    #: the default for the :attr:`Context[ObjT].allow_extra_args` flag.
     allow_extra_args = False
 
-    #: the default for the :attr:`Context.allow_interspersed_args` flag.
+    #: the default for the :attr:`Context[ObjT].allow_interspersed_args` flag.
     allow_interspersed_args = True
 
-    #: the default for the :attr:`Context.ignore_unknown_options` flag.
+    #: the default for the :attr:`Context[ObjT].ignore_unknown_options` flag.
     ignore_unknown_options = False
 
     def __init__(
@@ -916,7 +923,7 @@ class Command:
         #: the name the command thinks it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
         #: with this information.  You should instead use the
-        #: :class:`Context`\'s :attr:`~Context.info_name` attribute.
+        #: :class:`Context[ObjT]`\'s :attr:`~Context[ObjT].info_name` attribute.
         self.name = name
 
         if context_settings is None:
@@ -941,7 +948,7 @@ class Command:
         self.hidden = hidden
         self.deprecated = deprecated
 
-    def to_info_dict(self, ctx: Context) -> dict[str, t.Any]:
+    def to_info_dict(self, ctx: Context[ObjT]) -> dict[str, t.Any]:
         return {
             "name": self.name,
             "params": [param.to_info_dict() for param in self.get_params(ctx)],
@@ -955,7 +962,7 @@ class Command:
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.name}>"
 
-    def get_usage(self, ctx: Context) -> str:
+    def get_usage(self, ctx: Context[ObjT]) -> str:
         """Formats the usage line into a string and returns it.
 
         Calls :meth:`format_usage` internally.
@@ -964,7 +971,7 @@ class Command:
         self.format_usage(ctx, formatter)
         return formatter.getvalue().rstrip("\n")
 
-    def get_params(self, ctx: Context) -> list[Parameter]:
+    def get_params(self, ctx: Context[ObjT]) -> list[Parameter]:
         params = self.params
         help_option = self.get_help_option(ctx)
 
@@ -989,7 +996,7 @@ class Command:
 
         return params
 
-    def format_usage(self, ctx: Context, formatter: HelpFormatter) -> None:
+    def format_usage(self, ctx: Context[ObjT], formatter: HelpFormatter) -> None:
         """Writes the usage line into the formatter.
 
         This is a low-level method called by :meth:`get_usage`.
@@ -997,7 +1004,7 @@ class Command:
         pieces = self.collect_usage_pieces(ctx)
         formatter.write_usage(ctx.command_path, " ".join(pieces))
 
-    def collect_usage_pieces(self, ctx: Context) -> list[str]:
+    def collect_usage_pieces(self, ctx: Context[ObjT]) -> list[str]:
         """Returns all the pieces that go into the usage line and returns
         it as a list of strings.
         """
@@ -1008,7 +1015,7 @@ class Command:
 
         return rv
 
-    def get_help_option_names(self, ctx: Context) -> list[str]:
+    def get_help_option_names(self, ctx: Context[ObjT]) -> list[str]:
         """Returns the names for the help option."""
         all_names = set(ctx.help_option_names)
         for param in self.params:
@@ -1016,14 +1023,14 @@ class Command:
             all_names.difference_update(param.secondary_opts)
         return list(all_names)
 
-    def get_help_option(self, ctx: Context) -> Option | None:
+    def get_help_option(self, ctx: Context[ObjT]) -> Option | None:
         """Returns the help option object."""
         help_options = self.get_help_option_names(ctx)
 
         if not help_options or not self.add_help_option:
             return None
 
-        def show_help(ctx: Context, param: Parameter, value: str) -> None:
+        def show_help(ctx: Context[ObjT], param: Parameter, value: str) -> None:
             if value and not ctx.resilient_parsing:
                 echo(ctx.get_help(), color=ctx.color)
                 ctx.exit()
@@ -1037,14 +1044,14 @@ class Command:
             help=_("Show this message and exit."),
         )
 
-    def make_parser(self, ctx: Context) -> _OptionParser:
+    def make_parser(self, ctx: Context[ObjT]) -> _OptionParser:
         """Creates the underlying option parser for this command."""
         parser = _OptionParser(ctx)
         for param in self.get_params(ctx):
             param.add_to_parser(parser, ctx)
         return parser
 
-    def get_help(self, ctx: Context) -> str:
+    def get_help(self, ctx: Context[ObjT]) -> str:
         """Formats the help into a string and returns it.
 
         Calls :meth:`format_help` internally.
@@ -1069,7 +1076,7 @@ class Command:
 
         return text.strip()
 
-    def format_help(self, ctx: Context, formatter: HelpFormatter) -> None:
+    def format_help(self, ctx: Context[ObjT], formatter: HelpFormatter) -> None:
         """Writes the help into the formatter if it exists.
 
         This is a low-level method called by :meth:`get_help`.
@@ -1086,7 +1093,7 @@ class Command:
         self.format_options(ctx, formatter)
         self.format_epilog(ctx, formatter)
 
-    def format_help_text(self, ctx: Context, formatter: HelpFormatter) -> None:
+    def format_help_text(self, ctx: Context[ObjT], formatter: HelpFormatter) -> None:
         """Writes the help text to the formatter if it exists."""
         if self.help is not None:
             # truncate the help text to the first form feed
@@ -1103,7 +1110,7 @@ class Command:
             with formatter.indentation():
                 formatter.write_text(text)
 
-    def format_options(self, ctx: Context, formatter: HelpFormatter) -> None:
+    def format_options(self, ctx: Context[ObjT], formatter: HelpFormatter) -> None:
         """Writes all the options into the formatter if they exist."""
         opts = []
         for param in self.get_params(ctx):
@@ -1115,7 +1122,7 @@ class Command:
             with formatter.section(_("Options")):
                 formatter.write_dl(opts)
 
-    def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
+    def format_epilog(self, ctx: Context[ObjT], formatter: HelpFormatter) -> None:
         """Writes the epilog into the formatter if it exists."""
         if self.epilog:
             epilog = inspect.cleandoc(self.epilog)
@@ -1128,11 +1135,11 @@ class Command:
         self,
         info_name: str | None,
         args: list[str],
-        parent: Context | None = None,
+        parent: Context[ObjT] | None = None,
         **extra: t.Any,
-    ) -> Context:
+    ) -> Context[ObjT]:
         """This function when given an info name and arguments will kick
-        off the parsing and create a new :class:`Context`.  It does not
+        off the parsing and create a new :class:`Context[ObjT]`.  It does not
         invoke the actual command callback though.
 
         To quickly customize the context class used without overriding
@@ -1161,7 +1168,7 @@ class Command:
             self.parse_args(ctx, args)
         return ctx
 
-    def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
+    def parse_args(self, ctx: Context[ObjT], args: list[str]) -> list[str]:
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
             raise NoArgsIsHelpError(ctx)
 
@@ -1184,7 +1191,7 @@ class Command:
         ctx._opt_prefixes.update(parser._opt_prefixes)
         return args
 
-    def invoke(self, ctx: Context) -> t.Any:
+    def invoke(self, ctx: Context[ObjT]) -> t.Any:
         """Given a context, this invokes the attached callback (if it exists)
         in the right way.
         """
@@ -1197,7 +1204,9 @@ class Command:
         if self.callback is not None:
             return ctx.invoke(self.callback, **ctx.params)
 
-    def shell_complete(self, ctx: Context, incomplete: str) -> list[CompletionItem]:
+    def shell_complete(
+        self, ctx: Context[ObjT], incomplete: str
+    ) -> list[CompletionItem]:
         """Return a list of completions for the incomplete value. Looks
         at the names of options and chained multi-commands.
 
@@ -1235,7 +1244,7 @@ class Command:
         while ctx.parent is not None:
             ctx = ctx.parent
 
-            if isinstance(ctx.command, Group) and ctx.command.chain:
+            if isinstance(ctx.command, Group[ObjT]) and ctx.command.chain:
                 results.extend(
                     CompletionItem(name, help=command.get_short_help_str())
                     for name, command in _complete_visible_commands(ctx, incomplete)
@@ -1302,7 +1311,7 @@ class Command:
         :param windows_expand_args: Expand glob patterns, user dir, and
             env vars in command line args on Windows.
         :param extra: extra keyword arguments are forwarded to the context
-                      constructor.  See :class:`Context` for more information.
+                      constructor.  See :class:`Context[ObjT]` for more information.
 
         .. versionchanged:: 8.0.1
             Added the ``windows_expand_args`` parameter to allow
@@ -1422,14 +1431,14 @@ class _FakeSubclassCheck(type):
         return isinstance(instance, cls.__bases__[0])
 
 
-class _BaseCommand(Command, metaclass=_FakeSubclassCheck):
+class _BaseCommand(Command[ObjT], metaclass=_FakeSubclassCheck):
     """
     .. deprecated:: 8.2
         Will be removed in Click 9.0. Use ``Command`` instead.
     """
 
 
-class Group(Command):
+class Group(Command[ObjT]):
     """A group is a command that nests other commands (or more groups).
 
     :param name: The name of the group command.
@@ -1467,7 +1476,7 @@ class Group(Command):
     #: subcommands use a custom command class.
     #:
     #: .. versionadded:: 8.0
-    command_class: type[Command] | None = None
+    command_class: type[Command[ObjT]] | None = None
 
     #: If set, this is used by the group's :meth:`group` decorator
     #: as the default :class:`Group` class. This is useful to make all
@@ -1479,14 +1488,14 @@ class Group(Command):
     #: custom groups.
     #:
     #: .. versionadded:: 8.0
-    group_class: type[Group] | type[type] | None = None
+    group_class: type[Group[ObjT]] | type[type] | None = None
     # Literal[type] isn't valid, so use Type[type]
 
     def __init__(
         self,
         name: str | None = None,
-        commands: cabc.MutableMapping[str, Command]
-        | cabc.Sequence[Command]
+        commands: cabc.MutableMapping[str, Command[ObjT]]
+        | cabc.Sequence[Command[ObjT]]
         | None = None,
         invoke_without_command: bool = False,
         no_args_is_help: bool | None = None,
@@ -1503,7 +1512,7 @@ class Group(Command):
             commands = {c.name: c for c in commands if c.name is not None}
 
         #: The registered subcommands by their exported names.
-        self.commands: cabc.MutableMapping[str, Command] = commands
+        self.commands: cabc.MutableMapping[str, Command[ObjT]] = commands
 
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
@@ -1530,7 +1539,7 @@ class Group(Command):
                         "A group in chain mode cannot have optional arguments."
                     )
 
-    def to_info_dict(self, ctx: Context) -> dict[str, t.Any]:
+    def to_info_dict(self, ctx: Context[ObjT]) -> dict[str, t.Any]:
         info_dict = super().to_info_dict(ctx)
         commands = {}
 
@@ -1548,7 +1557,7 @@ class Group(Command):
         info_dict.update(commands=commands, chain=self.chain)
         return info_dict
 
-    def add_command(self, cmd: Command, name: str | None = None) -> None:
+    def add_command(self, cmd: Command[ObjT], name: str | None = None) -> None:
         """Registers another :class:`Command` with this group.  If the name
         is not provided, the name of the command is used.
         """
@@ -1559,16 +1568,16 @@ class Group(Command):
         self.commands[name] = cmd
 
     @t.overload
-    def command(self, __func: t.Callable[..., t.Any]) -> Command: ...
+    def command(self, __func: t.Callable[..., t.Any]) -> Command[ObjT]: ...
 
     @t.overload
     def command(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Command]: ...
+    ) -> t.Callable[[t.Callable[..., t.Any]], Command[ObjT]]: ...
 
     def command(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Command] | Command:
+    ) -> t.Callable[[t.Callable[..., t.Any]], Command[ObjT]] | Command[ObjT]:
         """A shortcut decorator for declaring and attaching a command to
         the group. This takes the same arguments as :func:`command` and
         immediately registers the created command with this group by
@@ -1597,8 +1606,8 @@ class Group(Command):
         if self.command_class and kwargs.get("cls") is None:
             kwargs["cls"] = self.command_class
 
-        def decorator(f: t.Callable[..., t.Any]) -> Command:
-            cmd: Command = command(*args, **kwargs)(f)
+        def decorator(f: t.Callable[..., t.Any]) -> Command[ObjT]:
+            cmd: Command[ObjT] = command(*args, **kwargs)(f)
             self.add_command(cmd)
             return cmd
 
@@ -1608,16 +1617,16 @@ class Group(Command):
         return decorator
 
     @t.overload
-    def group(self, __func: t.Callable[..., t.Any]) -> Group: ...
+    def group(self, __func: t.Callable[..., t.Any]) -> Group[ObjT]: ...
 
     @t.overload
     def group(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Group]: ...
+    ) -> t.Callable[[t.Callable[..., t.Any]], Group[ObjT]]: ...
 
     def group(
         self, *args: t.Any, **kwargs: t.Any
-    ) -> t.Callable[[t.Callable[..., t.Any]], Group] | Group:
+    ) -> t.Callable[[t.Callable[..., t.Any]], Group[ObjT]] | Group[ObjT]:
         """A shortcut decorator for declaring and attaching a group to
         the group. This takes the same arguments as :func:`group` and
         immediately registers the created group with this group by
@@ -1649,8 +1658,8 @@ class Group(Command):
             else:
                 kwargs["cls"] = self.group_class
 
-        def decorator(f: t.Callable[..., t.Any]) -> Group:
-            cmd: Group = group(*args, **kwargs)(f)
+        def decorator(f: t.Callable[..., t.Any]) -> Group[ObjT]:
+            cmd: Group[ObjT] = group(*args, **kwargs)(f)
             self.add_command(cmd)
             return cmd
 
@@ -1704,26 +1713,26 @@ class Group(Command):
 
         return decorator
 
-    def get_command(self, ctx: Context, cmd_name: str) -> Command | None:
+    def get_command(self, ctx: Context[ObjT], cmd_name: str) -> Command[ObjT] | None:
         """Given a context and a command name, this returns a :class:`Command`
         object if it exists or returns ``None``.
         """
         return self.commands.get(cmd_name)
 
-    def list_commands(self, ctx: Context) -> list[str]:
+    def list_commands(self, ctx: Context[ObjT]) -> list[str]:
         """Returns a list of subcommand names in the order they should appear."""
         return sorted(self.commands)
 
-    def collect_usage_pieces(self, ctx: Context) -> list[str]:
+    def collect_usage_pieces(self, ctx: Context[ObjT]) -> list[str]:
         rv = super().collect_usage_pieces(ctx)
         rv.append(self.subcommand_metavar)
         return rv
 
-    def format_options(self, ctx: Context, formatter: HelpFormatter) -> None:
+    def format_options(self, ctx: Context[ObjT], formatter: HelpFormatter) -> None:
         super().format_options(ctx, formatter)
         self.format_commands(ctx, formatter)
 
-    def format_commands(self, ctx: Context, formatter: HelpFormatter) -> None:
+    def format_commands(self, ctx: Context[ObjT], formatter: HelpFormatter) -> None:
         """Extra format methods for multi methods that adds all the commands
         after the options.
         """
@@ -1751,7 +1760,7 @@ class Group(Command):
                 with formatter.section(_("Commands")):
                     formatter.write_dl(rows)
 
-    def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
+    def parse_args(self, ctx: Context[ObjT], args: list[str]) -> list[str]:
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
             raise NoArgsIsHelpError(ctx)
 
@@ -1765,7 +1774,7 @@ class Group(Command):
 
         return ctx.args
 
-    def invoke(self, ctx: Context) -> t.Any:
+    def invoke(self, ctx: Context[ObjT]) -> t.Any:
         def _process_result(value: t.Any) -> t.Any:
             if self._result_callback is not None:
                 value = ctx.invoke(self._result_callback, value, **ctx.params)
@@ -1834,8 +1843,8 @@ class Group(Command):
             return _process_result(rv)
 
     def resolve_command(
-        self, ctx: Context, args: list[str]
-    ) -> tuple[str | None, Command | None, list[str]]:
+        self, ctx: Context[ObjT], args: list[str]
+    ) -> tuple[str | None, Command[ObjT] | None, list[str]]:
         cmd_name = make_str(args[0])
         original_cmd_name = cmd_name
 
@@ -1860,7 +1869,9 @@ class Group(Command):
             ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
         return cmd_name if cmd else None, cmd, args[1:]
 
-    def shell_complete(self, ctx: Context, incomplete: str) -> list[CompletionItem]:
+    def shell_complete(
+        self, ctx: Context[ObjT], incomplete: str
+    ) -> list[CompletionItem]:
         """Return a list of completions for the incomplete value. Looks
         at the names of options, subcommands, and chained
         multi-commands.
@@ -1880,14 +1891,14 @@ class Group(Command):
         return results
 
 
-class _MultiCommand(Group, metaclass=_FakeSubclassCheck):
+class _MultiCommand(Group[ObjT], metaclass=_FakeSubclassCheck):
     """
     .. deprecated:: 8.2
         Will be removed in Click 9.0. Use ``Group`` instead.
     """
 
 
-class CommandCollection(Group):
+class CommandCollection(Group[ObjT]):
     """A :class:`Group` that looks up subcommands on other groups. If a command
     is not found on this group, each registered source is checked in order.
     Parameters on a source are not added to this group, and a source's callback
@@ -1906,18 +1917,18 @@ class CommandCollection(Group):
     def __init__(
         self,
         name: str | None = None,
-        sources: list[Group] | None = None,
+        sources: list[Group[ObjT]] | None = None,
         **kwargs: t.Any,
     ) -> None:
         super().__init__(name, **kwargs)
         #: The list of registered groups.
-        self.sources: list[Group] = sources or []
+        self.sources: list[Group[ObjT]] = sources or []
 
-    def add_source(self, group: Group) -> None:
+    def add_source(self, group: Group[ObjT]) -> None:
         """Add a group as a source of commands."""
         self.sources.append(group)
 
-    def get_command(self, ctx: Context, cmd_name: str) -> Command | None:
+    def get_command(self, ctx: Context[ObjT], cmd_name: str) -> Command[ObjT] | None:
         rv = super().get_command(ctx, cmd_name)
 
         if rv is not None:
@@ -1934,7 +1945,7 @@ class CommandCollection(Group):
 
         return None
 
-    def list_commands(self, ctx: Context) -> list[str]:
+    def list_commands(self, ctx: Context[ObjT]) -> list[str]:
         rv: set[str] = set(super().list_commands(ctx))
 
         for source in self.sources:
@@ -2039,7 +2050,7 @@ class Parameter:
         type: types.ParamType | t.Any | None = None,
         required: bool = False,
         default: t.Any | t.Callable[[], t.Any] | None = None,
-        callback: t.Callable[[Context, Parameter, t.Any], t.Any] | None = None,
+        callback: t.Callable[[Context[ObjT], Parameter, t.Any], t.Any] | None = None,
         nargs: int | None = None,
         multiple: bool = False,
         metavar: str | None = None,
@@ -2047,7 +2058,7 @@ class Parameter:
         is_eager: bool = False,
         envvar: str | cabc.Sequence[str] | None = None,
         shell_complete: t.Callable[
-            [Context, Parameter, str], list[CompletionItem] | list[str]
+            [Context[ObjT], Parameter, str], list[CompletionItem] | list[str]
         ]
         | None = None,
     ) -> None:
@@ -2123,7 +2134,7 @@ class Parameter:
         """Gather information that could be useful for a tool generating
         user-facing documentation.
 
-        Use :meth:`click.Context.to_info_dict` to traverse the entire
+        Use :meth:`click.Context[ObjT].to_info_dict` to traverse the entire
         CLI structure.
 
         .. versionadded:: 8.0
@@ -2172,19 +2183,19 @@ class Parameter:
 
     @t.overload
     def get_default(
-        self, ctx: Context, call: t.Literal[True] = True
+        self, ctx: Context[ObjT], call: t.Literal[True] = True
     ) -> t.Any | None: ...
 
     @t.overload
     def get_default(
-        self, ctx: Context, call: bool = ...
+        self, ctx: Context[ObjT], call: bool = ...
     ) -> t.Any | t.Callable[[], t.Any] | None: ...
 
     def get_default(
-        self, ctx: Context, call: bool = True
+        self, ctx: Context[ObjT], call: bool = True
     ) -> t.Any | t.Callable[[], t.Any] | None:
         """Get the default for the parameter. Tries
-        :meth:`Context.lookup_default` first, then the local default.
+        :meth:`Context[ObjT].lookup_default` first, then the local default.
 
         :param ctx: Current context.
         :param call: If the default is a callable, call it. Disable to
@@ -2213,11 +2224,11 @@ class Parameter:
 
         return value
 
-    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
+    def add_to_parser(self, parser: _OptionParser, ctx: Context[ObjT]) -> None:
         raise NotImplementedError()
 
     def consume_value(
-        self, ctx: Context, opts: cabc.Mapping[str, t.Any]
+        self, ctx: Context[ObjT], opts: cabc.Mapping[str, t.Any]
     ) -> tuple[t.Any, ParameterSource]:
         value = opts.get(self.name)  # type: ignore
         source = ParameterSource.COMMANDLINE
@@ -2236,7 +2247,7 @@ class Parameter:
 
         return value, source
 
-    def type_cast_value(self, ctx: Context, value: t.Any) -> t.Any:
+    def type_cast_value(self, ctx: Context[ObjT], value: t.Any) -> t.Any:
         """Convert and validate a value against the option's
         :attr:`type`, :attr:`multiple`, and :attr:`nargs`.
         """
@@ -2296,7 +2307,7 @@ class Parameter:
 
         return False
 
-    def process_value(self, ctx: Context, value: t.Any) -> t.Any:
+    def process_value(self, ctx: Context[ObjT], value: t.Any) -> t.Any:
         value = self.type_cast_value(ctx, value)
 
         if self.required and self.value_is_missing(value):
@@ -2307,7 +2318,7 @@ class Parameter:
 
         return value
 
-    def resolve_envvar_value(self, ctx: Context) -> str | None:
+    def resolve_envvar_value(self, ctx: Context[ObjT]) -> str | None:
         if self.envvar is None:
             return None
 
@@ -2325,7 +2336,7 @@ class Parameter:
 
         return None
 
-    def value_from_envvar(self, ctx: Context) -> t.Any | None:
+    def value_from_envvar(self, ctx: Context[ObjT]) -> t.Any | None:
         rv: t.Any | None = self.resolve_envvar_value(ctx)
 
         if rv is not None and self.nargs != 1:
@@ -2334,7 +2345,7 @@ class Parameter:
         return rv
 
     def handle_parse_result(
-        self, ctx: Context, opts: cabc.Mapping[str, t.Any], args: list[str]
+        self, ctx: Context[ObjT], opts: cabc.Mapping[str, t.Any], args: list[str]
     ) -> tuple[t.Any, list[str]]:
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
@@ -2353,20 +2364,22 @@ class Parameter:
 
         return value, args
 
-    def get_help_record(self, ctx: Context) -> tuple[str, str] | None:
+    def get_help_record(self, ctx: Context[ObjT]) -> tuple[str, str] | None:
         pass
 
-    def get_usage_pieces(self, ctx: Context) -> list[str]:
+    def get_usage_pieces(self, ctx: Context[ObjT]) -> list[str]:
         return []
 
-    def get_error_hint(self, ctx: Context) -> str:
+    def get_error_hint(self, ctx: Context[ObjT]) -> str:
         """Get a stringified version of the param for use in error messages to
         indicate which param caused the error.
         """
         hint_list = self.opts or [self.human_readable_name]
         return " / ".join(f"'{x}'" for x in hint_list)
 
-    def shell_complete(self, ctx: Context, incomplete: str) -> list[CompletionItem]:
+    def shell_complete(
+        self, ctx: Context[ObjT], incomplete: str
+    ) -> list[CompletionItem]:
         """Return a list of completions for the incomplete value. If a
         ``shell_complete`` function was given during init, it is used.
         Otherwise, the :attr:`type`
@@ -2398,7 +2411,7 @@ class Option(Parameter):
 
     :param show_default: Show the default value for this option in its
         help text. Values are not shown by default, unless
-        :attr:`Context.show_default` is ``True``. If this value is a
+        :attr:`Context[ObjT].show_default` is ``True``. If this value is a
         string, it shows that string in parentheses instead of the
         actual value. This is particularly useful for dynamic options.
         For single option boolean flags, the default remains hidden if
@@ -2445,7 +2458,7 @@ class Option(Parameter):
 
     .. versionchanged:: 8.1
         The ``show_default`` parameter overrides
-        ``Context.show_default``.
+        ``Context[ObjT].show_default``.
 
     .. versionchanged:: 8.1
         The default of a single option boolean flag is not shown if the
@@ -2587,7 +2600,7 @@ class Option(Parameter):
         )
         return info_dict
 
-    def get_error_hint(self, ctx: Context) -> str:
+    def get_error_hint(self, ctx: Context[ObjT]) -> str:
         result = super().get_error_hint(ctx)
         if self.show_envvar:
             result += f" (env var: '{self.envvar}')"
@@ -2648,7 +2661,7 @@ class Option(Parameter):
 
         return name, opts, secondary_opts
 
-    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
+    def add_to_parser(self, parser: _OptionParser, ctx: Context[ObjT]) -> None:
         if self.multiple:
             action = "append"
         elif self.count:
@@ -2687,7 +2700,7 @@ class Option(Parameter):
                 nargs=self.nargs,
             )
 
-    def get_help_record(self, ctx: Context) -> tuple[str, str] | None:
+    def get_help_record(self, ctx: Context[ObjT]) -> tuple[str, str] | None:
         if self.hidden:
             return None
 
@@ -2732,7 +2745,7 @@ class Option(Parameter):
 
         return ("; " if any_prefix_is_slash else " / ").join(rv), help
 
-    def get_help_extra(self, ctx: Context) -> types.OptionHelpExtra:
+    def get_help_extra(self, ctx: Context[ObjT]) -> types.OptionHelpExtra:
         extra: types.OptionHelpExtra = {}
 
         if self.show_envvar:
@@ -2814,16 +2827,16 @@ class Option(Parameter):
 
     @t.overload
     def get_default(
-        self, ctx: Context, call: t.Literal[True] = True
+        self, ctx: Context[ObjT], call: t.Literal[True] = True
     ) -> t.Any | None: ...
 
     @t.overload
     def get_default(
-        self, ctx: Context, call: bool = ...
+        self, ctx: Context[ObjT], call: bool = ...
     ) -> t.Any | t.Callable[[], t.Any] | None: ...
 
     def get_default(
-        self, ctx: Context, call: bool = True
+        self, ctx: Context[ObjT], call: bool = True
     ) -> t.Any | t.Callable[[], t.Any] | None:
         # If we're a non boolean flag our default is more complex because
         # we need to look at all flags in the same group to figure out
@@ -2838,7 +2851,7 @@ class Option(Parameter):
 
         return super().get_default(ctx, call=call)
 
-    def prompt_for_value(self, ctx: Context) -> t.Any:
+    def prompt_for_value(self, ctx: Context[ObjT]) -> t.Any:
         """This is an alternative flow that can be activated in the full
         value processing if a value does not exist.  It will prompt the
         user until a valid value exists and then returns the processed
@@ -2871,7 +2884,7 @@ class Option(Parameter):
             **prompt_kwargs,
         )
 
-    def resolve_envvar_value(self, ctx: Context) -> str | None:
+    def resolve_envvar_value(self, ctx: Context[ObjT]) -> str | None:
         rv = super().resolve_envvar_value(ctx)
 
         if rv is not None:
@@ -2892,7 +2905,7 @@ class Option(Parameter):
 
         return None
 
-    def value_from_envvar(self, ctx: Context) -> t.Any | None:
+    def value_from_envvar(self, ctx: Context[ObjT]) -> t.Any | None:
         rv: t.Any | None = self.resolve_envvar_value(ctx)
 
         if rv is None:
@@ -2909,7 +2922,7 @@ class Option(Parameter):
         return rv
 
     def consume_value(
-        self, ctx: Context, opts: cabc.Mapping[str, Parameter]
+        self, ctx: Context[ObjT], opts: cabc.Mapping[str, Parameter]
     ) -> tuple[t.Any, ParameterSource]:
         value, source = super().consume_value(ctx, opts)
 
@@ -3012,13 +3025,13 @@ class Argument(Parameter):
             )
         return name, [arg], []
 
-    def get_usage_pieces(self, ctx: Context) -> list[str]:
+    def get_usage_pieces(self, ctx: Context[ObjT]) -> list[str]:
         return [self.make_metavar()]
 
-    def get_error_hint(self, ctx: Context) -> str:
+    def get_error_hint(self, ctx: Context[ObjT]) -> str:
         return f"'{self.make_metavar()}'"
 
-    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
+    def add_to_parser(self, parser: _OptionParser, ctx: Context[ObjT]) -> None:
         parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)
 
 

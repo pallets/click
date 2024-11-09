@@ -38,6 +38,7 @@ from .exceptions import UsageError
 if t.TYPE_CHECKING:
     from .core import Argument as CoreArgument
     from .core import Context
+    from .core import ObjT
     from .core import Option as CoreOption
     from .core import Parameter as CoreParameter
 
@@ -118,7 +119,7 @@ def _split_opt(opt: str) -> tuple[str, str]:
     return first, opt[1:]
 
 
-def _normalize_opt(opt: str, ctx: Context | None) -> str:
+def _normalize_opt(opt: str, ctx: Context[ObjT] | None) -> str:
     if ctx is None or ctx.token_normalize_func is None:
         return opt
     prefix, opt = _split_opt(opt)
@@ -229,15 +230,15 @@ class _OptionParser:
     implement features that are implemented on a higher level (such as
     types or defaults).
 
-    :param ctx: optionally the :class:`~click.Context` where this parser
+    :param ctx: optionally the :class:`~click.Context[ObjT]` where this parser
                 should go with.
 
     .. deprecated:: 8.2
         Will be removed in Click 9.0.
     """
 
-    def __init__(self, ctx: Context | None = None) -> None:
-        #: The :class:`~click.Context` for this parser.  This might be
+    def __init__(self, ctx: Context[ObjT] | None = None) -> None:
+        #: The :class:`~click.Context[ObjT]` for this parser.  This might be
         #: `None` for some advanced use cases.
         self.ctx = ctx
         #: This controls how the parser deals with interspersed arguments.
