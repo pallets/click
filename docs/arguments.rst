@@ -114,9 +114,10 @@ And from the command line:
 Environment Variables
 ---------------------
 
-This feature is not recommended since it be confusing to users. Arguments can only pull environment variables from ? explicitly named environment variables. In that case, it can also be a list of different environment variables where the first one is picked. ?
+Arguments can only pull from explicit environment variables, that is the
+name of the environment variable(s) must be passed into ``click.argument``.
 
-Example usage:
+Example usage checking one environment variable:
 
 .. click:example::
 
@@ -131,6 +132,28 @@ And from the command line:
 .. click:run::
 
     with isolated_filesystem():
+        # Writing the file in the filesystem.
         with open('hello.txt', 'w') as f:
             f.write('Hello World!')
         invoke(echo, env={'SRC': 'hello.txt'})
+
+
+Example usage checking multiple environment variables:
+
+.. click:example::
+
+    @click.command()
+    @click.argument('src', envvar=['SRC', 'SRC_2'], type=click.File('r'))
+    def echo(src):
+        """Print value of SRC environment variable."""
+        click.echo(src.read())
+
+And from the command line:
+
+.. click:run::
+
+    with isolated_filesystem():
+        # Writing the file in the filesystem.
+        with open('hello.txt', 'w') as f:
+            f.write('Hello World from second variable!')
+        invoke(echo, env={'SRC_2': 'hello.txt'})
