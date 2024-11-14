@@ -114,10 +114,9 @@ And from the command line:
 Environment Variables
 ---------------------
 
-Arguments can only pull from explicit environment variables, that is the
-name of the environment variable(s) must be passed into ``click.argument``.
+Arguments can use environment variables. To do so pass the name of the environment variable(s) into ``click.argument``.
 
-Example usage checking one environment variable:
+Checking one environment variable:
 
 .. click:example::
 
@@ -138,7 +137,7 @@ And from the command line:
         invoke(echo, env={'SRC': 'hello.txt'})
 
 
-Example usage checking multiple environment variables:
+Checking multiple environment variables:
 
 .. click:example::
 
