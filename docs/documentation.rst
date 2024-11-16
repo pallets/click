@@ -35,11 +35,55 @@ And what it looks like:
 
 .. _documenting-arguments:
 
+Command Short Help
+------------------
+
+For commands, a short help snippet is generated.  By default, it's the first
+sentence of the help message of the command. If it is too long, then it will show as much as it can on one line and ends with ``...``.  This can also be overridden:
+
+.. click:example::
+
+    @click.group()
+    def cli():
+        """A simple command line tool."""
+
+    @cli.command('init', short_help='init the repo')
+    def init():
+        """
+        Initializes the repository. This is a very long sentence that continues
+        for a while and more.
+
+        """
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(cli, args=['--help'])
+
+Command Epilog Help
+-------------------
+
+The help epilog is like the help string but it's printed at the end of the help page after everything else. Useful for showing example command usages or
+referencing additional help resources.
+
+.. click:example::
+
+    @click.command(epilog='Check out our docs at https://click.palletsprojects.com/ for more details')
+    def init():
+        """Initializes the repository."""
+
+And what it looks like:
+
+.. click:run::
+
+    invoke(init, prog_name='repo.py', args=['--help'])
+
 Documenting Arguments
 ----------------------
 
 :class:`click.argument` does not take a ``help`` parameter. This follows the Unix Command Line Tools convention of using arguments only for necessary things and documenting them in the command help text
-by name. Fo Python that means including them in docstrings.
+by name. For Python that means including them in docstrings.
 
 A brief example:
 
@@ -187,48 +231,6 @@ Example:
 .. click:run::
 
     invoke(hello, args=['--help'])
-
-
-Command Short Help
-------------------
-
-For commands, a short help snippet is generated.  By default, it's the first
-sentence of the help message of the command, unless it's too long.  This can
-also be overridden:
-
-.. click:example::
-
-    @click.group()
-    def cli():
-        """A simple command line tool."""
-
-    @cli.command('init', short_help='init the repo')
-    def init():
-        """Initializes the repository."""
-
-And what it looks like:
-
-.. click:run::
-
-    invoke(cli, prog_name='repo.py')
-
-Command Epilog Help
--------------------
-
-The help epilog is like the help string but it's printed at the end of the help page after everything else. Useful for showing example command usages or
-referencing additional help resources.
-
-.. click:example::
-
-    @click.command(epilog='Check out our docs at https://click.palletsprojects.com/ for more details')
-    def init():
-        """Initializes the repository."""
-
-And what it looks like:
-
-.. click:run::
-
-    invoke(init, prog_name='repo.py', args=['--help'])
 
 Help Parameter Customization
 ----------------------------
