@@ -38,8 +38,8 @@ And what it looks like:
 Command Short Help
 ------------------
 
-For commands, a short help snippet is generated.  By default, it's the first
-sentence of the help message of the command. If it is too long, then it will show as much as it can on one line and ends with ``...``.  This can also be overridden:
+For commands, a short help snippet is generated. By default, it's the first
+sentence of the docstring. If it is too long, then it will show as much as it can on one line and end with ``...``.  The short help snippet can also be overridden with the kwarg ``short_help``:
 
 .. click:example::
 
@@ -49,11 +49,7 @@ sentence of the help message of the command. If it is too long, then it will sho
 
     @cli.command('init', short_help='init the repo')
     def init():
-        """
-        Initializes the repository. This is a very long sentence that continues
-        for a while and more.
-
-        """
+        """Initializes the repository."""
 
 And what it looks like:
 
@@ -77,7 +73,7 @@ And what it looks like:
 
 .. click:run::
 
-    invoke(init, prog_name='repo.py', args=['--help'])
+    invoke(init, args=['--help'])
 
 Documenting Arguments
 ----------------------
@@ -120,8 +116,6 @@ And what it looks like:
 
     invoke(touch, args=['--help'])
 
-For more examples, see the examples in :doc:`/arguments`.
-
 Click's Wrapping Behavior
 ----------------------------
 Click's default wrapping ignores single new lines and rewraps the text based on the width of the
@@ -150,7 +144,7 @@ And what it looks like:
 
 Escaping Click's Wrapping
 ---------------------------
-Sometimes Click's wrapping can be a problem such as when showing code examples where newlines are significant. This behavior can be escaped on a per-paragraph basis by adding a line with only ``\b`` . The ``\b`` is removed from the rendered help text.
+Sometimes Click's wrapping can be a problem, such as when showing code examples where newlines are significant. This behavior can be escaped on a per-paragraph basis by adding a line with only ``\b`` . The ``\b`` is removed from the rendered help text.
 
 Example:
 
@@ -180,7 +174,6 @@ To change the rendering maximum width, pass ``max_content_width`` when calling t
 .. code-block:: python
 
     cli(max_content_width=120)
-
 
 .. _doc-meta-variables:
 
