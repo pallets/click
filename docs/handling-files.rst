@@ -79,10 +79,7 @@ The :class:`File` type attempts to be "intelligent" about when to open a file. S
 File open behavior can be controlled by the boolean kwarg ``lazy``. If a file is opened lazily:
 
 *   A failure at first IO operation will happen by raising an :exc:`FileError`.
-*   It can help minimize resource handling confusion.  If a file is opened in lazy mode, it will receive a
-    ``close_intelligently`` method that can help figure out if the file needs closing or not.
-    This is not needed for parameters, but is necessary for manually prompting with the :func:`prompt` function as you do not know if a stream like stdout was opened (which was already open
-    before) or a real file that needs closing.
+*   It can help minimize resource handling confusion.  If a file is opened in lazy mode, it will receive a ``close_intelligently`` method that can help figure out if the file needs closing or not. This is not needed for parameters, but is necessary for manually prompting. For manual prompts with the :func:`prompt` function you do not know if a stream like stdout was opened (which was already open before) or a real file was opened (that needs closing).
 
 Since files opened for writing will typically empty the file, the lazy mode should only be disabled if the developer is absolutely sure that this is intended behavior.
 
