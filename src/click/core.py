@@ -856,12 +856,15 @@ class Command:
                             If enabled this will add ``--help`` as argument
                             if no arguments are passed
     :param hidden: hide this command from help outputs.
-
-    :param deprecated: issues a message indicating that
-                             the command is deprecated.
+    :param deprecated: If ``True`` or non-empty string, issues a message
+                        indicating that the command is deprecated and highlights
+                        its deprecation in --help. The message can be customized
+                        by using a string as the value.
 
     .. versionchanged:: 8.2
         This is the base class for all commands, not ``BaseCommand``.
+        ``deprecated`` can be set to a string as well to customize the
+        deprecation message.
 
     .. versionchanged:: 8.1
         ``help``, ``epilog``, and ``short_help`` are stored unprocessed,
@@ -905,7 +908,7 @@ class Command:
         add_help_option: bool = True,
         no_args_is_help: bool = False,
         hidden: bool = False,
-        deprecated: bool = False,
+        deprecated: bool | str = False,
     ) -> None:
         #: the name the command thinks it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
@@ -1059,7 +1062,14 @@ class Command:
             text = ""
 
         if self.deprecated:
-            text = _("(Deprecated) {text}").format(text=text)
+            deprecated_message = (
+                f"(DEPRECATED: {self.deprecated})"
+                if isinstance(self.deprecated, str)
+                else "(DEPRECATED)"
+            )
+            text = _("{text} {deprecated_message}").format(
+                text=text, deprecated_message=deprecated_message
+            )
 
         return text.strip()
 
@@ -1089,7 +1099,14 @@ class Command:
             text = ""
 
         if self.deprecated:
-            text = _("(Deprecated) {text}").format(text=text)
+            deprecated_message = (
+                f"(DEPRECATED: {self.deprecated})"
+                if isinstance(self.deprecated, str)
+                else "(DEPRECATED)"
+            )
+            text = _("{text} {deprecated_message}").format(
+                text=text, deprecated_message=deprecated_message
+            )
 
         if text:
             formatter.write_paragraph()
@@ -1183,9 +1200,13 @@ class Command:
         in the right way.
         """
         if self.deprecated:
+            extra_message = (
+                f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
+            )
             message = _(
                 "DeprecationWarning: The command {name!r} is deprecated."
-            ).format(name=self.name)
+                "{extra_message}"
+            ).format(name=self.name, extra_message=extra_message)
             echo(style(message, fg="red"), err=True)
 
         if self.callback is not None:
@@ -1988,6 +2009,18 @@ class Parameter:
         given. Takes ``ctx, param, incomplete`` and must return a list
         of :class:`~click.shell_completion.CompletionItem` or a list of
         strings.
+    :param deprecated: If ``True`` or non-empty string, issues a message
+                        indicating that the argument is deprecated and highlights
+                        its deprecation in --help. The message can be customized
+                        by using a string as the value. A deprecated parameter
+                        cannot be required, a ValueError will be raised otherwise.
+
+    .. versionchanged:: 8.2.0
+        Introduction of ``deprecated``.
+
+    .. versionchanged:: 8.2
+        Adding duplicate parameter names to a :class:`~click.core.Command` will
+        result in a ``UserWarning`` being shown.
 
     .. versionchanged:: 8.2
         Adding duplicate parameter names to a :class:`~click.core.Command` will
@@ -2044,6 +2077,7 @@ class Parameter:
             [Context, Parameter, str], list[CompletionItem] | list[str]
         ]
         | None = None,
+        deprecated: bool | str = False,
     ) -> None:
         self.name: str | None
         self.opts: list[str]
@@ -2071,6 +2105,7 @@ class Parameter:
         self.metavar = metavar
         self.envvar = envvar
         self._custom_shell_complete = shell_complete
+        self.deprecated = deprecated
 
         if __debug__:
             if self.type.is_composite and nargs != self.type.arity:
@@ -2112,6 +2147,13 @@ class Parameter:
                         raise ValueError(
                             f"'default' {subject} must match nargs={nargs}."
                         )
+
+            if required and deprecated:
+                raise ValueError(
+                    f"The {self.param_type_name} '{self.human_readable_name}' "
+                    "is deprecated and still required. A deprecated "
+                    f"{self.param_type_name} cannot be required."
+                )
 
     def to_info_dict(self) -> dict[str, t.Any]:
         """Gather information that could be useful for a tool generating
@@ -2332,6 +2374,29 @@ class Parameter:
     ) -> tuple[t.Any, list[str]]:
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
+
+            if (
+                self.deprecated
+                and value is not None
+                and source
+                not in (
+                    ParameterSource.DEFAULT,
+                    ParameterSource.DEFAULT_MAP,
+                )
+            ):
+                extra_message = (
+                    f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
+                )
+                message = _(
+                    "DeprecationWarning: The {param_type} {name!r} is deprecated."
+                    "{extra_message}"
+                ).format(
+                    param_type=self.param_type_name,
+                    name=self.human_readable_name,
+                    extra_message=extra_message,
+                )
+                echo(style(message, fg="red"), err=True)
+
             ctx.set_parameter_source(self.name, source)  # type: ignore
 
             try:
@@ -2402,7 +2467,8 @@ class Option(Parameter):
         Normally, environment variables are not shown.
     :param prompt: If set to ``True`` or a non empty string then the
         user will be prompted for input. If set to ``True`` the prompt
-        will be the option name capitalized.
+        will be the option name capitalized. A deprecated option cannot be
+        prompted.
     :param confirmation_prompt: Prompt a second time to confirm the
         value if it was prompted for. Can be set to a string instead of
         ``True`` to customize the message.
@@ -2469,13 +2535,16 @@ class Option(Parameter):
         hidden: bool = False,
         show_choices: bool = True,
         show_envvar: bool = False,
+        deprecated: bool | str = False,
         **attrs: t.Any,
     ) -> None:
         if help:
             help = inspect.cleandoc(help)
 
         default_is_missing = "default" not in attrs
-        super().__init__(param_decls, type=type, multiple=multiple, **attrs)
+        super().__init__(
+            param_decls, type=type, multiple=multiple, deprecated=deprecated, **attrs
+        )
 
         if prompt is True:
             if self.name is None:
@@ -2486,6 +2555,14 @@ class Option(Parameter):
             prompt_text = None
         else:
             prompt_text = prompt
+
+        if deprecated:
+            deprecated_message = (
+                f"(DEPRECATED: {deprecated})"
+                if isinstance(deprecated, str)
+                else "(DEPRECATED)"
+            )
+            help = help + deprecated_message if help is not None else deprecated_message
 
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
@@ -2548,6 +2625,9 @@ class Option(Parameter):
         self.show_envvar = show_envvar
 
         if __debug__:
+            if deprecated and prompt:
+                raise ValueError("`deprecated` options cannot use `prompt`.")
+
             if self.nargs == -1:
                 raise TypeError("nargs=-1 is not supported for options.")
 
@@ -2983,6 +3063,8 @@ class Argument(Parameter):
         var = self.type.get_metavar(self)
         if not var:
             var = self.name.upper()  # type: ignore
+        if self.deprecated:
+            var += "!"
         if not self.required:
             var = f"[{var}]"
         if self.nargs != 1:
