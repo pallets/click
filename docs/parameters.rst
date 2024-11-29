@@ -99,6 +99,7 @@ How to Implement Custom Types
 -------------------------------
 
 To implement a custom type, you need to subclass the :class:`ParamType` class. For simple cases, passing a Python function that fails with a `ValueError` is also supported, though discouraged. Override the :meth:`~ParamType.convert` method to convert the value from a string to the correct type.
+When defining defaults they must be specified as a string, not as the expected final type. For example "0", not 0.
 
 The following code implements an integer type that accepts hex and octal
 numbers in addition to normal integers, and converts them into regular
