@@ -40,6 +40,7 @@ from .utils import PacifyFlushWrapper
 if t.TYPE_CHECKING:
     import typing_extensions as te
 
+    from .decorators import HelpOption
     from .shell_completion import CompletionItem
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
@@ -1230,7 +1231,7 @@ class Command(BaseCommand):
         self.options_metavar = options_metavar
         self.short_help = short_help
         self.add_help_option = add_help_option
-        self._help_option: HelpOption | None = None
+        self._help_option: t.Optional[HelpOption] = None
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
@@ -1309,9 +1310,10 @@ class Command(BaseCommand):
         # avoid creating it multiple times. Not doing this will break the
         # callback odering by iter_params_for_processing(), which relies on
         # object comparison.
-        if not getattr(self, "_help_option", None):
+        if self._help_option is None:
             # Avoid circular import.
             from .decorators import HelpOption
+
             self._help_option = HelpOption(help_options)
 
         return self._help_option
