@@ -538,14 +538,14 @@ if sys.platform.startswith("win") and WIN:
         rv = t.cast(t.TextIO, ansi_wrapper.stream)
         _write = rv.write
 
-        def _safe_write(s):
+        def _safe_write(s: str) -> int:
             try:
                 return _write(s)
             except BaseException:
                 ansi_wrapper.reset_all()
                 raise
 
-        rv.write = _safe_write
+        rv.write = _safe_write  # type: ignore[method-assign]
 
         try:
             _ansi_stream_wrappers[stream] = rv
