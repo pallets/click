@@ -378,7 +378,7 @@ def pager(generator: t.Iterable[str], color: t.Optional[bool] = None) -> None:
     if os.environ.get("TERM") in ("dumb", "emacs"):
         return _nullpager(stdout, generator, color)
     if WIN or sys.platform.startswith("os2"):
-        return _pipepager(generator, "more", color)
+        return _tempfilepager(generator, "more", color)
     if which("less") is not None:
         return _pipepager(generator, "less", color)
 

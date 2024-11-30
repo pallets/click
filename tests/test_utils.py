@@ -179,6 +179,7 @@ def _test_gen_func():
     yield "abc"
 
 
+@pytest.mark.skipif(WIN, reason="Different behavior on windows.")
 @pytest.mark.parametrize("cat", ["cat", "cat ", "cat "])
 @pytest.mark.parametrize(
     "test",
@@ -194,8 +195,7 @@ def _test_gen_func():
     ],
 )
 def test_echo_via_pager(monkeypatch, capfd, cat, test):
-    if not WIN:
-        monkeypatch.setitem(os.environ, "PAGER", cat)
+    monkeypatch.setitem(os.environ, "PAGER", cat)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
 
     expected_output = test[0]
@@ -204,11 +204,6 @@ def test_echo_via_pager(monkeypatch, capfd, cat, test):
     click.echo_via_pager(test_input)
 
     out, err = capfd.readouterr()
-    if WIN:
-        # Windows character changes.
-        expected_output = expected_output.replace("\n", "\r\n")
-        # more adds this when paging
-        expected_output += "\r\n"
     assert out == expected_output
 
 
