@@ -373,31 +373,42 @@ def pager(generator: t.Iterable[str], color: t.Optional[bool] = None) -> None:
     pager_cmd = (os.environ.get("PAGER", None) or "").strip()
     if pager_cmd:
         if WIN:
-            return _tempfilepager(generator, pager_cmd, color)
-        return _pipepager(generator, pager_cmd, color)
+            if _tempfilepager(generator, pager_cmd, color):
+                return
+        elif _pipepager(generator, pager_cmd, color):
+            return
     if os.environ.get("TERM") in ("dumb", "emacs"):
         return _nullpager(stdout, generator, color)
-    if WIN or sys.platform.startswith("os2"):
-        return _tempfilepager(generator, "more", color)
-    if which("less") is not None:
-        return _pipepager(generator, "less", color)
+    if (WIN or sys.platform.startswith("os2")) and _tempfilepager(
+        generator, "more", color
+    ):
+        return
+    if _pipepager(generator, "less", color):
+        return
 
     import tempfile
 
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
-        if which("more") is not None:
-            return _pipepager(generator, "more", color)
+        if _pipepager(generator, "more", color):
+            return
         return _nullpager(stdout, generator, color)
     finally:
         os.unlink(filename)
 
 
-def _pipepager(generator: t.Iterable[str], cmd: str, color: t.Optional[bool]) -> None:
+def _pipepager(generator: t.Iterable[str], cmd: str, color: t.Optional[bool]) -> bool:
     """Page through text by feeding it to another program.  Invoking a
     pager through this might support colors.
+
+    Returns True if the command was found, False otherwise and thus another
+    pager should be attempted.
     """
+    cmd_absolute = which(cmd)
+    if cmd_absolute is None:
+        return False
+
     import subprocess
 
     env = dict(os.environ)
@@ -414,7 +425,7 @@ def _pipepager(generator: t.Iterable[str], cmd: str, color: t.Optional[bool]) ->
             color = True
 
     c = subprocess.Popen(
-        cmd,
+        [cmd_absolute],
         shell=True,
         stdin=subprocess.PIPE,
         env=env,
@@ -449,13 +460,24 @@ def _pipepager(generator: t.Iterable[str], cmd: str, color: t.Optional[bool]) ->
         else:
             break
 
+    return True
+
 
 def _tempfilepager(
     generator: t.Iterable[str],
     cmd: str,
     color: t.Optional[bool],
-) -> None:
-    """Page through text by invoking a program on a temporary file."""
+) -> bool:
+    """Page through text by invoking a program on a temporary file.
+
+    Returns True if the command was found, False otherwise and thus another
+    pager should be attempted.
+    """
+    # Which is necessary for Windows, it is also recommended in the Popen docs.
+    cmd_absolute = which(cmd)
+    if cmd_absolute is None:
+        return False
+
     import subprocess
     import tempfile
 
@@ -468,13 +490,15 @@ def _tempfilepager(
     with open_stream(filename, "wb")[0] as f:
         f.write(text.encode(encoding))
     try:
-        subprocess.call([cmd, filename])
+        subprocess.call([cmd_absolute, filename])
     except OSError:
         # Command not found
         pass
     finally:
         os.close(fd)
         os.unlink(filename)
+
+    return True
 
 
 def _nullpager(
