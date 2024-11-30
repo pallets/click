@@ -203,9 +203,6 @@ def test_echo_via_pager(monkeypatch, capfd, cat, test):
     click.echo_via_pager(test_input)
 
     out, err = capfd.readouterr()
-    if WIN:
-        # Windows character changes.
-        expected_output = expected_output.replace("\n", "\r\n")
     assert out == expected_output
 
 
