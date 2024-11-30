@@ -167,6 +167,3 @@ def menu():
                 click.echo("Invalid input")
         elif menu == "quit":
             return
-
-if __name__ == "__main__":
-    pager()
