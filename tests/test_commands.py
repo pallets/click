@@ -305,6 +305,138 @@ def test_group_add_command_name(runner):
     assert result.exit_code == 0
 
 
+@pytest.mark.parametrize(
+    ("invocation_order", "declaration_order", "expected_order"),
+    [
+        # Non-eager options.
+        ([], ["-a"], ["-a"]),
+        (["-a"], ["-a"], ["-a"]),
+        ([], ["-a", "-c"], ["-a", "-c"]),
+        (["-a"], ["-a", "-c"], ["-a", "-c"]),
+        (["-c"], ["-a", "-c"], ["-c", "-a"]),
+        ([], ["-c", "-a"], ["-c", "-a"]),
+        (["-a"], ["-c", "-a"], ["-a", "-c"]),
+        (["-c"], ["-c", "-a"], ["-c", "-a"]),
+        (["-a", "-c"], ["-a", "-c"], ["-a", "-c"]),
+        (["-c", "-a"], ["-a", "-c"], ["-c", "-a"]),
+        # Eager options.
+        ([], ["-b"], ["-b"]),
+        (["-b"], ["-b"], ["-b"]),
+        ([], ["-b", "-d"], ["-b", "-d"]),
+        (["-b"], ["-b", "-d"], ["-b", "-d"]),
+        (["-d"], ["-b", "-d"], ["-d", "-b"]),
+        ([], ["-d", "-b"], ["-d", "-b"]),
+        (["-b"], ["-d", "-b"], ["-b", "-d"]),
+        (["-d"], ["-d", "-b"], ["-d", "-b"]),
+        (["-b", "-d"], ["-b", "-d"], ["-b", "-d"]),
+        (["-d", "-b"], ["-b", "-d"], ["-d", "-b"]),
+        # Mixed options.
+        ([], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
+        (["-a"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
+        (["-b"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
+        (["-c"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-c", "-a"]),
+        (["-d"], ["-a", "-b", "-c", "-d"], ["-d", "-b", "-a", "-c"]),
+        (["-a", "-b"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
+        (["-b", "-a"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
+        (["-d", "-c"], ["-a", "-b", "-c", "-d"], ["-d", "-b", "-c", "-a"]),
+        (["-c", "-d"], ["-a", "-b", "-c", "-d"], ["-d", "-b", "-c", "-a"]),
+        (["-a", "-b", "-c", "-d"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
+        (["-b", "-d", "-a", "-c"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
+        ([], ["-b", "-d", "-e", "-a", "-c"], ["-b", "-d", "-e", "-a", "-c"]),
+        (["-a", "-d"], ["-b", "-d", "-e", "-a", "-c"], ["-d", "-b", "-e", "-a", "-c"]),
+        (["-c", "-d"], ["-b", "-d", "-e", "-a", "-c"], ["-d", "-b", "-e", "-c", "-a"]),
+    ],
+)
+def test_iter_params_for_processing(
+    invocation_order, declaration_order, expected_order
+):
+    parameters = {
+        "-a": click.Option(["-a"]),
+        "-b": click.Option(["-b"], is_eager=True),
+        "-c": click.Option(["-c"]),
+        "-d": click.Option(["-d"], is_eager=True),
+        "-e": click.Option(["-e"], is_eager=True),
+    }
+
+    invocation_params = [parameters[opt_id] for opt_id in invocation_order]
+    declaration_params = [parameters[opt_id] for opt_id in declaration_order]
+    expected_params = [parameters[opt_id] for opt_id in expected_order]
+
+    assert (
+        click.core.iter_params_for_processing(invocation_params, declaration_params)
+        == expected_params
+    )
+
+
+def test_help_param_priority(runner):
+    """Cover the edge-case in which the eagerness of help option was not
+    respected, because it was internally generated multiple times.
+
+    See: https://github.com/pallets/click/pull/2811
+    """
+
+    def print_and_exit(ctx, param, value):
+        if value:
+            click.echo(f"Value of {param.name} is: {value}")
+            ctx.exit()
+
+    @click.command(context_settings={"help_option_names": ("--my-help",)})
+    @click.option("-a", is_flag=True, expose_value=False, callback=print_and_exit)
+    @click.option(
+        "-b", is_flag=True, expose_value=False, callback=print_and_exit, is_eager=True
+    )
+    def cli():
+        pass
+
+    # --my-help is properly called and stop execution.
+    result = runner.invoke(cli, ["--my-help"])
+    assert "Value of a is: True" not in result.stdout
+    assert "Value of b is: True" not in result.stdout
+    assert "--my-help" in result.stdout
+    assert result.exit_code == 0
+
+    # -a is properly called and stop execution.
+    result = runner.invoke(cli, ["-a"])
+    assert "Value of a is: True" in result.stdout
+    assert "Value of b is: True" not in result.stdout
+    assert "--my-help" not in result.stdout
+    assert result.exit_code == 0
+
+    # -a takes precedence over -b and stop execution.
+    result = runner.invoke(cli, ["-a", "-b"])
+    assert "Value of a is: True" not in result.stdout
+    assert "Value of b is: True" in result.stdout
+    assert "--my-help" not in result.stdout
+    assert result.exit_code == 0
+
+    # --my-help is eager by default so takes precedence over -a and stop
+    # execution, whatever the order.
+    for args in [["-a", "--my-help"], ["--my-help", "-a"]]:
+        result = runner.invoke(cli, args)
+        assert "Value of a is: True" not in result.stdout
+        assert "Value of b is: True" not in result.stdout
+        assert "--my-help" in result.stdout
+        assert result.exit_code == 0
+
+    # Both -b and --my-help are eager so they're called in the order they're
+    # invoked by the user.
+    result = runner.invoke(cli, ["-b", "--my-help"])
+    assert "Value of a is: True" not in result.stdout
+    assert "Value of b is: True" in result.stdout
+    assert "--my-help" not in result.stdout
+    assert result.exit_code == 0
+
+    # But there was a bug when --my-help is called before -b, because the
+    # --my-help option created by click via help_option_names is internally
+    # created twice and is not the same object, breaking the priority order
+    # produced by iter_params_for_processing.
+    result = runner.invoke(cli, ["--my-help", "-b"])
+    assert "Value of a is: True" not in result.stdout
+    assert "Value of b is: True" not in result.stdout
+    assert "--my-help" in result.stdout
+    assert result.exit_code == 0
+
+
 def test_unprocessed_options(runner):
     @click.command(context_settings=dict(ignore_unknown_options=True))
     @click.argument("args", nargs=-1, type=click.UNPROCESSED)

@@ -303,12 +303,19 @@ class BashComplete(ShellComplete):
 
     @staticmethod
     def _check_version() -> None:
+        import shutil
         import subprocess
 
-        output = subprocess.run(
-            ["bash", "-c", 'echo "${BASH_VERSION}"'], stdout=subprocess.PIPE
-        )
-        match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
+        bash_exe = shutil.which("bash")
+
+        if bash_exe is None:
+            match = None
+        else:
+            output = subprocess.run(
+                [bash_exe, "--norc", "-c", 'echo "${BASH_VERSION}"'],
+                stdout=subprocess.PIPE,
+            )
+            match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
 
         if match is not None:
             major, minor = match.groups()

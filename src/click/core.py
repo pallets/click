@@ -40,6 +40,7 @@ from .utils import PacifyFlushWrapper
 if t.TYPE_CHECKING:
     import typing_extensions as te
 
+    from .decorators import HelpOption
     from .shell_completion import CompletionItem
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
@@ -116,9 +117,16 @@ def iter_params_for_processing(
     invocation_order: t.Sequence["Parameter"],
     declaration_order: t.Sequence["Parameter"],
 ) -> t.List["Parameter"]:
-    """Given a sequence of parameters in the order as should be considered
-    for processing and an iterable of parameters that exist, this returns
-    a list in the correct order as they should be processed.
+    """Returns all declared parameters in the order they should be processed.
+
+    The declared parameters are re-shuffled depending on the order in which
+    they were invoked, as well as the eagerness of each parameters.
+
+    The invocation order takes precedence over the declaration order. I.e. the
+    order in which the user provided them to the CLI is respected.
+
+    This behavior and its effect on callback evaluation is detailed at:
+    https://click.palletsprojects.com/en/stable/advanced/#callback-evaluation-order
     """
 
     def sort_key(item: "Parameter") -> t.Tuple[bool, float]:
@@ -1223,6 +1231,7 @@ class Command(BaseCommand):
         self.options_metavar = options_metavar
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self._help_option: t.Optional[HelpOption] = None
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
@@ -1285,25 +1294,29 @@ class Command(BaseCommand):
         return list(all_names)
 
     def get_help_option(self, ctx: Context) -> t.Optional["Option"]:
-        """Returns the help option object."""
+        """Returns the help option object.
+
+        Unless ``add_help_option`` is ``False``.
+
+        .. versionchanged:: 8.1.8
+            The help option is now cached to avoid creating it multiple times.
+        """
         help_options = self.get_help_option_names(ctx)
 
         if not help_options or not self.add_help_option:
             return None
 
-        def show_help(ctx: Context, param: "Parameter", value: str) -> None:
-            if value and not ctx.resilient_parsing:
-                echo(ctx.get_help(), color=ctx.color)
-                ctx.exit()
+        # Cache the help option object in private _help_option attribute to
+        # avoid creating it multiple times. Not doing this will break the
+        # callback odering by iter_params_for_processing(), which relies on
+        # object comparison.
+        if self._help_option is None:
+            # Avoid circular import.
+            from .decorators import HelpOption
 
-        return Option(
-            help_options,
-            is_flag=True,
-            is_eager=True,
-            expose_value=False,
-            callback=show_help,
-            help=_("Show this message and exit."),
-        )
+            self._help_option = HelpOption(help_options)
+
+        return self._help_option
 
     def make_parser(self, ctx: Context) -> OptionParser:
         """Creates the underlying option parser for this command."""
@@ -2671,7 +2684,9 @@ class Option(Parameter):
         if name is None:
             if not expose_value:
                 return None, opts, secondary_opts
-            raise TypeError("Could not determine name for option")
+            raise TypeError(
+                f"Could not determine name for option with declarations {decls!r}"
+            )
 
         if not opts and not secondary_opts:
             raise TypeError(
@@ -3011,7 +3026,7 @@ class Argument(Parameter):
         if not decls:
             if not expose_value:
                 return None, [], []
-            raise TypeError("Could not determine name for argument")
+            raise TypeError("Argument is marked as exposed, but does not have a name.")
         if len(decls) == 1:
             name = arg = decls[0]
             name = name.replace("-", "_").lower()
