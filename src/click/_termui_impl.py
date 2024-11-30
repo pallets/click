@@ -378,7 +378,7 @@ def pager(generator: t.Iterable[str], color: t.Optional[bool] = None) -> None:
     if os.environ.get("TERM") in ("dumb", "emacs"):
         return _nullpager(stdout, generator, color)
     if WIN or sys.platform.startswith("os2"):
-        return _tempfilepager(generator, "more", color, pipe=True)
+        return _pipepager(generator, "more", color)
     if which("less") is not None:
         return _pipepager(generator, "less", color)
 
@@ -413,19 +413,25 @@ def _pipepager(generator: t.Iterable[str], cmd: str, color: t.Optional[bool]) ->
         elif "r" in less_flags or "R" in less_flags:
             color = True
 
-    c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, env=env)
-    stdin = t.cast(t.BinaryIO, c.stdin)
-    encoding = get_best_encoding(stdin)
+    c = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdin=subprocess.PIPE,
+        env=env,
+        errors="replace",
+        text=True,
+    )
+    assert c.stdin is not None
     try:
         for text in generator:
             if not color:
                 text = strip_ansi(text)
 
-            stdin.write(text.encode(encoding, "replace"))
+            c.stdin.write(text)
     except (OSError, KeyboardInterrupt):
         pass
     else:
-        stdin.close()
+        c.stdin.close()
 
     # Less doesn't respect ^C, but catches it for its own UI purposes (aborting
     # search or other commands inside less).
@@ -448,13 +454,8 @@ def _tempfilepager(
     generator: t.Iterable[str],
     cmd: str,
     color: t.Optional[bool],
-    pipe: bool = False,
 ) -> None:
-    """Page through text by invoking a program on a temporary file.
-
-    By default executes `cmd` as `cmd tmpfile`. If `pipe` is `True`, it will
-    instead pipe the text via stdin like `cat tmpfile | cmd`.
-    """
+    """Page through text by invoking a program on a temporary file."""
     import subprocess
     import tempfile
 
@@ -467,11 +468,7 @@ def _tempfilepager(
     with open_stream(filename, "wb")[0] as f:
         f.write(text.encode(encoding))
     try:
-        if pipe:
-            with open_stream(filename, "rb")[0] as f:
-                subprocess.call([cmd], stdin=f)
-        else:
-            subprocess.call([cmd, filename])
+        subprocess.call([cmd, filename])
     except OSError:
         # Command not found
         pass
