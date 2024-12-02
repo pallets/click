@@ -3,13 +3,12 @@ Help Pages
 
 .. currentmodule:: click
 
-Click makes it very easy to document your command line tools.  For most things Click automatically generates help pages for you.  By design the layout is not customizable but the text is.
+Click makes it very easy to document your command line tools. For most things Click automatically generates help pages for you. By design the text is customizable, but the layout is not.
 
 Help Texts
 ----------
 
-Commands and options accept help arguments.  In the case of commands, the
-docstring of the function is automatically used if provided.
+Commands and options accept help arguments. For commands, the docstring of the function is automatically used if provided.
 
 Simple example:
 
@@ -19,7 +18,7 @@ Simple example:
     @click.option('--count', default=1, help='number of greetings')
     @click.option('--name', help='a name')
     def hello(count, name=False):
-        """This script prints hello NAME COUNT times."""
+        """This script prints hello and a name one or more times."""
         for x in range(count):
             if name:
                 click.echo(f"Hello {name}!")
@@ -38,8 +37,7 @@ And what it looks like:
 Command Short Help
 ------------------
 
-For commands, a short help snippet is generated. By default, it's the first
-sentence of the docstring. If it is too long, then it will show as much as it can on one line and end with ``...``.  The short help snippet can also be overridden with the kwarg ``short_help``:
+For sub commands, a short help snippet is generated. By default, it's the first sentence of the docstring. If it is too long, then it will show as much as it can on one line and end with ``...``.  The short help snippet can also be overridden with the kwarg ``short_help``:
 
 .. click:example::
 
@@ -60,8 +58,7 @@ And what it looks like:
 Command Epilog Help
 -------------------
 
-The help epilog is like the help string but it's printed at the end of the help page after everything else. Useful for showing example command usages or
-referencing additional help resources.
+The help epilog is printed at the end of the help and is useful for showing example command usages or referencing additional help resources.
 
 .. click:example::
 
@@ -118,15 +115,14 @@ And what it looks like:
 
 Click's Wrapping Behavior
 ----------------------------
-Click's default wrapping ignores single new lines and rewraps the text based on the width of the
-terminal, to a maximum 80 characters. In the example notice how the second grouping of three lines is rewrapped into a single paragraph.
+Click's default wrapping ignores single new lines and rewraps the text based on the width of the terminal, to a maximum 80 characters. In the example notice how the second grouping of three lines is rewrapped into a single paragraph.
 
 .. click:example::
 
     @click.command()
     def cli():
         """
-        This is a very long second paragraph and as you
+        This is a very long paragraph and as you
         can see wrapped very early in the source text
         but will be rewrapped to the terminal width in
         the final output.
