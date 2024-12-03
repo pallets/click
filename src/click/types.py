@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import collections.abc as cabc
+import enum
 import os
 import stat
 import sys
@@ -249,9 +250,9 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
     name = "choice"
 
     def __init__(
-        self, choices: cabc.Sequence[ParamTypeValue], case_sensitive: bool = True
+        self, choices: cabc.Iterable[ParamTypeValue], case_sensitive: bool = True
     ) -> None:
-        self.choices = choices
+        self.choices: cabc.Sequence[ParamTypeValue] = list(choices)
         self.case_sensitive = case_sensitive
 
     def to_info_dict(self) -> dict[str, t.Any]:
@@ -277,7 +278,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
             for choice in self.choices
         }
 
-    def normalize_choice(self, choice: ParamTypeValue, ctx: Context | None) -> str:
+    def normalize_choice(self, choice: t.Any, ctx: Context | None) -> str:
         """
         Normalize a choice value.
 
@@ -286,7 +287,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
 
         .. versionadded:: 8.2.0
         """
-        normed_value = str(choice)
+        normed_value = choice.name if isinstance(choice, enum.Enum) else str(choice)
 
         if ctx is not None and ctx.token_normalize_func is not None:
             normed_value = ctx.token_normalize_func(normed_value)
@@ -326,26 +327,27 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
 
     def convert(
         self, value: t.Any, param: Parameter | None, ctx: Context | None
-    ) -> t.Any:
+    ) -> ParamTypeValue:
+        """
+        For a given value from the parser, normalize it and find its
+        matching normalized value in the list of choices. Then return the
+        matched "original" choice.
+        """
         normed_value = self.normalize_choice(choice=value, ctx=ctx)
         normalized_mapping = self.normalized_mapping(ctx=ctx)
-        original_choice = next(
-            (
+
+        try:
+            return next(
                 original
                 for original, normalized in normalized_mapping.items()
                 if normalized == normed_value
-            ),
-            None,
-        )
-
-        if not original_choice:
+            )
+        except StopIteration:
             self.fail(
                 self.get_invalid_choice_message(value=value, ctx=ctx),
                 param=param,
                 ctx=ctx,
             )
-
-        return original_choice
 
     def get_invalid_choice_message(self, value: t.Any, ctx: Context | None) -> str:
         """Get the error message when the given choice is invalid.
