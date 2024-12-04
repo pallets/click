@@ -183,12 +183,11 @@ Example:
 .. click:example::
 
     @click.command()
-    @click.pass_context
-    def cli(ctx):
+    def cli():
         """First paragraph.
         \f
 
-        :param click.core.Context ctx: Click context.
+        Words to not be included.
         """
 
 And what it looks like:
@@ -198,10 +197,10 @@ And what it looks like:
     invoke(cli, args=['--help'])
 
 
-Variable Placeholders
+Placeholder Variable
 -----------------------
 
-The default placeholder variable (meta variable) in the help pages is the parameter name in uppercase with underscores. This can be changed for Options and Parameters with the ``options_metavar`` and  ``metavar`` kwargs.
+The default placeholder variable (`meta variable <https://en.wikipedia.org/wiki/Metasyntactic_variable#IETF_Requests_for_Comments>`_) in the help pages is the parameter name in uppercase with underscores. This can be changed for Commands and Parameters with the ``options_metavar`` and  ``metavar`` kwargs.
 
 .. click:example::
 
@@ -211,7 +210,7 @@ The default placeholder variable (meta variable) in the help pages is the parame
                   metavar='<int>')
     @click.argument('name', metavar='<name>')
     def hello(count, name):
-        """This script prints hello <name> <int> times."""
+        """This script prints hello to things."""
         for x in range(count):
             click.echo(f"Hello {name}!")
 
@@ -223,27 +222,28 @@ Example:
 
 Help Parameter Customization
 ----------------------------
-The help parameter is implemented in Click in a very special manner.
-Unlike regular parameters it's automatically added by Click for any
-command and it performs automatic conflict resolution.  By default it's
-called ``--help``, but this can be changed.  If a command itself implements
-a parameter with the same name, the default help parameter stops accepting
-it.  There is a context setting that can be used to override the names of
-the help parameters called :attr:`~Context.help_option_names`.
+The help parameter(s) is automatically added by Click for any command. The default is ``--help`` but can be override by the context setting :attr:`~Context.help_option_names`. Click also performs automatic conflict resolution on the default help parameter so if a command itself implements a parameter named ``help`` then the default help will no be run.
 
-This example changes the default parameters to ``-h`` and ``--help``
-instead of just ``--help``:
+Example:
+
+TODO_ED: Figure this out
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+@click.command(context_settings=CONTEXT_SETTINGS)
 
 .. click:example::
 
-    CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-
-    @click.command(context_settings=CONTEXT_SETTINGS)
-    def cli():
-        pass
+    @click.command()
+    @click.argument('helps')
+    def clis(helps):
+        print(helps)
 
 And what it looks like:
 
 .. click:run::
 
-    invoke(cli, ['-h'])
+    invoke(clis, ['helpsss'])
+
+.. click:run::
+
+    invoke(clis, ['helpsss', '--help'])
