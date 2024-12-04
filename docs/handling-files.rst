@@ -5,7 +5,7 @@ Handling Files
 
 .. currentmodule:: click
 
-Click has built in features to support file and file path handling. Since files and files paths are recommended to be passed in as arguments, the examples use arguments.
+Click has built in features to support file and file path handling. The examples use arguments but the same principle applies to options as well.
 
 .. _file-args:
 
@@ -14,8 +14,8 @@ File Arguments
 
 Click supports working with files with the :class:`File` type. Some notable features are:
 
-*   Support for   ``-`` to mean a special file that refers to stdin/stdout. This is common pattern for POSIX command line utilities, for example wget.
-*   Deals with Unicode and bytes correctly for all versions of Python.
+*   Support for   ``-`` to mean a special file that refers to stdin when used for reading, and stdout when used for writing. This is a common pattern for POSIX command line utilities.
+*   Deals with ``str`` and ``bytes`` correctly for all versions of Python.
 
 Example:
 
@@ -32,7 +32,7 @@ Example:
                 break
             output.write(chunk)
 
-And what it does:
+And from the command line:
 
 .. click:run::
 
@@ -44,10 +44,14 @@ And what it does:
 File Path Arguments
 ----------------------
 
-For handling paths, the :class:`Path` type is better than a string. Some notable features are:
+For handling paths, the :class:`Path` type is better than a ``str``. Some notable features are:
 
-*   It can run checks such as does the path exist or is the file executable.
-*   It also handles formatting error messages with :func:`format_filename` so any undecodable bytes will be printed nicely.
+*   The ``exists`` argument will verify whether the path exists.
+*	``readable``, ``writable``, and ``executable`` can perform permission checks.
+*	``file_okay`` and ``dir_okay`` allow specifying whether files/directories are accepted.
+*   Error messages are nicely formatted using :func:`format_filename` so any undecodable bytes will be printed nicely.
+
+See :class:`Path` for all features.
 
 Example:
 
@@ -59,7 +63,7 @@ Example:
         """Print FILENAME if the file exists."""
         click.echo(click.format_filename(filename))
 
-And what it does:
+And from the command line:
 
 .. click:run::
 
@@ -79,7 +83,7 @@ The :class:`File` type attempts to be "intelligent" about when to open a file. S
 File open behavior can be controlled by the boolean kwarg ``lazy``. If a file is opened lazily:
 
 *   A failure at first IO operation will happen by raising an :exc:`FileError`.
-*   It can help minimize resource handling confusion.  If a file is opened in lazy mode, it will receive a ``close_intelligently`` method that can help figure out if the file needs closing or not. This is not needed for parameters, but is necessary for manually prompting. For manual prompts with the :func:`prompt` function you do not know if a stream like stdout was opened (which was already open before) or a real file was opened (that needs closing).
+*   It can help minimize resource handling confusion.  If a file is opened in lazy mode, it will call :meth:`LazyFile.close_intelligently` to help figure out if the file needs closing or not. This is not needed for parameters, but is necessary for manually prompting. For manual prompts with the :func:`prompt` function you do not know if a stream like stdout was opened (which was already open before) or a real file was opened (that needs closing).
 
 Since files opened for writing will typically empty the file, the lazy mode should only be disabled if the developer is absolutely sure that this is intended behavior.
 

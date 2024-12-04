@@ -7,19 +7,19 @@ Arguments
 
 Arguments are:
 
-*   Are positional in nature
+*   Are positional in nature.
 *   Similar to a limited version of :ref:`options <options>` that can take an arbitrary number of inputs
-*   :ref:`documented manually <documenting-arguments>`
+*   :ref:`Documented manually <documenting-arguments>`.
 
 Useful and often used kwargs are:
 
-*   ``default`` : Passes a default
-*   ``nargs`` : Sets the number of arguments. Set to -1 to take an arbitrary number.
+*   ``default``: Passes a default.
+*   ``nargs``: Sets the number of arguments. Set to -1 to take an arbitrary number.
 
-Basic Argument
+Basic Arguments
 ---------------
 
-A minimal :class:`click.Argument` takes the name of function argument. If you just pass it this, it assumes 1 argument, required, no default and string type.
+A minimal :class:`click.Argument` solely takes one string argument: the name of the argument. This will assume the argument is required, has no default, and is of the type ``str``.
 
 Example:
 
@@ -27,18 +27,18 @@ Example:
 
     @click.command()
     @click.argument('filename')
-    def touch(filename):
+    def touch(filename: str):
         """Print FILENAME."""
         click.echo(filename)
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
     invoke(touch, args=['foo.txt'])
 
 
-An argument may be assigned a :ref:`parameter type <parameter-types>`. If no type is provided, the type of the default value is used. If no default value is provided, the type is assumed to be STRING.
+An argument may be assigned a :ref:`parameter type <parameter-types>`. If no type is provided, the type of the default value is used. If no default value is provided, the type is assumed to be :data:`STRING`.
 
 .. admonition:: Note on Required Arguments
 
@@ -54,20 +54,20 @@ To set the number of argument use the ``nargs`` kwarg. It can be set to any posi
     @click.command()
     @click.argument('src', nargs=1)
     @click.argument('dsts', nargs=-1)
-    def copy(src, dsts):
+    def copy(src: str, dsts: tuple[str, ...]):
         """Move file SRC to DST."""
         for destination in dsts:
             click.echo(f"Copy {src} to folder {destination}")
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
     invoke(copy, args=['foo.txt', 'usr/david/foo.txt', 'usr/mitsuko/foo.txt'])
 
-.. admonition:: Note on Handling Files.
+.. admonition:: Note on Handling Files
 
-    This is not how you would handle files and files paths, since it passes them in as strings. For more see :ref:`handling-files`.
+    This is not how you should handle files and files paths. This merely used as a simple example. See :ref:`handling-files` to learn more about how to handle files in parameters.
 
 Argument Escape Sequences
 ---------------------------
@@ -79,8 +79,8 @@ Example usage:
 .. click:example::
 
     @click.command()
-    @click.argument('files', nargs=-1, type=click.Path())
-    def touch(files):
+    @click.argument('files', nargs=-1, type=click.Path(path_type=pathlib.Path))
+    def touch(files: tuple[pathlib.Path, ...]):
         """Print all FILES file names."""
         for filename in files:
             click.echo(filename)
@@ -114,7 +114,7 @@ And from the command line:
 Environment Variables
 ---------------------
 
-Arguments can use environment variables. To do so pass the name of the environment variable(s) into ``click.argument``.
+Arguments can use environment variables. To do so, pass the name(s) of the environment variable(s) via `envvar` in ``click.argument``.
 
 Checking one environment variable:
 
