@@ -75,6 +75,7 @@ usage patterns.
    arguments
    commands
    prompts
+   handling-files
    documentation
    complex
    advanced

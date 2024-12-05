@@ -53,6 +53,8 @@ And what it looks like when run:
 
     invoke(multi_echo, ['--times=3', 'index.txt'], prog_name='multi_echo')
 
+.. _parameter-types:
+
 Parameter Types
 ---------------
 
