@@ -112,6 +112,8 @@ Unreleased
     :issue:`2632`
 -   Fix ``click.echo(color=...)`` passing ``color`` to coloroma so it can be
     forced on Windows. :issue:`2606`.
+-   show correct auto complete value for nargs option in combination with
+    flag option :issue:`2813`
 
 
 Version 8.1.7
