@@ -79,8 +79,8 @@ Example usage:
 .. click:example::
 
     @click.command()
-    @click.argument('files', nargs=-1, type=click.Path(path_type=pathlib.Path))
-    def touch(files: tuple[pathlib.Path, ...]):
+    @click.argument('files', nargs=-1, type=click.Path())
+    def touch(files):
         """Print all FILES file names."""
         for filename in files:
             click.echo(filename)
