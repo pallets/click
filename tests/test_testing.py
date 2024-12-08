@@ -184,6 +184,28 @@ def test_catch_exceptions():
     assert result.exit_code == 1
 
 
+def test_catch_exceptions_cli_runner():
+    """Test that invoke `catch_exceptions` takes the value from CliRunner if not set
+    explicitly."""
+
+    class CustomError(Exception):
+        pass
+
+    @click.command()
+    def cli():
+        raise CustomError(1)
+
+    runner = CliRunner(catch_exceptions=False)
+
+    result = runner.invoke(cli, catch_exceptions=True)
+    assert isinstance(result.exception, CustomError)
+    assert type(result.exc_info) is tuple
+    assert len(result.exc_info) == 3
+
+    with pytest.raises(CustomError):
+        runner.invoke(cli)
+
+
 def test_with_color():
     @click.command()
     def cli():

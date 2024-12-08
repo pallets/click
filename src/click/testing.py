@@ -227,6 +227,11 @@ class CliRunner:
                        to `<stdout>`.  This is useful for showing examples in
                        some circumstances.  Note that regular prompts
                        will automatically echo the input.
+    :param catch_exceptions: Whether to catch any other exceptions than
+                             ``SystemExit`` when running :meth:`~CliRunner.invoke`.
+
+    .. versionchanged:: 8.2
+        Added the ``catch_exceptions`` parameter.
 
     .. versionchanged:: 8.2
         ``mix_stderr`` parameter has been removed.
@@ -237,10 +242,12 @@ class CliRunner:
         charset: str = "utf-8",
         env: cabc.Mapping[str, str | None] | None = None,
         echo_stdin: bool = False,
+        catch_exceptions: bool = True,
     ) -> None:
         self.charset = charset
         self.env: cabc.Mapping[str, str | None] = env or {}
         self.echo_stdin = echo_stdin
+        self.catch_exceptions = catch_exceptions
 
     def get_default_prog_name(self, cli: Command) -> str:
         """Given a command object it will return the default program name
@@ -410,7 +417,7 @@ class CliRunner:
         args: str | cabc.Sequence[str] | None = None,
         input: str | bytes | t.IO[t.Any] | None = None,
         env: cabc.Mapping[str, str | None] | None = None,
-        catch_exceptions: bool = True,
+        catch_exceptions: bool | None = None,
         color: bool = False,
         **extra: t.Any,
     ) -> Result:
@@ -429,7 +436,8 @@ class CliRunner:
         :param input: the input data for `sys.stdin`.
         :param env: the environment overrides.
         :param catch_exceptions: Whether to catch any other exceptions than
-                                 ``SystemExit``.
+                                 ``SystemExit``. If :data:`None`, the value
+                                 from :class:`CliRunner` is used.
         :param extra: the keyword arguments to pass to :meth:`main`.
         :param color: whether the output should contain color codes. The
                       application can still override this explicitly.
@@ -457,6 +465,9 @@ class CliRunner:
             traceback if available.
         """
         exc_info = None
+        if catch_exceptions is None:
+            catch_exceptions = self.catch_exceptions
+
         with self.isolation(input=input, env=env, color=color) as outstreams:
             return_value = None
             exception: BaseException | None = None
