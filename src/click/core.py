@@ -40,6 +40,7 @@ from .utils import PacifyFlushWrapper
 if t.TYPE_CHECKING:
     import typing_extensions as te
 
+    from .decorators import HelpOption
     from .shell_completion import CompletionItem
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
@@ -116,9 +117,16 @@ def iter_params_for_processing(
     invocation_order: t.Sequence["Parameter"],
     declaration_order: t.Sequence["Parameter"],
 ) -> t.List["Parameter"]:
-    """Given a sequence of parameters in the order as should be considered
-    for processing and an iterable of parameters that exist, this returns
-    a list in the correct order as they should be processed.
+    """Returns all declared parameters in the order they should be processed.
+
+    The declared parameters are re-shuffled depending on the order in which
+    they were invoked, as well as the eagerness of each parameters.
+
+    The invocation order takes precedence over the declaration order. I.e. the
+    order in which the user provided them to the CLI is respected.
+
+    This behavior and its effect on callback evaluation is detailed at:
+    https://click.palletsprojects.com/en/stable/advanced/#callback-evaluation-order
     """
 
     def sort_key(item: "Parameter") -> t.Tuple[bool, float]:
@@ -1223,6 +1231,7 @@ class Command(BaseCommand):
         self.options_metavar = options_metavar
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self._help_option: t.Optional[HelpOption] = None
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
@@ -1288,16 +1297,26 @@ class Command(BaseCommand):
         """Returns the help option object.
 
         Unless ``add_help_option`` is ``False``.
+
+        .. versionchanged:: 8.1.8
+            The help option is now cached to avoid creating it multiple times.
         """
         help_options = self.get_help_option_names(ctx)
 
         if not help_options or not self.add_help_option:
             return None
 
-        # Avoid circular import.
-        from .decorators import HelpOption
+        # Cache the help option object in private _help_option attribute to
+        # avoid creating it multiple times. Not doing this will break the
+        # callback odering by iter_params_for_processing(), which relies on
+        # object comparison.
+        if self._help_option is None:
+            # Avoid circular import.
+            from .decorators import HelpOption
 
-        return HelpOption(help_options)
+            self._help_option = HelpOption(help_options)
+
+        return self._help_option
 
     def make_parser(self, ctx: Context) -> OptionParser:
         """Creates the underlying option parser for this command."""
