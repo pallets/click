@@ -25,7 +25,7 @@ Simple example:
             else:
                 click.echo("Hello!")
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
@@ -49,7 +49,7 @@ For sub commands, a short help snippet is generated. By default, it's the first 
     def init():
         """Initializes the repository."""
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
@@ -66,7 +66,7 @@ The help epilog is printed at the end of the help and is useful for showing exam
     def init():
         """Initializes the repository."""
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
@@ -88,7 +88,7 @@ A brief example:
         """Print FILENAME."""
         click.echo(filename)
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
@@ -107,7 +107,7 @@ Or more explicitly:
         """
         click.echo(filename)
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
@@ -115,7 +115,7 @@ And what it looks like:
 
 Click's Wrapping Behavior
 ----------------------------
-Click's default wrapping ignores single new lines and rewraps the text based on the width of the terminal, to a maximum 80 characters. In the example notice how the second grouping of three lines is rewrapped into a single paragraph.
+Click's default wrapping ignores single new lines and rewraps the text based on the width of the terminal, to a maximum of 80 characters. In the example notice how the second grouping of three lines is rewrapped into a single paragraph.
 
 .. click:example::
 
@@ -132,7 +132,7 @@ Click's default wrapping ignores single new lines and rewraps the text based on 
         that is compacted.
         """
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
@@ -159,7 +159,7 @@ Example:
         that will be rewrapped again.
         """
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
@@ -190,7 +190,7 @@ Example:
         Words to not be included.
         """
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
@@ -235,7 +235,7 @@ instead of just ``--help``:
     def cli():
         pass
 
-And what it looks like:
+And from the command line:
 
 .. click:run::
 
