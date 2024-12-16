@@ -88,6 +88,9 @@ Unreleased
     -   Parameters cannot be required nor prompted or an error is raised.
     -   A warning will be printed when something deprecated is used.
 
+-   Add a ``catch_exceptions`` parameter to :class:`CliRunner`. If
+    ``catch_exceptions`` is not passed to :meth:`CliRunner.invoke`,
+    the value from :class:`CliRunner`.
 
 Version 8.1.8
 -------------
