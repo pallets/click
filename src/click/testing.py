@@ -227,7 +227,7 @@ class CliRunner:
                        to `<stdout>`.  This is useful for showing examples in
                        some circumstances.  Note that regular prompts
                        will automatically echo the input.
-    :param catch_exceptions: Whether to catch any other exceptions than
+    :param catch_exceptions: Whether to catch any exceptions other than
                              ``SystemExit`` when running :meth:`~CliRunner.invoke`.
 
     .. versionchanged:: 8.2
