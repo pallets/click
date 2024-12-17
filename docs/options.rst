@@ -377,53 +377,6 @@ And on the command line:
     invoke(info, args=['--lower'])
     invoke(info)
 
-.. _choice-opts:
-
-Choice Options
---------------
-
-Sometimes, you want to have a parameter be a choice of a list of values.
-In that case you can use :class:`Choice` type.  It can be instantiated
-with a list of valid values.  The originally passed choice will be returned,
-not the str passed on the command line.  Token normalization functions and
-``case_sensitive=False`` can cause the two to be different but still match.
-
-Example:
-
-.. click:example::
-
-    @click.command()
-    @click.option('--hash-type',
-                  type=click.Choice(['MD5', 'SHA1'], case_sensitive=False))
-    def digest(hash_type):
-        click.echo(hash_type)
-
-What it looks like:
-
-.. click:run::
-
-    invoke(digest, args=['--hash-type=MD5'])
-    println()
-    invoke(digest, args=['--hash-type=md5'])
-    println()
-    invoke(digest, args=['--hash-type=foo'])
-    println()
-    invoke(digest, args=['--help'])
-
-Only pass the choices as list or tuple. Other iterables (like
-generators) may lead to unexpected results.
-
-Choices work with options that have ``multiple=True``. If a ``default``
-value is given with ``multiple=True``, it should be a list or tuple of
-valid choices.
-
-Choices should be unique after considering the effects of
-``case_sensitive`` and any specified token normalization function.
-
-.. versionchanged:: 7.1
-    The resulting value from an option will always be one of the
-    originally passed choices regardless of ``case_sensitive``.
-
 .. _option-prompting:
 
 Prompting
