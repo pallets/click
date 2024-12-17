@@ -73,6 +73,7 @@ usage patterns.
    parameters
    options
    arguments
+   parameter-types
    commands
    prompts
    handling-files
