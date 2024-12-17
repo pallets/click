@@ -6,9 +6,21 @@ Options
 .. currentmodule:: click
 
 Adding options to commands can be accomplished by the :func:`option`
-decorator.  Since options can come in various different versions, there
-are a ton of parameters to configure their behavior. Options in click are
-distinct from :ref:`positional arguments <arguments>`.
+decorator.  Options in Click are distinct from :ref:`positional arguments <arguments>`.
+
+Useful and often used kwargs are:
+
+*   ``default``: Passes a defaults.
+*   ``help``: Sets help message.
+*   ``nargs``: Sets the number of arguments.
+*   ``required``: Makes option required.
+*   ``type``: Sets :ref:`parameter-types`
+
+.. contents::
+   :depth: 2
+   :local:
+
+
 
 Name Your Options
 -----------------
