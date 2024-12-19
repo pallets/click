@@ -90,7 +90,7 @@ Unreleased
 
 -   Add a ``catch_exceptions`` parameter to :class:`CliRunner`. If
     ``catch_exceptions`` is not passed to :meth:`CliRunner.invoke`,
-    the value from :class:`CliRunner`.
+    the value from :class:`CliRunner`. :issue:`2817` :pr:`2818`
 
 Version 8.1.8
 -------------
