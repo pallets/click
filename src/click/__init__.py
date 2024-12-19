@@ -53,6 +53,7 @@ from .termui import unstyle as unstyle
 from .types import BOOL as BOOL
 from .types import Choice as Choice
 from .types import DateTime as DateTime
+from .types import EnumChoice as EnumChoice
 from .types import File as File
 from .types import FLOAT as FLOAT
 from .types import FloatRange as FloatRange
