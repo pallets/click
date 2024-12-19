@@ -686,12 +686,22 @@ def secho(
 
 @t.overload
 def edit(
-    text: t.AnyStr,
+    text: bytes | bytearray,
+    editor: str | None = None,
+    env: cabc.Mapping[str, str] | None = None,
+    require_save: bool = False,
+    extension: str = ".txt",
+) -> bytes | None: ...
+
+
+@t.overload
+def edit(
+    text: str,
     editor: str | None = None,
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-) -> t.AnyStr: ...
+) -> str | None: ...
 
 
 @t.overload
@@ -706,13 +716,13 @@ def edit(
 
 
 def edit(
-    text: t.AnyStr | None = None,
+    text: str | bytes | bytearray | None = None,
     editor: str | None = None,
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
     filename: str | cabc.Iterable[str] | None = None,
-) -> t.AnyStr | None:
+) -> str | bytes | bytearray | None:
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
     system search path is used for finding the executable) it overrides
