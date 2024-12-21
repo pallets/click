@@ -29,6 +29,8 @@ Released 2024-12-19
     :pr:`2563`
 -   Test ``CLIRunner`` resets patched ``_compat.should_strip_ansi``.
     :issue:`2732`
+-   show correct auto complete value for nargs option in combination with
+    flag option :issue:`2813`
 
 
 Version 8.1.7
