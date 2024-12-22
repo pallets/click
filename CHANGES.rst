@@ -88,9 +88,11 @@ Unreleased
     -   Parameters cannot be required nor prompted or an error is raised.
     -   A warning will be printed when something deprecated is used.
 
--   Add a ``catch_exceptions`` parameter to :class:`CliRunner`. If
-    ``catch_exceptions`` is not passed to :meth:`CliRunner.invoke`,
+-   Add a ``catch_exceptions`` parameter to :class:``CliRunner``. If
+    ``catch_exceptions`` is not passed to :meth:``CliRunner.invoke``,
     the value from :class:`CliRunner`. :issue:`2817` :pr:`2818`
+-   :class:``Choice`` is now generic and supports any iterable value.
+    This allows you to use enums and other non-``str`` values.
 
 Version 8.1.8
 -------------
