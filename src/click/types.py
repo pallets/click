@@ -250,7 +250,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
         tuple.
 
     .. versionadded:: 8.2.0
-        Choices are normalized via :meth:`normalize_choice`
+        Choice normalization can be overridden via :meth:`normalize_choice`.
     """
 
     name = "choice"

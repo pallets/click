@@ -381,7 +381,9 @@ Example:
 
 .. click:example::
 
-    class HashType:
+    import enum
+
+    class HashType(enum.Enum):
         MD5 = 'MD5'
         SHA1 = 'SHA1'
 
@@ -411,8 +413,8 @@ Choices work with options that have ``multiple=True``. If a ``default``
 value is given with ``multiple=True``, it should be a list or tuple of
 valid choices.
 
-Choices should be unique after considering the effects of
-``case_sensitive`` and any specified token normalization function.
+Choices should be unique after normalization, see
+:meth:`Choice.normalize_choice` for more info.
 
 .. versionchanged:: 7.1
     The resulting value from an option will always be one of the
