@@ -58,7 +58,7 @@ NUMBER_OPTION = (
         "help": None,
         "prompt": None,
         "is_flag": False,
-        "flag_value": False,
+        "flag_value": None,
         "count": False,
         "hidden": False,
     },
