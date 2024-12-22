@@ -13,6 +13,7 @@ import io
 import sys
 import time
 import typing as t
+from ctypes import Array
 from ctypes import byref
 from ctypes import c_char
 from ctypes import c_char_p
@@ -67,6 +68,14 @@ STDERR_FILENO = 2
 EOF = b"\x1a"
 MAX_BYTES_WRITTEN = 32767
 
+if t.TYPE_CHECKING:
+    try:
+        # Using `typing_extensions.Buffer` instead of `collections.abc`
+        # on Windows for some reason does not have `Sized` implemented.
+        from collections.abc import Buffer  # type: ignore
+    except ImportError:
+        from typing_extensions import Buffer
+
 try:
     from ctypes import pythonapi
 except ImportError:
@@ -93,32 +102,32 @@ else:
     PyObject_GetBuffer = pythonapi.PyObject_GetBuffer
     PyBuffer_Release = pythonapi.PyBuffer_Release
 
-    def get_buffer(obj, writable=False):
+    def get_buffer(obj: Buffer, writable: bool = False) -> Array[c_char]:
         buf = Py_buffer()
-        flags = PyBUF_WRITABLE if writable else PyBUF_SIMPLE
+        flags: int = PyBUF_WRITABLE if writable else PyBUF_SIMPLE
         PyObject_GetBuffer(py_object(obj), byref(buf), flags)
 
         try:
-            buffer_type = c_char * buf.len
+            buffer_type: Array[c_char] = c_char * buf.len
             return buffer_type.from_address(buf.buf)
         finally:
             PyBuffer_Release(byref(buf))
 
 
 class _WindowsConsoleRawIOBase(io.RawIOBase):
-    def __init__(self, handle):
+    def __init__(self, handle: int | None) -> None:
         self.handle = handle
 
-    def isatty(self):
+    def isatty(self) -> t.Literal[True]:
         super().isatty()
         return True
 
 
 class _WindowsConsoleReader(_WindowsConsoleRawIOBase):
-    def readable(self):
+    def readable(self) -> t.Literal[True]:
         return True
 
-    def readinto(self, b):
+    def readinto(self, b: Buffer) -> int:
         bytes_to_be_read = len(b)
         if not bytes_to_be_read:
             return 0
@@ -150,18 +159,18 @@ class _WindowsConsoleReader(_WindowsConsoleRawIOBase):
 
 
 class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
-    def writable(self):
+    def writable(self) -> t.Literal[True]:
         return True
 
     @staticmethod
-    def _get_error_message(errno):
+    def _get_error_message(errno: int) -> str:
         if errno == ERROR_SUCCESS:
             return "ERROR_SUCCESS"
         elif errno == ERROR_NOT_ENOUGH_MEMORY:
             return "ERROR_NOT_ENOUGH_MEMORY"
         return f"Windows error {errno}"
 
-    def write(self, b):
+    def write(self, b: Buffer) -> int:
         bytes_to_be_written = len(b)
         buf = get_buffer(b)
         code_units_to_be_written = min(bytes_to_be_written, MAX_BYTES_WRITTEN) // 2
@@ -209,7 +218,7 @@ class ConsoleStream:
     def isatty(self) -> bool:
         return self.buffer.isatty()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<ConsoleStream name={self.name!r} encoding={self.encoding!r}>"
 
 
@@ -267,16 +276,20 @@ def _get_windows_console_stream(
     f: t.TextIO, encoding: str | None, errors: str | None
 ) -> t.TextIO | None:
     if (
-        get_buffer is not None
-        and encoding in {"utf-16-le", None}
-        and errors in {"strict", None}
-        and _is_console(f)
+        get_buffer is None
+        or encoding not in {"utf-16-le", None}
+        or errors not in {"strict", None}
+        or not _is_console(f)
     ):
-        func = _stream_factories.get(f.fileno())
-        if func is not None:
-            b = getattr(f, "buffer", None)
+        return None
 
-            if b is None:
-                return None
+    func = _stream_factories.get(f.fileno())
+    if func is None:
+        return None
 
-            return func(b)
+    b = getattr(f, "buffer", None)
+
+    if b is None:
+        return None
+
+    return func(b)

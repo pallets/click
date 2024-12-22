@@ -674,7 +674,7 @@ def _translate_ch_to_exc(ch: str) -> None:
     return None
 
 
-if WIN:
+if sys.platform == "win32":
     import msvcrt
 
     @contextlib.contextmanager
@@ -711,12 +711,11 @@ if WIN:
         #
         # Anyway, Click doesn't claim to do this Right(tm), and using `getwch`
         # is doing the right thing in more situations than with `getch`.
-        func: t.Callable[[], str]
 
         if echo:
-            func = msvcrt.getwche  # type: ignore
+            func = t.cast(t.Callable[[], str], msvcrt.getwche)
         else:
-            func = msvcrt.getwch  # type: ignore
+            func = t.cast(t.Callable[[], str], msvcrt.getwch)
 
         rv = func()
 
