@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import collections.abc as cabc
+import enum
 import os
 import stat
 import sys
@@ -22,6 +23,8 @@ if t.TYPE_CHECKING:
     from .core import Context
     from .core import Parameter
     from .shell_completion import CompletionItem
+
+ParamTypeValue = t.TypeVar("ParamTypeValue")
 
 
 class ParamType:
@@ -86,10 +89,10 @@ class ParamType:
         if value is not None:
             return self.convert(value, param, ctx)
 
-    def get_metavar(self, param: Parameter) -> str | None:
+    def get_metavar(self, param: Parameter, ctx: Context) -> str | None:
         """Returns the metavar default for this param if it provides one."""
 
-    def get_missing_message(self, param: Parameter) -> str | None:
+    def get_missing_message(self, param: Parameter, ctx: Context | None) -> str | None:
         """Optionally might return extra information about a missing
         parameter.
 
@@ -227,29 +230,35 @@ class StringParamType(ParamType):
         return "STRING"
 
 
-class Choice(ParamType):
+class Choice(ParamType, t.Generic[ParamTypeValue]):
     """The choice type allows a value to be checked against a fixed set
-    of supported values. All of these values have to be strings.
+    of supported values.
 
-    You should only pass a list or tuple of choices. Other iterables
-    (like generators) may lead to surprising results.
+    You may pass any iterable value which will be converted to a tuple
+    and thus will only be iterated once.
 
-    The resulting value will always be one of the originally passed choices
-    regardless of ``case_sensitive`` or any ``ctx.token_normalize_func``
-    being specified.
-
-    See :ref:`choice-opts` for an example.
+    The resulting value will always be one of the originally passed choices.
+    See :meth:`normalize_choice` for more info on the mapping of strings
+    to choices. See :ref:`choice-opts` for an example.
 
     :param case_sensitive: Set to false to make choices case
         insensitive. Defaults to true.
+
+    .. versionchanged:: 8.2.0
+        Non-``str`` ``choices`` are now supported. It can additionally be any
+        iterable. Before you were not recommended to pass anything but a list or
+        tuple.
+
+    .. versionadded:: 8.2.0
+        Choice normalization can be overridden via :meth:`normalize_choice`.
     """
 
     name = "choice"
 
     def __init__(
-        self, choices: cabc.Sequence[str], case_sensitive: bool = True
+        self, choices: cabc.Iterable[ParamTypeValue], case_sensitive: bool = True
     ) -> None:
-        self.choices = choices
+        self.choices: cabc.Sequence[ParamTypeValue] = tuple(choices)
         self.case_sensitive = case_sensitive
 
     def to_info_dict(self) -> dict[str, t.Any]:
@@ -258,14 +267,54 @@ class Choice(ParamType):
         info_dict["case_sensitive"] = self.case_sensitive
         return info_dict
 
-    def get_metavar(self, param: Parameter) -> str:
+    def _normalized_mapping(
+        self, ctx: Context | None = None
+    ) -> cabc.Mapping[ParamTypeValue, str]:
+        """
+        Returns mapping where keys are the original choices and the values are
+        the normalized values that are accepted via the command line.
+
+        This is a simple wrapper around :meth:`normalize_choice`, use that
+        instead which is supported.
+        """
+        return {
+            choice: self.normalize_choice(
+                choice=choice,
+                ctx=ctx,
+            )
+            for choice in self.choices
+        }
+
+    def normalize_choice(self, choice: ParamTypeValue, ctx: Context | None) -> str:
+        """
+        Normalize a choice value, used to map a passed string to a choice.
+        Each choice must have a unique normalized value.
+
+        By default uses :meth:`Context.token_normalize_func` and if not case
+        sensitive, convert it to a casefolded value.
+
+        .. versionadded:: 8.2.0
+        """
+        normed_value = choice.name if isinstance(choice, enum.Enum) else str(choice)
+
+        if ctx is not None and ctx.token_normalize_func is not None:
+            normed_value = ctx.token_normalize_func(normed_value)
+
+        if not self.case_sensitive:
+            normed_value = normed_value.casefold()
+
+        return normed_value
+
+    def get_metavar(self, param: Parameter, ctx: Context) -> str | None:
         if param.param_type_name == "option" and not param.show_choices:  # type: ignore
             choice_metavars = [
                 convert_type(type(choice)).name.upper() for choice in self.choices
             ]
             choices_str = "|".join([*dict.fromkeys(choice_metavars)])
         else:
-            choices_str = "|".join([str(i) for i in self.choices])
+            choices_str = "|".join(
+                [str(i) for i in self._normalized_mapping(ctx=ctx).values()]
+            )
 
         # Use curly braces to indicate a required argument.
         if param.required and param.param_type_name == "argument":
@@ -274,46 +323,48 @@ class Choice(ParamType):
         # Use square braces to indicate an option or optional argument.
         return f"[{choices_str}]"
 
-    def get_missing_message(self, param: Parameter) -> str:
-        return _("Choose from:\n\t{choices}").format(choices=",\n\t".join(self.choices))
+    def get_missing_message(self, param: Parameter, ctx: Context | None) -> str:
+        """
+        Message shown when no choice is passed.
+
+        .. versionchanged:: 8.2.0 Added ``ctx`` argument.
+        """
+        return _("Choose from:\n\t{choices}").format(
+            choices=",\n\t".join(self._normalized_mapping(ctx=ctx).values())
+        )
 
     def convert(
         self, value: t.Any, param: Parameter | None, ctx: Context | None
-    ) -> t.Any:
-        # Match through normalization and case sensitivity
-        # first do token_normalize_func, then lowercase
-        # preserve original `value` to produce an accurate message in
-        # `self.fail`
-        normed_value = value
-        normed_choices = {choice: choice for choice in self.choices}
+    ) -> ParamTypeValue:
+        """
+        For a given value from the parser, normalize it and find its
+        matching normalized value in the list of choices. Then return the
+        matched "original" choice.
+        """
+        normed_value = self.normalize_choice(choice=value, ctx=ctx)
+        normalized_mapping = self._normalized_mapping(ctx=ctx)
 
-        if ctx is not None and ctx.token_normalize_func is not None:
-            normed_value = ctx.token_normalize_func(value)
-            normed_choices = {
-                ctx.token_normalize_func(normed_choice): original
-                for normed_choice, original in normed_choices.items()
-            }
+        try:
+            return next(
+                original
+                for original, normalized in normalized_mapping.items()
+                if normalized == normed_value
+            )
+        except StopIteration:
+            self.fail(
+                self.get_invalid_choice_message(value=value, ctx=ctx),
+                param=param,
+                ctx=ctx,
+            )
 
-        if not self.case_sensitive:
-            normed_value = normed_value.casefold()
-            normed_choices = {
-                normed_choice.casefold(): original
-                for normed_choice, original in normed_choices.items()
-            }
-
-        if normed_value in normed_choices:
-            return normed_choices[normed_value]
-
-        self.fail(self.get_invalid_choice_message(value), param, ctx)
-
-    def get_invalid_choice_message(self, value: t.Any) -> str:
+    def get_invalid_choice_message(self, value: t.Any, ctx: Context | None) -> str:
         """Get the error message when the given choice is invalid.
 
         :param value: The invalid value.
 
         .. versionadded:: 8.2
         """
-        choices_str = ", ".join(map(repr, self.choices))
+        choices_str = ", ".join(map(repr, self._normalized_mapping(ctx=ctx).values()))
         return ngettext(
             "{value!r} is not {choice}.",
             "{value!r} is not one of {choices}.",
@@ -382,7 +433,7 @@ class DateTime(ParamType):
         info_dict["formats"] = self.formats
         return info_dict
 
-    def get_metavar(self, param: Parameter) -> str:
+    def get_metavar(self, param: Parameter, ctx: Context) -> str | None:
         return f"[{'|'.join(self.formats)}]"
 
     def _try_to_convert_date(self, value: t.Any, format: str) -> datetime | None:
