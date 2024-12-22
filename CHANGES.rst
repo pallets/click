@@ -94,6 +94,7 @@ Unreleased
 -   ``Option.flag_value`` will no longer have a default value set based on
     ``Option.default`` if ``Option.is_flag`` is ``False``. This results in
     ``Option.default`` not needing to implement `__bool__`. :pr:`2829`
+-   Incorrect ``click.edit`` typing has been corrected. :pr:`2804`
 
 Version 8.1.8
 -------------
