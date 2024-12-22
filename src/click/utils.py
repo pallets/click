@@ -120,7 +120,7 @@ class LazyFile:
         encoding: str | None = None,
         errors: str | None = "strict",
         atomic: bool = False,
-    ):
+    ) -> None:
         self.name: str = os.fspath(filename)
         self.mode = mode
         self.encoding = encoding
@@ -148,7 +148,7 @@ class LazyFile:
             return repr(self._f)
         return f"<unopened file '{format_filename(self.name)}' {self.mode}>"
 
-    def open(self) -> t.IO[t.Any]:
+    def open(self) -> t.IO[t.AnyStr]:
         """Opens the file if it's not yet open.  This call might fail with
         a :exc:`FileError`.  Not handling this error will produce an error
         that Click shows.

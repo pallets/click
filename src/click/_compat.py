@@ -360,7 +360,7 @@ def _wrap_io_open(
     mode: str,
     encoding: str | None,
     errors: str | None,
-) -> t.IO[t.Any]:
+) -> t.IO[t.AnyStr]:
     """Handles not passing ``encoding`` and ``errors`` in binary mode."""
     if "b" in mode:
         return open(file, mode)
@@ -374,7 +374,7 @@ def open_stream(
     encoding: str | None = None,
     errors: str | None = "strict",
     atomic: bool = False,
-) -> tuple[t.IO[t.Any], bool]:
+) -> tuple[t.IO[t.AnyStr] | t.BinaryIO | t.TextIO, bool]:
     binary = "b" in mode
     filename = os.fspath(filename)
 
