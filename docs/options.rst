@@ -375,15 +375,20 @@ In that case you can use :class:`Choice` type.  It can be instantiated
 with a list of valid values.  The originally passed choice will be returned,
 not the str passed on the command line.  Token normalization functions and
 ``case_sensitive=False`` can cause the two to be different but still match.
+:meth:`Choice.normalize_choice` for more info.
 
 Example:
 
 .. click:example::
 
+    class HashType:
+        MD5 = 'MD5'
+        SHA1 = 'SHA1'
+
     @click.command()
     @click.option('--hash-type',
-                  type=click.Choice(['MD5', 'SHA1'], case_sensitive=False))
-    def digest(hash_type):
+                  type=click.Choice(HashType, case_sensitive=False))
+    def digest(hash_type: HashType):
         click.echo(hash_type)
 
 What it looks like:
@@ -398,8 +403,9 @@ What it looks like:
     println()
     invoke(digest, args=['--help'])
 
-Only pass the choices as list or tuple. Other iterables (like
-generators) may lead to unexpected results.
+Since version 8.2.0 any iterable may be passed to :class:`Choice`, here
+an ``Enum`` is used which will result in all enum values to be valid
+choices.
 
 Choices work with options that have ``multiple=True``. If a ``default``
 value is given with ``multiple=True``, it should be a list or tuple of

@@ -232,19 +232,25 @@ class StringParamType(ParamType):
 
 class Choice(ParamType, t.Generic[ParamTypeValue]):
     """The choice type allows a value to be checked against a fixed set
-    of supported values. All of these values have to be strings.
+    of supported values.
 
-    You should only pass a list or tuple of choices. Other iterables
-    (like generators) may lead to surprising results.
+    You may pass any iterable value which will be converted to a tuple
+    and thus will only be iterated once.
 
-    The resulting value will always be one of the originally passed choices
-    regardless of ``case_sensitive`` or any ``ctx.token_normalize_func``
-    being specified.
-
-    See :ref:`choice-opts` for an example.
+    The resulting value will always be one of the originally passed choices.
+    See :meth:`normalize_choice` for more info on the mapping of strings
+    to choices. See :ref:`choice-opts` for an example.
 
     :param case_sensitive: Set to false to make choices case
         insensitive. Defaults to true.
+
+    .. versionchanged:: 8.2.0
+        Non-``str`` ``choices`` are now supported. It can additionally be any
+        iterable. Before you were not recommended to pass anything but a list or
+        tuple.
+
+    .. versionadded:: 8.2.0
+        Choices are normalized via :meth:`normalize_choice`
     """
 
     name = "choice"
@@ -252,7 +258,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
     def __init__(
         self, choices: cabc.Iterable[ParamTypeValue], case_sensitive: bool = True
     ) -> None:
-        self.choices: cabc.Sequence[ParamTypeValue] = list(choices)
+        self.choices: cabc.Sequence[ParamTypeValue] = tuple(choices)
         self.case_sensitive = case_sensitive
 
     def to_info_dict(self) -> dict[str, t.Any]:
@@ -261,14 +267,15 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
         info_dict["case_sensitive"] = self.case_sensitive
         return info_dict
 
-    def normalized_mapping(
+    def _normalized_mapping(
         self, ctx: Context | None = None
     ) -> cabc.Mapping[ParamTypeValue, str]:
         """
         Returns mapping where keys are the original choices and the values are
         the normalized values that are accepted via the command line.
 
-        .. versionadded:: 8.2.0
+        This is a simple wrapper around :meth:`normalize_choice`, use that
+        instead which is supported.
         """
         return {
             choice: self.normalize_choice(
@@ -278,12 +285,13 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
             for choice in self.choices
         }
 
-    def normalize_choice(self, choice: t.Any, ctx: Context | None) -> str:
+    def normalize_choice(self, choice: ParamTypeValue, ctx: Context | None) -> str:
         """
-        Normalize a choice value.
+        Normalize a choice value, used to map a passed string to a choice.
+        Each choice must have a unique normalized value.
 
-        By default use ``ctx.token_normalize_func`` and if not case sensitive,
-        convert to a lowecase/casefolded value.
+        By default uses :meth:`Context.token_normalize_func` and if not case
+        sensitive, convert it to a casefolded value.
 
         .. versionadded:: 8.2.0
         """
@@ -305,7 +313,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
             choices_str = "|".join([*dict.fromkeys(choice_metavars)])
         else:
             choices_str = "|".join(
-                [str(i) for i in self.normalized_mapping(ctx=ctx).values()]
+                [str(i) for i in self._normalized_mapping(ctx=ctx).values()]
             )
 
         # Use curly braces to indicate a required argument.
@@ -322,7 +330,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
         .. versionchanged:: 8.2.0 Added ``ctx`` argument.
         """
         return _("Choose from:\n\t{choices}").format(
-            choices=",\n\t".join(self.normalized_mapping(ctx=ctx).values())
+            choices=",\n\t".join(self._normalized_mapping(ctx=ctx).values())
         )
 
     def convert(
@@ -334,7 +342,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
         matched "original" choice.
         """
         normed_value = self.normalize_choice(choice=value, ctx=ctx)
-        normalized_mapping = self.normalized_mapping(ctx=ctx)
+        normalized_mapping = self._normalized_mapping(ctx=ctx)
 
         try:
             return next(
@@ -356,7 +364,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
 
         .. versionadded:: 8.2
         """
-        choices_str = ", ".join(map(repr, self.normalized_mapping(ctx=ctx).values()))
+        choices_str = ", ".join(map(repr, self._normalized_mapping(ctx=ctx).values()))
         return ngettext(
             "{value!r} is not {choice}.",
             "{value!r} is not one of {choices}.",
