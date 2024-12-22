@@ -6,12 +6,176 @@ Options
 .. currentmodule:: click
 
 Adding options to commands can be accomplished by the :func:`option`
-decorator.  Since options can come in various different versions, there
-are a ton of parameters to configure their behavior. Options in click are
-distinct from :ref:`positional arguments <arguments>`.
+decorator.  Options in Click are distinct from :ref:`positional arguments <arguments>`.
+
+Useful and often used kwargs are:
+
+*   ``default``: Passes a defaults.
+*   ``help``: Sets help message.
+*   ``nargs``: Sets the number of arguments.
+*   ``required``: Makes option required.
+*   ``type``: Sets :ref:`parameter-types`
+
+.. contents::
+   :depth: 2
+   :local:
+
+Basic Options
+---------------
+A simple :class:`click.Option` takes one argument. This will assume the argument is not required. If the decorated function takes an positional argument then None is passed it. This will also assume the type ``str``.
+
+Example:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--text')
+    def print_this(text):
+        click.echo(text)
+
+And from the command line:
+
+.. click:run::
+
+    invoke(print_this, args=['--text=this'])
+
+    invoke(print_this, args=[])
+
+And the help page:
+
+.. click:run::
+
+    invoke(print_this, args=['--help'])
+
+
+Setting a Default
+---------------------------
+Instead of setting the ``type``, you may set a default and Click will try to infer the type.
+
+Example:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--n', default=1)
+    def dots(n):
+        click.echo('.' * n)
+
+And the help page:
+
+.. click:run::
+
+    invoke(dots, args=['--help'])
+
+Multi Value Options
+-------------------
+
+To make an option take multiple values, pass the kwarg ``nargs``. Note only a fixed number of arguments is supported. The values are passed to the underlying function as a tuple.
+
+.. click:example::
+
+    @click.command()
+    @click.option('--pos', nargs=2, type=float)
+    def findme(pos):
+        a, b = pos
+        click.echo(f"{a} / {b}")
+
+And on the command line:
+
+.. click:run::
+
+    invoke(findme, args=['--pos', '2.0', '3.0'])
+
+.. _multiple-options:
+
+Multiple Options
+-----------------
+possible rename to multiple call options
+
+The multiple options format allows you to call the underlying function multiple times with one command line entry. If set, the default must be a list or tuple. Setting a string as a default will be interpreted as list of characters. For example, ``git commit -m foo -m bar`` would record two lines for the commit message: ``foo`` and ``bar``.
+
+Example:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--message', '-m', multiple=True)
+    def commit(message):
+        click.echo('\n'.join(message))
+
+And on the command line:
+
+.. click:run::
+
+    invoke(commit, args=['-m', 'foo', '-m', 'bar'])
+
+Counting
+--------
+In some very rare circumstances, it is interesting to use the repetition
+of options to count an integer up.  This can be used for verbosity flags,
+for instance:
+
+.. click:example::
+
+    @click.command()
+    @click.option('-v', '--verbose', count=True)
+    def log(verbose):
+        click.echo(f"Verbosity: {verbose}")
+
+And on the command line:
+
+.. click:run::
+
+    invoke(log, args=['-vvv'])
+
+Help pages
+---------------------------
+To control the showing of defaults pass ``show_default``.
+
+Example:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--n', default=1, show_default=False, help='number of dots')
+    def dots(n):
+        click.echo('.' * n)
+
+And the help page:
+
+.. click:run::
+
+    invoke(dots, args=['--help'])
+
+For single option boolean flags, the default remains hidden if the default value is False even if show default is true.
+
+.. click:example::
+
+    @click.command()
+    @click.option('--n', default=1, show_default=True)
+    @click.option("--gr", is_flag=True, show_default=True, default=False, help="Greet the world.")
+    @click.option("--br", is_flag=True, show_default=True, default=True, help="Add a thematic break")
+    def dots(n, gr, br):
+        if gr:
+            click.echo('Hello world!')
+        click.echo('.' * n)
+        if br:
+            click.echo('-' * n)
+
+.. click:run::
+
+   invoke(dots, args=['--help'])
 
 Name Your Options
 -----------------
+The most basic way to set the option name is to take the function argument, add two dashes to the front and convert underscores to dashes. For example:
+
+.. code-block:: python
+
+    @click.command()
+    @click.option('--string-to-echo')
+    def echo(string_to_echo):
+        click.echo(string_to_echo)
 
 Options have a name that will be used as the Python argument name when
 calling the decorated function. This can be inferred from the option
@@ -52,8 +216,9 @@ converted to underscores.
 -   ``"--f", "--foo-bar"``, the name is ``f``
 -   ``"---f"``, the name is ``_f``
 
+
 Basic Value Options
--------------------
+---------------------
 
 The most basic option is a value option.  These options accept one
 argument which is a value.  If no type is provided, the type of the default
@@ -72,14 +237,6 @@ simply pass in `required=True` as an argument to the decorator.
 
 .. click:example::
 
-    # How to make an option required
-    @click.command()
-    @click.option('--n', required=True, type=int)
-    def dots(n):
-        click.echo('.' * n)
-
-.. click:example::
-
     # How to use a Python reserved word such as `from` as a parameter
     @click.command()
     @click.option('--from', '-f', 'from_')
@@ -87,11 +244,7 @@ simply pass in `required=True` as an argument to the decorator.
     def reserved_param_name(from_, to):
         click.echo(f"from {from_} to {to}")
 
-And on the command line:
 
-.. click:run::
-
-   invoke(dots, args=['--n=2'])
 
 In this case the option is of type :data:`INT` because the default value
 is an integer.
@@ -109,47 +262,8 @@ To show the default values when showing command help, use ``show_default=True``
 
    invoke(dots, args=['--help'])
 
-For single option boolean flags, the default remains hidden if the default
-value is False.
-
-.. click:example::
-
-    @click.command()
-    @click.option('--n', default=1, show_default=True)
-    @click.option("--gr", is_flag=True, show_default=True, default=False, help="Greet the world.")
-    @click.option("--br", is_flag=True, show_default=True, default=True, help="Add a thematic break")
-    def dots(n, gr, br):
-        if gr:
-            click.echo('Hello world!')
-        click.echo('.' * n)
-        if br:
-            click.echo('-' * n)
-
-.. click:run::
-
-   invoke(dots, args=['--help'])
 
 
-Multi Value Options
--------------------
-
-Sometimes, you have options that take more than one argument.  For options,
-only a fixed number of arguments is supported.  This can be configured by
-the ``nargs`` parameter.  The values are then stored as a tuple.
-
-.. click:example::
-
-    @click.command()
-    @click.option('--pos', nargs=2, type=float)
-    def findme(pos):
-        a, b = pos
-        click.echo(f"{a} / {b}")
-
-And on the command line:
-
-.. click:run::
-
-    invoke(findme, args=['--pos', '2.0', '3.0'])
 
 .. _tuple-type:
 
@@ -189,60 +303,9 @@ used.  The above example is thus equivalent to this:
         name, id = item
         click.echo(f"name={name} id={id}")
 
-.. _multiple-options:
-
-Multiple Options
-----------------
-
-Similarly to ``nargs``, there is also the case of wanting to support a
-parameter being provided multiple times and have all the values recorded --
-not just the last one.  For instance, ``git commit -m foo -m bar`` would
-record two lines for the commit message: ``foo`` and ``bar``. This can be
-accomplished with the ``multiple`` flag:
-
-Example:
-
-.. click:example::
-
-    @click.command()
-    @click.option('--message', '-m', multiple=True)
-    def commit(message):
-        click.echo('\n'.join(message))
-
-And on the command line:
-
-.. click:run::
-
-    invoke(commit, args=['-m', 'foo', '-m', 'bar'])
-
-When passing a ``default`` with ``multiple=True``, the default value
-must be a list or tuple, otherwise it will be interpreted as a list of
-single characters.
-
-.. code-block:: python
-
-    @click.option("--format", multiple=True, default=["json"])
 
 
-Counting
---------
 
-In some very rare circumstances, it is interesting to use the repetition
-of options to count an integer up.  This can be used for verbosity flags,
-for instance:
-
-.. click:example::
-
-    @click.command()
-    @click.option('-v', '--verbose', count=True)
-    def log(verbose):
-        click.echo(f"Verbosity: {verbose}")
-
-And on the command line:
-
-.. click:run::
-
-    invoke(log, args=['-vvv'])
 
 Boolean Flags
 -------------
@@ -364,53 +427,6 @@ And on the command line:
     invoke(info, args=['--upper'])
     invoke(info, args=['--lower'])
     invoke(info)
-
-.. _choice-opts:
-
-Choice Options
---------------
-
-Sometimes, you want to have a parameter be a choice of a list of values.
-In that case you can use :class:`Choice` type.  It can be instantiated
-with a list of valid values.  The originally passed choice will be returned,
-not the str passed on the command line.  Token normalization functions and
-``case_sensitive=False`` can cause the two to be different but still match.
-
-Example:
-
-.. click:example::
-
-    @click.command()
-    @click.option('--hash-type',
-                  type=click.Choice(['MD5', 'SHA1'], case_sensitive=False))
-    def digest(hash_type):
-        click.echo(hash_type)
-
-What it looks like:
-
-.. click:run::
-
-    invoke(digest, args=['--hash-type=MD5'])
-    println()
-    invoke(digest, args=['--hash-type=md5'])
-    println()
-    invoke(digest, args=['--hash-type=foo'])
-    println()
-    invoke(digest, args=['--help'])
-
-Only pass the choices as list or tuple. Other iterables (like
-generators) may lead to unexpected results.
-
-Choices work with options that have ``multiple=True``. If a ``default``
-value is given with ``multiple=True``, it should be a list or tuple of
-valid choices.
-
-Choices should be unique after considering the effects of
-``case_sensitive`` and any specified token normalization function.
-
-.. versionchanged:: 7.1
-    The resulting value from an option will always be one of the
-    originally passed choices regardless of ``case_sensitive``.
 
 .. _option-prompting:
 
