@@ -5,7 +5,7 @@ Parameter Types
 
 .. currentmodule:: click
 
-Specifying the parameter type with the ``type`` kwarg allows Click add data to your help pages and helps with the handling of the types. Most examples are done with argument, but types are available to options and arguments.
+Specifying the parameter type with the ``type`` kwarg allows Click add data to your help pages and helps with the handling of the types. Most examples are done with options, but types are available to options and arguments.
 
 .. contents::
     :depth: 2
@@ -63,7 +63,7 @@ Choices should be unique after considering the effects of
 
 Built-in Types Listing
 -----------------------
-The supported parameter types are:
+The supported parameter :ref:`click-api-types` are:
 
 *   ``str`` / :data:`click.STRING`: The default parameter type which indicates unicode strings.
 

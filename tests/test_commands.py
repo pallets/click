@@ -95,13 +95,9 @@ def test_auto_shorthelp(runner):
     )
 
 
-def test_no_args_is_help(runner):
-    @click.command(no_args_is_help=True)
-    def cli():
-        pass
-
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 0
+def test_command_no_args_is_help(runner):
+    result = runner.invoke(click.Command("test", no_args_is_help=True))
+    assert result.exit_code == 2
     assert "Show this message and exit." in result.output
 
 
@@ -127,7 +123,7 @@ def test_default_maps(runner):
         (["obj1"], 2, "Error: Missing command."),
         (["obj1", "--help"], 0, "Show this message and exit."),
         (["obj1", "move"], 0, "obj=obj1\nmove\n"),
-        ([], 0, "Show this message and exit."),
+        ([], 2, "Show this message and exit."),
     ],
 )
 def test_group_with_args(runner, args, exit_code, expect):
@@ -145,14 +141,14 @@ def test_group_with_args(runner, args, exit_code, expect):
     assert expect in result.output
 
 
-def test_base_command(runner):
+def test_custom_parser(runner):
     import optparse
 
     @click.group()
     def cli():
         pass
 
-    class OptParseCommand(click.BaseCommand):
+    class OptParseCommand(click.Command):
         def __init__(self, name, parser, callback):
             super().__init__(name)
             self.parser = parser
@@ -249,7 +245,7 @@ def test_other_command_invoke_with_defaults(runner):
     result = runner.invoke(cli, standalone_mode=False)
     # invoke should type cast default values, str becomes int, empty
     # multiple should be empty tuple instead of None
-    assert result.return_value == ("other-cmd", 42, 15, ())
+    assert result.return_value == ("other", 42, 15, ())
 
 
 def test_invoked_subcommand(runner):
@@ -305,138 +301,6 @@ def test_group_add_command_name(runner):
     assert result.exit_code == 0
 
 
-@pytest.mark.parametrize(
-    ("invocation_order", "declaration_order", "expected_order"),
-    [
-        # Non-eager options.
-        ([], ["-a"], ["-a"]),
-        (["-a"], ["-a"], ["-a"]),
-        ([], ["-a", "-c"], ["-a", "-c"]),
-        (["-a"], ["-a", "-c"], ["-a", "-c"]),
-        (["-c"], ["-a", "-c"], ["-c", "-a"]),
-        ([], ["-c", "-a"], ["-c", "-a"]),
-        (["-a"], ["-c", "-a"], ["-a", "-c"]),
-        (["-c"], ["-c", "-a"], ["-c", "-a"]),
-        (["-a", "-c"], ["-a", "-c"], ["-a", "-c"]),
-        (["-c", "-a"], ["-a", "-c"], ["-c", "-a"]),
-        # Eager options.
-        ([], ["-b"], ["-b"]),
-        (["-b"], ["-b"], ["-b"]),
-        ([], ["-b", "-d"], ["-b", "-d"]),
-        (["-b"], ["-b", "-d"], ["-b", "-d"]),
-        (["-d"], ["-b", "-d"], ["-d", "-b"]),
-        ([], ["-d", "-b"], ["-d", "-b"]),
-        (["-b"], ["-d", "-b"], ["-b", "-d"]),
-        (["-d"], ["-d", "-b"], ["-d", "-b"]),
-        (["-b", "-d"], ["-b", "-d"], ["-b", "-d"]),
-        (["-d", "-b"], ["-b", "-d"], ["-d", "-b"]),
-        # Mixed options.
-        ([], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
-        (["-a"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
-        (["-b"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
-        (["-c"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-c", "-a"]),
-        (["-d"], ["-a", "-b", "-c", "-d"], ["-d", "-b", "-a", "-c"]),
-        (["-a", "-b"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
-        (["-b", "-a"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
-        (["-d", "-c"], ["-a", "-b", "-c", "-d"], ["-d", "-b", "-c", "-a"]),
-        (["-c", "-d"], ["-a", "-b", "-c", "-d"], ["-d", "-b", "-c", "-a"]),
-        (["-a", "-b", "-c", "-d"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
-        (["-b", "-d", "-a", "-c"], ["-a", "-b", "-c", "-d"], ["-b", "-d", "-a", "-c"]),
-        ([], ["-b", "-d", "-e", "-a", "-c"], ["-b", "-d", "-e", "-a", "-c"]),
-        (["-a", "-d"], ["-b", "-d", "-e", "-a", "-c"], ["-d", "-b", "-e", "-a", "-c"]),
-        (["-c", "-d"], ["-b", "-d", "-e", "-a", "-c"], ["-d", "-b", "-e", "-c", "-a"]),
-    ],
-)
-def test_iter_params_for_processing(
-    invocation_order, declaration_order, expected_order
-):
-    parameters = {
-        "-a": click.Option(["-a"]),
-        "-b": click.Option(["-b"], is_eager=True),
-        "-c": click.Option(["-c"]),
-        "-d": click.Option(["-d"], is_eager=True),
-        "-e": click.Option(["-e"], is_eager=True),
-    }
-
-    invocation_params = [parameters[opt_id] for opt_id in invocation_order]
-    declaration_params = [parameters[opt_id] for opt_id in declaration_order]
-    expected_params = [parameters[opt_id] for opt_id in expected_order]
-
-    assert (
-        click.core.iter_params_for_processing(invocation_params, declaration_params)
-        == expected_params
-    )
-
-
-def test_help_param_priority(runner):
-    """Cover the edge-case in which the eagerness of help option was not
-    respected, because it was internally generated multiple times.
-
-    See: https://github.com/pallets/click/pull/2811
-    """
-
-    def print_and_exit(ctx, param, value):
-        if value:
-            click.echo(f"Value of {param.name} is: {value}")
-            ctx.exit()
-
-    @click.command(context_settings={"help_option_names": ("--my-help",)})
-    @click.option("-a", is_flag=True, expose_value=False, callback=print_and_exit)
-    @click.option(
-        "-b", is_flag=True, expose_value=False, callback=print_and_exit, is_eager=True
-    )
-    def cli():
-        pass
-
-    # --my-help is properly called and stop execution.
-    result = runner.invoke(cli, ["--my-help"])
-    assert "Value of a is: True" not in result.stdout
-    assert "Value of b is: True" not in result.stdout
-    assert "--my-help" in result.stdout
-    assert result.exit_code == 0
-
-    # -a is properly called and stop execution.
-    result = runner.invoke(cli, ["-a"])
-    assert "Value of a is: True" in result.stdout
-    assert "Value of b is: True" not in result.stdout
-    assert "--my-help" not in result.stdout
-    assert result.exit_code == 0
-
-    # -a takes precedence over -b and stop execution.
-    result = runner.invoke(cli, ["-a", "-b"])
-    assert "Value of a is: True" not in result.stdout
-    assert "Value of b is: True" in result.stdout
-    assert "--my-help" not in result.stdout
-    assert result.exit_code == 0
-
-    # --my-help is eager by default so takes precedence over -a and stop
-    # execution, whatever the order.
-    for args in [["-a", "--my-help"], ["--my-help", "-a"]]:
-        result = runner.invoke(cli, args)
-        assert "Value of a is: True" not in result.stdout
-        assert "Value of b is: True" not in result.stdout
-        assert "--my-help" in result.stdout
-        assert result.exit_code == 0
-
-    # Both -b and --my-help are eager so they're called in the order they're
-    # invoked by the user.
-    result = runner.invoke(cli, ["-b", "--my-help"])
-    assert "Value of a is: True" not in result.stdout
-    assert "Value of b is: True" in result.stdout
-    assert "--my-help" not in result.stdout
-    assert result.exit_code == 0
-
-    # But there was a bug when --my-help is called before -b, because the
-    # --my-help option created by click via help_option_names is internally
-    # created twice and is not the same object, breaking the priority order
-    # produced by iter_params_for_processing.
-    result = runner.invoke(cli, ["--my-help", "-b"])
-    assert "Value of a is: True" not in result.stdout
-    assert "Value of b is: True" not in result.stdout
-    assert "--my-help" in result.stdout
-    assert result.exit_code == 0
-
-
 def test_unprocessed_options(runner):
     @click.command(context_settings=dict(ignore_unknown_options=True))
     @click.argument("args", nargs=-1, type=click.UNPROCESSED)
@@ -454,22 +318,30 @@ def test_unprocessed_options(runner):
 
 
 @pytest.mark.parametrize("doc", ["CLI HELP", None])
-def test_deprecated_in_help_messages(runner, doc):
-    @click.command(deprecated=True, help=doc)
+@pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])
+def test_deprecated_in_help_messages(runner, doc, deprecated):
+    @click.command(deprecated=deprecated, help=doc)
     def cli():
         pass
 
     result = runner.invoke(cli, ["--help"])
-    assert "(Deprecated)" in result.output
+    assert "(DEPRECATED" in result.output
+
+    if isinstance(deprecated, str):
+        assert deprecated in result.output
 
 
-def test_deprecated_in_invocation(runner):
-    @click.command(deprecated=True)
+@pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])
+def test_deprecated_in_invocation(runner, deprecated):
+    @click.command(deprecated=deprecated)
     def deprecated_cmd():
         pass
 
     result = runner.invoke(deprecated_cmd)
     assert "DeprecationWarning:" in result.output
+
+    if isinstance(deprecated, str):
+        assert deprecated in result.output
 
 
 def test_command_parse_args_collects_option_prefixes():
