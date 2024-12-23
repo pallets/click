@@ -72,11 +72,13 @@ usage patterns.
    virtualenv
    setuptools
    parameters
-   options
    arguments
+   options
    commands
+   documentation
    prompts
    documentation
+   handling-files
    complex
    advanced
    testing
