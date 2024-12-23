@@ -77,8 +77,6 @@ usage patterns.
    commands
    documentation
    prompts
-   documentation
-   handling-files
    complex
    advanced
    testing
