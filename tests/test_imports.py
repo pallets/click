@@ -49,6 +49,7 @@ ALLOWED_IMPORTS = {
     "typing",
     "types",
     "gettext",
+    "shutil",
 }
 
 if WIN:

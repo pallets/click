@@ -210,7 +210,7 @@ EchoViaPagerTest = namedtuple(
 )
 
 
-@pytest.mark.skipif(WIN, reason="Different behavior on windows.")
+@pytest.mark.parametrize("cat", ["cat", "cat ", "cat "])
 @pytest.mark.parametrize(
     "test",
     [

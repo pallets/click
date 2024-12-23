@@ -10,7 +10,7 @@ mypy-extensions==1.0.0
     # via mypy
 nodeenv==1.9.1
     # via pyright
-pyright==1.1.386
+pyright==1.1.390
     # via -r typing.in
 typing-extensions==4.12.2
     # via
