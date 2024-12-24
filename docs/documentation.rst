@@ -37,7 +37,7 @@ And from the command line:
 Command Short Help
 ------------------
 
-For sub commands, a short help snippet is generated. By default, it's the first sentence of the docstring. If it is too long, then it will show as much as it can on one line and end with ``...``.  The short help snippet can also be overridden with the kwarg ``short_help``:
+For subcommands, a short help snippet is generated. By default, it's the first sentence of the docstring. If too long, then it will ellipsize what cannot be fit on a single line with ``...``.  The short help snippet can also be overridden with ``short_help``:
 
 .. click:example::
 
@@ -62,7 +62,9 @@ The help epilog is printed at the end of the help and is useful for showing exam
 
 .. click:example::
 
-    @click.command(epilog='Check out our docs at https://click.palletsprojects.com/ for more details')
+    @click.command(
+    	epilog='See https://example.com for more details',
+  	)
     def init():
         """Initializes the repository."""
 
@@ -76,7 +78,7 @@ Documenting Arguments
 ----------------------
 
 :class:`click.argument` does not take a ``help`` parameter. This follows the Unix Command Line Tools convention of using arguments only for necessary things and documenting them in the command help text
-by name. For Python that means including them in docstrings.
+by name. This should then be done via the docstring.
 
 A brief example:
 
@@ -197,7 +199,7 @@ And from the command line:
     invoke(cli, args=['--help'])
 
 
-Placeholder Variable
+Placeholder / Meta Variable
 -----------------------
 
 The default placeholder variable (`meta variable <https://en.wikipedia.org/wiki/Metasyntactic_variable#IETF_Requests_for_Comments>`_) in the help pages is the parameter name in uppercase with underscores. This can be changed for Commands and Parameters with the ``options_metavar`` and  ``metavar`` kwargs.
@@ -209,8 +211,8 @@ The default placeholder variable (`meta variable <https://en.wikipedia.org/wiki/
     @click.option('--count', default=1, help='number of greetings',
                   metavar='<int>')
     @click.argument('name', metavar='<name>')
-    def hello(count, name):
-        """This script prints hello to things."""
+    def hello(name: str, count: int) -> None:
+        """This script prints 'hello <name>' a total of <count> times."""
         for x in range(count):
             click.echo(f"Hello {name}!")
 
@@ -222,7 +224,7 @@ Example:
 
 Help Parameter Customization
 ----------------------------
-The help parameter(s) is automatically added by Click for any command. The default is ``--help`` but can be override by the context setting :attr:`~Context.help_option_names`. Click also performs automatic conflict resolution on the default help parameter so if a command itself implements a parameter named ``help`` then the default help will no be run.
+Help parameters are automatically added by Click for any command. The default is ``--help`` but can be override by the context setting :attr:`~Context.help_option_names`. Click also performs automatic conflict resolution on the default help parameter so if a command itself implements a parameter named ``help`` then the default help will not be run.
 
 This example changes the default parameters to ``-h`` and ``--help``
 instead of just ``--help``:
