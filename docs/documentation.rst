@@ -6,7 +6,7 @@ Help Pages
 Click makes it very easy to document your command line tools. For most things Click automatically generates help pages for you. By design the text is customizable, but the layout is not.
 
 Help Texts
-----------
+--------------
 
 Commands and options accept help arguments. For commands, the docstring of the function is automatically used if provided.
 
@@ -15,17 +15,15 @@ Simple example:
 .. click:example::
 
     @click.command()
+    @click.argument('name')
     @click.option('--count', default=1, help='number of greetings')
-    @click.option('--name', help='a name')
-    def hello(count, name=False):
+    def hello(name: str, count: int):
         """This script prints hello and a name one or more times."""
         for x in range(count):
             if name:
                 click.echo(f"Hello {name}!")
             else:
                 click.echo("Hello!")
-
-And from the command line:
 
 .. click:run::
 
@@ -49,7 +47,6 @@ For sub commands, a short help snippet is generated. By default, it's the first 
     def init():
         """Initializes the repository."""
 
-And from the command line:
 
 .. click:run::
 
@@ -66,7 +63,6 @@ The help epilog is printed at the end of the help and is useful for showing exam
     def init():
         """Initializes the repository."""
 
-And from the command line:
 
 .. click:run::
 
@@ -88,7 +84,6 @@ A brief example:
         """Print FILENAME."""
         click.echo(filename)
 
-And from the command line:
 
 .. click:run::
 
@@ -106,8 +101,6 @@ Or more explicitly:
         FILENAME is the name of the file to check.
         """
         click.echo(filename)
-
-And from the command line:
 
 .. click:run::
 
@@ -131,8 +124,6 @@ Click's default wrapping ignores single new lines and rewraps the text based on 
         a paragraph
         that is compacted.
         """
-
-And from the command line:
 
 .. click:run::
 
@@ -159,7 +150,6 @@ Example:
         that will be rewrapped again.
         """
 
-And from the command line:
 
 .. click:run::
 
@@ -189,8 +179,6 @@ Example:
 
         Words to not be included.
         """
-
-And from the command line:
 
 .. click:run::
 
@@ -235,7 +223,6 @@ instead of just ``--help``:
     def cli():
         pass
 
-And from the command line:
 
 .. click:run::
 
