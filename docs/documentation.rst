@@ -1,32 +1,29 @@
-Documenting Scripts
+Help Pages
 ===================
 
 .. currentmodule:: click
 
-Click makes it very easy to document your command line tools.  First of
-all, it automatically generates help pages for you.  While these are
-currently not customizable in terms of their layout, all of the text
-can be changed.
+Click makes it very easy to document your command line tools. For most things Click automatically generates help pages for you. By design the text is customizable, but the layout is not.
 
 Help Texts
-----------
+--------------
 
-Commands and options accept help arguments.  In the case of commands, the
-docstring of the function is automatically used if provided.
+Commands and options accept help arguments. For commands, the docstring of the function is automatically used if provided.
 
 Simple example:
 
 .. click:example::
 
     @click.command()
-    @click.option('--count', default=1, help='number of greetings')
     @click.argument('name')
-    def hello(count, name):
-        """This script prints hello NAME COUNT times."""
+    @click.option('--count', default=1, help='number of greetings')
+    def hello(name: str, count: int):
+        """This script prints hello and a name one or more times."""
         for x in range(count):
-            click.echo(f"Hello {name}!")
-
-And what it looks like:
+            if name:
+                click.echo(f"Hello {name}!")
+            else:
+                click.echo("Hello!")
 
 .. click:run::
 
@@ -35,15 +32,51 @@ And what it looks like:
 
 .. _documenting-arguments:
 
+Command Short Help
+------------------
+
+For subcommands, a short help snippet is generated. By default, it's the first sentence of the docstring. If too long, then it will ellipsize what cannot be fit on a single line with ``...``.  The short help snippet can also be overridden with ``short_help``:
+
+.. click:example::
+
+    @click.group()
+    def cli():
+        """A simple command line tool."""
+
+    @cli.command('init', short_help='init the repo')
+    def init():
+        """Initializes the repository."""
+
+
+.. click:run::
+
+    invoke(cli, args=['--help'])
+
+Command Epilog Help
+-------------------
+
+The help epilog is printed at the end of the help and is useful for showing example command usages or referencing additional help resources.
+
+.. click:example::
+
+    @click.command(
+    	epilog='See https://example.com for more details',
+  	)
+    def init():
+        """Initializes the repository."""
+
+
+.. click:run::
+
+    invoke(init, args=['--help'])
+
 Documenting Arguments
 ----------------------
 
-:func:`click.argument` does not take a ``help`` parameter. This is to
-follow the general convention of Unix tools of using arguments for only
-the most necessary things, and to document them in the command help text
-by referring to them by name.
+:class:`click.argument` does not take a ``help`` parameter. This follows the Unix Command Line Tools convention of using arguments only for necessary things and documenting them in the command help text
+by name. This should then be done via the docstring.
 
-You might prefer to reference the argument in the description:
+A brief example:
 
 .. click:example::
 
@@ -53,13 +86,12 @@ You might prefer to reference the argument in the description:
         """Print FILENAME."""
         click.echo(filename)
 
-And what it looks like:
 
 .. click:run::
 
     invoke(touch, args=['--help'])
 
-Or you might prefer to explicitly provide a description of the argument:
+Or more explicitly:
 
 .. click:example::
 
@@ -72,26 +104,36 @@ Or you might prefer to explicitly provide a description of the argument:
         """
         click.echo(filename)
 
-And what it looks like:
-
 .. click:run::
 
     invoke(touch, args=['--help'])
 
-For more examples, see the examples in :doc:`/arguments`.
+Click's Wrapping Behavior
+----------------------------
+Click's default wrapping ignores single new lines and rewraps the text based on the width of the terminal, to a maximum of 80 characters. In the example notice how the second grouping of three lines is rewrapped into a single paragraph.
 
+.. click:example::
 
-Preventing Rewrapping
----------------------
+    @click.command()
+    def cli():
+        """
+        This is a very long paragraph and as you
+        can see wrapped very early in the source text
+        but will be rewrapped to the terminal width in
+        the final output.
 
-The default behavior of Click is to rewrap text based on the width of the
-terminal, to a maximum 80 characters. In some circumstances, this can become
-a problem. The main issue is when showing code examples, where newlines are
-significant.
+        This is
+        a paragraph
+        that is compacted.
+        """
 
-Rewrapping can be disabled on a per-paragraph basis by adding a line with
-solely the ``\b`` escape marker in it.  This line will be removed from the
-help text and rewrapping will be disabled.
+.. click:run::
+
+    invoke(cli, args=['--help'])
+
+Escaping Click's Wrapping
+---------------------------
+Sometimes Click's wrapping can be a problem, such as when showing code examples where newlines are significant. This behavior can be escaped on a per-paragraph basis by adding a line with only ``\b`` . The ``\b`` is removed from the rendered help text.
 
 Example:
 
@@ -100,11 +142,6 @@ Example:
     @click.command()
     def cli():
         """First paragraph.
-
-        This is a very long second paragraph and as you
-        can see wrapped very early in the source text
-        but will be rewrapped to the terminal width in
-        the final output.
 
         \b
         This is
@@ -115,71 +152,55 @@ Example:
         that will be rewrapped again.
         """
 
-And what it looks like:
 
 .. click:run::
 
     invoke(cli, args=['--help'])
 
-To change the maximum width, pass ``max_content_width`` when calling the command.
+To change the rendering maximum width, pass ``max_content_width`` when calling the command.
 
 .. code-block:: python
 
     cli(max_content_width=120)
-
 
 .. _doc-meta-variables:
 
 Truncating Help Texts
 ---------------------
 
-Click gets command help text from function docstrings.  However if you
-already use docstrings to document function arguments you may not want
-to see :param: and :return: lines in your help text.
-
-You can use the ``\f`` escape marker to have Click truncate the help text
-after the marker.
+Click gets :class:`Command` help text from the docstring. If you do not want to include part of the docstring, add the ``\f`` escape marker to have Click truncate the help text after the marker.
 
 Example:
 
 .. click:example::
 
     @click.command()
-    @click.pass_context
-    def cli(ctx):
+    def cli():
         """First paragraph.
-
-        This is a very long second
-        paragraph and not correctly
-        wrapped but it will be rewrapped.
         \f
 
-        :param click.core.Context ctx: Click context.
+        Words to not be included.
         """
-
-And what it looks like:
 
 .. click:run::
 
     invoke(cli, args=['--help'])
 
 
-Meta Variables
---------------
+Placeholder / Meta Variable
+-----------------------------
 
-Options and parameters accept a ``metavar`` argument that can change the
-meta variable in the help page.  The default version is the parameter name
-in uppercase with underscores, but can be annotated differently if
-desired.  This can be customized at all levels:
+The default placeholder variable (`meta variable <https://en.wikipedia.org/wiki/Metasyntactic_variable#IETF_Requests_for_Comments>`_) in the help pages is the parameter name in uppercase with underscores. This can be changed for Commands and Parameters with the ``options_metavar`` and  ``metavar`` kwargs.
 
 .. click:example::
 
-    @click.command(options_metavar='<options>')
+    # This controls entry on the usage line.
+    @click.command(options_metavar='[[options]]')
     @click.option('--count', default=1, help='number of greetings',
                   metavar='<int>')
     @click.argument('name', metavar='<name>')
-    def hello(count, name):
-        """This script prints hello <name> <int> times."""
+    def hello(name: str, count: int) -> None:
+        """This script prints 'hello <name>' a total of <count> times."""
         for x in range(count):
             click.echo(f"Hello {name}!")
 
@@ -189,65 +210,9 @@ Example:
 
     invoke(hello, args=['--help'])
 
-
-Command Short Help
-------------------
-
-For commands, a short help snippet is generated.  By default, it's the first
-sentence of the help message of the command, unless it's too long.  This can
-also be overridden:
-
-.. click:example::
-
-    @click.group()
-    def cli():
-        """A simple command line tool."""
-
-    @cli.command('init', short_help='init the repo')
-    def init():
-        """Initializes the repository."""
-
-    @cli.command('delete', short_help='delete the repo')
-    def delete():
-        """Deletes the repository."""
-
-And what it looks like:
-
-.. click:run::
-
-    invoke(cli, prog_name='repo.py')
-
-Command Epilog Help
--------------------
-
-The help epilog is like the help string but it's printed at the end of the help
-page after everything else. Useful for showing example command usages or
-referencing additional help resources.
-
-.. click:example::
-
-    @click.command(epilog='Check out our docs at https://click.palletsprojects.com/ for more details')
-    def init():
-        """Initializes the repository."""
-
-And what it looks like:
-
-.. click:run::
-
-    invoke(init, prog_name='repo.py', args=['--help'])
-
 Help Parameter Customization
 ----------------------------
-
-.. versionadded:: 2.0
-
-The help parameter is implemented in Click in a very special manner.
-Unlike regular parameters it's automatically added by Click for any
-command and it performs automatic conflict resolution.  By default it's
-called ``--help``, but this can be changed.  If a command itself implements
-a parameter with the same name, the default help parameter stops accepting
-it.  There is a context setting that can be used to override the names of
-the help parameters called :attr:`~Context.help_option_names`.
+Help parameters are automatically added by Click for any command. The default is ``--help`` but can be override by the context setting :attr:`~Context.help_option_names`. Click also performs automatic conflict resolution on the default help parameter so if a command itself implements a parameter named ``help`` then the default help will not be run.
 
 This example changes the default parameters to ``-h`` and ``--help``
 instead of just ``--help``:
@@ -260,7 +225,6 @@ instead of just ``--help``:
     def cli():
         pass
 
-And what it looks like:
 
 .. click:run::
 

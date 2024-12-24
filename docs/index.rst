@@ -72,11 +72,11 @@ usage patterns.
    virtualenv
    setuptools
    parameters
-   options
    arguments
+   options
    commands
-   prompts
    documentation
+   prompts
    complex
    advanced
    testing
