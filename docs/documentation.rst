@@ -188,7 +188,7 @@ Example:
 
 
 Placeholder / Meta Variable
------------------------
+-----------------------------
 
 The default placeholder variable (`meta variable <https://en.wikipedia.org/wiki/Metasyntactic_variable#IETF_Requests_for_Comments>`_) in the help pages is the parameter name in uppercase with underscores. This can be changed for Commands and Parameters with the ``options_metavar`` and  ``metavar`` kwargs.
 
