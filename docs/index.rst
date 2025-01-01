@@ -72,7 +72,9 @@ usage patterns.
    virtualenv
    setuptools
    parameters
+   parameter-types
    options
+   option-decorators
    arguments
    commands
    prompts
