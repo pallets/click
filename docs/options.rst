@@ -10,7 +10,7 @@ decorator.  Options in Click are distinct from :ref:`positional arguments <argum
 
 Useful and often used kwargs are:
 
-*   ``default``: Passes a defaults.
+*   ``default``: Passes a default.
 *   ``help``: Sets help message.
 *   ``nargs``: Sets the number of arguments.
 *   ``required``: Makes option required.
@@ -20,9 +20,9 @@ Useful and often used kwargs are:
    :depth: 2
    :local:
 
-Options Decorator
+Option Decorator
 -----------------
-Click expects you to pass at least two positional arguments to the options decorator. They are option name and function argument name.
+Click expects you to pass at least two positional arguments to the option decorator. They are option name and function argument name.
 
 .. click:example::
 
@@ -35,7 +35,7 @@ Click expects you to pass at least two positional arguments to the options decor
 
     invoke(echo, args=['--help'])
 
-However, if you don't pass in the function argument name, then Click will try to infer it. A simple way to name your option is by taking the function argument, adding two dashes to the front and converting underscores to dashes. In this case, Click will infer the name correctly so you can just leave it off.
+However, if you don't pass in the function argument name, then Click will try to infer it. A simple way to name your option is by taking the function argument, adding two dashes to the front and converting underscores to dashes. In this case, Click will infer the function argument name correctly so you can add only the option name.
 
 .. click:example::
 
@@ -48,7 +48,7 @@ However, if you don't pass in the function argument name, then Click will try to
 
     invoke(echo, args=['--string-to-echo', 'Hi!'])
 
-More formally, Click with try to infer the function argument name by:
+More formally, Click will try to infer the function argument name by:
 
 1.  If a positional argument name does not have a prefix, it is chosen.
 2.  If a positional argument name starts with with two dashes, the first one given is chosen.
@@ -77,9 +77,9 @@ The chosen positional argument is converted to lower case, up to two dashes are 
     * - ``"---f"``
       - _f
 
-Basic Options
+Basic Example
 ---------------
-A simple :class:`click.Option` takes one argument. This will assume the argument is not required. If the decorated function takes an positional argument then None is passed it. This will also assume the type ``str``.
+A simple :class:`click.Option` takes one argument. This will assume the argument is not required. If the decorated function takes an positional argument then None is passed it. This will also assume the type is ``str``.
 
 .. click:example::
 
@@ -118,7 +118,7 @@ Instead of setting the ``type``, you may set a default and Click will try to inf
 Multi Value Options
 -------------------
 
-To make an option take multiple values, pass the kwarg ``nargs``. Note only a fixed number of arguments is supported. The values are passed to the underlying function as a tuple.
+To make an option take multiple values, pass in ``nargs``. Note only a fixed number of arguments is supported. The values are passed to the underlying function as a tuple.
 
 .. click:example::
 
@@ -187,11 +187,11 @@ The multiple options format allows you to call the underlying function multiple 
 
 .. click:run::
 
-    invoke(commit, args=['-m', 'foo', '-m', 'bar'])
+    invoke(commit, args=['-m', 'foo', '-m', 'bar', '-m', 'here'])
 
 Counting
 --------
-To count the occurrence of an option use ``count``. If the option is not passed in, then the count is 0. Counting is commonly used for verbosity.
+To count the occurrence of an option pass in ``count=True``. If the option is not passed in, then the count is 0. Counting is commonly used for verbosity.
 
 .. click:example::
 
@@ -208,7 +208,7 @@ To count the occurrence of an option use ``count``. If the option is not passed 
 Boolean
 ------------------------
 
-Boolean options (boolean flags) take the value true or false. The simplest case sets the default value to ``False`` if the flag is not passed, and ``True`` if it is.
+Boolean options (boolean flags) take the value True or False. The simplest case sets the default value to ``False`` if the flag is not passed, and ``True`` if it is.
 
 .. click:example::
 
@@ -229,7 +229,7 @@ Boolean options (boolean flags) take the value true or false. The simplest case 
     invoke(info, args=['--shout'])
 
 
-To implement this more explicitly, pass on-option ``/`` off-option. Click will automatically set ``is_flag=True``. Click always wants you to provide an enable
+To implement this more explicitly, pass in on-option ``/`` off-option. Click will automatically set ``is_flag=True``. Click always wants you to provide an enable
 and disable flag so that you can change the default later.
 
 .. click:example::
@@ -250,7 +250,7 @@ and disable flag so that you can change the default later.
     invoke(info, args=['--shout'])
     invoke(info, args=['--no-shout'])
 
-If a forward slash(``/``) is contained in your option already, you can split the parameters using ``;``. In Windows ``/`` is commonly used as the prefix character.
+If a forward slash(``/``) is contained in your option name already, you can split the parameters using ``;``. In Windows ``/`` is commonly used as the prefix character.
 
 .. click:example::
 
@@ -268,7 +268,7 @@ If you want to define an alias for the second option only, then you will need to
     import sys
 
     @click.command()
-    @click.option('--shout/--no-shout', ' /-S', default=False)
+    @click.option('--shout/--no-shout', ' /-N', default=False)
     def info(shout):
         rv = sys.platform
         if shout:
