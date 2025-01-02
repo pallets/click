@@ -545,10 +545,18 @@ class Editor:
                 _("{editor}: Editing failed: {e}").format(editor=editor, e=e)
             ) from e
 
-    def edit(self, text: t.AnyStr | None) -> t.AnyStr | None:
+    @t.overload
+    def edit(self, text: bytes | bytearray) -> bytes | None: ...
+
+    # We cannot know whether or not the type expected is str or bytes when None
+    # is passed, so str is returned as that was what was done before.
+    @t.overload
+    def edit(self, text: str | None) -> str | None: ...
+
+    def edit(self, text: str | bytes | bytearray | None) -> str | bytes | None:
         import tempfile
 
-        if not text:
+        if text is None:
             data = b""
         elif isinstance(text, (bytes, bytearray)):
             data = text
@@ -588,7 +596,7 @@ class Editor:
             if isinstance(text, (bytes, bytearray)):
                 return rv
 
-            return rv.decode("utf-8-sig").replace("\r\n", "\n")  # type: ignore
+            return rv.decode("utf-8-sig").replace("\r\n", "\n")
         finally:
             os.unlink(name)
 
@@ -666,7 +674,7 @@ def _translate_ch_to_exc(ch: str) -> None:
     return None
 
 
-if WIN:
+if sys.platform == "win32":
     import msvcrt
 
     @contextlib.contextmanager
@@ -703,12 +711,11 @@ if WIN:
         #
         # Anyway, Click doesn't claim to do this Right(tm), and using `getwch`
         # is doing the right thing in more situations than with `getch`.
-        func: t.Callable[[], str]
 
         if echo:
-            func = msvcrt.getwche  # type: ignore
+            func = t.cast(t.Callable[[], str], msvcrt.getwche)
         else:
-            func = msvcrt.getwch  # type: ignore
+            func = t.cast(t.Callable[[], str], msvcrt.getwch)
 
         rv = func()
 

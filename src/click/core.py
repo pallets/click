@@ -2597,11 +2597,10 @@ class Option(Parameter):
             else:
                 self.default = False
 
-        if flag_value is None:
-            flag_value = not self.default
-
         self.type: types.ParamType
         if is_flag and type is None:
+            if flag_value is None:
+                flag_value = not self.default
             # Re-guess the type from the flag value instead of the
             # default.
             self.type = types.convert_type(None, flag_value)

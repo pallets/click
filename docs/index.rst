@@ -77,8 +77,8 @@ usage patterns.
    option-decorators
    arguments
    commands
-   prompts
    documentation
+   prompts
    complex
    advanced
    testing
