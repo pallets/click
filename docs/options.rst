@@ -1,67 +1,108 @@
 .. _options:
 
 Options
-=======
+=========
 
 .. currentmodule:: click
 
-Adding options to commands can be accomplished by the :func:`option`
-decorator.  Since options can come in various different versions, there
-are a ton of parameters to configure their behavior. Options in click are
-distinct from :ref:`positional arguments <arguments>`.
+Adding options to commands can be accomplished with the :func:`option`
+decorator.  Options in Click are distinct from :ref:`positional arguments <arguments>`.
 
-Name Your Options
+Useful and often used kwargs are:
+
+*   ``default``: Passes a default.
+*   ``help``: Sets help message.
+*   ``nargs``: Sets the number of arguments.
+*   ``required``: Makes option required.
+*   ``type``: Sets :ref:`parameter-types`
+
+.. contents::
+   :depth: 2
+   :local:
+
+Option Decorator
 -----------------
+Click expects you to pass at least two positional arguments to the option decorator. They are option name and function argument name.
 
-Options have a name that will be used as the Python argument name when
-calling the decorated function. This can be inferred from the option
-names or given explicitly. Names are given as position arguments to the
-decorator.
-
-A name is chosen in the following order
-
-1.  If a name is not prefixed, it is used as the Python argument name
-    and not treated as an option name on the command line.
-2.  If there is at least one name prefixed with two dashes, the first
-    one given is used as the name.
-3.  The first name prefixed with one dash is used otherwise.
-
-To get the Python argument name, the chosen name is converted to lower
-case, up to two dashes are removed as the prefix, and other dashes are
-converted to underscores.
-
-.. code-block:: python
+.. click:example::
 
     @click.command()
-    @click.option('-s', '--string-to-echo')
+    @click.option('--string-to-echo', 'string_to_echo')
     def echo(string_to_echo):
         click.echo(string_to_echo)
 
-.. code-block:: python
+.. click:run::
+
+    invoke(echo, args=['--help'])
+
+However, if you don't pass in the function argument name, then Click will try to infer it. A simple way to name your option is by taking the function argument, adding two dashes to the front and converting underscores to dashes. In this case, Click will infer the function argument name correctly so you can add only the option name.
+
+.. click:example::
 
     @click.command()
-    @click.option('-s', '--string-to-echo', 'string')
-    def echo(string):
-        click.echo(string)
+    @click.option('--string-to-echo')
+    def echo(string_to_echo):
+        click.echo(string_to_echo)
 
--   ``"-f", "--foo-bar"``, the name is ``foo_bar``
--   ``"-x"``, the name is ``x``
--   ``"-f", "--filename", "dest"``, the name is  ``dest``
--   ``"--CamelCase"``, the name is ``camelcase``
--   ``"-f", "-fb"``, the name is ``f``
--   ``"--f", "--foo-bar"``, the name is ``f``
--   ``"---f"``, the name is ``_f``
+.. click:run::
 
-Basic Value Options
--------------------
+    invoke(echo, args=['--string-to-echo', 'Hi!'])
 
-The most basic option is a value option.  These options accept one
-argument which is a value.  If no type is provided, the type of the default
-value is used.  If no default value is provided, the type is assumed to be
-:data:`STRING`.  Unless a name is explicitly specified, the name of the
-parameter is the first long option defined; otherwise the first short one is
-used. By default, options are not required, however to make an option required,
-simply pass in `required=True` as an argument to the decorator.
+More formally, Click will try to infer the function argument name by:
+
+1.  If a positional argument name does not have a prefix, it is chosen.
+2.  If a positional argument name starts with with two dashes, the first one given is chosen.
+3.  The first positional argument prefixed with one dash is chosen otherwise.
+
+The chosen positional argument is converted to lower case, up to two dashes are removed from the beginning, and other dashes are converted to underscores to get the function argument name.
+
+.. list-table:: Examples
+    :widths: 15 10
+    :header-rows: 1
+
+    * - Decorator Arguments
+      - Function Name
+    * - ``"-f", "--foo-bar"``
+      - foo_bar
+    * - ``"-x"``
+      - x
+    * - ``"-f", "--filename", "dest"``
+      - dest
+    * - ``"--CamelCase"``
+      - camelcase
+    * - ``"-f", "-fb"``
+      - f
+    * - ``"--f", "--foo-bar"``
+      - f
+    * - ``"---f"``
+      - _f
+
+Basic Example
+---------------
+A simple :class:`click.Option` takes one argument. This will assume the argument is not required. If the decorated function takes an positional argument then None is passed it. This will also assume the type is ``str``.
+
+.. click:example::
+
+    @click.command()
+    @click.option('--text')
+    def print_this(text):
+        click.echo(text)
+
+
+.. click:run::
+
+    invoke(print_this, args=['--text=this'])
+
+    invoke(print_this, args=[])
+
+.. click:run::
+
+    invoke(print_this, args=['--help'])
+
+
+Setting a Default
+---------------------------
+Instead of setting the ``type``, you may set a default and Click will try to infer the type.
 
 .. click:example::
 
@@ -70,72 +111,14 @@ simply pass in `required=True` as an argument to the decorator.
     def dots(n):
         click.echo('.' * n)
 
-.. click:example::
-
-    # How to make an option required
-    @click.command()
-    @click.option('--n', required=True, type=int)
-    def dots(n):
-        click.echo('.' * n)
-
-.. click:example::
-
-    # How to use a Python reserved word such as `from` as a parameter
-    @click.command()
-    @click.option('--from', '-f', 'from_')
-    @click.option('--to', '-t')
-    def reserved_param_name(from_, to):
-        click.echo(f"from {from_} to {to}")
-
-And on the command line:
-
 .. click:run::
 
-   invoke(dots, args=['--n=2'])
-
-In this case the option is of type :data:`INT` because the default value
-is an integer.
-
-To show the default values when showing command help, use ``show_default=True``
-
-.. click:example::
-
-    @click.command()
-    @click.option('--n', default=1, show_default=True)
-    def dots(n):
-        click.echo('.' * n)
-
-.. click:run::
-
-   invoke(dots, args=['--help'])
-
-For single option boolean flags, the default remains hidden if the default
-value is False.
-
-.. click:example::
-
-    @click.command()
-    @click.option('--n', default=1, show_default=True)
-    @click.option("--gr", is_flag=True, show_default=True, default=False, help="Greet the world.")
-    @click.option("--br", is_flag=True, show_default=True, default=True, help="Add a thematic break")
-    def dots(n, gr, br):
-        if gr:
-            click.echo('Hello world!')
-        click.echo('.' * n)
-        if br:
-            click.echo('-' * n)
-
-.. click:run::
-
-   invoke(dots, args=['--help'])
-
+    invoke(dots, args=['--help'])
 
 Multi Value Options
 -------------------
 
-Sometimes, you have options that take more than one argument.  For options,
-only a fixed number of arguments is supported.  This can be configured by
-the ``nargs`` parameter.  The values are then stored as a tuple.
+To make an option take multiple values, pass in ``nargs``. Note only a fixed number of arguments is supported. The values are passed to the underlying function as a tuple.
 
 .. click:example::
 
@@ -145,15 +128,14 @@ the ``nargs`` parameter.  The values are then stored as a tuple.
         a, b = pos
         click.echo(f"{a} / {b}")
 
-And on the command line:
-
 .. click:run::
 
     invoke(findme, args=['--pos', '2.0', '3.0'])
 
+
 .. _tuple-type:
 
-Tuples as Multi Value Options
+Multi Value Options as Tuples
 -----------------------------
 
 .. versionadded:: 4.0
@@ -192,15 +174,9 @@ used.  The above example is thus equivalent to this:
 .. _multiple-options:
 
 Multiple Options
-----------------
+-----------------
 
-Similarly to ``nargs``, there is also the case of wanting to support a
-parameter being provided multiple times and have all the values recorded --
-not just the last one.  For instance, ``git commit -m foo -m bar`` would
-record two lines for the commit message: ``foo`` and ``bar``. This can be
-accomplished with the ``multiple`` flag:
-
-Example:
+The multiple options format allows you to call the underlying function multiple times with one command line entry. If set, the default must be a list or tuple. Setting a string as a default will be interpreted as list of characters.
 
 .. click:example::
 
@@ -209,27 +185,13 @@ Example:
     def commit(message):
         click.echo('\n'.join(message))
 
-And on the command line:
-
 .. click:run::
 
-    invoke(commit, args=['-m', 'foo', '-m', 'bar'])
-
-When passing a ``default`` with ``multiple=True``, the default value
-must be a list or tuple, otherwise it will be interpreted as a list of
-single characters.
-
-.. code-block:: python
-
-    @click.option("--format", multiple=True, default=["json"])
-
+    invoke(commit, args=['-m', 'foo', '-m', 'bar', '-m', 'here'])
 
 Counting
 --------
-
-In some very rare circumstances, it is interesting to use the repetition
-of options to count an integer up.  This can be used for verbosity flags,
-for instance:
+To count the occurrence of an option pass in ``count=True``. If the option is not passed in, then the count is 0. Counting is commonly used for verbosity.
 
 .. click:example::
 
@@ -238,46 +200,15 @@ for instance:
     def log(verbose):
         click.echo(f"Verbosity: {verbose}")
 
-And on the command line:
-
 .. click:run::
 
+    invoke(log, args=[])
     invoke(log, args=['-vvv'])
 
-Boolean Flags
--------------
+Boolean
+------------------------
 
-Boolean flags are options that can be enabled or disabled.  This can be
-accomplished by defining two flags in one go separated by a slash (``/``)
-for enabling or disabling the option.  (If a slash is in an option string,
-Click automatically knows that it's a boolean flag and will pass
-``is_flag=True`` implicitly.)  Click always wants you to provide an enable
-and disable flag so that you can change the default later.
-
-Example:
-
-.. click:example::
-
-    import sys
-
-    @click.command()
-    @click.option('--shout/--no-shout', default=False)
-    def info(shout):
-        rv = sys.platform
-        if shout:
-            rv = rv.upper() + '!!!!111'
-        click.echo(rv)
-
-And on the command line:
-
-.. click:run::
-
-    invoke(info, args=['--shout'])
-    invoke(info, args=['--no-shout'])
-    invoke(info)
-
-If you really don't want an off-switch, you can just define one and
-manually inform Click that something is a flag:
+Boolean options (boolean flags) take the value True or False. The simplest case sets the default value to ``False`` if the flag is not passed, and ``True`` if it is.
 
 .. click:example::
 
@@ -291,16 +222,35 @@ manually inform Click that something is a flag:
             rv = rv.upper() + '!!!!111'
         click.echo(rv)
 
-And on the command line:
 
 .. click:run::
 
-    invoke(info, args=['--shout'])
     invoke(info)
+    invoke(info, args=['--shout'])
 
-Note that if a slash is contained in your option already (for instance, if
-you use Windows-style parameters where ``/`` is the prefix character), you
-can alternatively split the parameters through ``;`` instead:
+
+To implement this more explicitly, pass in on-option ``/`` off-option. Click will automatically set ``is_flag=True``. Click always wants you to provide an enable
+and disable flag so that you can change the default later.
+
+.. click:example::
+
+    import sys
+
+    @click.command()
+    @click.option('--shout/--no-shout', default=False)
+    def info(shout):
+        rv = sys.platform
+        if shout:
+            rv = rv.upper() + '!!!!111'
+        click.echo(rv)
+
+.. click:run::
+
+    invoke(info)
+    invoke(info, args=['--shout'])
+    invoke(info, args=['--no-shout'])
+
+If a forward slash(``/``) is contained in your option name already, you can split the parameters using ``;``. In Windows ``/`` is commonly used as the prefix character.
 
 .. click:example::
 
@@ -309,22 +259,16 @@ can alternatively split the parameters through ``;`` instead:
     def log(debug):
         click.echo(f"debug={debug}")
 
-    if __name__ == '__main__':
-        log()
-
 .. versionchanged:: 6.0
 
-If you want to define an alias for the second option only, then you will
-need to use leading whitespace to disambiguate the format string:
-
-Example:
+If you want to define an alias for the second option only, then you will need to use leading whitespace to disambiguate the format string.
 
 .. click:example::
 
     import sys
 
     @click.command()
-    @click.option('--shout/--no-shout', ' /-S', default=False)
+    @click.option('--shout/--no-shout', ' /-N', default=False)
     def info(shout):
         rv = sys.platform
         if shout:
@@ -335,8 +279,28 @@ Example:
 
     invoke(info, args=['--help'])
 
+Flag Value
+---------------
+To have an flag pass a value to the underlying function set ``is_flag=True`` and set ``flag_value`` to the value desired. This can be used to create patterns like this:
+
+.. click:example::
+
+    import sys
+
+    @click.command()
+    @click.option('--upper', 'transformation', flag_value='upper')
+    @click.option('--lower', 'transformation', flag_value='lower')
+    def info(transformation):
+        click.echo(getattr(sys.platform, transformation)())
+
+.. click:run::
+
+    invoke(info, args=['--help'])
+    invoke(info, args=['--upper'])
+    invoke(info, args=['--lower'])
+
 Feature Switches
-----------------
+---------------------------
 
 In addition to boolean flags, there are also feature switches.  These are
 implemented by setting multiple options to the same parameter name and
@@ -357,60 +321,12 @@ the default.
     def info(transformation):
         click.echo(getattr(sys.platform, transformation)())
 
-And on the command line:
-
 .. click:run::
 
     invoke(info, args=['--upper'])
-    invoke(info, args=['--lower'])
+    invoke(info, args=['--help'])
     invoke(info)
 
-.. _choice-opts:
-
-Choice Options
---------------
-
-Sometimes, you want to have a parameter be a choice of a list of values.
-In that case you can use :class:`Choice` type.  It can be instantiated
-with a list of valid values.  The originally passed choice will be returned,
-not the str passed on the command line.  Token normalization functions and
-``case_sensitive=False`` can cause the two to be different but still match.
-
-Example:
-
-.. click:example::
-
-    @click.command()
-    @click.option('--hash-type',
-                  type=click.Choice(['MD5', 'SHA1'], case_sensitive=False))
-    def digest(hash_type):
-        click.echo(hash_type)
-
-What it looks like:
-
-.. click:run::
-
-    invoke(digest, args=['--hash-type=MD5'])
-    println()
-    invoke(digest, args=['--hash-type=md5'])
-    println()
-    invoke(digest, args=['--hash-type=foo'])
-    println()
-    invoke(digest, args=['--help'])
-
-Only pass the choices as list or tuple. Other iterables (like
-generators) may lead to unexpected results.
-
-Choices work with options that have ``multiple=True``. If a ``default``
-value is given with ``multiple=True``, it should be a list or tuple of
-valid choices.
-
-Choices should be unique after considering the effects of
-``case_sensitive`` and any specified token normalization function.
-
-.. versionchanged:: 7.1
-    The resulting value from an option will always be one of the
-    originally passed choices regardless of ``case_sensitive``.
 
 .. _option-prompting:
 
@@ -459,40 +375,6 @@ flag set to True. Instead, prompt in the function interactively.
 By default, the user will be prompted for an input if one was not passed
 through the command line. To turn this behavior off, see
 :ref:`optional-value`.
-
-
-Password Prompts
-----------------
-
-Click also supports hidden prompts and asking for confirmation.  This is
-useful for password input:
-
-.. click:example::
-
-    import codecs
-
-    @click.command()
-    @click.option(
-        "--password", prompt=True, hide_input=True,
-        confirmation_prompt=True
-    )
-    def encode(password):
-        click.echo(f"encoded: {codecs.encode(password, 'rot13')}")
-
-.. click:run::
-
-    invoke(encode, input=['secret', 'secret'])
-
-Because this combination of parameters is quite common, this can also be
-replaced with the :func:`password_option` decorator:
-
-.. code-block:: python
-
-    @click.command()
-    @click.password_option()
-    def encrypt(password):
-        click.echo(f"encoded: to {codecs.encode(password, 'rot13')}")
-
 
 Dynamic Defaults for Prompts
 ----------------------------
@@ -593,46 +475,6 @@ What it looks like:
 
     invoke(hello)
     invoke(hello, args=['--version'])
-
-
-Yes Parameters
---------------
-
-For dangerous operations, it's very useful to be able to ask a user for
-confirmation.  This can be done by adding a boolean ``--yes`` flag and
-asking for confirmation if the user did not provide it and to fail in a
-callback:
-
-.. click:example::
-
-    def abort_if_false(ctx, param, value):
-        if not value:
-            ctx.abort()
-
-    @click.command()
-    @click.option('--yes', is_flag=True, callback=abort_if_false,
-                  expose_value=False,
-                  prompt='Are you sure you want to drop the db?')
-    def dropdb():
-        click.echo('Dropped all tables!')
-
-And what it looks like on the command line:
-
-.. click:run::
-
-    invoke(dropdb, input=['n'])
-    invoke(dropdb, args=['--yes'])
-
-Because this combination of parameters is quite common, this can also be
-replaced with the :func:`confirmation_option` decorator:
-
-.. click:example::
-
-    @click.command()
-    @click.confirmation_option(prompt='Are you sure you want to drop the db?')
-    def dropdb():
-        click.echo('Dropped all tables!')
-
 
 Values from Environment Variables
 ---------------------------------
@@ -800,40 +642,6 @@ boolean flag you need to separate it with ``;`` instead of ``/``:
 
     if __name__ == '__main__':
         log()
-
-.. _ranges:
-
-Range Options
--------------
-
-The :class:`IntRange` type extends the :data:`INT` type to ensure the
-value is contained in the given range. The :class:`FloatRange` type does
-the same for :data:`FLOAT`.
-
-If ``min`` or ``max`` is omitted, that side is *unbounded*. Any value in
-that direction is accepted. By default, both bounds are *closed*, which
-means the boundary value is included in the accepted range. ``min_open``
-and ``max_open`` can be used to exclude that boundary from the range.
-
-If ``clamp`` mode is enabled, a value that is outside the range is set
-to the boundary instead of failing. For example, the range ``0, 5``
-would return ``5`` for the value ``10``, or ``0`` for the value ``-1``.
-When using :class:`FloatRange`, ``clamp`` can only be enabled if both
-bounds are *closed* (the default).
-
-.. click:example::
-
-    @click.command()
-    @click.option("--count", type=click.IntRange(0, 20, clamp=True))
-    @click.option("--digit", type=click.IntRange(0, 9))
-    def repeat(count, digit):
-        click.echo(str(digit) * count)
-
-.. click:run::
-
-    invoke(repeat, args=['--count=100', '--digit=5'])
-    invoke(repeat, args=['--count=6', '--digit=12'])
-
 
 Callbacks for Validation
 ------------------------
