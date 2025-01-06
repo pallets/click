@@ -2932,7 +2932,7 @@ class Option(Parameter):
         if isinstance(self.show_default, bool):
             prompt_kwargs["show_default"] = self.show_default
         elif isinstance(self.show_default, str):
-            default=show_default
+            default = show_default
 
         return prompt(
             self.prompt,
