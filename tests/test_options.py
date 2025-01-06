@@ -856,6 +856,17 @@ def test_show_default_string(runner):
     assert "[default: (unlimited)]" in message
 
 
+def test_string_show_default_shows_custom_string_in_prompt(runner):
+    @click.command()
+    @click.option("--arg1", show_default="custom", prompt=True, default="my-default-value")
+    def cmd(arg1):
+        pass
+
+    result = runner.invoke(cmd, input="my-input", standalone_mode=False)
+    assert "(custom)" in result.output
+    assert "my-default-value" not in result.output
+
+
 def test_show_default_with_empty_string(runner):
     """When show_default is True and default is set to an empty string."""
     opt = click.Option(["--limit"], default="", show_default=True)
