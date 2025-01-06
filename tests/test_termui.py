@@ -489,7 +489,9 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
 
 def test_string_show_default_shows_custom_string_in_prompt(runner):
     @click.command()
-    @click.option("--arg1", show_default="custom", prompt=True, default="my-default-value")
+    @click.option(
+        "--arg1", show_default="custom", prompt=True, default="my-default-value"
+    )
     def cmd(arg1):
         pass
 
