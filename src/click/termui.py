@@ -123,6 +123,9 @@ def prompt(
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
 
+    .. versionadded:: 8.2
+        ``show_default`` can be a custom string.
+
     .. versionadded:: 8.0
         ``confirmation_prompt`` can be a custom string.
 
