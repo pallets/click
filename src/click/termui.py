@@ -114,7 +114,7 @@ def prompt(
                        convert a value.
     :param prompt_suffix: a suffix that should be added to the prompt.
     :param show_default: shows or hides the default value in the prompt.
-                         If this value is a string, it shows that string 
+                         If this value is a string, it shows that string
                          in parentheses instead of the actual value.
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``, the same as with echo.
