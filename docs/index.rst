@@ -74,6 +74,7 @@ usage patterns.
    parameters
    arguments
    options
+   commands-and-groups
    commands
    documentation
    prompts
