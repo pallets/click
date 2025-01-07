@@ -5,6 +5,7 @@ Version 8.2.0
 
 Unreleased
 
+-   Add support for custom ``show_default`` string in prompts. :pr:`460a142`
 -   Drop support for Python 3.7. :pr:`2588`
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
     :pr:`326`
