@@ -95,6 +95,8 @@ Unreleased
     ``Option.default`` if ``Option.is_flag`` is ``False``. This results in
     ``Option.default`` not needing to implement `__bool__`. :pr:`2829`
 -   Incorrect ``click.edit`` typing has been corrected. :pr:`2804`
+-   Fix setup of help option's defaults when using a custom class on its
+    decorator. Removes ``HelpOption``. :issue:`2832` :pr:`2840`
 
 Version 8.1.8
 -------------
