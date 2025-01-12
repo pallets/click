@@ -8,7 +8,7 @@ Unreleased
 -   Drop support for Python 3.7. :pr:`2588`
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
     :pr:`326`
--   Use ``flit_core`` instead of ``setuptools`` as build backend.
+-   Use ``flit_core`` instead of ``setuptools`` as build backend. :pr:`2543`
 -   Deprecate the ``__version__`` attribute. Use feature detection, or
     ``importlib.metadata.version("click")``, instead. :issue:`2598`
 -   ``BaseCommand`` is deprecated. ``Command`` is the base class for all
