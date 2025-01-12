@@ -2192,11 +2192,11 @@ class Parameter:
         """
         return self.name  # type: ignore
 
-    def make_metavar(self) -> str:
+    def make_metavar(self, ctx: Context) -> str:
         if self.metavar is not None:
             return self.metavar
 
-        metavar = self.type.get_metavar(self)
+        metavar = self.type.get_metavar(param=self, ctx=ctx)
 
         if metavar is None:
             metavar = self.type.name.upper()
@@ -2775,7 +2775,7 @@ class Option(Parameter):
                 any_prefix_is_slash = True
 
             if not self.is_flag and not self.count:
-                rv += f" {self.make_metavar()}"
+                rv += f" {self.make_metavar(ctx=ctx)}"
 
             return rv
 
@@ -3056,10 +3056,10 @@ class Argument(Parameter):
             return self.metavar
         return self.name.upper()  # type: ignore
 
-    def make_metavar(self) -> str:
+    def make_metavar(self, ctx: Context) -> str:
         if self.metavar is not None:
             return self.metavar
-        var = self.type.get_metavar(self)
+        var = self.type.get_metavar(param=self, ctx=ctx)
         if not var:
             var = self.name.upper()  # type: ignore
         if self.deprecated:
@@ -3088,10 +3088,10 @@ class Argument(Parameter):
         return name, [arg], []
 
     def get_usage_pieces(self, ctx: Context) -> list[str]:
-        return [self.make_metavar()]
+        return [self.make_metavar(ctx)]
 
     def get_error_hint(self, ctx: Context) -> str:
-        return f"'{self.make_metavar()}'"
+        return f"'{self.make_metavar(ctx)}'"
 
     def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
         parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)

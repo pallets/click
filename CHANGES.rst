@@ -88,13 +88,16 @@ Unreleased
     -   Parameters cannot be required nor prompted or an error is raised.
     -   A warning will be printed when something deprecated is used.
 
--   Add a ``catch_exceptions`` parameter to :class:`CliRunner`. If
-    ``catch_exceptions`` is not passed to :meth:`CliRunner.invoke`,
+-   Add a ``catch_exceptions`` parameter to :class:``CliRunner``. If
+    ``catch_exceptions`` is not passed to :meth:``CliRunner.invoke``,
     the value from :class:`CliRunner`. :issue:`2817` :pr:`2818`
 -   ``Option.flag_value`` will no longer have a default value set based on
     ``Option.default`` if ``Option.is_flag`` is ``False``. This results in
     ``Option.default`` not needing to implement `__bool__`. :pr:`2829`
 -   Incorrect ``click.edit`` typing has been corrected. :pr:`2804`
+-   :class:``Choice`` is now generic and supports any iterable value.
+    This allows you to use enums and other non-``str`` values. :pr:`2796`
+    :issue:`605`
 
 Version 8.1.8
 -------------
