@@ -113,6 +113,7 @@ Context
     :members:
     :member-order: bysource
 
+.. _click-api-types:
 
 Types
 -----
