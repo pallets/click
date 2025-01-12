@@ -76,7 +76,6 @@ usage patterns.
    options
    option-decorators
    arguments
-   options
    commands
    documentation
    prompts
