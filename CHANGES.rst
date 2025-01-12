@@ -96,7 +96,8 @@ Unreleased
     ``Option.default`` not needing to implement `__bool__`. :pr:`2829`
 -   Incorrect ``click.edit`` typing has been corrected. :pr:`2804`
 -   :class:``Choice`` is now generic and supports any iterable value.
-    This allows you to use enums and other non-``str`` values.
+    This allows you to use enums and other non-``str`` values. :pr:`2796`
+    :issue:`605`
 
 Version 8.1.8
 -------------
