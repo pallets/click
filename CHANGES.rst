@@ -7,7 +7,7 @@ Unreleased
 
 -   Drop support for Python 3.7. :pr:`2588`
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
-    :pr:`326`
+    :pr:`2438`
 -   Use ``flit_core`` instead of ``setuptools`` as build backend. :pr:`2543`
 -   Deprecate the ``__version__`` attribute. Use feature detection, or
     ``importlib.metadata.version("click")``, instead. :issue:`2598`
@@ -41,7 +41,7 @@ Unreleased
     :pr:`2517`
 -   Keep stdout and stderr streams independent in ``CliRunner``. Always
     collect stderr output and never raise an exception. Add a new
-    output` stream to simulate what the user sees in its terminal. Removes
+    output stream to simulate what the user sees in its terminal. Removes
     the ``mix_stderr`` parameter in ``CliRunner``. :issue:`2522` :pr:`2523`
 -   ``Option.show_envvar`` now also shows environment variable in error messages.
     :issue:`2695` :pr:`2696`
@@ -50,7 +50,7 @@ Unreleased
     ``Context.with_resource`` to be closed on exit as well. :pr:`2680`
 -   Add ``ProgressBar(hidden: bool)`` to allow hiding the progressbar. :issue:`2609`
 -   A ``UserWarning`` will be shown when multiple parameters attempt to use the
-    same name. :issue:`2396``
+    same name. :issue:`2396`
 -   When using ``Option.envvar`` with ``Option.flag_value``, the ``flag_value``
     will always be used instead of the value of the environment variable.
     :issue:`2746` :pr:`2788`
@@ -60,7 +60,7 @@ Unreleased
     for groups, ``False`` for commands), the exit code is 2 instead of 0.
     :issue:`1489` :pr:`1489`
 -   Contexts created during shell completion are closed properly, fixing
-    ``ResourceWarning``s when using ``click.File``. :issue:`2644` :pr:`2800`
+    a ``ResourceWarning`` when using ``click.File``. :issue:`2644` :pr:`2800`
     :pr:`2767`
 -   ``click.edit(filename)`` now supports passing an iterable of filenames in
     case the editor supports editing multiple files at once. Its return type
@@ -88,14 +88,14 @@ Unreleased
     -   Parameters cannot be required nor prompted or an error is raised.
     -   A warning will be printed when something deprecated is used.
 
--   Add a ``catch_exceptions`` parameter to :class:``CliRunner``. If
-    ``catch_exceptions`` is not passed to :meth:``CliRunner.invoke``,
-    the value from :class:`CliRunner`. :issue:`2817` :pr:`2818`
+-   Add a ``catch_exceptions`` parameter to ``CliRunner``. If
+    ``catch_exceptions`` is not passed to ``CliRunner.invoke``,
+    the value from ``CliRunner``. :issue:`2817` :pr:`2818`
 -   ``Option.flag_value`` will no longer have a default value set based on
     ``Option.default`` if ``Option.is_flag`` is ``False``. This results in
     ``Option.default`` not needing to implement `__bool__`. :pr:`2829`
 -   Incorrect ``click.edit`` typing has been corrected. :pr:`2804`
--   :class:``Choice`` is now generic and supports any iterable value.
+-   ``Choice`` is now generic and supports any iterable value.
     This allows you to use enums and other non-``str`` values. :pr:`2796`
     :issue:`605`
 
