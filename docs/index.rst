@@ -72,10 +72,12 @@ usage patterns.
    virtualenv
    setuptools
    parameters
-   arguments
+   parameter-types
    options
-   commands-and-groups
+   option-decorators
+   arguments
    commands
+   commands-and-groups
    documentation
    prompts
    complex
