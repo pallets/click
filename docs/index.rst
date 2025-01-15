@@ -76,8 +76,8 @@ usage patterns.
    options
    option-decorators
    arguments
-   commands
    commands-and-groups
+   commands
    documentation
    prompts
    complex

@@ -168,8 +168,7 @@ This behavior is observable with the ``--help`` option. Suppose we have a group 
 
 Arbitrary Nesting
 ------------------
-Commands are attached to a group. Multiple groups can be attached to another group. Groups containing multiple groups can be attached to a group, and so on.
-To invoke a command nest under multiple groups, all the above groups must added.
+:class:`Commands <Command>` are attached to a :class:`Group`. Multiple groups can be attached to another group. Groups containing multiple groups can be attached to a group, and so on. To invoke a command nested under multiple groups, all the groups under which it is nested must added.
 
 .. click:example::
 
@@ -196,7 +195,7 @@ To invoke a command nest under multiple groups, all the above groups must added.
 
 Lazily Attaching Commands
 --------------------------
-Most examples so far have attached the the commands and group immediately, but commands may be registered later. This could be used to split command into multiple Python modules.
+Most examples so far have attached the commands and to a group immediately, but commands may be registered later. This could be used to split commands into multiple Python modules. Regardless of how they are attached, the commands are invoked identically.
 
 .. click:example::
 
@@ -215,6 +214,11 @@ Most examples so far have attached the the commands and group immediately, but c
     cli.add_command(initdb)
     cli.add_command(dropdb)
 
+.. click:run::
+
+    invoke(cli, args=['initdb'])
+    invoke(cli, args=['dropdb'])
+
 Context Object
 -------------------
-The :class:`Context` object ...
+The :class:`Context` object is how commands and groups communicate.
