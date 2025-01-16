@@ -53,7 +53,7 @@ To mark a command as deprecated pass in ``deprecated=True``
 
 Basic Group Example
 ---------------------
-A group wraps command(s). After being wrapped, the commands are nested under that group. You can see that on the help pages and in the execution. By default, invoking the group with no command shows the help page.
+A group wraps one or more commands. After being wrapped, the commands are nested under that group. You can see that on the help pages and in the execution. By default, invoking the group with no command shows the help page.
 
 .. click:example::
     @click.group()
@@ -86,7 +86,7 @@ Renaming Groups
 To have a name other than the decorated function name as the group name, pass it in as the first positional argument.
 
 .. click:example::
-    @click.group('greet_someone')
+    @click.group('greet-someone')
     def greeting():
         click.echo('Starting greeting ...')
 
@@ -103,12 +103,7 @@ To have a name other than the decorated function name as the group name, pass it
 Group Invocation Without Command
 --------------------------------
 
-By default, a group is not invoked unless a subcommand is passed. In fact, not
-providing a command automatically passes ``--help`` by default. This behavior
-can be changed by passing ``invoke_without_command=True`` to a group. In that
-case, the callback is always invoked instead of showing the help page. The
-context object also includes information about whether or not the invocation
-would go to a subcommand.
+By default, if a group is passed without a command, the group is not invoked and a command automatically passes ``--help``. To change this, pass ``invoke_without_command=True`` to the group. The context object also includes information about whether or not the group invocation would go to a command nested under it.
 
 .. click:example::
 
@@ -133,7 +128,7 @@ would go to a subcommand.
 
 Group Separation
 --------------------------
-Within a group, command :ref:`parameters` attached to a command belong only to that command.
+Command :ref:`parameters` attached to a command belong only to that command.
 
 .. click:example::
     @click.group()
@@ -164,11 +159,11 @@ This behavior is observable with the ``--help`` option. Suppose we have a group 
 
 - ``tool --help`` returns the help for the whole program (listing subcommands).
 - ``tool sub --help`` returns the help for the ``sub`` subcommand.
-- But ``tool.py --help sub`` treats ``--help`` as an argument for the main program. Click then invokes the callback for ``--help``, which prints the help and aborts the program before click can process the subcommand.
+- But ``tool --help sub`` treats ``--help`` as an argument for the main program. Click then invokes the callback for ``--help``, which prints the help and aborts the program before click can process the subcommand.
 
 Arbitrary Nesting
 ------------------
-:class:`Commands <Command>` are attached to a :class:`Group`. Multiple groups can be attached to another group. Groups containing multiple groups can be attached to a group, and so on. To invoke a command nested under multiple groups, all the groups under which it is nested must added.
+:class:`Commands <Command>` are attached to a :class:`Group`. Multiple groups can be attached to another group. Groups containing multiple groups can be attached to a group, and so on. To invoke a command nested under multiple groups, all the groups under which it is nested must be invoked.
 
 .. click:example::
 
@@ -195,7 +190,7 @@ Arbitrary Nesting
 
 Lazily Attaching Commands
 --------------------------
-Most examples so far have attached the commands and to a group immediately, but commands may be registered later. This could be used to split commands into multiple Python modules. Regardless of how they are attached, the commands are invoked identically.
+Most examples so far have attached the commands to a group immediately, but commands may be registered later. This could be used to split commands into multiple Python modules. Regardless of how they are attached, the commands are invoked identically.
 
 .. click:example::
 
@@ -203,7 +198,7 @@ Most examples so far have attached the commands and to a group immediately, but 
     def cli():
         pass
 
-    @click.command()
+    @cli.command()
     def initdb():
         click.echo('Initialized the database')
 
@@ -211,7 +206,6 @@ Most examples so far have attached the commands and to a group immediately, but 
     def dropdb():
         click.echo('Dropped the database')
 
-    cli.add_command(initdb)
     cli.add_command(dropdb)
 
 .. click:run::
