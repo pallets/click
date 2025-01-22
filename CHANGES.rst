@@ -98,6 +98,8 @@ Unreleased
 -   ``Choice`` is now generic and supports any iterable value.
     This allows you to use enums and other non-``str`` values. :pr:`2796`
     :issue:`605`
+-   show correct auto complete value for nargs option in combination with
+    flag option :issue:`2813`
 
 Version 8.1.8
 -------------
