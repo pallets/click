@@ -3,7 +3,7 @@
 Version 8.2.0
 -------------
 
-Unreleased
+Released 2025-01-12
 
 -   Drop support for Python 3.7. :pr:`2588`
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
