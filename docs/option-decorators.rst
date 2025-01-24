@@ -78,3 +78,7 @@ replaced with the :func:`confirmation_option` decorator:
     @click.confirmation_option(prompt='Are you sure you want to drop the db?')
     def dropdb():
         click.echo('Dropped all tables!')
+
+Version Option
+----------------
+:func:`version_option` adds a --version option which immediately prints the version number and exits the program.

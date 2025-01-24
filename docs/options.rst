@@ -6,7 +6,7 @@ Options
 .. currentmodule:: click
 
 Adding options to commands can be accomplished with the :func:`option`
-decorator.  Options in Click are distinct from :ref:`positional arguments <arguments>`.
+decorator. At runtime the decorator invokes the :class:`Option` class. Options in Click are distinct from :ref:`positional arguments <arguments>`.
 
 Useful and often used kwargs are:
 
@@ -14,7 +14,7 @@ Useful and often used kwargs are:
 *   ``help``: Sets help message.
 *   ``nargs``: Sets the number of arguments.
 *   ``required``: Makes option required.
-*   ``type``: Sets :ref:`parameter-types`
+*   ``type``: Sets :ref:`parameter type <parameter-types>`
 
 .. contents::
    :depth: 2
@@ -205,6 +205,8 @@ To count the occurrence of an option pass in ``count=True``. If the option is no
     invoke(log, args=[])
     invoke(log, args=['-vvv'])
 
+.. _option-boolean-flag:
+
 Boolean
 ------------------------
 
@@ -281,14 +283,14 @@ If you want to define an alias for the second option only, then you will need to
 
 Flag Value
 ---------------
-To have an flag pass a value to the underlying function set ``is_flag=True`` and set ``flag_value`` to the value desired. This can be used to create patterns like this:
+To have an flag pass a value to the underlying function set ``flag_value`` to the value desired. This automatically sets ``is_flag=True``. To set a default flag, set  ``default=True``. Setting flag values can be used to create patterns like this:
 
 .. click:example::
 
     import sys
 
     @click.command()
-    @click.option('--upper', 'transformation', flag_value='upper')
+    @click.option('--upper', 'transformation', flag_value='upper', default=True)
     @click.option('--lower', 'transformation', flag_value='lower')
     def info(transformation):
         click.echo(getattr(sys.platform, transformation)())
@@ -298,201 +300,44 @@ To have an flag pass a value to the underlying function set ``is_flag=True`` and
     invoke(info, args=['--help'])
     invoke(info, args=['--upper'])
     invoke(info, args=['--lower'])
-
-Feature Switches
----------------------------
-
-In addition to boolean flags, there are also feature switches.  These are
-implemented by setting multiple options to the same parameter name and
-defining a flag value.  Note that by providing the ``flag_value`` parameter,
-Click will implicitly set ``is_flag=True``.
-
-To set a default flag, assign a value of `True` to the flag that should be
-the default.
-
-.. click:example::
-
-    import sys
-
-    @click.command()
-    @click.option('--upper', 'transformation', flag_value='upper',
-                  default=True)
-    @click.option('--lower', 'transformation', flag_value='lower')
-    def info(transformation):
-        click.echo(getattr(sys.platform, transformation)())
-
-.. click:run::
-
-    invoke(info, args=['--upper'])
-    invoke(info, args=['--help'])
     invoke(info)
-
-
-.. _option-prompting:
-
-Prompting
----------
-
-In some cases, you want parameters that can be provided from the command line,
-but if not provided, ask for user input instead.  This can be implemented with
-Click by defining a prompt string.
-
-Example:
-
-.. click:example::
-
-    @click.command()
-    @click.option('--name', prompt=True)
-    def hello(name):
-        click.echo(f"Hello {name}!")
-
-And what it looks like:
-
-.. click:run::
-
-    invoke(hello, args=['--name=John'])
-    invoke(hello, input=['John'])
-
-If you are not happy with the default prompt string, you can ask for
-a different one:
-
-.. click:example::
-
-    @click.command()
-    @click.option('--name', prompt='Your name please')
-    def hello(name):
-        click.echo(f"Hello {name}!")
-
-What it looks like:
-
-.. click:run::
-
-    invoke(hello, input=['John'])
-
-It is advised that prompt not be used in conjunction with the multiple
-flag set to True. Instead, prompt in the function interactively.
-
-By default, the user will be prompted for an input if one was not passed
-through the command line. To turn this behavior off, see
-:ref:`optional-value`.
-
-Dynamic Defaults for Prompts
-----------------------------
-
-The ``auto_envvar_prefix`` and ``default_map`` options for the context
-allow the program to read option values from the environment or a
-configuration file.  However, this overrides the prompting mechanism, so
-that the user does not get the option to change the value interactively.
-
-If you want to let the user configure the default value, but still be
-prompted if the option isn't specified on the command line, you can do so
-by supplying a callable as the default value. For example, to get a default
-from the environment:
-
-.. code-block:: python
-
-    import os
-
-    @click.command()
-    @click.option(
-        "--username", prompt=True,
-        default=lambda: os.environ.get("USER", "")
-    )
-    def hello(username):
-        click.echo(f"Hello, {username}!")
-
-To describe what the default value will be, set it in ``show_default``.
-
-.. click:example::
-
-    import os
-
-    @click.command()
-    @click.option(
-        "--username", prompt=True,
-        default=lambda: os.environ.get("USER", ""),
-        show_default="current user"
-    )
-    def hello(username):
-        click.echo(f"Hello, {username}!")
-
-.. click:run::
-
-   invoke(hello, args=["--help"])
-
-
-Callbacks and Eager Options
----------------------------
-
-Sometimes, you want a parameter to completely change the execution flow.
-For instance, this is the case when you want to have a ``--version``
-parameter that prints out the version and then exits the application.
-
-Note: an actual implementation of a ``--version`` parameter that is
-reusable is available in Click as :func:`click.version_option`.  The code
-here is merely an example of how to implement such a flag.
-
-In such cases, you need two concepts: eager parameters and a callback.  An
-eager parameter is a parameter that is handled before others, and a
-callback is what executes after the parameter is handled.  The eagerness
-is necessary so that an earlier required parameter does not produce an
-error message.  For instance, if ``--version`` was not eager and a
-parameter ``--foo`` was required and defined before, you would need to
-specify it for ``--version`` to work.  For more information, see
-:ref:`callback-evaluation-order`.
-
-A callback is a function that is invoked with three parameters: the
-current :class:`Context`, the current :class:`Parameter`, and the value.
-The context provides some useful features such as quitting the
-application and gives access to other already processed parameters.
-
-Here's an example for a ``--version`` flag:
-
-.. click:example::
-
-    def print_version(ctx, param, value):
-        if not value or ctx.resilient_parsing:
-            return
-        click.echo('Version 1.0')
-        ctx.exit()
-
-    @click.command()
-    @click.option('--version', is_flag=True, callback=print_version,
-                  expose_value=False, is_eager=True)
-    def hello():
-        click.echo('Hello World!')
-
-The `expose_value` parameter prevents the pretty pointless ``version``
-parameter from being passed to the callback.  If that was not specified, a
-boolean would be passed to the `hello` script.  The `resilient_parsing`
-flag is applied to the context if Click wants to parse the command line
-without any destructive behavior that would change the execution flow.  In
-this case, because we would exit the program, we instead do nothing.
-
-What it looks like:
-
-.. click:run::
-
-    invoke(hello)
-    invoke(hello, args=['--version'])
 
 Values from Environment Variables
 ---------------------------------
+To pass in a value in from a specific environment variable use ``envvar``.
 
-A very useful feature of Click is the ability to accept parameters from
-environment variables in addition to regular parameters.  This allows
-tools to be automated much easier.  For instance, you might want to pass
-a configuration file with a ``--config`` parameter but also support exporting
-a ``TOOL_CONFIG=hello.cfg`` key-value pair for a nicer development
-experience.
+.. click:example::
 
-This is supported by Click in two ways.  One is to automatically build
-environment variables which is supported for options only.  To enable this
-feature, the ``auto_envvar_prefix`` parameter needs to be passed to the
-script that is invoked.  Each command and parameter is then added as an
-uppercase underscore-separated variable.  If you have a subcommand
-called ``run`` taking an option called ``reload`` and the prefix is
-``WEB``, then the variable is ``WEB_RUN_RELOAD``.
+    @click.command()
+    @click.option('--username', envvar='USERNAME')
+    def greet(username):
+       click.echo(f"Hello {username}!")
+
+.. click:run::
+
+    invoke(greet, env={'USERNAME': 'john'})
+
+If a list is passed to ``envvar``, the first environment variable found is picked.
+
+.. click:example::
+
+    @click.command()
+    @click.option('--username', envvar=['ALT_USERNAME', 'USERNAME'])
+    def greet(username):
+       click.echo(f"Hello {username}!")
+
+.. click:run::
+
+    invoke(greet, env={'ALT_USERNAME': 'Bill', 'USERNAME': 'john'})
+
+Auto Envvar Prefix
+--------------------
+
+---move to context section
+
+
+Automatically built environment variables are supported for options only. To enable this feature, the ``auto_envvar_prefix`` parameter needs to be passed to the script that is invoked.  Each command and parameter is then added as an uppercase underscore-separated variable.  If you have a subcommand
+called ``run`` taking an option called ``reload`` and the prefix is ``WEB``, then the variable is ``WEB_RUN_RELOAD``.
 
 Example usage:
 
@@ -519,8 +364,6 @@ the parameter name, *i.e.* ``PREFIX_COMMAND_VARIABLE``. If you have a
 subcommand called ``run-server`` taking an option called ``host`` and
 the prefix is ``WEB``, then the variable is ``WEB_RUN_SERVER_HOST``.
 
-Example:
-
 .. click:example::
 
    @click.group()
@@ -542,33 +385,8 @@ Example:
           env={'GREETER_GREET_USERNAME': 'John', 'GREETER_DEBUG': 'false'},
           auto_envvar_prefix='GREETER')
 
-
-The second option is to manually pull values in from specific environment
-variables by defining the name of the environment variable on the option.
-
-Example usage:
-
-.. click:example::
-
-    @click.command()
-    @click.option('--username', envvar='USERNAME')
-    def greet(username):
-       click.echo(f"Hello {username}!")
-
-    if __name__ == '__main__':
-        greet()
-
-And from the command line:
-
-.. click:run::
-
-    invoke(greet, env={'USERNAME': 'john'})
-
-In that case it can also be a list of different environment variables
-where the first one is picked.
-
-Multiple Values from Environment Values
----------------------------------------
+Multiple Options from Environment Values
+-----------------------------------------
 
 As options can accept multiple values, pulling in such values from
 environment variables (which are strings) is a bit more complex.  The way
@@ -607,11 +425,8 @@ And from the command line:
 Other Prefix Characters
 -----------------------
 
-Click can deal with alternative prefix characters other than ``-`` for
-options.  This is for instance useful if you want to handle slashes as
-parameters ``/`` or something similar.  Note that this is strongly
-discouraged in general because Click wants developers to stay close to
-POSIX semantics.  However in certain situations this can be useful:
+Click can deal with prefix characters besides ``-`` for options.  Click can use
+``/``, ``+`` as well as others. Note that alternative prefix characters are generally used very sparingly if at all within POSIX.
 
 .. click:example::
 
@@ -620,73 +435,12 @@ POSIX semantics.  However in certain situations this can be useful:
     def chmod(w):
         click.echo(f"writable={w}")
 
-    if __name__ == '__main__':
-        chmod()
-
-And from the command line:
-
 .. click:run::
 
     invoke(chmod, args=['+w'])
     invoke(chmod, args=['-w'])
 
-Note that if you are using ``/`` as prefix character and you want to use a
-boolean flag you need to separate it with ``;`` instead of ``/``:
-
-.. click:example::
-
-    @click.command()
-    @click.option('/debug;/no-debug')
-    def log(debug):
-        click.echo(f"debug={debug}")
-
-    if __name__ == '__main__':
-        log()
-
-Callbacks for Validation
-------------------------
-
-.. versionchanged:: 2.0
-
-If you want to apply custom validation logic, you can do this in the
-parameter callbacks. These callbacks can both modify values as well as
-raise errors if the validation does not work. The callback runs after
-type conversion. It is called for all sources, including prompts.
-
-In Click 1.0, you can only raise the :exc:`UsageError` but starting with
-Click 2.0, you can also raise the :exc:`BadParameter` error, which has the
-added advantage that it will automatically format the error message to
-also contain the parameter name.
-
-.. click:example::
-
-    def validate_rolls(ctx, param, value):
-        if isinstance(value, tuple):
-            return value
-
-        try:
-            rolls, _, dice = value.partition("d")
-            return int(dice), int(rolls)
-        except ValueError:
-            raise click.BadParameter("format must be 'NdM'")
-
-    @click.command()
-    @click.option(
-        "--rolls", type=click.UNPROCESSED, callback=validate_rolls,
-        default="1d6", prompt=True,
-    )
-    def roll(rolls):
-        sides, times = rolls
-        click.echo(f"Rolling a {sides}-sided dice {times} time(s)")
-
-.. click:run::
-
-    invoke(roll, args=["--rolls=42"])
-    println()
-    invoke(roll, args=["--rolls=2d12"])
-    println()
-    invoke(roll, input=["42", "2d12"])
-
+There are special considerations for using ``/`` as prefix character, see :ref:`option-boolean-flag` for more.
 
 .. _optional-value:
 
@@ -713,23 +467,3 @@ can still be passed a value, but if only the flag is given the
     invoke(hello, args=[])
     invoke(hello, args=["--name", "Value"])
     invoke(hello, args=["--name"])
-
-If the option has ``prompt`` enabled, then setting
-``prompt_required=False`` tells Click to only show the prompt if the
-option's flag is given, instead of if the option is not provided at all.
-
-.. click:example::
-
-    @click.command()
-    @click.option('--name', prompt=True, prompt_required=False, default="Default")
-    def hello(name):
-        click.echo(f"Hello {name}!")
-
-.. click:run::
-
-    invoke(hello)
-    invoke(hello, args=["--name", "Value"])
-    invoke(hello, args=["--name"], input="Prompt")
-
-If ``required=True``, then the option will still prompt if it is not
-given, but it will also prompt if only the flag is given.
