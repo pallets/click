@@ -81,4 +81,4 @@ replaced with the :func:`confirmation_option` decorator:
 
 Version Option
 ----------------
-:func:`version_option` adds a --version option which immediately prints the version number and exits the program.
+:func:`version_option` adds a ``--version`` option which immediately prints the version number and exits the program.

@@ -21,7 +21,9 @@ Option Prompts
 --------------
 
 Option prompts are integrated into the option interface.  Internally, it
-automatically calls either :func:`prompt` or :func:`confirm` as necessary. In some cases, you want parameters that can be provided from the command line,
+automatically calls either :func:`prompt` or :func:`confirm` as necessary.
+
+In some cases, you want parameters that can be provided from the command line,
 but if not provided, ask for user input instead.  This can be implemented with
 Click by defining a prompt string.
 

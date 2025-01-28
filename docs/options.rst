@@ -283,7 +283,7 @@ If you want to define an alias for the second option only, then you will need to
 
 Flag Value
 ---------------
-To have an flag pass a value to the underlying function set ``flag_value`` to the value desired. This automatically sets ``is_flag=True``. To set a default flag, set  ``default=True``. Setting flag values can be used to create patterns like this:
+To have an flag pass a value to the underlying function set ``flag_value``. This automatically sets ``is_flag=True``. To set a default flag, set  ``default=True``. Setting flag values can be used to create patterns like this:
 
 .. click:example::
 
@@ -332,10 +332,6 @@ If a list is passed to ``envvar``, the first environment variable found is picke
 
 Auto Envvar Prefix
 --------------------
-
----move to context section
-
-
 Automatically built environment variables are supported for options only. To enable this feature, the ``auto_envvar_prefix`` parameter needs to be passed to the script that is invoked.  Each command and parameter is then added as an uppercase underscore-separated variable.  If you have a subcommand
 called ``run`` taking an option called ``reload`` and the prefix is ``WEB``, then the variable is ``WEB_RUN_RELOAD``.
 
@@ -398,10 +394,8 @@ perform the splitting.
 The default implementation for all types is to split on whitespace.  The
 exceptions to this rule are the :class:`File` and :class:`Path` types
 which both split according to the operating system's path splitting rules.
-On Unix systems like Linux and OS X, the splitting happens for those on
-every colon (``:``), and for Windows, on every semicolon (``;``).
-
-Example usage:
+On Unix systems like Linux and OS X, the splitting happens on
+every colon (``:``), and for Windows, splitting on every semicolon (``;``).
 
 .. click:example::
 
@@ -414,8 +408,6 @@ Example usage:
 
     if __name__ == '__main__':
         perform()
-
-And from the command line:
 
 .. click:run::
 
@@ -452,8 +444,8 @@ providing only the option's flag without a value will either show a
 prompt or use its ``flag_value``.
 
 Setting ``is_flag=False, flag_value=value`` tells Click that the option
-can still be passed a value, but if only the flag is given the
-``flag_value`` is used.
+can still be passed a value, but only if the flag is given the
+``flag_value``.
 
 .. click:example::
 
