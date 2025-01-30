@@ -3,7 +3,7 @@
 Version 8.2.0
 -------------
 
-Unreleased
+Released 2025-01-12
 
 -   Drop support for Python 3.7. :pr:`2588`
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
@@ -98,6 +98,8 @@ Unreleased
 -   ``Choice`` is now generic and supports any iterable value.
     This allows you to use enums and other non-``str`` values. :pr:`2796`
     :issue:`605`
+-   show correct auto complete value for nargs option in combination with
+    flag option :issue:`2813`
 
 Version 8.1.8
 -------------
