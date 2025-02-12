@@ -155,8 +155,8 @@ Overriding Value Completion
 
 Value completions for a parameter can be customized without a custom
 type by providing a ``shell_complete`` function. The function is used
-instead of any completion provided by the type. It is passed 3 keyword
-arguments:
+instead of any completion provided by the type. It is passed 3
+positional arguments:
 
 -   ``ctx`` - The current command context.
 -   ``param`` - The current parameter requesting completion.
