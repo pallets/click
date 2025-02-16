@@ -18,8 +18,8 @@ Basic Example
 -------------
 
 The key pieces are:
-   * :class:`CliRunner` - to invoke commands as command line scripts.
-   * :class:`Result` - returned from :meth:`CliRunner.invoke`, captures output data, exit code, and optional exception,  captures the output as both bytes and binary data.
+   * :class:`CliRunner` - used to invoke commands as command line scripts.
+   * :class:`Result` - returned from :meth:`CliRunner.invoke`. Captures output data, exit code, optional exception, and captures the output as bytes and binary data.
 
 .. code-block:: python
    :caption: hello.py
@@ -46,7 +46,7 @@ The key pieces are:
 Subcommands
 ------------
 
-A subcommand name must be specified in the `args` parameter of :meth:`CliRunner.invoke` method:
+A subcommand name must be specified in the `args` parameter :meth:`CliRunner.invoke`:
 
 .. code-block:: python
    :caption: sync.py
@@ -78,7 +78,7 @@ A subcommand name must be specified in the `args` parameter of :meth:`CliRunner.
 Context Settings
 -----------------
 Additional keyword arguments passed to :meth:`CliRunner.invoke` will be used to construct the initial :class:`Context object <click.Context>`.
-For example, to run your tests against a fixed terminal width equal to 60:
+For example, setting a fixed terminal width equal to 60:
 
 .. code-block:: python
    :caption: sync.py
@@ -86,9 +86,8 @@ For example, to run your tests against a fixed terminal width equal to 60:
    import click
 
    @click.group()
-   @click.option('--debug/--no-debug', default=False)
-   def cli(debug):
-      click.echo(f"Debug mode is {'on' if debug else 'off'}")
+   def cli():
+      pass
 
    @cli.command()
    def sync():
@@ -102,7 +101,7 @@ For example, to run your tests against a fixed terminal width equal to 60:
 
    def test_sync():
      runner = CliRunner()
-     result = runner.invoke(cli, ['--debug', 'sync'], terminal_width=60)
+     result = runner.invoke(cli, ['sync'], terminal_width=60)
      assert result.exit_code == 0
      assert 'Debug mode is on' in result.output
      assert 'Syncing' in result.output
@@ -110,7 +109,7 @@ For example, to run your tests against a fixed terminal width equal to 60:
 File System Isolation
 ---------------------
 
-The :meth:`CliRunner.isolated_filesystem` method sets the current working directory to a new, empty folder.
+The :meth:`CliRunner.isolated_filesystem` context manager sets the current working directory to a new, empty folder.
 
 .. code-block:: python
    :caption: cat.py
@@ -138,17 +137,25 @@ The :meth:`CliRunner.isolated_filesystem` method sets the current working direct
          assert result.exit_code == 0
          assert result.output == 'Hello World!\n'
 
-Pass ``temp_dir`` to control where the temporary directory is created.
-The directory will not be removed by Click in this case. This is useful
+Pass in a path to control where the temporary directory is created.
+In this case, the directory will not be removed by Click. Its useful
 to integrate with a framework like Pytest that manages temporary files.
 
 .. code-block:: python
+   :caption: test_cat.py
 
-    def test_keep_dir(tmp_path):
-        runner = CliRunner()
+   from click.testing import CliRunner
+   from cat import cat
 
-        with runner.isolated_filesystem(temp_dir=tmp_path) as td:
-            ...
+   def test_cat_with_path_specified():
+      runner = CliRunner()
+      with runner.isolated_filesystem('~/test_folder'):
+         with open('hello.txt', 'w') as f:
+             f.write('Hello World!')
+
+         result = runner.invoke(cat, ['hello.txt'])
+         assert result.exit_code == 0
+         assert result.output == 'Hello World!\n'
 
 
 Input Streams
@@ -178,6 +185,6 @@ The test wrapper can provide input data for the input stream (stdin).  This is v
       assert not result.exception
       assert result.output == 'Foo: wau wau\nfoo=wau wau\n'
 
-Note that prompts will be emulated so that they write the input data to
+Prompts will be emulated so they write the input data to
 the output stream as well.  If hidden input is expected then this
 does not happen.
