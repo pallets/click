@@ -416,7 +416,6 @@ def test_abort_exceptions_with_disabled_standalone_mode(runner, exc):
     assert rv.exception.__cause__.args == ("catch me!",)
 
 
-# Test case 1: Argument named 'help' should cause an error
 def test_argument_named_help():
     @click.command()
     @click.argument("help")
@@ -426,11 +425,10 @@ def test_argument_named_help():
     runner = CliRunner()
     result = runner.invoke(my_command, ["test"])
 
-    assert result.exit_code != 0  # Expect failure
-    assert "Invalid value for '--help'" in result.output  # Confirms the conflict
+    assert result.exit_code != 0
+    assert "Invalid value for '--help'" in result.output
 
 
-# Test case 2: Option named '--help' should cause an error
 def test_option_named_help():
     @click.command()
     @click.option("--help", default="this_2")
@@ -446,11 +444,10 @@ def test_option_named_help():
 
     # Invoke with --help, should fail
     result_with_help = runner.invoke(my_command, ["--help"])
-    assert result_with_help.exit_code != 0  # Expect failure
+    assert result_with_help.exit_code != 0
     assert "Error: Option '--help' requires an argument." in result_with_help.output
 
 
-# Test case 3: Argument named 'helps' should work fine
 def test_argument_named_helps():
     @click.command()
     @click.argument("helps")
@@ -460,6 +457,6 @@ def test_argument_named_helps():
     runner = CliRunner()
     result = runner.invoke(my_command, ["test"])
 
-    assert result.exit_code == 0  # Should succeed
-    assert "test" in result.output  # Confirms correct output
+    assert result.exit_code == 0
+    assert "test" in result.output
 
