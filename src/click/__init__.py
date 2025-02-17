@@ -122,3 +122,4 @@ def __getattr__(name: str) -> object:
         return importlib.metadata.version("click")
 
     raise AttributeError(name)
+
