@@ -6,6 +6,10 @@ API
 This part of the documentation lists the full API reference of all public
 classes and functions.
 
+.. contents::
+   :depth: 1
+   :local:
+
 Decorators
 ----------
 
@@ -198,6 +202,8 @@ customizing Click's shell completion system.
 
 .. autofunction:: add_completion_class
 
+
+.. _testing:
 
 Testing
 -------
