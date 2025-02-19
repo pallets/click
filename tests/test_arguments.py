@@ -63,6 +63,15 @@ def test_nargs_tup_composite(runner, opts):
     assert result.output.splitlines() == ["name=peter id=1"]
 
 
+def test_nargs_mismatch_with_tuple_type():
+    with pytest.raises(ValueError, match="nargs.*must be 2.*but it was 3"):
+
+        @click.command()
+        @click.argument("test", type=(str, int), nargs=3)
+        def cli(_):
+            pass
+
+
 def test_nargs_err(runner):
     @click.command()
     @click.argument("x")
