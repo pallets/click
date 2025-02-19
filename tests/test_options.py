@@ -1078,7 +1078,8 @@ def test_duplicate_names_warning(runner, opts_one, opts_two):
             [
                 "test string which is not a list in the list"
             ],  # default (list of non-lists)
-            "'default' must be a list of lists when 'multiple' is true and 'nargs' != 1.",
+            "'default' must be a list of lists when 'multiple' is true"
+            " and 'nargs' != 1.",
         ),
     ],
 )
