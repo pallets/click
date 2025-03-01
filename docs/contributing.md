@@ -42,3 +42,14 @@ external package for it.
 ## Formatting
 
 Wrap lines in Markdown files at 80 characters.
+
+## Translations
+
+If you want to work on translations:
+
+* Install gettext. Windows requires a unix-like environment - see [MinGW gettext](https://gnuwin32.sourceforge.net/packages/gettext.htm).
+
+* Compile the translations.
+  ```shell-session
+  $ bash ./locales/compile.sh
+  ```

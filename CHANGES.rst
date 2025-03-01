@@ -5,6 +5,10 @@ Version 8.4.0
 
 Unreleased
 
+-   Allow customizing locales via ``click.set_click_locale`` and ``click.reset_click_locale``
+    and querying the active locale via ``click.get_click_locale``.
+    Click now uses its own gettext domain. :issue:`2706`
+
 -   :class:`ParamType` typing improvements. :pr:`3371`
 
     -   :class:`ParamType` is now a generic abstract base class,
