@@ -38,6 +38,9 @@ from .exceptions import UsageError as UsageError
 from .formatting import HelpFormatter as HelpFormatter
 from .formatting import wrap_text as wrap_text
 from .globals import get_current_context as get_current_context
+from .locales import get_click_locale as get_click_locale
+from .locales import reset_click_locale as reset_click_locale
+from .locales import set_click_locale as set_click_locale
 from .termui import clear as clear
 from .termui import confirm as confirm
 from .termui import echo_via_pager as echo_via_pager
