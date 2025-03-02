@@ -167,7 +167,7 @@ def test_cat_with_path_specified():
 
 ## Input Streams
 
-The test wrapper can provide input data for the input stream (stdin). This is very useful for testing prompts, for instance:
+The test wrapper can provide input data for the input stream (stdin). This is very useful for testing prompts.
 
 ```{code-block} python
 :caption: prompt.py

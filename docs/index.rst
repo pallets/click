@@ -81,7 +81,7 @@ usage patterns.
    prompts
    complex
    advanced
-   testing <testing.md>
+   testing
    utils
    shell-completion
    exceptions
