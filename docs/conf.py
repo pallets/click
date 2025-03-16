@@ -18,6 +18,7 @@ extensions = [
     "sphinx_tabs.tabs",
     "sphinxcontrib.log_cabinet",
     "pallets_sphinx_themes",
+    "myst_parser",
 ]
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
