@@ -1,12 +1,13 @@
-Commands and Groups
-===================
+Advanced Groups and Context
+=============================
 
 .. currentmodule:: click
 
-The structure of a Click application is defined with :class:`Command`, which
-defines an individual named command, and :class:`Group`, which defines a nested
-collection of commands (or more groups) under a name.
+In addition to the capabilities covered in the previous section, Groups have more advanced capabilities that leverage the Context.
 
+.. contents::
+   :depth: 1
+   :local:
 
 Callback Invocation
 -------------------
@@ -38,26 +39,6 @@ Here is what this looks like:
     invoke(cli, prog_name='tool.py')
     println()
     invoke(cli, prog_name='tool.py', args=['--debug', 'sync'])
-
-Passing Parameters
-------------------
-
-Click strictly separates parameters between commands and subcommands. What this
-means is that options and arguments for a specific command have to be specified
-*after* the command name itself, but *before* any other command names.
-
-This behavior is already observable with the predefined ``--help`` option.
-Suppose we have a program called ``tool.py``, containing a subcommand called
-``sub``.
-
-- ``tool.py --help`` will return the help for the whole program (listing
-  subcommands).
-
-- ``tool.py sub --help`` will return the help for the ``sub`` subcommand.
-
-- But ``tool.py --help sub`` will treat ``--help`` as an argument for the main
-  program. Click then invokes the callback for ``--help``, which prints the
-  help and aborts the program before click can process the subcommand.
 
 Nested Handling and Contexts
 ----------------------------
@@ -143,98 +124,6 @@ obj)`` or ``f(obj)`` depending on whether or not it itself is decorated with
 
 This is a very powerful concept that can be used to build very complex
 nested applications; see :ref:`complex-guide` for more information.
-
-
-Group Invocation Without Command
---------------------------------
-
-By default, a group is not invoked unless a subcommand is passed. In fact, not
-providing a command automatically passes ``--help`` by default. This behavior
-can be changed by passing ``invoke_without_command=True`` to a group. In that
-case, the callback is always invoked instead of showing the help page. The
-context object also includes information about whether or not the invocation
-would go to a subcommand.
-
-.. click:example::
-
-    @click.group(invoke_without_command=True)
-    @click.pass_context
-    def cli(ctx):
-        if ctx.invoked_subcommand is None:
-            click.echo('I was invoked without subcommand')
-        else:
-            click.echo(f"I am about to invoke {ctx.invoked_subcommand}")
-
-    @cli.command()
-    def sync():
-        click.echo('The subcommand')
-
-.. click:run::
-
-    invoke(cli, prog_name='tool', args=[])
-    invoke(cli, prog_name='tool', args=['sync'])
-
-
-.. _custom-groups:
-
-Custom Groups
--------------
-
-You can customize the behavior of a group beyond the arguments it accepts by
-subclassing :class:`click.Group`.
-
-The most common methods to override are :meth:`~click.Group.get_command` and
-:meth:`~click.Group.list_commands`.
-
-The following example implements a basic plugin system that loads commands from
-Python files in a folder. The command is lazily loaded to avoid slow startup.
-
-.. code-block:: python
-
-    import importlib.util
-    import os
-    import click
-
-    class PluginGroup(click.Group):
-        def __init__(self, name=None, plugin_folder="commands", **kwargs):
-            super().__init__(name=name, **kwargs)
-            self.plugin_folder = plugin_folder
-
-        def list_commands(self, ctx):
-            rv = []
-
-            for filename in os.listdir(self.plugin_folder):
-                if filename.endswith(".py"):
-                    rv.append(filename[:-3])
-
-            rv.sort()
-            return rv
-
-        def get_command(self, ctx, name):
-            path = os.path.join(self.plugin_folder, f"{name}.py")
-            spec = importlib.util.spec_from_file_location(name, path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            return module.cli
-
-    cli = PluginGroup(
-        plugin_folder=os.path.join(os.path.dirname(__file__), "commands")
-    )
-
-    if __name__ == "__main__":
-        cli()
-
-Custom classes can also be used with decorators:
-
-.. code-block:: python
-
-    @click.group(
-        cls=PluginGroup,
-        plugin_folder=os.path.join(os.path.dirname(__file__), "commands")
-    )
-    def cli():
-        pass
-
 
 .. _command-chaining:
 
