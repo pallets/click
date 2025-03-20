@@ -13,7 +13,6 @@ import os
 import sys
 import time
 import typing as t
-from gettext import gettext as _
 from io import StringIO
 from types import TracebackType
 
@@ -26,6 +25,7 @@ from ._compat import strip_ansi
 from ._compat import term_len
 from ._compat import WIN
 from .exceptions import ClickException
+from .locales import gettext as _
 from .utils import echo
 
 V = t.TypeVar("V")

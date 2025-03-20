@@ -5,6 +5,9 @@ Version 8.2.0
 
 Unreleased
 
+-   Allow customizing locales via ``click.set_click_locale`` and ``click.reset_click_locale``
+    and querying the active locale via ``click.get_click_locale``.
+    Click now uses its own gettext domain. :issue:`2706`
 -   Drop support for Python 3.7. :pr:`2588`
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
     :pr:`2438`

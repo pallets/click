@@ -120,12 +120,23 @@ First time setup
 
         $ pre-commit install
 
+-   If you want to work on translations:
+
+    - Install gettext. Windows requires a unix-like environment - see `MinGW gettext`_.
+
+    - Compile the translations.
+
+        .. code-block:: text
+
+            $ bash ./locales/compile.sh
+
 .. _latest version of git: https://git-scm.com/downloads
 .. _username: https://docs.github.com/en/github/using-git/setting-your-username-in-git
 .. _email: https://docs.github.com/en/github/setting-up-and-managing-your-github-user-account/setting-your-commit-email-address
 .. _GitHub account: https://github.com/join
 .. _Fork: https://github.com/pallets/click/fork
 .. _Clone: https://docs.github.com/en/github/getting-started-with-github/fork-a-repo#step-2-create-a-local-clone-of-your-fork
+.. _MinGW gettext: https://gnuwin32.sourceforge.net/packages/gettext.htm
 
 
 Start coding
