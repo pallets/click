@@ -10,11 +10,14 @@ import collections.abc as cabc
 import contextlib
 import math
 import os
+import shlex
 import sys
 import time
 import typing as t
 from gettext import gettext as _
 from io import StringIO
+from pathlib import Path
+from shutil import which
 from types import TracebackType
 
 from ._compat import _default_text_stdout
@@ -375,58 +378,89 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
 
     if not isatty(sys.stdin) or not isatty(stdout):
         return _nullpager(stdout, generator, color)
-    pager_cmd = (os.environ.get("PAGER", None) or "").strip()
-    if pager_cmd:
+
+    # Split and normalize the pager command into parts.
+    pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""), posix=False)
+    if pager_cmd_parts:
         if WIN:
-            return _tempfilepager(generator, pager_cmd, color)
-        return _pipepager(generator, pager_cmd, color)
+            if _tempfilepager(generator, pager_cmd_parts, color):
+                return
+        elif _pipepager(generator, pager_cmd_parts, color):
+            return
+
     if os.environ.get("TERM") in ("dumb", "emacs"):
         return _nullpager(stdout, generator, color)
-    if WIN or sys.platform.startswith("os2"):
-        return _tempfilepager(generator, "more <", color)
-    if hasattr(os, "system") and os.system("(less) 2>/dev/null") == 0:
-        return _pipepager(generator, "less", color)
+    if (WIN or sys.platform.startswith("os2")) and _tempfilepager(
+        generator, ["more"], color
+    ):
+        return
+    if _pipepager(generator, ["less"], color):
+        return
 
     import tempfile
 
     fd, filename = tempfile.mkstemp()
     os.close(fd)
     try:
-        if hasattr(os, "system") and os.system(f'more "{filename}"') == 0:
-            return _pipepager(generator, "more", color)
+        if _pipepager(generator, ["more"], color):
+            return
         return _nullpager(stdout, generator, color)
     finally:
         os.unlink(filename)
 
 
-def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> None:
-    """Page through text by feeding it to another program.  Invoking a
+def _pipepager(
+    generator: cabc.Iterable[str], cmd_parts: list[str], color: bool | None
+) -> bool:
+    """Page through text by feeding it to another program. Invoking a
     pager through this might support colors.
+
+    Returns `True` if the command was found, `False` otherwise and thus another
+    pager should be attempted.
     """
+    # Split the command into the invoked CLI and its parameters.
+    if not cmd_parts:
+        return False
+    cmd = cmd_parts[0]
+    cmd_params = cmd_parts[1:]
+
+    cmd_filepath = which(cmd)
+    if not cmd_filepath:
+        return False
+    # Resolves symlinks and produces a normalized absolute path string.
+    cmd_path = Path(cmd_filepath).resolve()
+    cmd_name = cmd_path.name
+
     import subprocess
 
+    # Make a local copy of the environment to not affect the global one.
     env = dict(os.environ)
 
-    # If we're piping to less we might support colors under the
-    # condition that
-    cmd_detail = cmd.rsplit("/", 1)[-1].split()
-    if color is None and cmd_detail[0] == "less":
-        less_flags = f"{os.environ.get('LESS', '')}{' '.join(cmd_detail[1:])}"
+    # If we're piping to less and the user hasn't decided on colors, we enable
+    # them by default we find the -R flag in the command line arguments.
+    if color is None and cmd_name == "less":
+        less_flags = f"{os.environ.get('LESS', '')}{' '.join(cmd_params)}"
         if not less_flags:
             env["LESS"] = "-R"
             color = True
         elif "r" in less_flags or "R" in less_flags:
             color = True
 
-    c = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, env=env)
-    stdin = t.cast(t.BinaryIO, c.stdin)
-    encoding = get_best_encoding(stdin)
+    c = subprocess.Popen(
+        [str(cmd_path)] + cmd_params,
+        shell=True,
+        stdin=subprocess.PIPE,
+        env=env,
+        errors="replace",
+        text=True,
+    )
+    assert c.stdin is not None
     try:
         for text in generator:
             if not color:
                 text = strip_ansi(text)
 
-            stdin.write(text.encode(encoding, "replace"))
+            c.stdin.write(text)
     except BrokenPipeError:
         # In case the pager exited unexpectedly, ignore the broken pipe error.
         pass
@@ -440,7 +474,7 @@ def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> N
     finally:
         # We must close stdin and wait for the pager to exit before we continue
         try:
-            stdin.close()
+            c.stdin.close()
         # Close implies flush, so it might throw a BrokenPipeError if the pager
         # process exited already.
         except BrokenPipeError:
@@ -462,9 +496,29 @@ def _pipepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> N
             else:
                 break
 
+    return True
 
-def _tempfilepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) -> None:
-    """Page through text by invoking a program on a temporary file."""
+
+def _tempfilepager(
+    generator: cabc.Iterable[str], cmd_parts: list[str], color: bool | None
+) -> bool:
+    """Page through text by invoking a program on a temporary file.
+
+    Returns `True` if the command was found, `False` otherwise and thus another
+    pager should be attempted.
+    """
+    # Split the command into the invoked CLI and its parameters.
+    if not cmd_parts:
+        return False
+    cmd = cmd_parts[0]
+
+    cmd_filepath = which(cmd)
+    if not cmd_filepath:
+        return False
+    # Resolves symlinks and produces a normalized absolute path string.
+    cmd_path = Path(cmd_filepath).resolve()
+
+    import subprocess
     import tempfile
 
     fd, filename = tempfile.mkstemp()
@@ -476,10 +530,15 @@ def _tempfilepager(generator: cabc.Iterable[str], cmd: str, color: bool | None) 
     with open_stream(filename, "wb")[0] as f:
         f.write(text.encode(encoding))
     try:
-        os.system(f'{cmd} "{filename}"')
+        subprocess.call([str(cmd_path), filename])
+    except OSError:
+        # Command not found
+        pass
     finally:
         os.close(fd)
         os.unlink(filename)
+
+    return True
 
 
 def _nullpager(
@@ -515,7 +574,7 @@ class Editor:
         if WIN:
             return "notepad"
         for editor in "sensible-editor", "vim", "nano":
-            if os.system(f"which {editor} >/dev/null 2>&1") == 0:
+            if which(editor) is not None:
                 return editor
         return "vi"
 
@@ -626,22 +685,33 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
             null.close()
     elif WIN:
         if locate:
-            url = _unquote_file(url.replace('"', ""))
-            args = f'explorer /select,"{url}"'
+            url = _unquote_file(url)
+            args = ["explorer", f"/select,{url}"]
         else:
-            url = url.replace('"', "")
-            wait_str = "/WAIT" if wait else ""
-            args = f'start {wait_str} "" "{url}"'
-        return os.system(args)
+            args = ["start"]
+            if wait:
+                args.append("/WAIT")
+            args.append("")
+            args.append(url)
+        try:
+            return subprocess.call(args)
+        except OSError:
+            # Command not found
+            return 127
     elif CYGWIN:
         if locate:
-            url = os.path.dirname(_unquote_file(url).replace('"', ""))
-            args = f'cygstart "{url}"'
+            url = _unquote_file(url)
+            args = ["cygstart", os.path.dirname(url)]
         else:
-            url = url.replace('"', "")
-            wait_str = "-w" if wait else ""
-            args = f'cygstart {wait_str} "{url}"'
-        return os.system(args)
+            args = ["cygstart"]
+            if wait:
+                args.append("-w")
+            args.append(url)
+        try:
+            return subprocess.call(args)
+        except OSError:
+            # Command not found
+            return 127
 
     try:
         if locate:
