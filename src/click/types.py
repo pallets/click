@@ -726,12 +726,15 @@ class File(ParamType):
     will not be held open until first IO. lazy is mainly useful when opening
     for writing to avoid creating the file until it is needed.
 
-    Starting with Click 2.0, files can also be opened atomically in which
-    case all writes go into a separate file in the same folder and upon
-    completion the file will be moved over to the original location.  This
-    is useful if a file regularly read by other users is modified.
+    Files can also be opened atomically in which case all writes go into a
+    separate file in the same folder and upon completion the file will
+    be moved over to the original location.  This is useful if a file
+    regularly read by other users is modified.
 
     See :ref:`file-args` for more information.
+
+    .. versionchanged:: 2.0
+        Added the ``atomic`` parameter.
     """
 
     name = "filename"
