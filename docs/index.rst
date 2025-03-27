@@ -80,6 +80,7 @@ usage patterns.
    commands
    documentation
    prompts
+   handling-files
    complex
    advanced
    testing

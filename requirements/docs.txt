@@ -35,7 +35,7 @@ mdurl==0.1.2
     # via markdown-it-py
 myst-parser==4.0.1
     # via -r docs.in
-packaging==24.1
+packaging==24.2
     # via
     #   pallets-sphinx-themes
     #   sphinx

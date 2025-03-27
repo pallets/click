@@ -375,6 +375,7 @@ class CliRunner:
         old_hidden_prompt_func = termui.hidden_prompt_func
         old__getchar_func = termui._getchar
         old_should_strip_ansi = utils.should_strip_ansi  # type: ignore
+        old__compat_should_strip_ansi = _compat.should_strip_ansi
         termui.visible_prompt_func = visible_input
         termui.hidden_prompt_func = hidden_input
         termui._getchar = _getchar
@@ -409,6 +410,7 @@ class CliRunner:
             termui.hidden_prompt_func = old_hidden_prompt_func
             termui._getchar = old__getchar_func
             utils.should_strip_ansi = old_should_strip_ansi  # type: ignore
+            _compat.should_strip_ansi = old__compat_should_strip_ansi
             formatting.FORCED_WIDTH = old_forced_width
 
     def invoke(

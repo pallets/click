@@ -1,10 +1,15 @@
 import os
 import pathlib
 import stat
+import subprocess
 import sys
 from collections import namedtuple
+from contextlib import nullcontext
+from functools import partial
 from io import StringIO
+from pathlib import Path
 from tempfile import tempdir
+from unittest.mock import patch
 
 import pytest
 
@@ -212,6 +217,9 @@ EchoViaPagerTest = namedtuple(
 
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
 @pytest.mark.parametrize(
+    "pager_cmd", ["cat", "cat ", " cat ", "less", " less", " less "]
+)
+@pytest.mark.parametrize(
     "test",
     [
         # We need to pass a parameter function instead of a plain param
@@ -262,7 +270,7 @@ EchoViaPagerTest = namedtuple(
             test_input=lambda: _test_gen_func_fails,
             # Because generator throws early on, the pager did not have
             # a chance yet to write the file.
-            expected_pager=None,
+            expected_pager="",
             expected_stdout="",
             expected_stderr="",
             expected_error=RuntimeError,
@@ -272,7 +280,7 @@ EchoViaPagerTest = namedtuple(
             test_input=lambda: _test_gen_func_fails,
             # Because generator throws early on, the pager did not have a
             # chance yet to write the file.
-            expected_pager=None,
+            expected_pager="",
             expected_stdout="",
             expected_stderr="",
             expected_error=RuntimeError,
@@ -307,13 +315,8 @@ EchoViaPagerTest = namedtuple(
         ),
     ],
 )
-def test_echo_via_pager(monkeypatch, capfd, test):
-    pager_out_tmp = f"{tempdir}/pager_out.txt"
-
-    if os.path.exists(pager_out_tmp):
-        os.remove(pager_out_tmp)
-
-    monkeypatch.setitem(os.environ, "PAGER", f"cat > {pager_out_tmp}")
+def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test):
+    monkeypatch.setitem(os.environ, "PAGER", pager_cmd)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
 
     test_input = test.test_input()
@@ -322,21 +325,23 @@ def test_echo_via_pager(monkeypatch, capfd, test):
     expected_stderr = test.expected_stderr
     expected_error = test.expected_error
 
-    if expected_error:
-        with pytest.raises(expected_error):
-            click.echo_via_pager(test_input)
-    else:
-        click.echo_via_pager(test_input)
+    check_raise = pytest.raises(expected_error) if expected_error else nullcontext()
+
+    pager_out_tmp = Path(tempdir) / "pager_out.txt"
+    pager_out_tmp.unlink(missing_ok=True)
+    with pager_out_tmp.open("w") as f:
+        force_subprocess_stdout = patch.object(
+            subprocess,
+            "Popen",
+            partial(subprocess.Popen, stdout=f),
+        )
+        with force_subprocess_stdout:
+            with check_raise:
+                click.echo_via_pager(test_input)
 
     out, err = capfd.readouterr()
 
-    if os.path.exists(pager_out_tmp):
-        with open(pager_out_tmp) as f:
-            pager = f.read()
-    else:
-        # The pager process was not started or has been
-        # terminated before it could finish writing
-        pager = None
+    pager = pager_out_tmp.read_text()
 
     assert (
         pager == expected_pager

@@ -1,4 +1,4 @@
-"""Example from https://click.palletsprojects.com/en/8.1.x/advanced/#command-aliases"""
+"""Example from https://click.palletsprojects.com/en/stable/advanced/#command-aliases"""
 
 from __future__ import annotations
 
