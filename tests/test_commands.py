@@ -459,3 +459,4 @@ def test_argument_named_helps():
 
     assert result.exit_code == 0
     assert "test" in result.output
+
