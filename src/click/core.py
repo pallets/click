@@ -1028,7 +1028,7 @@ class Command:
 
         # apply help_option decorator and pop resulting option
         help_option(*help_option_names)(self)
-        return self.params.pop() # type: ignore[return-value]
+        return self.params.pop()  # type: ignore[return-value]
 
     def make_parser(self, ctx: Context) -> _OptionParser:
         """Creates the underlying option parser for this command."""
