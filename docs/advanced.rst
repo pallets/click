@@ -109,6 +109,68 @@ also contain the parameter name.
     invoke(roll, args=["--rolls=2d12"])
     println()
     invoke(roll, input=["42", "2d12"])
+   :depth: 1
+   :local:
+
+.. _custom-groups:
+
+Custom Groups
+-------------
+
+You can customize the behavior of a group beyond the arguments it accepts by
+subclassing :class:`click.Group`.
+
+The most common methods to override are :meth:`~click.Group.get_command` and
+:meth:`~click.Group.list_commands`.
+
+The following example implements a basic plugin system that loads commands from
+Python files in a folder. The command is lazily loaded to avoid slow startup.
+
+.. code-block:: python
+
+    import importlib.util
+    import os
+    import click
+
+    class PluginGroup(click.Group):
+        def __init__(self, name=None, plugin_folder="commands", **kwargs):
+            super().__init__(name=name, **kwargs)
+            self.plugin_folder = plugin_folder
+
+        def list_commands(self, ctx):
+            rv = []
+
+            for filename in os.listdir(self.plugin_folder):
+                if filename.endswith(".py"):
+                    rv.append(filename[:-3])
+
+            rv.sort()
+            return rv
+
+        def get_command(self, ctx, name):
+            path = os.path.join(self.plugin_folder, f"{name}.py")
+            spec = importlib.util.spec_from_file_location(name, path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module.cli
+
+    cli = PluginGroup(
+        plugin_folder=os.path.join(os.path.dirname(__file__), "commands")
+    )
+
+    if __name__ == "__main__":
+        cli()
+
+Custom classes can also be used with decorators:
+
+.. code-block:: python
+
+    @click.group(
+        cls=PluginGroup,
+        plugin_folder=os.path.join(os.path.dirname(__file__), "commands")
+    )
+    def cli():
+        pass
 
 .. _aliases:
 

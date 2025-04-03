@@ -98,6 +98,8 @@ Unreleased
 -   ``Choice`` is now generic and supports any iterable value.
     This allows you to use enums and other non-``str`` values. :pr:`2796`
     :issue:`605`
+-   Fix setup of help option's defaults when using a custom class on its
+    decorator. Removes ``HelpOption``. :issue:`2832` :pr:`2840`
 
 Version 8.1.8
 -------------

@@ -76,6 +76,7 @@ usage patterns.
    options
    option-decorators
    arguments
+   commands-and-groups
    commands
    documentation
    prompts
