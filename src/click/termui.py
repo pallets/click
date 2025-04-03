@@ -57,20 +57,39 @@ def hidden_prompt_func(prompt: str) -> str:
     return getpass.getpass(prompt)
 
 
-def _build_prompt(
-    text: str,
-    suffix: str,
-    show_default: bool = False,
-    default: t.Any | None = None,
-    show_choices: bool = True,
-    type: ParamType | None = None,
-) -> str:
-    prompt = text
-    if type is not None and show_choices and isinstance(type, Choice):
-        prompt += f" ({', '.join(map(str, type.choices))})"
-    if default is not None and show_default:
-        prompt = f"{prompt} [{_format_default(default)}]"
-    return f"{prompt}{suffix}"
+class PromptBuilder:
+    def build(
+        self,
+        text: str,
+        suffix: str,
+        show_default: bool = False,
+        default: t.Any | None = None,
+        show_choices: bool = True,
+        type: ParamType | None = None,
+    ) -> str:
+        prompt = (
+            text
+            + self.add_choices(show_choices=show_choices, type=type)
+            + self.add_default(show_default=show_default, default=default)
+        )
+        return f"{prompt}{suffix}"
+
+    def add_choices(
+        self, show_choices: bool = True, type: ParamType | None = None
+    ) -> str:
+        if type is not None and show_choices and isinstance(type, Choice):
+            return f" ({', '.join(map(str, type.choices))})"
+        return ""
+
+    def add_default(
+        self, show_default: bool = False, default: t.Any | None = None
+    ) -> str:
+        if default is not None and show_default:
+            return f" [{_format_default(default)}]"
+        return ""
+
+
+_build_prompt = PromptBuilder().build
 
 
 def _format_default(default: t.Any) -> t.Any:
