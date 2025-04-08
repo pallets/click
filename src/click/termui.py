@@ -58,6 +58,23 @@ def hidden_prompt_func(prompt: str) -> str:
 
 
 class PromptBuilder:
+    """Base class for building prompts.
+
+    This class is used to build the prompt string that is displayed to
+    the user. It can be customized by subclassing and overriding any
+    of the methods: `build`, `add_choices`, and `add_default`,
+    `should_add_choices`, `should_add_default`.
+
+    :param text: The text to display in the prompt.
+    :param suffix: The suffix to append to the prompt.
+    :param show_default: Whether to show the default value in the prompt.
+    :param default: The default value to display in the prompt.
+    :param show_choices: Whether to show the choices in the prompt.
+    :param type: The type of the parameter, used to determine choices.
+
+    .. versionadded:: 8.2.1
+    """
+
     def build(
         self,
         text: str,
@@ -77,16 +94,28 @@ class PromptBuilder:
     def add_choices(
         self, show_choices: bool = True, type: ParamType | None = None
     ) -> str:
-        if type is not None and show_choices and isinstance(type, Choice):
-            return f" ({', '.join(map(str, type.choices))})"
+        if self.should_add_choices(show_choices, type):
+            # ignoring type as it does not dynamically recognize
+            # it's valid via above check
+            return f" ({', '.join(map(str, type.choices))})"  # type: ignore
         return ""
 
     def add_default(
         self, show_default: bool = False, default: t.Any | None = None
     ) -> str:
-        if default is not None and show_default:
+        if self.should_add_default(show_default, default):
             return f" [{_format_default(default)}]"
         return ""
+
+    def should_add_choices(
+        self, show_choices: bool = True, type: ParamType | None = None
+    ) -> bool:
+        return type is not None and show_choices and isinstance(type, Choice)
+
+    def should_add_default(
+        self, show_default: bool = False, default: t.Any | None = None
+    ) -> bool:
+        return default is not None and show_default
 
     @staticmethod
     def validate(value: t.Any) -> None:
@@ -154,7 +183,7 @@ def prompt(
         :class:`PromptBuilder` will be used. This is useful for
         customizing the prompt format.
 
-    .. versionadded:: 8.2.1
+    .. versionchanged:: 8.2.1
         The ``builder_cls`` parameter.
 
     .. versionadded:: 8.0

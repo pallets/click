@@ -1,5 +1,12 @@
 .. currentmodule:: click
 
+Version 8.2.1
+-------------
+
+Unreleased
+
+-   Create ``PrompBuilder`` class for customizing prompts display and add ``builder_cls`` parameter to ``prompt`` and ``confirm`` methods. :issue:`2875`
+
 Version 8.2.0
 -------------
 
