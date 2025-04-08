@@ -57,20 +57,80 @@ def hidden_prompt_func(prompt: str) -> str:
     return getpass.getpass(prompt)
 
 
-def _build_prompt(
-    text: str,
-    suffix: str,
-    show_default: bool = False,
-    default: t.Any | None = None,
-    show_choices: bool = True,
-    type: ParamType | None = None,
-) -> str:
-    prompt = text
-    if type is not None and show_choices and isinstance(type, Choice):
-        prompt += f" ({', '.join(map(str, type.choices))})"
-    if default is not None and show_default:
-        prompt = f"{prompt} [{_format_default(default)}]"
-    return f"{prompt}{suffix}"
+class PromptBuilder:
+    """Base class for building prompts.
+
+    This class is used to build the prompt string that is displayed to
+    the user. It can be customized by subclassing and overriding any
+    of the methods: `build`, `add_choices`, and `add_default`,
+    `should_add_choices`, `should_add_default`.
+
+    :param text: The text to display in the prompt.
+    :param suffix: The suffix to append to the prompt.
+    :param show_default: Whether to show the default value in the prompt.
+    :param default: The default value to display in the prompt.
+    :param show_choices: Whether to show the choices in the prompt.
+    :param type: The type of the parameter, used to determine choices.
+
+    .. versionadded:: 8.2.1
+    """
+
+    def build(
+        self,
+        text: str,
+        suffix: str,
+        show_default: bool = False,
+        default: t.Any | None = None,
+        show_choices: bool = True,
+        type: ParamType | None = None,
+    ) -> str:
+        prompt = (
+            text
+            + self.add_choices(show_choices=show_choices, type=type)
+            + self.add_default(show_default=show_default, default=default)
+        )
+        return f"{prompt}{suffix}"
+
+    def add_choices(
+        self, show_choices: bool = True, type: ParamType | None = None
+    ) -> str:
+        if self.should_add_choices(show_choices, type):
+            # ignoring type as it does not dynamically recognize
+            # it's valid via above check
+            return f" ({', '.join(map(str, type.choices))})"  # type: ignore
+        return ""
+
+    def add_default(
+        self, show_default: bool = False, default: t.Any | None = None
+    ) -> str:
+        if self.should_add_default(show_default, default):
+            return f" [{_format_default(default)}]"
+        return ""
+
+    def should_add_choices(
+        self, show_choices: bool = True, type: ParamType | None = None
+    ) -> bool:
+        return type is not None and show_choices and isinstance(type, Choice)
+
+    def should_add_default(
+        self, show_default: bool = False, default: t.Any | None = None
+    ) -> bool:
+        return default is not None and show_default
+
+    @staticmethod
+    def validate(value: t.Any) -> None:
+        """Check if the `value` class is an instance and an instance of PromptBuilder.
+
+        Raises an AssertionError if the `value` class
+        is not an instance of PromptBuilder."""
+        try:
+            if issubclass(value, PromptBuilder):
+                raise AssertionError(
+                    f"Attempted to use an uninstantiated parameter type ({value})."
+                )
+        except TypeError:
+            # cls is an instance (correct), so issubclass fails.
+            pass
 
 
 def _format_default(default: t.Any) -> t.Any:
@@ -91,6 +151,7 @@ def prompt(
     show_default: bool = True,
     err: bool = False,
     show_choices: bool = True,
+    builder_cls: PromptBuilder | None = None,
 ) -> t.Any:
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
@@ -118,6 +179,12 @@ def prompt(
                          For example if type is a Choice of either day or week,
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
+    :param builder_cls: A custom prompt builder class. If not provided,
+        :class:`PromptBuilder` will be used. This is useful for
+        customizing the prompt format.
+
+    .. versionchanged:: 8.2.1
+        The ``builder_cls`` parameter.
 
     .. versionadded:: 8.0
         ``confirmation_prompt`` can be a custom string.
@@ -132,6 +199,11 @@ def prompt(
         Added the `err` parameter.
 
     """
+    if builder_cls is None:
+        builder_cls = PromptBuilder()
+
+    if __debug__:
+        PromptBuilder.validate(builder_cls)
 
     def prompt_func(text: str) -> str:
         f = hidden_prompt_func if hide_input else visible_prompt_func
@@ -153,7 +225,7 @@ def prompt(
     if value_proc is None:
         value_proc = convert_type(type, default)
 
-    prompt = _build_prompt(
+    prompt = builder_cls.build(
         text, prompt_suffix, show_default, default, show_choices, type
     )
 
@@ -161,7 +233,7 @@ def prompt(
         if confirmation_prompt is True:
             confirmation_prompt = _("Repeat for confirmation")
 
-        confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
+        confirmation_prompt = builder_cls.build(confirmation_prompt, prompt_suffix)
 
     while True:
         while True:
@@ -198,6 +270,7 @@ def confirm(
     prompt_suffix: str = ": ",
     show_default: bool = True,
     err: bool = False,
+    builder_cls: PromptBuilder | None = None,
 ) -> bool:
     """Prompts for confirmation (yes/no question).
 
@@ -213,6 +286,12 @@ def confirm(
     :param show_default: shows or hides the default value in the prompt.
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``, the same as with echo.
+    :param builder_cls: A custom prompt builder class. If not provided,
+        :class:`PromptBuilder` will be used. This is useful for
+        customizing the prompt format.
+
+    .. versionadded:: 8.2.1
+        The ``builder_cls`` parameter.
 
     .. versionchanged:: 8.0
         Repeat until input is given if ``default`` is ``None``.
@@ -220,7 +299,13 @@ def confirm(
     .. versionadded:: 4.0
         Added the ``err`` parameter.
     """
-    prompt = _build_prompt(
+    if builder_cls is None:
+        builder_cls = PromptBuilder()
+
+    if __debug__:
+        PromptBuilder.validate(builder_cls)
+
+    prompt = builder_cls.build(
         text,
         prompt_suffix,
         show_default,

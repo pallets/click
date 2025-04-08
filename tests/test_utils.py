@@ -150,6 +150,46 @@ def test_prompts(runner):
     assert result.output == "Foo [Y/n]: n\nno :(\n"
 
 
+def test_prompts_custom_builder(runner):
+    class CustomBuilder(click.termui.PromptBuilder):
+        def add_choices(self, show_choices=True, type=None):
+            if self.should_add_choices(show_choices, type):
+                # ignoring type as it does not dynamically recognize
+                # it's valid via above check
+                return f" ({' | '.join(map(str, type.choices))})"  # type: ignore
+
+        def add_default(self, show_default=False, default=None):
+            if self.should_add_default(show_default, default):
+                return f" <<{default}>>"
+
+    @click.command()
+    def test():
+        if (
+            click.prompt(
+                "Foo",
+                type=click.Choice(["bar", "baz"]),
+                default="bar",
+                builder_cls=CustomBuilder(),
+            )
+            == "bar"
+        ):
+            click.echo("yes!")
+        else:
+            click.echo("no :(")
+
+    result = runner.invoke(test, input="bar\n")
+    assert not result.exception
+    assert result.output == "Foo (bar | baz) <<bar>>: bar\nyes!\n"
+
+    result = runner.invoke(test, input="\n")
+    assert not result.exception
+    assert result.output == "Foo (bar | baz) <<bar>>: \nyes!\n"
+
+    result = runner.invoke(test, input="baz\n")
+    assert not result.exception
+    assert result.output == "Foo (bar | baz) <<bar>>: baz\nno :(\n"
+
+
 def test_confirm_repeat(runner):
     cli = click.Command(
         "cli", params=[click.Option(["--a/--no-a"], default=None, prompt=True)]
