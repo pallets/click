@@ -41,6 +41,8 @@ Decorators
 Utilities
 ---------
 
+.. autoclass:: PromptBuilder
+
 .. autofunction:: echo
 
 .. autofunction:: echo_via_pager

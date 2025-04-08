@@ -32,6 +32,9 @@ provided.  For instance, the following will only accept floats::
 
     value = click.prompt('Please enter a number', default=42.0)
 
+You can customize how to display and format the prompt via providing
+:param:`builder_cls` as an instance of :class:`PromptBuilder`.
+
 Confirmation Prompts
 --------------------
 
@@ -46,3 +49,7 @@ There is also the option to make the function automatically abort the
 execution of the program if it does not return ``True``::
 
     click.confirm('Do you want to continue?', abort=True)
+
+As in `Input Prompts`_ described above, you can customize how to display
+and format the prompt via providing :param:`builder_cls` as an instance
+of :class:`PromptBuilder`.
