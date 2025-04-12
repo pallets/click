@@ -1,6 +1,6 @@
 [project]
 name = "click"
-version = "8.2.0.dev"
+version = "8.2.0"
 description = "Composable command line interface toolkit"
 readme = "README.md"
 license = {file = "LICENSE.txt"}
