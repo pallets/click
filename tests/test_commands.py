@@ -3,6 +3,7 @@ import re
 import pytest
 
 import click
+from click.testing import CliRunner
 
 
 def test_other_command_invoke(runner):
@@ -413,3 +414,48 @@ def test_abort_exceptions_with_disabled_standalone_mode(runner, exc):
     assert rv.exit_code == 1
     assert isinstance(rv.exception.__cause__, exc)
     assert rv.exception.__cause__.args == ("catch me!",)
+
+
+def test_argument_named_help():
+    @click.command()
+    @click.argument("help")
+    def my_command(help):
+        click.echo(help)
+
+    runner = CliRunner()
+    result = runner.invoke(my_command, ["test"])
+
+    assert result.exit_code != 0
+    assert "Invalid value for '--help'" in result.output
+
+
+def test_option_named_help():
+    @click.command()
+    @click.option("--help", default="this_2")
+    def my_command(help):
+        click.echo(help)
+
+    runner = CliRunner()
+
+    # Invoke without --help, should succeed
+    result_without_help = runner.invoke(my_command)
+    assert result_without_help.exit_code == 0
+    assert result_without_help.output.strip() == "this_2"
+
+    # Invoke with --help, should fail
+    result_with_help = runner.invoke(my_command, ["--help"])
+    assert result_with_help.exit_code != 0
+    assert "Error: Option '--help' requires an argument." in result_with_help.output
+
+
+def test_argument_named_helps():
+    @click.command()
+    @click.argument("helps")
+    def my_command(helps):
+        click.echo(helps)
+
+    runner = CliRunner()
+    result = runner.invoke(my_command, ["test"])
+
+    assert result.exit_code == 0
+    assert "test" in result.output
