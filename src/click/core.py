@@ -13,8 +13,6 @@ from contextlib import AbstractContextManager
 from contextlib import contextmanager
 from contextlib import ExitStack
 from functools import update_wrapper
-from gettext import gettext as _
-from gettext import ngettext
 from itertools import repeat
 from types import TracebackType
 
@@ -30,6 +28,8 @@ from .formatting import HelpFormatter
 from .formatting import join_options
 from .globals import pop_context
 from .globals import push_context
+from .locales import gettext as _
+from .locales import ngettext
 from .parser import _flag_needs_value
 from .parser import _OptionParser
 from .parser import _split_opt

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import collections.abc as cabc
 from contextlib import contextmanager
-from gettext import gettext as _
 
 from ._compat import term_len
+from .locales import gettext as _
 from .parser import _split_opt
 
 # Can force a width.  This is used by the test system

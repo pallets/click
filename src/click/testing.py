@@ -13,6 +13,7 @@ from types import TracebackType
 
 from . import _compat
 from . import formatting
+from . import locales
 from . import termui
 from . import utils
 from ._compat import _find_binary_reader
@@ -553,3 +554,16 @@ class CliRunner:
                     shutil.rmtree(dt)
                 except OSError:
                     pass
+
+
+@contextlib.contextmanager
+def ContextualizedLocale(target_locale: str) -> cabc.Iterator[None]:
+    old_locale = locales.get_click_locale()
+    locales.set_click_locale(target_locale)
+
+    yield
+
+    if old_locale is None:
+        locales.reset_click_locale()
+    else:
+        locales.set_click_locale(old_locale)
