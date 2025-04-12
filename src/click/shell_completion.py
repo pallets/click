@@ -124,6 +124,12 @@ _SOURCE_BASH = """\
 %(complete_func)s_setup;
 """
 
+# See ZshComplete.format_completion below, and issue #2703, before
+# changing this script.
+#
+# (TL;DR: _describe is picky about the format, but this Zsh script snippet
+# is already widely deployed.  So freeze this script, and use clever-ish
+# handling of colons in ZshComplet.format_completion.)
 _SOURCE_ZSH = """\
 #compdef %(prog_name)s
 
@@ -366,7 +372,24 @@ class ZshComplete(ShellComplete):
         return args, incomplete
 
     def format_completion(self, item: CompletionItem) -> str:
-        return f"{item.type}\n{item.value}\n{item.help if item.help else '_'}"
+        """"""
+        # See issue #1812 and issue #2703 for further context.  (TL;DR:
+        # colons sometimes need special handling.)
+        #
+        # Items *with* help are registered with zsh's `_describe`, which
+        # splits off the help/description after the first colon.  So
+        # escape all colons in item.value so that they arrive intact.
+        #
+        # Items *without* help are registered with zsh's `compadd`,
+        # which does no colon handling.  So do *not* escape colons in
+        # item.value, lest the completions themselves ultimately get
+        # mangled.
+        #
+        # Finally, there is no functional difference between using an
+        # empty help and using "_" as help.
+        help_ = item.help or "_"
+        value = item.value.replace(":", r"\:") if help_ != "_" else item.value
+        return f"{item.type}\n{value}\n{help_}"
 
 
 class FishComplete(ShellComplete):
