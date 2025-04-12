@@ -109,8 +109,6 @@ also contain the parameter name.
     invoke(roll, args=["--rolls=2d12"])
     println()
     invoke(roll, input=["42", "2d12"])
-   :depth: 1
-   :local:
 
 .. _custom-groups:
 
