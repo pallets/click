@@ -8,8 +8,107 @@ itself, there are countless patterns that can be implemented by extending
 Click.  This page should give some insight into what can be accomplished.
 
 .. contents::
-   :depth: 1
-   :local:
+    :depth: 2
+    :local:
+
+Callbacks and Eager Options
+---------------------------
+
+Sometimes, you want a parameter to completely change the execution flow.
+For instance, this is the case when you want to have a ``--version``
+parameter that prints out the version and then exits the application.
+
+Note: an actual implementation of a ``--version`` parameter that is
+reusable is available in Click as :func:`click.version_option`.  The code
+here is merely an example of how to implement such a flag.
+
+In such cases, you need two concepts: eager parameters and a callback.  An
+eager parameter is a parameter that is handled before others, and a
+callback is what executes after the parameter is handled.  The eagerness
+is necessary so that an earlier required parameter does not produce an
+error message.  For instance, if ``--version`` was not eager and a
+parameter ``--foo`` was required and defined before, you would need to
+specify it for ``--version`` to work.  For more information, see
+:ref:`callback-evaluation-order`.
+
+A callback is a function that is invoked with three parameters: the
+current :class:`Context`, the current :class:`Parameter`, and the value.
+The context provides some useful features such as quitting the
+application and gives access to other already processed parameters.
+
+Here's an example for a ``--version`` flag:
+
+.. click:example::
+
+    def print_version(ctx, param, value):
+        if not value or ctx.resilient_parsing:
+            return
+        click.echo('Version 1.0')
+        ctx.exit()
+
+    @click.command()
+    @click.option('--version', is_flag=True, callback=print_version,
+                  expose_value=False, is_eager=True)
+    def hello():
+        click.echo('Hello World!')
+
+The `expose_value` parameter prevents the pretty pointless ``version``
+parameter from being passed to the callback.  If that was not specified, a
+boolean would be passed to the `hello` script.  The `resilient_parsing`
+flag is applied to the context if Click wants to parse the command line
+without any destructive behavior that would change the execution flow.  In
+this case, because we would exit the program, we instead do nothing.
+
+What it looks like:
+
+.. click:run::
+
+    invoke(hello)
+    invoke(hello, args=['--version'])
+
+Callbacks for Validation
+------------------------
+
+.. versionchanged:: 2.0
+
+If you want to apply custom validation logic, you can do this in the
+parameter callbacks. These callbacks can both modify values as well as
+raise errors if the validation does not work. The callback runs after
+type conversion. It is called for all sources, including prompts.
+
+In Click 1.0, you can only raise the :exc:`UsageError` but starting with
+Click 2.0, you can also raise the :exc:`BadParameter` error, which has the
+added advantage that it will automatically format the error message to
+also contain the parameter name.
+
+.. click:example::
+
+    def validate_rolls(ctx, param, value):
+        if isinstance(value, tuple):
+            return value
+
+        try:
+            rolls, _, dice = value.partition("d")
+            return int(dice), int(rolls)
+        except ValueError:
+            raise click.BadParameter("format must be 'NdM'")
+
+    @click.command()
+    @click.option(
+        "--rolls", type=click.UNPROCESSED, callback=validate_rolls,
+        default="1d6", prompt=True,
+    )
+    def roll(rolls):
+        sides, times = rolls
+        click.echo(f"Rolling a {sides}-sided dice {times} time(s)")
+
+.. click:run::
+
+    invoke(roll, args=["--rolls=42"])
+    println()
+    invoke(roll, args=["--rolls=2d12"])
+    println()
+    invoke(roll, input=["42", "2d12"])
 
 .. _custom-groups:
 
