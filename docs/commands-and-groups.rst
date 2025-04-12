@@ -216,3 +216,54 @@ Most examples so far have attached the commands to a group immediately, but comm
 Context Object
 -------------------
 The :class:`Context` object is how commands and groups communicate.
+
+Auto Envvar Prefix
+--------------------
+Automatically built environment variables are supported for options only. To enable this feature, the ``auto_envvar_prefix`` parameter needs to be passed to the script that is invoked.  Each command and parameter is then added as an uppercase underscore-separated variable.  If you have a subcommand
+called ``run`` taking an option called ``reload`` and the prefix is ``WEB``, then the variable is ``WEB_RUN_RELOAD``.
+
+Example usage:
+
+.. click:example::
+
+    @click.command()
+    @click.option('--username')
+    def greet(username):
+        click.echo(f'Hello {username}!')
+
+    if __name__ == '__main__':
+        greet(auto_envvar_prefix='GREETER')
+
+And from the command line:
+
+.. click:run::
+
+    invoke(greet, env={'GREETER_USERNAME': 'john'},
+           auto_envvar_prefix='GREETER')
+
+When using ``auto_envvar_prefix`` with command groups, the command name
+needs to be included in the environment variable, between the prefix and
+the parameter name, *i.e.* ``PREFIX_COMMAND_VARIABLE``. If you have a
+subcommand called ``run-server`` taking an option called ``host`` and
+the prefix is ``WEB``, then the variable is ``WEB_RUN_SERVER_HOST``.
+
+.. click:example::
+
+   @click.group()
+   @click.option('--debug/--no-debug')
+   def cli(debug):
+       click.echo(f"Debug mode is {'on' if debug else 'off'}")
+
+   @cli.command()
+   @click.option('--username')
+   def greet(username):
+       click.echo(f"Hello {username}!")
+
+   if __name__ == '__main__':
+       cli(auto_envvar_prefix='GREETER')
+
+.. click:run::
+
+   invoke(cli, args=['greet',],
+          env={'GREETER_GREET_USERNAME': 'John', 'GREETER_DEBUG': 'false'},
+          auto_envvar_prefix='GREETER')
