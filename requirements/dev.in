@@ -3,3 +3,4 @@
 -r typing.txt
 pre-commit
 tox
+sphinx-autobuild

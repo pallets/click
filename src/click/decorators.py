@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import inspect
 import typing as t
-from collections import abc
 from functools import update_wrapper
 from gettext import gettext as _
 
@@ -525,41 +524,28 @@ def version_option(
     return option(*param_decls, **kwargs)
 
 
-class HelpOption(Option):
+def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     """Pre-configured ``--help`` option which immediately prints the help page
     and exits the program.
+
+    :param param_decls: One or more option names. Defaults to the single
+        value ``"--help"``.
+    :param kwargs: Extra arguments are passed to :func:`option`.
     """
 
-    def __init__(
-        self,
-        param_decls: abc.Sequence[str] | None = None,
-        **kwargs: t.Any,
-    ) -> None:
-        if not param_decls:
-            param_decls = ("--help",)
-
-        kwargs.setdefault("is_flag", True)
-        kwargs.setdefault("expose_value", False)
-        kwargs.setdefault("is_eager", True)
-        kwargs.setdefault("help", _("Show this message and exit."))
-        kwargs.setdefault("callback", self.show_help)
-
-        super().__init__(param_decls, **kwargs)
-
-    @staticmethod
     def show_help(ctx: Context, param: Parameter, value: bool) -> None:
         """Callback that print the help page on ``<stdout>`` and exits."""
         if value and not ctx.resilient_parsing:
             echo(ctx.get_help(), color=ctx.color)
             ctx.exit()
 
+    if not param_decls:
+        param_decls = ("--help",)
 
-def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
-    """Decorator for the pre-configured ``--help`` option defined above.
+    kwargs.setdefault("is_flag", True)
+    kwargs.setdefault("expose_value", False)
+    kwargs.setdefault("is_eager", True)
+    kwargs.setdefault("help", _("Show this message and exit."))
+    kwargs.setdefault("callback", show_help)
 
-    :param param_decls: One or more option names. Defaults to the single
-        value ``"--help"``.
-    :param kwargs: Extra arguments are passed to :func:`option`.
-    """
-    kwargs.setdefault("cls", HelpOption)
     return option(*param_decls, **kwargs)
