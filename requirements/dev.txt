@@ -86,7 +86,7 @@ nodeenv==1.9.1
     #   -r typing.txt
     #   pre-commit
     #   pyright
-packaging==24.1
+packaging==24.2
     # via
     #   -r docs.txt
     #   -r tests.txt
@@ -115,9 +115,9 @@ pygments==2.18.0
     #   sphinx-tabs
 pyproject-api==1.8.0
     # via tox
-pyright==1.1.386
+pyright==1.1.390
     # via -r typing.txt
-pytest==8.3.3
+pytest==8.3.4
     # via -r tests.txt
 pyyaml==6.0.2
     # via pre-commit

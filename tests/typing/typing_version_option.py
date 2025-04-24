@@ -1,5 +1,5 @@
 """
-From https://click.palletsprojects.com/en/8.1.x/options/#callbacks-and-eager-options.
+From https://click.palletsprojects.com/en/stable/options/#callbacks-and-eager-options.
 """
 
 from typing_extensions import assert_type
