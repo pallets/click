@@ -3,9 +3,9 @@
 Version 8.2.0
 -------------
 
-Released 2025-03-26
+Released 2025-05-10
 
--   Drop support for Python 3.7, 3.8, and 3.9. :pr:`2588` :pr:`2892`
+-   Drop support for Python 3.7, 3.8, and 3.9. :pr:`2588` :pr:`2893`
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
     :pr:`2438`
 -   Use ``flit_core`` instead of ``setuptools`` as build backend. :pr:`2543`
