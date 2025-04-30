@@ -116,9 +116,16 @@ def iter_params_for_processing(
     invocation_order: cabc.Sequence[Parameter],
     declaration_order: cabc.Sequence[Parameter],
 ) -> list[Parameter]:
-    """Given a sequence of parameters in the order as should be considered
-    for processing and an iterable of parameters that exist, this returns
-    a list in the correct order as they should be processed.
+    """Returns all declared parameters in the order they should be processed.
+
+    The declared parameters are re-shuffled depending on the order in which
+    they were invoked, as well as the eagerness of each parameters.
+
+    The invocation order takes precedence over the declaration order. I.e. the
+    order in which the user provided them to the CLI is respected.
+
+    This behavior and its effect on callback evaluation is detailed at:
+    https://click.palletsprojects.com/en/stable/advanced/#callback-evaluation-order
     """
 
     def sort_key(item: Parameter) -> tuple[bool, float]:
@@ -934,6 +941,7 @@ class Command:
         self.options_metavar = options_metavar
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self._help_option = None
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
@@ -1017,18 +1025,28 @@ class Command:
         """Returns the help option object.
 
         Skipped if :attr:`add_help_option` is ``False``.
+
+        .. versionchanged:: 8.1.8
+            The help option is now cached to avoid creating it multiple times.
         """
         help_option_names = self.get_help_option_names(ctx)
 
         if not help_option_names or not self.add_help_option:
             return None
 
-        # Avoid circular import.
-        from .decorators import help_option
+        # Cache the help option object in private _help_option attribute to
+        # avoid creating it multiple times. Not doing this will break the
+        # callback odering by iter_params_for_processing(), which relies on
+        # object comparison.
+        if self._help_option is None:
+            # Avoid circular import.
+            from .decorators import help_option
 
-        # apply help_option decorator and pop resulting option
-        help_option(*help_option_names)(self)
-        return self.params.pop()  # type: ignore[return-value]
+            # Apply help_option decorator and pop resulting option
+            help_option(*help_option_names)(self)
+            self._help_option = self.params.pop()  # type: ignore[assignment]
+
+        return self._help_option
 
     def make_parser(self, ctx: Context) -> _OptionParser:
         """Creates the underlying option parser for this command."""
