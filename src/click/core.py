@@ -1218,8 +1218,7 @@ class Command:
                 f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
             )
             message = _(
-                "DeprecationWarning: The command {name!r} is deprecated."
-                "{extra_message}"
+                "DeprecationWarning: The command {name!r} is deprecated.{extra_message}"
             ).format(name=self.name, extra_message=extra_message)
             echo(style(message, fg="red"), err=True)
 

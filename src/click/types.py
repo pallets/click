@@ -1,3 +1,11 @@
+# Ask Ruff to accept the format method on strings, and not let pyupgrade
+# always force f-strings. The latter are unfortunately not supported yet
+# by Babel, a localisation library.
+#
+# Note: Using `# noqa: UP032` on lines has not worked, so a file
+#       setting.
+# ruff: noqa: UP032
+
 from __future__ import annotations
 
 import collections.abc as cabc
@@ -318,10 +326,10 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
 
         # Use curly braces to indicate a required argument.
         if param.required and param.param_type_name == "argument":
-            return f"{{{choices_str}}}"
+            return "{{{choices}}}".format(choices=choices_str)  # noqa: UP032
 
         # Use square braces to indicate an option or optional argument.
-        return f"[{choices_str}]"
+        return "[{choices}]".format(choices=choices_str)  # noqa: UP032
 
     def get_missing_message(self, param: Parameter, ctx: Context | None) -> str:
         """
@@ -372,7 +380,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
         ).format(value=value, choice=choices_str, choices=choices_str)
 
     def __repr__(self) -> str:
-        return f"Choice({list(self.choices)})"
+        return "Choice({choices})".format(choices=list(self.choices))  # noqa: UP032
 
     def shell_complete(
         self, ctx: Context, param: Parameter, incomplete: str
@@ -434,7 +442,7 @@ class DateTime(ParamType):
         return info_dict
 
     def get_metavar(self, param: Parameter, ctx: Context) -> str | None:
-        return f"[{'|'.join(self.formats)}]"
+        return "[{formats}]".format(formats="|".join(self.formats))  # noqa: UP032
 
     def _try_to_convert_date(self, value: t.Any, format: str) -> datetime | None:
         try:
@@ -809,7 +817,13 @@ class File(ParamType):
 
             return f
         except OSError as e:
-            self.fail(f"'{format_filename(value)}': {e.strerror}", param, ctx)
+            self.fail(
+                "'{filename}': {message}".format(
+                    filename=format_filename(value), message=e.strerror
+                ),
+                param,
+                ctx,
+            )  # noqa: UP032
 
     def shell_complete(
         self, ctx: Context, param: Parameter, incomplete: str
@@ -1114,7 +1128,8 @@ def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType:
         try:
             if issubclass(ty, ParamType):
                 raise AssertionError(
-                    f"Attempted to use an uninstantiated parameter type ({ty})."
+                    "Attempted to use an uninstantiated parameter "
+                    "type ({type}).".format(type=ty)  # noqa: UP032
                 )
         except TypeError:
             # ty is an instance (correct), so issubclass fails.
