@@ -1,3 +1,11 @@
+# Ask Ruff to accept the format method on strings, and not let pyupgrade
+# always force f-strings. The latter are unfortunately not supported yet
+# by Babel, a localisation library.
+#
+# Note: Using `# noqa: UP032` on lines has not worked, so a file
+#       setting.
+# ruff: noqa: UP032
+
 from __future__ import annotations
 
 import collections.abc as cabc
@@ -77,13 +85,17 @@ def _check_nested_chain(
 
     if register:
         message = (
-            f"It is not possible to add the group {cmd_name!r} to another"
-            f" group {base_command.name!r} that is in chain mode."
+            "It is not possible to add the group {cmd_name!r} to another"
+            " group {base_cmd_name!r} that is in chain mode.".format(
+                cmd_name=cmd_name, base_cmd_name=base_command.name
+            )  # noqa: UP032
         )
     else:
         message = (
-            f"Found the group {cmd_name!r} as subcommand to another group "
-            f" {base_command.name!r} that is in chain mode. This is not supported."
+            "Found the group {cmd_name!r} as subcommand to another group "
+            " {base_cmd_name!r} that is in chain mode. This is not supported.".format(
+                cmd_name=cmd_name, base_cmd_name=base_command.name
+            )  # noqa: UP032
         )
 
     raise RuntimeError(message)
@@ -986,8 +998,10 @@ class Command:
             for duplicate_opt in duplicate_opts:
                 warnings.warn(
                     (
-                        f"The parameter {duplicate_opt} is used more than once. "
-                        "Remove its duplicate as parameters should be unique."
+                        _(
+                            "The parameter {param} is used more than once. "
+                            "Remove its duplicate as parameters should be unique."
+                        ).format(param=duplicate_opt)
                     ),
                     stacklevel=3,
                 )
@@ -1077,9 +1091,9 @@ class Command:
 
         if self.deprecated:
             deprecated_message = (
-                f"(DEPRECATED: {self.deprecated})"
+                _("(DEPRECATED: {target})".format(target=self.deprecated))
                 if isinstance(self.deprecated, str)
-                else "(DEPRECATED)"
+                else _("(DEPRECATED)")
             )
             text = _("{text} {deprecated_message}").format(
                 text=text, deprecated_message=deprecated_message
@@ -1114,9 +1128,9 @@ class Command:
 
         if self.deprecated:
             deprecated_message = (
-                f"(DEPRECATED: {self.deprecated})"
+                _("(DEPRECATED: {target})".format(target=self.deprecated))
                 if isinstance(self.deprecated, str)
-                else "(DEPRECATED)"
+                else _("(DEPRECATED)")
             )
             text = _("{text} {deprecated_message}").format(
                 text=text, deprecated_message=deprecated_message
@@ -1218,8 +1232,7 @@ class Command:
                 f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
             )
             message = _(
-                "DeprecationWarning: The command {name!r} is deprecated."
-                "{extra_message}"
+                "DeprecationWarning: The command {name!r} is deprecated.{extra_message}"
             ).format(name=self.name, extra_message=extra_message)
             echo(style(message, fg="red"), err=True)
 
@@ -2124,8 +2137,10 @@ class Parameter:
         if __debug__:
             if self.type.is_composite and nargs != self.type.arity:
                 raise ValueError(
-                    f"'nargs' must be {self.type.arity} (or None) for"
-                    f" type {self.type!r}, but it was {nargs}."
+                    "'nargs' must be {arity} (or None) for"
+                    " type {type!r}, but it was {nargs}.".format(
+                        arity=self.type.arity, type=self.type, nargs=nargs
+                    )
                 )
 
             # Skip no default or callable default.
@@ -2159,14 +2174,21 @@ class Parameter:
                     if nargs > 1 and len(check_default) != nargs:
                         subject = "item length" if multiple else "length"
                         raise ValueError(
-                            f"'default' {subject} must match nargs={nargs}."
+                            _("'default' {subject} must match nargs={nargs}.").format(
+                                subject=subject, nargs=nargs
+                            )
                         )
 
             if required and deprecated:
                 raise ValueError(
-                    f"The {self.param_type_name} '{self.human_readable_name}' "
-                    "is deprecated and still required. A deprecated "
-                    f"{self.param_type_name} cannot be required."
+                    _(
+                        "The {type_name} '{readable_name}' "
+                        "is deprecated and still required. A deprecated "
+                        "{type_name} cannot be required."
+                    ).format(
+                        type_name=self.param_type_name,
+                        readable_name=self.human_readable_name,
+                    )
                 )
 
     def to_info_dict(self) -> dict[str, t.Any]:
@@ -2572,9 +2594,9 @@ class Option(Parameter):
 
         if deprecated:
             deprecated_message = (
-                f"(DEPRECATED: {deprecated})"
+                _("(DEPRECATED: {target})".format(target=deprecated))
                 if isinstance(deprecated, str)
-                else "(DEPRECATED)"
+                else _("(DEPRECATED)")
             )
             help = help + deprecated_message if help is not None else deprecated_message
 
@@ -2677,7 +2699,7 @@ class Option(Parameter):
     def get_error_hint(self, ctx: Context) -> str:
         result = super().get_error_hint(ctx)
         if self.show_envvar:
-            result += f" (env var: '{self.envvar}')"
+            result += _(" (env var: '{var}')").format(var=self.envvar)  # noqa: UP032
         return result
 
     def _parse_decls(
@@ -2691,7 +2713,7 @@ class Option(Parameter):
         for decl in decls:
             if decl.isidentifier():
                 if name is not None:
-                    raise TypeError(f"Name '{name}' defined twice")
+                    raise TypeError(_("Name '{name}' defined twice").format(name=name))  # noqa: UP032
                 name = decl
             else:
                 split_char = ";" if decl[:1] == "/" else "/"
@@ -2706,8 +2728,10 @@ class Option(Parameter):
                         secondary_opts.append(second.lstrip())
                     if first == second:
                         raise ValueError(
-                            f"Boolean option {decl!r} cannot use the"
-                            " same flag for true/false."
+                            _(
+                                "Boolean option {decl!r} cannot use the"
+                                " same flag for true/false."
+                            ).format(decl=decl)
                         )
                 else:
                     possible_names.append(_split_opt(decl))
@@ -2723,14 +2747,18 @@ class Option(Parameter):
             if not expose_value:
                 return None, opts, secondary_opts
             raise TypeError(
-                f"Could not determine name for option with declarations {decls!r}"
+                _(
+                    "Could not determine name for option with declarations {decls!r}"
+                ).format(decls=decls)
             )
 
         if not opts and not secondary_opts:
             raise TypeError(
-                f"No options defined but a name was passed ({name})."
-                " Did you mean to declare an argument instead? Did"
-                f" you mean to pass '--{name}'?"
+                _(
+                    "No options defined but a name was passed ({name})."
+                    " Did you mean to declare an argument instead? Did"
+                    " you mean to pass '--{name}'?"
+                ).format(name=name)
             )
 
         return name, opts, secondary_opts
@@ -3096,8 +3124,10 @@ class Argument(Parameter):
             name = name.replace("-", "_").lower()
         else:
             raise TypeError(
-                "Arguments take exactly one parameter declaration, got"
-                f" {len(decls)}: {decls}."
+                _(
+                    "Arguments take exactly one parameter declaration, got"
+                    " {length}: {decls}."
+                ).format(length=len(decls), decls=decls)
             )
         return name, [arg], []
 

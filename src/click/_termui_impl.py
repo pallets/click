@@ -174,7 +174,13 @@ class ProgressBar(t.Generic[V]):
             hours = t % 24
             t //= 24
             if t > 0:
-                return f"{t}d {hours:02}:{minutes:02}:{seconds:02}"
+                return "{d}{day_label} {h:02}:{m:02}:{s:02}".format(
+                    d=t,
+                    day_label=_("d"),
+                    h=hours,
+                    m=minutes,
+                    s=seconds,
+                )
             else:
                 return f"{hours:02}:{minutes:02}:{seconds:02}"
         return ""
