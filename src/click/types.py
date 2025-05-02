@@ -1,3 +1,11 @@
+# Ask Ruff to accept the format method on strings, and not let pyupgrade
+# always force f-strings. The latter are unfortunately not supported yet
+# by Babel, a localisation library.
+#
+# Note: Using `# noqa: UP032` on lines has not worked, so a file
+#       setting.
+# ruff: noqa: UP032
+
 from __future__ import annotations
 
 import collections.abc as cabc
@@ -372,7 +380,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
         ).format(value=value, choice=choices_str, choices=choices_str)
 
     def __repr__(self) -> str:
-        return f"Choice({list(self.choices)})"
+        return _("Choice({choices})").format(choices=list(self.choices))  # noqa: UP032
 
     def shell_complete(
         self, ctx: Context, param: Parameter, incomplete: str
@@ -809,7 +817,11 @@ class File(ParamType):
 
             return f
         except OSError as e:
-            self.fail(f"'{format_filename(value)}': {e.strerror}", param, ctx)
+            self.fail(
+                f"'{format_filename(value)}': {e.strerror}",
+                param,
+                ctx,
+            )
 
     def shell_complete(
         self, ctx: Context, param: Parameter, incomplete: str
@@ -1114,7 +1126,9 @@ def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType:
         try:
             if issubclass(ty, ParamType):
                 raise AssertionError(
-                    f"Attempted to use an uninstantiated parameter type ({ty})."
+                    _(
+                        "Attempted to use an uninstantiated parameter " "type ({type})."
+                    ).format(type=ty)  # noqa: UP032
                 )
         except TypeError:
             # ty is an instance (correct), so issubclass fails.

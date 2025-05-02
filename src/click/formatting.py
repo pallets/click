@@ -153,7 +153,7 @@ class HelpFormatter:
             ``"Usage: "``.
         """
         if prefix is None:
-            prefix = f"{_('Usage:')} "
+            prefix = "{usage} ".format(usage=_("Usage:"))
 
         usage_prefix = f"{prefix:>{self.current_indent}}{prog} "
         text_width = self.width - self.current_indent
