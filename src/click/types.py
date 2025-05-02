@@ -326,10 +326,10 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
 
         # Use curly braces to indicate a required argument.
         if param.required and param.param_type_name == "argument":
-            return "{{{choices}}}".format(choices=choices_str)  # noqa: UP032
+            return f"{{{choices_str}}}"
 
         # Use square braces to indicate an option or optional argument.
-        return "[{choices}]".format(choices=choices_str)  # noqa: UP032
+        return f"[{choices_str}]"
 
     def get_missing_message(self, param: Parameter, ctx: Context | None) -> str:
         """
@@ -442,7 +442,7 @@ class DateTime(ParamType):
         return info_dict
 
     def get_metavar(self, param: Parameter, ctx: Context) -> str | None:
-        return "[{formats}]".format(formats="|".join(self.formats))  # noqa: UP032
+        return f"[{'|'.join(self.formats)}]"
 
     def _try_to_convert_date(self, value: t.Any, format: str) -> datetime | None:
         try:

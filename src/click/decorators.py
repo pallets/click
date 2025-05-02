@@ -93,9 +93,11 @@ def make_pass_decorator(
 
             if obj is None:
                 raise RuntimeError(
-                    "Managed to invoke callback without a context"
-                    " object of type {type!r}"
-                    " existing.".format(type=object_type.__name__)  # noqa: UP032
+                    _(
+                        "Managed to invoke callback without a context"
+                        " object of type {type!r}"
+                        " existing."
+                    ).format(type=object_type.__name__)  # noqa: UP032
                 )  # noqa: UP032
 
             return ctx.invoke(f, obj, *args, **kwargs)
@@ -129,14 +131,14 @@ def pass_meta_key(
         return update_wrapper(new_func, f)
 
     if doc_description is None:
-        doc_description = "the {key!r} key from :attr:`click.Context.meta`".format(
+        doc_description = _("the {key!r} key from :attr:`click.Context.meta`").format(
             key=key
         )  # noqa: UP032
 
-    decorator.__doc__ = (
+    decorator.__doc__ = _(
         "Decorator that passes {description} as the first argument"
-        " to the decorated function.".format(description=doc_description)  # noqa: UP032
-    )
+        " to the decorated function."
+    ).format(description=doc_description)  # noqa: UP032
     return decorator
 
 
@@ -508,13 +510,15 @@ def version_option(
                 version = importlib.metadata.version(package_name)
             except importlib.metadata.PackageNotFoundError:
                 raise RuntimeError(
-                    "{name!r} is not installed. Try passing"
-                    " 'package_name' instead.".format(name=package_name)  # noqa: UP032
+                    _(
+                        "{name!r} is not installed. Try passing"
+                        " 'package_name' instead."
+                    ).format(name=package_name)  # noqa: UP032
                 ) from None
 
         if version is None:
             raise RuntimeError(
-                "Could not determine the version for {name!r} automatically.".format(
+                _("Could not determine the version for {name!r} automatically.").format(
                     name=package_name
                 )  # noqa: UP032
             )

@@ -155,9 +155,7 @@ class HelpFormatter:
         if prefix is None:
             prefix = "{usage} ".format(usage=_("Usage:"))
 
-        usage_prefix = "{prefix:>{indent}}{prog} ".format(
-            prefix=prefix, indent=self.current_indent, prog=prog
-        )
+        usage_prefix = f"{prefix:>{self.current_indent}}{prog} "
         text_width = self.width - self.current_indent
 
         if text_width >= (term_len(usage_prefix) + 20):
@@ -186,11 +184,7 @@ class HelpFormatter:
 
     def write_heading(self, heading: str) -> None:
         """Writes a heading into the buffer."""
-        self.write(
-            "{prefix:>{indent}}{message}:\n".format(
-                prefix="", indent=self.current_indent, message=heading
-            )
-        )
+        self.write(f"{'':>{self.current_indent}}{heading}:\n")
 
     def write_paragraph(self) -> None:
         """Writes a paragraph into the buffer."""
@@ -235,11 +229,7 @@ class HelpFormatter:
         first_col = min(widths[0], col_max) + col_spacing
 
         for first, second in iter_rows(rows, len(widths)):
-            self.write(
-                "{prefix:>{indent}}{message}".format(
-                    prefix="", indent=self.current_indent, message=first
-                )
-            )
+            self.write(f"{'':>{self.current_indent}}{first}")
             if not second:
                 self.write("\n")
                 continue
@@ -257,13 +247,7 @@ class HelpFormatter:
                 self.write(f"{lines[0]}\n")
 
                 for line in lines[1:]:
-                    self.write(
-                        "{prefix:>{indent}}{message}\n".format(
-                            prefix="",
-                            indent=first_col + self.current_indent,
-                            message=line,
-                        )
-                    )
+                    self.write(f"{'':>{first_col + self.current_indent}}{line}\n")
             else:
                 self.write("\n")
 

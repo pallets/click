@@ -84,19 +84,15 @@ def _check_nested_chain(
         return
 
     if register:
-        message = (
+        message = _(
             "It is not possible to add the group {cmd_name!r} to another"
-            " group {base_cmd_name!r} that is in chain mode.".format(
-                cmd_name=cmd_name, base_cmd_name=base_command.name
-            )  # noqa: UP032
-        )
+            " group {base_cmd_name!r} that is in chain mode."
+        ).format(cmd_name=cmd_name, base_cmd_name=base_command.name)  # noqa: UP032
     else:
-        message = (
+        message = _(
             "Found the group {cmd_name!r} as subcommand to another group "
-            " {base_cmd_name!r} that is in chain mode. This is not supported.".format(
-                cmd_name=cmd_name, base_cmd_name=base_command.name
-            )  # noqa: UP032
-        )
+            " {base_cmd_name!r} that is in chain mode. This is not supported."
+        ).format(cmd_name=cmd_name, base_cmd_name=base_command.name)  # noqa: UP032
 
     raise RuntimeError(message)
 
@@ -2137,10 +2133,10 @@ class Parameter:
         if __debug__:
             if self.type.is_composite and nargs != self.type.arity:
                 raise ValueError(
-                    "'nargs' must be {arity} (or None) for"
-                    " type {type!r}, but it was {nargs}.".format(
-                        arity=self.type.arity, type=self.type, nargs=nargs
-                    )
+                    _(
+                        "'nargs' must be {arity} (or None) for"
+                        " type {type!r}, but it was {nargs}."
+                    ).format(arity=self.type.arity, type=self.type, nargs=nargs)
                 )
 
             # Skip no default or callable default.

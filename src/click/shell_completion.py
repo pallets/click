@@ -1,11 +1,3 @@
-# Ask Ruff to accept the format method on strings, and not let pyupgrade
-# always force f-strings. The latter are unfortunately not supported yet
-# by Babel, a localisation library.
-#
-# Note: Using `# noqa: UP032` on lines has not worked, so a file
-#       setting.
-# ruff: noqa: UP032
-
 from __future__ import annotations
 
 import collections.abc as cabc
@@ -381,9 +373,7 @@ class ZshComplete(ShellComplete):
         return args, incomplete
 
     def format_completion(self, item: CompletionItem) -> str:
-        return "{type}\n{value}\n{help}".format(
-            type=item.type, value=item.value, help=item.help if item.help else "_"
-        )
+        return f"{item.type}\n{item.value}\n{item.help if item.help else '_'}"
 
 
 class FishComplete(ShellComplete):
@@ -406,9 +396,7 @@ class FishComplete(ShellComplete):
 
     def format_completion(self, item: CompletionItem) -> str:
         if item.help:
-            return "{type},{value}\t{help}".format(
-                type=item.type, value=item.value, help=item.help
-            )  # noqa: UP032
+            return f"{item.type},{item.value}\t{item.help}"
 
         return f"{item.type},{item.value}"
 
