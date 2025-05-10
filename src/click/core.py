@@ -90,7 +90,7 @@ def _check_nested_chain(
 
 
 def batch(iterable: cabc.Iterable[V], batch_size: int) -> list[tuple[V, ...]]:
-    return list(zip(*repeat(iter(iterable), batch_size)))
+    return list(zip(*repeat(iter(iterable), batch_size), strict=False))
 
 
 @contextmanager
