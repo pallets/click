@@ -109,7 +109,7 @@ else:
 
         try:
             buffer_type: Array[c_char] = c_char * buf.len
-            return buffer_type.from_address(buf.buf)
+            return buffer_type.from_address(buf.buf)  # type: ignore[attr-defined, no-any-return]
         finally:
             PyBuffer_Release(byref(buf))
 
