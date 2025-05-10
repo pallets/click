@@ -89,7 +89,8 @@ Released 2025-03-26
     -   A warning will be printed when something deprecated is used.
 
 -   Add a ``catch_exceptions`` parameter to ``CliRunner``. If
-    ``catch_exceptions`` is not passed to ``CliRunner.invoke``,
+    ``catch_exceptions`` is not passed to ``CliRunner.invoke`` the value
+    from ``CliRunner`` is used.
     the value from ``CliRunner``. :issue:`2817` :pr:`2818`
 -   ``Option.flag_value`` will no longer have a default value set based on
     ``Option.default`` if ``Option.is_flag`` is ``False``. This results in
