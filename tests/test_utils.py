@@ -574,7 +574,7 @@ def test_iter_keepopenfile(tmpdir):
     p = tmpdir.mkdir("testdir").join("testfile")
     p.write("\n".join(expected))
     with p.open() as f:
-        for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
+        for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f), strict=False):
             assert e_line == a_line.strip()
 
 
@@ -584,7 +584,7 @@ def test_iter_lazyfile(tmpdir):
     p.write("\n".join(expected))
     with p.open() as f:
         with click.utils.LazyFile(f.name) as lf:
-            for e_line, a_line in zip(expected, lf):
+            for e_line, a_line in zip(expected, lf, strict=False):
                 assert e_line == a_line.strip()
 
 
