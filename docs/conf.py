@@ -10,6 +10,7 @@ release, version = get_version("Click")
 
 # General --------------------------------------------------------------
 
+master_doc = "index"
 default_role = "code"
 extensions = [
     "sphinx.ext.autodoc",

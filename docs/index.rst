@@ -60,17 +60,35 @@ You can get the library directly from PyPI::
 Documentation
 -------------
 
-This part of the documentation guides you through all of the library's
-usage patterns.
-
+Tutorials
+^^^^^^^^^^^^^
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+
+   quickstart
+   virtualenv
+
+How to Guides
+^^^^^^^^^^^^^
+.. toctree::
+   :maxdepth: 1
+
+   entry-points
+   setuptools
+
+Conceptual Guides
+^^^^^^^^^^^^^^^^^^^
+.. toctree::
+   :maxdepth: 1
 
    why
-   quickstart
-   entry-points
-   virtualenv
-   setuptools
+
+General Reference
+^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 1
+
    parameters
    parameter-types
    options
@@ -91,21 +109,26 @@ usage patterns.
    wincmd
 
 API Reference
--------------
-
-If you are looking for information on a specific function, class, or
-method, this part of the documentation is for you.
+^^^^^^^^^^^^^^^
 
 .. toctree::
    :maxdepth: 2
 
    api
 
-Miscellaneous Pages
+About Project
 -------------------
 
+* This documentation is structured according to `Diataxis <https://diataxis.fr/>`_
+
+* `Version Policy <https://palletsprojects.com/versions>`_
+
+* `Contributing <https://palletsprojects.com/contributing/>`_
+
+* `Donate <https://palletsprojects.com/donate>`_
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    contrib
    license
