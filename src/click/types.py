@@ -660,7 +660,7 @@ class FloatRange(_NumberRangeBase, FloatParamType):
         if not open:
             return bound
 
-        # Could use Python 3.9's math.nextafter here, but clamping an
+        # Could use math.nextafter here, but clamping an
         # open float range doesn't seem to be particularly useful. It's
         # left up to the user to write a callback to do it if needed.
         raise RuntimeError("Clamping is not supported for open bounds.")
@@ -1072,7 +1072,9 @@ class Tuple(CompositeParamType):
                 ctx=ctx,
             )
 
-        return tuple(ty(x, param, ctx) for ty, x in zip(self.types, value))
+        return tuple(
+            ty(x, param, ctx) for ty, x in zip(self.types, value, strict=False)
+        )
 
 
 def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType:

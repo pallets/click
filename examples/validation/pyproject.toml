@@ -2,7 +2,7 @@
 name = "click-example-validation"
 version = "1.0.0"
 description = "Click validation example"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "click>=8.1",
 ]

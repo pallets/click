@@ -82,9 +82,9 @@ def test_bytes_args(runner, monkeypatch):
     @click.command()
     @click.argument("arg")
     def from_bytes(arg):
-        assert isinstance(
-            arg, str
-        ), "UTF-8 encoded argument should be implicitly converted to Unicode"
+        assert isinstance(arg, str), (
+            "UTF-8 encoded argument should be implicitly converted to Unicode"
+        )
 
     # Simulate empty locale environment variables
     monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "utf-8")

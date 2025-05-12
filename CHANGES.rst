@@ -1,11 +1,15 @@
 .. currentmodule:: click
 
+Version 8.2.1
+-------------
+
+
 Version 8.2.0
 -------------
 
-Released 2025-03-26
+Released 2025-05-10
 
--   Drop support for Python 3.7. :pr:`2588`
+-   Drop support for Python 3.7, 3.8, and 3.9. :pr:`2588` :pr:`2893`
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
     :pr:`2438`
 -   Use ``flit_core`` instead of ``setuptools`` as build backend. :pr:`2543`
@@ -89,8 +93,8 @@ Released 2025-03-26
     -   A warning will be printed when something deprecated is used.
 
 -   Add a ``catch_exceptions`` parameter to ``CliRunner``. If
-    ``catch_exceptions`` is not passed to ``CliRunner.invoke``,
-    the value from ``CliRunner``. :issue:`2817` :pr:`2818`
+    ``catch_exceptions`` is not passed to ``CliRunner.invoke``, the value
+    from ``CliRunner`` is used. :issue:`2817` :pr:`2818`
 -   ``Option.flag_value`` will no longer have a default value set based on
     ``Option.default`` if ``Option.is_flag`` is ``False``. This results in
     ``Option.default`` not needing to implement `__bool__`. :pr:`2829`

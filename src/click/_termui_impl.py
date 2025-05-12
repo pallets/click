@@ -100,7 +100,7 @@ class ProgressBar(t.Generic[V]):
             iterable = t.cast("cabc.Iterable[V]", range(length))
         self.iter: cabc.Iterable[V] = iter(iterable)
         self.length = length
-        self.pos = 0
+        self.pos: int = 0
         self.avg: list[float] = []
         self.last_eta: float
         self.start: float

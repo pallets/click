@@ -129,7 +129,7 @@ class HelpFormatter:
             if width is None:
                 width = max(min(shutil.get_terminal_size().columns, max_width) - 2, 50)
         self.width = width
-        self.current_indent = 0
+        self.current_indent: int = 0
         self.buffer: list[str] = []
 
     def write(self, string: str) -> None:
