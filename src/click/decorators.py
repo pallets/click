@@ -511,8 +511,7 @@ def version_option(
             except importlib.metadata.PackageNotFoundError:
                 raise RuntimeError(
                     _(
-                        "{name!r} is not installed. Try passing"
-                        " 'package_name' instead."
+                        "{name!r} is not installed. Try passing 'package_name' instead."
                     ).format(name=package_name)  # noqa: UP032
                 ) from None
 

@@ -1129,7 +1129,7 @@ def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType:
             if issubclass(ty, ParamType):
                 raise AssertionError(
                     _(
-                        "Attempted to use an uninstantiated parameter " "type ({type})."
+                        "Attempted to use an uninstantiated parameter type ({type})."
                     ).format(type=ty)  # noqa: UP032
                 )
         except TypeError:
