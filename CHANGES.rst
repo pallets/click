@@ -3,6 +3,7 @@
 Version 8.2.1
 -------------
 
+- Fix shell completion for nested groups. :issue:`2906` :pr:`2907`
 
 Version 8.2.0
 -------------
