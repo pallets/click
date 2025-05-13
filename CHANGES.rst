@@ -3,7 +3,7 @@
 Version 8.2.1
 -------------
 
-- Fixes flag default handling for boolean options. :issue:`2897` :pr:`2908`
+- Fixes flag default handling for boolean options. :issue:`2897` :pr:`2912`
 
 Version 8.2.0
 -------------
