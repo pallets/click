@@ -84,3 +84,43 @@ def test_flag_default_map(runner):
 
     result = runner.invoke(cli, ["foo", "--help"], default_map={"foo": {"name": True}})
     assert "default: name" in result.output
+
+
+def test_flag_default_bool(runner):
+    """test flag with default bool"""
+
+    @click.command()
+    @click.option("--foo", is_flag=True, default=False, type=click.BOOL)
+    @click.option("--bar", is_flag=True, default=False, type=bool)
+    @click.option("--baz", is_flag=True, default=True, type=click.BOOL)
+    @click.option("--qux", is_flag=True, default=True, type=bool)
+    def cli(foo, bar, baz, qux):
+        assert isinstance(foo, bool)
+        assert isinstance(bar, bool)
+        assert isinstance(baz, bool)
+        assert isinstance(qux, bool)
+        click.echo(f"foo: {foo}, bar: {bar}, baz: {baz}, qux: {qux}")
+
+    result = runner.invoke(cli, [])
+    assert not result.exception
+    assert "foo: False, bar: False, baz: True, qux: True" in result.output
+
+    result = runner.invoke(cli, ["--foo"])
+    assert not result.exception
+    assert "foo: True, bar: False, baz: True, qux: True" in result.output
+
+    result = runner.invoke(cli, ["--bar"])
+    assert not result.exception
+    assert "foo: False, bar: True, baz: True, qux: True" in result.output
+
+    result = runner.invoke(cli, ["--baz"])
+    assert not result.exception
+    assert "foo: False, bar: False, baz: False, qux: True" in result.output
+
+    result = runner.invoke(cli, ["--qux"])
+    assert not result.exception
+    assert "foo: False, bar: False, baz: True, qux: False" in result.output
+
+    result = runner.invoke(cli, ["--foo", "--bar", "--baz", "--qux"])
+    assert not result.exception
+    assert "foo: True, bar: True, baz: False, qux: False" in result.output

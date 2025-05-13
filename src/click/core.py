@@ -2618,6 +2618,12 @@ class Option(Parameter):
             # default.
             self.type = types.convert_type(None, flag_value)
 
+        if is_flag and isinstance(self.type, types.BoolParamType):
+            # If the type is a boolean, we need to set the flag_value
+            # to True or False depending on the default.
+            if flag_value is None:
+                flag_value = not self.default
+
         self.is_flag: bool = is_flag
         self.is_bool_flag: bool = is_flag and isinstance(self.type, types.BoolParamType)
         self.flag_value: t.Any = flag_value
