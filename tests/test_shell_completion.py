@@ -40,6 +40,30 @@ def test_group():
     assert _get_words(cli, [], "-") == ["-a", "--help"]
 
 
+def test_nested_group():
+    cli = Group(
+        "cli",
+        commands=[
+            Group(
+                "get",
+                commands=[
+                    Group(
+                        "full",
+                        params=[Option(["--verbose"])],
+                        commands=[Command("data", params=[Option(["-a"])])],
+                    )
+                ],
+            )
+        ],
+    )
+    assert _get_words(cli, [], "") == ["get"]
+    assert _get_words(cli, ["get"], "") == ["full"]
+    assert _get_words(cli, ["get", "full"], "") == ["data"]
+    assert _get_words(cli, ["get", "full"], "-") == ["--verbose", "--help"]
+    assert _get_words(cli, ["get", "full", "data"], "") == []
+    assert _get_words(cli, ["get", "full", "data"], "-") == ["-a", "--help"]
+
+
 def test_group_command_same_option():
     cli = Group(
         "cli", params=[Option(["-a"])], commands=[Command("x", params=[Option(["-a"])])]
