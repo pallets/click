@@ -275,7 +275,7 @@ the prefix is ``WEB``, then the variable is ``WEB_RUN_SERVER_HOST``.
           auto_envvar_prefix='GREETER')
 
 Global Context Access
----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 .. versionadded:: 5.0
 
@@ -314,7 +314,7 @@ it.
 
 
 Detecting the Source of a Parameter
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In some situations it's helpful to understand whether or not an option
 or parameter came from the command line, the environment, the default
