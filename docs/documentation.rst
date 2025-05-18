@@ -30,8 +30,6 @@ Simple example:
     invoke(hello, args=['--help'])
 
 
-.. _documenting-arguments:
-
 Command Short Help
 ------------------
 
@@ -69,6 +67,8 @@ The help epilog is printed at the end of the help and is useful for showing exam
 .. click:run::
 
     invoke(init, args=['--help'])
+
+.. _documenting-arguments:
 
 Documenting Arguments
 ----------------------
