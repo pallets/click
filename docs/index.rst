@@ -60,6 +60,11 @@ You can get the library directly from PyPI::
 Documentation
 -------------
 
+.. toctree::
+   :maxdepth: 2
+
+   faqs
+
 Tutorials
 ^^^^^^^^^^^^^
 .. toctree::
