@@ -510,6 +510,7 @@ class CliRunner:
                 exc_info = sys.exc_info()
             finally:
                 sys.stdout.flush()
+                sys.stderr.flush()
                 stdout = outstreams[0].getvalue()
                 stderr = outstreams[1].getvalue()
                 output = outstreams[2].getvalue()
