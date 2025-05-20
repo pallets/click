@@ -3,6 +3,8 @@
 Version 8.2.1
 -------------
 
+Released 2025-05-20
+
 -   Fix flag value handling for flag options with a provided type. :issue:`2894`
     :issue:`2897` :pr:`2930`
 -   Fix shell completion for nested groups. :issue:`2906` :pr:`2907`
