@@ -40,6 +40,36 @@ def test_group():
     assert _get_words(cli, [], "-") == ["-a", "--help"]
 
 
+@pytest.mark.parametrize(
+    ("args", "word", "expect"),
+    [
+        ([], "", ["get"]),
+        (["get"], "", ["full"]),
+        (["get", "full"], "", ["data"]),
+        (["get", "full"], "-", ["--verbose", "--help"]),
+        (["get", "full", "data"], "", []),
+        (["get", "full", "data"], "-", ["-a", "--help"]),
+    ],
+)
+def test_nested_group(args: list[str], word: str, expect: list[str]) -> None:
+    cli = Group(
+        "cli",
+        commands=[
+            Group(
+                "get",
+                commands=[
+                    Group(
+                        "full",
+                        params=[Option(["--verbose"])],
+                        commands=[Command("data", params=[Option(["-a"])])],
+                    )
+                ],
+            )
+        ],
+    )
+    assert _get_words(cli, args, word) == expect
+
+
 def test_group_command_same_option():
     cli = Group(
         "cli", params=[Option(["-a"])], commands=[Command("x", params=[Option(["-a"])])]
