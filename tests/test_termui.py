@@ -242,7 +242,7 @@ def test_file_prompt_default_format(runner, file_kwargs):
     def cli(f):
         click.echo(f.name)
 
-    result = runner.invoke(cli)
+    result = runner.invoke(cli, input="\n")
     assert result.output == f"file [{__file__}]: \n{__file__}\n"
 
 
@@ -451,7 +451,7 @@ def test_prompt_required_false(runner, args, expect):
     [
         (True, "password\npassword", None, "password"),
         ("Confirm Password", "password\npassword\n", None, "password"),
-        (True, "", "", ""),
+        (True, "\n\n", "", ""),
         (False, None, None, None),
     ],
 )

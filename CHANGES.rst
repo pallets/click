@@ -7,6 +7,7 @@ Version 8.2.1
     :issue:`2897` :pr:`2930`
 -   Fix shell completion for nested groups. :issue:`2906` :pr:`2907`
 -   Flush ``sys.stderr`` at the end of ``CliRunner.invoke``. :issue:`2682`
+-   Fix EOF handling for stdin input in CliRunner. :issue:`2787`
 
 Version 8.2.0
 -------------
