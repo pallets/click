@@ -60,6 +60,11 @@ You can get the library directly from PyPI::
 Documentation
 -------------
 
+.. toctree::
+   :maxdepth: 2
+
+   faqs
+
 Tutorials
 ^^^^^^^^^^^^^
 .. toctree::
@@ -82,6 +87,7 @@ Conceptual Guides
    :maxdepth: 1
 
    why
+   click-concepts
 
 General Reference
 ^^^^^^^^^^^^^^^^^^^
@@ -99,8 +105,9 @@ General Reference
    documentation
    prompts
    handling-files
-   complex
    advanced
+   complex
+   extending-click
    testing
    utils
    shell-completion

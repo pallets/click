@@ -33,8 +33,8 @@ Example:
     import enum
 
     class HashType(enum.Enum):
-        MD5 = 'MD5'
-        SHA1 = 'SHA1'
+        MD5 = enum.auto()
+        SHA1 = enum.auto()
 
     @click.command()
     @click.option('--hash-type',
@@ -54,9 +54,8 @@ What it looks like:
     println()
     invoke(digest, args=['--help'])
 
-Since version 8.2.0 any iterable may be passed to :class:`Choice`, here
-an ``Enum`` is used which will result in all enum values to be valid
-choices.
+Any iterable may be passed to :class:`Choice`. If an ``Enum`` is passed, the
+names of the enum members will be used as valid choices.
 
 Choices work with options that have ``multiple=True``. If a ``default``
 value is given with ``multiple=True``, it should be a list or tuple of

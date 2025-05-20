@@ -3,12 +3,10 @@ Advanced Patterns
 
 .. currentmodule:: click
 
-In addition to common functionality that is implemented in the library
-itself, there are countless patterns that can be implemented by extending
-Click.  This page should give some insight into what can be accomplished.
+In addition to common functionality, Click offers some advanced features.
 
 .. contents::
-    :depth: 2
+    :depth: 1
     :local:
 
 Callbacks and Eager Options
@@ -109,133 +107,6 @@ also contain the parameter name.
     invoke(roll, args=["--rolls=2d12"])
     println()
     invoke(roll, input=["42", "2d12"])
-
-.. _custom-groups:
-
-Custom Groups
--------------
-
-You can customize the behavior of a group beyond the arguments it accepts by
-subclassing :class:`click.Group`.
-
-The most common methods to override are :meth:`~click.Group.get_command` and
-:meth:`~click.Group.list_commands`.
-
-The following example implements a basic plugin system that loads commands from
-Python files in a folder. The command is lazily loaded to avoid slow startup.
-
-.. code-block:: python
-
-    import importlib.util
-    import os
-    import click
-
-    class PluginGroup(click.Group):
-        def __init__(self, name=None, plugin_folder="commands", **kwargs):
-            super().__init__(name=name, **kwargs)
-            self.plugin_folder = plugin_folder
-
-        def list_commands(self, ctx):
-            rv = []
-
-            for filename in os.listdir(self.plugin_folder):
-                if filename.endswith(".py"):
-                    rv.append(filename[:-3])
-
-            rv.sort()
-            return rv
-
-        def get_command(self, ctx, name):
-            path = os.path.join(self.plugin_folder, f"{name}.py")
-            spec = importlib.util.spec_from_file_location(name, path)
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
-            return module.cli
-
-    cli = PluginGroup(
-        plugin_folder=os.path.join(os.path.dirname(__file__), "commands")
-    )
-
-    if __name__ == "__main__":
-        cli()
-
-Custom classes can also be used with decorators:
-
-.. code-block:: python
-
-    @click.group(
-        cls=PluginGroup,
-        plugin_folder=os.path.join(os.path.dirname(__file__), "commands")
-    )
-    def cli():
-        pass
-
-.. _aliases:
-
-Command Aliases
----------------
-
-Many tools support aliases for commands. For example, you can configure
-``git`` to accept ``git ci`` as alias for ``git commit``. Other tools also
-support auto-discovery for aliases by automatically shortening them.
-
-It's possible to customize :class:`Group` to provide this functionality. As
-explained in :ref:`custom-groups`, a group provides two methods:
-:meth:`~Group.list_commands` and :meth:`~Group.get_command`. In this particular
-case, you only need to override the latter as you generally don't want to
-enumerate the aliases on the help page in order to avoid confusion.
-
-The following example implements a subclass of :class:`Group` that accepts a
-prefix for a command. If there was a command called ``push``, it would accept
-``pus`` as an alias (so long as it was unique):
-
-.. click:example::
-
-    class AliasedGroup(click.Group):
-        def get_command(self, ctx, cmd_name):
-            rv = super().get_command(ctx, cmd_name)
-
-            if rv is not None:
-                return rv
-
-            matches = [
-                x for x in self.list_commands(ctx)
-                if x.startswith(cmd_name)
-            ]
-
-            if not matches:
-                return None
-
-            if len(matches) == 1:
-                return click.Group.get_command(self, ctx, matches[0])
-
-            ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
-
-        def resolve_command(self, ctx, args):
-            # always return the full command name
-            _, cmd, args = super().resolve_command(ctx, args)
-            return cmd.name, cmd, args
-
-It can be used like this:
-
-.. click:example::
-
-    @click.group(cls=AliasedGroup)
-    def cli():
-        pass
-
-    @cli.command
-    def push():
-        pass
-
-    @cli.command
-    def pop():
-        pass
-
-See the `alias example`_ in Click's repository for another example.
-
-.. _alias example: https://github.com/pallets/click/tree/main/examples/aliases
-
 
 Parameter Modifications
 -----------------------
@@ -360,64 +231,6 @@ And what it looks like:
     invoke(cli, prog_name='cli', args=['dist'])
 
 
-.. _callback-evaluation-order:
-
-Callback Evaluation Order
--------------------------
-
-Click works a bit differently than some other command line parsers in that
-it attempts to reconcile the order of arguments as defined by the
-programmer with the order of arguments as defined by the user before
-invoking any callbacks.
-
-This is an important concept to understand when porting complex
-patterns to Click from optparse or other systems.  A parameter
-callback invocation in optparse happens as part of the parsing step,
-whereas a callback invocation in Click happens after the parsing.
-
-The main difference is that in optparse, callbacks are invoked with the raw
-value as it happens, whereas a callback in Click is invoked after the
-value has been fully converted.
-
-Generally, the order of invocation is driven by the order in which the user
-provides the arguments to the script; if there is an option called ``--foo``
-and an option called ``--bar`` and the user calls it as ``--bar
---foo``, then the callback for ``bar`` will fire before the one for ``foo``.
-
-There are three exceptions to this rule which are important to know:
-
-Eagerness:
-    An option can be set to be "eager".  All eager parameters are
-    evaluated before all non-eager parameters, but again in the order as
-    they were provided on the command line by the user.
-
-    This is important for parameters that execute and exit like ``--help``
-    and ``--version``.  Both are eager parameters, but whatever parameter
-    comes first on the command line will win and exit the program.
-
-Repeated parameters:
-    If an option or argument is split up on the command line into multiple
-    places because it is repeated -- for instance, ``--exclude foo --include
-    baz --exclude bar`` -- the callback will fire based on the position of
-    the first option.  In this case, the callback will fire for
-    ``exclude`` and it will be passed both options (``foo`` and
-    ``bar``), then the callback for ``include`` will fire with ``baz``
-    only.
-
-    Note that even if a parameter does not allow multiple versions, Click
-    will still accept the position of the first, but it will ignore every
-    value except the last.  The reason for this is to allow composability
-    through shell aliases that set defaults.
-
-Missing parameters:
-    If a parameter is not defined on the command line, the callback will
-    still fire.  This is different from how it works in optparse where
-    undefined values do not fire the callback.  Missing parameters fire
-    their callbacks at the very end which makes it possible for them to
-    default to values from a parameter that came before.
-
-Most of the time you do not need to be concerned about any of this,
-but it is important to know how it works for some advanced cases.
 
 .. _forwarding-unknown-options:
 
@@ -513,74 +326,6 @@ your own commands and commands from another application are discouraged
 and if you can avoid it, you should.  It's a much better idea to have
 everything below a subcommand be forwarded to another application than to
 handle some arguments yourself.
-
-
-Global Context Access
----------------------
-
-.. versionadded:: 5.0
-
-Starting with Click 5.0 it is possible to access the current context from
-anywhere within the same thread through the use of the
-:func:`get_current_context` function which returns it.  This is primarily
-useful for accessing the context bound object as well as some flags that
-are stored on it to customize the runtime behavior.  For instance the
-:func:`echo` function does this to infer the default value of the `color`
-flag.
-
-Example usage::
-
-    def get_current_command_name():
-        return click.get_current_context().info_name
-
-It should be noted that this only works within the current thread.  If you
-spawn additional threads then those threads will not have the ability to
-refer to the current context.  If you want to give another thread the
-ability to refer to this context you need to use the context within the
-thread as a context manager::
-
-    def spawn_thread(ctx, func):
-        def wrapper():
-            with ctx:
-                func()
-        t = threading.Thread(target=wrapper)
-        t.start()
-        return t
-
-Now the thread function can access the context like the main thread would
-do.  However if you do use this for threading you need to be very careful
-as the vast majority of the context is not thread safe!  You are only
-allowed to read from the context, but not to perform any modifications on
-it.
-
-
-Detecting the Source of a Parameter
------------------------------------
-
-In some situations it's helpful to understand whether or not an option
-or parameter came from the command line, the environment, the default
-value, or :attr:`Context.default_map`. The
-:meth:`Context.get_parameter_source` method can be used to find this
-out. It will return a member of the :class:`~click.core.ParameterSource`
-enum.
-
-.. click:example::
-
-    @click.command()
-    @click.argument('port', nargs=1, default=8080, envvar="PORT")
-    @click.pass_context
-    def cli(ctx, port):
-        source = ctx.get_parameter_source("port")
-        click.echo(f"Port came from {source.name}")
-
-.. click:run::
-
-    invoke(cli, prog_name='cli', args=['8080'])
-    println()
-    invoke(cli, prog_name='cli', args=[], env={"PORT": "8080"})
-    println()
-    invoke(cli, prog_name='cli', args=[])
-    println()
 
 
 Managing Resources

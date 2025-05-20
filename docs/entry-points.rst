@@ -27,6 +27,7 @@ To install your app with an entry point, all you need is the script and a
         src/
             hello/
                 __init__.py
+                hello.py
         pyproject.toml
 
 Contents of ``hello.py``:
