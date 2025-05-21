@@ -80,6 +80,7 @@ How to Guides
 
    entry-points
    setuptools
+   support-multiple-versions
 
 Conceptual Guides
 ^^^^^^^^^^^^^^^^^^^
