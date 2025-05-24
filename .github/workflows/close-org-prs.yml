@@ -1,0 +1,51 @@
+name: Close PRs from Orgs
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  close-org-prs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if PR is from an org and close if so
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const isFork = pr.head.repo.full_name !== pr.base.repo.full_name;
+            const forkOwnerType = pr.head.repo.owner.type;
+            if (isFork && forkOwnerType === 'Organization') {
+              // Add 'invalid' label
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: ['invalid']
+              });
+              // Close the PR
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                state: 'closed'
+              });
+              // Leave a comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: "We don't allow pull requests from organization accounts. This PR has been closed."
+              });
+              // Lock the conversation
+              await github.rest.issues.lock({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                lock_reason: 'spam'
+              });
+            }
