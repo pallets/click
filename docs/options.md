@@ -2,10 +2,6 @@
 
 # Options
 
-```{eval-rst}
-.. currentmodule:: click
-```
-
 Adding options to commands can be accomplished with the {func}`option`
 decorator. At runtime the decorator invokes the {class}`Option` class. Options in Click are distinct from {ref}`positional arguments <arguments>`.
 
