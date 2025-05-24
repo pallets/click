@@ -1,5 +1,10 @@
 .. currentmodule:: click
 
+Version 8.2.2
+-------------
+
+- Fix regression related to EOF handling in CliRunner. :issue:`2939`
+
 Version 8.2.1
 -------------
 
