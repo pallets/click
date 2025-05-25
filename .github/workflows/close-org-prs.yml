@@ -39,13 +39,6 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body: "We don't allow pull requests from organization accounts. This PR has been closed."
-              });
-              // Lock the conversation
-              await github.rest.issues.lock({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                lock_reason: 'spam'
+                body: "Please don't open PRs from a fork owned by a different organization rather than your account. It causes GitHub to disable the ability for maintainers to push changes, so we can't update this to prepare it for merge."
               });
             }
