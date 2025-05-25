@@ -6,7 +6,6 @@ on:
 
 permissions:
   pull-requests: write
-  issues: write
 
 jobs:
   close-org-prs:
@@ -32,6 +31,11 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: pr.number,
-                body: "Please don't open PRs from a fork owned by a different organization rather than your account. It causes GitHub to disable the ability for maintainers to push changes, so we can't update this to prepare it for merge."
+                body: `Please don't open PRs from a fork owned by a different organization rather than your account. It causes GitHub to disable the ability for maintainers to push changes, so we can't update this to prepare it for merge.
+                To fix this:
+                  1. Fork this project with your user account.
+                  2. Push this branch there.
+                  3. Create the PR again from that fork/branch.
+                `
               });
             }
