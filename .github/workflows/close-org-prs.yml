@@ -16,9 +16,9 @@ jobs:
         with:
           script: |
             const pr = context.payload.pull_request;
-            const isFork = pr.head.repo.full_name !== pr.base.repo.full_name;
+            const isOwner = pr.head.repo.full_name !== pr.base.repo.full_name;
             const forkOwnerType = pr.head.repo.owner.type;
-            if (isFork && forkOwnerType === 'Organization') {
+            if (isOwner && forkOwnerType === 'Organization') {
               // Close the PR
               await github.rest.pulls.update({
                 owner: context.repo.owner,
