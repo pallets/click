@@ -20,13 +20,6 @@ jobs:
             const isFork = pr.head.repo.full_name !== pr.base.repo.full_name;
             const forkOwnerType = pr.head.repo.owner.type;
             if (isFork && forkOwnerType === 'Organization') {
-              // Add 'invalid' label
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number,
-                labels: ['invalid']
-              });
               // Close the PR
               await github.rest.pulls.update({
                 owner: context.repo.owner,
