@@ -102,7 +102,7 @@ $ hello --name Value
 Hello Value!
 
 $ hello --name
-Name [Default]: 
+Name [Default]:
 ```
 
 If `required=True`, then the option will still prompt if it is not given, but it will also prompt if only the flag is

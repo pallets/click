@@ -40,4 +40,3 @@ please open a pull request to remove it from the list.
 :::
 
 [click-contrib]: https://github.com/click-contrib/
-

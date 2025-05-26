@@ -27,8 +27,8 @@ def encode(password):
 
 ```console
 $ encode
-Password: 
-Repeat for confirmation: 
+Password:
+Repeat for confirmation:
 encoded: frperg
 ```
 

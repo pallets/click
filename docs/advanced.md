@@ -61,7 +61,7 @@ Version 1.0
 
 ## Callbacks for Validation
 
-```{versionchanged} 2.0 
+```{versionchanged} 2.0
 ```
 
 If you want to apply custom validation logic, you can do this in the parameter callbacks. These callbacks can both
@@ -375,7 +375,7 @@ def cli(ctx, repo_home):
         db.close()
 ```
 
-:::{versionchanged} 8.2 
+:::{versionchanged} 8.2
 `Context.call_on_close` and context managers registered via `Context.with_resource` will be
 closed when the CLI exits. These were previously not called on exit.
 :::
