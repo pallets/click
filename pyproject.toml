@@ -39,6 +39,7 @@ docs = [
     "sphinxcontrib-log-cabinet",
     "sphinx-autodoc2",
     "sphinx_design",
+    "linkify-it-py",
 ]
 docs-auto = [
     "sphinx-autobuild",
