@@ -30,31 +30,36 @@ readable and easier to maintain. The built-in shells are `bash`, `zsh`, and `fis
 
 Provide your users with the following instructions customized to your program name. This uses `foo-bar` as an example.
 
-::::{tab-set}
+```{eval-rst}
+.. tabs::
 
-:::{tab-item} Bash
-Add this to `~/.bashrc`:
-```console
-eval "$(_FOO_BAR_COMPLETE=bash_source foo-bar)"
+    .. group-tab:: Bash
+
+        Add this to ``~/.bashrc``:
+
+        .. code-block:: bash
+
+            eval "$(_FOO_BAR_COMPLETE=bash_source foo-bar)"
+
+    .. group-tab:: Zsh
+
+        Add this to ``~/.zshrc``:
+
+        .. code-block:: zsh
+
+            eval "$(_FOO_BAR_COMPLETE=zsh_source foo-bar)"
+
+    .. group-tab:: Fish
+
+        Add this to ``~/.config/fish/completions/foo-bar.fish``:
+
+        .. code-block:: fish
+
+            _FOO_BAR_COMPLETE=fish_source foo-bar | source
+
+        This is the same file used for the activation script method
+        below. For Fish it's probably always easier to use that method.
 ```
-:::
-
-:::{tab-item} Zsh
-Add this to `~/.zshrc`:
-```console
-eval "$(_FOO_BAR_COMPLETE=zsh_source foo-bar)"
-```
-:::
-
-:::{tab-item} Fish
-Add this to `~/.config/fish/completions/foo-bar.fish`:
-```console
-_FOO_BAR_COMPLETE=fish_source foo-bar | source
-```
-This is the same file used for the activation script method below. For Fish it’s probably always easier to use that method.
-:::
-
-::::
 
 Using `eval` means that the command is invoked and evaluated every time a shell is started, which can delay shell
 responsiveness. To speed it up, write the generated script to a file, then source that. You can generate the files ahead
