@@ -61,8 +61,8 @@ Version 1.0
 
 ## Callbacks for Validation
 
-```{versionchanged} 2.0
-```
+:::{versionchanged} 2.0
+:::
 
 If you want to apply custom validation logic, you can do this in the parameter callbacks. These callbacks can both
 modify values as well as raise errors if the validation does not work. The callback runs after type conversion. It is
