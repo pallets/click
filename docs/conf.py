@@ -13,17 +13,28 @@ release, version = get_version("Click")
 master_doc = "index"
 default_role = "code"
 extensions = [
-    "sphinx.ext.autodoc",
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
     "sphinx_tabs.tabs",
     "sphinxcontrib.log_cabinet",
     "pallets_sphinx_themes",
     "myst_parser",
+    "autodoc2",
+    "sphinx_design",
 ]
-autodoc_member_order = "bysource"
-autodoc_typehints = "description"
-autodoc_preserve_defaults = True
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
+    "linkify",
+]
+autodoc2_packages = [
+    {
+        "path": "../src/click",
+        "module": "click",
+        "auto_mode": False,
+    },
+]
+autodoc2_render_plugin = "myst"
 extlinks = {
     "issue": ("https://github.com/pallets/click/issues/%s", "#%s"),
     "pr": ("https://github.com/pallets/click/pull/%s", "#%s"),
