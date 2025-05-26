@@ -1,29 +1,29 @@
-.. _virtualenv-heading:
+(virtualenv-heading)=
 
-Virtualenv
-=========================
+# Virtualenv
 
-Why Use Virtualenv?
--------------------------
+## Why Use Virtualenv?
 
-You should use `Virtualenv <https://virtualenv.pypa.io/en/latest/>`_ because:
+You should use [Virtualenv](https://virtualenv.pypa.io/en/latest/) because:
 
-*   It allows you to install multiple versions of the same dependency.
+- It allows you to install multiple versions of the same dependency.
+- If you have an operating system version of Python, it prevents you from changing its dependencies and potentially
+  messing up your os.
 
-*   If you have an operating system version of Python, it prevents you from changing its dependencies and potentially messing up your os.
+## How to Use Virtualenv
 
-How to Use Virtualenv
------------------------------
+Create your project folder, then a virtualenv within it:
 
-Create your project folder, then a virtualenv within it::
+```console
+$ mkdir myproject
+$ cd myproject
+$ python3 -m venv .venv
+```
 
-    $ mkdir myproject
-    $ cd myproject
-    $ python3 -m venv .venv
+Now, whenever you want to work on a project, you only have to activate the corresponding environment.
 
-Now, whenever you want to work on a project, you only have to activate the
-corresponding environment.
 
+```{eval-rst}
 .. tabs::
 
     .. group-tab:: OSX/Linux
@@ -39,16 +39,20 @@ corresponding environment.
 
             > .venv\scripts\activate
             (venv) >
-
+```
 
 You are now using your virtualenv (notice how the prompt of your shell has changed to show the active environment).
 
-To install packages in the virtual environment::
+To install packages in the virtual environment:
 
-    $ pip install click
+```console
+$ pip install click
+```
 
-And if you want to stop using the virtualenv, use the following command::
+And if you want to stop using the virtualenv, use the following command:
 
-    $ deactivate
+```console
+$ deactivate
+```
 
 After doing this, the prompt of your shell should be as familiar as before.

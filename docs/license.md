@@ -1,5 +1,7 @@
-BSD-3-Clause License
-====================
+# BSD-3-Clause License
 
-.. literalinclude:: ../LICENSE.txt
-    :language: text
+```{literalinclude} ../LICENSE.txt
+---
+language: text
+---
+```

@@ -1,87 +1,79 @@
-Packaging Entry Points
-======================
+# Packaging Entry Points
 
-It's recommended to write command line utilities as installable packages with
-entry points instead telling users to run ``python hello.py``.
+It's recommended to write command line utilities as installable packages with entry points instead telling users to run
+`python hello.py`.
 
-A distribution package is a ``.whl`` file you install with pip or another Python
-installer. You use a ``pyproject.toml`` file to describe the project and how it
-is built into a package. You might upload this package to PyPI, or distribute it
+A distribution package is a `.whl` file you install with pip or another Python installer. You use a `pyproject.toml`
+file to describe the project and how it is built into a package. You might upload this package to PyPI, or distribute it
 to your users in another way.
 
-Python installers create executable scripts that will run a specified Python
-function. These are known as "entry points". The installer knows how to create
-an executable regardless of the operating system, so it will work on Linux,
+Python installers create executable scripts that will run a specified Python function. These are known as "entry
+points". The installer knows how to create an executable regardless of the operating system, so it will work on Linux,
 Windows, MacOS, etc.
 
+## Project Files
 
-Project Files
--------------
+To install your app with an entry point, all you need is the script and a `pyproject.toml` file. Here's an example
+project directory:
 
-To install your app with an entry point, all you need is the script and a
-``pyproject.toml`` file. Here's an example project directory:
+```python
+hello-project/
+    src/
+        hello/
+            __init__.py
+            hello.py
+    pyproject.toml
+```
 
-.. code-block:: text
+Contents of `hello.py`:
 
-    hello-project/
-        src/
-            hello/
-                __init__.py
-                hello.py
-        pyproject.toml
+```python
+import click
 
-Contents of ``hello.py``:
+@click.command()
+def cli():
+    """Prints a greeting."""
+    click.echo("Hello, World!")
+```
 
-.. click:example::
+Contents of `pyproject.toml`:
 
-    import click
+```python
+[project]
+name = "hello"
+version = "1.0.0"
+description = "Hello CLI"
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.1",
+]
 
-    @click.command()
-    def cli():
-        """Prints a greeting."""
-        click.echo("Hello, World!")
+[project.scripts]
+hello = "hello:cli"
 
-Contents of ``pyproject.toml``:
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
+```
 
-.. code-block:: toml
+The magic is in the `project.scripts` section. Each line identifies one executable script. The first part before the
+equals sign (`=`) is the name of the script that should be generated, the second part is the import path followed by a
+colon (`:`) with the function to call (the Click command).
 
-    [project]
-    name = "hello"
-    version = "1.0.0"
-    description = "Hello CLI"
-    requires-python = ">=3.11"
-    dependencies = [
-        "click>=8.1",
-    ]
+## Installation
 
-    [project.scripts]
-    hello = "hello:cli"
+When your package is installed, the installer will create an executable script based on the configuration. During
+development, you can install in editable mode using the `-e` option. Remember to use a virtual environment!
 
-    [build-system]
-    requires = ["flit_core<4"]
-    build-backend = "flit_core.buildapi"
-
-The magic is in the ``project.scripts`` section. Each line identifies one executable
-script. The first part before the equals sign (``=``) is the name of the script that
-should be generated, the second part is the import path followed by a colon
-(``:``) with the function to call (the Click command).
-
-
-Installation
-------------
-
-When your package is installed, the installer will create an executable script
-based on the configuration. During development, you can install in editable
-mode using the ``-e`` option. Remember to use a virtual environment!
-
-.. code-block:: console
-
-    $ python -m venv .venv
-    $ . .venv/bin/activate
-    $ pip install -e .
+```console
+$ python -m venv .venv
+$ . .venv/bin/activate
+$ pip install -e .
+```
 
 Afterwards, your command should be available:
 
-.. click:run::
-
-    invoke(cli, prog_name="hello")
+```console
+$ hello
+Hello, World!
+```

@@ -1,9 +1,5 @@
 # Testing Click Applications
 
-```{eval-rst}
-.. currentmodule:: click.testing
-```
-
 Click provides the {ref}`click.testing <testing>` module to help you invoke command line applications and check their behavior.
 
 These tools should only be used for testing since they change
@@ -22,9 +18,7 @@ The key pieces are:
   - {class}`CliRunner` - used to invoke commands as command line scripts.
   - {class}`Result` - returned from {meth}`CliRunner.invoke`. Captures output data, exit code, optional exception, and captures the output as bytes and binary data.
 
-```{code-block} python
-:caption: hello.py
-
+```python
 import click
 
 @click.command()
@@ -33,9 +27,7 @@ def hello(name):
    click.echo(f'Hello {name}!')
 ```
 
-```{code-block} python
-:caption: test_hello.py
-
+```python
 from click.testing import CliRunner
 from hello import hello
 
@@ -50,9 +42,7 @@ def test_hello_world():
 
 A subcommand name must be specified in the `args` parameter {meth}`CliRunner.invoke`:
 
-```{code-block} python
-:caption: sync.py
-
+```python
 import click
 
 @click.group()
@@ -65,9 +55,7 @@ def sync():
    click.echo('Syncing')
 ```
 
-```{code-block} python
-:caption: test_sync.py
-
+```python
 from click.testing import CliRunner
 from sync import cli
 
@@ -84,9 +72,7 @@ def test_sync():
 Additional keyword arguments passed to {meth}`CliRunner.invoke` will be used to construct the initial {class}`Context object <click.Context>`.
 For example, setting a fixed terminal width equal to 60:
 
-```{code-block} python
-:caption: sync.py
-
+```python
 import click
 
 @click.group()
@@ -98,9 +84,7 @@ def sync():
    click.echo('Syncing')
 ```
 
-```{code-block} python
-:caption: test_sync.py
-
+```python
 from click.testing import CliRunner
 from sync import cli
 
@@ -116,9 +100,7 @@ def test_sync():
 
 The {meth}`CliRunner.isolated_filesystem` context manager sets the current working directory to a new, empty folder.
 
-```{code-block} python
-:caption: cat.py
-
+```python
 import click
 
 @click.command()
@@ -127,9 +109,7 @@ def cat(f):
    click.echo(f.read())
 ```
 
-```{code-block} python
-:caption: test_cat.py
-
+```python
 from click.testing import CliRunner
 from cat import cat
 
@@ -148,9 +128,7 @@ Pass in a path to control where the temporary directory is created.
 In this case, the directory will not be removed by Click. Its useful
 to integrate with a framework like Pytest that manages temporary files.
 
-```{code-block} python
-:caption: test_cat.py
-
+```python
 from click.testing import CliRunner
 from cat import cat
 
@@ -169,9 +147,7 @@ def test_cat_with_path_specified():
 
 The test wrapper can provide input data for the input stream (stdin). This is very useful for testing prompts.
 
-```{code-block} python
-:caption: prompt.py
-
+```python
 import click
 
 @click.command()
@@ -180,9 +156,7 @@ def prompt(foo):
    click.echo(f"foo={foo}")
 ```
 
-```{code-block} python
-:caption: test_prompt.py
-
+```python
 from click.testing import CliRunner
 from prompt import prompt
 
