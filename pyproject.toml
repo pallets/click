@@ -37,6 +37,8 @@ docs = [
     "sphinx",
     "sphinx-tabs",
     "sphinxcontrib-log-cabinet",
+    "autodoc2",
+    "sphinx_design",
 ]
 docs-auto = [
     "sphinx-autobuild",
