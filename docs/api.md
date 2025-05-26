@@ -11,241 +11,329 @@ local: true
 
 ## Decorators
 
-:::{autodoc2-object} click.decorators.command
-:::
+```{eval-rst}
+.. autofunction:: click.command
+```
 
-:::{autodoc2-object} click.decorators.group
-:::
+```{eval-rst}
+.. autofunction:: click.group
+```
 
-:::{autodoc2-object} click.decorators.argument
-:::
+```{eval-rst}
+.. autofunction:: click.argument
+```
 
-:::{autodoc2-object} click.decorators.option
-:::
+```{eval-rst}
+.. autofunction:: click.option
+```
 
-:::{autodoc2-object} click.decorators.password_option
-:::
+```{eval-rst}
+.. autofunction:: click.password_option
+```
 
-:::{autodoc2-object} click.decorators.confirmation_option
-:::
+```{eval-rst}
+.. autofunction:: click.confirmation_option
+```
 
-:::{autodoc2-object} click.decorators.version_option
-:::
+```{eval-rst}
+.. autofunction:: click.version_option
+```
 
-:::{autodoc2-object} click.decorators.help_option
-:::
+```{eval-rst}
+.. autofunction:: click.help_option
+```
 
-:::{autodoc2-object} click.decorators.pass_context
-:::
+```{eval-rst}
+.. autofunction:: click.pass_context
+```
 
-:::{autodoc2-object} click.decorators.pass_obj
-:::
+```{eval-rst}
+.. autofunction:: click.pass_obj
+```
 
-:::{autodoc2-object} click.decorators.make_pass_decorator
-:::
+```{eval-rst}
+.. autofunction:: click.make_pass_decorator
+```
 
-:::{autodoc2-object} click.decorators.pass_meta_key
-:::
+```{eval-rst}
+.. autofunction:: click.decorators.pass_meta_key
+```
 
 ## Utilities
 
-:::{autodoc2-object} click.utils.echo
-:::
+```{eval-rst}
+.. autofunction:: click.echo
+```
 
-:::{autodoc2-object} click.utils.get_binary_stream
-:::
+```{eval-rst}
+.. autofunction:: click.get_binary_stream
+```
 
-:::{autodoc2-object} click.utils.get_text_stream
-:::
+```{eval-rst}
+.. autofunction:: click.get_text_stream
+```
 
-:::{autodoc2-object} click.utils.open_file
-:::
+```{eval-rst}
+.. autofunction:: click.open_file
+```
 
-:::{autodoc2-object} click.utils.get_app_dir
-:::
+```{eval-rst}
+.. autofunction:: click.get_app_dir
+```
 
-:::{autodoc2-object} click.utils.format_filename
-:::
+```{eval-rst}
+.. autofunction:: click.format_filename
+```
 
-:::{autodoc2-object} click.termui.echo_via_pager
-:::
+```{eval-rst}
+.. autofunction:: click.echo_via_pager
+```
 
-:::{autodoc2-object} click.termui.prompt
-:::
+```{eval-rst}
+.. autofunction:: click.prompt
+```
 
-:::{autodoc2-object} click.termui.confirm
-:::
+```{eval-rst}
+.. autofunction:: click.confirm
+```
 
-:::{autodoc2-object} click.termui.progressbar
-:::
+```{eval-rst}
+.. autofunction:: click.progressbar
+```
 
-:::{autodoc2-object} click.termui.clear
-:::
+```{eval-rst}
+.. autofunction:: click.clear
+```
 
-:::{autodoc2-object} click.termui.style
-:::
+```{eval-rst}
+.. autofunction:: click.style
+```
 
-:::{autodoc2-object} click.termui.unstyle
-:::
+```{eval-rst}
+.. autofunction:: click.unstyle
+```
 
-:::{autodoc2-object} click.termui.secho
-:::
+```{eval-rst}
+.. autofunction:: click.secho
+```
 
-:::{autodoc2-object} click.termui.edit
-:::
+```{eval-rst}
+.. autofunction:: click.edit
+```
 
-:::{autodoc2-object} click.termui.launch
-:::
+```{eval-rst}
+.. autofunction:: click.launch
+```
 
-:::{autodoc2-object} click.termui.getchar
-:::
+```{eval-rst}
+.. autofunction:: click.getchar
+```
 
-:::{autodoc2-object} click.termui.pause
-:::
+```{eval-rst}
+.. autofunction:: click.pause
+```
 
 ## Commands
 
-:::{autodoc2-object} click.core._BaseCommand
-:::
+```{eval-rst}
+.. autoclass:: click.BaseCommand
+   :members:
+```
 
-:::{autodoc2-object} click.core.Command
-:::
+```{eval-rst}
+.. autoclass:: click.Command
+   :members:
+```
 
-:::{autodoc2-object} click.core._MultiCommand
-:::
+```{eval-rst}
+.. autoclass:: click.MultiCommand
+   :members:
+```
 
-:::{autodoc2-object} click.core.Group
-:::
+```{eval-rst}
+.. autoclass:: click.Group
+   :members:
+```
 
-:::{autodoc2-object} click.core.CommandCollection
-:::
+```{eval-rst}
+.. autoclass:: click.CommandCollection
+   :members:
+```
 
 ## Parameters
 
-:::{autodoc2-object} click.core.Parameter
-:::
+```{eval-rst}
+.. autoclass:: click.Parameter
+   :members:
+```
 
-:::{autodoc2-object} click.core.Option
-:::
+```{eval-rst}
+.. autoclass:: click.Option
+```
 
-:::{autodoc2-object} click.core.Argument
-:::
+```{eval-rst}
+.. autoclass:: click.Argument
+```
 
 ## Context
 
-:::{autodoc2-object} click.core.Context
-:::
+```{eval-rst}
+.. autoclass:: click.Context
+   :members:
+```
 
-:::{autodoc2-object} click.globals.get_current_context
-:::
+```{eval-rst}
+.. autofunction:: click.get_current_context
+```
 
-:::{autodoc2-object} click.core.ParameterSource
-:::
+```{eval-rst}
+.. autoclass:: click.core.ParameterSource
+   :members:
+   :member-order: bysource
+```
 
 (click-api-types)=
 
 ## Types
 
-:::{autodoc2-object} click.types.STRING
-:::
+```{eval-rst}
+.. autodata:: click.STRING
+```
 
-:::{autodoc2-object} click.types.INT
-:::
+```{eval-rst}
+.. autodata:: click.INT
+```
 
-:::{autodoc2-object} click.types.FLOAT
-:::
+```{eval-rst}
+.. autodata:: click.FLOAT
+```
 
-:::{autodoc2-object} click.types.BOOL
-:::
+```{eval-rst}
+.. autodata:: click.BOOL
+```
 
-:::{autodoc2-object} click.types.UUID
-:::
+```{eval-rst}
+.. autodata:: click.UUID
+```
 
-:::{autodoc2-object} click.types.UNPROCESSED
-:::
+```{eval-rst}
+.. autodata:: click.UNPROCESSED
+```
 
-:::{autodoc2-object} click.types.File
-:::
+```{eval-rst}
+.. autoclass:: click.File
+```
 
-:::{autodoc2-object} click.types.Path
-:::
+```{eval-rst}
+.. autoclass:: click.Path
+```
 
-:::{autodoc2-object} click.types.Choice
-:::
+```{eval-rst}
+.. autoclass:: click.Choice
+   :members:
+```
 
-:::{autodoc2-object} click.types.IntRange
-:::
+```{eval-rst}
+.. autoclass:: click.IntRange
+```
 
-:::{autodoc2-object} click.types.FloatRange
-:::
+```{eval-rst}
+.. autoclass:: click.FloatRange
+```
 
-:::{autodoc2-object} click.types.DateTime
-:::
+```{eval-rst}
+.. autoclass:: click.DateTime
+```
 
-:::{autodoc2-object} click.types.Tuple
-:::
+```{eval-rst}
+.. autoclass:: click.Tuple
+```
 
-:::{autodoc2-object} click.types.ParamType
-:::
+```{eval-rst}
+.. autoclass:: click.ParamType
+   :members:
+```
 
 ## Exceptions
 
-:::{autodoc2-object} click.exceptions.ClickException
-:::
+```{eval-rst}
+.. autoexception:: click.ClickException
+```
 
-:::{autodoc2-object} click.exceptions.Abort
-:::
+```{eval-rst}
+.. autoexception:: click.Abort
+```
 
-:::{autodoc2-object} click.exceptions.UsageError
-:::
+```{eval-rst}
+.. autoexception:: click.UsageError
+```
 
-:::{autodoc2-object} click.exceptions.BadParameter
-:::
+```{eval-rst}
+.. autoexception:: click.BadParameter
+```
 
-:::{autodoc2-object} click.exceptions.FileError
-:::
+```{eval-rst}
+.. autoexception:: click.FileError
+```
 
-:::{autodoc2-object} click.exceptions.NoSuchOption
-:::
+```{eval-rst}
+.. autoexception:: click.NoSuchOption
+```
 
-:::{autodoc2-object} click.exceptions.BadOptionUsage
-:::
+```{eval-rst}
+.. autoexception:: click.BadOptionUsage
+```
 
-:::{autodoc2-object} click.exceptions.BadArgumentUsage
-:::
+```{eval-rst}
+.. autoexception:: click.BadArgumentUsage
+```
 
 ## Formatting
 
-:::{autodoc2-object} click.formatting.HelpFormatter
-:::
+```{eval-rst}
+.. autoclass:: click.HelpFormatter
+   :members:
+```
 
-:::{autodoc2-object} click.formatting.wrap_text
-:::
+```{eval-rst}
+.. autofunction:: click.wrap_text
+```
 
 ## Parsing
 
-:::{autodoc2-object} click.parser._OptionParser
-:::
+```{eval-rst}
+.. autoclass:: click.OptionParser
+   :members:
+```
 
 ## Shell Completion
 
 See {ref}`shell-completion` for information about enabling and customizing Click's shell completion system.
 
-:::{autodoc2-object} click.shell_completion.CompletionItem
-:::
+```{eval-rst}
+.. autoclass:: click.shell_completion.CompletionItem
+```
 
-:::{autodoc2-object} click.shell_completion.ShellComplete
-:::
+```{eval-rst}
+.. autoclass:: click.shell_completion.ShellComplete
+   :members:
+   :member-order: bysource
+```
 
-:::{autodoc2-object} click.shell_completion.add_completion_class
-:::
+```{eval-rst}
+.. autofunction:: click.shell_completion.add_completion_class
+```
 
 (testing)=
 
 ## Testing
 
-:::{autodoc2-object} click.testing.CliRunner
-:::
+```{eval-rst}
+.. autoclass:: click.testing.CliRunner
+   :members:
+```
 
-:::{autodoc2-object} click.testing.Result
-:::
+```{eval-rst}
+.. autoclass:: click.testing.Result
+   :members:
+```
