@@ -35,6 +35,9 @@ autodoc2_packages = [
     },
 ]
 autodoc2_render_plugin = "myst"
+autodoc2_docstring_parser_regexes = [
+    (r"^click\..*", "rst"),
+]
 extlinks = {
     "issue": ("https://github.com/pallets/click/issues/%s", "#%s"),
     "pr": ("https://github.com/pallets/click/pull/%s", "#%s"),
