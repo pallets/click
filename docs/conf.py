@@ -15,8 +15,6 @@ default_role = "code"
 extensions = [
     "sphinx.ext.extlinks",
     "sphinx.ext.intersphinx",
-    "sphinx_tabs.tabs",
-    "sphinxcontrib.log_cabinet",
     "pallets_sphinx_themes",
     "myst_parser",
     "autodoc2",
