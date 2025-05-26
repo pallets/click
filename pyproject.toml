@@ -35,8 +35,6 @@ docs = [
     "myst-parser",
     "pallets-sphinx-themes",
     "sphinx",
-    "sphinx-tabs",
-    "sphinxcontrib-log-cabinet",
     "sphinx-autodoc2",
     "sphinx_design",
     "linkify-it-py",
