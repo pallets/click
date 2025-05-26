@@ -171,8 +171,6 @@ docs = [
     { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "sphinx-autodoc2" },
     { name = "sphinx-design" },
-    { name = "sphinx-tabs" },
-    { name = "sphinxcontrib-log-cabinet" },
 ]
 docs-auto = [
     { name = "sphinx-autobuild" },
@@ -209,8 +207,6 @@ docs = [
     { name = "sphinx" },
     { name = "sphinx-autodoc2" },
     { name = "sphinx-design" },
-    { name = "sphinx-tabs" },
-    { name = "sphinxcontrib-log-cabinet" },
 ]
 docs-auto = [{ name = "sphinx-autobuild" }]
 gha-update = [{ name = "gha-update", marker = "python_full_version >= '3.12'" }]
@@ -904,21 +900,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sphinx-tabs"
-version = "3.4.7"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "docutils" },
-    { name = "pygments" },
-    { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6a/53/a9a91995cb365e589f413b77fc75f1c0e9b4ac61bfa8da52a779ad855cc0/sphinx-tabs-3.4.7.tar.gz", hash = "sha256:991ad4a424ff54119799ba1491701aa8130dd43509474aef45a81c42d889784d", size = 15891, upload-time = "2024-10-08T13:37:27.887Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/6b/c6/f47505b564b918a3ba60c1e99232d4942c4a7e44ecaae603e829e3d05dae/sphinx_tabs-3.4.7-py3-none-any.whl", hash = "sha256:c12d7a36fd413b369e9e9967a0a4015781b71a9c393575419834f19204bd1915", size = 9727, upload-time = "2024-10-08T13:37:26.192Z" },
-]
-
-[[package]]
 name = "sphinxcontrib-applehelp"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -952,19 +933,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b2/e8/9ed3830aeed71f17c026a07a5097edcf44b692850ef215b161b8ad875729/sphinxcontrib-jsmath-1.0.1.tar.gz", hash = "sha256:a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8", size = 5787, upload-time = "2019-01-21T16:10:16.347Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c2/42/4c8646762ee83602e3fb3fbe774c2fac12f317deb0b5dbeeedd2d3ba4b77/sphinxcontrib_jsmath-1.0.1-py2.py3-none-any.whl", hash = "sha256:2ec2eaebfb78f3f2078e73666b1415417a116cc848b72e5172e596c871103178", size = 5071, upload-time = "2019-01-21T16:10:14.333Z" },
-]
-
-[[package]]
-name = "sphinxcontrib-log-cabinet"
-version = "1.0.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "sphinx", version = "8.2.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/75/26/0687391e10c605a4d0c7ebe118c57c51ecc687128bcdae5803d9b96def81/sphinxcontrib-log-cabinet-1.0.1.tar.gz", hash = "sha256:103b2e62df4e57abb943bea05ee9c2beb7da922222c8b77314ffd6ab9901c558", size = 4072, upload-time = "2019-07-05T23:22:34.596Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/27/e7/dbfc155c1b4c429a9a8149032a56bfb7bab4efabc656abb24ab4619c715d/sphinxcontrib_log_cabinet-1.0.1-py2.py3-none-any.whl", hash = "sha256:3decc888e8e453d1912cd95d50efb0794a4670a214efa65e71a7de277dcfe2cd", size = 4887, upload-time = "2019-07-05T23:22:32.969Z" },
 ]
 
 [[package]]
