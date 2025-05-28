@@ -222,16 +222,20 @@ def test_boolean_switch(runner, default, args, expect):
     assert result.return_value is expect
 
 
-@pytest.mark.parametrize("default", [True, False])
-@pytest.mark.parametrize(("args", "expect"), [(["--f"], True), ([], False)])
+@pytest.mark.parametrize(
+    ("default", "args", "expect"),
+    (
+        (True, ["--f"], True),
+        (True, [], True),
+        (False, ["--f"], True),
+        (False, [], False),
+    ),
+)
 def test_boolean_flag(runner, default, args, expect):
     @click.command()
     @click.option("--f", is_flag=True, default=default)
     def cli(f):
         return f
-
-    if default:
-        expect = not expect
 
     result = runner.invoke(cli, args, standalone_mode=False)
     assert result.return_value is expect
