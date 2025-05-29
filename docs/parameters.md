@@ -2,8 +2,7 @@
 
 # Parameters
 
-```{eval-rst}
-.. currentmodule:: click
+```{currentmodule} click
 ```
 
 Click supports only two principle types of parameters for scripts (by design): options and arguments.
