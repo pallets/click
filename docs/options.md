@@ -432,8 +432,8 @@ providing only the option's flag without a value will either show a
 prompt or use its `flag_value`.
 
 Setting `is_flag=False, flag_value=value` tells Click that the option
-can still be passed a value, but only if the flag is given the
-`flag_value`.
+can still be passed a value, but if only the flag is given, the
+value will be `flag_value`.
 
 ```{eval-rst}
 .. click:example::
