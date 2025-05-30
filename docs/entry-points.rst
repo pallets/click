@@ -55,7 +55,7 @@ Contents of ``pyproject.toml``:
     ]
 
     [project.scripts]
-    hello = "hello:cli"
+    hello = "hello.hello:cli"
 
     [build-system]
     requires = ["flit_core<4"]
