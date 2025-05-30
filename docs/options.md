@@ -152,8 +152,8 @@ To make an option take multiple values, pass in `nargs`. Note only a fixed numbe
 
 ## Multi Value Options as Tuples
 
-:::{versionadded} 4.0
-:::
+```{versionadded} 4.0
+```
 
 As you can see that by using `nargs` set to a specific number each item in
 the resulting tuple is of the same type. This might not be what you want.
@@ -289,8 +289,8 @@ If a forward slash(`/`) is contained in your option name already, you can split 
         click.echo(f"debug={debug}")
 ```
 
-:::{versionchanged} 6.0
-:::
+```{versionchanged} 6.0
+```
 
 If you want to define an alias for the second option only, then you will need to use leading whitespace to disambiguate the format string.
 
