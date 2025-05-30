@@ -295,7 +295,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
 
         .. versionadded:: 8.2.0
         """
-        normed_value = choice.name if isinstance(choice, enum.Enum) else str(choice)
+        normed_value = choice.value if isinstance(choice, enum.Enum) else str(choice)
 
         if ctx is not None and ctx.token_normalize_func is not None:
             normed_value = ctx.token_normalize_func(normed_value)

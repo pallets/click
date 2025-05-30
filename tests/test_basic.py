@@ -418,19 +418,19 @@ def test_choice_argument_enum(runner):
         assert isinstance(method, MyEnum)
         click.echo(method)
 
-    result = runner.invoke(cli, ["foo"])
+    result = runner.invoke(cli, ["foo-value"])
     assert result.output == "foo-value\n"
     assert not result.exception
 
     result = runner.invoke(cli, ["meh"])
     assert result.exit_code == 2
     assert (
-        "Invalid value for '{foo|bar|baz}': 'meh' is not one of 'foo',"
-        " 'bar', 'baz'." in result.output
+        "Invalid value for '{foo-value|bar-value|baz-value}': 'meh' is not one of"
+        " 'foo-value', 'bar-value', 'baz-value'." in result.output
     )
 
     result = runner.invoke(cli, ["--help"])
-    assert "{foo|bar|baz}" in result.output
+    assert "{foo-value|bar-value|baz-value}" in result.output
 
 
 def test_choice_argument_custom_type(runner):
