@@ -1,7 +1,7 @@
 # Windows Console Notes
 
-:::{versionadded} 6.0
-:::
+```{versionadded} 6.0
+```
 
 Click emulates output streams on Windows to support unicode to the Windows console through separate APIs and we perform
 different decoding of parameters.
