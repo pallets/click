@@ -1,3 +1,6 @@
+```{currentmodule} click
+```
+
 # Utilities
 
 Besides the functionality that Click provides to interface with argument parsing and handling, it also provides a bunch
@@ -5,7 +8,7 @@ of addon functionality that is useful for writing command line utilities.
 
 ## Printing to Stdout
 
-The most obvious helper is the {func}`click.echo` function, which in many ways works like the Python `print` statement or
+The most obvious helper is the {func}`echo` function, which in many ways works like the Python `print` statement or
 function. The main difference is that it works the same in many different terminal environments.
 
 Example:
@@ -23,7 +26,7 @@ passing `nl=False`:
 click.echo(b'\xe2\x98\x83', nl=False)
 ```
 
-Last but not least {func}`click.echo` uses click's intelligent internal output streams to stdout and stderr which support
+Last but not least {func}`echo` uses click's intelligent internal output streams to stdout and stderr which support
 unicode output on the Windows console. This means for as long as you are using `click.echo` you can output unicode
 characters (there are some limitations on the default font with regards to which characters can be displayed).
 
@@ -49,18 +52,18 @@ click.echo('Hello World!', err=True)
 ```{versionadded} 2.0
 ```
 
-The {func}`click.echo` function supports ANSI colors and styles. On Windows this uses [colorama].
+The {func}`echo` function supports ANSI colors and styles. On Windows this uses [colorama].
 
 Primarily this means that:
 
-- Click's {func}`click.echo` function will automatically strip ANSI color codes if the stream is not connected to a terminal.
-- the {func}`click.echo` function will transparently connect to the terminal on Windows and translate ANSI codes to terminal
+- Click's {func}`echo` function will automatically strip ANSI color codes if the stream is not connected to a terminal.
+- the {func}`echo` function will transparently connect to the terminal on Windows and translate ANSI codes to terminal
   API calls. This means that colors will work on Windows the same way they do on other operating systems.
 
 On Windows, Click uses colorama without calling `colorama.init()`. You can still call that in your code, but it's not
 required for Click.
 
-For styling a string, the {func}`click.style` function can be used:
+For styling a string, the {func}`style` function can be used:
 
 ```python
 import click
@@ -70,7 +73,7 @@ click.echo(click.style('Some more text', bg='blue', fg='white'))
 click.echo(click.style('ATTENTION', blink=True, bold=True))
 ```
 
-The combination of {func}`click.echo` and {func}`click.style` is also available in a single function called {func}`click.secho`:
+The combination of {func}`echo` and {func}`style` is also available in a single function called {func}`secho`:
 
 ```python
 click.secho('Hello World!', fg='green')
@@ -81,7 +84,7 @@ click.secho('ATTENTION', blink=True, bold=True)
 ## Pager Support
 
 In some situations, you might want to show long texts on the terminal and let a user scroll through it. This can be
-achieved by using the {func}`click.echo_via_pager` function which works similarly to the {func}`click.echo` function, but always
+achieved by using the {func}`echo_via_pager` function which works similarly to the {func}`echo` function, but always
 writes to stdout and, if possible, through a pager.
 
 Example:
@@ -110,7 +113,7 @@ def less():
 ```{versionadded} 2.0
 ```
 
-To clear the terminal screen, you can use the {func}`click.clear` function that is provided starting with Click 2.0. It does
+To clear the terminal screen, you can use the {func}`clear` function that is provided starting with Click 2.0. It does
 what the name suggests: it clears the entire visible screen in a platform-agnostic way:
 
 ```
@@ -127,7 +130,7 @@ Normally, when reading input from the terminal, you would read from standard inp
 will not show up until the line has been terminated. In certain circumstances, you might not want to do that and instead
 read individual characters as they are being written.
 
-For this, Click provides the {func}`click.getchar` function which reads a single character from the terminal buffer and
+For this, Click provides the {func}`getchar` function which reads a single character from the terminal buffer and
 returns it as a Unicode character.
 
 Note that this function will always read from the terminal, even if stdin is instead a pipe.
@@ -161,7 +164,7 @@ cannot be properly exited.
 Sometimes, it's useful to pause until the user presses any key on the keyboard. This is especially useful on Windows
 where `cmd.exe` will close the window at the end of the command execution by default, instead of waiting.
 
-In click, this can be accomplished with the {func}`click.pause` function. This function will print a quick message to the
+In click, this can be accomplished with the {func}`pause` function. This function will print a quick message to the
 terminal (which can be customized) and wait for the user to press a key. In addition to that, it will also become a NOP
 (no operation instruction) if the script is not run interactively.
 
@@ -177,7 +180,7 @@ click.pause()
 ```{versionadded} 2.0
 ```
 
-Click supports launching editors automatically through {func}`click.edit`. This is very useful for asking users for multi-line
+Click supports launching editors automatically through {func}`edit`. This is very useful for asking users for multi-line
 input. It will automatically open the user's defined editor or fall back to a sensible default. If the user closes the
 editor without saving, the return value will be `None`, otherwise the entered text.
 
@@ -208,7 +211,7 @@ click.edit(filename='/etc/passwd')
 ```{versionadded} 2.0
 ```
 
-Click supports launching applications through {func}`click.launch`. This can be used to open the default application
+Click supports launching applications through {func}`launch`. This can be used to open the default application
 associated with a URL or filetype. This can be used to launch web browsers or picture viewers, for instance. In addition
 to this, it can also launch the file manager and automatically select the provided file.
 
@@ -223,7 +226,7 @@ click.launch("/my/downloaded/file.txt", locate=True)
 
 Because filenames might not be Unicode, formatting them can be a bit tricky.
 
-The way this works with click is through the {func}`click.format_filename` function. It does a best-effort conversion of the
+The way this works with click is through the {func}`format_filename` function. It does a best-effort conversion of the
 filename to Unicode and will never fail. This makes it possible to use these filenames in the context of a full Unicode
 string.
 
@@ -239,7 +242,7 @@ For command line utilities, it's very important to get access to input and outpu
 provides access to these streams through `sys.stdout` and friends, but unfortunately, there are API differences between
 2.x and 3.x, especially with regards to how these streams respond to Unicode and binary data.
 
-Because of this, click provides the {func}`click.get_binary_stream` and {func}`click.get_text_stream` functions, which produce
+Because of this, click provides the {func}`get_binary_stream` and {func}`get_text_stream` functions, which produce
 consistent results with different Python versions and for a wide variety of terminal configurations.
 
 The end result is that these functions will always return a functional stream object (except in very odd cases; see
@@ -265,7 +268,7 @@ information see {doc}`wincmd`.
 ```{versionadded} 3.0
 ```
 
-Starting with Click 3.0 the logic for opening files from the {func}`click.File` type is exposed through the {func}`click.open_file`
+Starting with Click 3.0 the logic for opening files from the {func}`File` type is exposed through the {func}`open_file`
 function. It can intelligently open stdin/stdout as well as any other file.
 
 Example:
@@ -292,7 +295,7 @@ with click.open_file(filename, 'w') as f:
 
 Very often, you want to open a configuration file that belongs to your application. However, different operating systems
 store these configuration files in different locations depending on their standards. Click provides a
-{func}`click.get_app_dir` function which returns the most appropriate location for per-user config files for your application
+{func}`get_app_dir` function which returns the most appropriate location for per-user config files for your application
 depending on the OS.
 
 Example usage:
@@ -318,7 +321,7 @@ return rv
 
 Sometimes, you have command line scripts that need to process a lot of data, but you want to quickly show the user some
 progress about how long that will take. Click supports simple progress bar rendering for that through the
-{func}`click.progressbar` function.
+{func}`progressbar` function.
 
 ```{note} If you find that you have requirements beyond what Click's progress bar supports, try using [tqdm].
 ```
@@ -352,7 +355,7 @@ with click.progressbar(all_the_users_to_process,
         modify_the_user(user)
 ```
 
-Note that {func}`click.progressbar` updates the bar *after* each iteration of the loop. So code like this will render
+Note that {func}`progressbar` updates the bar *after* each iteration of the loop. So code like this will render
 correctly:
 
 ```python
