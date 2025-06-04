@@ -46,7 +46,7 @@ Click has to take extra care to support Unicode text in different environments.
 
 - When dealing with files, Click will always use the Unicode file system API by using the operating system's reported or
   guessed filesystem encoding. Surrogates are supported for filenames, so it should be possible to open files through
-  the {func}`click.File` type even if the environment is misconfigured.
+  the {func}`File` type even if the environment is misconfigured.
 
 ## Surrogate Handling
 
