@@ -1,10 +1,23 @@
 .. currentmodule:: click
 
-Version 8.2.1
+Version 8.2.2
 -------------
+
+Unreleased
 
 -   Fix completion for the Z shell (``zsh``) for completion items containing
     colons. :issue:`2703` :pr:`2846`
+
+Version 8.2.1
+-------------
+
+Released 2025-05-20
+
+-   Fix flag value handling for flag options with a provided type. :issue:`2894`
+    :issue:`2897` :pr:`2930`
+-   Fix shell completion for nested groups. :issue:`2906` :pr:`2907`
+-   Flush ``sys.stderr`` at the end of ``CliRunner.invoke``. :issue:`2682`
+-   Fix EOF handling for stdin input in CliRunner. :issue:`2787`
 
 Version 8.2.0
 -------------

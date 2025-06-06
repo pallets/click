@@ -58,10 +58,15 @@ You can get the library directly from PyPI::
     pip install click
 
 Documentation
--------------
+==============
+
+.. toctree::
+   :maxdepth: 2
+
+   faqs
 
 Tutorials
-^^^^^^^^^^^^^
+------------
 .. toctree::
    :maxdepth: 1
 
@@ -69,15 +74,16 @@ Tutorials
    virtualenv
 
 How to Guides
-^^^^^^^^^^^^^
+---------------
 .. toctree::
    :maxdepth: 1
 
    entry-points
    setuptools
+   support-multiple-versions
 
 Conceptual Guides
-^^^^^^^^^^^^^^^^^^^
+-------------------
 .. toctree::
    :maxdepth: 1
 
@@ -85,7 +91,7 @@ Conceptual Guides
    click-concepts
 
 General Reference
-^^^^^^^^^^^^^^^^^^^
+--------------------
 
 .. toctree::
    :maxdepth: 1
@@ -111,7 +117,7 @@ General Reference
    wincmd
 
 API Reference
-^^^^^^^^^^^^^^^
+-------------------
 
 .. toctree::
    :maxdepth: 2
@@ -119,7 +125,7 @@ API Reference
    api
 
 About Project
--------------------
+===============
 
 * This documentation is structured according to `Diataxis <https://diataxis.fr/>`_
 

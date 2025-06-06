@@ -450,3 +450,24 @@ def test_isolation_stderr_errors():
         click.echo("\udce2", err=True, nl=False)
 
     assert err.getvalue() == b"\\udce2"
+
+
+def test_isolation_flushes_unflushed_stderr():
+    """An un-flushed write to stderr, as with `print(..., file=sys.stderr)`, will end up
+    flushed by the runner at end of invocation.
+    """
+    runner = CliRunner()
+
+    with runner.isolation() as (_, err, _):
+        click.echo("\udce2", err=True, nl=False)
+
+    assert err.getvalue() == b"\\udce2"
+
+    @click.command()
+    def cli():
+        # set end="", flush=False so that it's totally clear that we won't get any
+        # auto-flush behaviors
+        print("gyarados gyarados gyarados", file=sys.stderr, end="", flush=False)
+
+    result = runner.invoke(cli)
+    assert result.stderr == "gyarados gyarados gyarados"

@@ -199,7 +199,7 @@ To change the rendering maximum width, pass ``max_content_width`` when calling t
 
     cli(max_content_width=120)
 
-.. _doc-meta-variables:
+
 
 Truncating Help Texts
 ---------------------
@@ -222,6 +222,7 @@ Example:
 
     invoke(cli, args=['--help'])
 
+.. _doc-meta-variables:
 
 Placeholder / Meta Variable
 -----------------------------

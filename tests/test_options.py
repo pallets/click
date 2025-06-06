@@ -1008,6 +1008,31 @@ def test_type_from_flag_value():
 
 
 @pytest.mark.parametrize(
+    ("opts", "pass_flag", "expected"),
+    [
+        pytest.param({"type": bool}, False, "False"),
+        pytest.param({"type": bool}, True, "True"),
+        pytest.param({"type": bool, "default": True}, False, "True"),
+        pytest.param({"type": bool, "default": True}, True, "False"),
+        pytest.param({"type": click.BOOL}, False, "False"),
+        pytest.param({"type": click.BOOL}, True, "True"),
+        pytest.param({"type": click.BOOL, "default": True}, False, "True"),
+        pytest.param({"type": click.BOOL, "default": True}, True, "False"),
+        pytest.param({"type": str}, False, ""),
+        pytest.param({"type": str}, True, "True"),
+    ],
+)
+def test_flag_value_is_correctly_set(runner, opts, pass_flag, expected):
+    @click.command()
+    @click.option("--foo", is_flag=True, **opts)
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd, ["--foo"] if pass_flag else [])
+    assert result.output == f"{expected}\n"
+
+
+@pytest.mark.parametrize(
     ("option", "expected"),
     [
         # Not boolean flags
@@ -1038,6 +1063,20 @@ def test_invalid_flag_combinations(runner, kwargs, message):
         click.Option(["-a"], **kwargs)
 
     assert message in str(e.value)
+
+
+def test_non_flag_with_non_negatable_default(runner):
+    class NonNegatable:
+        def __bool__(self):
+            raise ValueError("Cannot negate this object")
+
+    @click.command()
+    @click.option("--foo", default=NonNegatable())
+    def cmd(foo):
+        pass
+
+    result = runner.invoke(cmd)
+    assert result.exit_code == 0
 
 
 @pytest.mark.parametrize(

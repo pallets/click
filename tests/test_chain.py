@@ -163,8 +163,8 @@ def test_pipeline(runner, args, input, expect):
         return processor
 
     result = runner.invoke(cli, args, input=input)
-    assert not result.exception
-    assert result.output.splitlines() == expect
+    # last two lines are '' and 'Aborted!'
+    assert result.output.splitlines()[:-2] == expect
 
 
 def test_args_and_chain(runner):
