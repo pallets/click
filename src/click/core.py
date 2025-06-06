@@ -2676,7 +2676,7 @@ class Option(Parameter):
 
     def get_error_hint(self, ctx: Context) -> str:
         result = super().get_error_hint(ctx)
-        if self.show_envvar:
+        if self.show_envvar and self.envvar:
             result += f" (env var: '{self.envvar}')"
         return result
 
