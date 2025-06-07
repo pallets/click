@@ -1,5 +1,12 @@
 .. currentmodule:: click
 
+Version 8.2.0
+-------------
+
+Unreleased
+
+- Don't include envvar in error hint when not configured. :issue:`2971`
+
 Version 8.2.1
 -------------
 
