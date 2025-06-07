@@ -11,6 +11,7 @@ from gettext import gettext as _
 
 from ._compat import isatty
 from ._compat import strip_ansi
+from ._compat import WIN
 from .exceptions import Abort
 from .exceptions import UsageError
 from .globals import resolve_color_default
@@ -136,12 +137,17 @@ def prompt(
     def prompt_func(text: str) -> str:
         f = hidden_prompt_func if hide_input else visible_prompt_func
         try:
-            # Write the prompt separately so that we get nice
-            # coloring through colorama on Windows
-            echo(text.rstrip(" "), nl=False, err=err)
-            # Echo a space to stdout to work around an issue where
-            # readline causes backspace to clear the whole line.
-            return f(" ")
+            if WIN:
+                # Write the prompt separately so that we get nice
+                # coloring through colorama on Windows
+                echo(text.rstrip(" "), nl=False, err=err)
+                # Echo a space to stdout to work around an issue where
+                # readline causes backspace to clear the whole line.
+                return f(" ")
+            else:
+                # On non-Windows platforms, pass the full prompt to readline
+                # so it can properly handle line editing and cursor positioning
+                return f(text)
         except (KeyboardInterrupt, EOFError):
             # getpass doesn't print a newline if the user aborts input with ^C.
             # Allegedly this behavior is inherited from getpass(3).
