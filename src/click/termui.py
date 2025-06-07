@@ -7,6 +7,7 @@ import itertools
 import sys
 import typing as t
 from contextlib import AbstractContextManager
+from contextlib import redirect_stdout
 from gettext import gettext as _
 
 from ._compat import isatty
@@ -147,7 +148,11 @@ def prompt(
             else:
                 # On non-Windows platforms, pass the full prompt to readline
                 # so it can properly handle line editing and cursor positioning
-                return f(text)
+                if err:
+                    with redirect_stdout(sys.stderr):
+                        return f(text)
+                else:
+                    return f(text)
         except (KeyboardInterrupt, EOFError):
             # getpass doesn't print a newline if the user aborts input with ^C.
             # Allegedly this behavior is inherited from getpass(3).
