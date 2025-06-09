@@ -1,4 +1,6 @@
-# $ click_
+<div align="center"><img src="https://raw.githubusercontent.com/pallets/click/refs/heads/stable/docs/_static/click-horizontal.svg" alt="" height="150"></div>
+
+# Click
 
 Click is a Python package for creating beautiful command line interfaces
 in a composable way with as little code as necessary. It's the "Command
