@@ -616,7 +616,7 @@ class Editor:
         import tempfile
 
         if text is None:
-            data = b""
+            data: bytes | bytearray = b""
         elif isinstance(text, (bytes, bytearray)):
             data = text
         else:
