@@ -6,6 +6,7 @@ import os
 import stat
 import sys
 import typing as t
+from configparser import RawConfigParser
 from datetime import datetime
 from gettext import gettext as _
 from gettext import ngettext
@@ -661,23 +662,41 @@ class FloatRange(_NumberRangeBase, FloatParamType):
 class BoolParamType(ParamType):
     name = "boolean"
 
+    bool_states: dict[str, bool] = dict(**RawConfigParser.BOOLEAN_STATES) | {
+        "t": True,
+        "f": False,
+        "y": True,
+        "n": False,
+        # Absence of value is considered False.
+        "": False,
+        # XXX Possible states to add in the future:
+        # "enabled": True,
+        # "disabled": False,
+        # "accept": True,
+        # "reject": False,
+    }
+    """A mapping of string values to boolean values."""
+
+    @staticmethod
+    def str_to_bool(value: str | bool) -> bool | None:
+        """Convert a string to a boolean value."""
+        if isinstance(value, bool):
+            return value
+        return BoolParamType.bool_states.get(value.strip().lower())
+
     def convert(
         self, value: t.Any, param: Parameter | None, ctx: Context | None
-    ) -> t.Any:
-        if value in {False, True}:
-            return bool(value)
-
-        norm = value.strip().lower()
-
-        if norm in {"1", "true", "t", "yes", "y", "on"}:
-            return True
-
-        if norm in {"0", "false", "f", "no", "n", "off"}:
-            return False
-
-        self.fail(
-            _("{value!r} is not a valid boolean.").format(value=value), param, ctx
-        )
+    ) -> bool:
+        normalized = self.str_to_bool(value)
+        if normalized is None:
+            self.fail(
+                _(
+                    "{value!r} is not a valid boolean. Recognized values: {states}"
+                ).format(value=value, states=", ".join(sorted(self.bool_states))),
+                param,
+                ctx,
+            )
+        return normalized
 
     def __repr__(self) -> str:
         return "BOOL"

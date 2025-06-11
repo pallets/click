@@ -368,6 +368,24 @@ If a list is passed to `envvar`, the first environment variable found is picked.
 
 ```
 
+Variable names are:
+ - [Case-insensitive on Windows but not on other platforms](https://github.com/python/cpython/blob/aa9eb5f757ceff461e6e996f12c89e5d9b583b01/Lib/os.py#L777-L789).
+ - Not stripped of whitespaces and should match the exact name provided to the `envvar` argument.
+
+For flag options, the environment variable values needs to be interpreted to determine if the flag is be activated or not. This is required because values read from the environment are always strings. We need to transform these strings into boolean values that will to determine if the flag is activated or not.
+
+Here are the rules regarding the interpretation of environment variable values for flag options:
+   - `true`, `1`, `yes`, `on`, `t`, `y` are interpreted as activating the flag
+   - `false`, `0`, `no`, `off`, `f`, `n` are interpreted as deactivating the flag
+   - The presence of the environment variable without value is interpreted as deactivating the flag
+   - Empty strings are interpreted as deactivating the flag
+   - Values are case-insensitive, so `True`, `TRUE`, `true` are all normalized to `true`, and thus activate the flag
+   - Values are stripped of leading and trailing whitespaces before being interpreted, so `" true "` is interpreted as `true` and activates the flag
+   - If the flag option has a `flag_value` argument, passing that value in the environment variable will activate the flag, in addition to all the cases described above
+   - Any other value is interpreted as deactivating the flag
+
+Note: for boolean flags with a pair of values like `--flag\--no-flag`, the only recognized environment variable is the one provided to the `envvar` argument. So with `envvar="FLAG"`, there is no magical `NO_FLAG` variable that is recognized.
+
 ## Multiple Options from Environment Values
 
 As options can accept multiple values, pulling in such values from
