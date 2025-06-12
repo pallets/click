@@ -3,7 +3,7 @@
 Welcome to Click
 ================
 
-.. image:: _static/click-horizontal.svg
+.. image:: _static/click-name.svg
     :align: center
     :height: 200px
 
