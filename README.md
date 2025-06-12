@@ -1,4 +1,4 @@
-<div align="center"><img src="https://raw.githubusercontent.com/pallets/click/refs/heads/stable/docs/_static/click-horizontal.svg" alt="" height="150"></div>
+<div align="center"><img src="https://raw.githubusercontent.com/pallets/click/refs/heads/stable/docs/_static/click-name.svg" alt="" height="150"></div>
 
 # Click
 
