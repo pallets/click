@@ -2,7 +2,7 @@ Packaging Entry Points
 ======================
 
 It's recommended to write command line utilities as installable packages with
-entry points instead telling users to run ``python hello.py``.
+entry points instead of telling users to run ``python hello.py``.
 
 A distribution package is a ``.whl`` file you install with pip or another Python
 installer. You use a ``pyproject.toml`` file to describe the project and how it
