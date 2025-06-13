@@ -1,3 +1,11 @@
+# Ask Ruff to accept the format method on strings, and not let pyupgrade
+# always force f-strings. The latter are unfortunately not supported yet
+# by Babel, a localisation library.
+#
+# Note: Using `# noqa: UP032` on lines has not worked, so a file
+#       setting.
+# ruff: noqa: UP032
+
 from __future__ import annotations
 
 import inspect
@@ -85,10 +93,12 @@ def make_pass_decorator(
 
             if obj is None:
                 raise RuntimeError(
-                    "Managed to invoke callback without a context"
-                    f" object of type {object_type.__name__!r}"
-                    " existing."
-                )
+                    _(
+                        "Managed to invoke callback without a context"
+                        " object of type {type!r}"
+                        " existing."
+                    ).format(type=object_type.__name__)  # noqa: UP032
+                )  # noqa: UP032
 
             return ctx.invoke(f, obj, *args, **kwargs)
 
@@ -121,12 +131,14 @@ def pass_meta_key(
         return update_wrapper(new_func, f)
 
     if doc_description is None:
-        doc_description = f"the {key!r} key from :attr:`click.Context.meta`"
+        doc_description = _("the {key!r} key from :attr:`click.Context.meta`").format(
+            key=key
+        )  # noqa: UP032
 
-    decorator.__doc__ = (
-        f"Decorator that passes {doc_description} as the first argument"
+    decorator.__doc__ = _(
+        "Decorator that passes {description} as the first argument"
         " to the decorated function."
-    )
+    ).format(description=doc_description)  # noqa: UP032
     return decorator
 
 
@@ -498,13 +510,16 @@ def version_option(
                 version = importlib.metadata.version(package_name)
             except importlib.metadata.PackageNotFoundError:
                 raise RuntimeError(
-                    f"{package_name!r} is not installed. Try passing"
-                    " 'package_name' instead."
+                    _(
+                        "{name!r} is not installed. Try passing 'package_name' instead."
+                    ).format(name=package_name)  # noqa: UP032
                 ) from None
 
         if version is None:
             raise RuntimeError(
-                f"Could not determine the version for {package_name!r} automatically."
+                _("Could not determine the version for {name!r} automatically.").format(
+                    name=package_name
+                )  # noqa: UP032
             )
 
         echo(
