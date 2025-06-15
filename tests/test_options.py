@@ -247,15 +247,95 @@ def test_multiple_envvar(runner):
     assert result.output == "foo|bar\n"
 
 
-def test_trailing_blanks_boolean_envvar(runner):
+@pytest.mark.parametrize(
+    ("name", "value", "expected"),
+    (
+        # Lower-cased variations of value.
+        ("SHOUT", "true", True),
+        ("SHOUT", "false", False),
+        # Title-cased variations of value.
+        ("SHOUT", "True", True),
+        ("SHOUT", "False", False),
+        # Upper-cased variations of value.
+        ("SHOUT", "TRUE", True),
+        ("SHOUT", "FALSE", False),
+        # Random-cased variations of value.
+        ("SHOUT", "TruE", True),
+        ("SHOUT", "truE", True),
+        ("SHOUT", "FaLsE", False),
+        ("SHOUT", "falsE", False),
+        # Extra spaces around the value.
+        ("SHOUT", "true ", True),
+        ("SHOUT", " true", True),
+        ("SHOUT", " true ", True),
+        ("SHOUT", "false ", False),
+        ("SHOUT", " false", False),
+        ("SHOUT", " false ", False),
+        # Integer variations.
+        ("SHOUT", "1", True),
+        ("SHOUT", "0", False),
+        # Alternative states.
+        ("SHOUT", "t", True),
+        ("SHOUT", "f", False),
+        ("SHOUT", "y", True),
+        ("SHOUT", "n", False),
+        ("SHOUT", "yes", True),
+        ("SHOUT", "no", False),
+        ("SHOUT", "on", True),
+        ("SHOUT", "off", False),
+        # Blank value variations.
+        ("SHOUT", None, False),
+        ("SHOUT", "", False),
+        ("SHOUT", " ", False),
+        ("SHOUT", "       ", False),
+        # Variable names are not stripped of spaces and so don't match the
+        # flag, which then naturraly takes its default value.
+        ("SHOUT  ", "True", False),
+        ("SHOUT  ", "False", False),
+        ("  SHOUT  ", "True", False),
+        ("  SHOUT  ", "False", False),
+        # Same for random and reverse environment variable names: they are not
+        # recognized by the option.
+        ("RANDOM", "True", False),
+        ("NO_SHOUT", "True", False),
+        ("NO_SHOUT", "False", False),
+    ),
+)
+def test_boolean_envvar_normalization(runner, name, value, expected):
     @click.command()
     @click.option("--shout/--no-shout", envvar="SHOUT")
     def cli(shout):
         click.echo(f"shout: {shout!r}")
 
-    result = runner.invoke(cli, [], env={"SHOUT": " true "})
+    result = runner.invoke(cli, [], env={name: value})
     assert result.exit_code == 0
-    assert result.output == "shout: True\n"
+    assert result.output == f"shout: {expected}\n"
+
+
+@pytest.mark.parametrize(
+    ("name", "value"),
+    (
+        ("SHOUT", "tr ue"),
+        ("SHOUT", "10"),
+        ("SHOUT", "01"),
+        ("SHOUT", "00"),
+        ("SHOUT", "11"),
+        ("SHOUT", "randomstring"),
+        ("SHOUT", "None"),
+    ),
+)
+def test_boolean_envvar_bad_values(runner, name, value):
+    @click.command()
+    @click.option("--shout/--no-shout", envvar="SHOUT")
+    def cli(shout):
+        click.echo(f"shout: {shout!r}")
+
+    result = runner.invoke(cli, [], env={name: value})
+    assert result.exit_code == 2
+    assert (
+        f"Invalid value for '--shout': {value!r} is not a valid boolean."
+        in result.output
+    )
 
 
 def test_multiple_default_help(runner):
@@ -1008,28 +1088,169 @@ def test_type_from_flag_value():
 
 
 @pytest.mark.parametrize(
-    ("opts", "pass_flag", "expected"),
+    ("opt_params", "pass_flag", "expected"),
     [
-        pytest.param({"type": bool}, False, "False"),
-        pytest.param({"type": bool}, True, "True"),
-        pytest.param({"type": bool, "default": True}, False, "True"),
-        pytest.param({"type": bool, "default": True}, True, "False"),
-        pytest.param({"type": click.BOOL}, False, "False"),
-        pytest.param({"type": click.BOOL}, True, "True"),
-        pytest.param({"type": click.BOOL, "default": True}, False, "True"),
-        pytest.param({"type": click.BOOL, "default": True}, True, "False"),
-        pytest.param({"type": str}, False, ""),
-        pytest.param({"type": str}, True, "True"),
+        # Effect of the presence/absence of flag depending on type
+        ({"type": bool}, False, False),
+        ({"type": bool}, True, True),
+        ({"type": click.BOOL}, False, False),
+        ({"type": click.BOOL}, True, True),
+        ({"type": str}, False, "False"),
+        ({"type": str}, True, "True"),
+        # Effects of default value
+        ({"type": bool, "default": True}, False, True),
+        ({"type": bool, "default": True}, True, True),
+        ({"type": bool, "default": False}, False, False),
+        ({"type": bool, "default": False}, True, True),
+        ({"type": bool, "default": None}, False, False),
+        ({"type": bool, "default": None}, True, True),
+        ({"type": click.BOOL, "default": True}, False, True),
+        ({"type": click.BOOL, "default": True}, True, True),
+        ({"type": click.BOOL, "default": False}, False, False),
+        ({"type": click.BOOL, "default": False}, True, True),
+        ({"type": click.BOOL, "default": None}, False, False),
+        ({"type": click.BOOL, "default": None}, True, True),
+        ({"type": str, "default": True}, False, "True"),
+        ({"type": str, "default": True}, True, "True"),
+        ({"type": str, "default": False}, False, "False"),
+        ({"type": str, "default": False}, True, "True"),
+        ({"type": str, "default": "foo"}, False, "foo"),
+        ({"type": str, "default": "foo"}, True, "foo"),
+        ({"type": str, "default": None}, False, "False"),
+        ({"type": str, "default": None}, True, "True"),
+        # Effects of flag_value
+        ({"type": bool, "flag_value": True}, False, False),
+        ({"type": bool, "flag_value": True}, True, True),
+        ({"type": bool, "flag_value": False}, False, False),
+        ({"type": bool, "flag_value": False}, True, False),
+        ({"type": bool, "flag_value": None}, False, False),
+        ({"type": bool, "flag_value": None}, True, True),
+        ({"type": click.BOOL, "flag_value": True}, False, False),
+        ({"type": click.BOOL, "flag_value": True}, True, True),
+        ({"type": click.BOOL, "flag_value": False}, False, False),
+        ({"type": click.BOOL, "flag_value": False}, True, False),
+        ({"type": click.BOOL, "flag_value": None}, False, False),
+        ({"type": click.BOOL, "flag_value": None}, True, True),
+        ({"type": str, "flag_value": True}, False, "False"),
+        ({"type": str, "flag_value": True}, True, "True"),
+        ({"type": str, "flag_value": False}, False, "False"),
+        ({"type": str, "flag_value": False}, True, "False"),
+        ({"type": str, "flag_value": "foo"}, False, "False"),
+        ({"type": str, "flag_value": "foo"}, True, "foo"),
+        ({"type": str, "flag_value": None}, False, "False"),
+        ({"type": str, "flag_value": None}, True, "True"),
+        # Not passing --foo returns the default value as-is
+        ({"type": bool, "default": True, "flag_value": True}, False, True),
+        ({"type": bool, "default": True, "flag_value": False}, False, True),
+        ({"type": bool, "default": False, "flag_value": True}, False, False),
+        ({"type": bool, "default": False, "flag_value": False}, False, False),
+        ({"type": bool, "default": None, "flag_value": True}, False, False),
+        ({"type": bool, "default": None, "flag_value": False}, False, False),
+        ({"type": str, "default": True, "flag_value": True}, False, "True"),
+        ({"type": str, "default": True, "flag_value": False}, False, "True"),
+        ({"type": str, "default": False, "flag_value": True}, False, "False"),
+        ({"type": str, "default": False, "flag_value": False}, False, "False"),
+        ({"type": str, "default": "foo", "flag_value": True}, False, "foo"),
+        ({"type": str, "default": "foo", "flag_value": False}, False, "foo"),
+        ({"type": str, "default": "foo", "flag_value": "bar"}, False, "foo"),
+        ({"type": str, "default": "foo", "flag_value": None}, False, "foo"),
+        ({"type": str, "default": None, "flag_value": True}, False, "False"),
+        ({"type": str, "default": None, "flag_value": False}, False, "False"),
+        # Passing --foo returns the explicitly set flag_value
+        ({"type": bool, "default": True, "flag_value": True}, True, True),
+        ({"type": bool, "default": True, "flag_value": False}, True, False),
+        ({"type": bool, "default": False, "flag_value": True}, True, True),
+        ({"type": bool, "default": False, "flag_value": False}, True, False),
+        ({"type": bool, "default": None, "flag_value": True}, True, True),
+        ({"type": bool, "default": None, "flag_value": False}, True, False),
+        ({"type": str, "default": True, "flag_value": True}, True, "True"),
+        ({"type": str, "default": True, "flag_value": False}, True, "False"),
+        ({"type": str, "default": False, "flag_value": True}, True, "True"),
+        ({"type": str, "default": False, "flag_value": False}, True, "False"),
+        ({"type": str, "default": "foo", "flag_value": True}, True, "True"),
+        ({"type": str, "default": "foo", "flag_value": False}, True, "False"),
+        ({"type": str, "default": "foo", "flag_value": "bar"}, True, "bar"),
+        ({"type": str, "default": "foo", "flag_value": None}, True, "foo"),
+        ({"type": str, "default": None, "flag_value": True}, True, "True"),
+        ({"type": str, "default": None, "flag_value": False}, True, "False"),
     ],
 )
-def test_flag_value_is_correctly_set(runner, opts, pass_flag, expected):
+def test_flag_value_and_default(runner, opt_params, pass_flag, expected):
+    @click.command()
+    @click.option("--foo", is_flag=True, **opt_params)
+    def cmd(foo):
+        click.echo(repr(foo))
+
+    result = runner.invoke(cmd, ["--foo"] if pass_flag else [])
+    assert result.output == f"{expected!r}\n"
+
+
+@pytest.mark.parametrize(
+    "opts",
+    [
+        {"type": bool, "default": "foo"},
+        {"type": bool, "flag_value": "foo"},
+        {"type": click.BOOL, "default": "foo"},
+        {"type": click.BOOL, "flag_value": "foo"},
+    ],
+)
+def test_invalid_flag_definition(runner, opts):
     @click.command()
     @click.option("--foo", is_flag=True, **opts)
     def cmd(foo):
         click.echo(foo)
 
-    result = runner.invoke(cmd, ["--foo"] if pass_flag else [])
-    assert result.output == f"{expected}\n"
+    result = runner.invoke(cmd, ["--foo"])
+    assert (
+        "Error: Invalid value for '--foo': 'foo' is not a valid boolean"
+        in result.output
+    )
+
+
+@pytest.mark.parametrize(
+    ("flag_value", "envvar_value", "expected"),
+    [
+        # Envvar is set to false, so the flag default value is returned.
+        ("bar", "False", "False"),
+        # Same as above with alternative states and blank values.
+        ("bar", "0", "False"),
+        ("bar", "f", "False"),
+        ("bar", "", "False"),
+        # Envvar is set to true, so the flag_value is returned.
+        ("bar", "True", "bar"),
+        ("bar", "1", "bar"),
+        ("bar", "t", "bar"),
+        # So far we have the same cases as the test_flag_value_and_default
+        # test case. Now instead of passing a boolean-like value, let's use
+        # the flag_value as the envvar value.
+        ("bar", "bar", "bar"),
+        # flag_value is expected to be the exact same in the envvar for the flag to be
+        # activated.
+        ("bar", " bar ", "False"),
+        ("bar", "BAR", "False"),
+        ("bar", "random", "False"),
+        ("bar", "bar random", "False"),
+        ("bar", "random bar", "False"),
+        ("BAR", "BAR", "BAR"),
+        ("BAR", "bar", "False"),
+        (" bar ", " bar ", " bar "),
+        (" bar ", "bar", "False"),
+        (" bar ", "BAR", "False"),
+    ],
+)
+def test_envvar_flag_value(runner, flag_value, envvar_value, expected):
+    """Ensure that flag_value is recognized by the envvar."""
+
+    @click.command()
+    @click.option(
+        "--upper", type=str, is_flag=True, flag_value=flag_value, envvar="UPPER"
+    )
+    def cmd(upper):
+        click.echo(repr(upper))
+
+    result = runner.invoke(cmd, env={"UPPER": envvar_value})
+    assert result.exit_code == 0
+    assert result.output == f"{expected!r}\n"
 
 
 @pytest.mark.parametrize(
@@ -1047,7 +1268,7 @@ def test_flag_value_is_correctly_set(runner, opts, pass_flag, expected):
         pytest.param(Option(["-a"], flag_value=True), True, id="bool flag_value"),
     ],
 )
-def test_is_bool_flag_is_correctly_set(option, expected):
+def test_bool_flag_auto_detection(option, expected):
     assert option.is_bool_flag is expected
 
 
