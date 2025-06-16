@@ -31,9 +31,7 @@ Some of the most popular and actively maintained are listed below:
 | [Cloup](https://github.com/janluke/cloup)               | Adds option groups, constraints, command aliases, help themes, suggestions and more. | ![GitHub stars](https://img.shields.io/github/stars/janluke/cloup?label=%20&style=flat-square)         | ![Last commit](https://img.shields.io/github/last-commit/janluke/cloup?label=%20&style=flat-square)         |
 | [Click Extra](https://github.com/kdeldycke/click-extra) | Cloup + colorful `--help`, `--config`, `--show-params`, `--verbosity` options, etc.  | ![GitHub stars](https://img.shields.io/github/stars/kdeldycke/click-extra?label=%20&style=flat-square) | ![Last commit](https://img.shields.io/github/last-commit/kdeldycke/click-extra?label=%20&style=flat-square) |
 
-----
-**Note**
-
+```{note}
 To make it into the list above, a project:
 
 - must be actively maintained (at least one commit in the last year)
@@ -44,7 +42,6 @@ to add it to the list.
 
 If a project is no longer maintained or does not meet the criteria above,
 please open a pull request to remove it from the list.
-----
 
 
 
