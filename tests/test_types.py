@@ -244,3 +244,9 @@ def test_invalid_path_with_esc_sequence():
             click.Path(dir_okay=False).convert(tempdir, None, None)
 
     assert "my\\ndir" in exc_info.value.message
+
+
+def test_choice_get_invalid_choice_message():
+    choice = click.Choice(["a", "b", "c"])
+    message = choice.get_invalid_choice_message("d", ctx=None)
+    assert message == "'d' is not one of 'a', 'b', 'c'."

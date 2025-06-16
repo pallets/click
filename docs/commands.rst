@@ -1,11 +1,13 @@
-Commands and Groups
-===================
+Advanced Groups and Context
+=============================
 
 .. currentmodule:: click
 
-The most important feature of Click is the concept of arbitrarily nesting
-command line utilities.  This is implemented through the :class:`Command`
-and :class:`Group` (actually :class:`MultiCommand`).
+In addition to the capabilities covered in the previous section, Groups have more advanced capabilities that leverage the Context.
+
+.. contents::
+   :depth: 1
+   :local:
 
 Callback Invocation
 -------------------
@@ -15,10 +17,9 @@ If the script is the only command, it will always fire (unless a parameter
 callback prevents it.  This for instance happens if someone passes
 ``--help`` to the script).
 
-For groups and multi commands, the situation looks different.  In this case,
-the callback fires whenever a subcommand fires (unless this behavior is
-changed).  What this means in practice is that an outer command runs
-when an inner command runs:
+For groups, the situation looks different. In this case, the callback fires
+whenever a subcommand fires.  What this means in practice is that an outer
+command runs when an inner command runs:
 
 .. click:example::
 
@@ -38,26 +39,6 @@ Here is what this looks like:
     invoke(cli, prog_name='tool.py')
     println()
     invoke(cli, prog_name='tool.py', args=['--debug', 'sync'])
-
-Passing Parameters
-------------------
-
-Click strictly separates parameters between commands and subcommands. What this
-means is that options and arguments for a specific command have to be specified
-*after* the command name itself, but *before* any other command names.
-
-This behavior is already observable with the predefined ``--help`` option.
-Suppose we have a program called ``tool.py``, containing a subcommand called
-``sub``.
-
-- ``tool.py --help`` will return the help for the whole program (listing
-  subcommands).
-
-- ``tool.py sub --help`` will return the help for the ``sub`` subcommand.
-
-- But ``tool.py --help sub`` will treat ``--help`` as an argument for the main
-  program. Click then invokes the callback for ``--help``, which prints the
-  help and aborts the program before click can process the subcommand.
 
 Nested Handling and Contexts
 ----------------------------
@@ -144,152 +125,14 @@ obj)`` or ``f(obj)`` depending on whether or not it itself is decorated with
 This is a very powerful concept that can be used to build very complex
 nested applications; see :ref:`complex-guide` for more information.
 
+.. _command-chaining:
 
-Group Invocation Without Command
---------------------------------
+Command Chaining
+----------------
 
-By default, a group or multi command is not invoked unless a subcommand is
-passed.  In fact, not providing a command automatically passes ``--help``
-by default.  This behavior can be changed by passing
-``invoke_without_command=True`` to a group.  In that case, the callback is
-always invoked instead of showing the help page.  The context object also
-includes information about whether or not the invocation would go to a
-subcommand.
-
-Example:
-
-.. click:example::
-
-    @click.group(invoke_without_command=True)
-    @click.pass_context
-    def cli(ctx):
-        if ctx.invoked_subcommand is None:
-            click.echo('I was invoked without subcommand')
-        else:
-            click.echo(f"I am about to invoke {ctx.invoked_subcommand}")
-
-    @cli.command()
-    def sync():
-        click.echo('The subcommand')
-
-And how it works in practice:
-
-.. click:run::
-
-    invoke(cli, prog_name='tool', args=[])
-    invoke(cli, prog_name='tool', args=['sync'])
-
-.. _custom-multi-commands:
-
-Custom Multi Commands
----------------------
-
-In addition to using :func:`click.group`, you can also build your own
-custom multi commands.  This is useful when you want to support commands
-being loaded lazily from plugins.
-
-A custom multi command just needs to implement a list and load method:
-
-.. click:example::
-
-    import click
-    import os
-
-    plugin_folder = os.path.join(os.path.dirname(__file__), 'commands')
-
-    class MyCLI(click.MultiCommand):
-
-        def list_commands(self, ctx):
-            rv = []
-            for filename in os.listdir(plugin_folder):
-                if filename.endswith('.py') and filename != '__init__.py':
-                    rv.append(filename[:-3])
-            rv.sort()
-            return rv
-
-        def get_command(self, ctx, name):
-            ns = {}
-            fn = os.path.join(plugin_folder, name + '.py')
-            with open(fn) as f:
-                code = compile(f.read(), fn, 'exec')
-                eval(code, ns, ns)
-            return ns['cli']
-
-    cli = MyCLI(help='This tool\'s subcommands are loaded from a '
-                'plugin folder dynamically.')
-
-    if __name__ == '__main__':
-        cli()
-
-These custom classes can also be used with decorators:
-
-.. click:example::
-
-    @click.command(cls=MyCLI)
-    def cli():
-        pass
-
-Merging Multi Commands
-----------------------
-
-In addition to implementing custom multi commands, it can also be
-interesting to merge multiple together into one script.  While this is
-generally not as recommended as it nests one below the other, the merging
-approach can be useful in some circumstances for a nicer shell experience.
-
-The default implementation for such a merging system is the
-:class:`CommandCollection` class.  It accepts a list of other multi
-commands and makes the commands available on the same level.
-
-Example usage:
-
-.. click:example::
-
-    import click
-
-    @click.group()
-    def cli1():
-        pass
-
-    @cli1.command()
-    def cmd1():
-        """Command on cli1"""
-
-    @click.group()
-    def cli2():
-        pass
-
-    @cli2.command()
-    def cmd2():
-        """Command on cli2"""
-
-    cli = click.CommandCollection(sources=[cli1, cli2])
-
-    if __name__ == '__main__':
-        cli()
-
-And what it looks like:
-
-.. click:run::
-
-    invoke(cli, prog_name='cli', args=['--help'])
-
-In case a command exists in more than one source, the first source wins.
-
-
-.. _multi-command-chaining:
-
-Multi Command Chaining
-----------------------
-
-.. versionadded:: 3.0
-
-Sometimes it is useful to be allowed to invoke more than one subcommand in
-one go.  For instance if you have installed a setuptools package before
-you might be familiar with the ``setup.py sdist bdist_wheel upload``
-command chain which invokes ``sdist`` before ``bdist_wheel`` before
-``upload``.  Starting with Click 3.0 this is very simple to implement.
-All you have to do is to pass ``chain=True`` to your multicommand:
+It is useful to invoke more than one subcommand in one call. For example,
+``my-app validate build upload`` would invoke ``validate``, then ``build``, then
+``upload``. To implement this, pass ``chain=True`` when creating a group.
 
 .. click:example::
 
@@ -297,95 +140,109 @@ All you have to do is to pass ``chain=True`` to your multicommand:
     def cli():
         pass
 
+    @cli.command('validate')
+    def validate():
+        click.echo('validate')
 
-    @cli.command('sdist')
-    def sdist():
-        click.echo('sdist called')
+    @cli.command('build')
+    def build():
+        click.echo('build')
 
-
-    @cli.command('bdist_wheel')
-    def bdist_wheel():
-        click.echo('bdist_wheel called')
-
-Now you can invoke it like this:
+You can invoke it like this:
 
 .. click:run::
 
-    invoke(cli, prog_name='setup.py', args=['sdist', 'bdist_wheel'])
+    invoke(cli, prog_name='my-app', args=['validate', 'build'])
 
-When using multi command chaining you can only have one command (the last)
-use ``nargs=-1`` on an argument.  It is also not possible to nest multi
-commands below chained multicommands.  Other than that there are no
-restrictions on how they work.  They can accept options and arguments as
-normal. The order between options and arguments is limited for chained
-commands. Currently only ``--options argument`` order is allowed.
+When using chaining, there are a few restrictions:
 
-Another note: the :attr:`Context.invoked_subcommand` attribute is a bit
-useless for multi commands as it will give ``'*'`` as value if more than
-one command is invoked.  This is necessary because the handling of
-subcommands happens one after another so the exact subcommands that will
-be handled are not yet available when the callback fires.
+-   Only the last command may use ``nargs=-1`` on an argument, otherwise the
+    parser will not be able to find further commands.
+-   It is not possible to nest groups below a chain group.
+-   On the command line, options must be specified before arguments for each
+    command in the chain.
+-   The :attr:`Context.invoked_subcommand` attribute will be ``'*'`` because the
+    parser doesn't know the full list of commands that will run yet.
 
-.. note::
+.. _command-pipelines:
 
-    It is currently not possible for chain commands to be nested.  This
-    will be fixed in future versions of Click.
+Command Pipelines
+------------------
 
+When using chaining, a common pattern is to have each command process the
+result of the previous command.
 
-Multi Command Pipelines
------------------------
-
-.. versionadded:: 3.0
-
-A very common usecase of multi command chaining is to have one command
-process the result of the previous command.  There are various ways in
-which this can be facilitated.  The most obvious way is to store a value
-on the context object and process it from function to function.  This
-works by decorating a function with :func:`pass_context` after which the
-context object is provided and a subcommand can store its data there.
-
-Another way to accomplish this is to setup pipelines by returning
-processing functions.  Think of it like this: when a subcommand gets
-invoked it processes all of its parameters and comes up with a plan of
-how to do its processing.  At that point it then returns a processing
-function and returns.
-
-Where do the returned functions go?  The chained multicommand can register
-a callback with :meth:`MultiCommand.result_callback` that goes over all
-these functions and then invoke them.
-
-To make this a bit more concrete consider this example:
+A straightforward way to do this is to use :func:`make_pass_decorator` to pass
+a context object to each command, and store and read the data on that object.
 
 .. click:example::
 
+    pass_ns = click.make_pass_decorator(dict, ensure=True)
+
+    @click.group(chain=True)
+    @click.argument("name")
+    @pass_ns
+    def cli(ns, name):
+        ns["name"] = name
+
+    @cli.command
+    @pass_ns
+    def lower(ns):
+        ns["name"] = ns["name"].lower()
+
+    @cli.command
+    @pass_ns
+    def show(ns):
+        click.echo(ns["name"])
+
+.. click:run::
+
+    invoke(cli, prog_name="process", args=["Click", "show", "lower", "show"])
+
+Another way to do this is to collect data returned by each command, then process
+it at the end of the chain. Use the group's :meth:`~Group.result_callback`
+decorator to register a function that is called after the chain is finished. It
+is passed the list of return values as well as any parameters registered on the
+group.
+
+A command can return anything, including a function. Here's an example of that,
+where each subcommand creates a function that processes the input, then the
+result callback calls each function. The command takes a file, processes each
+line, then outputs it. If no subcommands are given, it outputs the contents
+of the file unchanged.
+
+.. code-block:: python
+
     @click.group(chain=True, invoke_without_command=True)
-    @click.option('-i', '--input', type=click.File('r'))
-    def cli(input):
+    @click.argument("fin", type=click.File("r"))
+    def cli(fin):
         pass
 
     @cli.result_callback()
-    def process_pipeline(processors, input):
-        iterator = (x.rstrip('\r\n') for x in input)
+    def process_pipeline(processors, fin):
+        iterator = (x.rstrip("\r\n") for x in input)
+
         for processor in processors:
             iterator = processor(iterator)
+
         for item in iterator:
             click.echo(item)
 
-    @cli.command('uppercase')
+    @cli.command("upper")
     def make_uppercase():
         def processor(iterator):
             for line in iterator:
                 yield line.upper()
         return processor
 
-    @cli.command('lowercase')
+    @cli.command("lower")
     def make_lowercase():
         def processor(iterator):
             for line in iterator:
                 yield line.lower()
         return processor
 
-    @cli.command('strip')
+    @cli.command("strip")
     def make_strip():
         def processor(iterator):
             for line in iterator:
@@ -420,11 +277,11 @@ make resource handling much more complicated.  For such it's recommended
 to not use the file type and manually open the file through
 :func:`open_file`.
 
-For a more complex example that also improves upon handling of the
-pipelines have a look at the `imagepipe multi command chaining demo
-<https://github.com/pallets/click/tree/main/examples/imagepipe>`__ in
-the Click repository.  It implements a pipeline based image editing tool
-that has a nice internal structure for the pipelines.
+For a more complex example that also improves upon handling of the pipelines,
+see the `imagepipe example`_ in the Click repository. It implements a
+pipeline based image editing tool that has a nice internal structure.
+
+.. _imagepipe example: https://github.com/pallets/click/tree/main/examples/imagepipe
 
 
 Overriding Defaults
@@ -535,15 +392,15 @@ that were previously hard to implement.
 
 In essence any command callback can now return a value.  This return value
 is bubbled to certain receivers.  One usecase for this has already been
-show in the example of :ref:`multi-command-chaining` where it has been
-demonstrated that chained multi commands can have callbacks that process
+show in the example of :ref:`command-chaining` where it has been
+demonstrated that chained groups can have callbacks that process
 all return values.
 
 When working with command return values in Click, this is what you need to
 know:
 
 -   The return value of a command callback is generally returned from the
-    :meth:`BaseCommand.invoke` method.  The exception to this rule has to
+    :meth:`Command.invoke` method.  The exception to this rule has to
     do with :class:`Group`\s:
 
     *   In a group the return value is generally the return value of the
@@ -553,7 +410,7 @@ know:
     *   If a group is set up for chaining then the return value is a list
         of all subcommands' results.
     *   Return values of groups can be processed through a
-        :attr:`MultiCommand.result_callback`.  This is invoked with the
+        :attr:`Group.result_callback`.  This is invoked with the
         list of all return values in chain mode, or the single return
         value in case of non chained commands.
 
@@ -563,9 +420,9 @@ know:
 
 -   Click does not have any hard requirements for the return values and
     does not use them itself.  This allows return values to be used for
-    custom decorators or workflows (like in the multi command chaining
+    custom decorators or workflows (like in the command chaining
     example).
 
 -   When a Click script is invoked as command line application (through
-    :meth:`BaseCommand.main`) the return value is ignored unless the
+    :meth:`Command.main`) the return value is ignored unless the
     `standalone_mode` is disabled in which case it's bubbled through.

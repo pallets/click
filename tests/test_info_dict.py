@@ -58,7 +58,7 @@ NUMBER_OPTION = (
         "help": None,
         "prompt": None,
         "is_flag": False,
-        "flag_value": False,
+        "flag_value": None,
         "count": False,
         "hidden": False,
     },
@@ -106,11 +106,11 @@ HELLO_GROUP = (
         ),
         pytest.param(*STRING_PARAM_TYPE, id="STRING ParamType"),
         pytest.param(
-            click.Choice(["a", "b"]),
+            click.Choice(("a", "b")),
             {
                 "param_type": "Choice",
                 "name": "choice",
-                "choices": ["a", "b"],
+                "choices": ("a", "b"),
                 "case_sensitive": True,
             },
             id="Choice ParamType",

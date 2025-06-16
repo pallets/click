@@ -1,0 +1,261 @@
+Metadata-Version: 2.1
+Name: sphinx-issues
+Version: 5.0.0
+Summary: A Sphinx extension for linking to your project's issue tracker
+Keywords: sphinx,issues,github
+Author-email: Steven Loria <sloria1@gmail.com>
+Requires-Python: >=3.9
+Description-Content-Type: text/x-rst
+Classifier: Framework :: Sphinx :: Extension
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Topic :: Software Development :: Documentation
+Requires-Dist: sphinx
+Requires-Dist: sphinx-issues[tests] ; extra == "dev"
+Requires-Dist: tox ; extra == "dev"
+Requires-Dist: pre-commit>=3.6,<5.0 ; extra == "dev"
+Requires-Dist: pytest ; extra == "tests"
+Project-URL: Issues, https://github.com/sloria/sphinx-issues/issues
+Project-URL: Source, https://github.com/sloria/sphinx-issues
+Provides-Extra: dev
+Provides-Extra: tests
+
+=============
+sphinx-issues
+=============
+
+.. image:: https://badgen.net/pypi/v/sphinx-issues
+    :target: https://pypi.org/project/sphinx-issues/
+    :alt: PyPI badge
+
+.. image:: https://github.com/sloria/sphinx-issues/actions/workflows/build-release.yml/badge.svg
+    :target: https://github.com/sloria/sphinx-issues/actions/workflows/build-release.yml
+    :alt: Build status
+
+A Sphinx extension for linking to your project's issue tracker. Includes roles for linking to issues, pull requests, user profiles, with built-in support for GitHub (though this works with other services).
+
+Example
+*******
+
+For an example usage, check out `marshmallow's changelog <http://marshmallow.readthedocs.org/en/latest/changelog.html>`_, which makes use of the roles in this library.
+
+Installation and Configuration
+******************************
+
+.. code-block:: console
+
+    pip install sphinx-issues
+
+
+Add ``sphinx_issues`` to ``extensions`` in your ``conf.py``.
+
+The extension has default values for GitHub projects.
+Simply set the add the ``issues_default_group_project`` config variable and you are good
+to go:
+
+.. code-block:: python
+
+    # docs/conf.py
+
+    # ...
+    extensions = [
+        # ...
+        "sphinx_issues"
+    ]
+
+    # Path to GitHub repo {group}/{project}  (note that `group` is the GitHub user or organization)
+    issues_github_path = "sloria/marshmallow"
+
+    # which is the equivalent to:
+    issues_uri = "https://github.com/{group}/{project}/issues/{issue}"
+    issues_prefix = "#"
+    issues_pr_uri = "https://github.com/{group}/{project}/pull/{pr}"
+    issues_pr_prefix = "#"
+    issues_commit_uri = "https://github.com/{group}/{project}/commit/{commit}"
+    issues_commit_prefix = "@"
+    issues_user_uri = "https://github.com/{user}"
+    issues_user_prefix = "@"
+
+The extension is very configurable and can be used with any kind of
+issue tracker. Here is how you could configure it for use
+with a custom hosed GitLab instance:
+
+.. code-block:: python
+
+    # docs/conf.py
+
+    # ...
+    extensions = [
+        # ...
+        "sphinx_issues"
+    ]
+
+    #  Default repo {group}/{project} of gitlab project
+    issues_default_group_project = "myteam/super_great_project"
+    issues_uri = "https://gitlab.company.com/{group}/{project}/-/issues/{issue}"
+    issues_prefix = "#"
+    issues_pr_uri = "https://gitlab.company.com/{group}/{project}/-/merge_requests/{pr}"
+    issues_pr_prefix = "!"
+    issues_commit_uri = "https://gitlab.company.com/{group}/{project}/-/commit/{commit}"
+    issues_commit_prefix = "@"
+    issues_user_uri = "https://gitlab.company.com/{user}"
+    issues_user_prefix = "@"
+
+
+Usage inside the documentation
+******************************
+
+Use the ``:issue:``  and ``:pr:`` roles in your docs like so:
+
+.. code-block:: rst
+
+    See issue :issue:`42`
+
+    See issues :issue:`12,13`
+
+    See :issue:`sloria/konch#45`.
+
+    See PR :pr:`58`
+
+
+Use the ``:user:`` role in your docs to link to user profiles (GitHub by default, but can be configured via the ``issues_user_uri`` config variable).
+
+
+Use the ``:commit:`` role to link to commits.
+
+.. code-block:: rst
+
+    Fixed in :commit:`6bb9124d5e9dbb2f7b52864c3d8af7feb1b69403`.
+
+.. code-block:: rst
+
+    Thanks to :user:`bitprophet` for the idea!
+
+You can also use explicit names if you want to use a different name than the github user name:
+
+.. code-block:: rst
+
+    This change is due to :user:`Andreas Mueller <amueller>`.
+
+The syntax ``:role:`My custom title <target>``` works for all roles of this extension.
+
+It can be also used in combination with a list:
+
+.. code-block:: rst
+
+    Fix bad bug :issue:`123, (Duplicate) <199>`
+
+Use the ``:pypi:`` role to link to PyPI on https://pypi.org.
+
+.. code-block:: rst
+
+    :pypi:`sphinx-issues` - A Sphinx extension for linking to your project's issue tracker.
+
+Credits
+*******
+
+Credit goes to Jeff Forcier for his work on the `releases <https://github.com/bitprophet/releases>`_ extension, which is a full-featured solution for generating changelogs. I just needed a quick way to reference GitHub issues in my docs, so I yoinked the bits that I needed.
+
+License
+*******
+
+MIT licensed. See the bundled `LICENSE <https://github.com/sloria/sphinx-issues/blob/master/LICENSE>`_ file for more details.
+
+
+Changelog
+*********
+
+5.0.0 (2024-10-11)
+------------------
+
+- Remove `:cwe:` and `:cve:` roles, as these are officially included in Sphinx>=8.1.0.
+- Support Python 3.9-3.13. Python 3.8 is no longer supported.
+
+4.1.0 (2024-04-14)
+------------------
+
+- Add `:pypi:` role for linking to PyPI projects (`#144 <https://github.com/sloria/sphinx-issues/issues/144>`_).
+  Thanks @shenxianpeng for the suggestion and PR.
+
+4.0.0 (2024-01-19)
+------------------
+
+- Default to linking GH Sponsors for the :user: role (`#129 <https://github.com/sloria/sphinx-issues/issues/129>`_).
+  Thanks @webknjaz for the suggestion.
+- Support Python 3.8-3.12. Older versions are no longer supported.
+- *Backwards-incompatible*: Remove ``__version__``, ``__author__``, and ``__license__`` attributes.
+  Use ``importlib.metadata`` to read this metadata instead.
+
+3.0.1 (2022-01-11)
+------------------
+
+- Fix regression from 3.0.0: `exception: 'in <string>' requires string as left operand, not type`.
+
+3.0.0 (2022-01-10)
+------------------
+
+- The `:commit:` role now outputs with an `@` prefix.
+- Add configuration options for changing prefixes.
+- Allow `{group}` to be specified within `issues_uri`, `issues_pr_uri`, `issues_commit_uri`, and 
+
+2.0.0 (2022-01-01)
+------------------
+
+- Drop support for Python 2.7 and 3.5.
+- Test against Python 3.8 to 3.10.
+- Add ``:cwe:`` role for linking to CVEs on https://cwe.mitre.org.
+  Thanks @hugovk for the PR.
+- Add support for custom urls and separators `Issue #93 <https://github.com/sloria/sphinx-issues/issues/93>`_
+- Allow custom titles for all roles `Issue #116 <https://github.com/sloria/sphinx-issues/issues/116>`_
+- Added setting `issues_default_group_project` as future replacement of `issues_github_path`, to reflect the now to universal nature of the extension
+
+1.2.0 (2018-12-26)
+------------------
+
+- Add ``:commit:`` role for linking to commits.
+- Add support for linking to external repos.
+- Test against Python 3.7.
+
+1.1.0 (2018-09-18)
+------------------
+
+- Add ``:cve:`` role for linking to CVEs on https://cve.mitre.org.
+
+1.0.0 (2018-07-14)
+------------------
+
+- Add ``:pr:`` role. Thanks @jnotham for the suggestion.
+- Drop support for Python 3.4.
+
+0.4.0 (2017-11-25)
+------------------
+
+- Raise ``ValueError`` if neither ``issues_uri`` nor ``issues_github_path`` is set. Thanks @jnothman for the PR.
+- Drop support for Python 2.6 and 3.3.
+
+0.3.1 (2017-01-16)
+------------------
+
+- ``setup`` returns metadata, preventing warnings about parallel reads and writes. Thanks @jfinkels for reporting.
+
+0.3.0 (2016-10-20)
+------------------
+
+- Support anchor text for ``:user:`` role. Thanks @jnothman for the suggestion and thanks @amueller for the PR.
+
+0.2.0 (2014-12-22)
+------------------
+
+- Add ``:user:`` role for linking to GitHub user profiles.
+
+0.1.0 (2014-12-21)
+------------------
+
+- Initial release.
+

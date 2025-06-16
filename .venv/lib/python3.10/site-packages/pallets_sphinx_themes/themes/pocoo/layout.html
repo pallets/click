@@ -1,0 +1,19 @@
+{% extends "basic/layout.html" %}
+
+{% set metatags %}
+  {{- metatags }}
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+{%- endset %}
+
+{% block sidebarlogo %}
+  {% if pagename != "index" or theme_index_sidebar_logo %}
+    {{ super() }}
+  {% endif %}
+{% endblock %}
+
+{% block relbar2 %}{% endblock %}
+
+{% block sidebar2 %}
+  <span id="sidebar-top"></span>
+  {{- super() }}
+{%- endblock %}

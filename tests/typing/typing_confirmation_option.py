@@ -1,4 +1,4 @@
-"""From https://click.palletsprojects.com/en/8.1.x/options/#yes-parameters"""
+"""From https://click.palletsprojects.com/en/stable/options/#yes-parameters"""
 
 from typing_extensions import assert_type
 

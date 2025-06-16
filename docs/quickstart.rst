@@ -21,7 +21,7 @@ Some standalone examples of Click applications are packaged with Click. They are
 *   `naval <https://github.com/pallets/click/tree/main/examples/naval>`_ : Port of the `docopt <http://docopt.org/>`_ naval example.
 *   `colors <https://github.com/pallets/click/tree/main/examples/colors>`_ : A simple example that colorizes text. Uses colorama on Windows.
 *   `aliases <https://github.com/pallets/click/tree/main/examples/aliases>`_ : An advanced example that implements :ref:`aliases`.
-*   `imagepipe <https://github.com/pallets/click/tree/main/examples/imagepipe>`_ : A complex example that implements some :ref:`multi-command-chaining` . It chains together image processing instructions. Requires pillow.
+*   `imagepipe <https://github.com/pallets/click/tree/main/examples/imagepipe>`_ : A complex example that implements some :ref:`command-pipelines` . It chains together image processing instructions. Requires pillow.
 *   `repo <https://github.com/pallets/click/tree/main/examples/repo>`_ : An advanced example that implements a Git-/Mercurial-like command line interface.
 *   `complex <https://github.com/pallets/click/tree/main/examples/complex>`_ : A very advanced example that implements loading subcommands dynamically from a plugin folder.
 *   `termui <https://github.com/pallets/click/tree/main/examples/termui>`_ : A simple example that showcases terminal UI helpers provided by click.
@@ -131,8 +131,7 @@ script can instead be written like this:
     def dropdb():
         click.echo('Dropped the database')
 
-You would then invoke the :class:`Group` in your setuptools entry points or
-other invocations::
+You would then invoke the :class:`Group` in your entry points or other invocations::
 
     if __name__ == '__main__':
         cli()
@@ -181,30 +180,27 @@ What it looks like:
 
     invoke(hello, args=['--help'], prog_name='python hello.py')
 
-.. _switching-to-setuptools:
-
-Switching to Setuptools
------------------------
+Switching to Entry Points
+-------------------------
 
 In the code you wrote so far there is a block at the end of the file which
 looks like this: ``if __name__ == '__main__':``.  This is traditionally
 how a standalone Python file looks like.  With Click you can continue
-doing that, but there are better ways through setuptools.
+doing that, but a better way is to package your app with an entry point.
 
 There are two main (and many more) reasons for this:
 
-The first one is that setuptools automatically generates executable
+The first one is that installers automatically generate executable
 wrappers for Windows so your command line utilities work on Windows too.
 
-The second reason is that setuptools scripts work with virtualenv on Unix
+The second reason is that entry point scripts work with virtualenv on Unix
 without the virtualenv having to be activated.  This is a very useful
 concept which allows you to bundle your scripts with all requirements into
 a virtualenv.
 
 Click is perfectly equipped to work with that and in fact the rest of the
-documentation will assume that you are writing applications through
-setuptools.
+documentation will assume that you are writing applications as distributed
+packages.
 
-I strongly recommend to have a look at the :ref:`setuptools-integration`
-chapter before reading the rest as the examples assume that you will
-be using setuptools.
+Look at the :doc:`entry-points` chapter before reading the rest as the examples
+assume that you will be using entry points.

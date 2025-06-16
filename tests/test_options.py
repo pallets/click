@@ -33,6 +33,52 @@ def test_invalid_option(runner):
     assert "'--foo'" in message
 
 
+@pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])
+def test_deprecated_usage(runner, deprecated):
+    @click.command()
+    @click.option("--foo", default="bar", deprecated=deprecated)
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd, ["--help"])
+    assert "(DEPRECATED" in result.output
+
+    if isinstance(deprecated, str):
+        assert deprecated in result.output
+
+
+@pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])
+def test_deprecated_warning(runner, deprecated):
+    @click.command()
+    @click.option(
+        "--my-option", required=False, deprecated=deprecated, default="default option"
+    )
+    def cli(my_option: str):
+        click.echo(f"{my_option}")
+
+    # defaults should not give a deprecated warning
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0, result.output
+    assert "is deprecated" not in result.output
+
+    result = runner.invoke(cli, ["--my-option", "hello"])
+    assert result.exit_code == 0, result.output
+    assert "option 'my_option' is deprecated" in result.output
+
+    if isinstance(deprecated, str):
+        assert deprecated in result.output
+
+
+def test_deprecated_required(runner):
+    with pytest.raises(ValueError, match="is deprecated and still required"):
+        click.Option(["--a"], required=True, deprecated=True)
+
+
+def test_deprecated_prompt(runner):
+    with pytest.raises(ValueError, match="`deprecated` options cannot use `prompt`"):
+        click.Option(["--a"], prompt=True, deprecated=True)
+
+
 def test_invalid_nargs(runner):
     with pytest.raises(TypeError, match="nargs=-1"):
 
@@ -316,6 +362,7 @@ def test_dynamic_default_help_special_method(runner):
 
     opt = click.Option(["-a"], default=Value(), show_default=True)
     ctx = click.Context(click.Command("cli"))
+    assert opt.get_help_extra(ctx) == {"default": "special value"}
     assert "special value" in opt.get_help_record(ctx)[1]
 
 
@@ -331,6 +378,7 @@ def test_dynamic_default_help_special_method(runner):
 def test_intrange_default_help_text(type, expect):
     option = click.Option(["--num"], type=type, show_default=True, default=2)
     context = click.Context(click.Command("test"))
+    assert option.get_help_extra(context) == {"default": "2", "range": expect}
     result = option.get_help_record(context)[1]
     assert expect in result
 
@@ -339,6 +387,7 @@ def test_count_default_type_help():
     """A count option with the default type should not show >=0 in help."""
     option = click.Option(["--count"], count=True, help="some words")
     context = click.Context(click.Command("test"))
+    assert option.get_help_extra(context) == {}
     result = option.get_help_record(context)[1]
     assert result == "some words"
 
@@ -354,6 +403,7 @@ def test_file_type_help_default():
         ["--in"], type=click.File(), default=__file__, show_default=True
     )
     context = click.Context(click.Command("test"))
+    assert option.get_help_extra(context) == {"default": __file__}
     result = option.get_help_record(context)[1]
     assert __file__ in result
 
@@ -527,6 +577,22 @@ def test_missing_choice(runner):
     assert "bar" in choices
 
 
+def test_missing_envvar(runner):
+    cli = click.Command(
+        "cli", params=[click.Option(["--foo"], envvar="bar", required=True)]
+    )
+    result = runner.invoke(cli)
+    assert result.exit_code == 2
+    assert "Error: Missing option '--foo'." in result.output
+    cli = click.Command(
+        "cli",
+        params=[click.Option(["--foo"], envvar="bar", show_envvar=True, required=True)],
+    )
+    result = runner.invoke(cli)
+    assert result.exit_code == 2
+    assert "Error: Missing option '--foo' (env var: 'bar')." in result.output
+
+
 def test_case_insensitive_choice(runner):
     @click.command()
     @click.option("--foo", type=click.Choice(["Orange", "Apple"], case_sensitive=False))
@@ -658,6 +724,45 @@ def test_option_custom_class_reusable(runner):
         assert "you wont see me" not in result.output
 
 
+@pytest.mark.parametrize("custom_class", (True, False))
+@pytest.mark.parametrize(
+    ("name_specs", "expected"),
+    (
+        (
+            ("-h", "--help"),
+            "  -h, --help  Show this message and exit.\n",
+        ),
+        (
+            ("-h",),
+            "  -h      Show this message and exit.\n"
+            "  --help  Show this message and exit.\n",
+        ),
+        (
+            ("--help",),
+            "  --help  Show this message and exit.\n",
+        ),
+    ),
+)
+def test_help_option_custom_names_and_class(runner, custom_class, name_specs, expected):
+    class CustomHelpOption(click.Option):
+        pass
+
+    option_attrs = {}
+    if custom_class:
+        option_attrs["cls"] = CustomHelpOption
+
+    @click.command()
+    @click.help_option(*name_specs, **option_attrs)
+    def cmd():
+        pass
+
+    for arg in name_specs:
+        result = runner.invoke(cmd, [arg])
+        assert not result.exception
+        assert result.exit_code == 0
+        assert expected in result.output
+
+
 def test_bool_flag_with_type(runner):
     @click.command()
     @click.option("--shout/--no-shout", default=False, type=bool)
@@ -741,6 +846,7 @@ def test_show_default_boolean_flag_name(runner, default, expect):
         help="Enable/Disable the cache.",
     )
     ctx = click.Context(click.Command("test"))
+    assert opt.get_help_extra(ctx) == {"default": expect}
     message = opt.get_help_record(ctx)[1]
     assert f"[default: {expect}]" in message
 
@@ -757,6 +863,7 @@ def test_show_true_default_boolean_flag_value(runner):
         help="Enable the cache.",
     )
     ctx = click.Context(click.Command("test"))
+    assert opt.get_help_extra(ctx) == {"default": "True"}
     message = opt.get_help_record(ctx)[1]
     assert "[default: True]" in message
 
@@ -774,6 +881,7 @@ def test_hide_false_default_boolean_flag_value(runner, default):
         help="Enable the cache.",
     )
     ctx = click.Context(click.Command("test"))
+    assert opt.get_help_extra(ctx) == {}
     message = opt.get_help_record(ctx)[1]
     assert "[default: " not in message
 
@@ -782,6 +890,7 @@ def test_show_default_string(runner):
     """When show_default is a string show that value as default."""
     opt = click.Option(["--limit"], show_default="unlimited")
     ctx = click.Context(click.Command("cli"))
+    assert opt.get_help_extra(ctx) == {"default": "(unlimited)"}
     message = opt.get_help_record(ctx)[1]
     assert "[default: (unlimited)]" in message
 
@@ -798,6 +907,7 @@ def test_do_not_show_no_default(runner):
     """When show_default is True and no default is set do not show None."""
     opt = click.Option(["--limit"], show_default=True)
     ctx = click.Context(click.Command("cli"))
+    assert opt.get_help_extra(ctx) == {}
     message = opt.get_help_record(ctx)[1]
     assert "[default: None]" not in message
 
@@ -808,28 +918,30 @@ def test_do_not_show_default_empty_multiple():
     """
     opt = click.Option(["-a"], multiple=True, help="values", show_default=True)
     ctx = click.Context(click.Command("cli"))
+    assert opt.get_help_extra(ctx) == {}
     message = opt.get_help_record(ctx)[1]
     assert message == "values"
 
 
 @pytest.mark.parametrize(
-    ("ctx_value", "opt_value", "expect"),
+    ("ctx_value", "opt_value", "extra_value", "expect"),
     [
-        (None, None, False),
-        (None, False, False),
-        (None, True, True),
-        (False, None, False),
-        (False, False, False),
-        (False, True, True),
-        (True, None, True),
-        (True, False, False),
-        (True, True, True),
-        (False, "one", True),
+        (None, None, {}, False),
+        (None, False, {}, False),
+        (None, True, {"default": "1"}, True),
+        (False, None, {}, False),
+        (False, False, {}, False),
+        (False, True, {"default": "1"}, True),
+        (True, None, {"default": "1"}, True),
+        (True, False, {}, False),
+        (True, True, {"default": "1"}, True),
+        (False, "one", {"default": "(one)"}, True),
     ],
 )
-def test_show_default_precedence(ctx_value, opt_value, expect):
+def test_show_default_precedence(ctx_value, opt_value, extra_value, expect):
     ctx = click.Context(click.Command("test"), show_default=ctx_value)
     opt = click.Option("-a", default=1, help="value", show_default=opt_value)
+    assert opt.get_help_extra(ctx) == extra_value
     help = opt.get_help_record(ctx)[1]
     assert ("default:" in help) is expect
 
@@ -896,6 +1008,31 @@ def test_type_from_flag_value():
 
 
 @pytest.mark.parametrize(
+    ("opts", "pass_flag", "expected"),
+    [
+        pytest.param({"type": bool}, False, "False"),
+        pytest.param({"type": bool}, True, "True"),
+        pytest.param({"type": bool, "default": True}, False, "True"),
+        pytest.param({"type": bool, "default": True}, True, "False"),
+        pytest.param({"type": click.BOOL}, False, "False"),
+        pytest.param({"type": click.BOOL}, True, "True"),
+        pytest.param({"type": click.BOOL, "default": True}, False, "True"),
+        pytest.param({"type": click.BOOL, "default": True}, True, "False"),
+        pytest.param({"type": str}, False, ""),
+        pytest.param({"type": str}, True, "True"),
+    ],
+)
+def test_flag_value_is_correctly_set(runner, opts, pass_flag, expected):
+    @click.command()
+    @click.option("--foo", is_flag=True, **opts)
+    def cmd(foo):
+        click.echo(foo)
+
+    result = runner.invoke(cmd, ["--foo"] if pass_flag else [])
+    assert result.output == f"{expected}\n"
+
+
+@pytest.mark.parametrize(
     ("option", "expected"),
     [
         # Not boolean flags
@@ -926,3 +1063,79 @@ def test_invalid_flag_combinations(runner, kwargs, message):
         click.Option(["-a"], **kwargs)
 
     assert message in str(e.value)
+
+
+def test_non_flag_with_non_negatable_default(runner):
+    class NonNegatable:
+        def __bool__(self):
+            raise ValueError("Cannot negate this object")
+
+    @click.command()
+    @click.option("--foo", default=NonNegatable())
+    def cmd(foo):
+        pass
+
+    result = runner.invoke(cmd)
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    ("choices", "metavars"),
+    [
+        pytest.param(["foo", "bar"], "[TEXT]", id="text choices"),
+        pytest.param([1, 2], "[INTEGER]", id="int choices"),
+        pytest.param([1.0, 2.0], "[FLOAT]", id="float choices"),
+        pytest.param([True, False], "[BOOLEAN]", id="bool choices"),
+        pytest.param(["foo", 1], "[TEXT|INTEGER]", id="text/int choices"),
+    ],
+)
+def test_usage_show_choices(runner, choices, metavars):
+    """When show_choices=False is set, the --help output
+    should print choice metavars instead of values.
+    """
+
+    @click.command()
+    @click.option("-g", type=click.Choice(choices))
+    def cli_with_choices(g):
+        pass
+
+    @click.command()
+    @click.option(
+        "-g",
+        type=click.Choice(choices),
+        show_choices=False,
+    )
+    def cli_without_choices(g):
+        pass
+
+    result = runner.invoke(cli_with_choices, ["--help"])
+    assert f"[{'|'.join([str(i) for i in choices])}]" in result.output
+
+    result = runner.invoke(cli_without_choices, ["--help"])
+    assert metavars in result.output
+
+
+@pytest.mark.parametrize(
+    "opts_one,opts_two",
+    [
+        # No duplicate shortnames
+        (
+            ("-a", "--aardvark"),
+            ("-a", "--avocado"),
+        ),
+        # No duplicate long names
+        (
+            ("-a", "--aardvark"),
+            ("-b", "--aardvark"),
+        ),
+    ],
+)
+def test_duplicate_names_warning(runner, opts_one, opts_two):
+    @click.command()
+    @click.option(*opts_one)
+    @click.option(*opts_two)
+    def cli(one, two):
+        pass
+
+    with pytest.warns(UserWarning):
+        runner.invoke(cli, [])

@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 import click.shell_completion
@@ -36,6 +38,36 @@ def test_group():
     cli = Group("cli", params=[Option(["-a"])], commands=[Command("x"), Command("y")])
     assert _get_words(cli, [], "") == ["x", "y"]
     assert _get_words(cli, [], "-") == ["-a", "--help"]
+
+
+@pytest.mark.parametrize(
+    ("args", "word", "expect"),
+    [
+        ([], "", ["get"]),
+        (["get"], "", ["full"]),
+        (["get", "full"], "", ["data"]),
+        (["get", "full"], "-", ["--verbose", "--help"]),
+        (["get", "full", "data"], "", []),
+        (["get", "full", "data"], "-", ["-a", "--help"]),
+    ],
+)
+def test_nested_group(args: list[str], word: str, expect: list[str]) -> None:
+    cli = Group(
+        "cli",
+        commands=[
+            Group(
+                "get",
+                commands=[
+                    Group(
+                        "full",
+                        params=[Option(["--verbose"])],
+                        commands=[Command("data", params=[Option(["-a"])])],
+                    )
+                ],
+            )
+        ],
+    )
+    assert _get_words(cli, args, word) == expect
 
 
 def test_group_command_same_option():
@@ -414,3 +446,27 @@ def test_add_completion_class_decorator():
     # Using `add_completion_class` as a decorator adds the new shell immediately
     assert "mysh" in click.shell_completion._available_shells
     assert click.shell_completion._available_shells["mysh"] is MyshComplete
+
+
+# Don't make the ResourceWarning give an error
+@pytest.mark.filterwarnings("default")
+def test_files_closed(runner) -> None:
+    with runner.isolated_filesystem():
+        config_file = "foo.txt"
+        with open(config_file, "w") as f:
+            f.write("bar")
+
+        @click.group()
+        @click.option(
+            "--config-file",
+            default=config_file,
+            type=click.File(mode="r"),
+        )
+        @click.pass_context
+        def cli(ctx, config_file):
+            pass
+
+        with warnings.catch_warnings(record=True) as current_warnings:
+            assert not current_warnings, "There should be no warnings to start"
+            _get_completions(cli, args=[], incomplete="")
+            assert not current_warnings, "There should be no warnings after either"

@@ -1,0 +1,3 @@
+[console_scripts]
+sphinx-autobuild=sphinx_autobuild.__main__:main
+

@@ -28,7 +28,7 @@ pass_environment = click.make_pass_decorator(Environment, ensure=True)
 cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "commands"))
 
 
-class ComplexCLI(click.MultiCommand):
+class ComplexCLI(click.Group):
     def list_commands(self, ctx):
         rv = []
         for filename in os.listdir(cmd_folder):

@@ -1,0 +1,6 @@
+{% if project_links %}
+  <h3>Project Links</h3>
+  <ul>{% for item in project_links %}
+    <li><a href="{{ item.url }}">{{ item.title }}</a>
+  {% endfor %}</ul>
+{%- endif %}

@@ -1,0 +1,28 @@
+@import url("pocoo.css");
+@import url("https://fonts.googleapis.com/css?family=Ubuntu+Mono");
+@import url("https://fonts.googleapis.com/css?family=Open+Sans");
+
+body, pre, code {
+  font-family: "Ubuntu Mono", "Consolas", "Menlo", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", monospace;
+  font-size: 15px;
+}
+
+h1, h2, h3, h4, h5, h6, p.admonition-title, div.sphinxsidebar input {
+  font-family: "Open Sans", "Helvetica", "Arial", sans-serif;
+}
+
+div.body {
+  color: #3e4349;
+}
+
+a {
+  color: #5d2cd1;
+}
+
+a:hover {
+  color: #7546e3;
+}
+
+p.version-warning {
+  background-color: #7546e3;
+}

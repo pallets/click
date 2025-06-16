@@ -1,0 +1,4 @@
+- package: markdown-it-footnote
+  commit: cab6665ba39c6eb517cbbae3baeb549004bf740c
+  date: Jul 9, 2019
+  version: 3.0.2

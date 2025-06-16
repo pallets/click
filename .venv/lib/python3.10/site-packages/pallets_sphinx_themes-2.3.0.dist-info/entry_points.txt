@@ -1,0 +1,4 @@
+[pygments.styles]
+jinja=pallets_sphinx_themes.themes.jinja:JinjaStyle
+pocoo=pallets_sphinx_themes.themes.pocoo:PocooStyle
+

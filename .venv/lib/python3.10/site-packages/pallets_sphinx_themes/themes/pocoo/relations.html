@@ -1,0 +1,13 @@
+<h3>Navigation</h3>
+<ul>
+  <li><a href="{{ pathto(master_doc) }}">Overview</a>
+    {% if parents or prev or next %}<ul>{% for parent in parents %}
+      <li><a href="{{ parent.link|e }}">{{ parent.title }}</a>
+        {% if not loop.last or (prev or next) %}<ul>{% endif %}{% endfor %}
+          {% if prev %}<li>Previous: <a href="{{ prev.link|e }}" title="{{ _('previous chapter') }}">{{ prev.title }}</a>{% endif %}
+          {% if next %}<li>Next: <a href="{{ next.link|e }}" title="{{ _('next chapter') }}">{{ next.title }}</a>{% endif %}
+        {%- for parent in parents %}</ul>
+      </li>{% endfor %}
+    </ul>{% endif %}
+  </li>
+</ul>

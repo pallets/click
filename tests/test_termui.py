@@ -1,4 +1,5 @@
 import platform
+import tempfile
 import time
 
 import pytest
@@ -71,7 +72,7 @@ def test_progressbar_length_hint(runner, monkeypatch):
     assert result.exception is None
 
 
-def test_progressbar_hidden(runner, monkeypatch):
+def test_progressbar_no_tty(runner, monkeypatch):
     @click.command()
     def cli():
         with _create_progress(label="working") as progress:
@@ -80,6 +81,17 @@ def test_progressbar_hidden(runner, monkeypatch):
 
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
     assert runner.invoke(cli, []).output == "working\n"
+
+
+def test_progressbar_hidden_manual(runner, monkeypatch):
+    @click.command()
+    def cli():
+        with _create_progress(label="see nothing", hidden=True) as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    assert runner.invoke(cli, []).output == ""
 
 
 @pytest.mark.parametrize("avg, expected", [([], 0.0), ([1, 4], 2.5)])
@@ -230,7 +242,7 @@ def test_file_prompt_default_format(runner, file_kwargs):
     def cli(f):
         click.echo(f.name)
 
-    result = runner.invoke(cli)
+    result = runner.invoke(cli, input="\n")
     assert result.output == f"file [{__file__}]: \n{__file__}\n"
 
 
@@ -246,7 +258,7 @@ def test_secho(runner):
     ("value", "expect"), [(123, b"\x1b[45m123\x1b[0m"), (b"test", b"test")]
 )
 def test_secho_non_text(runner, value, expect):
-    with runner.isolation() as (out, _):
+    with runner.isolation() as (out, _, _):
         click.secho(value, nl=False, color=True, bg="magenta")
         result = out.getvalue()
         assert result == expect
@@ -369,6 +381,20 @@ def test_fast_edit(runner):
     assert result == "aTest\nbTest\n"
 
 
+@pytest.mark.skipif(platform.system() == "Windows", reason="No sed on Windows.")
+def test_edit(runner):
+    with tempfile.NamedTemporaryFile(mode="w") as named_tempfile:
+        named_tempfile.write("a\nb")
+        named_tempfile.flush()
+
+        result = click.edit(filename=named_tempfile.name, editor="sed -i~ 's/$/Test/'")
+        assert result is None
+
+        # We need ot reopen the file as it becomes unreadable after the edit.
+        with open(named_tempfile.name) as reopened_file:
+            assert reopened_file.read() == "aTest\nbTest"
+
+
 @pytest.mark.parametrize(
     ("prompt_required", "required", "args", "expect"),
     [
@@ -425,7 +451,7 @@ def test_prompt_required_false(runner, args, expect):
     [
         (True, "password\npassword", None, "password"),
         ("Confirm Password", "password\npassword\n", None, "password"),
-        (True, "", "", ""),
+        (True, "\n\n", "", ""),
         (False, None, None, None),
     ],
 )
@@ -447,3 +473,15 @@ def test_confirmation_prompt(runner, prompt, input, default, expect):
 
     if prompt == "Confirm Password":
         assert "Confirm Password: " in result.output
+
+
+def test_false_show_default_cause_no_default_display_in_prompt(runner):
+    @click.command()
+    @click.option("--arg1", show_default=False, prompt=True, default="my-default-value")
+    def cmd(arg1):
+        pass
+
+    # Confirm that the default value is not included in the output when `show_default`
+    # is False
+    result = runner.invoke(cmd, input="my-input", standalone_mode=False)
+    assert "my-default-value" not in result.output

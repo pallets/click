@@ -1,0 +1,126 @@
+Metadata-Version: 2.3
+Name: myst-parser
+Version: 4.0.1
+Summary: An extended [CommonMark](https://spec.commonmark.org/) compliant parser,
+Keywords: markdown,lexer,parser,development,docutils,sphinx
+Author-email: Chris Sewell <chrisj_sewell@hotmail.com>
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Classifier: Development Status :: 4 - Beta
+Classifier: Framework :: Sphinx :: Extension
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Programming Language :: Python :: Implementation :: CPython
+Classifier: Programming Language :: Python :: Implementation :: PyPy
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Text Processing :: Markup
+Requires-Dist: docutils>=0.19,<0.22
+Requires-Dist: jinja2
+Requires-Dist: markdown-it-py~=3.0
+Requires-Dist: mdit-py-plugins~=0.4,>=0.4.1
+Requires-Dist: pyyaml
+Requires-Dist: sphinx>=7,<9
+Requires-Dist: pre-commit~=4.0 ; extra == "code-style"
+Requires-Dist: linkify-it-py~=2.0 ; extra == "linkify"
+Requires-Dist: sphinx>=7 ; extra == "rtd"
+Requires-Dist: ipython ; extra == "rtd"
+Requires-Dist: sphinx-book-theme~=1.1 ; extra == "rtd"
+Requires-Dist: sphinx-design ; extra == "rtd"
+Requires-Dist: sphinx-copybutton ; extra == "rtd"
+Requires-Dist: sphinxext-rediraffe~=0.2.7 ; extra == "rtd"
+Requires-Dist: sphinxext-opengraph~=0.9.0 ; extra == "rtd"
+Requires-Dist: sphinx-pyscript ; extra == "rtd"
+Requires-Dist: sphinx-tippy>=0.4.3 ; extra == "rtd"
+Requires-Dist: sphinx-autodoc2~=0.5.0 ; extra == "rtd"
+Requires-Dist: sphinx-togglebutton ; extra == "rtd"
+Requires-Dist: beautifulsoup4 ; extra == "testing"
+Requires-Dist: coverage[toml] ; extra == "testing"
+Requires-Dist: defusedxml ; extra == "testing"
+Requires-Dist: pytest>=8,<9 ; extra == "testing"
+Requires-Dist: pytest-cov ; extra == "testing"
+Requires-Dist: pytest-regressions ; extra == "testing"
+Requires-Dist: pytest-param-files~=0.6.0 ; extra == "testing"
+Requires-Dist: sphinx-pytest ; extra == "testing"
+Requires-Dist: pygments<2.19 ; extra == "testing"
+Requires-Dist: pygments ; extra == "testing-docutils"
+Requires-Dist: pytest>=8,<9 ; extra == "testing-docutils"
+Requires-Dist: pytest-param-files~=0.6.0 ; extra == "testing-docutils"
+Project-URL: Documentation, https://myst-parser.readthedocs.io
+Project-URL: Homepage, https://github.com/executablebooks/MyST-Parser
+Provides-Extra: code-style
+Provides-Extra: linkify
+Provides-Extra: rtd
+Provides-Extra: testing
+Provides-Extra: testing-docutils
+
+# MyST-Parser
+
+[![Github-CI][github-ci]][github-link]
+[![Coverage Status][codecov-badge]][codecov-link]
+[![Documentation Status][rtd-badge]][rtd-link]
+[![Code style: black][black-badge]][black-link]
+[![PyPI][pypi-badge]][pypi-link]
+[![Conda][conda-badge]][conda-link]
+[![PyPI - Downloads][install-badge]][install-link]
+
+
+**MyST is a rich and extensible flavor of Markdown meant for technical documentation and publishing**.
+
+MyST is a flavor of markdown that is designed for simplicity, flexibility, and extensibility.
+This repository serves as the reference implementation of MyST Markdown, as well as a collection of tools to support working with MyST in Python and Sphinx.
+It contains an extended [CommonMark](https://commonmark.org)-compliant parser using [`markdown-it-py`](https://markdown-it-py.readthedocs.io/), as well as a [Sphinx](https://www.sphinx-doc.org) extension that allows you to write MyST Markdown in Sphinx.
+
+[**See the MyST Parser documentation for more information**](https://myst-parser.readthedocs.io/en/latest/).
+
+## Installation
+
+To install the MyST parser, run the following in a
+[Conda environment](https://docs.conda.io) (recommended):
+
+```bash
+conda install -c conda-forge myst-parser
+```
+
+or
+
+```bash
+pip install myst-parser
+```
+
+Or for package development:
+
+```bash
+git clone https://github.com/executablebooks/MyST-Parser
+cd MyST-Parser
+git checkout master
+pip install -e .[code_style,linkify,testing,rtd]
+```
+
+To use the MyST parser in Sphinx, simply add: `extensions = ["myst_parser"]` to your `conf.py`.
+
+## Contributing
+
+We welcome all contributions!
+See the [Contributing Guide](https://myst-parser.readthedocs.io/en/latest/develop/index.html) for more details.
+
+[github-ci]: https://github.com/executablebooks/MyST-Parser/workflows/continuous-integration/badge.svg?branch=master
+[github-link]: https://github.com/executablebooks/MyST-Parser
+[codecov-badge]: https://codecov.io/gh/executablebooks/MyST-Parser/branch/master/graph/badge.svg
+[codecov-link]: https://codecov.io/gh/executablebooks/MyST-Parser
+[rtd-badge]: https://readthedocs.org/projects/myst-parser/badge/?version=latest
+[rtd-link]: https://myst-parser.readthedocs.io/en/latest/?badge=latest
+[black-badge]: https://img.shields.io/badge/code%20style-black-000000.svg
+[pypi-badge]: https://img.shields.io/pypi/v/myst-parser.svg
+[pypi-link]: https://pypi.org/project/myst-parser
+[conda-badge]: https://anaconda.org/conda-forge/myst-parser/badges/version.svg
+[conda-link]: https://anaconda.org/conda-forge/myst-parser
+[black-link]: https://github.com/ambv/black
+[install-badge]: https://img.shields.io/pypi/dw/myst-parser?label=pypi%20installs
+[install-link]: https://pypistats.org/packages/myst-parser
+

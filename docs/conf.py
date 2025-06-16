@@ -10,6 +10,7 @@ release, version = get_version("Click")
 
 # General --------------------------------------------------------------
 
+master_doc = "index"
 default_role = "code"
 extensions = [
     "sphinx.ext.autodoc",
@@ -18,6 +19,7 @@ extensions = [
     "sphinx_tabs.tabs",
     "sphinxcontrib.log_cabinet",
     "pallets_sphinx_themes",
+    "myst_parser",
 ]
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
@@ -49,7 +51,7 @@ html_sidebars = {
 }
 singlehtml_sidebars = {"index": ["project.html", "localtoc.html", "ethicalads.html"]}
 html_static_path = ["_static"]
-html_favicon = "_static/click-icon.png"
-html_logo = "_static/click-logo-sidebar.png"
+html_favicon = "_static/click-icon.svg"
+html_logo = "_static/click-logo.svg"
 html_title = f"Click Documentation ({version})"
 html_show_sourcelink = False

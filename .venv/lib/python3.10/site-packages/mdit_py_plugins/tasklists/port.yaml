@@ -1,0 +1,6 @@
+- package: markdown-it-task-lists
+  commit: 8233e000559fae5a6306009e55332a54a9d3f606
+  date: 6 Mar 2018
+  version: 2.1.1
+  changes:
+    - Replaced number generator from original plugin with uuid

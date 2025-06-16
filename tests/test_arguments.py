@@ -82,9 +82,9 @@ def test_bytes_args(runner, monkeypatch):
     @click.command()
     @click.argument("arg")
     def from_bytes(arg):
-        assert isinstance(
-            arg, str
-        ), "UTF-8 encoded argument should be implicitly converted to Unicode"
+        assert isinstance(arg, str), (
+            "UTF-8 encoded argument should be implicitly converted to Unicode"
+        )
 
     # Simulate empty locale environment variables
     monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "utf-8")
@@ -198,6 +198,19 @@ def test_nargs_envvar(runner, nargs, value, expect):
         assert result.return_value == expect
 
 
+def test_envvar_flag_value(runner):
+    @click.command()
+    # is_flag is implicitly true
+    @click.option("--upper", flag_value="upper", envvar="UPPER")
+    def cmd(upper):
+        click.echo(upper)
+        return upper
+
+    # For whatever value of the `env` variable, if it exists, the flag should be `upper`
+    result = runner.invoke(cmd, env={"UPPER": "whatever"})
+    assert result.output.strip() == "upper"
+
+
 def test_nargs_envvar_only_if_values_empty(runner):
     @click.command()
     @click.argument("arg", envvar="X", nargs=-1)
@@ -260,6 +273,44 @@ def test_implicit_non_required(runner):
     result = runner.invoke(cli, [])
     assert result.exit_code == 0
     assert result.output == "test\n"
+
+
+def test_deprecated_usage(runner):
+    @click.command()
+    @click.argument("f", required=False, deprecated=True)
+    def cli(f):
+        click.echo(f)
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert "[F!]" in result.output
+
+
+@pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])
+def test_deprecated_warning(runner, deprecated):
+    @click.command()
+    @click.argument(
+        "my-argument", required=False, deprecated=deprecated, default="default argument"
+    )
+    def cli(my_argument: str):
+        click.echo(f"{my_argument}")
+
+    # defaults should not give a deprecated warning
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0, result.output
+    assert "is deprecated" not in result.output
+
+    result = runner.invoke(cli, ["hello"])
+    assert result.exit_code == 0, result.output
+    assert "argument 'MY_ARGUMENT' is deprecated" in result.output
+
+    if isinstance(deprecated, str):
+        assert deprecated in result.output
+
+
+def test_deprecated_required(runner):
+    with pytest.raises(ValueError, match="is deprecated and still required"):
+        click.Argument(["a"], required=True, deprecated=True)
 
 
 def test_eat_options(runner):
@@ -401,3 +452,23 @@ def test_when_argument_decorator_is_used_multiple_times_cls_is_preserved():
 
     assert isinstance(foo.params[0], CustomArgument)
     assert isinstance(bar.params[0], CustomArgument)
+
+
+@pytest.mark.parametrize(
+    "args_one,args_two",
+    [
+        (
+            ("aardvark",),
+            ("aardvark",),
+        ),
+    ],
+)
+def test_duplicate_names_warning(runner, args_one, args_two):
+    @click.command()
+    @click.argument(*args_one)
+    @click.argument(*args_two)
+    def cli(one, two):
+        pass
+
+    with pytest.warns(UserWarning):
+        runner.invoke(cli, [])

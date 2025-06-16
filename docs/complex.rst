@@ -16,6 +16,10 @@ In a theoretical world of two separate Click command line utilities, they
 could solve this problem by nesting one inside the other.  For instance, the
 web framework could also load the commands for the message queue framework.
 
+.. contents::
+    :depth: 1
+    :local:
+
 Basic Concepts
 --------------
 
@@ -224,9 +228,9 @@ Lazily Loading Subcommands
 
 Large CLIs and CLIs with slow imports may benefit from deferring the loading of
 subcommands. The interfaces which support this mode of use are
-:meth:`MultiCommand.list_commands` and :meth:`MultiCommand.get_command`. A custom
-:class:`MultiCommand` subclass can implement a lazy loader by storing extra data such
-that :meth:`MultiCommand.get_command` is responsible for running imports.
+:meth:`Group.list_commands` and :meth:`Group.get_command`. A custom
+:class:`Group` subclass can implement a lazy loader by storing extra data such
+that :meth:`Group.get_command` is responsible for running imports.
 
 Since the primary case for this is a :class:`Group` which loads its subcommands lazily,
 the following example shows a lazy-group implementation.
@@ -279,7 +283,7 @@ stores a mapping from subcommand names to the information for importing them.
             # get the Command object from that module
             cmd_object = getattr(mod, cmd_object_name)
             # check the result to make debugging easier
-            if not isinstance(cmd_object, click.BaseCommand):
+            if not isinstance(cmd_object, click.Command):
                 raise ValueError(
                     f"Lazy loading of {import_path} failed by returning "
                     "a non-command object"
@@ -306,12 +310,16 @@ subcommands like so:
     def cli():
         pass
 
+.. code-block:: python
+
     # in foo.py
     import click
 
     @click.group(help="foo command for lazy example")
     def cli():
         pass
+
+.. code-block:: python
 
     # in bar.py
     import click
@@ -325,6 +333,8 @@ subcommands like so:
     def cli():
         pass
 
+.. code-block:: python
+
     # in baz.py
     import click
 
@@ -337,7 +347,7 @@ What triggers Lazy Loading?
 ```````````````````````````
 
 There are several events which may trigger lazy loading by running the
-:meth:`MultiCommand.get_command` function.
+:meth:`Group.get_command` function.
 Some are intuititve, and some are less so.
 
 All cases are described with respect to the above example, assuming the main program
@@ -358,9 +368,9 @@ Further Deferring Imports
 It is possible to make the process even lazier, but it is generally more difficult the
 more you want to defer work.
 
-For example, subcommands could be represented as a custom :class:`BaseCommand` subclass
+For example, subcommands could be represented as a custom :class:`Command` subclass
 which defers importing the command until it is invoked, but which provides
-:meth:`BaseCommand.get_short_help_str` in order to support completions and helptext.
+:meth:`Command.get_short_help_str` in order to support completions and helptext.
 More simply, commands can be constructed whose callback functions defer any actual work
 until after an import.
 
@@ -377,7 +387,7 @@ the "real" callback function is deferred until invocation time:
 
         foo_concrete(n, w)
 
-Because ``click`` builds helptext and usage info from options, arguments, and command
+Because Click builds helptext and usage info from options, arguments, and command
 attributes, it has no awareness that the underlying function is in any way handling a
-deferred import. Therefore, all ``click``-provided utilities and functionality will work
+deferred import. Therefore, all Click-provided utilities and functionality will work
 as normal on such a command.

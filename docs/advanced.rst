@@ -3,70 +3,110 @@ Advanced Patterns
 
 .. currentmodule:: click
 
-In addition to common functionality that is implemented in the library
-itself, there are countless patterns that can be implemented by extending
-Click.  This page should give some insight into what can be accomplished.
+In addition to common functionality, Click offers some advanced features.
 
-.. _aliases:
+.. contents::
+    :depth: 1
+    :local:
 
-Command Aliases
----------------
+Callbacks and Eager Options
+---------------------------
 
-Many tools support aliases for commands (see `Command alias example
-<https://github.com/pallets/click/tree/main/examples/aliases>`_).
-For instance, you can configure ``git`` to accept ``git ci`` as alias for
-``git commit``.  Other tools also support auto-discovery for aliases by
-automatically shortening them.
+Sometimes, you want a parameter to completely change the execution flow.
+For instance, this is the case when you want to have a ``--version``
+parameter that prints out the version and then exits the application.
 
-Click does not support this out of the box, but it's very easy to customize
-the :class:`Group` or any other :class:`MultiCommand` to provide this
-functionality.
+Note: an actual implementation of a ``--version`` parameter that is
+reusable is available in Click as :func:`click.version_option`.  The code
+here is merely an example of how to implement such a flag.
 
-As explained in :ref:`custom-multi-commands`, a multi command can provide
-two methods: :meth:`~MultiCommand.list_commands` and
-:meth:`~MultiCommand.get_command`.  In this particular case, you only need
-to override the latter as you generally don't want to enumerate the
-aliases on the help page in order to avoid confusion.
+In such cases, you need two concepts: eager parameters and a callback.  An
+eager parameter is a parameter that is handled before others, and a
+callback is what executes after the parameter is handled.  The eagerness
+is necessary so that an earlier required parameter does not produce an
+error message.  For instance, if ``--version`` was not eager and a
+parameter ``--foo`` was required and defined before, you would need to
+specify it for ``--version`` to work.  For more information, see
+:ref:`callback-evaluation-order`.
 
-This following example implements a subclass of :class:`Group` that
-accepts a prefix for a command.  If there were a command called ``push``,
-it would accept ``pus`` as an alias (so long as it was unique):
+A callback is a function that is invoked with three parameters: the
+current :class:`Context`, the current :class:`Parameter`, and the value.
+The context provides some useful features such as quitting the
+application and gives access to other already processed parameters.
 
-.. click:example::
-
-    class AliasedGroup(click.Group):
-        def get_command(self, ctx, cmd_name):
-            rv = click.Group.get_command(self, ctx, cmd_name)
-            if rv is not None:
-                return rv
-            matches = [x for x in self.list_commands(ctx)
-                       if x.startswith(cmd_name)]
-            if not matches:
-                return None
-            elif len(matches) == 1:
-                return click.Group.get_command(self, ctx, matches[0])
-            ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
-
-        def resolve_command(self, ctx, args):
-            # always return the full command name
-            _, cmd, args = super().resolve_command(ctx, args)
-            return cmd.name, cmd, args
-
-And it can then be used like this:
+Here's an example for a ``--version`` flag:
 
 .. click:example::
 
-    @click.command(cls=AliasedGroup)
-    def cli():
-        pass
+    def print_version(ctx, param, value):
+        if not value or ctx.resilient_parsing:
+            return
+        click.echo('Version 1.0')
+        ctx.exit()
 
-    @cli.command()
-    def push():
-        pass
+    @click.command()
+    @click.option('--version', is_flag=True, callback=print_version,
+                  expose_value=False, is_eager=True)
+    def hello():
+        click.echo('Hello World!')
 
-    @cli.command()
-    def pop():
-        pass
+The `expose_value` parameter prevents the pretty pointless ``version``
+parameter from being passed to the callback.  If that was not specified, a
+boolean would be passed to the `hello` script.  The `resilient_parsing`
+flag is applied to the context if Click wants to parse the command line
+without any destructive behavior that would change the execution flow.  In
+this case, because we would exit the program, we instead do nothing.
+
+What it looks like:
+
+.. click:run::
+
+    invoke(hello)
+    invoke(hello, args=['--version'])
+
+Callbacks for Validation
+------------------------
+
+.. versionchanged:: 2.0
+
+If you want to apply custom validation logic, you can do this in the
+parameter callbacks. These callbacks can both modify values as well as
+raise errors if the validation does not work. The callback runs after
+type conversion. It is called for all sources, including prompts.
+
+In Click 1.0, you can only raise the :exc:`UsageError` but starting with
+Click 2.0, you can also raise the :exc:`BadParameter` error, which has the
+added advantage that it will automatically format the error message to
+also contain the parameter name.
+
+.. click:example::
+
+    def validate_rolls(ctx, param, value):
+        if isinstance(value, tuple):
+            return value
+
+        try:
+            rolls, _, dice = value.partition("d")
+            return int(dice), int(rolls)
+        except ValueError:
+            raise click.BadParameter("format must be 'NdM'")
+
+    @click.command()
+    @click.option(
+        "--rolls", type=click.UNPROCESSED, callback=validate_rolls,
+        default="1d6", prompt=True,
+    )
+    def roll(rolls):
+        sides, times = rolls
+        click.echo(f"Rolling a {sides}-sided dice {times} time(s)")
+
+.. click:run::
+
+    invoke(roll, args=["--rolls=42"])
+    println()
+    invoke(roll, args=["--rolls=2d12"])
+    println()
+    invoke(roll, input=["42", "2d12"])
 
 Parameter Modifications
 -----------------------
@@ -191,64 +231,6 @@ And what it looks like:
     invoke(cli, prog_name='cli', args=['dist'])
 
 
-.. _callback-evaluation-order:
-
-Callback Evaluation Order
--------------------------
-
-Click works a bit differently than some other command line parsers in that
-it attempts to reconcile the order of arguments as defined by the
-programmer with the order of arguments as defined by the user before
-invoking any callbacks.
-
-This is an important concept to understand when porting complex
-patterns to Click from optparse or other systems.  A parameter
-callback invocation in optparse happens as part of the parsing step,
-whereas a callback invocation in Click happens after the parsing.
-
-The main difference is that in optparse, callbacks are invoked with the raw
-value as it happens, whereas a callback in Click is invoked after the
-value has been fully converted.
-
-Generally, the order of invocation is driven by the order in which the user
-provides the arguments to the script; if there is an option called ``--foo``
-and an option called ``--bar`` and the user calls it as ``--bar
---foo``, then the callback for ``bar`` will fire before the one for ``foo``.
-
-There are three exceptions to this rule which are important to know:
-
-Eagerness:
-    An option can be set to be "eager".  All eager parameters are
-    evaluated before all non-eager parameters, but again in the order as
-    they were provided on the command line by the user.
-
-    This is important for parameters that execute and exit like ``--help``
-    and ``--version``.  Both are eager parameters, but whatever parameter
-    comes first on the command line will win and exit the program.
-
-Repeated parameters:
-    If an option or argument is split up on the command line into multiple
-    places because it is repeated -- for instance, ``--exclude foo --include
-    baz --exclude bar`` -- the callback will fire based on the position of
-    the first option.  In this case, the callback will fire for
-    ``exclude`` and it will be passed both options (``foo`` and
-    ``bar``), then the callback for ``include`` will fire with ``baz``
-    only.
-
-    Note that even if a parameter does not allow multiple versions, Click
-    will still accept the position of the first, but it will ignore every
-    value except the last.  The reason for this is to allow composability
-    through shell aliases that set defaults.
-
-Missing parameters:
-    If a parameter is not defined on the command line, the callback will
-    still fire.  This is different from how it works in optparse where
-    undefined values do not fire the callback.  Missing parameters fire
-    their callbacks at the very end which makes it possible for them to
-    default to values from a parameter that came before.
-
-Most of the time you do not need to be concerned about any of this,
-but it is important to know how it works for some advanced cases.
 
 .. _forwarding-unknown-options:
 
@@ -266,7 +248,7 @@ triggering a parsing error.
 This can generally be activated in two different ways:
 
 1.  It can be enabled on custom :class:`Command` subclasses by changing
-    the :attr:`~BaseCommand.ignore_unknown_options` attribute.
+    the :attr:`~Command.ignore_unknown_options` attribute.
 2.  It can be enabled by changing the attribute of the same name on the
     context class (:attr:`Context.ignore_unknown_options`).  This is best
     changed through the ``context_settings`` dictionary on the command.
@@ -346,74 +328,6 @@ everything below a subcommand be forwarded to another application than to
 handle some arguments yourself.
 
 
-Global Context Access
----------------------
-
-.. versionadded:: 5.0
-
-Starting with Click 5.0 it is possible to access the current context from
-anywhere within the same thread through the use of the
-:func:`get_current_context` function which returns it.  This is primarily
-useful for accessing the context bound object as well as some flags that
-are stored on it to customize the runtime behavior.  For instance the
-:func:`echo` function does this to infer the default value of the `color`
-flag.
-
-Example usage::
-
-    def get_current_command_name():
-        return click.get_current_context().info_name
-
-It should be noted that this only works within the current thread.  If you
-spawn additional threads then those threads will not have the ability to
-refer to the current context.  If you want to give another thread the
-ability to refer to this context you need to use the context within the
-thread as a context manager::
-
-    def spawn_thread(ctx, func):
-        def wrapper():
-            with ctx:
-                func()
-        t = threading.Thread(target=wrapper)
-        t.start()
-        return t
-
-Now the thread function can access the context like the main thread would
-do.  However if you do use this for threading you need to be very careful
-as the vast majority of the context is not thread safe!  You are only
-allowed to read from the context, but not to perform any modifications on
-it.
-
-
-Detecting the Source of a Parameter
------------------------------------
-
-In some situations it's helpful to understand whether or not an option
-or parameter came from the command line, the environment, the default
-value, or :attr:`Context.default_map`. The
-:meth:`Context.get_parameter_source` method can be used to find this
-out. It will return a member of the :class:`~click.core.ParameterSource`
-enum.
-
-.. click:example::
-
-    @click.command()
-    @click.argument('port', nargs=1, default=8080, envvar="PORT")
-    @click.pass_context
-    def cli(ctx, port):
-        source = ctx.get_parameter_source("port")
-        click.echo(f"Port came from {source.name}")
-
-.. click:run::
-
-    invoke(cli, prog_name='cli', args=['8080'])
-    println()
-    invoke(cli, prog_name='cli', args=[], env={"PORT": "8080"})
-    println()
-    invoke(cli, prog_name='cli', args=[])
-    println()
-
-
 Managing Resources
 ------------------
 
@@ -487,3 +401,8 @@ cleanup function.
             db.record_use()
             db.save()
             db.close()
+
+
+.. versionchanged:: 8.2 ``Context.call_on_close`` and context managers registered
+    via ``Context.with_resource`` will be closed when the CLI exits. These were
+    previously not called on exit.

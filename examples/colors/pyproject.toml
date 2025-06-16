@@ -1,0 +1,18 @@
+[project]
+name = "click-example-colors"
+version = "1.0.0"
+description = "Click colors example"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+]
+
+[project.scripts]
+colors = "colors:cli"
+
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "colors"

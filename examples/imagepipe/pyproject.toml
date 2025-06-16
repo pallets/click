@@ -1,0 +1,19 @@
+[project]
+name = "click-example-imagepipe"
+version = "1.0.0"
+description = "Click imagepipe example"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1",
+    "pillow",
+]
+
+[project.scripts]
+imagepipe = "imagepipe:cli"
+
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "imagepipe"
