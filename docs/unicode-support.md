@@ -1,7 +1,7 @@
+# Unicode Support
+
 ```{currentmodule} click
 ```
-
-# Unicode Support
 
 Click has to take extra care to support Unicode text in different environments.
 
