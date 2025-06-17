@@ -1,7 +1,7 @@
+# Utilities
+
 ```{currentmodule} click
 ```
-
-# Utilities
 
 Besides the functionality that Click provides to interface with argument parsing and handling, it also provides a bunch
 of addon functionality that is useful for writing command line utilities.
@@ -52,7 +52,7 @@ click.echo('Hello World!', err=True)
 ```{versionadded} 2.0
 ```
 
-The {func}`echo` function supports ANSI colors and styles. On Windows this uses [colorama].
+The {func}`echo` function supports ANSI colors and styles. On Windows this uses [colorama](https://pypi.org/project/colorama/).
 
 Primarily this means that:
 
@@ -323,7 +323,7 @@ Sometimes, you have command line scripts that need to process a lot of data, but
 progress about how long that will take. Click supports simple progress bar rendering for that through the
 {func}`progressbar` function.
 
-```{note} If you find that you have requirements beyond what Click's progress bar supports, try using [tqdm].
+```{note} If you find that you have requirements beyond what Click's progress bar supports, try using [tqdm](https://tqdm.github.io/).
 ```
 
 The basic usage is very simple: the idea is that you have an iterable that you want to operate on. For each item in the
@@ -388,6 +388,3 @@ with click.progressbar(length=total_size,
         archive.extract()
         bar.update(archive.size)
 ```
-
-[colorama]: https://pypi.org/project/colorama/
-[tqdm]: https://tqdm.github.io/
