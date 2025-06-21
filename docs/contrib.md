@@ -44,4 +44,3 @@ If a project is no longer maintained or does not meet the criteria above,
 please open a pull request to remove it from the list.
 ```
 
-[click-contrib]: https://github.com/click-contrib/
