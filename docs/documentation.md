@@ -1,7 +1,6 @@
 # Help Pages
 
-```{eval-rst}
-.. currentmodule:: click
+```{currentmodule} click
 ```
 
 Click makes it very easy to document your command line tools. For most things Click automatically generates help pages for you. By design the text is customizable, but the layout is not.
@@ -28,8 +27,6 @@ Simple example:
 
 .. click:run::
     invoke(hello, args=['--help'])
-
-
 ```
 
 ## Command Short Help
@@ -251,10 +248,10 @@ The default placeholder variable ([meta variable](https://en.wikipedia.org/wiki/
             click.echo(f"Hello {name}!")
 
 # Example usage:
-    from click.testing import CliRunner
-    runner = CliRunner()
-    result = runner.invoke(hello, args=['--help'])
-    print(result.output)
+
+.. click:run::
+    invoke(hello, args=['--help'])
+
 ```
 
 ## Help Parameter Customization
