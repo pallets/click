@@ -1,5 +1,13 @@
 .. currentmodule:: click
 
+Version 8.2.2
+-------------
+
+Unreleased
+
+-   Fix completion for the Z shell (``zsh``) for completion items containing
+    colons. :issue:`2703` :pr:`2846`
+
 Version 8.2.1
 -------------
 
