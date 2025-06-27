@@ -311,7 +311,24 @@ If you want to define an alias for the second option only, then you will need to
 
     invoke(info, args=['--help'])
 ```
+### Boolean Flags and Environment Variables
 
+You can use 'envvar=...' with boolean flags like '--debug/--no-debug', but it has some caveats. By default, Click treats  **any set environment variable as "flag present"**, even if the value is `"false"` or `"0"`.
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('--dry-run/--no-dry-run', default='False', envvar='DRY_RUN', type=click.BOOL)
+    def cli(dry_run):
+        click.echo(f"Dry run: {dry_run}")
+
+.. click:run::
+
+    invoke(cli, env={"DRY_RUN": "false"})
+    invoke(cli, env={"DRY_RUN": "true"})
+
+```
 ## Flag Value
 
 To have an flag pass a value to the underlying function set `flag_value`. This automatically sets `is_flag=True`. To set a default flag, set `default=True`. Setting flag values can be used to create patterns like this:
