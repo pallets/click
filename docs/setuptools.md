@@ -1,6 +1,7 @@
-:orphan:
+---
+orphan: true
+---
 
-Setuptools Integration
-======================
+# Setuptools Integration
 
-Moved to :doc:`entry-points`.
+Moved to {doc}`entry-points`.
