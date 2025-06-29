@@ -334,6 +334,33 @@ To have an flag pass a value to the underlying function set `flag_value`. This a
     invoke(info, args=['--lower'])
     invoke(info)
 ```
+### Positive / Negative Flags
+
+Click supports paired boolean flags like `--debug/--no-debug` or `--dry-run/--no-dry-run`, which let users explicitly enable or disable a feature. These are especially useful when clarity or override behavior matters.
+
+- **When defaults change dynamically**
+  If your program determines defaults at runtime, users may want to override them with either form of the flag.
+
+- **For clearer scripting**
+  Scripts or automation tools often prefer to state the full intent — for example, `--no-debug` even when debug mode is already off by default.
+
+- **To override predefined options**
+  If a shell alias or wrapper sets `--debug`, a user can negate it by adding `--no-debug` at the command line.
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('--debug/--no-debug', default=False)
+    def cli(debug):
+        click.echo(f"Debug is {'on' if debug else 'off'}")
+
+.. click:run::
+
+    invoke(cli)
+    invoke(cli, args=["--debug"])
+    invoke(cli, args=["--no-debug"])
+```
 
 ## Values from Environment Variables
 
