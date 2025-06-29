@@ -338,13 +338,13 @@ To have an flag pass a value to the underlying function set `flag_value`. This a
 
 Click supports paired boolean flags like `--debug/--no-debug` or `--dry-run/--no-dry-run`, which let users explicitly enable or disable a feature. These are especially useful when clarity or override behavior matters.
 
-- **When defaults change dynamically**  
+- **When defaults change dynamically**
   If your program determines defaults at runtime, users may want to override them with either form of the flag.
 
-- **For clearer scripting**  
+- **For clearer scripting**
   Scripts or automation tools often prefer to state the full intent — for example, `--no-debug` even when debug mode is already off by default.
 
-- **To override predefined options**  
+- **To override predefined options**
   If a shell alias or wrapper sets `--debug`, a user can negate it by adding `--no-debug` at the command line.
 
 ```{eval-rst}
