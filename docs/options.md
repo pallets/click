@@ -311,24 +311,7 @@ If you want to define an alias for the second option only, then you will need to
 
     invoke(info, args=['--help'])
 ```
-### Boolean Flags and Environment Variables
 
-You can use 'envvar=...' with boolean flags like '--debug/--no-debug', but it has some caveats. By default, Click treats  **any set environment variable as "flag present"**, even if the value is `"false"` or `"0"`.
-
-```{eval-rst}
-.. click:example::
-
-    @click.command()
-    @click.option('--dry-run/--no-dry-run', default='False', envvar='DRY_RUN', type=click.BOOL)
-    def cli(dry_run):
-        click.echo(f"Dry run: {dry_run}")
-
-.. click:run::
-
-    invoke(cli, env={"DRY_RUN": "false"})
-    invoke(cli, env={"DRY_RUN": "true"})
-
-```
 ## Flag Value
 
 To have an flag pass a value to the underlying function set `flag_value`. This automatically sets `is_flag=True`. To set a default flag, set `default=True`. Setting flag values can be used to create patterns like this:
@@ -350,6 +333,33 @@ To have an flag pass a value to the underlying function set `flag_value`. This a
     invoke(info, args=['--upper'])
     invoke(info, args=['--lower'])
     invoke(info)
+```
+### Positive / Negative Flags
+
+Click supports paired boolean flags like `--debug/--no-debug` or `--dry-run/--no-dry-run`, which let users explicitly enable or disable a feature. These are especially useful when clarity or override behavior matters.
+
+- **When defaults change dynamically**  
+  If your program determines defaults at runtime, users may want to override them with either form of the flag.
+
+- **For clearer scripting**  
+  Scripts or automation tools often prefer to state the full intent — for example, `--no-debug` even when debug mode is already off by default.
+
+- **To override predefined options**  
+  If a shell alias or wrapper sets `--debug`, a user can negate it by adding `--no-debug` at the command line.
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('--debug/--no-debug', default=False)
+    def cli(debug):
+        click.echo(f"Debug is {'on' if debug else 'off'}")
+
+.. click:run::
+
+    invoke(cli)
+    invoke(cli, args=["--debug"])
+    invoke(cli, args=["--no-debug"])
 ```
 
 ## Values from Environment Variables
