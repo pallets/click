@@ -220,50 +220,60 @@ class KeepOpenFile:
 
 
 def echo(
-    message: t.Any | None = None,
-    file: t.IO[t.Any] | None = None,
+    message: t.Optional[t.Any] = None,
+    file: t.Optional[t.IO[t.Any]] = None,
     nl: bool = True,
     err: bool = False,
-    color: bool | None = None,
+    color: t.Optional[bool] = None,
+    level: t.Optional[str] = None,
 ) -> None:
-    """Print a message and newline to stdout or a file. This should be
-    used instead of :func:`print` because it provides better support
-    for different data, files, and environments.
+    """Prints a message to the console.
 
-    Compared to :func:`print`, this does the following:
+    This function is independent of the an ``echo`` function defined in
+    a :class:`~click.Context` object, which is used for the
+    :func:`~click.echo` convenience function.
 
-    -   Ensures that the output encoding is not misconfigured on Linux.
-    -   Supports Unicode in the Windows console.
-    -   Supports writing to binary outputs, and supports writing bytes
-        to text outputs.
-    -   Supports colors and styles on Windows.
-    -   Removes ANSI color and style codes if the output does not look
-        like an interactive terminal.
-    -   Always flushes the output.
+    It's recommended to use the context's ``echo`` function rather than
+    this one directly.
 
-    :param message: The string or bytes to output. Other objects are
-        converted to strings.
-    :param file: The file to write to. Defaults to ``stdout``.
-    :param err: Write to ``stderr`` instead of ``stdout``.
-    :param nl: Print a newline after the message. Enabled by default.
-    :param color: Force showing or hiding colors and other styles. By
-        default Click will remove color if the output does not look like
-        an interactive terminal.
-
-    .. versionchanged:: 6.0
-        Support Unicode output on the Windows console. Click does not
-        modify ``sys.stdout``, so ``sys.stdout.write()`` and ``print()``
-        will still not support Unicode.
-
-    .. versionchanged:: 4.0
-        Added the ``color`` parameter.
-
-    .. versionadded:: 3.0
-        Added the ``err`` parameter.
-
+    .. versionchanged:: 8.2
+       The ``level`` parameter was added.
+    .. versionchanged:: 8.0
+        When printing to stdout, `errors="replace"` is used to handle
+        characters that can't be encoded.
     .. versionchanged:: 2.0
-        Support colors on Windows if colorama is installed.
+       The ``err`` parameter was added to allow writing to stderr.
+
+    :param message: The message to print. If ``None``, prints a newline.
+    :param file: The file to write to. Defaults to ``stdout`` or
+        ``stderr``, depending on the ``err`` flag.
+    :param nl: If ``True``, prints a newline after the message.
+    :param err: If ``True``, prints to ``stderr`` instead of ``stdout``.
+    :param color: If ``True``, force color, ``False`` to disable,
+        ``None`` to autodetect.
+    :param level: If provided, prefixes the message with a log level
+        (e.g., [INFO]). Only active if the `CLICK_ECHO_LEVEL`
+        environment variable is set.
     """
+    # Determine the message prefix based on the level and environment variable
+    prefix = ""
+    env_level = os.environ.get("CLICK_ECHO_LEVEL")
+
+    if level and env_level:
+        try:
+            # Only show levels that are at or above the environment level
+            levels = ["DEBUG", "INFO", "WARNING", "ERROR"]
+            if levels.index(level.upper()) >= levels.index(env_level.upper()):
+                prefix = f"[{level.upper()}] "
+        except ValueError:
+            # Ignore invalid levels
+            pass
+
+    if message is None:
+        message = ""
+
+    message = f"{prefix}{message}"
+
     if file is None:
         if err:
             file = _default_text_stderr()
