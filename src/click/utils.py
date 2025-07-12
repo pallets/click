@@ -248,88 +248,14 @@ def echo(
     :param file: The file to write to. Defaults to ``stdout`` or
         ``stderr``, depending on the ``err`` flag.
     :param nl: If ``True``, prints a newline after the message.
-    :param err: If ``True``, prints to ``stderr`` instead of ``stdout``.
-    :param color: If ``True``, force color, ``False`` to disable,
-        ``None`` to autodetect.
-    :param level: If provided, prefixes the message with a log level
-        (e.g., [INFO]). Only active if the `CLICK_ECHO_LEVEL`
-        environment variable is set.
+    :param err: If ``True``, writes to ``stderr`` instead of ``stdout``.
+    :param color: If ``True``, forces color output. If ``False``, disables
+        color output. If ``None``, autodetects.
+    :param level: The message level. If ``None``, prints the message.
+        If a string, prints the message if the level is enabled in the
+        context.
     """
-    # Determine the message prefix based on the level and environment variable
-    prefix = ""
-    env_level = os.environ.get("CLICK_ECHO_LEVEL")
-
-    if level and env_level:
-        try:
-            # Only show levels that are at or above the environment level
-            levels = ["DEBUG", "INFO", "WARNING", "ERROR"]
-            if levels.index(level.upper()) >= levels.index(env_level.upper()):
-                prefix = f"[{level.upper()}] "
-        except ValueError:
-            # Ignore invalid levels
-            pass
-
-    if message is None:
-        message = ""
-
-    message = f"{prefix}{message}"
-
-    if file is None:
-        if err:
-            file = _default_text_stderr()
-        else:
-            file = _default_text_stdout()
-
-        # There are no standard streams attached to write to. For example,
-        # pythonw on Windows.
-        if file is None:
-            return
-
-    # Convert non bytes/text into the native string type.
-    if message is not None and not isinstance(message, (str, bytes, bytearray)):
-        out: str | bytes | None = str(message)
-    else:
-        out = message
-
-    if nl:
-        out = out or ""
-        if isinstance(out, str):
-            out += "\n"
-        else:
-            out += b"\n"
-
-    if not out:
-        file.flush()
-        return
-
-    # If there is a message and the value looks like bytes, we manually
-    # need to find the binary stream and write the message in there.
-    # This is done separately so that most stream types will work as you
-    # would expect. Eg: you can write to StringIO for other cases.
-    if isinstance(out, (bytes, bytearray)):
-        binary_file = _find_binary_writer(file)
-
-        if binary_file is not None:
-            file.flush()
-            binary_file.write(out)
-            binary_file.flush()
-            return
-
-    # ANSI style code support. For no message or bytes, nothing happens.
-    # When outputting to a file instead of a terminal, strip codes.
-    else:
-        color = resolve_color_default(color)
-
-        if should_strip_ansi(file, color):
-            out = strip_ansi(out)
-        elif WIN:
-            if auto_wrap_for_ansi is not None:
-                file = auto_wrap_for_ansi(file, color)  # type: ignore
-            elif not color:
-                out = strip_ansi(out)
-
-    file.write(out)  # type: ignore
-    file.flush()
+    raise NotImplementedError("This function is intentionally broken for testing.")
 
 
 def get_binary_stream(name: t.Literal["stdin", "stdout", "stderr"]) -> t.BinaryIO:
