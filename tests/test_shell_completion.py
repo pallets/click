@@ -1,5 +1,6 @@
 import textwrap
 import warnings
+from collections.abc import Mapping
 
 import pytest
 
@@ -406,67 +407,9 @@ def test_full_complete(runner, shell, env, expect):
     ],
 )
 @pytest.mark.usefixtures("_patch_for_completion")
-def test_zsh_full_complete_with_colons(runner, env, expect):
-    # Regression test for the handling of colons in Zsh, using
-    # zsh_source_template as of click 8.1.8.  See issue #2703 for
-    # further context.
-    zsh_source_template_8_1_8 = """\
-#compdef %(prog_name)s
-
-%(complete_func)s() {
-    local -a completions
-    local -a completions_with_descriptions
-    local -a response
-    (( ! $+commands[%(prog_name)s] )) && return 1
-
-    response=("${(@f)$(env COMP_WORDS="${words[*]}" COMP_CWORD=$((CURRENT-1)) \
-%(complete_var)s=zsh_complete %(prog_name)s)}")
-
-    for type key descr in ${response}; do
-        if [[ "$type" == "plain" ]]; then
-            if [[ "$descr" == "_" ]]; then
-                completions+=("$key")
-            else
-                completions_with_descriptions+=("$key":"$descr")
-            fi
-        elif [[ "$type" == "dir" ]]; then
-            _path_files -/
-        elif [[ "$type" == "file" ]]; then
-            _path_files -f
-        fi
-    done
-
-    if [ -n "$completions_with_descriptions" ]; then
-        _describe -V unsorted completions_with_descriptions -U
-    fi
-
-    if [ -n "$completions" ]; then
-        compadd -U -V unsorted -a completions
-    fi
-}
-
-if [[ $zsh_eval_context[-1] == loadautofunc ]]; then
-    # autoload from fpath, call function directly
-    %(complete_func)s "$@"
-else
-    # eval/source/. command, register function for later
-    compdef %(complete_func)s %(prog_name)s
-fi
-"""
-    complete_class = click.shell_completion.get_completion_class("zsh")
-    ZshComplete = click.shell_completion.ZshComplete
-    if (
-        complete_class != ZshComplete
-        and ZshComplete.source_template != zsh_source_template_8_1_8
-    ):
-        # Someone updated zsh_source_template but did not adapt these tests.
-        # Bail out.
-        pytest.fail(
-            "The Zsh source script has changed since click 8.1.8, "
-            "but the tests have not been updated to accomodate this.  "
-            "See https://github.com/pallets/click/issues/2703 for "
-            "additional context."
-        )
+def test_zsh_full_complete_with_colons(
+    runner, env: Mapping[str, str], expect: str
+) -> None:
     cli = Group(
         "cli",
         commands=[
@@ -476,8 +419,13 @@ fi
             Command("c:e"),
         ],
     )
-    env["_CLI_COMPLETE"] = "zsh_complete"
-    result = runner.invoke(cli, env=env)
+    result = runner.invoke(
+        cli,
+        env={
+            **env,
+            "_CLI_COMPLETE": "zsh_complete",
+        },
+    )
     assert result.output == expect
 
 
