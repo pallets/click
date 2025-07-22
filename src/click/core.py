@@ -2872,6 +2872,8 @@ class Option(Parameter):
                 default_string = f"({self.show_default})"
             elif isinstance(default_value, (list, tuple)):
                 default_string = ", ".join(str(d) for d in default_value)
+            elif isinstance(default_value, enum.Enum):
+                default_string = default_value.name
             elif inspect.isfunction(default_value):
                 default_string = _("(dynamic)")
             elif self.is_bool_flag and self.secondary_opts:
