@@ -8,6 +8,13 @@ Unreleased
 -   Fix reconciliation of `default`, `flag_value` and `type` parameters for
     flag options, as well as parsing and normalization of environment variables.
     :issue:`2952` :pr:`2956`
+-   Fix typing issue in ``BadParameter`` and ``MissingParameter`` exceptions for the
+    parameter ``param_hint`` that did not allow for a sequence of string where the
+    underlying functino ``_join_param_hints`` allows for it. :issue:`2777` :pr:`2990`
+-   Use the value of ``Enum`` choices to render their default value in help
+    screen. Refs :issue:`2911` :pr:`3004`
+-   Fix completion for the Z shell (``zsh``) for completion items containing
+    colons. :issue:`2703` :pr:`2846`
 
 Version 8.2.1
 -------------
