@@ -1,6 +1,4 @@
-import textwrap
 import warnings
-from collections.abc import Mapping
 
 import pytest
 
@@ -353,79 +351,6 @@ def test_full_complete(runner, shell, env, expect):
     cli = Group("cli", commands=[Command("a"), Command("b", help="bee")])
     env["_CLI_COMPLETE"] = f"{shell}_complete"
     result = runner.invoke(cli, env=env)
-    assert result.output == expect
-
-
-@pytest.mark.parametrize(
-    ("env", "expect"),
-    [
-        (
-            {"COMP_WORDS": "", "COMP_CWORD": "0"},
-            textwrap.dedent(
-                """\
-                    plain
-                    a
-                    _
-                    plain
-                    b
-                    bee
-                    plain
-                    c\\:d
-                    cee:dee
-                    plain
-                    c:e
-                    _
-                """
-            ),
-        ),
-        (
-            {"COMP_WORDS": "a c", "COMP_CWORD": "1"},
-            textwrap.dedent(
-                """\
-                    plain
-                    c\\:d
-                    cee:dee
-                    plain
-                    c:e
-                    _
-                """
-            ),
-        ),
-        (
-            {"COMP_WORDS": "a c:", "COMP_CWORD": "1"},
-            textwrap.dedent(
-                """\
-                    plain
-                    c\\:d
-                    cee:dee
-                    plain
-                    c:e
-                    _
-                """
-            ),
-        ),
-    ],
-)
-@pytest.mark.usefixtures("_patch_for_completion")
-def test_zsh_full_complete_with_colons(
-    runner, env: Mapping[str, str], expect: str
-) -> None:
-    cli = Group(
-        "cli",
-        commands=[
-            Command("a"),
-            Command("b", help="bee"),
-            Command("c:d", help="cee:dee"),
-            Command("c:e"),
-        ],
-    )
-    result = runner.invoke(
-        cli,
-        env={
-            **env,
-            "_CLI_COMPLETE": "zsh_complete",
-        },
-    )
     assert result.output == expect
 
 

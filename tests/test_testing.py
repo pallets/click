@@ -448,7 +448,8 @@ def test_isolation_stderr_errors():
 
     with runner.isolation() as (_, err, _):
         click.echo("\udce2", err=True, nl=False)
-        assert err.getvalue() == b"\\udce2"
+
+    assert err.getvalue() == b"\\udce2"
 
 
 def test_isolation_flushes_unflushed_stderr():
@@ -459,7 +460,8 @@ def test_isolation_flushes_unflushed_stderr():
 
     with runner.isolation() as (_, err, _):
         click.echo("\udce2", err=True, nl=False)
-        assert err.getvalue() == b"\\udce2"
+
+    assert err.getvalue() == b"\\udce2"
 
     @click.command()
     def cli():

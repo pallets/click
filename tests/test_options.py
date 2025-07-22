@@ -1,10 +1,5 @@
-import enum
 import os
 import re
-import sys
-
-if sys.version_info < (3, 11):
-    enum.StrEnum = enum.Enum  # type: ignore[assignment]
 
 import pytest
 
@@ -1305,33 +1300,6 @@ def test_non_flag_with_non_negatable_default(runner):
     assert result.exit_code == 0
 
 
-class HashType(enum.Enum):
-    MD5 = enum.auto()
-    SHA1 = enum.auto()
-
-
-class Number(enum.IntEnum):
-    ONE = enum.auto()
-    TWO = enum.auto()
-
-
-class Letter(enum.StrEnum):
-    A = enum.auto()
-    B = enum.auto()
-
-
-class Color(enum.Flag):
-    RED = enum.auto()
-    GREEN = enum.auto()
-    BLUE = enum.auto()
-
-
-class ColorInt(enum.IntFlag):
-    RED = enum.auto()
-    GREEN = enum.auto()
-    BLUE = enum.auto()
-
-
 @pytest.mark.parametrize(
     ("choices", "metavars"),
     [
@@ -1340,11 +1308,6 @@ class ColorInt(enum.IntFlag):
         pytest.param([1.0, 2.0], "[FLOAT]", id="float choices"),
         pytest.param([True, False], "[BOOLEAN]", id="bool choices"),
         pytest.param(["foo", 1], "[TEXT|INTEGER]", id="text/int choices"),
-        pytest.param(HashType, "[HASHTYPE]", id="enum choices"),
-        pytest.param(Number, "[NUMBER]", id="int enum choices"),
-        pytest.param(Letter, "[LETTER]", id="str enum choices"),
-        pytest.param(Color, "[COLOR]", id="flag enum choices"),
-        pytest.param(ColorInt, "[COLORINT]", id="int flag enum choices"),
     ],
 )
 def test_usage_show_choices(runner, choices, metavars):
@@ -1367,59 +1330,10 @@ def test_usage_show_choices(runner, choices, metavars):
         pass
 
     result = runner.invoke(cli_with_choices, ["--help"])
-    assert (
-        f"[{'|'.join(i.name if isinstance(i, enum.Enum) else str(i) for i in choices)}]"
-        in result.output
-    )
+    assert f"[{'|'.join([str(i) for i in choices])}]" in result.output
 
     result = runner.invoke(cli_without_choices, ["--help"])
     assert metavars in result.output
-
-
-@pytest.mark.parametrize(
-    ("choices", "default", "default_string"),
-    [
-        (["foo", "bar"], "bar", "bar"),
-        # The default value is not enforced to be in the choices.
-        (["foo", "bar"], "random", "random"),
-        # None cannot be a default value as-is: it left the default value as unset.
-        (["foo", "bar"], None, None),
-        ([0, 1], 0, "0"),
-        # Values are not coerced to the type of the choice, even if equivalent.
-        ([0, 1], 0.0, "0.0"),
-        ([1, 2], 2, "2"),
-        ([1.0, 2.0], 2, "2"),
-        ([1.0, 2.0], 2.0, "2.0"),
-        ([True, False], True, "True"),
-        ([True, False], False, "False"),
-        (["foo", 1], "foo", "foo"),
-        (["foo", 1], 1, "1"),
-        # Enum choices are rendered as their names.
-        # See: https://github.com/pallets/click/issues/2911
-        (HashType, HashType.SHA1, "SHA1"),
-        # Enum choices allow defaults strings that are their names.
-        (HashType, "SHA1", "SHA1"),
-        (Number, Number.TWO, "TWO"),
-        (Letter, Letter.B, "B"),
-        (Color, Color.GREEN, "GREEN"),
-        (ColorInt, ColorInt.GREEN, "GREEN"),
-    ],
-)
-def test_choice_default_rendering(runner, choices, default, default_string):
-    @click.command()
-    @click.option("-g", type=click.Choice(choices), default=default, show_default=True)
-    def cli_with_choices(g):
-        pass
-
-    # Check that the default value is kept normalized to the type of the choice.
-    assert cli_with_choices.params[0].default == default
-
-    result = runner.invoke(cli_with_choices, ["--help"])
-    extra_usage = f"[default: {default_string}]"
-    if default_string is None:
-        assert extra_usage not in result.output
-    else:
-        assert extra_usage in result.output
 
 
 @pytest.mark.parametrize(
