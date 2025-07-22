@@ -152,8 +152,8 @@ To make an option take multiple values, pass in `nargs`. Note only a fixed numbe
 
 ## Multi Value Options as Tuples
 
-:::{versionadded} 4.0
-:::
+```{versionadded} 4.0
+```
 
 As you can see that by using `nargs` set to a specific number each item in
 the resulting tuple is of the same type. This might not be what you want.
@@ -289,8 +289,8 @@ If a forward slash(`/`) is contained in your option name already, you can split 
         click.echo(f"debug={debug}")
 ```
 
-:::{versionchanged} 6.0
-:::
+```{versionchanged} 6.0
+```
 
 If you want to define an alias for the second option only, then you will need to use leading whitespace to disambiguate the format string.
 
@@ -368,6 +368,31 @@ If a list is passed to `envvar`, the first environment variable found is picked.
 
 ```
 
+Variable names are:
+ - [Case-insensitive on Windows but not on other platforms](https://github.com/python/cpython/blob/aa9eb5f757ceff461e6e996f12c89e5d9b583b01/Lib/os.py#L777-L789).
+ - Not stripped of whitespaces and should match the exact name provided to the `envvar` argument.
+
+For flag options, there is two concepts to consider: the activation of the flag driven by the environment variable, and the value of the flag if it is activated.
+
+The environment variable need to be interpreted, because values read from them are always strings. We need to transform these strings into boolean values that will determine if the flag is activated or not.
+
+Here are the rules used to parse environment variable values for flag options:
+   - `true`, `1`, `yes`, `on`, `t`, `y` are interpreted as activating the flag
+   - `false`, `0`, `no`, `off`, `f`, `n` are interpreted as deactivating the flag
+   - The presence of the environment variable without value is interpreted as deactivating the flag
+   - Empty strings are interpreted as deactivating the flag
+   - Values are case-insensitive, so the `True`, `TRUE`, `tRuE` strings are all activating the flag
+   - Values are stripped of leading and trailing whitespaces before being interpreted, so the `" True "` string is transformed to `"true"` and so activates the flag
+   - If the flag option has a `flag_value` argument, passing that value in the environment variable will activate the flag, in addition to all the cases described above
+   - Any other value is interpreted as deactivating the flag
+
+.. caution::
+    For boolean flags with a pair of values, the only recognized environment variable is the one provided to the `envvar` argument.
+
+    So an option defined as `--flag\--no-flag`, with a `envvar="FLAG"` parameter, there is no magical `NO_FLAG=<anything>` variable that is recognized. Only the `FLAG=<anything>` environment variable is recognized.
+
+Once the status of the flag has been determine to be activated or not, the `flag_value` is used as the value of the flag if it is activated. If the flag is not activated, the value of the flag is set to `None` by default.
+
 ## Multiple Options from Environment Values
 
 As options can accept multiple values, pulling in such values from
@@ -432,8 +457,8 @@ providing only the option's flag without a value will either show a
 prompt or use its `flag_value`.
 
 Setting `is_flag=False, flag_value=value` tells Click that the option
-can still be passed a value, but only if the flag is given the
-`flag_value`.
+can still be passed a value, but if only the flag is given, the
+value will be `flag_value`.
 
 ```{eval-rst}
 .. click:example::
