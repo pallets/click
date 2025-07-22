@@ -51,7 +51,7 @@ html_sidebars = {
 }
 singlehtml_sidebars = {"index": ["project.html", "localtoc.html", "ethicalads.html"]}
 html_static_path = ["_static"]
-html_favicon = "_static/click-icon.png"
-html_logo = "_static/click-logo-sidebar.png"
+html_favicon = "_static/click-icon.svg"
+html_logo = "_static/click-logo.svg"
 html_title = f"Click Documentation ({version})"
 html_show_sourcelink = False
