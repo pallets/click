@@ -1453,3 +1453,33 @@ def test_duplicate_names_warning(runner, opts_one, opts_two):
 
     with pytest.warns(UserWarning):
         runner.invoke(cli, [])
+
+
+@pytest.mark.parametrize(
+    ("multiple", "nargs", "default", "expected_message"),
+    [
+        (
+            False,  # multiple
+            2,  # nargs
+            42,  # default (not a list)
+            "'default' must be a list when 'nargs' != 1.",
+        ),
+        (
+            True,  # multiple
+            2,  # nargs
+            [
+                "test string which is not a list in the list"
+            ],  # default (list of non-lists)
+            "'default' must be a list of lists when 'multiple' is true"
+            " and 'nargs' != 1.",
+        ),
+    ],
+)
+def test_default_type_error_raises(multiple, nargs, default, expected_message):
+    with pytest.raises(ValueError, match=expected_message):
+        click.Option(
+            ["--test"],
+            multiple=multiple,
+            nargs=nargs,
+            default=default,
+        )
