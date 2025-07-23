@@ -15,6 +15,7 @@ Unreleased
     screen. Refs :issue:`2911` :pr:`3004`
 -   Fix completion for the Z shell (``zsh``) for completion items containing
     colons. :issue:`2703` :pr:`2846`
+-   Don't include envvar in error hint when not configured. :issue:`2971` :pr:`2972`
 -   Fix a rare race in ``click.testing.StreamMixer``'s finalization that manifested
     as a ``ValueError`` on close in a multi-threaded test session.
     :issue:`2993` :pr:`2991`
