@@ -405,6 +405,8 @@ class FishComplete(ShellComplete):
     def get_completion_args(self) -> tuple[list[str], str]:
         cwords = split_arg_string(os.environ["COMP_WORDS"])
         incomplete = os.environ["COMP_CWORD"]
+        if incomplete:
+            incomplete = split_arg_string(incomplete)[0]
         args = cwords[1:]
 
         # Fish stores the partial word in both COMP_WORDS and
