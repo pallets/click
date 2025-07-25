@@ -153,9 +153,7 @@ def test_type_enum_choice():
         a2 = enum.auto()
         b = enum.auto()
 
-    cli = Command(
-        "cli", params=[Option(["-c"], type=Choice(MyEnum))]
-    )
+    cli = Command("cli", params=[Option(["-c"], type=Choice(MyEnum))])
     assert _get_words(cli, ["-c"], "") == ["a1", "a2", "b"]
     assert _get_words(cli, ["-c"], "a") == ["a1", "a2"]
     assert _get_words(cli, ["-c"], "a2") == ["a2"]
