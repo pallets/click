@@ -15,6 +15,8 @@ Unreleased
     screen. Refs :issue:`2911` :pr:`3004`
 -   Fix completion for the Z shell (``zsh``) for completion items containing
     colons. :issue:`2703` :pr:`2846`
+-   Fix rendering when ``prompt`` and ``confirm`` parameter ``prompt_suffix`` is
+    empty. :issue:`3019`
 
 Version 8.2.1
 -------------
