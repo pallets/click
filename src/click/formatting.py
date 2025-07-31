@@ -119,12 +119,12 @@ class HelpFormatter:
         width: int | None = None,
         max_width: int | None = None,
     ) -> None:
-        import shutil
-
         self.indent_increment = indent_increment
         if max_width is None:
             max_width = 80
         if width is None:
+            import shutil
+
             width = FORCED_WIDTH
             if width is None:
                 width = max(min(shutil.get_terminal_size().columns, max_width) - 2, 50)
