@@ -420,7 +420,7 @@ def _pipepager(
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
         return False
-    
+
     import shutil
 
     cmd = cmd_parts[0]
