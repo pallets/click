@@ -43,7 +43,6 @@ ALLOWED_IMPORTS = {
     "itertools",
     "os",
     "re",
-    "shutil",
     "stat",
     "struct",
     "sys",
