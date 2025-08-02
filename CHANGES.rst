@@ -3,7 +3,7 @@
 Version 8.2.2
 -------------
 
-Unreleased
+Released 2025-07-31
 
 -   Fix reconciliation of `default`, `flag_value` and `type` parameters for
     flag options, as well as parsing and normalization of environment variables.
