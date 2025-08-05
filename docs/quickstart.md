@@ -42,7 +42,7 @@ Some standalone examples of Click applications are packaged with Click. They are
 Click is based on declaring commands through decorators. Internally, there is a non-decorator interface for advanced use
 cases, but it's discouraged for high-level usage.
 
-A function becomes a Click command line tool by decorating it through {func}`click.command`. At its simplest, just
+A function becomes a Click command line tool by decorating it through {func}`command`. At its simplest, just
 decorating a function with this decorator will make it into a callable script:
 
 
