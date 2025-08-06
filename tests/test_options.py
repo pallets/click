@@ -10,6 +10,7 @@ import pytest
 
 import click
 from click import Option
+from click.utils import UNSET
 
 
 def test_prefixes(runner):
@@ -85,7 +86,7 @@ def test_deprecated_prompt(runner):
 
 
 def test_invalid_nargs(runner):
-    with pytest.raises(TypeError, match="nargs=-1"):
+    with pytest.raises(TypeError, match="nargs=-1 is not supported for options."):
 
         @click.command()
         @click.option("--foo", nargs=-1)
@@ -170,38 +171,119 @@ def test_multiple_required(runner):
 
 
 @pytest.mark.parametrize(
-    ("multiple", "nargs", "default"),
+    ("args", "multiple", "nargs", "default", "expected"),
     [
-        (True, 1, []),
-        (True, 1, [1]),
-        # (False, -1, []),
-        # (False, -1, [1]),
-        (False, 2, [1, 2]),
-        # (True, -1, [[]]),
-        # (True, -1, []),
-        # (True, -1, [[1]]),
-        (True, 2, []),
-        (True, 2, [[1, 2]]),
+        # If multiple values are allowed, defaults should be iterable.
+        ([], True, 1, [], "()"),
+        ([], True, 1, (), "()"),
+        ([], True, 1, tuple(), "()"),
+        ([], True, 1, set(), "()"),
+        ([], True, 1, frozenset(), "()"),
+        ([], True, 1, {}, "()"),
+        # Special values.
+        ([], True, 1, None, "()"),
+        ([], True, 1, UNSET, "()"),
+        # Number of values are kept as-is in the default.
+        ([], True, 1, [1], "(1,)"),
+        ([], True, 1, [1, 2], "(1, 2)"),
+        ([], True, 1, [1, 2, 3], "(1, 2, 3)"),
+        ([], True, 1, [1.1, 2.2], "(1.1, 2.2)"),
+        ([], True, 1, ["1", "2"], "('1', '2')"),
+        ([], True, 1, [None, None], "(None, None)"),
+        # XXX Why items of the defaults are converted to strings and not left as integers?
+        ([], True, 1, {1, 2}, "('1', '2')"),
+        ([], True, 1, frozenset([1, 2]), "('1', '2')"),
+        ([], True, 1, {1: "a", 2: "b"}, "('1', '2')"),
+        # Multiple values with nargs > 1.
+        ([], True, 2, [], "()"),
+        ([], True, 2, (), "()"),
+        ([], True, 2, tuple(), "()"),
+        ([], True, 2, set(), "()"),
+        ([], True, 2, frozenset(), "()"),
+        ([], True, 2, {}, "()"),
+        ([], True, 2, None, "()"),
+        ([], True, 2, UNSET, "()"),
+        ([], True, 2, [[1, 2]], "((1, 2),)"),
+        ([], True, 2, [[1, 2], [3, 4]], "((1, 2), (3, 4))"),
+        ([], True, 2, [[1, 2], [3, 4], [5, 6]], "((1, 2), (3, 4), (5, 6))"),
+        ([], True, 2, [[1.1, 2.2], [3.3, 4.4]], "((1.1, 2.2), (3.3, 4.4))"),
+        ([], True, 2, [["1", "2"], ["3", "4"]], "(('1', '2'), ('3', '4'))"),
+        ([], True, 2, [[None, None], [None, None]], "((None, None), (None, None))"),
+        ([], True, 2, [[1, 2.2], ["3", None]], "((1, 2.2), (3, None))"),
+        ([], True, 2, [[1, 2.2], None], "((1, 2.2), None)"),
+        #
+        ([], False, 2, [1, 2], "(1, 2)"),
+        #
     ],
 )
-def test_init_good_default_list(runner, multiple, nargs, default):
-    click.Option(["-a"], multiple=multiple, nargs=nargs, default=default)
+def test_good_defaults_for_multiple(runner, args, multiple, nargs, default, expected):
+    @click.command()
+    @click.option("-a", multiple=multiple, nargs=nargs, default=default)
+    def cmd(a):
+        click.echo(repr(a))
+
+    result = runner.invoke(cmd, args)
+    assert result.output.strip() == expected
 
 
 @pytest.mark.parametrize(
-    ("multiple", "nargs", "default"),
+    ("multiple", "nargs", "default", "message"),
     [
-        (True, 1, 1),
-        # (False, -1, 1),
-        (False, 2, [1]),
-        (True, 2, [[1]]),
+        # Non-iterables defaults.
+        (True, 1, "Yo", "Error: Invalid value for '-a': Value must be an iterable."),
+        (True, 1, "", "Error: Invalid value for '-a': Value must be an iterable."),
+        (
+            True,
+            1,
+            True,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            1,
+            False,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (True, 1, 12, "Error: Invalid value for '-a': Value must be an iterable."),
+        (True, 1, 7.9, "Error: Invalid value for '-a': Value must be an iterable."),
+        #
+        (False, 2, 42, "Error: Invalid value for '-a': Value must be an iterable."),
+        (
+            True,
+            2,
+            ["test string which is not a list in the list"],
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        # Multiple options, each with 2 args, but with wrong length.
+        (
+            True,
+            2,
+            (1,),
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            2,
+            (1, 2, 3),
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        # A mix of valid and invalid defaults.
+        (
+            True,
+            2,
+            [[1, 2.2], []],
+            "Error: Invalid value for '-a': 2 values are required, but 0 were given.",
+        ),
     ],
 )
-def test_init_bad_default_list(runner, multiple, nargs, default):
-    type = (str, str) if nargs == 2 else None
+def test_bad_defaults_for_multiple(runner, multiple, nargs, default, message):
+    @click.command()
+    @click.option("-a", multiple=multiple, nargs=nargs, default=default)
+    def cmd(a):
+        click.echo(repr(a))
 
-    with pytest.raises(ValueError, match="default"):
-        click.Option(["-a"], type=type, multiple=multiple, nargs=nargs, default=default)
+    result = runner.invoke(cmd, [])
+    assert message in result.stderr
 
 
 @pytest.mark.parametrize("env_key", ["MYPATH", "AUTO_MYPATH"])
@@ -629,13 +711,37 @@ def test_legacy_options(runner):
     assert result.output == "23\n"
 
 
-def test_missing_option_string_cast():
+@pytest.mark.parametrize(
+    ("value", "expect_missing", "processed_value"),
+    [
+        (UNSET, True, None),
+        (None, False, None),
+        # Default type of the argument is str, so everything is processed as strings.
+        ("", False, ""),
+        ("  ", False, "  "),
+        ("foo", False, "foo"),
+        ("12", False, "12"),
+        (12, False, "12"),
+        (12.1, False, "12.1"),
+        (list(), False, "[]"),
+        (tuple(), False, "()"),
+        (set(), False, "set()"),
+        (frozenset(), False, "frozenset()"),
+        (dict(), False, "{}"),
+    ],
+)
+def test_required_option(value, expect_missing, processed_value):
     ctx = click.Context(click.Command(""))
+    argument = click.Option(["-a"], required=True)
 
-    with pytest.raises(click.MissingParameter) as excinfo:
-        click.Option(["-a"], required=True).process_value(ctx, None)
+    if expect_missing:
+        with pytest.raises(click.MissingParameter) as excinfo:
+            argument.process_value(ctx, value)
+        assert str(excinfo.value) == "Missing parameter: a"
 
-    assert str(excinfo.value) == "Missing parameter: a"
+    else:
+        value = argument.process_value(ctx, value)
+        assert value == processed_value
 
 
 def test_missing_required_flag(runner):
@@ -1102,47 +1208,53 @@ def test_type_from_flag_value():
 @pytest.mark.parametrize(
     ("opt_params", "pass_flag", "expected"),
     [
-        # Effect of the presence/absence of flag depending on type
+        # The type passed to the option is responsible to converting the value, whether we pass the option flag or not.
         ({"type": bool}, False, False),
         ({"type": bool}, True, True),
         ({"type": click.BOOL}, False, False),
         ({"type": click.BOOL}, True, True),
         ({"type": str}, False, "False"),
         ({"type": str}, True, "True"),
-        # Effects of default value
+        # Default value is given as-is to the --foo option when it is not passed, whatever the type.
+        # Now if --foo is passed, the value is always True, whatever the type.
+        # In both case the type of the option is responsible for the conversion of the value.
         ({"type": bool, "default": True}, False, True),
         ({"type": bool, "default": True}, True, True),
         ({"type": bool, "default": False}, False, False),
         ({"type": bool, "default": False}, True, True),
-        ({"type": bool, "default": None}, False, False),
+        # ({"type": bool, "default": "foo"}, False, "foo"),
+        ({"type": bool, "default": "foo"}, True, True),
+        ({"type": bool, "default": None}, False, None),
         ({"type": bool, "default": None}, True, True),
         ({"type": click.BOOL, "default": True}, False, True),
         ({"type": click.BOOL, "default": True}, True, True),
         ({"type": click.BOOL, "default": False}, False, False),
         ({"type": click.BOOL, "default": False}, True, True),
-        ({"type": click.BOOL, "default": None}, False, False),
+        # ({"type": click.BOOL, "default": "foo"}, False, "foo"),
+        ({"type": click.BOOL, "default": "foo"}, True, True),
+        ({"type": click.BOOL, "default": None}, False, None),
         ({"type": click.BOOL, "default": None}, True, True),
         ({"type": str, "default": True}, False, "True"),
         ({"type": str, "default": True}, True, "True"),
         ({"type": str, "default": False}, False, "False"),
         ({"type": str, "default": False}, True, "True"),
         ({"type": str, "default": "foo"}, False, "foo"),
-        ({"type": str, "default": "foo"}, True, "foo"),
-        ({"type": str, "default": None}, False, "False"),
+        ({"type": str, "default": "foo"}, True, "True"),
+        ({"type": str, "default": None}, False, None),
         ({"type": str, "default": None}, True, "True"),
-        # Effects of flag_value
+        # Flag value is given as-is to the --foo option when it is passed, then converted by the option type.
         ({"type": bool, "flag_value": True}, False, False),
         ({"type": bool, "flag_value": True}, True, True),
         ({"type": bool, "flag_value": False}, False, False),
         ({"type": bool, "flag_value": False}, True, False),
         ({"type": bool, "flag_value": None}, False, False),
-        ({"type": bool, "flag_value": None}, True, True),
+        ({"type": bool, "flag_value": None}, True, None),
         ({"type": click.BOOL, "flag_value": True}, False, False),
         ({"type": click.BOOL, "flag_value": True}, True, True),
         ({"type": click.BOOL, "flag_value": False}, False, False),
         ({"type": click.BOOL, "flag_value": False}, True, False),
         ({"type": click.BOOL, "flag_value": None}, False, False),
-        ({"type": click.BOOL, "flag_value": None}, True, True),
+        ({"type": click.BOOL, "flag_value": None}, True, None),
         ({"type": str, "flag_value": True}, False, "False"),
         ({"type": str, "flag_value": True}, True, "True"),
         ({"type": str, "flag_value": False}, False, "False"),
@@ -1150,14 +1262,14 @@ def test_type_from_flag_value():
         ({"type": str, "flag_value": "foo"}, False, "False"),
         ({"type": str, "flag_value": "foo"}, True, "foo"),
         ({"type": str, "flag_value": None}, False, "False"),
-        ({"type": str, "flag_value": None}, True, "True"),
-        # Not passing --foo returns the default value as-is
+        ({"type": str, "flag_value": None}, True, None),
+        # Not passing --foo returns the default value as-is, in its Python type, then converted by the option type.
         ({"type": bool, "default": True, "flag_value": True}, False, True),
         ({"type": bool, "default": True, "flag_value": False}, False, True),
         ({"type": bool, "default": False, "flag_value": True}, False, False),
         ({"type": bool, "default": False, "flag_value": False}, False, False),
-        ({"type": bool, "default": None, "flag_value": True}, False, False),
-        ({"type": bool, "default": None, "flag_value": False}, False, False),
+        ({"type": bool, "default": None, "flag_value": True}, False, None),
+        ({"type": bool, "default": None, "flag_value": False}, False, None),
         ({"type": str, "default": True, "flag_value": True}, False, "True"),
         ({"type": str, "default": True, "flag_value": False}, False, "True"),
         ({"type": str, "default": False, "flag_value": True}, False, "False"),
@@ -1166,9 +1278,10 @@ def test_type_from_flag_value():
         ({"type": str, "default": "foo", "flag_value": False}, False, "foo"),
         ({"type": str, "default": "foo", "flag_value": "bar"}, False, "foo"),
         ({"type": str, "default": "foo", "flag_value": None}, False, "foo"),
-        ({"type": str, "default": None, "flag_value": True}, False, "False"),
-        ({"type": str, "default": None, "flag_value": False}, False, "False"),
-        # Passing --foo returns the explicitly set flag_value
+        ({"type": str, "default": None, "flag_value": True}, False, None),
+        ({"type": str, "default": None, "flag_value": False}, False, None),
+        # Passing --foo returns the flag_value that was explicitly set by the user, with its Python type,
+        # but still converted by the option type.
         ({"type": bool, "default": True, "flag_value": True}, True, True),
         ({"type": bool, "default": True, "flag_value": False}, True, False),
         ({"type": bool, "default": False, "flag_value": True}, True, True),
@@ -1182,7 +1295,7 @@ def test_type_from_flag_value():
         ({"type": str, "default": "foo", "flag_value": True}, True, "True"),
         ({"type": str, "default": "foo", "flag_value": False}, True, "False"),
         ({"type": str, "default": "foo", "flag_value": "bar"}, True, "bar"),
-        ({"type": str, "default": "foo", "flag_value": None}, True, "foo"),
+        ({"type": str, "default": "foo", "flag_value": None}, True, None),
         ({"type": str, "default": None, "flag_value": True}, True, "True"),
         ({"type": str, "default": None, "flag_value": False}, True, "False"),
     ],
@@ -1198,21 +1311,21 @@ def test_flag_value_and_default(runner, opt_params, pass_flag, expected):
 
 
 @pytest.mark.parametrize(
-    "opts",
+    ("args", "opts"),
     [
-        {"type": bool, "default": "foo"},
-        {"type": bool, "flag_value": "foo"},
-        {"type": click.BOOL, "default": "foo"},
-        {"type": click.BOOL, "flag_value": "foo"},
+        ([], {"type": bool, "default": "foo"}),
+        ([], {"type": click.BOOL, "default": "foo"}),
+        (["--foo"], {"type": bool, "flag_value": "foo"}),
+        (["--foo"], {"type": click.BOOL, "flag_value": "foo"}),
     ],
 )
-def test_invalid_flag_definition(runner, opts):
+def test_invalid_flag_definition(runner, args, opts):
     @click.command()
     @click.option("--foo", is_flag=True, **opts)
     def cmd(foo):
         click.echo(foo)
 
-    result = runner.invoke(cmd, ["--foo"])
+    result = runner.invoke(cmd, args)
     assert (
         "Error: Invalid value for '--foo': 'foo' is not a valid boolean"
         in result.output
@@ -1266,22 +1379,40 @@ def test_envvar_flag_value(runner, flag_value, envvar_value, expected):
 
 
 @pytest.mark.parametrize(
-    ("option", "expected"),
+    ("option", "expect_flag", "expect_bool_flag"),
     [
-        # Not boolean flags
-        pytest.param(Option(["-a"], type=int), False, id="int option"),
-        pytest.param(Option(["-a"], type=bool), False, id="bool non-flag [None]"),
-        pytest.param(Option(["-a"], default=True), False, id="bool non-flag [True]"),
-        pytest.param(Option(["-a"], default=False), False, id="bool non-flag [False]"),
-        pytest.param(Option(["-a"], flag_value=1), False, id="non-bool flag_value"),
-        # Boolean flags
-        pytest.param(Option(["-a"], is_flag=True), True, id="is_flag=True"),
-        pytest.param(Option(["-a/-A"]), True, id="secondary option [implicit flag]"),
-        pytest.param(Option(["-a"], flag_value=True), True, id="bool flag_value"),
+        # Not boolean flags.
+        pytest.param(Option(["-a"], type=int), False, False, id="int option"),
+        pytest.param(
+            Option(["-a"], type=bool), False, False, id="bool non-flag [None]"
+        ),
+        pytest.param(
+            Option(["-a"], default=True), False, False, id="bool non-flag [True]"
+        ),
+        pytest.param(
+            Option(["-a"], default=False), False, False, id="bool non-flag [False]"
+        ),
+        pytest.param(
+            Option(["-a"], flag_value=1), True, False, id="non-bool flag_value"
+        ),
+        # Boolean flags.
+        pytest.param(Option(["-a"], is_flag=True), True, True, id="is_flag=True"),
+        pytest.param(
+            Option(["-a/-A"]), True, True, id="secondary option [implicit flag]"
+        ),
+        pytest.param(Option(["-a"], flag_value=True), True, True, id="bool flag_value"),
+        # Non-flag with flag_value.
+        pytest.param(
+            Option(["-a"], is_flag=False, flag_value=1),
+            False,
+            False,
+            id="non-flag with flag_value",
+        ),
     ],
 )
-def test_bool_flag_auto_detection(option, expected):
-    assert option.is_bool_flag is expected
+def test_flag_auto_detection(option, expect_flag, expect_bool_flag):
+    assert option.is_flag is expect_flag
+    assert option.is_bool_flag is expect_bool_flag
 
 
 @pytest.mark.parametrize(
@@ -1455,31 +1586,25 @@ def test_duplicate_names_warning(runner, opts_one, opts_two):
         runner.invoke(cli, [])
 
 
-@pytest.mark.parametrize(
-    ("multiple", "nargs", "default", "expected_message"),
-    [
-        (
-            False,  # multiple
-            2,  # nargs
-            42,  # default (not a list)
-            "'default' must be a list when 'nargs' != 1.",
-        ),
-        (
-            True,  # multiple
-            2,  # nargs
-            [
-                "test string which is not a list in the list"
-            ],  # default (list of non-lists)
-            "'default' must be a list of lists when 'multiple' is true"
-            " and 'nargs' != 1.",
-        ),
-    ],
-)
-def test_default_type_error_raises(multiple, nargs, default, expected_message):
-    with pytest.raises(ValueError, match=expected_message):
-        click.Option(
-            ["--test"],
-            multiple=multiple,
-            nargs=nargs,
-            default=default,
-        )
+def test_custom_type_flag_value_default(runner):
+    """A reproduction of https://github.com/pallets/click/issues/2610"""
+
+    @click.command()
+    @click.option(
+        "--without-scm-ignore-files",
+        "scm_ignore_files",
+        is_flag=True,
+        type=frozenset,
+        flag_value=frozenset(),
+        default=frozenset(["git"]),
+    )
+    def rcli(scm_ignore_files):
+        click.echo(f"scm_ignore_files = {scm_ignore_files!r}")
+
+    result = runner.invoke(rcli)
+    assert result.stdout == ("scm_ignore_files = frozenset({'git'})\n")
+    assert result.exit_code == 0
+
+    result = runner.invoke(rcli, ["--without-scm-ignore-files"])
+    assert result.stdout == ("scm_ignore_files = frozenset()\n")
+    assert result.exit_code == 0

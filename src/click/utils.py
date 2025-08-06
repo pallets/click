@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import collections.abc as cabc
+import enum
 import os
 import re
 import sys
@@ -22,11 +23,31 @@ from ._compat import WIN
 from .globals import resolve_color_default
 
 if t.TYPE_CHECKING:
+    from typing import Final
+
     import typing_extensions as te
 
     P = te.ParamSpec("P")
 
 R = t.TypeVar("R")
+
+
+class Sentinel(enum.Enum):
+    """Enum used to define sentinel values.
+
+    .. seealso::
+
+        `PEP 661 - Sentinel Values <https://peps.python.org/pep-0661/>`_.
+    """
+
+    UNSET = object()
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}.{self.name}"
+
+
+UNSET: Final = Sentinel.UNSET
+"""A sentinel object used to indicate that a value is not set."""
 
 
 def _posixify(name: str) -> str:
