@@ -1,4 +1,6 @@
-# $ click_
+<div align="center"><img src="https://raw.githubusercontent.com/pallets/click/refs/heads/stable/docs/_static/click-name.svg" alt="" height="150"></div>
+
+# Click
 
 Click is a Python package for creating beautiful command line interfaces
 in a composable way with as little code as necessary. It's the "Command
@@ -50,3 +52,11 @@ allow the maintainers to devote more time to the projects, [please
 donate today][].
 
 [please donate today]: https://palletsprojects.com/donate
+
+## Contributing
+
+See our [detailed contributing documentation][contrib] for many ways to
+contribute, including reporting issues, requesting features, asking or answering
+questions, and making PRs.
+
+[contrib]: https://palletsprojects.com/contributing/

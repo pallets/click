@@ -1,10 +1,15 @@
 import os
 import pathlib
 import stat
+import subprocess
 import sys
 from collections import namedtuple
+from contextlib import nullcontext
+from functools import partial
 from io import StringIO
+from pathlib import Path
 from tempfile import tempdir
+from unittest.mock import patch
 
 import pytest
 
@@ -107,7 +112,7 @@ def test_filename_formatting():
     assert click.format_filename(b"/x/foo.txt") == "/x/foo.txt"
     assert click.format_filename("/x/foo.txt") == "/x/foo.txt"
     assert click.format_filename("/x/foo.txt", shorten=True) == "foo.txt"
-    assert click.format_filename(b"/x/\xff.txt", shorten=True) == "�.txt"
+    assert click.format_filename("/x/\ufffd.txt", shorten=True) == "�.txt"
 
 
 def test_prompts(runner):
@@ -174,6 +179,19 @@ def test_prompts_abort(monkeypatch, capsys):
     assert out == "Password:\ninterrupted\n"
 
 
+def test_prompts_eof(runner):
+    """If too few lines of input are given, prompt should exit, not hang."""
+
+    @click.command
+    def echo():
+        for _ in range(3):
+            click.echo(click.prompt("", type=int))
+
+    # only provide two lines of input for three prompts
+    result = runner.invoke(echo, input="1\n2\n")
+    assert result.exit_code == 1
+
+
 def _test_gen_func():
     yield "a"
     yield "b"
@@ -211,6 +229,9 @@ EchoViaPagerTest = namedtuple(
 
 
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
+@pytest.mark.parametrize(
+    "pager_cmd", ["cat", "cat ", " cat ", "less", " less", " less "]
+)
 @pytest.mark.parametrize(
     "test",
     [
@@ -262,7 +283,7 @@ EchoViaPagerTest = namedtuple(
             test_input=lambda: _test_gen_func_fails,
             # Because generator throws early on, the pager did not have
             # a chance yet to write the file.
-            expected_pager=None,
+            expected_pager="",
             expected_stdout="",
             expected_stderr="",
             expected_error=RuntimeError,
@@ -272,7 +293,7 @@ EchoViaPagerTest = namedtuple(
             test_input=lambda: _test_gen_func_fails,
             # Because generator throws early on, the pager did not have a
             # chance yet to write the file.
-            expected_pager=None,
+            expected_pager="",
             expected_stdout="",
             expected_stderr="",
             expected_error=RuntimeError,
@@ -307,13 +328,8 @@ EchoViaPagerTest = namedtuple(
         ),
     ],
 )
-def test_echo_via_pager(monkeypatch, capfd, test):
-    pager_out_tmp = f"{tempdir}/pager_out.txt"
-
-    if os.path.exists(pager_out_tmp):
-        os.remove(pager_out_tmp)
-
-    monkeypatch.setitem(os.environ, "PAGER", f"cat > {pager_out_tmp}")
+def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test):
+    monkeypatch.setitem(os.environ, "PAGER", pager_cmd)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
 
     test_input = test.test_input()
@@ -322,31 +338,33 @@ def test_echo_via_pager(monkeypatch, capfd, test):
     expected_stderr = test.expected_stderr
     expected_error = test.expected_error
 
-    if expected_error:
-        with pytest.raises(expected_error):
-            click.echo_via_pager(test_input)
-    else:
-        click.echo_via_pager(test_input)
+    check_raise = pytest.raises(expected_error) if expected_error else nullcontext()
+
+    pager_out_tmp = Path(tempdir) / "pager_out.txt"
+    pager_out_tmp.unlink(missing_ok=True)
+    with pager_out_tmp.open("w") as f:
+        force_subprocess_stdout = patch.object(
+            subprocess,
+            "Popen",
+            partial(subprocess.Popen, stdout=f),
+        )
+        with force_subprocess_stdout:
+            with check_raise:
+                click.echo_via_pager(test_input)
 
     out, err = capfd.readouterr()
 
-    if os.path.exists(pager_out_tmp):
-        with open(pager_out_tmp) as f:
-            pager = f.read()
-    else:
-        # The pager process was not started or has been
-        # terminated before it could finish writing
-        pager = None
+    pager = pager_out_tmp.read_text()
 
-    assert (
-        pager == expected_pager
-    ), f"Unexpected pager output in test case '{test.description}'"
-    assert (
-        out == expected_stdout
-    ), f"Unexpected stdout in test case '{test.description}'"
-    assert (
-        err == expected_stderr
-    ), f"Unexpected stderr in test case '{test.description}'"
+    assert pager == expected_pager, (
+        f"Unexpected pager output in test case '{test.description}'"
+    )
+    assert out == expected_stdout, (
+        f"Unexpected stdout in test case '{test.description}'"
+    )
+    assert err == expected_stderr, (
+        f"Unexpected stderr in test case '{test.description}'"
+    )
 
 
 def test_echo_color_flag(monkeypatch, capfd):
@@ -569,7 +587,7 @@ def test_iter_keepopenfile(tmpdir):
     p = tmpdir.mkdir("testdir").join("testfile")
     p.write("\n".join(expected))
     with p.open() as f:
-        for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f)):
+        for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f), strict=False):
             assert e_line == a_line.strip()
 
 
@@ -579,7 +597,7 @@ def test_iter_lazyfile(tmpdir):
     p.write("\n".join(expected))
     with p.open() as f:
         with click.utils.LazyFile(f.name) as lf:
-            for e_line, a_line in zip(expected, lf):
+            for e_line, a_line in zip(expected, lf, strict=False):
                 assert e_line == a_line.strip()
 
 

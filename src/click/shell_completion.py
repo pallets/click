@@ -124,6 +124,12 @@ _SOURCE_BASH = """\
 %(complete_func)s_setup;
 """
 
+# See ZshComplete.format_completion below, and issue #2703, before
+# changing this script.
+#
+# (TL;DR: _describe is picky about the format, but this Zsh script snippet
+# is already widely deployed.  So freeze this script, and use clever-ish
+# handling of colons in ZshComplet.format_completion.)
 _SOURCE_ZSH = """\
 #compdef %(prog_name)s
 
@@ -303,12 +309,19 @@ class BashComplete(ShellComplete):
 
     @staticmethod
     def _check_version() -> None:
+        import shutil
         import subprocess
 
-        output = subprocess.run(
-            ["bash", "-c", 'echo "${BASH_VERSION}"'], stdout=subprocess.PIPE
-        )
-        match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
+        bash_exe = shutil.which("bash")
+
+        if bash_exe is None:
+            match = None
+        else:
+            output = subprocess.run(
+                [bash_exe, "--norc", "-c", 'echo "${BASH_VERSION}"'],
+                stdout=subprocess.PIPE,
+            )
+            match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
 
         if match is not None:
             major, minor = match.groups()
@@ -366,7 +379,21 @@ class ZshComplete(ShellComplete):
         return args, incomplete
 
     def format_completion(self, item: CompletionItem) -> str:
-        return f"{item.type}\n{item.value}\n{item.help if item.help else '_'}"
+        help_ = item.help or "_"
+        # The zsh completion script uses `_describe` on items with help
+        # texts (which splits the item help from the item value at the
+        # first unescaped colon) and `compadd` on items without help
+        # text (which uses the item value as-is and does not support
+        # colon escaping).  So escape colons in the item value if and
+        # only if the item help is not the sentinel "_" value, as used
+        # by the completion script.
+        #
+        # (The zsh completion script is potentially widely deployed, and
+        # thus harder to fix than this method.)
+        #
+        # See issue #1812 and issue #2703 for further context.
+        value = item.value.replace(":", r"\:") if help_ != "_" else item.value
+        return f"{item.type}\n{value}\n{help_}"
 
 
 class FishComplete(ShellComplete):
@@ -561,8 +588,8 @@ def _resolve_context(
                     with cmd.make_context(
                         name, args, parent=ctx, resilient_parsing=True
                     ) as sub_ctx:
-                        args = ctx._protected_args + ctx.args
                         ctx = sub_ctx
+                        args = ctx._protected_args + ctx.args
                 else:
                     sub_ctx = ctx
 
@@ -580,8 +607,8 @@ def _resolve_context(
                             allow_interspersed_args=False,
                             resilient_parsing=True,
                         ) as sub_sub_ctx:
-                            args = sub_ctx.args
                             sub_ctx = sub_sub_ctx
+                            args = sub_ctx.args
 
                     ctx = sub_ctx
                     args = [*sub_ctx._protected_args, *sub_ctx.args]

@@ -115,7 +115,7 @@ class BadParameter(UsageError):
         message: str,
         ctx: Context | None = None,
         param: Parameter | None = None,
-        param_hint: str | None = None,
+        param_hint: cabc.Sequence[str] | str | None = None,
     ) -> None:
         super().__init__(message, ctx)
         self.param = param
@@ -151,7 +151,7 @@ class MissingParameter(BadParameter):
         message: str | None = None,
         ctx: Context | None = None,
         param: Parameter | None = None,
-        param_hint: str | None = None,
+        param_hint: cabc.Sequence[str] | str | None = None,
         param_type: str | None = None,
     ) -> None:
         super().__init__(message or "", ctx, param, param_hint)
@@ -159,7 +159,7 @@ class MissingParameter(BadParameter):
 
     def format_message(self) -> str:
         if self.param_hint is not None:
-            param_hint: str | None = self.param_hint
+            param_hint: cabc.Sequence[str] | str | None = self.param_hint
         elif self.param is not None:
             param_hint = self.param.get_error_hint(self.ctx)  # type: ignore
         else:
@@ -174,7 +174,9 @@ class MissingParameter(BadParameter):
 
         msg = self.message
         if self.param is not None:
-            msg_extra = self.param.type.get_missing_message(self.param)
+            msg_extra = self.param.type.get_missing_message(
+                param=self.param, ctx=self.ctx
+            )
             if msg_extra:
                 if msg:
                     msg += f". {msg_extra}"

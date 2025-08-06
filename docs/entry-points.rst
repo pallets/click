@@ -2,7 +2,7 @@ Packaging Entry Points
 ======================
 
 It's recommended to write command line utilities as installable packages with
-entry points instead telling users to run ``python hello.py``.
+entry points instead of telling users to run ``python hello.py``.
 
 A distribution package is a ``.whl`` file you install with pip or another Python
 installer. You use a ``pyproject.toml`` file to describe the project and how it
@@ -27,6 +27,7 @@ To install your app with an entry point, all you need is the script and a
         src/
             hello/
                 __init__.py
+                hello.py
         pyproject.toml
 
 Contents of ``hello.py``:
@@ -54,7 +55,7 @@ Contents of ``pyproject.toml``:
     ]
 
     [project.scripts]
-    hello = "hello:cli"
+    hello = "hello.hello:cli"
 
     [build-system]
     requires = ["flit_core<4"]

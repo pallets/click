@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import enum
 import os
 from itertools import chain
 
@@ -219,16 +222,20 @@ def test_boolean_switch(runner, default, args, expect):
     assert result.return_value is expect
 
 
-@pytest.mark.parametrize("default", [True, False])
-@pytest.mark.parametrize(("args", "expect"), [(["--f"], True), ([], False)])
+@pytest.mark.parametrize(
+    ("default", "args", "expect"),
+    (
+        (True, ["--f"], True),
+        (True, [], True),
+        (False, ["--f"], True),
+        (False, [], False),
+    ),
+)
 def test_boolean_flag(runner, default, args, expect):
     @click.command()
     @click.option("--f", is_flag=True, default=default)
     def cli(f):
         return f
-
-    if default:
-        expect = not expect
 
     result = runner.invoke(cli, args, standalone_mode=False)
     assert result.return_value is expect
@@ -401,6 +408,82 @@ def test_choice_argument(runner):
 
     result = runner.invoke(cli, ["--help"])
     assert "{foo|bar|baz}" in result.output
+
+
+def test_choice_argument_enum(runner):
+    class MyEnum(str, enum.Enum):
+        FOO = "foo-value"
+        BAR = "bar-value"
+        BAZ = "baz-value"
+
+    @click.command()
+    @click.argument("method", type=click.Choice(MyEnum, case_sensitive=False))
+    def cli(method: MyEnum):
+        assert isinstance(method, MyEnum)
+        click.echo(method)
+
+    result = runner.invoke(cli, ["foo"])
+    assert result.output == "foo-value\n"
+    assert not result.exception
+
+    result = runner.invoke(cli, ["meh"])
+    assert result.exit_code == 2
+    assert (
+        "Invalid value for '{foo|bar|baz}': 'meh' is not one of 'foo',"
+        " 'bar', 'baz'." in result.output
+    )
+
+    result = runner.invoke(cli, ["--help"])
+    assert "{foo|bar|baz}" in result.output
+
+
+def test_choice_argument_custom_type(runner):
+    class MyClass:
+        def __init__(self, value: str) -> None:
+            self.value = value
+
+        def __str__(self) -> str:
+            return self.value
+
+    @click.command()
+    @click.argument(
+        "method", type=click.Choice([MyClass("foo"), MyClass("bar"), MyClass("baz")])
+    )
+    def cli(method: MyClass):
+        assert isinstance(method, MyClass)
+        click.echo(method)
+
+    result = runner.invoke(cli, ["foo"])
+    assert not result.exception
+    assert result.output == "foo\n"
+
+    result = runner.invoke(cli, ["meh"])
+    assert result.exit_code == 2
+    assert (
+        "Invalid value for '{foo|bar|baz}': 'meh' is not one of 'foo',"
+        " 'bar', 'baz'." in result.output
+    )
+
+    result = runner.invoke(cli, ["--help"])
+    assert "{foo|bar|baz}" in result.output
+
+
+def test_choice_argument_none(runner):
+    @click.command()
+    @click.argument(
+        "method", type=click.Choice(["not-none", None], case_sensitive=False)
+    )
+    def cli(method: str | None):
+        assert isinstance(method, str) or method is None
+        click.echo(method)
+
+    result = runner.invoke(cli, ["not-none"])
+    assert not result.exception
+    assert result.output == "not-none\n"
+
+    # None is not yet supported.
+    result = runner.invoke(cli, ["none"])
+    assert result.exception
 
 
 def test_datetime_option_default(runner):

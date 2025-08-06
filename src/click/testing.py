@@ -99,6 +99,18 @@ class StreamMixer:
         self.stdout: io.BytesIO = BytesIOCopy(copy_to=self.output)
         self.stderr: io.BytesIO = BytesIOCopy(copy_to=self.output)
 
+    def __del__(self) -> None:
+        """
+        Guarantee that embedded file-like objects are closed in a
+        predictable order, protecting against races between
+        self.output being closed and other streams being flushed on close
+
+        .. versionadded:: 8.2.2
+        """
+        self.stderr.close()
+        self.stdout.close()
+        self.output.close()
+
 
 class _NamedTextIOWrapper(io.TextIOWrapper):
     def __init__(
@@ -115,6 +127,13 @@ class _NamedTextIOWrapper(io.TextIOWrapper):
     @property
     def mode(self) -> str:
         return self._mode
+
+    def __next__(self) -> str:  # type: ignore
+        try:
+            line = super().__next__()
+        except StopIteration as e:
+            raise EOFError() from e
+        return line
 
 
 def make_input_stream(
@@ -341,7 +360,7 @@ class CliRunner:
         @_pause_echo(echo_input)  # type: ignore
         def visible_input(prompt: str | None = None) -> str:
             sys.stdout.write(prompt or "")
-            val = text_input.readline().rstrip("\r\n")
+            val = next(text_input).rstrip("\r\n")
             sys.stdout.write(f"{val}\n")
             sys.stdout.flush()
             return val
@@ -350,7 +369,7 @@ class CliRunner:
         def hidden_input(prompt: str | None = None) -> str:
             sys.stdout.write(f"{prompt or ''}\n")
             sys.stdout.flush()
-            return text_input.readline().rstrip("\r\n")
+            return next(text_input).rstrip("\r\n")
 
         @_pause_echo(echo_input)  # type: ignore
         def _getchar(echo: bool) -> str:
@@ -375,6 +394,7 @@ class CliRunner:
         old_hidden_prompt_func = termui.hidden_prompt_func
         old__getchar_func = termui._getchar
         old_should_strip_ansi = utils.should_strip_ansi  # type: ignore
+        old__compat_should_strip_ansi = _compat.should_strip_ansi
         termui.visible_prompt_func = visible_input
         termui.hidden_prompt_func = hidden_input
         termui._getchar = _getchar
@@ -409,6 +429,7 @@ class CliRunner:
             termui.hidden_prompt_func = old_hidden_prompt_func
             termui._getchar = old__getchar_func
             utils.should_strip_ansi = old_should_strip_ansi  # type: ignore
+            _compat.should_strip_ansi = old__compat_should_strip_ansi
             formatting.FORCED_WIDTH = old_forced_width
 
     def invoke(
@@ -508,6 +529,7 @@ class CliRunner:
                 exc_info = sys.exc_info()
             finally:
                 sys.stdout.flush()
+                sys.stderr.flush()
                 stdout = outstreams[0].getvalue()
                 stderr = outstreams[1].getvalue()
                 output = outstreams[2].getvalue()

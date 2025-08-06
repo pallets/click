@@ -16,6 +16,10 @@ In a theoretical world of two separate Click command line utilities, they
 could solve this problem by nesting one inside the other.  For instance, the
 web framework could also load the commands for the message queue framework.
 
+.. contents::
+    :depth: 1
+    :local:
+
 Basic Concepts
 --------------
 

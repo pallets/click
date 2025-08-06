@@ -277,7 +277,7 @@ def echo(
 
     # Convert non bytes/text into the native string type.
     if message is not None and not isinstance(message, (str, bytes, bytearray)):
-        out: str | bytes | None = str(message)
+        out: str | bytes | bytearray | None = str(message)
     else:
         out = message
 

@@ -90,7 +90,7 @@ def _check_nested_chain(
 
 
 def batch(iterable: cabc.Iterable[V], batch_size: int) -> list[tuple[V, ...]]:
-    return list(zip(*repeat(iter(iterable), batch_size)))
+    return list(zip(*repeat(iter(iterable), batch_size), strict=False))
 
 
 @contextmanager
@@ -116,9 +116,16 @@ def iter_params_for_processing(
     invocation_order: cabc.Sequence[Parameter],
     declaration_order: cabc.Sequence[Parameter],
 ) -> list[Parameter]:
-    """Given a sequence of parameters in the order as should be considered
-    for processing and an iterable of parameters that exist, this returns
-    a list in the correct order as they should be processed.
+    """Returns all declared parameters in the order they should be processed.
+
+    The declared parameters are re-shuffled depending on the order in which
+    they were invoked, as well as the eagerness of each parameters.
+
+    The invocation order takes precedence over the declaration order. I.e. the
+    order in which the user provided them to the CLI is respected.
+
+    This behavior and its effect on callback evaluation is detailed at:
+    https://click.palletsprojects.com/en/stable/advanced/#callback-evaluation-order
     """
 
     def sort_key(item: Parameter) -> tuple[bool, float]:
@@ -934,6 +941,7 @@ class Command:
         self.options_metavar = options_metavar
         self.short_help = short_help
         self.add_help_option = add_help_option
+        self._help_option = None
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
@@ -1014,25 +1022,31 @@ class Command:
         return list(all_names)
 
     def get_help_option(self, ctx: Context) -> Option | None:
-        """Returns the help option object."""
-        help_options = self.get_help_option_names(ctx)
+        """Returns the help option object.
 
-        if not help_options or not self.add_help_option:
+        Skipped if :attr:`add_help_option` is ``False``.
+
+        .. versionchanged:: 8.1.8
+            The help option is now cached to avoid creating it multiple times.
+        """
+        help_option_names = self.get_help_option_names(ctx)
+
+        if not help_option_names or not self.add_help_option:
             return None
 
-        def show_help(ctx: Context, param: Parameter, value: str) -> None:
-            if value and not ctx.resilient_parsing:
-                echo(ctx.get_help(), color=ctx.color)
-                ctx.exit()
+        # Cache the help option object in private _help_option attribute to
+        # avoid creating it multiple times. Not doing this will break the
+        # callback odering by iter_params_for_processing(), which relies on
+        # object comparison.
+        if self._help_option is None:
+            # Avoid circular import.
+            from .decorators import help_option
 
-        return Option(
-            help_options,
-            is_flag=True,
-            is_eager=True,
-            expose_value=False,
-            callback=show_help,
-            help=_("Show this message and exit."),
-        )
+            # Apply help_option decorator and pop resulting option
+            help_option(*help_option_names)(self)
+            self._help_option = self.params.pop()  # type: ignore[assignment]
+
+        return self._help_option
 
     def make_parser(self, ctx: Context) -> _OptionParser:
         """Creates the underlying option parser for this command."""
@@ -1204,8 +1218,7 @@ class Command:
                 f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
             )
             message = _(
-                "DeprecationWarning: The command {name!r} is deprecated."
-                "{extra_message}"
+                "DeprecationWarning: The command {name!r} is deprecated.{extra_message}"
             ).format(name=self.name, extra_message=extra_message)
             echo(style(message, fg="red"), err=True)
 
@@ -1603,9 +1616,9 @@ class Group(Command):
         func: t.Callable[..., t.Any] | None = None
 
         if args and callable(args[0]):
-            assert (
-                len(args) == 1 and not kwargs
-            ), "Use 'command(**kwargs)(callable)' to provide arguments."
+            assert len(args) == 1 and not kwargs, (
+                "Use 'command(**kwargs)(callable)' to provide arguments."
+            )
             (func,) = args
             args = ()
 
@@ -1652,9 +1665,9 @@ class Group(Command):
         func: t.Callable[..., t.Any] | None = None
 
         if args and callable(args[0]):
-            assert (
-                len(args) == 1 and not kwargs
-            ), "Use 'group(**kwargs)(callable)' to provide arguments."
+            assert len(args) == 1 and not kwargs, (
+                "Use 'group(**kwargs)(callable)' to provide arguments."
+            )
             (func,) = args
             args = ()
 
@@ -2192,11 +2205,11 @@ class Parameter:
         """
         return self.name  # type: ignore
 
-    def make_metavar(self) -> str:
+    def make_metavar(self, ctx: Context) -> str:
         if self.metavar is not None:
             return self.metavar
 
-        metavar = self.type.get_metavar(self)
+        metavar = self.type.get_metavar(param=self, ctx=ctx)
 
         if metavar is None:
             metavar = self.type.name.upper()
@@ -2541,7 +2554,6 @@ class Option(Parameter):
         if help:
             help = inspect.cleandoc(help)
 
-        default_is_missing = "default" not in attrs
         super().__init__(
             param_decls, type=type, multiple=multiple, deprecated=deprecated, **attrs
         )
@@ -2575,15 +2587,15 @@ class Option(Parameter):
         self._flag_needs_value = self.prompt is not None and not self.prompt_required
 
         if is_flag is None:
+            # Implicitly a flag because flag_value was set.
             if flag_value is not None:
-                # Implicitly a flag because flag_value was set.
                 is_flag = True
+            # Not a flag, but when used as a flag it shows a prompt.
             elif self._flag_needs_value:
-                # Not a flag, but when used as a flag it shows a prompt.
                 is_flag = False
-            else:
-                # Implicitly a flag because flag options were given.
-                is_flag = bool(self.secondary_opts)
+            # Implicitly a flag because flag options were given.
+            elif self.secondary_opts:
+                is_flag = True
         elif is_flag is False and not self._flag_needs_value:
             # Not a flag, and prompt is not enabled, can be used as a
             # flag if flag_value is set.
@@ -2591,22 +2603,30 @@ class Option(Parameter):
 
         self.default: t.Any | t.Callable[[], t.Any]
 
-        if is_flag and default_is_missing and not self.required:
-            if multiple:
-                self.default = ()
-            else:
-                self.default = False
+        if is_flag:
+            # Set missing default for flags if not explicitly required or prompted.
+            if self.default is None and not self.required and not self.prompt:
+                if multiple:
+                    self.default = ()
+                else:
+                    self.default = False
+
+            if flag_value is None:
+                # A boolean flag presence in the command line is enough to set
+                # the value: to the default if it is not blank, or to True
+                # otherwise.
+                flag_value = self.default if self.default else True
 
         self.type: types.ParamType
         if is_flag and type is None:
-            if flag_value is None:
-                flag_value = not self.default
             # Re-guess the type from the flag value instead of the
             # default.
             self.type = types.convert_type(None, flag_value)
 
-        self.is_flag: bool = is_flag
-        self.is_bool_flag: bool = is_flag and isinstance(self.type, types.BoolParamType)
+        self.is_flag: bool = bool(is_flag)
+        self.is_bool_flag: bool = bool(
+            is_flag and isinstance(self.type, types.BoolParamType)
+        )
         self.flag_value: t.Any = flag_value
 
         # Counting
@@ -2614,7 +2634,7 @@ class Option(Parameter):
         if count:
             if type is None:
                 self.type = types.IntRange(min=0)
-            if default_is_missing:
+            if self.default is None:
                 self.default = 0
 
         self.allow_from_autoenv = allow_from_autoenv
@@ -2662,7 +2682,7 @@ class Option(Parameter):
 
     def get_error_hint(self, ctx: Context) -> str:
         result = super().get_error_hint(ctx)
-        if self.show_envvar:
+        if self.show_envvar and self.envvar is not None:
             result += f" (env var: '{self.envvar}')"
         return result
 
@@ -2775,7 +2795,7 @@ class Option(Parameter):
                 any_prefix_is_slash = True
 
             if not self.is_flag and not self.count:
-                rv += f" {self.make_metavar()}"
+                rv += f" {self.make_metavar(ctx=ctx)}"
 
             return rv
 
@@ -2852,6 +2872,8 @@ class Option(Parameter):
                 default_string = f"({self.show_default})"
             elif isinstance(default_value, (list, tuple)):
                 default_string = ", ".join(str(d) for d in default_value)
+            elif isinstance(default_value, enum.Enum):
+                default_string = default_value.name
             elif inspect.isfunction(default_value):
                 default_string = _("(dynamic)")
             elif self.is_bool_flag and self.secondary_opts:
@@ -2904,8 +2926,8 @@ class Option(Parameter):
         # value as default.
         if self.is_flag and not self.is_bool_flag:
             for param in ctx.command.params:
-                if param.name == self.name and param.default:
-                    return t.cast(Option, param).flag_value
+                if param.name == self.name and param.default is not None:
+                    return t.cast(Option, param).default
 
             return None
 
@@ -2945,11 +2967,21 @@ class Option(Parameter):
         )
 
     def resolve_envvar_value(self, ctx: Context) -> str | None:
+        """Find which environment variable to read for this option and return
+        its value.
+
+        Returns the value of the environment variable if it exists, or ``None``
+        if it does not.
+
+        .. caution::
+
+            The raw value extracted from the environment is not normalized and
+            is returned as-is. Any normalization or reconciation with the
+            option's type should happen later.
+        """
         rv = super().resolve_envvar_value(ctx)
 
         if rv is not None:
-            if self.is_flag and self.flag_value:
-                return str(self.flag_value)
             return rv
 
         if (
@@ -2966,18 +2998,32 @@ class Option(Parameter):
         return None
 
     def value_from_envvar(self, ctx: Context) -> t.Any | None:
-        rv: t.Any | None = self.resolve_envvar_value(ctx)
+        """Normalize the value from the environment variable, if it exists."""
+        rv: str | None = self.resolve_envvar_value(ctx)
 
         if rv is None:
             return None
 
+        # Non-boolean flags are more liberal in what they accept. But a flag being a
+        # flag, its envvar value still needs to analyzed to determine if the flag is
+        # activated or not.
+        if self.is_flag and not self.is_bool_flag:
+            # If the flag_value is set and match the envvar value, return it
+            # directly.
+            if self.flag_value is not None and rv == self.flag_value:
+                return self.flag_value
+            # Analyze the envvar value as a boolean to know if the flag is
+            # activated or not.
+            return types.BoolParamType.str_to_bool(rv)
+
+        # Split the envvar value if it is allowed to be repeated.
         value_depth = (self.nargs != 1) + bool(self.multiple)
-
         if value_depth > 0:
-            rv = self.type.split_envvar_value(rv)
-
+            multi_rv = self.type.split_envvar_value(rv)
             if self.multiple and self.nargs != 1:
-                rv = batch(rv, self.nargs)
+                multi_rv = batch(multi_rv, self.nargs)  # type: ignore[assignment]
+
+            return multi_rv
 
         return rv
 
@@ -2996,6 +3042,17 @@ class Option(Parameter):
             else:
                 value = self.flag_value
                 source = ParameterSource.COMMANDLINE
+
+        # A flag which is activated and has a flag_value set, should returns
+        # the latter, unless the value comes from the explicitly sets default.
+        elif (
+            self.is_flag
+            and value is True
+            and not self.is_bool_flag
+            and self.flag_value is not None
+            and source is not ParameterSource.DEFAULT
+        ):
+            value = self.flag_value
 
         elif (
             self.multiple
@@ -3056,10 +3113,10 @@ class Argument(Parameter):
             return self.metavar
         return self.name.upper()  # type: ignore
 
-    def make_metavar(self) -> str:
+    def make_metavar(self, ctx: Context) -> str:
         if self.metavar is not None:
             return self.metavar
-        var = self.type.get_metavar(self)
+        var = self.type.get_metavar(param=self, ctx=ctx)
         if not var:
             var = self.name.upper()  # type: ignore
         if self.deprecated:
@@ -3088,10 +3145,10 @@ class Argument(Parameter):
         return name, [arg], []
 
     def get_usage_pieces(self, ctx: Context) -> list[str]:
-        return [self.make_metavar()]
+        return [self.make_metavar(ctx)]
 
     def get_error_hint(self, ctx: Context) -> str:
-        return f"'{self.make_metavar()}'"
+        return f"'{self.make_metavar(ctx)}'"
 
     def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
         parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)

@@ -1,14 +1,45 @@
 .. currentmodule:: click
 
+Version 8.2.2
+-------------
+
+Released 2025-07-31
+
+-   Fix reconciliation of `default`, `flag_value` and `type` parameters for
+    flag options, as well as parsing and normalization of environment variables.
+    :issue:`2952` :pr:`2956`
+-   Fix typing issue in ``BadParameter`` and ``MissingParameter`` exceptions for the
+    parameter ``param_hint`` that did not allow for a sequence of string where the
+    underlying functino ``_join_param_hints`` allows for it. :issue:`2777` :pr:`2990`
+-   Use the value of ``Enum`` choices to render their default value in help
+    screen. Refs :issue:`2911` :pr:`3004`
+-   Fix completion for the Z shell (``zsh``) for completion items containing
+    colons. :issue:`2703` :pr:`2846`
+-   Don't include envvar in error hint when not configured. :issue:`2971` :pr:`2972`
+-   Fix a rare race in ``click.testing.StreamMixer``'s finalization that manifested
+    as a ``ValueError`` on close in a multi-threaded test session.
+    :issue:`2993` :pr:`2991`
+
+Version 8.2.1
+-------------
+
+Released 2025-05-20
+
+-   Fix flag value handling for flag options with a provided type. :issue:`2894`
+    :issue:`2897` :pr:`2930`
+-   Fix shell completion for nested groups. :issue:`2906` :pr:`2907`
+-   Flush ``sys.stderr`` at the end of ``CliRunner.invoke``. :issue:`2682`
+-   Fix EOF handling for stdin input in CliRunner. :issue:`2787`
+
 Version 8.2.0
 -------------
 
-Unreleased
+Released 2025-05-10
 
--   Drop support for Python 3.7. :pr:`2588`
+-   Drop support for Python 3.7, 3.8, and 3.9. :pr:`2588` :pr:`2893`
 -   Use modern packaging metadata with ``pyproject.toml`` instead of ``setup.cfg``.
-    :pr:`326`
--   Use ``flit_core`` instead of ``setuptools`` as build backend.
+    :pr:`2438`
+-   Use ``flit_core`` instead of ``setuptools`` as build backend. :pr:`2543`
 -   Deprecate the ``__version__`` attribute. Use feature detection, or
     ``importlib.metadata.version("click")``, instead. :issue:`2598`
 -   ``BaseCommand`` is deprecated. ``Command`` is the base class for all
@@ -41,7 +72,7 @@ Unreleased
     :pr:`2517`
 -   Keep stdout and stderr streams independent in ``CliRunner``. Always
     collect stderr output and never raise an exception. Add a new
-    output` stream to simulate what the user sees in its terminal. Removes
+    output stream to simulate what the user sees in its terminal. Removes
     the ``mix_stderr`` parameter in ``CliRunner``. :issue:`2522` :pr:`2523`
 -   ``Option.show_envvar`` now also shows environment variable in error messages.
     :issue:`2695` :pr:`2696`
@@ -50,7 +81,7 @@ Unreleased
     ``Context.with_resource`` to be closed on exit as well. :pr:`2680`
 -   Add ``ProgressBar(hidden: bool)`` to allow hiding the progressbar. :issue:`2609`
 -   A ``UserWarning`` will be shown when multiple parameters attempt to use the
-    same name. :issue:`2396``
+    same name. :issue:`2396`
 -   When using ``Option.envvar`` with ``Option.flag_value``, the ``flag_value``
     will always be used instead of the value of the environment variable.
     :issue:`2746` :pr:`2788`
@@ -60,7 +91,7 @@ Unreleased
     for groups, ``False`` for commands), the exit code is 2 instead of 0.
     :issue:`1489` :pr:`1489`
 -   Contexts created during shell completion are closed properly, fixing
-    ``ResourceWarning``s when using ``click.File``. :issue:`2644` :pr:`2800`
+    a ``ResourceWarning`` when using ``click.File``. :issue:`2644` :pr:`2800`
     :pr:`2767`
 -   ``click.edit(filename)`` now supports passing an iterable of filenames in
     case the editor supports editing multiple files at once. Its return type
@@ -88,18 +119,23 @@ Unreleased
     -   Parameters cannot be required nor prompted or an error is raised.
     -   A warning will be printed when something deprecated is used.
 
--   Add a ``catch_exceptions`` parameter to :class:`CliRunner`. If
-    ``catch_exceptions`` is not passed to :meth:`CliRunner.invoke`,
-    the value from :class:`CliRunner`. :issue:`2817` :pr:`2818`
+-   Add a ``catch_exceptions`` parameter to ``CliRunner``. If
+    ``catch_exceptions`` is not passed to ``CliRunner.invoke``, the value
+    from ``CliRunner`` is used. :issue:`2817` :pr:`2818`
 -   ``Option.flag_value`` will no longer have a default value set based on
     ``Option.default`` if ``Option.is_flag`` is ``False``. This results in
     ``Option.default`` not needing to implement `__bool__`. :pr:`2829`
 -   Incorrect ``click.edit`` typing has been corrected. :pr:`2804`
+-   ``Choice`` is now generic and supports any iterable value.
+    This allows you to use enums and other non-``str`` values. :pr:`2796`
+    :issue:`605`
+-   Fix setup of help option's defaults when using a custom class on its
+    decorator. Removes ``HelpOption``. :issue:`2832` :pr:`2840`
 
 Version 8.1.8
 -------------
 
-Unreleased
+Released 2024-12-19
 
 -   Fix an issue with type hints for ``click.open_file()``. :issue:`2717`
 -   Fix issue where error message for invalid ``click.Path`` displays on
@@ -112,8 +148,19 @@ Unreleased
     :issue:`2632`
 -   Fix ``click.echo(color=...)`` passing ``color`` to coloroma so it can be
     forced on Windows. :issue:`2606`.
--   show correct auto complete value for nargs option in combination with
-    flag option :issue:`2813`
+-   More robust bash version check, fixing problem on Windows with git-bash.
+    :issue:`2638`
+-   Cache the help option generated by the ``help_option_names`` setting to
+    respect its eagerness. :pr:`2811`
+-   Replace uses of ``os.system`` with ``subprocess.Popen``. :issue:`1476`
+-   Exceptions generated during a command will use the context's ``color``
+    setting when being displayed. :issue:`2193`
+-   Error message when defining option with invalid name is more descriptive.
+    :issue:`2452`
+-   Refactor code generating default ``--help`` option to deduplicate code.
+    :pr:`2563`
+-   Test ``CLIRunner`` resets patched ``_compat.should_strip_ansi``.
+    :issue:`2732`
 
 
 Version 8.1.7

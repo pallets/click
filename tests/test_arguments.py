@@ -63,6 +63,15 @@ def test_nargs_tup_composite(runner, opts):
     assert result.output.splitlines() == ["name=peter id=1"]
 
 
+def test_nargs_mismatch_with_tuple_type():
+    with pytest.raises(ValueError, match="nargs.*must be 2.*but it was 3"):
+
+        @click.command()
+        @click.argument("test", type=(str, int), nargs=3)
+        def cli(_):
+            pass
+
+
 def test_nargs_err(runner):
     @click.command()
     @click.argument("x")
@@ -82,9 +91,9 @@ def test_bytes_args(runner, monkeypatch):
     @click.command()
     @click.argument("arg")
     def from_bytes(arg):
-        assert isinstance(
-            arg, str
-        ), "UTF-8 encoded argument should be implicitly converted to Unicode"
+        assert isinstance(arg, str), (
+            "UTF-8 encoded argument should be implicitly converted to Unicode"
+        )
 
     # Simulate empty locale environment variables
     monkeypatch.setattr(sys, "getfilesystemencoding", lambda: "utf-8")
@@ -196,19 +205,6 @@ def test_nargs_envvar(runner, nargs, value, expect):
         assert expect in result.exception.format_message()
     else:
         assert result.return_value == expect
-
-
-def test_envvar_flag_value(runner):
-    @click.command()
-    # is_flag is implicitly true
-    @click.option("--upper", flag_value="upper", envvar="UPPER")
-    def cmd(upper):
-        click.echo(upper)
-        return upper
-
-    # For whatever value of the `env` variable, if it exists, the flag should be `upper`
-    result = runner.invoke(cmd, env={"UPPER": "whatever"})
-    assert result.output.strip() == "upper"
 
 
 def test_nargs_envvar_only_if_values_empty(runner):

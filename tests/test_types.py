@@ -226,7 +226,12 @@ def test_path_surrogates(tmp_path, monkeypatch):
 def test_file_surrogates(type, tmp_path):
     path = tmp_path / "\udcff"
 
-    with pytest.raises(click.BadParameter, match="�': No such file or directory"):
+    # - common case: �': No such file or directory
+    # - special case: Illegal byte sequence
+    # The spacial case is seen with rootless Podman. The root cause is most
+    # likely that the path is handled by a user-space program (FUSE).
+    match = r"(�': No such file or directory|Illegal byte sequence)"
+    with pytest.raises(click.BadParameter, match=match):
         type.convert(path, None, None)
 
 
@@ -248,5 +253,5 @@ def test_invalid_path_with_esc_sequence():
 
 def test_choice_get_invalid_choice_message():
     choice = click.Choice(["a", "b", "c"])
-    message = choice.get_invalid_choice_message("d")
+    message = choice.get_invalid_choice_message("d", ctx=None)
     assert message == "'d' is not one of 'a', 'b', 'c'."

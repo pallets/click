@@ -1,13 +1,17 @@
 version: 2
+# Do not specify sphinx key here to be in full control of build steps.
+# https://docs.readthedocs.com/platform/stable/build-customization.html#extend-or-override-the-build-process
+
 build:
-  os: ubuntu-22.04
+  os: ubuntu-24.04
   tools:
-    python: '3.12'
-python:
-  install:
-    - requirements: requirements/docs.txt
-    - method: pip
-      path: .
-sphinx:
-  builder: dirhtml
-  fail_on_warning: true
+    python: '3.13'
+  jobs:
+    install:
+      - echo "Installing dependencies"
+      - asdf plugin add uv
+      - asdf install uv latest
+      - asdf global uv latest
+    build:
+      html:
+        - uv run --group docs sphinx-build -W -b dirhtml docs $READTHEDOCS_OUTPUT/html
