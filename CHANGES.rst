@@ -1,7 +1,6 @@
 .. currentmodule:: click
 
 Version 8.2.x
-
 -------------
 
 Unreleased 
