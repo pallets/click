@@ -552,6 +552,7 @@ def _is_incomplete_option(ctx: Context, args: list[str], param: Parameter) -> bo
 
         if _start_of_option(ctx, arg):
             last_option = arg
+            break
 
     return last_option is not None and last_option in param.opts
 

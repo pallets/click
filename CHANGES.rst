@@ -1,5 +1,12 @@
 .. currentmodule:: click
 
+Version 8.2.x
+-------------
+
+Unreleased
+
+-   show correct auto complete value for nargs option in combination with flag option :issue:`2813`
+
 Version 8.2.2
 -------------
 
