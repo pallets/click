@@ -3,7 +3,7 @@
 Version 8.2.x
 -------------
 
-Unreleased 
+Unreleased
 
 -   show correct auto complete value for nargs option in combination with flag option :issue:`2813`
 
