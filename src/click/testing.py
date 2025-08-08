@@ -5,7 +5,6 @@ import contextlib
 import io
 import os
 import shlex
-import shutil
 import sys
 import tempfile
 import typing as t
@@ -571,6 +570,8 @@ class CliRunner:
             os.chdir(cwd)
 
             if temp_dir is None:
+                import shutil
+
                 try:
                     shutil.rmtree(dt)
                 except OSError:
