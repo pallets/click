@@ -2446,7 +2446,7 @@ class Parameter:
 
         # Normalize unset values to None, as we're about to pass them to the
         # command function.
-        if value is _UNSET:
+        if value is UNSET:
             value = None
 
         if self.expose_value:
@@ -2643,7 +2643,6 @@ class Option(Parameter):
             if self.default is UNSET and not self.required and not self.prompt:
                 if multiple:
                     self.default = ()
-
 
             # Auto-detect the type of the flag based on the flag_value.
             if type is None:
