@@ -386,10 +386,11 @@ Here are the rules used to parse environment variable values for flag options:
    - If the flag option has a `flag_value` argument, passing that value in the environment variable will activate the flag, in addition to all the cases described above
    - Any other value is interpreted as deactivating the flag
 
-.. caution::
-    For boolean flags with a pair of values, the only recognized environment variable is the one provided to the `envvar` argument.
+```{caution}
+For boolean flags with a pair of values, the only recognized environment variable is the one provided to the `envvar` argument.
 
-    So an option defined as `--flag\--no-flag`, with a `envvar="FLAG"` parameter, there is no magical `NO_FLAG=<anything>` variable that is recognized. Only the `FLAG=<anything>` environment variable is recognized.
+So an option defined as `--flag\--no-flag`, with a `envvar="FLAG"` parameter, there is no magical `NO_FLAG=<anything>` variable that is recognized. Only the `FLAG=<anything>` environment variable is recognized.
+```
 
 Once the status of the flag has been determine to be activated or not, the `flag_value` is used as the value of the flag if it is activated. If the flag is not activated, the value of the flag is set to `None` by default.
 

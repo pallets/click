@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import collections.abc as cabc
+import enum
 import os
 import re
 import sys
@@ -27,6 +28,27 @@ if t.TYPE_CHECKING:
     P = te.ParamSpec("P")
 
 R = t.TypeVar("R")
+
+
+class Sentinel(enum.Enum):
+    """Enum used to define sentinel values.
+
+    .. seealso::
+
+        `PEP 661 - Sentinel Values <https://peps.python.org/pep-0661/>`_.
+    """
+
+    UNSET = object()
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}.{self.name}"
+
+
+UNSET = Sentinel.UNSET
+"""A sentinel object used to indicate that a value is not set."""
+
+T_UNSET = t.Literal[Sentinel.UNSET]
+"""Type hint for the :data:`UNSET` sentinel value."""
 
 
 def _posixify(name: str) -> str:

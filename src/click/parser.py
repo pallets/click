@@ -34,12 +34,14 @@ from .exceptions import BadArgumentUsage
 from .exceptions import BadOptionUsage
 from .exceptions import NoSuchOption
 from .exceptions import UsageError
+from .utils import UNSET
 
 if t.TYPE_CHECKING:
     from .core import Argument as CoreArgument
     from .core import Context
     from .core import Option as CoreOption
     from .core import Parameter as CoreParameter
+    from .utils import T_UNSET
 
 V = t.TypeVar("V")
 
@@ -59,7 +61,7 @@ def _unpack_args(
     The nargs specification is the number of arguments that should be consumed
     or `-1` to indicate that this position should eat up all the remainders.
 
-    Missing items are filled with `None`.
+    Missing items are filled with ``UNSET``.
     """
     args = deque(args)
     nargs_spec = deque(nargs_spec)
@@ -73,7 +75,7 @@ def _unpack_args(
             else:
                 return c.pop()
         except IndexError:
-            return None
+            return UNSET
 
     while nargs_spec:
         nargs = _fetch(nargs_spec)
@@ -97,7 +99,7 @@ def _unpack_args(
                 raise TypeError("Cannot have two nargs < 0")
 
             spos = len(rv)
-            rv.append(None)
+            rv.append(UNSET)
 
     # spos is the position of the wildcard (star).  If it's not `None`,
     # we fill it with the remainder.
@@ -187,14 +189,14 @@ class _Argument:
 
     def process(
         self,
-        value: str | cabc.Sequence[str | None] | None,
+        value: str | cabc.Sequence[str | None] | None | T_UNSET,
         state: _ParsingState,
     ) -> None:
         if self.nargs > 1:
-            assert value is not None
-            holes = sum(1 for x in value if x is None)
+            assert value is not UNSET
+            holes = sum(1 for x in value if x is UNSET)
             if holes == len(value):
-                value = None
+                value = UNSET
             elif holes != 0:
                 raise BadArgumentUsage(
                     _("Argument {name!r} takes {nargs} values.").format(
@@ -202,10 +204,9 @@ class _Argument:
                     )
                 )
 
+        # Unset empty tuple so that a value from the environment may be tried.
         if self.nargs == -1 and self.obj.envvar is not None and value == ():
-            # Replace empty tuple with None so that a value from the
-            # environment may be tried.
-            value = None
+            value = UNSET
 
         state.opts[self.dest] = value  # type: ignore
         state.order.append(self.obj)
@@ -384,7 +385,7 @@ class _OptionParser:
             )
 
         else:
-            value = None
+            value = UNSET
 
         option.process(value, state)
 
@@ -414,7 +415,7 @@ class _OptionParser:
                 value = self._get_value_from_state(opt, option, state)
 
             else:
-                value = None
+                value = UNSET
 
             option.process(value, state)
 
