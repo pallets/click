@@ -5,17 +5,12 @@ Version 8.2.x
 
 Unreleased
 
--   show correct auto complete value for nargs option in combination with flag option :issue:`2813`
-Version 8.2.3
--------------
-
-Unreleased
-
 -   Make first-class citizen of user-provided values to ``default`` and
     ``flag_value`` arguments. This allows users to pass in values and have them
     unaltered, by differentiating the absence of value from the value of absence. As
     such `None` is now a valid value. :issue:`3024` :pr:`3030`
--   Show correct auto complete value for nargs option in combination with flag option :issue:`2813`
+-   Show correct auto complete value for ``nargs`` option in combination with flag
+    option :issue:`2813`
 
 Version 8.2.2
 -------------
