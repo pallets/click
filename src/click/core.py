@@ -2967,15 +2967,18 @@ class Option(Parameter):
         """
         assert self.prompt is not None
 
-        # Calculate the default before prompting anything to be stable.
+        # Calculate the default before prompting anything to lock in the value before
+        # attempting any user interaction.
         default = self.get_default(ctx)
-        # If no default is set, use `None` to inform the confirm()/prompt() functions
-        # to reiterate until a valid value is provided by the user.
-        if default is UNSET:
-            default = None
 
         # A boolean flag can use a simplified [y/n] confirmation prompt.
         if self.is_bool_flag:
+            # If the default is UNSET or None, we do not show a default value, which
+            # force the user to provide a value.
+            if default in (UNSET, None):
+                default = None
+            else:
+                default = True if default else False
             return confirm(self.prompt, default)
 
         # If show_default is set to True/False, provide this to `prompt` as well. For
@@ -2986,7 +2989,9 @@ class Option(Parameter):
 
         return prompt(
             self.prompt,
-            default=default,
+            # Use `None` to inform the prompt() function to reiterate until a valid
+            # value is provided by the user if we have no default.
+            default=None if default is UNSET else default,
             type=self.type,
             hide_input=self.hide_input,
             show_choices=self.show_choices,
@@ -2998,8 +3003,8 @@ class Option(Parameter):
     def resolve_envvar_value(self, ctx: Context) -> str | None:
         """:class:`Option` resolves its environment variable the same way as
         :func:`Parameter.resolve_envvar_value`, but it also supports
-        :attr:`Context.auto_envvar_prefix`. If we could not find an environment
-        from the :attr:`envvar` property, we fallback on :attr:`Context.auto_envvar_prefix`
+        :attr:`Context.auto_envvar_prefix`. If we could not find an environment from
+        the :attr:`envvar` property, we fallback on :attr:`Context.auto_envvar_prefix`
         to build dynamiccaly the environment variable name using the
         :python:`{ctx.auto_envvar_prefix}_{self.name.upper()}` template.
         """

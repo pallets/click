@@ -485,3 +485,65 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
     # is False
     result = runner.invoke(cmd, input="my-input", standalone_mode=False)
     assert "my-default-value" not in result.output
+
+
+@pytest.mark.parametrize(
+    ("opt_params", "args", "prompt", "input", "expected"),
+    [
+        # Prompt is allowed and the flag has no default, so it prompts.
+        ({"prompt": True}, [], "[y/N]", "y", True),
+        ({"prompt": True}, [], "[y/N]", "n", False),
+        # Empty input default to False.
+        ({"prompt": True}, [], "[y/N]", "", False),
+        # Changing the default to True, makes the prompt change to [Y/n].
+        ({"prompt": True, "default": True}, [], "[Y/n]", "", True),
+        ({"prompt": True, "default": True}, [], "[Y/n]", "y", True),
+        ({"prompt": True, "default": True}, [], "[Y/n]", "n", False),
+        # False is the default's default, so it prompts with [y/N].
+        ({"prompt": True, "default": False}, [], "[y/N]", "", False),
+        ({"prompt": True, "default": False}, [], "[y/N]", "y", True),
+        ({"prompt": True, "default": False}, [], "[y/N]", "n", False),
+        # Defaulting to None, prompts with [y/n], which makes the user explicitly
+        # choose between True or False.
+        ({"prompt": True, "default": None}, [], "[y/n]", "y", True),
+        ({"prompt": True, "default": None}, [], "[y/n]", "n", False),
+        # Random string default is treated as a truthy value, so it prompts with [Y/n].
+        ({"prompt": True, "default": "foo"}, [], "[Y/n]", "", True),
+        ({"prompt": True, "default": "foo"}, [], "[Y/n]", "y", True),
+        ({"prompt": True, "default": "foo"}, [], "[Y/n]", "n", False),
+        # If the flag is provided to the CLI, no interactive prompt is shown, whatever
+        # the default.
+        ({"prompt": True}, ["--flag"], None, None, True),
+        ({"prompt": True}, ["--no-flag"], None, None, False),
+        ({"prompt": True, "default": None}, ["--flag"], None, None, True),
+        ({"prompt": True, "default": None}, ["--no-flag"], None, None, False),
+        ({"prompt": True, "default": True}, ["--flag"], None, None, True),
+        ({"prompt": True, "default": True}, ["--no-flag"], None, None, False),
+        ({"prompt": True, "default": False}, ["--flag"], None, None, True),
+        ({"prompt": True, "default": False}, ["--no-flag"], None, None, False),
+        ({"prompt": True, "default": "foo"}, ["--flag"], None, None, True),
+        ({"prompt": True, "default": "foo"}, ["--no-flag"], None, None, False),
+    ],
+)
+def test_boolean_flag_prompt(runner, opt_params, args, prompt, input, expected):
+    """Covers concerns raised in issue https://github.com/pallets/click/issues/1992."""
+
+    @click.command()
+    @click.option("--flag/--no-flag", is_flag=True, **opt_params)
+    def cli(flag):
+        click.echo(repr(flag))
+
+    invoke_options = {"standalone_mode": False}
+    if input is not None:
+        invoke_options["input"] = f"{input}\n"
+
+    result = runner.invoke(cli, args, **invoke_options)
+
+    expected_output = ""
+    if prompt:
+        expected_output += f"Flag {prompt}: {input}\n"
+    expected_output += f"{expected!r}\n"
+
+    assert result.output == expected_output
+    assert not result.stderr
+    assert result.exit_code == 0
