@@ -6,6 +6,7 @@ import pytest
 
 import click._termui_impl
 from click._compat import WIN
+from click.exceptions import BadParameter, MissingParameter
 
 
 class FakeClock:
@@ -490,6 +491,9 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
 @pytest.mark.parametrize(
     ("opt_params", "args", "prompt", "input", "expected"),
     [
+        ###
+        ### Test cases with prompt=True explicitly enabled for the flag.
+        ###
         # Prompt is allowed and the flag has no default, so it prompts.
         ({"prompt": True}, [], "[y/N]", "y", True),
         ({"prompt": True}, [], "[y/N]", "n", False),
@@ -511,8 +515,22 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
         ({"prompt": True, "default": "foo"}, [], "[Y/n]", "", True),
         ({"prompt": True, "default": "foo"}, [], "[Y/n]", "y", True),
         ({"prompt": True, "default": "foo"}, [], "[Y/n]", "n", False),
-        # If the flag is provided to the CLI, no interactive prompt is shown, whatever
-        # the default.
+        ###
+        ### Test cases with required=True explicitly enabled for the flag.
+        ###
+        # A required flag just raises an error unless a default is set.
+        ({"required": True}, [], None, None, MissingParameter),
+        ({"required": True, "default": True}, [], None, None, True),
+        ({"required": True, "default": False}, [], None, None, False),
+        ({"required": True, "default": None}, [], None, None, None),
+        ({"required": True, "default": "on"}, [], None, None, True),
+        ({"required": True, "default": "off"}, [], None, None, False),
+        ({"required": True, "default": "foo"}, [], None, None, BadParameter),
+        ###
+        ### Explicitly passing the flag to the CLI bypass any prompt, whatever the
+        ### configuration of the flag.
+        ###
+        # Flag allowing a prompt.
         ({"prompt": True}, ["--flag"], None, None, True),
         ({"prompt": True}, ["--no-flag"], None, None, False),
         ({"prompt": True, "default": None}, ["--flag"], None, None, True),
@@ -523,6 +541,17 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
         ({"prompt": True, "default": False}, ["--no-flag"], None, None, False),
         ({"prompt": True, "default": "foo"}, ["--flag"], None, None, True),
         ({"prompt": True, "default": "foo"}, ["--no-flag"], None, None, False),
+        # Required flag.
+        ({"required": True}, ["--flag"], None, None, True),
+        ({"required": True}, ["--no-flag"], None, None, False),
+        ({"required": True, "default": None}, ["--flag"], None, None, True),
+        ({"required": True, "default": None}, ["--no-flag"], None, None, False),
+        ({"required": True, "default": True}, ["--flag"], None, None, True),
+        ({"required": True, "default": True}, ["--no-flag"], None, None, False),
+        ({"required": True, "default": False}, ["--flag"], None, None, True),
+        ({"required": True, "default": False}, ["--no-flag"], None, None, False),
+        ({"required": True, "default": "foo"}, ["--flag"], None, None, True),
+        ({"required": True, "default": "foo"}, ["--no-flag"], None, None, False),
     ],
 )
 def test_boolean_flag_prompt(runner, opt_params, args, prompt, input, expected):
@@ -535,15 +564,23 @@ def test_boolean_flag_prompt(runner, opt_params, args, prompt, input, expected):
 
     invoke_options = {"standalone_mode": False}
     if input is not None:
+        assert isinstance(input, str)
         invoke_options["input"] = f"{input}\n"
 
     result = runner.invoke(cli, args, **invoke_options)
 
-    expected_output = ""
-    if prompt:
-        expected_output += f"Flag {prompt}: {input}\n"
-    expected_output += f"{expected!r}\n"
+    if expected in (MissingParameter, BadParameter):
+        assert isinstance(result.exception, expected)
+        assert not result.output
+        assert result.exit_code == 1
 
-    assert result.output == expected_output
-    assert not result.stderr
-    assert result.exit_code == 0
+    else:
+        expected_output = ""
+        if prompt is not None:
+            assert isinstance(input, str)
+            expected_output += f"Flag {prompt}: {input}\n"
+        expected_output += f"{expected!r}\n"
+
+        assert result.output == expected_output
+        assert not result.stderr
+        assert result.exit_code == 0
