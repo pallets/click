@@ -2695,9 +2695,6 @@ class Option(Parameter):
             if self.nargs == -1:
                 raise TypeError("nargs=-1 is not supported for options.")
 
-            if self.prompt and self.is_flag and not self.is_bool_flag:
-                raise TypeError("'prompt' is not valid for non-boolean flag.")
-
             if not self.is_bool_flag and self.secondary_opts:
                 raise TypeError("Secondary flag is not valid for non-boolean flag.")
 

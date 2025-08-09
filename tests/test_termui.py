@@ -558,7 +558,7 @@ def test_boolean_flag_prompt(runner, opt_params, args, prompt, input, expected):
     """Covers concerns raised in issue https://github.com/pallets/click/issues/1992."""
 
     @click.command()
-    @click.option("--flag/--no-flag", is_flag=True, **opt_params)
+    @click.option("--flag/--no-flag", **opt_params)
     def cli(flag):
         click.echo(repr(flag))
 
@@ -577,8 +577,222 @@ def test_boolean_flag_prompt(runner, opt_params, args, prompt, input, expected):
     else:
         expected_output = ""
         if prompt is not None:
+            assert isinstance(prompt, str)
+            expected_output += "Flag"
+            if prompt:
+                expected_output += f" {prompt}"
+            expected_output += ": "
             assert isinstance(input, str)
-            expected_output += f"Flag {prompt}: {input}\n"
+            expected_output += f"{input}\n"
+        expected_output += f"{expected!r}\n"
+
+        assert result.output == expected_output
+        assert not result.stderr
+        assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    ("opt_params", "args", "prompt", "input", "expected"),
+    [
+        ###
+        ### Test cases with prompt=True explicitly enabled for the flag.
+        ###
+        # Prompt is allowed and the flag has no default, so it prompts.
+        # But the flag_value is not set, so it defaults to a string.
+        # XXX ({"prompt": True}, [], "", "", ""),
+        ({"prompt": True}, [], "", "y", "y"),
+        ({"prompt": True}, [], "", "n", "n"),
+        ({"prompt": True}, [], "", "foo", "foo"),
+        # This time we provide a boolean flag_value, which makes the flag behave like
+        # a boolean flag, and use the appropriate variation of [y/n].
+        ({"prompt": True, "flag_value": True}, [], "[y/N]", "", False),
+        ({"prompt": True, "flag_value": True}, [], "[y/N]", "y", True),
+        ({"prompt": True, "flag_value": True}, [], "[y/N]", "n", False),
+        ({"prompt": True, "flag_value": False}, [], "[y/N]", "", False),
+        ({"prompt": True, "flag_value": False}, [], "[y/N]", "y", True),
+        ({"prompt": True, "flag_value": False}, [], "[y/N]", "n", False),
+        # Other flag values changes the auto-detection of the flag type.
+        # XXX ({"prompt": True, "flag_value": None}, [], "", "", ""),
+        ({"prompt": True, "flag_value": None}, [], "", "y", "y"),
+        ({"prompt": True, "flag_value": None}, [], "", "n", "n"),
+        # XXX ({"prompt": True, "flag_value": "foo"}, [], "", "", ""),
+        ({"prompt": True, "flag_value": "foo"}, [], "", "y", "y"),
+        ({"prompt": True, "flag_value": "foo"}, [], "", "n", "n"),
+        ###
+        ### Test cases with a flag_value and a default.
+        ###
+        # default=True
+        ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "", True),
+        ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "y", True),
+        (
+            {"prompt": True, "default": True, "flag_value": True},
+            [],
+            "[Y/n]",
+            "n",
+            False,
+        ),
+        (
+            {"prompt": True, "default": True, "flag_value": False},
+            [],
+            "[Y/n]",
+            "",
+            True,
+        ),
+        (
+            {"prompt": True, "default": True, "flag_value": False},
+            [],
+            "[Y/n]",
+            "y",
+            True,
+        ),
+        (
+            {"prompt": True, "default": True, "flag_value": False},
+            [],
+            "[Y/n]",
+            "n",
+            False,
+        ),
+        # default=False
+        (
+            {"prompt": True, "default": False, "flag_value": True},
+            [],
+            "[y/N]",
+            "",
+            False,
+        ),
+        (
+            {"prompt": True, "default": False, "flag_value": True},
+            [],
+            "[y/N]",
+            "y",
+            True,
+        ),
+        (
+            {"prompt": True, "default": False, "flag_value": True},
+            [],
+            "[y/N]",
+            "n",
+            False,
+        ),
+        (
+            {"prompt": True, "default": False, "flag_value": False},
+            [],
+            "[y/N]",
+            "",
+            False,
+        ),
+        (
+            {"prompt": True, "default": False, "flag_value": False},
+            [],
+            "[y/N]",
+            "y",
+            True,
+        ),
+        (
+            {"prompt": True, "default": False, "flag_value": False},
+            [],
+            "[y/N]",
+            "n",
+            False,
+        ),
+        # default=None
+        # XXX ({"prompt": True, "default": None, "flag_value": True}, [], "[y/n]", "", False),
+        ({"prompt": True, "default": None, "flag_value": True}, [], "[y/n]", "y", True),
+        (
+            {"prompt": True, "default": None, "flag_value": True},
+            [],
+            "[y/n]",
+            "n",
+            False,
+        ),
+        # XXX (
+        #     {"prompt": True, "default": None, "flag_value": False},
+        #     [],
+        #     "[y/n]",
+        #     "",
+        #     False,
+        # ),
+        (
+            {"prompt": True, "default": None, "flag_value": False},
+            [],
+            "[y/n]",
+            "y",
+            True,
+        ),
+        (
+            {"prompt": True, "default": None, "flag_value": False},
+            [],
+            "[y/n]",
+            "n",
+            False,
+        ),
+        # If the flag_value is None, the flag behave like a string flag, whatever the
+        # default is.
+        (
+            {"prompt": True, "default": True, "flag_value": None},
+            [],
+            "[True]",
+            "",
+            "True",
+        ),
+        ({"prompt": True, "default": True, "flag_value": None}, [], "[True]", "y", "y"),
+        ({"prompt": True, "default": True, "flag_value": None}, [], "[True]", "n", "n"),
+        (
+            {"prompt": True, "default": False, "flag_value": None},
+            [],
+            "[False]",
+            "",
+            "False",
+        ),
+        (
+            {"prompt": True, "default": False, "flag_value": None},
+            [],
+            "[False]",
+            "y",
+            "y",
+        ),
+        (
+            {"prompt": True, "default": False, "flag_value": None},
+            [],
+            "[False]",
+            "n",
+            "n",
+        ),
+        # XXX ({"prompt": True, "default": None, "flag_value": None}, [], "", "", "False"),
+        ({"prompt": True, "default": None, "flag_value": None}, [], "", "y", "y"),
+        ({"prompt": True, "default": None, "flag_value": None}, [], "", "n", "n"),
+    ],
+)
+def test_flag_value_prompt(runner, opt_params, args, prompt, input, expected):
+    """Covers concerns raised in issue https://github.com/pallets/click/issues/1992."""
+
+    @click.command()
+    @click.option("--flag", **opt_params)
+    def cli(flag):
+        click.echo(repr(flag))
+
+    invoke_options = {"standalone_mode": False}
+    if input is not None:
+        assert isinstance(input, str)
+        invoke_options["input"] = f"{input}\n"
+
+    result = runner.invoke(cli, args, **invoke_options)
+
+    if expected in (MissingParameter, BadParameter):
+        assert isinstance(result.exception, expected)
+        assert not result.output
+        assert result.exit_code == 1
+
+    else:
+        expected_output = ""
+        if prompt is not None:
+            assert isinstance(prompt, str)
+            expected_output += "Flag"
+            if prompt:
+                expected_output += f" {prompt}"
+            expected_output += ": "
+            assert isinstance(input, str)
+            expected_output += f"{input}\n"
         expected_output += f"{expected!r}\n"
 
         assert result.output == expected_output
