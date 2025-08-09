@@ -2973,12 +2973,12 @@ class Option(Parameter):
 
         # A boolean flag can use a simplified [y/n] confirmation prompt.
         if self.is_bool_flag:
-            # If the default is UNSET or None, we do not show a default value, which
-            # force the user to provide a value.
+            # If we have no boolean default, we force the user to explicitly provide
+            # one.
             if default in (UNSET, None):
                 default = None
             else:
-                default = True if default else False
+                default = bool(default)
             return confirm(self.prompt, default)
 
         # If show_default is set to True/False, provide this to `prompt` as well. For
