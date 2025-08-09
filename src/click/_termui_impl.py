@@ -429,8 +429,9 @@ def _pipepager(
     cmd_filepath = shutil.which(cmd)
     if not cmd_filepath:
         return False
-    # Resolves symlinks and produces a normalized absolute path string.
-    cmd_path = Path(cmd_filepath).resolve()
+
+    # Produces a normalized absolute path string.
+    cmd_path = Path(cmd_filepath).absolute()
     cmd_name = cmd_path.name
 
     import subprocess
