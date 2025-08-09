@@ -41,6 +41,7 @@ if t.TYPE_CHECKING:
     from .core import Context
     from .core import Option as CoreOption
     from .core import Parameter as CoreParameter
+    from .utils import T_UNSET
 
 V = t.TypeVar("V")
 
@@ -188,7 +189,7 @@ class _Argument:
 
     def process(
         self,
-        value: str | cabc.Sequence[str | None] | None | type[UNSET],
+        value: str | cabc.Sequence[str | None] | None | T_UNSET,
         state: _ParsingState,
     ) -> None:
         if self.nargs > 1:

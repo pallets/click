@@ -23,8 +23,6 @@ from ._compat import WIN
 from .globals import resolve_color_default
 
 if t.TYPE_CHECKING:
-    from typing import Final
-
     import typing_extensions as te
 
     P = te.ParamSpec("P")
@@ -46,8 +44,11 @@ class Sentinel(enum.Enum):
         return f"{self.__class__.__name__}.{self.name}"
 
 
-UNSET: Final = Sentinel.UNSET
+UNSET = Sentinel.UNSET
 """A sentinel object used to indicate that a value is not set."""
+
+T_UNSET = t.Literal[Sentinel.UNSET]
+"""Type hint for the :data:`UNSET` sentinel value."""
 
 
 def _posixify(name: str) -> str:
