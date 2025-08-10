@@ -5,7 +5,6 @@ import contextlib
 import io
 import os
 import shlex
-import shutil
 import sys
 import tempfile
 import typing as t
@@ -98,6 +97,18 @@ class StreamMixer:
         self.output: io.BytesIO = io.BytesIO()
         self.stdout: io.BytesIO = BytesIOCopy(copy_to=self.output)
         self.stderr: io.BytesIO = BytesIOCopy(copy_to=self.output)
+
+    def __del__(self) -> None:
+        """
+        Guarantee that embedded file-like objects are closed in a
+        predictable order, protecting against races between
+        self.output being closed and other streams being flushed on close
+
+        .. versionadded:: 8.2.2
+        """
+        self.stderr.close()
+        self.stdout.close()
+        self.output.close()
 
 
 class _NamedTextIOWrapper(io.TextIOWrapper):
@@ -559,6 +570,8 @@ class CliRunner:
             os.chdir(cwd)
 
             if temp_dir is None:
+                import shutil
+
                 try:
                     shutil.rmtree(dt)
                 except OSError:

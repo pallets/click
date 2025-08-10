@@ -1,5 +1,32 @@
 .. currentmodule:: click
 
+Version 8.2.x
+-------------
+
+Unreleased
+
+-   show correct auto complete value for nargs option in combination with flag option :issue:`2813`
+
+Version 8.2.2
+-------------
+
+Released 2025-07-31
+
+-   Fix reconciliation of `default`, `flag_value` and `type` parameters for
+    flag options, as well as parsing and normalization of environment variables.
+    :issue:`2952` :pr:`2956`
+-   Fix typing issue in ``BadParameter`` and ``MissingParameter`` exceptions for the
+    parameter ``param_hint`` that did not allow for a sequence of string where the
+    underlying functino ``_join_param_hints`` allows for it. :issue:`2777` :pr:`2990`
+-   Use the value of ``Enum`` choices to render their default value in help
+    screen. Refs :issue:`2911` :pr:`3004`
+-   Fix completion for the Z shell (``zsh``) for completion items containing
+    colons. :issue:`2703` :pr:`2846`
+-   Don't include envvar in error hint when not configured. :issue:`2971` :pr:`2972`
+-   Fix a rare race in ``click.testing.StreamMixer``'s finalization that manifested
+    as a ``ValueError`` on close in a multi-threaded test session.
+    :issue:`2993` :pr:`2991`
+
 Version 8.2.1
 -------------
 
