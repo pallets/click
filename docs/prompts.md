@@ -73,19 +73,15 @@ off, see {ref}`optional-value`.
 To manually ask for user input, you can use the {func}`prompt` function. By default, it accepts any Unicode string, but
 you can ask for any other type. For instance, you can ask for a valid integer:
 
-```{eval-rst}
-.. click:example::
-
-    value = click.prompt('Please enter a valid integer', type=int)
+```python
+value = click.prompt('Please enter a valid integer', type=int)
 ```
 
 Additionally, the type will be determined automatically if a default value is provided. For instance, the following will
 only accept floats:
 
-```{eval-rst}
-.. click:example::
-
-    value = click.prompt('Please enter a number', default=42.0)
+```python
+value = click.prompt('Please enter a number', default=42.0)
 ```
 
 ## Optional Prompts
@@ -116,20 +112,16 @@ given.
 To ask if a user wants to continue with an action, the {func}`confirm` function comes in handy. By default, it returns
 the result of the prompt as a boolean value:
 
-```{eval-rst}
-.. click:example::
-
-    if click.confirm('Do you want to continue?'):
-        click.echo('Well done!')
+```python
+if click.confirm('Do you want to continue?'):
+    click.echo('Well done!')
 ```
 
 There is also the option to make the function automatically abort the execution of the program if it does not return
 `True`:
 
-```{eval-rst}
-.. click:example::
-
-    click.confirm('Do you want to continue?', abort=True)
+```python
+click.confirm('Do you want to continue?', abort=True)
 ```
 
 ## Dynamic Defaults for Prompts
