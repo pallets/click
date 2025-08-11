@@ -470,7 +470,7 @@ def test_context_settings(runner):
     assert result.output == "plain,a\nplain,b\n"
 
 
-@pytest.mark.parametrize(("value", "expect"), [(False, ["Au", "al"]), (True, ["al"])])
+@pytest.mark.parametrize(("value", "expect"), [(False, ["au", "al"]), (True, ["al"])])
 def test_choice_case_sensitive(value, expect):
     cli = Command(
         "cli",
