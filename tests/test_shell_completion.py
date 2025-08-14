@@ -1,3 +1,4 @@
+import enum
 import textwrap
 import warnings
 from collections.abc import Mapping
@@ -141,6 +142,18 @@ def test_argument_default():
 
 def test_type_choice():
     cli = Command("cli", params=[Option(["-c"], type=Choice(["a1", "a2", "b"]))])
+    assert _get_words(cli, ["-c"], "") == ["a1", "a2", "b"]
+    assert _get_words(cli, ["-c"], "a") == ["a1", "a2"]
+    assert _get_words(cli, ["-c"], "a2") == ["a2"]
+
+
+def test_type_enum_choice():
+    class MyEnum(enum.Enum):
+        a1 = enum.auto()
+        a2 = enum.auto()
+        b = enum.auto()
+
+    cli = Command("cli", params=[Option(["-c"], type=Choice(MyEnum))])
     assert _get_words(cli, ["-c"], "") == ["a1", "a2", "b"]
     assert _get_words(cli, ["-c"], "a") == ["a1", "a2"]
     assert _get_words(cli, ["-c"], "a2") == ["a2"]
@@ -457,7 +470,7 @@ def test_context_settings(runner):
     assert result.output == "plain,a\nplain,b\n"
 
 
-@pytest.mark.parametrize(("value", "expect"), [(False, ["Au", "al"]), (True, ["al"])])
+@pytest.mark.parametrize(("value", "expect"), [(False, ["au", "al"]), (True, ["al"])])
 def test_choice_case_sensitive(value, expect):
     cli = Command(
         "cli",
