@@ -7,6 +7,7 @@ from itertools import chain
 import pytest
 
 import click
+from click._utils import UNSET
 
 
 def test_basic_functionality(runner):
@@ -205,18 +206,28 @@ def test_float_option(runner, args, expect):
         assert result.exception is None
 
 
-@pytest.mark.parametrize("default", [True, False])
 @pytest.mark.parametrize(
-    ("args", "expect"), [(["--on"], True), (["--off"], False), ([], None)]
+    ("args", "default", "expect"),
+    [
+        (["--on"], True, True),
+        (["--on"], False, True),
+        (["--on"], None, True),
+        (["--on"], UNSET, True),
+        (["--off"], True, False),
+        (["--off"], False, False),
+        (["--off"], None, False),
+        (["--off"], UNSET, False),
+        ([], True, True),
+        ([], False, False),
+        ([], None, None),
+        ([], UNSET, False),
+    ],
 )
-def test_boolean_switch(runner, default, args, expect):
+def test_boolean_switch(runner, args, default, expect):
     @click.command()
     @click.option("--on/--off", default=default)
     def cli(on):
         return on
-
-    if expect is None:
-        expect = default
 
     result = runner.invoke(cli, args, standalone_mode=False)
     assert result.return_value is expect
@@ -229,6 +240,10 @@ def test_boolean_switch(runner, default, args, expect):
         (True, [], True),
         (False, ["--f"], True),
         (False, [], False),
+        # Boolean flags have a 3-states logic.
+        # See: https://github.com/pallets/click/issues/3024#issue-3285556668
+        (None, ["--f"], True),
+        (None, [], None),
     ),
 )
 def test_boolean_flag(runner, default, args, expect):
@@ -259,6 +274,27 @@ def test_boolean_conversion(runner, value, expect):
 
     result = runner.invoke(cli, ["--flag", value.title()])
     assert result.output == expect
+
+
+@pytest.mark.parametrize(
+    ("default", "args", "expect"),
+    (
+        # See: https://github.com/pallets/click/issues/3024#issuecomment-3146199461
+        (True, ["--upper"], "upper"),
+        (True, ["--lower"], "lower"),
+        (True, [], "True"),
+        ("upper", [], "upper"),
+    ),
+)
+def test_flag_value(runner, default, args, expect):
+    @click.command()
+    @click.option("--upper", "transformation", flag_value="upper", default=default)
+    @click.option("--lower", "transformation", flag_value="lower")
+    def cli(transformation):
+        click.echo(repr(transformation), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.output == repr(expect)
 
 
 def test_file_option(runner):
@@ -475,15 +511,25 @@ def test_choice_argument_none(runner):
     )
     def cli(method: str | None):
         assert isinstance(method, str) or method is None
-        click.echo(method)
+        click.echo(repr(method), nl=False)
 
     result = runner.invoke(cli, ["not-none"])
     assert not result.exception
-    assert result.output == "not-none\n"
+    assert result.output == repr("not-none")
 
-    # None is not yet supported.
     result = runner.invoke(cli, ["none"])
+    assert not result.exception
+    assert result.output == repr(None)
+
+    result = runner.invoke(cli, [])
     assert result.exception
+    assert (
+        "Error: Missing argument '{not-none|none}'. "
+        "Choose from:\n\tnot-none,\n\tnone\n" in result.stderr
+    )
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.output.startswith("Usage: cli [OPTIONS] {not-none|none}\n")
 
 
 def test_datetime_option_default(runner):

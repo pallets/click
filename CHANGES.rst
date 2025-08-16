@@ -5,19 +5,31 @@ Version 8.2.x
 
 Unreleased
 
--   show correct auto complete value for nargs option in combination with flag option :issue:`2813`
+-   Rework flag value passing by disentangling use of ``default``. Formerly defaults
+    for ``flag_value`` were set by passing ``default=True``, now set by passing
+    ``default=<desired_value>``. This change breaks all default settings for flag value
+    type flags. In all other places in code, ``default`` takes on the default value.
+    Fixing this inconsistency allows the fixing of the linked issues and supports a
+    more consistent API.  :issue:`1992` :issue:`2012`` :issue:`2514` :issue:`2610`
+    :issue:`3024` :pr:`3030`
+-   Custom ``callback`` function are now allowed to receive the ``UNSET`` sentinel
+    value.  :pr:`3030`
+-   Allow ``default`` to be set on ``Argument`` for ``nargs = -1``. :issue:`2164`
+    :pr:`3030`
+-   Show correct auto complete value for ``nargs`` option in combination with flag
+    option :issue:`2813`
 
 Version 8.2.2
 -------------
 
 Released 2025-07-31
 
--   Fix reconciliation of `default`, `flag_value` and `type` parameters for
+-   Fix reconciliation of ``default``, ``flag_value`` and ``type`` parameters for
     flag options, as well as parsing and normalization of environment variables.
     :issue:`2952` :pr:`2956`
 -   Fix typing issue in ``BadParameter`` and ``MissingParameter`` exceptions for the
     parameter ``param_hint`` that did not allow for a sequence of string where the
-    underlying functino ``_join_param_hints`` allows for it. :issue:`2777` :pr:`2990`
+    underlying function ``_join_param_hints`` allows for it. :issue:`2777` :pr:`2990`
 -   Use the value of ``Enum`` choices to render their default value in help
     screen. Refs :issue:`2911` :pr:`3004`
 -   Fix completion for the Z shell (``zsh``) for completion items containing

@@ -220,6 +220,8 @@ def confirm(
     .. versionadded:: 4.0
         Added the ``err`` parameter.
     """
+    assert default in (True, False, None), "default must be True, False, or None"
+
     prompt = _build_prompt(
         text,
         prompt_suffix,
