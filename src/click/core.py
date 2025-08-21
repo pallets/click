@@ -2250,8 +2250,10 @@ class Parameter:
 
         If no value is found, an internal sentinel value is returned.
         """
-        # If the value is set, it means the parser produced a value from user input.
+        # Collect from the parse the value passed by the user to the CLI.
         value = opts.get(self.name, UNSET)  # type: ignore
+        # If the value is set, it means it was sourced from the command line by the
+        # parser, otherwise it left unset by default.
         source = (
             ParameterSource.COMMANDLINE
             if value is not UNSET
