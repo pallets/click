@@ -2281,7 +2281,7 @@ class Parameter:
         return value, source
 
     def type_cast_value(self, ctx: Context, value: t.Any) -> t.Any:
-        """Convert and validate a value against the option's
+        """Convert and validate a value against the parameter's
         :attr:`type`, :attr:`multiple`, and :attr:`nargs`.
         """
         if value in (None, UNSET):
