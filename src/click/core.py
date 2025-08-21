@@ -2017,9 +2017,8 @@ class Parameter:
                      should not be set for arguments or it will inverse the
                      order of processing.
     :param envvar: environment variable(s) that are used to provide a default value for
-                   this parameter. This can be a string or a sequence of strings. If a
-                   sequence is given, only the first non-empty environment variable is
-                   used for the parameter.
+        this parameter. This can be a string or a sequence of strings. If a sequence is
+        given, only the first non-empty environment variable is used for the parameter.
     :param shell_complete: A function that returns custom shell
         completions. Used instead of the param's type completion if
         given. Takes ``ctx, param, incomplete`` and must return a list
