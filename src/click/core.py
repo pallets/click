@@ -2556,7 +2556,7 @@ class Option(Parameter):
     :param flag_value: which value should be used for this flag if it's
                        enabled.  This is set to a boolean automatically if
                        the option string contains a slash to mark two options.
-    :param multiple: if this is set to ``True`` then the argument is accepted
+    :param multiple: if this is set to `True` then the argument is accepted
                      multiple times and recorded.  This is similar to ``nargs``
                      in how it works but supports arbitrary number of
                      arguments.
