@@ -187,7 +187,7 @@ class Context:
                       the name of the script.
     :param obj: an arbitrary object of user data.
     :param auto_envvar_prefix: the prefix to use for automatic environment
-                               variables.  If this is ``None`` then reading
+                               variables.  If this is `None` then reading
                                from environment variables is disabled.  This
                                does not affect manually set environment
                                variables which are always read.
@@ -210,11 +210,11 @@ class Context:
                               invocation.  Default values will also be
                               ignored.  This is useful for implementing
                               things such as completion support.
-    :param allow_extra_args: if this is set to ``True`` then extra arguments
+    :param allow_extra_args: if this is set to `True` then extra arguments
                              at the end will not raise an error and will be
                              kept on the context.  The default is to inherit
                              from the command.
-    :param allow_interspersed_args: if this is set to ``False`` then options
+    :param allow_interspersed_args: if this is set to `False` then options
                                     and arguments cannot be mixed.  The
                                     default is to inherit from the command.
     :param ignore_unknown_options: instructs click to ignore options it does
@@ -289,7 +289,7 @@ class Context:
         color: bool | None = None,
         show_default: bool | None = None,
     ) -> None:
-        #: the parent context or ``None`` if none exists.
+        #: the parent context or `None` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
         self.command = command
@@ -494,7 +494,7 @@ class Context:
         """This helper method can be used with the context object to promote
         it to the current thread local (see :func:`get_current_context`).
         The default behavior of this is to invoke the cleanup functions which
-        can be disabled by setting `cleanup` to ``False``.  The cleanup
+        can be disabled by setting `cleanup` to `False`.  The cleanup
         functions are typically used for things such as closing file handles.
 
         If the cleanup is intended the context object can also be directly
@@ -931,7 +931,7 @@ class Command:
         self.context_settings: cabc.MutableMapping[str, t.Any] = context_settings
 
         #: the callback to execute when the command fires.  This might be
-        #: ``None`` in which case nothing happens.
+        #: `None` in which case nothing happens.
         self.callback = callback
         #: the list of parameters for this command in the order they
         #: should show up in the help page and execute.  Eager parameters
@@ -1324,7 +1324,7 @@ class Command:
                                 handle exceptions and convert them into
                                 error messages and the function will never
                                 return but shut down the interpreter.  If
-                                this is set to ``False`` they will be
+                                this is set to `False` they will be
                                 propagated to the caller and the return
                                 value of this function is the return value
                                 of :meth:`invoke`.
@@ -1368,7 +1368,7 @@ class Command:
                     # note that `rv` may actually contain data like "1" which
                     # has obvious effects
                     # more subtle case: `rv=[None, None]` can come out of
-                    # chained commands which all returned ``None`` -- so it's not
+                    # chained commands which all returned `None` -- so it's not
                     # even always obvious that `rv` indicates success/failure
                     # by its truthiness/falsiness
                     ctx.exit()
@@ -1708,7 +1708,7 @@ class Group(Command):
             def process_result(result, input):
                 return result + input
 
-        :param replace: if set to ``True`` an already existing result
+        :param replace: if set to `True` an already existing result
                         callback will be removed.
 
         .. versionchanged:: 8.0
@@ -2010,7 +2010,7 @@ class Parameter:
                   the arity of the tuple). If ``nargs=-1``, all remaining
                   parameters are collected.
     :param metavar: how the value is represented in the help page.
-    :param expose_value: if this is ``True`` then the value is passed onwards
+    :param expose_value: if this is `True` then the value is passed onwards
                          to the command callback and stored on the context,
                          otherwise it's skipped.
     :param is_eager: eager values are processed before non eager ones.  This
