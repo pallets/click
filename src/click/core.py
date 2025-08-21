@@ -2146,10 +2146,6 @@ class Parameter:
         .. versionchanged:: 8.3.0
             Returns ``None`` for the :attr:`default` if it is :attr:`UNSET`.
 
-            We explicitly hide the :attr:`UNSET` value to the user, as we choose to
-            make it an implementation detail. And because ``to_info_dict`` has been
-            designed for documentation purposes, we return ``None`` instead.
-
         .. versionadded:: 8.0
         """
         return {
@@ -2161,6 +2157,9 @@ class Parameter:
             "required": self.required,
             "nargs": self.nargs,
             "multiple": self.multiple,
+            # We explicitly hide the :attr:`UNSET` value to the user, as we choose to
+            # make it an implementation detail. And because ``to_info_dict`` has been
+            # designed for documentation purposes, we return ``None`` instead.
             "default": self.default if self.default is not UNSET else None,
             "envvar": self.envvar,
         }
@@ -2747,16 +2746,15 @@ class Option(Parameter):
         """
         .. versionchanged:: 8.3.0
             Returns ``None`` for the :attr:`flag_value` if it is :attr:`UNSET`.
-
-            We explicitly hide the :attr:`UNSET` value to the user, as we choose to
-            make it an implementation detail. And because ``to_info_dict`` has been
-            designed for documentation purposes, we return ``None`` instead.
         """
         info_dict = super().to_info_dict()
         info_dict.update(
             help=self.help,
             prompt=self.prompt,
             is_flag=self.is_flag,
+            # We explicitly hide the :attr:`UNSET` value to the user, as we choose to
+            # make it an implementation detail. And because ``to_info_dict`` has been
+            # designed for documentation purposes, we return ``None`` instead.
             flag_value=self.flag_value if self.flag_value is not UNSET else None,
             count=self.count,
             hidden=self.hidden,
