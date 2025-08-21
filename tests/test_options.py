@@ -1913,7 +1913,7 @@ class Class2:
         ({"type": str, "flag_value": 1, "default": True}, [], "True"),
         ({"type": str, "flag_value": "1", "default": True}, [], "True"),
         ({"type": str, "flag_value": EngineType.OSS, "default": True}, [], "True"),
-        # But having the flag value set to integer is automaticcally recognized by click.
+        # But having the flag value set to integer is automaticcally recognized by Click.
         ({"flag_value": 1, "default": True}, [], 1),
         ({"type": int, "flag_value": 1, "default": True}, [], 1),
         ({"type": int, "flag_value": "1", "default": True}, [], 1),
@@ -1942,9 +1942,8 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
 @pytest.mark.parametrize(
     ("opt1_params", "opt2_params", "args", "expected"),
     [
-        ###
-        ### Reproduces https://github.com/pallets/click/issues/3024#issuecomment-3146508536
-        ###
+        # Dual options sharing the same variable name, are not competitive, and the
+        # flag value is returned as-is. Especially when the type is force to be unprocessed.
         (
             {"flag_value": EngineType.OSS, "type": UNPROCESSED},
             {"flag_value": EngineType.PRO, "type": UNPROCESSED},
@@ -1963,10 +1962,8 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
             ["--opt2"],
             EngineType.PRO,
         ),
-        ###
-        ### Reproduces https://github.com/pallets/click/issues/2012#issue-946471049
-        ###
-        # Default type fallback to string.
+        # Check that passing exotic flag values like classes is supported, but are rendered to strings
+        # when the type is not specified.
         ({"flag_value": Class1, "default": True}, {"flag_value": Class2}, [], "True"),
         (
             {"flag_value": Class1, "default": True},
@@ -2004,7 +2001,7 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
         ),
         # Setting the default to a class, an instance of the class is returned instead
         # of the class itself, because the default is allowed to be callable (and
-        # consummd). And this what happens the type is.
+        # consummd). And this happens whatever the type is.
         (
             {"flag_value": Class1, "default": Class1},
             {"flag_value": Class2},
@@ -2029,9 +2026,7 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
             [],
             re.compile(r"<test_options.Class2 object at 0x[0-9A-Fa-f]+>"),
         ),
-        ###
-        ### Reproduces https://github.com/pallets/click/issues/2012#issuecomment-892437060
-        ###
+        # Having the flag value set to integer is automaticcally recognized by Click.
         (
             {"flag_value": 1, "default": True},
             {"flag_value": "1"},
@@ -2049,6 +2044,15 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
 def test_custom_type_flag_value_dual_options(
     runner, opt1_params, opt2_params, args, expected
 ):
+    """Test how flag values are processed with dual options competing for the same
+    variable name.
+
+    Reproduce issues reported in:
+    https://github.com/pallets/click/issues/3024#issuecomment-3146508536
+    https://github.com/pallets/click/issues/2012#issue-946471049
+    https://github.com/pallets/click/issues/2012#issuecomment-892437060
+    """
+
     @click.command()
     @click.option("--opt1", "dual_option", **opt1_params)
     @click.option("--opt2", "dual_option", **opt2_params)
