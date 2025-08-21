@@ -2407,11 +2407,11 @@ class Parameter:
 
         envvars = [self.envvar] if isinstance(self.envvar, str) else self.envvar
         for envvar in envvars:
-            raw_value = os.environ.get(envvar)
+            rv = os.environ.get(envvar)
 
             # Return the first non-empty value of the list of environment variables.
-            if raw_value:
-                return raw_value
+            if rv:
+                return rv
             # Else, absence of value is interpreted as an environment variable that is
             # not set, so proceed to the next one.
 
@@ -2424,12 +2424,12 @@ class Parameter:
         parameter is expecting multiple values (i.e. its :attr:`nargs` property is set
         to a value other than ``1``).
         """
-        raw_value = self.resolve_envvar_value(ctx)
+        rv = self.resolve_envvar_value(ctx)
 
-        if raw_value is not None and self.nargs != 1:
-            return self.type.split_envvar_value(raw_value)
+        if rv is not None and self.nargs != 1:
+            return self.type.split_envvar_value(rv)
 
-        return raw_value
+        return rv
 
     def handle_parse_result(
         self, ctx: Context, opts: cabc.Mapping[str, t.Any], args: list[str]
@@ -3036,10 +3036,10 @@ class Option(Parameter):
         to build dynamiccaly the environment variable name using the
         :python:`{ctx.auto_envvar_prefix}_{self.name.upper()}` template.
         """
-        raw_value = super().resolve_envvar_value(ctx)
+        rv = super().resolve_envvar_value(ctx)
 
-        if raw_value is not None:
-            return raw_value
+        if rv is not None:
+            return rv
 
         if (
             self.allow_from_autoenv
@@ -3047,11 +3047,11 @@ class Option(Parameter):
             and self.name is not None
         ):
             envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
-            raw_value = os.environ.get(envvar)
+            rv = os.environ.get(envvar)
 
             # Return the first non-empty value of the list of environment variables.
-            if raw_value:
-                return raw_value
+            if rv:
+                return rv
             # Else, absence of value is interpreted as an environment variable that is
             # not set, so proceed to the next one.
 
@@ -3069,10 +3069,10 @@ class Option(Parameter):
         This method also takes care of repeated options (i.e. options with
         :attr:`multiple` set to ``True``).
         """
-        raw_value = self.resolve_envvar_value(ctx)
+        rv = self.resolve_envvar_value(ctx)
 
         # Absent environment variable or an empty string is interpreted as unset.
-        if raw_value is None:
+        if rv is None:
             return None
 
         # Non-boolean flags are more liberal in what they accept. But a flag being a
@@ -3081,22 +3081,22 @@ class Option(Parameter):
         if self.is_flag and not self.is_bool_flag:
             # If the flag_value is set and match the envvar value, return it
             # directly.
-            if self.flag_value is not UNSET and raw_value == self.flag_value:
+            if self.flag_value is not UNSET and rv == self.flag_value:
                 return self.flag_value
             # Analyze the envvar value as a boolean to know if the flag is
             # activated or not.
-            return types.BoolParamType.str_to_bool(raw_value)
+            return types.BoolParamType.str_to_bool(rv)
 
         # Split the envvar value if it is allowed to be repeated.
         value_depth = (self.nargs != 1) + bool(self.multiple)
         if value_depth > 0:
-            multi_rv = self.type.split_envvar_value(raw_value)
+            multi_rv = self.type.split_envvar_value(rv)
             if self.multiple and self.nargs != 1:
                 multi_rv = batch(multi_rv, self.nargs)  # type: ignore[assignment]
 
             return multi_rv
 
-        return raw_value
+        return rv
 
     def consume_value(
         self, ctx: Context, opts: cabc.Mapping[str, Parameter]
