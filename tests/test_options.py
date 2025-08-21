@@ -1478,7 +1478,7 @@ def test_default_dual_option_callback(runner, default, args, expected):
         ("bar", "t", "bar"),
         ("bar", "y", "bar"),
         # Deactivating the flag with a value recognized as False by the envvar, which
-        # explicitly return the 'False' as the option is explicitely declared as a
+        # explicitly return the 'False' as the option is explicitly declared as a
         # string.
         ("bar", "False", "False"),
         ("bar", "false", "False"),
@@ -1490,7 +1490,7 @@ def test_default_dual_option_callback(runner, default, args, expected):
         ("bar", "f", "False"),
         ("bar", "n", "False"),
         # Any other value than the flag_value, or a recogned True or False value, fails
-        # to explicitely activate or deactivate the flag. So the flag default value is
+        # to explicitly activate or deactivate the flag. So the flag default value is
         # returned, which is None in this case.
         ("bar", " bar ", None),
         ("bar", "BAR", None),
