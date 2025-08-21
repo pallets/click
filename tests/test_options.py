@@ -2,6 +2,7 @@ import enum
 import os
 import re
 import sys
+import tempfile
 
 if sys.version_info < (3, 11):
     enum.StrEnum = enum.Enum  # type: ignore[assignment]
@@ -1364,35 +1365,56 @@ def test_invalid_flag_definition(runner, args, opts):
 
 @pytest.mark.parametrize(
     ("default", "args", "expected"),
-    [
-        (None, [], "A real None"),
-        (UNSET, [], "A real UNSET"),
-        ("random", [], "random"),
+    # These test cases are similar to the ones in
+    # tests/test_basic.py::test_flag_value_dual_options, so keep them in sync.
+    (
+        # Each option is returning its own flag_value, whatever the default is.
+        (True, ["--js"], "js"),
+        (True, ["--xml"], "xml"),
+        (False, ["--js"], "js"),
+        (False, ["--xml"], "xml"),
         (None, ["--js"], "js"),
         (None, ["--xml"], "xml"),
-    ],
+        (UNSET, ["--js"], "js"),
+        (UNSET, ["--xml"], "xml"),
+        # Check that the last option wins when both are specified.
+        (True, ["--js", "--xml"], "xml"),
+        (True, ["--xml", "--js"], "js"),
+        # Check that the default is returned as-is when no option is specified.
+        ("js", [], "js"),
+        ("xml", [], "xml"),
+        ("jS", [], "jS"),
+        ("xMl", [], "xMl"),
+        (" ᕕ( ᐛ )ᕗ ", [], " ᕕ( ᐛ )ᕗ "),
+        (None, [], None),
+        (UNSET, [], UNSET),
+        # Non-string defaults are process as strings by the default Parameter's type.
+        (True, [], "True"),
+        (False, [], "False"),
+        (42, [], "42"),
+        (12.3, [], "12.3"),
+    ),
 )
-def test_flag_value_dual_callback(runner, default, args, expected):
-    """
+def test_default_dual_option_callback(runner, default, args, expected):
+    """Check how default is processed by the callback when options compete for the same
+    variable name.
+
     Reproduction of the issue reported in
     https://github.com/pallets/click/pull/3030#discussion_r2271571819
     """
 
     def _my_func(ctx, param, value):
-        if value is None:
-            return "A real None"
-        if value is UNSET:
-            return "A real UNSET"
-        return value
+        # Print the value received by the callback as-is, so we can check for it.
+        return f"Callback value: {value!r}"
 
     @click.command()
     @click.option("--js", "fmt", flag_value="js", callback=_my_func, default=default)
     @click.option("--xml", "fmt", flag_value="xml", callback=_my_func)
     def main(fmt):
-        click.secho(repr(fmt), nl=False)
+        click.secho(fmt, nl=False)
 
     result = runner.invoke(main, args)
-    assert result.output == repr(expected)
+    assert result.output == f"Callback value: {expected!r}"
     assert result.exit_code == 0
 
 
@@ -1688,19 +1710,89 @@ def test_duplicate_names_warning(runner, opts_one, opts_two):
         runner.invoke(cli, [])
 
 
-def test_custom_type_click_class_flag_value(runner):
-    """A reproduction of
+NO_CONFIG = object()
+"""A sentinel value to indicate no configuration file is provided."""
+
+
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    (
+        # Option default to None.
+        ([], None),
+        # Config has no default value, and no flag value, so it requires an argument.
+        (
+            ["--config"],
+            re.compile(re.escape("Error: Option '--config' requires an argument.\n")),
+        ),
+        (
+            ["--no-config", "--config"],
+            re.compile(re.escape("Error: Option '--config' requires an argument.\n")),
+        ),
+        # Passing --no-config defaults to the sentinel value because of the flag_value,
+        # and then the custom type receives that sentinel and returns a message.
+        (["--no-config"], "No configuration file provided."),
+        # Passing --config with an argument returns the file path.
+        (["--config", "foo.conf"], "foo.conf"),
+        # An argument is not allowed for --no-config, so it raises an error.
+        (
+            ["--no-config", "foo.conf"],
+            re.compile(
+                r"Usage: main \[OPTIONS\]\n"
+                r"Try 'main --help' for help.\n"
+                r"\n"
+                r"Error: Got unexpected extra argument (.+)\n"
+            ),
+        ),
+        # Passing --config with an argument that does not exist raises an error.
+        (
+            ["--config", "random-file.conf"],
+            re.compile(
+                r"Usage: main \[OPTIONS\]\n"
+                r"Try 'main --help' for help.\n"
+                r"\n"
+                r"Error: Invalid value for '-c' / '--config': "
+                r"File 'random-file.conf' does not exist.\n"
+            ),
+        ),
+        (
+            ["--config", "--no-config"],
+            re.compile(
+                r"Usage: main \[OPTIONS\]\n"
+                r"Try 'main --help' for help.\n"
+                r"\n"
+                r"Error: Invalid value for '-c' / '--config': "
+                r"File '--no-config' does not exist.\n"
+            ),
+        ),
+        (
+            ["--config", "--no-config", "foo.conf"],
+            re.compile(
+                r"Usage: main \[OPTIONS\]\n"
+                r"Try 'main --help' for help.\n"
+                r"\n"
+                r"Error: Invalid value for '-c' / '--config': "
+                r"File '--no-config' does not exist.\n"
+            ),
+        ),
+        # --config is passed last and overrides the --no-config option.
+        (["--no-config", "--config", "foo.conf"], "foo.conf"),
+    ),
+)
+def test_dual_options_custom_type_sentinel_flag_value(runner, args, expected):
+    """Check that an object-based sentinel, used as a flag value, is returned as-is
+    to a custom type that is shared by two options, competing for the same variable
+    name.
+
+    A reproduction of
     https://github.com/pallets/click/issues/3024#issuecomment-3146511356
     """
 
-    NO_CONFIG = object()
-
     class ConfigParamType(click.ParamType):
-        name = "config"
+        """A custom type that accepts a file path or a sentinel value."""
 
         def convert(self, value, param, ctx):
             if value is NO_CONFIG:
-                return value
+                return "No configuration file provided."
             else:
                 return click.Path(exists=True, dir_okay=False).convert(
                     value, param, ctx
@@ -1712,8 +1804,20 @@ def test_custom_type_click_class_flag_value(runner):
     def main(config):
         click.echo(repr(config), nl=False)
 
-    result = runner.invoke(main)
-    assert result.output == repr(None)
+    with tempfile.NamedTemporaryFile(mode="w") as named_tempfile:
+        if "foo.conf" in args:
+            named_tempfile.write("Blah blah")
+            named_tempfile.flush()
+            args = [named_tempfile.name if a == "foo.conf" else a for a in args]
+
+        result = runner.invoke(main, args)
+
+        if isinstance(expected, re.Pattern):
+            assert re.match(expected, result.output)
+        else:
+            assert result.output == repr(
+                named_tempfile.name if expected == "foo.conf" else expected
+            )
 
 
 class EngineType(enum.Enum):

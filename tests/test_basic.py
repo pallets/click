@@ -277,24 +277,53 @@ def test_boolean_conversion(runner, value, expect):
 
 
 @pytest.mark.parametrize(
-    ("default", "args", "expect"),
+    ("default", "args", "expected"),
+    # These test cases are similar to the ones in
+    # tests/test_options.py::test_default_dual_option_callback, so keep them in sync.
     (
-        # See: https://github.com/pallets/click/issues/3024#issuecomment-3146199461
+        # Each option is returning its own flag_value, whatever the default is.
         (True, ["--upper"], "upper"),
         (True, ["--lower"], "lower"),
-        (True, [], "True"),
+        (False, ["--upper"], "upper"),
+        (False, ["--lower"], "lower"),
+        (None, ["--upper"], "upper"),
+        (None, ["--lower"], "lower"),
+        (UNSET, ["--upper"], "upper"),
+        (UNSET, ["--lower"], "lower"),
+        # Check that the last option wins when both are specified.
+        (True, ["--upper", "--lower"], "lower"),
+        (True, ["--lower", "--upper"], "upper"),
+        # Check that the default is returned as-is when no option is specified.
         ("upper", [], "upper"),
+        ("lower", [], "lower"),
+        ("uPPer", [], "uPPer"),
+        ("lOwEr", [], "lOwEr"),
+        (" ᕕ( ᐛ )ᕗ ", [], " ᕕ( ᐛ )ᕗ "),
+        (None, [], None),
+        # Default is normalized to None if it is UNSET.
+        (UNSET, [], None),
+        # Non-string defaults are process as strings by the default Parameter's type.
+        (True, [], "True"),
+        (False, [], "False"),
+        (42, [], "42"),
+        (12.3, [], "12.3"),
     ),
 )
-def test_flag_value_dual_options(runner, default, args, expect):
+def test_flag_value_dual_options(runner, default, args, expected):
+    """Check how default is processed when options compete for the same variable name.
+
+    Covers the regression reported in
+    https://github.com/pallets/click/issues/3024#issuecomment-3146199461
+    """
+
     @click.command()
-    @click.option("--upper", "transformation", flag_value="upper", default=default)
-    @click.option("--lower", "transformation", flag_value="lower")
-    def cli(transformation):
-        click.echo(repr(transformation), nl=False)
+    @click.option("--upper", "case", flag_value="upper", default=default)
+    @click.option("--lower", "case", flag_value="lower")
+    def cli(case):
+        click.echo(repr(case), nl=False)
 
     result = runner.invoke(cli, args)
-    assert result.output == repr(expect)
+    assert result.output == repr(expected)
 
 
 def test_file_option(runner):
