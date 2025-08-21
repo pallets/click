@@ -2248,7 +2248,7 @@ class Parameter:
         sourced from the environment variable, the default map, or the parameter's
         default value. In that order of precedence.
 
-        If no value is found, the value is returned as :attr:`UNSET`.
+        If no value is found, an internal sentinel value is returned.
         """
         # If the value is set, it means the parser produced a value from user input.
         value = opts.get(self.name, UNSET)  # type: ignore
