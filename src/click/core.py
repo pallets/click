@@ -187,7 +187,7 @@ class Context:
                       the name of the script.
     :param obj: an arbitrary object of user data.
     :param auto_envvar_prefix: the prefix to use for automatic environment
-                               variables.  If this is `None` then reading
+                               variables.  If this is ``None`` then reading
                                from environment variables is disabled.  This
                                does not affect manually set environment
                                variables which are always read.
@@ -210,11 +210,11 @@ class Context:
                               invocation.  Default values will also be
                               ignored.  This is useful for implementing
                               things such as completion support.
-    :param allow_extra_args: if this is set to `True` then extra arguments
+    :param allow_extra_args: if this is set to ``True`` then extra arguments
                              at the end will not raise an error and will be
                              kept on the context.  The default is to inherit
                              from the command.
-    :param allow_interspersed_args: if this is set to `False` then options
+    :param allow_interspersed_args: if this is set to ``False`` then options
                                     and arguments cannot be mixed.  The
                                     default is to inherit from the command.
     :param ignore_unknown_options: instructs click to ignore options it does
@@ -289,7 +289,7 @@ class Context:
         color: bool | None = None,
         show_default: bool | None = None,
     ) -> None:
-        #: the parent context or `None` if none exists.
+        #: the parent context or ``None`` if none exists.
         self.parent = parent
         #: the :class:`Command` for this context.
         self.command = command
@@ -494,7 +494,7 @@ class Context:
         """This helper method can be used with the context object to promote
         it to the current thread local (see :func:`get_current_context`).
         The default behavior of this is to invoke the cleanup functions which
-        can be disabled by setting `cleanup` to `False`.  The cleanup
+        can be disabled by setting `cleanup` to ``False``.  The cleanup
         functions are typically used for things such as closing file handles.
 
         If the cleanup is intended the context object can also be directly
@@ -835,7 +835,7 @@ class Context:
         :rtype: ParameterSource
 
         .. versionchanged:: 8.0
-            Returns `None` if the parameter was not provided from any
+            Returns ``None`` if the parameter was not provided from any
             source.
         """
         return self._parameter_source.get(name)
@@ -864,7 +864,7 @@ class Command:
                             If enabled this will add ``--help`` as argument
                             if no arguments are passed
     :param hidden: hide this command from help outputs.
-    :param deprecated: If `True` or non-empty string, issues a message
+    :param deprecated: If ``True`` or non-empty string, issues a message
                         indicating that the command is deprecated and highlights
                         its deprecation in --help. The message can be customized
                         by using a string as the value.
@@ -931,7 +931,7 @@ class Command:
         self.context_settings: cabc.MutableMapping[str, t.Any] = context_settings
 
         #: the callback to execute when the command fires.  This might be
-        #: `None` in which case nothing happens.
+        #: ``None`` in which case nothing happens.
         self.callback = callback
         #: the list of parameters for this command in the order they
         #: should show up in the help page and execute.  Eager parameters
@@ -1025,7 +1025,7 @@ class Command:
     def get_help_option(self, ctx: Context) -> Option | None:
         """Returns the help option object.
 
-        Skipped if :attr:`add_help_option` is `False`.
+        Skipped if :attr:`add_help_option` is ``False``.
 
         .. versionchanged:: 8.1.8
             The help option is now cached to avoid creating it multiple times.
@@ -1324,7 +1324,7 @@ class Command:
                                 handle exceptions and convert them into
                                 error messages and the function will never
                                 return but shut down the interpreter.  If
-                                this is set to `False` they will be
+                                this is set to ``False`` they will be
                                 propagated to the caller and the return
                                 value of this function is the return value
                                 of :meth:`invoke`.
@@ -1368,7 +1368,7 @@ class Command:
                     # note that `rv` may actually contain data like "1" which
                     # has obvious effects
                     # more subtle case: `rv=[None, None]` can come out of
-                    # chained commands which all returned `None` -- so it's not
+                    # chained commands which all returned ``None`` -- so it's not
                     # even always obvious that `rv` indicates success/failure
                     # by its truthiness/falsiness
                     ctx.exit()
@@ -1708,7 +1708,7 @@ class Group(Command):
             def process_result(result, input):
                 return result + input
 
-        :param replace: if set to `True` an already existing result
+        :param replace: if set to ``True`` an already existing result
                         callback will be removed.
 
         .. versionchanged:: 8.0
@@ -1735,7 +1735,7 @@ class Group(Command):
 
     def get_command(self, ctx: Context, cmd_name: str) -> Command | None:
         """Given a context and a command name, this returns a :class:`Command`
-        object if it exists or returns `None`.
+        object if it exists or returns ``None``.
         """
         return self.commands.get(cmd_name)
 
@@ -2010,7 +2010,7 @@ class Parameter:
                   the arity of the tuple). If ``nargs=-1``, all remaining
                   parameters are collected.
     :param metavar: how the value is represented in the help page.
-    :param expose_value: if this is `True` then the value is passed onwards
+    :param expose_value: if this is ``True`` then the value is passed onwards
                          to the command callback and stored on the context,
                          otherwise it's skipped.
     :param is_eager: eager values are processed before non eager ones.  This
@@ -2025,7 +2025,7 @@ class Parameter:
         given. Takes ``ctx, param, incomplete`` and must return a list
         of :class:`~click.shell_completion.CompletionItem` or a list of
         strings.
-    :param deprecated: If `True` or non-empty string, issues a message
+    :param deprecated: If ``True`` or non-empty string, issues a message
                         indicating that the argument is deprecated and highlights
                         its deprecation in --help. The message can be customized
                         by using a string as the value. A deprecated parameter
@@ -2060,7 +2060,7 @@ class Parameter:
 
     .. versionchanged:: 8.0
         Setting a default is no longer required for ``nargs>1``, it will
-        default to `None`. ``multiple=True`` or ``nargs=-1`` will
+        default to ``None``. ``multiple=True`` or ``nargs=-1`` will
         default to ``()``.
 
     .. versionchanged:: 7.1
@@ -2145,11 +2145,11 @@ class Parameter:
         CLI structure.
 
         .. versionchanged:: 8.3.0
-            Returns `None` for the :attr:`default` if it is :attr:`UNSET`.
+            Returns ``None`` for the :attr:`default` if it is :attr:`UNSET`.
 
             We explicitly hide the :attr:`UNSET` value to the user, as we choose to
             make it an implementation detail. And because ``to_info_dict`` has been
-            designed for documentation purposes, we return `None` instead.
+            designed for documentation purposes, we return ``None`` instead.
 
         .. versionadded:: 8.0
         """
@@ -2368,7 +2368,7 @@ class Parameter:
             parameter is not given by the CLI user.
 
             The callback is receiving the value as-is, which let the developer decide
-            how to handle the different cases of `None`, ``UNSET``, or any other value.
+            how to handle the different cases of ``None``, ``UNSET``, or any other value.
         """
         value = self.type_cast_value(ctx, value)
 
@@ -2387,7 +2387,7 @@ class Parameter:
         Environment variables values are `always returned as strings
         <https://docs.python.org/3/library/os.html#os.environ>`_.
 
-        This method returns `None` if:
+        This method returns ``None`` if:
 
         - the :attr:`envvar` property is not set on the :class:`Parameter`,
         - the environment variable is not found in the environment,
@@ -2531,32 +2531,32 @@ class Option(Parameter):
 
     :param show_default: Show the default value for this option in its
         help text. Values are not shown by default, unless
-        :attr:`Context.show_default` is `True`. If this value is a
+        :attr:`Context.show_default` is ``True``. If this value is a
         string, it shows that string in parentheses instead of the
         actual value. This is particularly useful for dynamic options.
         For single option boolean flags, the default remains hidden if
-        its value is `False`.
+        its value is ``False``.
     :param show_envvar: Controls if an environment variable should be
         shown on the help page and error messages.
         Normally, environment variables are not shown.
-    :param prompt: If set to `True` or a non empty string then the
-        user will be prompted for input. If set to `True` the prompt
+    :param prompt: If set to ``True`` or a non empty string then the
+        user will be prompted for input. If set to ``True`` the prompt
         will be the option name capitalized. A deprecated option cannot be
         prompted.
     :param confirmation_prompt: Prompt a second time to confirm the
         value if it was prompted for. Can be set to a string instead of
-        `True` to customize the message.
-    :param prompt_required: If set to `False`, the user will be
+        ``True`` to customize the message.
+    :param prompt_required: If set to ``False``, the user will be
         prompted for input only when the option was specified as a flag
         without a value.
-    :param hide_input: If this is `True` then the input on the prompt
+    :param hide_input: If this is ``True`` then the input on the prompt
         will be hidden from the user. This is useful for password input.
     :param is_flag: forces this option to act as a flag.  The default is
                     auto detection.
     :param flag_value: which value should be used for this flag if it's
                        enabled.  This is set to a boolean automatically if
                        the option string contains a slash to mark two options.
-    :param multiple: if this is set to `True` then the argument is accepted
+    :param multiple: if this is set to ``True`` then the argument is accepted
                      multiple times and recorded.  This is similar to ``nargs``
                      in how it works but supports arbitrary number of
                      arguments.
@@ -2583,7 +2583,7 @@ class Option(Parameter):
 
     .. versionchanged:: 8.1
         The default of a single option boolean flag is not shown if the
-        default value is `False`.
+        default value is ``False``.
 
     .. versionchanged:: 8.0.1
         ``type`` is detected from ``flag_value`` if given.
@@ -2742,11 +2742,11 @@ class Option(Parameter):
     def to_info_dict(self) -> dict[str, t.Any]:
         """
         .. versionchanged:: 8.3.0
-            Returns `None` for the :attr:`flag_value` if it is :attr:`UNSET`.
+            Returns ``None`` for the :attr:`flag_value` if it is :attr:`UNSET`.
 
             We explicitly hide the :attr:`UNSET` value to the user, as we choose to
             make it an implementation detail. And because ``to_info_dict`` has been
-            designed for documentation purposes, we return `None` instead.
+            designed for documentation purposes, we return ``None`` instead.
         """
         info_dict = super().to_info_dict()
         info_dict.update(
@@ -3018,7 +3018,7 @@ class Option(Parameter):
 
         return prompt(
             self.prompt,
-            # Use `None` to inform the prompt() function to reiterate until a valid
+            # Use ``None`` to inform the prompt() function to reiterate until a valid
             # value is provided by the user if we have no default.
             default=None if default is UNSET else default,
             type=self.type,
@@ -3068,7 +3068,7 @@ class Option(Parameter):
         :attr:`flag_value` if the latter is set.
 
         This method also takes care of repeated options (i.e. options with
-        :attr:`multiple` set to `True`).
+        :attr:`multiple` set to ``True``).
         """
         raw_value = self.resolve_envvar_value(ctx)
 
