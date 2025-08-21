@@ -286,7 +286,7 @@ def test_boolean_conversion(runner, value, expect):
         ("upper", [], "upper"),
     ),
 )
-def test_flag_value(runner, default, args, expect):
+def test_flag_value_dual_options(runner, default, args, expect):
     @click.command()
     @click.option("--upper", "transformation", flag_value="upper", default=default)
     @click.option("--lower", "transformation", flag_value="lower")

@@ -1372,7 +1372,7 @@ def test_invalid_flag_definition(runner, args, opts):
         (None, ["--xml"], "xml"),
     ],
 )
-def test_flag_value_callback(runner, default, args, expected):
+def test_flag_value_dual_callback(runner, default, args, expected):
     """
     Reproduction of the issue reported in
     https://github.com/pallets/click/pull/3030#discussion_r2271571819

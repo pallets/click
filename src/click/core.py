@@ -2437,51 +2437,64 @@ class Parameter:
     def handle_parse_result(
         self, ctx: Context, opts: cabc.Mapping[str, t.Any], args: list[str]
     ) -> tuple[t.Any, list[str]]:
-        """Process the value produced by the parser from user input."""
+        """Process the value produced by the parser from user input.
+
+        Always process the value through the Parameter's :attr:`type`, wherever it
+        comes from.
+
+        If the parameter is deprecated, this method warn the user about it. But only if
+        the value has been explicitly set by the user (and as such, is not coming from
+        a default).
+        """
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
 
             ctx.set_parameter_source(self.name, source)  # type: ignore
 
-            # Only try to process the value if it is not coming from the defaults.
-            # Defaults set by the users are under their control and so are left
-            # untouched as Python values: these values does not need to be processed.
-            if source not in (ParameterSource.DEFAULT, ParameterSource.DEFAULT_MAP):
-                # If the parameter is deprecated, we want to warn the user about it.
-                # If the value is UNSET there is no need to warn the user of a
-                # parameter that has not been invoked.
-                if self.deprecated and value is not UNSET:
-                    extra_message = (
-                        f" {self.deprecated}"
-                        if isinstance(self.deprecated, str)
-                        else ""
-                    )
-                    message = _(
-                        "DeprecationWarning: The {param_type} {name!r} is deprecated."
-                        "{extra_message}"
-                    ).format(
-                        param_type=self.param_type_name,
-                        name=self.human_readable_name,
-                        extra_message=extra_message,
-                    )
-                    echo(style(message, fg="red"), err=True)
+            # Display a deprecation warning if necessary.
+            if (
+                self.deprecated
+                and value is not UNSET
+                and source not in (ParameterSource.DEFAULT, ParameterSource.DEFAULT_MAP)
+            ):
+                extra_message = (
+                    f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
+                )
+                message = _(
+                    "DeprecationWarning: The {param_type} {name!r} is deprecated."
+                    "{extra_message}"
+                ).format(
+                    param_type=self.param_type_name,
+                    name=self.human_readable_name,
+                    extra_message=extra_message,
+                )
+                echo(style(message, fg="red"), err=True)
 
+            # Process the value through the parameter's type.
             try:
                 value = self.process_value(ctx, value)
             except Exception:
                 if not ctx.resilient_parsing:
                     raise
-
-                # Ignore values that we have a hard time processing.
+                # In resilient parsing mode, we do not want to fail the command if the
+                # value is incompatible with the parameter type, so we reset the value
+                # to UNSET, which will be interpreted as a missing value.
                 value = UNSET
 
-        if self.expose_value and self.name not in ctx.params:
+        # Add parameter's value to the context.
+        if (
+            self.expose_value
+            # We skip adding the value if it was previously set by another parameter
+            # targeting the same variable name. This prevents parameters competing for
+            # the same name to override each other.
+            and self.name not in ctx.params
+        ):
             # Click is logically enforcing that the name is None if the parameter is
-            # not exposed. We still assert it here to please the type checker.
+            # not to be exposed. We still assert it here to please the type checker.
             assert self.name is not None, (
                 f"{self!r} parameter's name should not be None when exposing value."
             )
-            # Normalize unset values to None, as we're about to pass them to the
+            # Normalize UNSET values to None, as we're about to pass them to the
             # command function and move them to the pure-Python realm of user-written
             # code.
             ctx.params[self.name] = value if value is not UNSET else None
