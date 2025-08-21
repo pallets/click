@@ -2359,16 +2359,13 @@ class Parameter:
         1. Type cast the value using :meth:`type_cast_value`.
         2. Check if the value is missing (see: :meth:`value_is_missing`), and raise
            :exc:`MissingParameter` if it is required.
-        3. If a :attr:`callback` is set, call it to have the value replaced buy the
-           result of the callback.
+        3. If a :attr:`callback` is set, call it to have the value replaced by the
+           result of the callback. The callback is receiving the value as-is, which let
+           the developer decide how to handle the different cases.
 
         .. versionchanged:: 8.3
-
-            The :attr:`callback` is now receiving the :attr:`UNSET` sentinel if the
-            parameter is not given by the CLI user.
-
-            The callback is receiving the value as-is, which let the developer decide
-            how to handle the different cases of ``None``, ``UNSET``, or any other value.
+            The :attr:`callback` gets an internal sentinel if the parameter was not set
+            by the user and no default was specified.
         """
         value = self.type_cast_value(ctx, value)
 
