@@ -2405,15 +2405,20 @@ class Parameter:
         if not self.envvar:
             return None
 
-        envvars = [self.envvar] if isinstance(self.envvar, str) else self.envvar
-        for envvar in envvars:
-            rv = os.environ.get(envvar)
+        if isinstance(self.envvar, str):
+            rv = os.environ.get(self.envvar)
 
-            # Return the first non-empty value of the list of environment variables.
             if rv:
                 return rv
-            # Else, absence of value is interpreted as an environment variable that is
-            # not set, so proceed to the next one.
+        else:
+            for envvar in self.envvar:
+                rv = os.environ.get(envvar)
+
+                # Return the first non-empty value of the list of environment variables.
+                if rv:
+                    return rv
+                # Else, absence of value is interpreted as an environment variable that is
+                # not set, so proceed to the next one.
 
         return None
 
@@ -3049,11 +3054,8 @@ class Option(Parameter):
             envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
             rv = os.environ.get(envvar)
 
-            # Return the first non-empty value of the list of environment variables.
             if rv:
                 return rv
-            # Else, absence of value is interpreted as an environment variable that is
-            # not set, so proceed to the next one.
 
         return None
 
