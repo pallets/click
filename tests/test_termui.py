@@ -646,7 +646,11 @@ FLAG_VALUE_PROMPT_CASES = [
 def test_flag_value_prompt(
     runner, opt_decls, opt_params, args, prompt, input, expected
 ):
-    """Covers concerns raised in issue https://github.com/pallets/click/issues/1992."""
+    """Check how flag value are prompted and handled by all combinations of
+    ``prompt``, ``default``, and ``flag_value`` parameters.
+
+    Covers concerns raised in issue https://github.com/pallets/click/issues/1992.
+    """
 
     @click.command()
     @click.option(opt_decls, **opt_params)
