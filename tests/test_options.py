@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import tempfile
+from typing import Literal
 
 if sys.version_info < (3, 11):
     enum.StrEnum = enum.Enum  # type: ignore[assignment]
@@ -1710,10 +1711,22 @@ def test_duplicate_names_warning(runner, opts_one, opts_two):
         runner.invoke(cli, [])
 
 
-NO_CONFIG = object()
-"""A sentinel value to indicate no configuration file is provided."""
+OBJECT_SENTINEL = object()
+"""An object-based sentinel value."""
 
 
+class EnumSentinel(enum.Enum):
+    FALSY_SENTINEL = object()
+
+    def __bool__(self) -> Literal[False]:
+        """Force the sentinel to be falsy to make sure it is not caught by Click internal
+        implementation.
+        """
+        return False
+
+
+# Any kind of sentinel value is recognized by Click as a valid flag value.
+@pytest.mark.parametrize("sentinel", (OBJECT_SENTINEL, EnumSentinel.FALSY_SENTINEL))
 @pytest.mark.parametrize(
     ("args", "expected"),
     (
@@ -1778,7 +1791,7 @@ NO_CONFIG = object()
         (["--no-config", "--config", "foo.conf"], "foo.conf"),
     ),
 )
-def test_dual_options_custom_type_sentinel_flag_value(runner, args, expected):
+def test_dual_options_custom_type_sentinel_flag_value(runner, sentinel, args, expected):
     """Check that an object-based sentinel, used as a flag value, is returned as-is
     to a custom type that is shared by two options, competing for the same variable
     name.
@@ -1791,7 +1804,7 @@ def test_dual_options_custom_type_sentinel_flag_value(runner, args, expected):
         """A custom type that accepts a file path or a sentinel value."""
 
         def convert(self, value, param, ctx):
-            if value is NO_CONFIG:
+            if value is sentinel:
                 return "No configuration file provided."
             else:
                 return click.Path(exists=True, dir_okay=False).convert(
@@ -1800,7 +1813,7 @@ def test_dual_options_custom_type_sentinel_flag_value(runner, args, expected):
 
     @click.command()
     @click.option("-c", "--config", type=ConfigParamType())
-    @click.option("--no-config", "config", flag_value=NO_CONFIG, type=ConfigParamType())
+    @click.option("--no-config", "config", flag_value=sentinel, type=ConfigParamType())
     def main(config):
         click.echo(repr(config), nl=False)
 
