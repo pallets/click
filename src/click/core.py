@@ -2144,7 +2144,7 @@ class Parameter:
         CLI structure.
 
         .. versionchanged:: 8.3.0
-            Returns ``None`` for the :attr:`default` if it is :attr:`UNSET`.
+            Returns ``None`` for the :attr:`default` if it was not set.
 
         .. versionadded:: 8.0
         """
@@ -2757,7 +2757,7 @@ class Option(Parameter):
     def to_info_dict(self) -> dict[str, t.Any]:
         """
         .. versionchanged:: 8.3.0
-            Returns ``None`` for the :attr:`flag_value` if it is :attr:`UNSET`.
+            Returns ``None`` for the :attr:`flag_value` if it was not set.
         """
         info_dict = super().to_info_dict()
         info_dict.update(
