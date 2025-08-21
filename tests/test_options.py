@@ -1721,6 +1721,10 @@ class EnumSentinel(enum.Enum):
     def __bool__(self) -> Literal[False]:
         """Force the sentinel to be falsy to make sure it is not caught by Click internal
         implementation.
+
+        Falsy sentinels have been discussed in:
+        https://github.com/pallets/click/pull/3030#pullrequestreview-3106604795
+        https://github.com/pallets/click/pull/3030#pullrequestreview-3108471552
         """
         return False
 
