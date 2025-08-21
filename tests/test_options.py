@@ -1854,53 +1854,79 @@ class Class2:
 @pytest.mark.parametrize(
     ("opt_params", "args", "expected"),
     [
-        # Reproduction of cases from
-        # https://github.com/pallets/click/issues/3024#issuecomment-3146480714
-        ({"type": EngineType, "flag_value": None}, [], None),
+        # Check that the flag value is returned as-is when the option is passed, and not normalized
+        # to a boolean, even if it is explicitly declared as a flag.
         ({"type": EngineType, "flag_value": None}, ["--pro"], None),
-        ({"type": EngineType, "flag_value": EngineType.MAX}, [], None),
         (
-            {"type": EngineType, "flag_value": EngineType.MAX},
+            {"type": EngineType, "is_flag": True, "flag_value": None},
             ["--pro"],
-            EngineType.MAX,
+            None,
         ),
-        ({"type": EngineType, "default": EngineType.OSS}, [], EngineType.OSS),
+        ({"type": EngineType, "flag_value": EngineType.OSS}, ["--pro"], EngineType.OSS),
+        (
+            {"type": EngineType, "is_flag": True, "flag_value": EngineType.OSS},
+            ["--pro"],
+            EngineType.OSS,
+        ),
+        (
+            {"type": EngineType, "is_flag": True, "default": EngineType.OSS},
+            ["--pro"],
+            EngineType.OSS,
+        ),
+        # The default value is returned as-is when the option is not passed, whatever the flag value.
+        ({"type": EngineType, "flag_value": None}, [], None),
+        ({"type": EngineType, "is_flag": True, "flag_value": None}, [], None),
+        ({"type": EngineType, "flag_value": EngineType.OSS}, [], None),
+        (
+            {"type": EngineType, "is_flag": True, "flag_value": EngineType.OSS},
+            [],
+            None,
+        ),
+        (
+            {"type": EngineType, "is_flag": True, "default": EngineType.OSS},
+            [],
+            EngineType.OSS,
+        ),
+        # The option has not enough parameters to be detected as flag-like, so it requires an argument.
         (
             {"type": EngineType, "default": EngineType.OSS},
             ["--pro"],
             re.compile(re.escape("Error: Option '--pro' requires an argument.\n")),
         ),
+        ({"type": EngineType, "default": EngineType.OSS}, [], EngineType.OSS),
+        # If a flag value is set, it is returned instead of the default value.
         (
-            {"type": EngineType, "is_flag": True, "default": EngineType.OSS},
-            [],
-            EngineType.OSS,
-        ),
-        (
-            {"type": EngineType, "is_flag": True, "default": EngineType.OSS},
+            {"type": EngineType, "flag_value": EngineType.OSS, "default": True},
             ["--pro"],
             EngineType.OSS,
-        ),
-        # Reproduction of cases from
-        # https://github.com/pallets/click/issues/2012#issuecomment-892437060
-        (
-            {"flag_value": EngineType.OSS, "default": True},
-            [],
-            "True",
         ),
         (
             {"type": EngineType, "flag_value": EngineType.OSS, "default": True},
             [],
             EngineType.OSS,
         ),
-        ({"flag_value": 1, "default": True}, [], 1),
+        # Type is not specified and default to string, so the default value is
+        # returned as a string, even if it is a boolean.
         ({"flag_value": "1", "default": True}, [], "True"),
-        ({"flag_value": 1, "type": str, "default": True}, [], "True"),
-        ({"flag_value": "1", "type": str, "default": True}, [], "True"),
-        ({"flag_value": 1, "type": int, "default": True}, [], 1),
-        ({"flag_value": "1", "type": int, "default": True}, [], 1),
+        ({"flag_value": EngineType.OSS, "default": True}, [], "True"),
+        # See: the result is the same if we force the type to be str.
+        ({"type": str, "flag_value": 1, "default": True}, [], "True"),
+        ({"type": str, "flag_value": "1", "default": True}, [], "True"),
+        ({"type": str, "flag_value": EngineType.OSS, "default": True}, [], "True"),
+        # But having the flag value set to integer is automaticcally recognized by click.
+        ({"flag_value": 1, "default": True}, [], 1),
+        ({"type": int, "flag_value": 1, "default": True}, [], 1),
+        ({"type": int, "flag_value": "1", "default": True}, [], 1),
     ],
 )
 def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expected):
+    """Test how the type and flag_value influence the returned value.
+
+    Cover cases reported in:
+    https://github.com/pallets/click/issues/3024#issuecomment-3146480714
+    https://github.com/pallets/click/issues/2012#issuecomment-892437060
+    """
+
     @click.command()
     @click.option("--pro", **opt_params)
     def scan(pro):
