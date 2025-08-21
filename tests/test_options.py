@@ -2067,7 +2067,10 @@ def test_custom_type_flag_value_dual_options(
 
 
 def test_custom_type_frozenset_flag_value(runner):
-    """A reproduction of https://github.com/pallets/click/issues/2610"""
+    """Check that frozenset is correctly handled as a type, a flag value and a default.
+
+    Reproduces https://github.com/pallets/click/issues/2610
+    """
 
     @click.command()
     @click.option(
