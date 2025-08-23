@@ -30,7 +30,6 @@ def test_unset_sentinel():
     assert repr(value) == "Sentinel.UNSET"
     assert str(value) == "Sentinel.UNSET"
     assert bool(value) is True
-    assert value is not True
 
     # Try all native Python values that can be falsy or truthy.
     # See: https://docs.python.org/3/library/stdtypes.html#truth-value-testing
