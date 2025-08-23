@@ -1297,13 +1297,13 @@ def test_type_from_flag_value():
         # Not passing --foo returns the default value as-is, in its Python type, then
         # converted by the option type.
         ({"type": bool, "default": True, "flag_value": True}, [], True),
-        ({"type": bool, "default": True, "flag_value": False}, [], True),
+        ({"type": bool, "default": True, "flag_value": False}, [], False),
         ({"type": bool, "default": False, "flag_value": True}, [], False),
         ({"type": bool, "default": False, "flag_value": False}, [], False),
         ({"type": bool, "default": None, "flag_value": True}, [], None),
         ({"type": bool, "default": None, "flag_value": False}, [], None),
         ({"type": str, "default": True, "flag_value": True}, [], "True"),
-        ({"type": str, "default": True, "flag_value": False}, [], "True"),
+        ({"type": str, "default": True, "flag_value": False}, [], "False"),
         ({"type": str, "default": False, "flag_value": True}, [], "False"),
         ({"type": str, "default": False, "flag_value": False}, [], "False"),
         ({"type": str, "default": "foo", "flag_value": True}, [], "foo"),
@@ -1389,8 +1389,10 @@ def test_invalid_flag_definition(runner, args, opts):
         (" ᕕ( ᐛ )ᕗ ", [], " ᕕ( ᐛ )ᕗ "),
         (None, [], None),
         (UNSET, [], UNSET),
+        # Legacy case: if default=True and flag_value is set, The value returned is the
+        # flag_value, not default itself.
+        (True, [], "js"),
         # Non-string defaults are process as strings by the default Parameter's type.
-        (True, [], "True"),
         (False, [], "False"),
         (42, [], "42"),
         (12.3, [], "12.3"),
@@ -1906,17 +1908,30 @@ class Class2:
             EngineType.OSS,
         ),
         # Type is not specified and default to string, so the default value is
-        # returned as a string, even if it is a boolean.
-        ({"flag_value": "1", "default": True}, [], "True"),
-        ({"flag_value": EngineType.OSS, "default": True}, [], "True"),
+        # returned as a string, even if it is a boolean. Also, defaults to the
+        # flag_value instead of the default value to support legacy behavior.
+        ({"flag_value": "1", "default": True}, [], "1"),
+        ({"flag_value": "1", "default": 42}, [], "42"),
+        ({"flag_value": EngineType.OSS, "default": True}, [], "EngineType.OSS"),
+        ({"flag_value": EngineType.OSS, "default": 42}, [], "42"),
         # See: the result is the same if we force the type to be str.
-        ({"type": str, "flag_value": 1, "default": True}, [], "True"),
-        ({"type": str, "flag_value": "1", "default": True}, [], "True"),
-        ({"type": str, "flag_value": EngineType.OSS, "default": True}, [], "True"),
+        ({"type": str, "flag_value": 1, "default": True}, [], "1"),
+        ({"type": str, "flag_value": 1, "default": 42}, [], "42"),
+        ({"type": str, "flag_value": "1", "default": True}, [], "1"),
+        ({"type": str, "flag_value": "1", "default": 42}, [], "42"),
+        (
+            {"type": str, "flag_value": EngineType.OSS, "default": True},
+            [],
+            "EngineType.OSS",
+        ),
+        ({"type": str, "flag_value": EngineType.OSS, "default": 42}, [], "42"),
         # But having the flag value set to integer is automaticcally recognized by Click.
         ({"flag_value": 1, "default": True}, [], 1),
+        ({"flag_value": 1, "default": 42}, [], 42),
         ({"type": int, "flag_value": 1, "default": True}, [], 1),
+        ({"type": int, "flag_value": 1, "default": 42}, [], 42),
         ({"type": int, "flag_value": "1", "default": True}, [], 1),
+        ({"type": int, "flag_value": "1", "default": 42}, [], 42),
     ],
 )
 def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expected):
@@ -1964,7 +1979,12 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
         ),
         # Check that passing exotic flag values like classes is supported, but are rendered to strings
         # when the type is not specified.
-        ({"flag_value": Class1, "default": True}, {"flag_value": Class2}, [], "True"),
+        (
+            {"flag_value": Class1, "default": True},
+            {"flag_value": Class2},
+            [],
+            re.compile(r"'<test_options.Class1 object at 0x[0-9A-Fa-f]+>'"),
+        ),
         (
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},
@@ -1985,7 +2005,7 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
             {"flag_value": Class1, "type": UNPROCESSED, "default": True},
             {"flag_value": Class2, "type": UNPROCESSED},
             [],
-            True,
+            re.compile(r"<test_options.Class1 object at 0x[0-9A-Fa-f]+>"),
         ),
         (
             {"flag_value": Class1, "type": UNPROCESSED, "default": True},

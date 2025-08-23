@@ -314,7 +314,7 @@ If you want to define an alias for the second option only, then you will need to
 
 ## Flag Value
 
-To have an flag pass a value to the underlying function set `flag_value`. This automatically sets `is_flag=True`. To influence the value-less behavior, force its value with `default='upper'`. Setting flag values can be used to create patterns like this:
+To have an flag pass a value to the underlying function set `flag_value`. This automatically sets `is_flag=True`. To mark the flag as default, set `default=True`. Setting flag values can be used to create patterns like this:
 
 ```{eval-rst}
 .. click:example::
@@ -322,7 +322,7 @@ To have an flag pass a value to the underlying function set `flag_value`. This a
     import sys
 
     @click.command()
-    @click.option('--upper', 'transformation', flag_value='upper', default='upper')
+    @click.option('--upper', 'transformation', flag_value='upper', default=True)
     @click.option('--lower', 'transformation', flag_value='lower')
     def info(transformation):
         click.echo(getattr(sys.platform, transformation)())
@@ -334,6 +334,30 @@ To have an flag pass a value to the underlying function set `flag_value`. This a
     invoke(info, args=['--lower'])
     invoke(info)
 ```
+
+````{caution}
+The `default` argument of options always [give to the underlying function its value *as-is*](api#click.Parameter).
+
+But for flags, the interaction between `flag_value` and `default` is a bit special.
+
+If a flag has a `flag_value`, setting `default` to `True` means that the flag is activated by default. Not that the value passed to the underlying function is the `True` Python value. Instead, the default value will be aligned to the `flag_value` behind the scenes.
+
+Which means, the in example above, this option:
+
+```python
+@click.option('--upper', 'transformation', flag_value='upper', default=True)
+```
+
+is equivalent to:
+
+```python
+@click.option('--upper', 'transformation', flag_value='upper', default='upper')
+```
+
+This was implemented to support legacy behavior, that will be removed in Click 9.0 to allow for default to take any value, including `True`.
+
+In the mean time, to avoid confusion, it is recommended to always set `default` to the actual default value you want to pass to the underlying function, and not use `True`, `False` or `None`. Unless that's the precise value you want to explicitly force as default.
+````
 
 ## Values from Environment Variables
 

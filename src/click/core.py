@@ -2595,6 +2595,15 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
 
+    .. caution::
+        Flags specifying a ``flag_value`` and whose ``default=True`` will have
+        their ``default`` aligned to the ``flag_value``.
+
+        This means there is no way to setup a flag whose default ``True`` and
+        whose ``flag_value`` is something else than ``True``.
+
+        This is to support legacy behavior that will be removed in Click 9.0.
+
     .. versionchanged:: 8.2
         ``envvar`` used with ``flag_value`` will always use the ``flag_value``,
         previously it would use the value of the environment variable.
@@ -2721,6 +2730,25 @@ class Option(Parameter):
         if self.is_bool_flag:
             if self.default is UNSET and not self.required:
                 self.default = False
+
+        # XXX Support the legacy case of aligning the default value with the flag_value
+        # for flags whose default is explicitly set to True. As long as we have this
+        # condition, there is no way a flag can have a default set to True, unless its
+        # flag_value itself is set to True. Refs:
+        # https://github.com/pallets/click/issues/3024#issuecomment-3146199461
+        # https://github.com/pallets/click/pull/3030/files#r2288936493
+        if self.default is True and self.flag_value is not UNSET:
+            # This message is a convoluted way to explain that if you want things
+            # to be equal, make them equal.
+            # warnings.warn(
+            #     "A flag's `default` value will no longer be aligned with its "
+            #     "`flag_value` if `default=True` in Click 9.0. If you want the flag to "
+            #     "get the same `default` as its `flag_value`, update the option to "
+            #     "make its `default` parameter equal to its `flag_value`.",
+            #     DeprecationWarning,
+            #     stacklevel=2,
+            # )
+            self.default = self.flag_value
 
         # Set the default flag_value if it is not set.
         if self.flag_value is UNSET:

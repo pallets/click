@@ -5,13 +5,14 @@ Version 8.2.x
 
 Unreleased
 
--   Rework flag value passing by disentangling use of ``default``. Formerly defaults
-    for ``flag_value`` were set by passing ``default=True``, now set by passing
-    ``default=<desired_value>``. This change breaks all default settings for flag value
-    type flags. In all other places in code, ``default`` takes on the default value.
-    Fixing this inconsistency allows the fixing of the linked issues and supports a
-    more consistent API.  :issue:`1992` :issue:`2012`` :issue:`2514` :issue:`2610`
-    :issue:`3024` :pr:`3030`
+-   Rework relationship between ``flag_value`` and ``default``: the value given to
+    ``default`` is now left untouched, and keep the value it receive. So
+    ``default=<desired_value>`` is respected and ``<desired_value>`` is passed on as-is
+    to the CLI function. With the exception of flag options, where setting
+    ``default=True`` maintain the legacy behavior of defaulting to the ``flag_value``.
+    This allow ``default`` to be of any type, including ``bool`` or ``None``, fixing
+    inconsistencies reported in: :issue:`1992` :issue:`2012` :issue:`2514`
+    :issue:`2610` :issue:`3024` :pr:`3030`
 -   Custom ``callback`` function are now allowed to receive the ``UNSET`` sentinel
     value.  :pr:`3030`
 -   Allow ``default`` to be set on ``Argument`` for ``nargs = -1``. :issue:`2164`

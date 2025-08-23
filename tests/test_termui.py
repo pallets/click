@@ -489,6 +489,18 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
     assert "my-default-value" not in result.output
 
 
+REPEAT = object()
+"""Sentinel value to indicate that the prompt is expected to be repeated.
+
+I.e. the value provided by the user is not satisfactory and need to be re-prompted.
+"""
+
+INVALID = object()
+"""Sentinel value to indicate that the prompt is expected to be invalid.
+
+On invalid input, Click will output an error message and re-prompt the user.
+"""
+
 BOOLEAN_FLAG_PROMPT_CASES = [
     ###
     ### Test cases with prompt=True explicitly enabled for the flag.
@@ -559,7 +571,7 @@ FLAG_VALUE_PROMPT_CASES = [
     ###
     # Prompt is allowed and the flag has no default, so it prompts.
     # But the flag_value is not set, so it defaults to a string.
-    # XXX ({"prompt": True}, [], "", "", ""),
+    ({"prompt": True}, [], "", "", REPEAT),
     ({"prompt": True}, [], "", "y", "y"),
     ({"prompt": True}, [], "", "n", "n"),
     ({"prompt": True}, [], "", "foo", "foo"),
@@ -572,10 +584,10 @@ FLAG_VALUE_PROMPT_CASES = [
     ({"prompt": True, "flag_value": False}, [], "[y/N]", "y", True),
     ({"prompt": True, "flag_value": False}, [], "[y/N]", "n", False),
     # Other flag values changes the auto-detection of the flag type.
-    # XXX ({"prompt": True, "flag_value": None}, [], "", "", ""),
+    ({"prompt": True, "flag_value": None}, [], "", "", REPEAT),
     ({"prompt": True, "flag_value": None}, [], "", "y", "y"),
     ({"prompt": True, "flag_value": None}, [], "", "n", "n"),
-    # XXX ({"prompt": True, "flag_value": "foo"}, [], "", "", ""),
+    ({"prompt": True, "flag_value": "foo"}, [], "", "", REPEAT),
     ({"prompt": True, "flag_value": "foo"}, [], "", "y", "y"),
     ({"prompt": True, "flag_value": "foo"}, [], "", "n", "n"),
     ###
@@ -585,9 +597,9 @@ FLAG_VALUE_PROMPT_CASES = [
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "", True),
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "y", True),
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "n", False),
-    ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "", True),
-    ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "y", True),
-    ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "n", False),
+    ({"prompt": True, "default": True, "flag_value": False}, [], "[y/N]", "", False),
+    ({"prompt": True, "default": True, "flag_value": False}, [], "[y/N]", "y", True),
+    ({"prompt": True, "default": True, "flag_value": False}, [], "[y/N]", "n", False),
     # default=False
     ({"prompt": True, "default": False, "flag_value": True}, [], "[y/N]", "", False),
     ({"prompt": True, "default": False, "flag_value": True}, [], "[y/N]", "y", True),
@@ -596,31 +608,29 @@ FLAG_VALUE_PROMPT_CASES = [
     ({"prompt": True, "default": False, "flag_value": False}, [], "[y/N]", "y", True),
     ({"prompt": True, "default": False, "flag_value": False}, [], "[y/N]", "n", False),
     # default=None
-    # XXX
-    # (
-    #     {"prompt": True, "default": None, "flag_value": True},
-    #     [],
-    #     "[y/n]",
-    #     "",
-    #     False,
-    # ),
+    (
+        {"prompt": True, "default": None, "flag_value": True},
+        [],
+        "[y/n]",
+        "",
+        INVALID,
+    ),
     ({"prompt": True, "default": None, "flag_value": True}, [], "[y/n]", "y", True),
     ({"prompt": True, "default": None, "flag_value": True}, [], "[y/n]", "n", False),
-    # XXX
-    # (
-    #     {"prompt": True, "default": None, "flag_value": False},
-    #     [],
-    #     "[y/n]",
-    #     "",
-    #     False,
-    # ),
+    (
+        {"prompt": True, "default": None, "flag_value": False},
+        [],
+        "[y/n]",
+        "",
+        INVALID,
+    ),
     ({"prompt": True, "default": None, "flag_value": False}, [], "[y/n]", "y", True),
     ({"prompt": True, "default": None, "flag_value": False}, [], "[y/n]", "n", False),
     # If the flag_value is None, the flag behave like a string flag, whatever the
     # default is.
-    ({"prompt": True, "default": True, "flag_value": None}, [], "[True]", "", "True"),
-    ({"prompt": True, "default": True, "flag_value": None}, [], "[True]", "y", "y"),
-    ({"prompt": True, "default": True, "flag_value": None}, [], "[True]", "n", "n"),
+    ({"prompt": True, "default": True, "flag_value": None}, [], "", "", REPEAT),
+    ({"prompt": True, "default": True, "flag_value": None}, [], "", "y", "y"),
+    ({"prompt": True, "default": True, "flag_value": None}, [], "", "n", "n"),
     (
         {"prompt": True, "default": False, "flag_value": None},
         [],
@@ -630,7 +640,7 @@ FLAG_VALUE_PROMPT_CASES = [
     ),
     ({"prompt": True, "default": False, "flag_value": None}, [], "[False]", "y", "y"),
     ({"prompt": True, "default": False, "flag_value": None}, [], "[False]", "n", "n"),
-    # XXX ({"prompt": True, "default": None, "flag_value": None}, [], "", "", "False"),
+    ({"prompt": True, "default": None, "flag_value": None}, [], "", "", REPEAT),
     ({"prompt": True, "default": None, "flag_value": None}, [], "", "y", "y"),
     ({"prompt": True, "default": None, "flag_value": None}, [], "", "n", "n"),
 ]
@@ -672,15 +682,24 @@ def test_flag_value_prompt(
     else:
         expected_output = ""
         if prompt is not None:
+            # Build the expected prompt.
             assert isinstance(prompt, str)
-            expected_output += "Flag"
-            if prompt:
-                expected_output += f" {prompt}"
-            expected_output += ": "
+            expected_prompt = f"Flag {prompt}: " if prompt else "Flag: "
+
+            # Add the user input to the expected output.
             assert isinstance(input, str)
-            expected_output += f"{input}\n"
-        expected_output += f"{expected!r}\n"
+            expected_output += f"{expected_prompt}{input}\n"
+
+            if expected is INVALID:
+                expected_output += "Error: invalid input\n"
+
+            # The prompt is expected to be repeated.
+            if expected in (REPEAT, INVALID):
+                expected_output += expected_prompt
+
+        if expected not in (REPEAT, INVALID):
+            expected_output += f"{expected!r}\n"
 
         assert result.output == expected_output
         assert not result.stderr
-        assert result.exit_code == 0
+        assert result.exit_code == 0 if expected not in (REPEAT, INVALID) else 1

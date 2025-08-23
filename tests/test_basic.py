@@ -302,8 +302,10 @@ def test_boolean_conversion(runner, value, expect):
         (None, [], None),
         # Default is normalized to None if it is UNSET.
         (UNSET, [], None),
+        # Legacy case: if default=True and flag_value is set, The value returned is the
+        # flag_value, not default itself.
+        (True, [], "upper"),
         # Non-string defaults are process as strings by the default Parameter's type.
-        (True, [], "True"),
         (False, [], "False"),
         (42, [], "42"),
         (12.3, [], "12.3"),
