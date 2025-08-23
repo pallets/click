@@ -336,7 +336,7 @@ To have an flag pass a value to the underlying function set `flag_value`. This a
 ```
 
 ````{caution}
-The `default` argument of options always [give to the underlying function its value *as-is*](api#click.Parameter).
+The `default` argument of options always give to the underlying function its value *as-is*.
 
 But for flags, the interaction between `flag_value` and `default` is a bit special.
 
