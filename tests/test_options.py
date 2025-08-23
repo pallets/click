@@ -1721,8 +1721,8 @@ class EnumSentinel(enum.Enum):
     FALSY_SENTINEL = object()
 
     def __bool__(self) -> Literal[False]:
-        """Force the sentinel to be falsy to make sure it is not caught by Click internal
-        implementation.
+        """Force the sentinel to be falsy to make sure it is not caught by Click
+        internal implementation.
 
         Falsy sentinels have been discussed in:
         https://github.com/pallets/click/pull/3030#pullrequestreview-3106604795
@@ -1856,8 +1856,8 @@ class Class2:
 @pytest.mark.parametrize(
     ("opt_params", "args", "expected"),
     [
-        # Check that the flag value is returned as-is when the option is passed, and not normalized
-        # to a boolean, even if it is explicitly declared as a flag.
+        # Check that the flag value is returned as-is when the option is passed, and
+        # not normalized to a boolean, even if it is explicitly declared as a flag.
         ({"type": EngineType, "flag_value": None}, ["--pro"], None),
         (
             {"type": EngineType, "is_flag": True, "flag_value": None},
@@ -1875,7 +1875,8 @@ class Class2:
             ["--pro"],
             EngineType.OSS,
         ),
-        # The default value is returned as-is when the option is not passed, whatever the flag value.
+        # The default value is returned as-is when the option is not passed, whatever
+        # the flag value.
         ({"type": EngineType, "flag_value": None}, [], None),
         ({"type": EngineType, "is_flag": True, "flag_value": None}, [], None),
         ({"type": EngineType, "flag_value": EngineType.OSS}, [], None),
@@ -1889,7 +1890,8 @@ class Class2:
             [],
             EngineType.OSS,
         ),
-        # The option has not enough parameters to be detected as flag-like, so it requires an argument.
+        # The option has not enough parameters to be detected as flag-like, so it
+        # requires an argument.
         (
             {"type": EngineType, "default": EngineType.OSS},
             ["--pro"],
@@ -1925,7 +1927,8 @@ class Class2:
             "EngineType.OSS",
         ),
         ({"type": str, "flag_value": EngineType.OSS, "default": 42}, [], "42"),
-        # But having the flag value set to integer is automaticcally recognized by Click.
+        # But having the flag value set to integer is automaticcally recognized by
+        # Click.
         ({"flag_value": 1, "default": True}, [], 1),
         ({"flag_value": 1, "default": 42}, [], 42),
         ({"type": int, "flag_value": 1, "default": True}, [], 1),
@@ -1958,7 +1961,8 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
     ("opt1_params", "opt2_params", "args", "expected"),
     [
         # Dual options sharing the same variable name, are not competitive, and the
-        # flag value is returned as-is. Especially when the type is force to be unprocessed.
+        # flag value is returned as-is. Especially when the type is force to be
+        # unprocessed.
         (
             {"flag_value": EngineType.OSS, "type": UNPROCESSED},
             {"flag_value": EngineType.PRO, "type": UNPROCESSED},
@@ -1977,8 +1981,8 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
             ["--opt2"],
             EngineType.PRO,
         ),
-        # Check that passing exotic flag values like classes is supported, but are rendered to strings
-        # when the type is not specified.
+        # Check that passing exotic flag values like classes is supported, but are
+        # rendered to strings when the type is not specified.
         (
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},

@@ -2422,8 +2422,8 @@ class Parameter:
                 # Return the first non-empty value of the list of environment variables.
                 if rv:
                     return rv
-                # Else, absence of value is interpreted as an environment variable that is
-                # not set, so proceed to the next one.
+                # Else, absence of value is interpreted as an environment variable that
+                # is not set, so proceed to the next one.
 
         return None
 
@@ -2742,9 +2742,9 @@ class Option(Parameter):
             # to be equal, make them equal.
             # warnings.warn(
             #     "A flag's `default` value will no longer be aligned with its "
-            #     "`flag_value` if `default=True` in Click 9.0. If you want the flag to "
-            #     "get the same `default` as its `flag_value`, update the option to "
-            #     "make its `default` parameter equal to its `flag_value`.",
+            #     "`flag_value` if `default=True` in Click 9.0. If you want the flag "
+            #     "to get the same `default` as its `flag_value`, update the option "
+            #     "to make its `default` parameter equal to its `flag_value`.",
             #     DeprecationWarning,
             #     stacklevel=2,
             # )
