@@ -174,88 +174,121 @@ def test_multiple_required(runner):
 
 
 @pytest.mark.parametrize(
-    ("args", "multiple", "nargs", "default", "expected"),
+    ("multiple", "nargs", "default", "expected"),
     [
         # If multiple values are allowed, defaults should be iterable.
-        ([], True, 1, [], ()),
-        ([], True, 1, (), ()),
-        ([], True, 1, tuple(), ()),
-        ([], True, 1, set(), ()),
-        ([], True, 1, frozenset(), ()),
-        ([], True, 1, {}, ()),
+        (True, 1, [], ()),
+        (True, 1, (), ()),
+        (True, 1, tuple(), ()),
+        (True, 1, set(), ()),
+        (True, 1, frozenset(), ()),
+        (True, 1, {}, ()),
         # Special values.
-        ([], True, 1, None, ()),
-        ([], True, 1, UNSET, ()),
+        (True, 1, None, ()),
+        (True, 1, UNSET, ()),
         # Number of values are kept as-is in the default.
-        ([], True, 1, [1], (1,)),
-        ([], True, 1, [1, 2], (1, 2)),
-        ([], True, 1, [1, 2, 3], (1, 2, 3)),
-        ([], True, 1, [1.1, 2.2], (1.1, 2.2)),
-        ([], True, 1, ["1", "2"], ("1", "2")),
-        ([], True, 1, [None, None], (None, None)),
-        # XXX Why items of the defaults are converted to strings and not left as
-        # integers?
-        ([], True, 1, {1, 2}, ("1", "2")),
-        ([], True, 1, frozenset([1, 2]), ("1", "2")),
-        ([], True, 1, {1: "a", 2: "b"}, ("1", "2")),
+        (True, 1, [1], (1,)),
+        (True, 1, [1, 2], (1, 2)),
+        (True, 1, [1, 2, 3], (1, 2, 3)),
+        (True, 1, [1.1, 2.2], (1.1, 2.2)),
+        (True, 1, ["1", "2"], ("1", "2")),
+        (True, 1, [None, None], (None, None)),
+        # Contrary to list or tuples, native Python types not supported by Click are
+        # not recognized and are converted to the default format: tuple of strings.
+        # Refs: https://github.com/pallets/click/issues/3036
+        (True, 1, {1, 2}, ("1", "2")),
+        (True, 1, frozenset([1, 2]), ("1", "2")),
+        (True, 1, {1: "a", 2: "b"}, ("1", "2")),
         # Multiple values with nargs > 1.
-        ([], True, 2, [], ()),
-        ([], True, 2, (), ()),
-        ([], True, 2, tuple(), ()),
-        ([], True, 2, set(), ()),
-        ([], True, 2, frozenset(), ()),
-        ([], True, 2, {}, ()),
-        ([], True, 2, None, ()),
-        ([], True, 2, UNSET, ()),
-        ([], True, 2, [[1, 2]], ((1, 2),)),
-        ([], True, 2, [[1, 2], [3, 4]], ((1, 2), (3, 4))),
-        ([], True, 2, [[1, 2], [3, 4], [5, 6]], ((1, 2), (3, 4), (5, 6))),
-        ([], True, 2, [[1.1, 2.2], [3.3, 4.4]], ((1.1, 2.2), (3.3, 4.4))),
-        ([], True, 2, [["1", "2"], ["3", "4"]], (("1", "2"), ("3", "4"))),
-        ([], True, 2, [[None, None], [None, None]], ((None, None), (None, None))),
-        ([], True, 2, [[1, 2.2], ["3", None]], ((1, 2.2), (3, None))),
-        ([], True, 2, [[1, 2.2], None], ((1, 2.2), None)),
-        #
-        ([], False, 2, [1, 2], (1, 2)),
-        #
+        (True, 2, [], ()),
+        (True, 2, (), ()),
+        (True, 2, tuple(), ()),
+        (True, 2, set(), ()),
+        (True, 2, frozenset(), ()),
+        (True, 2, {}, ()),
+        (True, 2, None, ()),
+        (True, 2, UNSET, ()),
+        (True, 2, [[1, 2]], ((1, 2),)),
+        (True, 2, [[1, 2], [3, 4]], ((1, 2), (3, 4))),
+        (True, 2, [[1, 2], [3, 4], [5, 6]], ((1, 2), (3, 4), (5, 6))),
+        (True, 2, [[1.1, 2.2], [3.3, 4.4]], ((1.1, 2.2), (3.3, 4.4))),
+        (True, 2, [["1", "2"], ["3", "4"]], (("1", "2"), ("3", "4"))),
+        (True, 2, [[None, None], [None, None]], ((None, None), (None, None))),
+        (True, 2, [[1, 2.2], ["3", None]], ((1, 2.2), (3, None))),
+        (True, 2, [[1, 2.2], None], ((1, 2.2), None)),
+        # Default of the right length works for non-multiples.
+        (False, 2, [1, 2], (1, 2)),
     ],
 )
-def test_good_defaults_for_multiple(runner, args, multiple, nargs, default, expected):
+def test_good_defaults_for_multiple(runner, multiple, nargs, default, expected):
     @click.command()
     @click.option("-a", multiple=multiple, nargs=nargs, default=default)
     def cmd(a):
         click.echo(repr(a), nl=False)
 
-    result = runner.invoke(cmd, args)
+    result = runner.invoke(cmd)
     assert result.output == repr(expected)
 
 
 @pytest.mark.parametrize(
-    ("multiple", "nargs", "default", "message"),
+    ("multiple", "nargs", "default", "exception", "message"),
     [
         # Non-iterables defaults.
-        (True, 1, "Yo", "Error: Invalid value for '-a': Value must be an iterable."),
-        (True, 1, "", "Error: Invalid value for '-a': Value must be an iterable."),
+        (
+            True,
+            1,
+            "Yo",
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            1,
+            "",
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
         (
             True,
             1,
             True,
+            None,
             "Error: Invalid value for '-a': Value must be an iterable.",
         ),
         (
             True,
             1,
             False,
+            None,
             "Error: Invalid value for '-a': Value must be an iterable.",
         ),
-        (True, 1, 12, "Error: Invalid value for '-a': Value must be an iterable."),
-        (True, 1, 7.9, "Error: Invalid value for '-a': Value must be an iterable."),
+        (
+            True,
+            1,
+            12,
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            1,
+            7.9,
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
         #
-        (False, 2, 42, "Error: Invalid value for '-a': Value must be an iterable."),
+        (
+            False,
+            2,
+            42,
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
         (
             True,
             2,
             ["test string which is not a list in the list"],
+            None,
             "Error: Invalid value for '-a': Value must be an iterable.",
         ),
         # Multiple options, each with 2 args, but with wrong length.
@@ -263,31 +296,87 @@ def test_good_defaults_for_multiple(runner, args, multiple, nargs, default, expe
             True,
             2,
             (1,),
+            None,
             "Error: Invalid value for '-a': Value must be an iterable.",
         ),
         (
             True,
             2,
             (1, 2, 3),
+            None,
             "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            2,
+            [tuple()],
+            ValueError,
+            r"'nargs' must be 0 \(or None\) for type <click\.types\.Tuple object at "
+            r"0x[0-9A-Fa-f]+>, but it was 2\.",
+        ),
+        (
+            True,
+            2,
+            [(1,)],
+            ValueError,
+            r"'nargs' must be 1 \(or None\) for type <click\.types\.Tuple object at "
+            r"0x[0-9A-Fa-f]+>, but it was 2\.",
+        ),
+        (
+            True,
+            2,
+            [(1, 2, 3)],
+            ValueError,
+            r"'nargs' must be 3 \(or None\) for type <click\.types\.Tuple object at "
+            r"0x[0-9A-Fa-f]+>, but it was 2\.",
         ),
         # A mix of valid and invalid defaults.
         (
             True,
             2,
             [[1, 2.2], []],
+            None,
             "Error: Invalid value for '-a': 2 values are required, but 0 were given.",
+        ),
+        # Default values that are iterable but not of the right length.
+        (
+            False,
+            2,
+            [1],
+            None,
+            "Error: Invalid value for '-a': Takes 2 values but 1 was given.",
+        ),
+        (
+            True,
+            2,
+            [[1]],
+            ValueError,
+            r"'nargs' must be 1 \(or None\) for type <click\.types\.Tuple object at "
+            r"0x[0-9A-Fa-f]+>, but it was 2\.",
         ),
     ],
 )
-def test_bad_defaults_for_multiple(runner, multiple, nargs, default, message):
-    @click.command()
-    @click.option("-a", multiple=multiple, nargs=nargs, default=default)
-    def cmd(a):
-        click.echo(repr(a))
+def test_bad_defaults_for_multiple(
+    runner, multiple, nargs, default, exception, message
+):
+    if exception:
+        assert issubclass(exception, Exception)
+    else:
+        assert exception is None
 
-    result = runner.invoke(cmd, [])
-    assert message in result.stderr
+    with (
+        pytest.raises(exception, match=re.compile(message))
+        if exception
+        else nullcontext()
+    ):
+
+        @click.command()
+        @click.option("-a", multiple=multiple, nargs=nargs, default=default)
+        def cmd(a):
+            click.echo(repr(a))
+
+        result = runner.invoke(cmd)
+        assert message in result.stderr
 
 
 @pytest.mark.parametrize("env_key", ["MYPATH", "AUTO_MYPATH"])
