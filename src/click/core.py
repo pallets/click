@@ -2080,6 +2080,16 @@ class Parameter:
         param_decls: cabc.Sequence[str] | None = None,
         type: types.ParamType | t.Any | None = None,
         required: bool = False,
+        # XXX The default historically embed two concepts:
+        # - the declaration of a Parameter object carrying the default (handy to
+        #   arbitrage the default value of coupled Parameters sharing the same
+        #   self.name, like flag options),
+        # - and the actual value of the default.
+        # It is confusing and is the source of many issues discussed in:
+        # https://github.com/pallets/click/pull/3030
+        # In the future, we might think of splitting it in two, not unlike
+        # Option.is_flag and Option.flag_value: we could have something like
+        # Parameter.is_default and Parameter.default_value.
         default: t.Any | t.Callable[[], t.Any] | None = UNSET,
         callback: t.Callable[[Context, Parameter, t.Any], t.Any] | None = None,
         nargs: int | None = None,
