@@ -13,8 +13,6 @@ Unreleased
     This allow ``default`` to be of any type, including ``bool`` or ``None``, fixing
     inconsistencies reported in: :issue:`1992` :issue:`2012` :issue:`2514`
     :issue:`2610` :issue:`3024` :pr:`3030`
--   Custom ``callback`` function are now allowed to receive the ``UNSET`` sentinel
-    value.  :pr:`3030`
 -   Allow ``default`` to be set on ``Argument`` for ``nargs = -1``. :issue:`2164`
     :pr:`3030`
 -   Show correct auto complete value for ``nargs`` option in combination with flag

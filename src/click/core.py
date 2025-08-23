@@ -2363,12 +2363,9 @@ class Parameter:
         2. Check if the value is missing (see: :meth:`value_is_missing`), and raise
            :exc:`MissingParameter` if it is required.
         3. If a :attr:`callback` is set, call it to have the value replaced by the
-           result of the callback. The callback is receiving the value as-is, which let
-           the developer decide how to handle the different cases.
-
-        .. versionchanged:: 8.3
-            The :attr:`callback` gets an internal sentinel if the parameter was not set
-            by the user and no default was specified.
+           result of the callback. If the value was not set, the callback receive
+           ``None``. This keep the legacy behavior as it was before the introduction of
+           the :attr:`UNSET` sentinel.
 
         :meta private:
         """
@@ -2378,6 +2375,10 @@ class Parameter:
             raise MissingParameter(ctx=ctx, param=self)
 
         if self.callback is not None:
+            # Legacy case: UNSET is not exposed directly to the callback, but converted
+            # to None.
+            if value is UNSET:
+                value = None
             value = self.callback(ctx, self, value)
 
         return value
