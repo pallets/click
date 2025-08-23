@@ -2249,6 +2249,8 @@ class Parameter:
         default value. In that order of precedence.
 
         If no value is found, an internal sentinel value is returned.
+
+        :meta private:
         """
         # Collect from the parse the value passed by the user to the CLI.
         value = opts.get(self.name, UNSET)  # type: ignore
@@ -2337,13 +2339,14 @@ class Parameter:
         return convert(value)
 
     def value_is_missing(self, value: t.Any) -> bool:
-        """
-        A value is considered missing if:
+        """A value is considered missing if:
 
         - it is :attr:`UNSET`,
         - or if it is an empty sequence while the parameter is suppose to have
           non-single value (i.e. :attr:`nargs` is not ``1`` or :attr:`multiple` is
           set).
+
+        :meta private:
         """
         if value is UNSET:
             return True
@@ -2366,6 +2369,8 @@ class Parameter:
         .. versionchanged:: 8.3
             The :attr:`callback` gets an internal sentinel if the parameter was not set
             by the user and no default was specified.
+
+        :meta private:
         """
         value = self.type_cast_value(ctx, value)
 
@@ -2399,6 +2404,8 @@ class Parameter:
             The raw value extracted from the environment is not normalized and is
             returned as-is. Any normalization or reconciliation is performed later by
             the :class:`Parameter`'s :attr:`type`.
+
+        :meta private:
         """
         if not self.envvar:
             return None
@@ -2426,6 +2433,8 @@ class Parameter:
         Returns the string as-is or splits it into a sequence of strings if the
         parameter is expecting multiple values (i.e. its :attr:`nargs` property is set
         to a value other than ``1``).
+
+        :meta private:
         """
         rv = self.resolve_envvar_value(ctx)
 
@@ -2445,6 +2454,8 @@ class Parameter:
         If the parameter is deprecated, this method warn the user about it. But only if
         the value has been explicitly set by the user (and as such, is not coming from
         a default).
+
+        :meta private:
         """
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
@@ -3050,6 +3061,8 @@ class Option(Parameter):
         the :attr:`envvar` property, we fallback on :attr:`Context.auto_envvar_prefix`
         to build dynamiccaly the environment variable name using the
         :python:`{ctx.auto_envvar_prefix}_{self.name.upper()}` template.
+
+        :meta private:
         """
         rv = super().resolve_envvar_value(ctx)
 
@@ -3070,9 +3083,8 @@ class Option(Parameter):
         return None
 
     def value_from_envvar(self, ctx: Context) -> t.Any:
-        """
-        For :class:`Option`, this method processes the raw environment variable string
-        the same way as :func:`Parameter.value_from_envvar` does.
+        """For :class:`Option`, this method processes the raw environment variable
+        string the same way as :func:`Parameter.value_from_envvar` does.
 
         But in the case of non-boolean flags, the value is analyzed to determine if the
         flag is activated or not, and returns a boolean of its activation, or the
@@ -3080,6 +3092,8 @@ class Option(Parameter):
 
         This method also takes care of repeated options (i.e. options with
         :attr:`multiple` set to ``True``).
+
+        :meta private:
         """
         rv = self.resolve_envvar_value(ctx)
 
@@ -3113,13 +3127,14 @@ class Option(Parameter):
     def consume_value(
         self, ctx: Context, opts: cabc.Mapping[str, Parameter]
     ) -> tuple[t.Any, ParameterSource]:
-        """
-        For :class:`Option`, the value can be collected from an interactive prompt if
-        the option is a flag that needs a value (and the :attr:`prompt` property is
+        """For :class:`Option`, the value can be collected from an interactive prompt
+        if the option is a flag that needs a value (and the :attr:`prompt` property is
         set).
 
         Additionally, this method handles flag option that are activated without a
         value, in which case the :attr:`flag_value` is returned.
+
+        :meta private:
         """
         value, source = super().consume_value(ctx, opts)
 
