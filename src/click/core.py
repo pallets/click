@@ -2439,7 +2439,7 @@ class Parameter:
         rv = self.resolve_envvar_value(ctx)
 
         if rv is not None and self.nargs != 1:
-            rv = self.type.split_envvar_value(rv)
+            rv = t.cast(cabc.Sequence[str], self.type.split_envvar_value(rv))
 
         return rv
 
