@@ -3059,6 +3059,12 @@ class Option(Parameter):
             # one.
             if default in (UNSET, None):
                 default = None
+            # Nothing prevent you to declare an option that is auto-detected as a
+            # boolean flag, is allow to prompt but still declare a non-boolean default.
+            # So with this casting, we aligns the default value to the prompt behavior.
+            # The prompt is going to default to [Y/n]), and so not entering a value for
+            # input is expected to make the option takes True as the default.
+            # Refs: https://github.com/pallets/click/pull/3030#discussion_r2289180249
             else:
                 default = bool(default)
             return confirm(self.prompt, default)
