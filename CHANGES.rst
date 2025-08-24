@@ -1,10 +1,21 @@
 .. currentmodule:: click
 
-Version 8.2.x
+Version 8.3.x
 -------------
 
 Unreleased
-
+-   Rework relationship between ``flag_value`` and ``default``: the value given to
+    ``default`` is now left untouched, and keep the value it receive. So
+    ``default=<desired_value>`` is respected and ``<desired_value>`` is passed on as-is
+    to the CLI function. With the exception of flag options, where setting
+    ``default=True`` maintain the legacy behavior of defaulting to the ``flag_value``.
+    This allow ``default`` to be of any type, including ``bool`` or ``None``, fixing
+    inconsistencies reported in: :issue:`1992` :issue:`2012` :issue:`2514`
+    :issue:`2610` :issue:`3024` :pr:`3030`
+-   Allow ``default`` to be set on ``Argument`` for ``nargs = -1``. :issue:`2164`
+    :pr:`3030`
+-   Show correct auto complete value for ``nargs`` option in combination with flag
+    option :issue:`2813`
 -   Show correct auto complete value for nargs option in combination with flag option :issue:`2813`
 -   Fix handling of quoted and escaped parameters in Fish autocompletion. :issue:`2995` :pr:`3013`
 -   Lazily import ``shutil``. :pr:`3023`
@@ -14,12 +25,12 @@ Version 8.2.2
 
 Released 2025-07-31
 
--   Fix reconciliation of `default`, `flag_value` and `type` parameters for
+-   Fix reconciliation of ``default``, ``flag_value`` and ``type`` parameters for
     flag options, as well as parsing and normalization of environment variables.
     :issue:`2952` :pr:`2956`
 -   Fix typing issue in ``BadParameter`` and ``MissingParameter`` exceptions for the
     parameter ``param_hint`` that did not allow for a sequence of string where the
-    underlying functino ``_join_param_hints`` allows for it. :issue:`2777` :pr:`2990`
+    underlying function ``_join_param_hints`` allows for it. :issue:`2777` :pr:`2990`
 -   Use the value of ``Enum`` choices to render their default value in help
     screen. Refs :issue:`2911` :pr:`3004`
 -   Fix completion for the Z shell (``zsh``) for completion items containing
