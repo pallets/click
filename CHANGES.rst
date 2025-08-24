@@ -1,10 +1,9 @@
 .. currentmodule:: click
 
-Version 8.2.x
+Version 8.3.x
 -------------
 
 Unreleased
-
 -   Rework relationship between ``flag_value`` and ``default``: the value given to
     ``default`` is now left untouched, and keep the value it receive. So
     ``default=<desired_value>`` is respected and ``<desired_value>`` is passed on as-is
@@ -17,6 +16,9 @@ Unreleased
     :pr:`3030`
 -   Show correct auto complete value for ``nargs`` option in combination with flag
     option :issue:`2813`
+-   Show correct auto complete value for nargs option in combination with flag option :issue:`2813`
+-   Fix handling of quoted and escaped parameters in Fish autocompletion. :issue:`2995` :pr:`3013`
+-   Lazily import ``shutil``. :pr:`3023`
 
 Version 8.2.2
 -------------
