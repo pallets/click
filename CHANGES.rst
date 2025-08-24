@@ -1,9 +1,10 @@
 .. currentmodule:: click
 
 Version 8.3.x
--------------
+--------------
 
 Unreleased
+
 -   Rework relationship between ``flag_value`` and ``default``: the value given to
     ``default`` is now left untouched, and keep the value it receive. So
     ``default=<desired_value>`` is respected and ``<desired_value>`` is passed on as-is
