@@ -30,6 +30,7 @@ from collections import deque
 from gettext import gettext as _
 from gettext import ngettext
 
+from ._utils import FLAG_NEEDS_VALUE
 from ._utils import UNSET
 from .exceptions import BadArgumentUsage
 from .exceptions import BadOptionUsage
@@ -37,6 +38,7 @@ from .exceptions import NoSuchOption
 from .exceptions import UsageError
 
 if t.TYPE_CHECKING:
+    from ._utils import T_FLAG_NEEDS_VALUE
     from ._utils import T_UNSET
     from .core import Argument as CoreArgument
     from .core import Context
@@ -44,11 +46,6 @@ if t.TYPE_CHECKING:
     from .core import Parameter as CoreParameter
 
 V = t.TypeVar("V")
-
-# Sentinel value that indicates an option was passed as a flag without a
-# value but is not a flag option. Option.consume_value uses this to
-# prompt or use the flag_value.
-_flag_needs_value = object()
 
 
 def _unpack_args(
@@ -431,13 +428,15 @@ class _OptionParser:
 
     def _get_value_from_state(
         self, option_name: str, option: _Option, state: _ParsingState
-    ) -> t.Any:
+    ) -> str | cabc.Sequence[str] | T_FLAG_NEEDS_VALUE:
         nargs = option.nargs
+
+        value: str | cabc.Sequence[str] | T_FLAG_NEEDS_VALUE
 
         if len(state.rargs) < nargs:
             if option.obj._flag_needs_value:
                 # Option allows omitting the value.
-                value = _flag_needs_value
+                value = FLAG_NEEDS_VALUE
             else:
                 raise BadOptionUsage(
                     option_name,
@@ -458,7 +457,7 @@ class _OptionParser:
             ):
                 # The next arg looks like the start of an option, don't
                 # use it as the value if omitting the value is allowed.
-                value = _flag_needs_value
+                value = FLAG_NEEDS_VALUE
             else:
                 value = state.rargs.pop(0)
         else:
