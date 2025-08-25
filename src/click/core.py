@@ -2606,15 +2606,6 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
 
-    .. caution::
-        Flags specifying a ``flag_value`` and whose ``default=True`` will have
-        their ``default`` aligned to the ``flag_value``.
-
-        This means there is no way to setup a flag whose default ``True`` and
-        whose ``flag_value`` is something else than ``True``.
-
-        This is to support legacy behavior that will be removed in Click 9.0.
-
     .. versionchanged:: 8.2
         ``envvar`` used with ``flag_value`` will always use the ``flag_value``,
         previously it would use the value of the environment variable.
@@ -2742,23 +2733,13 @@ class Option(Parameter):
             if self.default is UNSET and not self.required:
                 self.default = False
 
-        # XXX Support the legacy case of aligning the default value with the flag_value
-        # for flags whose default is explicitly set to True. As long as we have this
-        # condition, there is no way a flag can have a default set to True, unless its
-        # flag_value itself is set to True. Refs:
+        # Support the special case of aligning the default value with the flag_value
+        # for flags whose default is explicitly set to True. Note that as long as we
+        # have this condition, there is no way a flag can have a default set to True,
+        # and a flag_value set to something else. Refs:
         # https://github.com/pallets/click/issues/3024#issuecomment-3146199461
-        # https://github.com/pallets/click/pull/3030/files#r2288936493
+        # https://github.com/pallets/click/pull/3030/commits/06847da
         if self.default is True and self.flag_value is not UNSET:
-            # This message is a convoluted way to explain that if you want things
-            # to be equal, make them equal.
-            # warnings.warn(
-            #     "A flag's `default` value will no longer be aligned with its "
-            #     "`flag_value` if `default=True` in Click 9.0. If you want the flag "
-            #     "to get the same `default` as its `flag_value`, update the option "
-            #     "to make its `default` parameter equal to its `flag_value`.",
-            #     DeprecationWarning,
-            #     stacklevel=2,
-            # )
             self.default = self.flag_value
 
         # Set the default flag_value if it is not set.
@@ -3070,11 +3051,14 @@ class Option(Parameter):
             # one.
             if default in (UNSET, None):
                 default = None
-            # Nothing prevent you to declare an option that is auto-detected as a
-            # boolean flag, is allow to prompt but still declare a non-boolean default.
-            # So with this casting, we aligns the default value to the prompt behavior.
-            # The prompt is going to default to [Y/n]), and so not entering a value for
-            # input is expected to make the option takes True as the default.
+            # Nothing prevent you to declare an option that is simultaneously:
+            # 1) auto-detected as a boolean flag,
+            # 2) allowed to prompt, and
+            # 3) still declare a non-boolean default.
+            # This forced casting into a boolean is necessary to align any non-boolean
+            # default to the prompt, which is going to be a [y/n]-style confirmation
+            # because the option is still a boolean flag. That way, instead of [y/n],
+            # we get [Y/n] or [y/N] depending on the truthy value of the default.
             # Refs: https://github.com/pallets/click/pull/3030#discussion_r2289180249
             else:
                 default = bool(default)

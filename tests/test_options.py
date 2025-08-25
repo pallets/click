@@ -1478,11 +1478,11 @@ def test_invalid_flag_definition(runner, args, opts):
         ("xMl", [], "xMl"),
         (" ᕕ( ᐛ )ᕗ ", [], " ᕕ( ᐛ )ᕗ "),
         (None, [], None),
-        # Legacy case: UNSET is not exposed directly to the callback, but converted to
+        # Special case: UNSET is not provided as-is to the callback, but normalized to
         # None.
         (UNSET, [], None),
-        # Legacy case: if default=True and flag_value is set, The value returned is the
-        # flag_value, not default itself.
+        # Special case: if default=True and flag_value is set, the value returned is the
+        # flag_value, not the True Python value itself.
         (True, [], "js"),
         # Non-string defaults are process as strings by the default Parameter's type.
         (False, [], "False"),
