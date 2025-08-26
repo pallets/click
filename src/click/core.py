@@ -19,6 +19,7 @@ from itertools import repeat
 from types import TracebackType
 
 from . import types
+from ._utils import FLAG_NEEDS_VALUE
 from ._utils import UNSET
 from .exceptions import Abort
 from .exceptions import BadParameter
@@ -31,7 +32,6 @@ from .formatting import HelpFormatter
 from .formatting import join_options
 from .globals import pop_context
 from .globals import push_context
-from .parser import _flag_needs_value
 from .parser import _OptionParser
 from .parser import _split_opt
 from .termui import confirm
@@ -3185,7 +3185,7 @@ class Option(Parameter):
 
         # The parser will emit a sentinel value if the option is allowed to as a flag
         # without a value.
-        if value is _flag_needs_value:
+        if value is FLAG_NEEDS_VALUE:
             # If the option allows for a prompt, we start an interaction with the user.
             if self.prompt is not None and not ctx.resilient_parsing:
                 value = self.prompt_for_value(ctx)
@@ -3207,14 +3207,14 @@ class Option(Parameter):
 
         # Re-interpret a multiple option which has been sent as-is by the parser.
         # Here we replace each occurrence of value-less flags (marked by the
-        # _flag_needs_value sentinel) with the flag_value.
+        # FLAG_NEEDS_VALUE sentinel) with the flag_value.
         elif (
             self.multiple
             and value is not UNSET
             and source not in (ParameterSource.DEFAULT, ParameterSource.DEFAULT_MAP)
-            and any(v is _flag_needs_value for v in value)
+            and any(v is FLAG_NEEDS_VALUE for v in value)
         ):
-            value = [self.flag_value if v is _flag_needs_value else v for v in value]
+            value = [self.flag_value if v is FLAG_NEEDS_VALUE else v for v in value]
             source = ParameterSource.COMMANDLINE
 
         # The value wasn't set, or used the param's default, prompt for one to the user
