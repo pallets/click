@@ -5,14 +5,16 @@ Version 8.3.x
 
 Unreleased
 
--   Rework relationship between ``flag_value`` and ``default``: the value given to
-    ``default`` is now left untouched, and keep the value it receive. So
-    ``default=<desired_value>`` is respected and ``<desired_value>`` is passed on as-is
-    to the CLI function. With the exception of flag options, where setting
-    ``default=True`` maintain the legacy behavior of defaulting to the ``flag_value``.
-    This allow ``default`` to be of any type, including ``bool`` or ``None``, fixing
-    inconsistencies reported in: :issue:`1992` :issue:`2012` :issue:`2514`
-    :issue:`2610` :issue:`3024` :pr:`3030`
+-   **Improved flag option handling**: Reworked the relationship between ``flag_value``
+    and ``default`` parameters for better consistency:
+
+    * The ``default`` parameter value is now preserved as-is and passed directly
+      to CLI functions (no more unexpected transformations)
+    * Exception: flag options with ``default=True`` maintain backward compatibility
+      by defaulting to their ``flag_value``
+    * The ``default`` parameter can now be any type (``bool``, ``None``, etc.)
+    * Fixes inconsistencies reported in: :issue:`1992` :issue:`2514` :issue:`2610`
+      :issue:`3024` :pr:`3030`
 -   Allow ``default`` to be set on ``Argument`` for ``nargs = -1``. :issue:`2164`
     :pr:`3030`
 -   Show correct auto complete value for ``nargs`` option in combination with flag

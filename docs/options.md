@@ -335,14 +335,12 @@ To have an flag pass a value to the underlying function set `flag_value`. This a
     invoke(info)
 ```
 
-````{caution}
-The `default` argument of options always give to the underlying function its value *as-is*.
+````{note}
+The `default` value is given to the underlying function as-is. So if you set `default=None`, the value passed to the function is the `None` Python value. Same for any other type.
 
-But for flags, the interaction between `flag_value` and `default` is a bit special.
+But there is a special case for flags. If a flag has a `flag_value`, then setting `default=True` is interpreted as *the flag should be activated by default*. So instead of the underlying function receiving the `True` Python value, it will receive the `flag_value`.
 
-If a flag has a `flag_value`, setting `default` to `True` means that the flag is activated by default. Not that the value passed to the underlying function is the `True` Python value. Instead, the default value will be aligned to the `flag_value` behind the scenes.
-
-Which means, the in example above, this option:
+Which means, in example above, this option:
 
 ```python
 @click.option('--upper', 'transformation', flag_value='upper', default=True)
@@ -354,9 +352,7 @@ is equivalent to:
 @click.option('--upper', 'transformation', flag_value='upper', default='upper')
 ```
 
-This was implemented to support legacy behavior, that will be removed in Click 9.0 to allow for default to take any value, including `True`.
-
-In the mean time, to avoid confusion, it is recommended to always set `default` to the actual default value you want to pass to the underlying function, and not use `True`, `False` or `None`. Unless that's the precise value you want to explicitly force as default.
+Because the two are equivalent, it is recommended to always use the second form, and set `default` to the actual value you want to pass. And not use the special `True` case. This makes the code more explicit and predictable.
 ````
 
 ## Values from Environment Variables
