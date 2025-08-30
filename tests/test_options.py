@@ -1667,8 +1667,9 @@ def test_non_flag_with_non_negatable_default(runner):
 
 
 class HashType(enum.Enum):
-    MD5 = enum.auto()
-    SHA1 = enum.auto()
+    MD5 = "MD5"
+    SHA1 = "SHA1"
+    SHA256 = "SHA-256"
 
 
 class Number(enum.IntEnum):
@@ -1677,8 +1678,9 @@ class Number(enum.IntEnum):
 
 
 class Letter(enum.StrEnum):
-    A = enum.auto()
-    B = enum.auto()
+    NAME_1 = "Value-1"
+    NAME_2 = "Value_2"
+    NAME_3 = "42_value"
 
 
 class Color(enum.Flag):
@@ -1694,23 +1696,27 @@ class ColorInt(enum.IntFlag):
 
 
 @pytest.mark.parametrize(
-    ("choices", "metavars"),
+    ("choices", "metavar"),
     [
-        pytest.param(["foo", "bar"], "[TEXT]", id="text choices"),
-        pytest.param([1, 2], "[INTEGER]", id="int choices"),
-        pytest.param([1.0, 2.0], "[FLOAT]", id="float choices"),
-        pytest.param([True, False], "[BOOLEAN]", id="bool choices"),
-        pytest.param(["foo", 1], "[TEXT|INTEGER]", id="text/int choices"),
-        pytest.param(HashType, "[HASHTYPE]", id="enum choices"),
-        pytest.param(Number, "[NUMBER]", id="int enum choices"),
-        pytest.param(Letter, "[LETTER]", id="str enum choices"),
-        pytest.param(Color, "[COLOR]", id="flag enum choices"),
-        pytest.param(ColorInt, "[COLORINT]", id="int flag enum choices"),
+        (["foo", "bar"], "[TEXT]"),
+        ([1, 2], "[INTEGER]"),
+        ([1.0, 2.0], "[FLOAT]"),
+        ([True, False], "[BOOLEAN]"),
+        (["foo", 1], "[TEXT|INTEGER]"),
+        (HashType, "[HASHTYPE]"),
+        (Number, "[NUMBER]"),
+        (Letter, "[LETTER]"),
+        (Color, "[COLOR]"),
+        (ColorInt, "[COLORINT]"),
     ],
 )
-def test_usage_show_choices(runner, choices, metavars):
-    """When show_choices=False is set, the --help output
-    should print choice metavars instead of values.
+def test_choice_usage_rendering(runner, choices, metavar):
+    """BY default ``--help`` prints choice's values in the usage message.
+
+    But ``show_choices=False`` makes ``--help`` prints choice's METAVAR instead of
+    values.
+
+    Also check that usage error message always suggests the actual values.
     """
 
     @click.command()
@@ -1723,14 +1729,31 @@ def test_usage_show_choices(runner, choices, metavars):
     def cli_without_choices(g):
         pass
 
-    result = runner.invoke(cli_with_choices, ["--help"])
-    assert (
-        f"[{'|'.join(i.name if isinstance(i, enum.Enum) else str(i) for i in choices)}]"
-        in result.output
+    display_values = tuple(
+        i.name if isinstance(i, enum.Enum) else str(i) for i in choices
     )
 
+    # Check that the choices values are rendered as-is in the usage message.
+    result = runner.invoke(cli_with_choices, ["--help"])
+    assert f"[{'|'.join(display_values)}]" in result.stdout
+    assert not result.stderr
+    assert result.exit_code == 0
+
+    # Check that the metavar is rendered instead of the choices values themselves.
     result = runner.invoke(cli_without_choices, ["--help"])
-    assert metavars in result.output
+    assert metavar in result.stdout
+    assert not result.stderr
+    assert result.exit_code == 0
+
+    # Check the usage error message suggests the actual accepted values.
+    for cli in (cli_with_choices, cli_without_choices):
+        result = runner.invoke(cli, ["-g", "random"])
+        assert (
+            "\n\nError: Invalid value for '-g': 'random' is not one of "
+            f"{', '.join(map(repr, display_values))}.\n" in result.stderr
+        )
+        assert not result.stdout
+        assert result.exit_code == 2
 
 
 @pytest.mark.parametrize(
@@ -1751,15 +1774,24 @@ def test_usage_show_choices(runner, choices, metavars):
         ([True, False], False, "False"),
         (["foo", 1], "foo", "foo"),
         (["foo", 1], 1, "1"),
-        # Enum choices are rendered as their names.
+        # Enum choices are rendered as their names, not values.
         # See: https://github.com/pallets/click/issues/2911
         (HashType, HashType.SHA1, "SHA1"),
         # Enum choices allow defaults strings that are their names.
-        (HashType, "SHA1", "SHA1"),
+        (HashType, HashType.SHA256, "SHA256"),
+        (HashType, "SHA256", "SHA256"),
         (Number, Number.TWO, "TWO"),
-        (Letter, Letter.B, "B"),
+        (Number, "TWO", "TWO"),
+        (Letter, Letter.NAME_1, "NAME_1"),
+        (Letter, Letter.NAME_2, "NAME_2"),
+        (Letter, Letter.NAME_3, "NAME_3"),
+        (Letter, "NAME_1", "NAME_1"),
+        (Letter, "NAME_2", "NAME_2"),
+        (Letter, "NAME_3", "NAME_3"),
         (Color, Color.GREEN, "GREEN"),
+        (Color, "GREEN", "GREEN"),
         (ColorInt, ColorInt.GREEN, "GREEN"),
+        (ColorInt, "GREEN", "GREEN"),
     ],
 )
 def test_choice_default_rendering(runner, choices, default, default_string):
