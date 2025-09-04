@@ -25,6 +25,7 @@ Unreleased
 -   Properly forward exception information to resources registered with
     ``click.core.Context.with_resource()``. :issue:`2447` :pr:`3058`
 -   Fix regression related to EOF handling in CliRunner. :issue:`2939`:pr:`2940`
+-   Don't discard pager arguments. :issue:`3039` :pr:`3055`
 
 Version 8.2.2
 -------------
