@@ -7,8 +7,9 @@
 :local: true
 ```
 
-Answers the question, is the keyword argument (kwarg) expressive
-N
+The table answers the question, is the keyword argument (kwarg) expressive.
+Along the top is situations. Right now some are just kwargs hopefully they all
+get proper names.
 
 ## Options inherited from Parameter
 
@@ -20,7 +21,11 @@ N
 | type     | Yes   | Yes, Note 1 | Yes, Note 1 | No, Note 2 | No, Note 3        | Yes          |     |
 | default  | Yes   | Yes, Note 4 | Yes, Note 4 | Yes        | Yes               | Yes, Note 5  |     |
 | required | Yes   | Yes         | Yes         | Yes        | Sometimes, Note 6 | No           |     |
-| callback | Yes   | Yes         | Yes         | Yes        |   |             |     |
+| callback | Yes   | Yes         | Yes         | Yes, Note 7| Yes, Note 7       | Yes, Note 7  |     |
+| nargs    | -     | -           | -           | -          | -                 | -            |     |
+| metavar  | Yes   | Yes         | Yes         | Yes        | Yes               | Yes          |     |
+| expose_value | -     | -           | -           | -          | -                 | -            |     |
+| nargs    | -     | -           | -           | -          | -                 | -            |     |
 
 
 ```
@@ -33,10 +38,11 @@ Notes:
 1. The value must have arity equal to args value.
 1. In addition to normal usage, default may be used to indicate which of the flag values is default, by `default = True`.
 6. In the simple `is_flag=True`, no. In the `--flag/--no-flag`, yes indicating you must select one.
+1. Only use case (that I can think of) is multiple parameter dependent validation
 
 Abbreviations:
 * NW: No warn. Click does not stop you.
-* Boolean 1. Simple is_flag=True
+
 
 Terms:
 * [arity](https://en.wikipedia.org/wiki/Arity)
@@ -47,14 +53,14 @@ Note 1:
 .. click:example::
 
     @click.command()
-    @click.option('--echos', nargs=2, type=str)
-    def echo(echos):
-        click.echo(echos)
+    @click.option('--echoes', nargs=2, type=str)
+    def echo(echoes):
+        click.echo(echoes)
 
 
 .. click:run::
 
-    invoke(echo, args=['--echos', '2', '2'])
+    invoke(echo, args=['--echoes', '2', '2'])
 ```
 
 Note 4:
@@ -62,14 +68,14 @@ Note 4:
 .. click:example::
 
     @click.command()
-    @click.option('--echos', nargs=2, default=('p', 'y'))
-    def echo(echos):
-        click.echo(echos)
+    @click.option('--echoes', nargs=2, default=('p', 'y'))
+    def echo(echoes):
+        click.echo(echoes)
 
 
 .. click:run::
 
-    invoke(echo, args=['--echos', '2', '2'])
+    invoke(echo, args=['--echoes', '2', '2'])
 ```
 
 type x multiple
@@ -77,13 +83,13 @@ type x multiple
 .. click:example::
 
     @click.command()
-    @click.option('--echos', multiple=True)
-    def echo(echos):
-        click.echo(echos)
+    @click.option('--echoes', multiple=True)
+    def echo(echoes):
+        click.echo(echoes)
 
 .. click:run::
 
-    invoke(echo, args=['--echos', '2', '--echos', '2'])
+    invoke(echo, args=['--echoes', '2', '--echoes', '2'])
 ```
 
 type x counting
@@ -91,13 +97,13 @@ type x counting
 .. click:example::
 
     @click.command()
-    @click.option('--echos', count=True,)
-    def echo(echos):
-        click.echo(echos)
+    @click.option('--echoes', count=True,)
+    def echo(echoes):
+        click.echo(echoes)
 
 .. click:run::
 
-    invoke(echo, args=['--echos', '--echos', ])
+    invoke(echo, args=['--echoes', '--echoes', ])
 ```
 
 type x boolean
@@ -105,13 +111,13 @@ type x boolean
 .. click:example::
 
     @click.command()
-    @click.option('--echos', is_flag=True, type=int)
-    def echo(echos):
-        click.echo(echos)
+    @click.option('--echoes', is_flag=True, type=int)
+    def echo(echoes):
+        click.echo(echoes)
 
 .. click:run::
 
-    invoke(echo, args=['--echos'])
+    invoke(echo, args=['--echoes'])
 ```
 
 default x counting
@@ -119,9 +125,9 @@ default x counting
 .. click:example::
 
     @click.command()
-    @click.option('--echos', count=True, default=2)
-    def echo(echos):
-        click.echo(echos)
+    @click.option('--echoes', count=True, default=2)
+    def echo(echoes):
+        click.echo(echoes)
 
 .. click:run::
 
@@ -133,13 +139,13 @@ required x boolean
 .. click:example::
 
     @click.command()
-    @click.option('--echos/--no-echos', is_flag=True, required=True, )
-    def echo(echos):
-        click.echo(echos)
+    @click.option('--echoes/--no-echoes', is_flag=True, required=True, )
+    def echo(echoes):
+        click.echo(echoes)
 
 .. click:run::
 
-    invoke(echo, args=['--no-echos'])
+    invoke(echo, args=['--no-echoes'])
 ```
 
 required x flag value
@@ -147,16 +153,60 @@ required x flag value
 .. click:example::
 
     @click.command()
-    @click.option('--present', 'echos', is_flag=True, flag_value='present', required=True)
-    @click.option('--past', 'echos', is_flag=True, flag_value='past')
-    def echo(echos):
-        click.echo(echos)
+    @click.option('--present', 'echoes', is_flag=True, flag_value='present', required=True)
+    @click.option('--past', 'echoes', is_flag=True, flag_value='past')
+    def echo(echoes):
+        click.echo(echoes)
 
 .. click:run::
 
     invoke(echo, args=[])
 ```
 
+callback x counting
+```{eval-rst}
+.. click:example::
+
+    def validate_count(ctx, param, value):
+        print(f"validation: {value}" )
+        return value
+
+    @click.command()
+    @click.option('--echoes', count=True, callback=validate_count)
+    def echo(echoes):
+        click.echo(echoes)
+
+.. click:run::
+
+    invoke(echo, args=[ '--echoes'])
+```
+
+metavar x nargs >= 2
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('--echoes', nargs=2,)
+    def echo(echoes):
+        click.echo(echoes)
+
+.. click:run::
+    invoke(echo, args=['--help', ])
+```
+
+metavar x multiple
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('--echoes', multiple=True, metavar='meta')
+    def echo(echoes):
+        click.echo(echoes)
+
+.. click:run::
+    invoke(echo, args=['--help', ])
+    invoke(echo, args=['--echoes', '2', '--echoes', '2'])
+```
 ## Options from class
 
 ```{table}
