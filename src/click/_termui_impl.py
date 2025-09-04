@@ -450,7 +450,7 @@ def _pipepager(
 
     c = subprocess.Popen(
         [str(cmd_path)] + cmd_params,
-        shell=True,
+        shell=False,
         stdin=subprocess.PIPE,
         env=env,
         errors="replace",
