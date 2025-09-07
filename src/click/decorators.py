@@ -536,7 +536,45 @@ def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     def show_help(ctx: Context, param: Parameter, value: bool) -> None:
         """Callback that print the help page on ``<stdout>`` and exits."""
         if value and not ctx.resilient_parsing:
-            echo(ctx.get_help(), color=ctx.color)
+            # If interspersed args are enabled, try to find the target command for help
+            help_ctx = ctx
+            if ctx.allow_interspersed_args and hasattr(ctx, "_original_args"):
+                # Parse the original arguments to find the intended command
+                original_args = ctx._original_args
+
+                # Look for potential command names by finding non-option arguments
+                # This is a simplified heuristic that works for the most common cases
+                potential_commands = []
+                for arg in original_args:
+                    if not arg.startswith("-") and arg not in ctx.help_option_names:
+                        potential_commands.append(arg)
+
+                # Try to resolve the deepest valid command path
+                current_command = ctx.command
+                current_ctx = ctx
+
+                for cmd_name in potential_commands:
+                    if isinstance(current_command, Group):
+                        subcommand = current_command.get_command(current_ctx, cmd_name)
+                        if subcommand:
+                            # Create context for this subcommand
+                            current_ctx = Context(
+                                subcommand,
+                                parent=current_ctx,
+                                allow_extra_args=True,
+                                allow_interspersed_args=True,
+                            )
+                            current_command = subcommand
+                            help_ctx = current_ctx
+                        else:
+                            # Command not found, this might be an option value
+                            # Skip it and continue with the next potential command
+                            continue
+                    else:
+                        # Current command is not a group, can't have subcommands
+                        break
+
+            echo(help_ctx.get_help(), color=ctx.color)
             ctx.exit()
 
     if not param_decls:

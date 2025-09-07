@@ -304,6 +304,8 @@ class Context:
         #: must be never propagated to another arguments.  This is used
         #: to implement nested parsing.
         self._protected_args: list[str] = []
+        #: the original arguments passed to parse_args for interspersed help processing
+        self._original_args: list[str] = []
         #: the collected prefixes of the command's options.
         self._opt_prefixes: set[str] = set(parent._opt_prefixes) if parent else set()
 
@@ -1189,6 +1191,9 @@ class Command:
     def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
             raise NoArgsIsHelpError(ctx)
+
+        # Store original args for interspersed help processing
+        ctx._original_args = args.copy()
 
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
