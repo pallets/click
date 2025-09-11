@@ -220,12 +220,12 @@ class KeepOpenFile:
 
 
 def echo(
-    message: t.Optional[t.Any] = None,
-    file: t.Optional[t.IO[t.Any]] = None,
+    message: t.Any | None = None,
+    file: t.IO[t.Any] | None = None,
     nl: bool = True,
     err: bool = False,
-    color: t.Optional[bool] = None,
-    level: t.Optional[str] = None,
+    color: bool | None = None,
+    level: str | None = None,
 ) -> None:
     """Prints a message to the console.
 
