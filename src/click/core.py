@@ -483,11 +483,14 @@ class Context:
         exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         tb: TracebackType | None,
-    ) -> None:
+    ) -> bool | None:
         self._depth -= 1
+        exit_result: bool | None = None
         if self._depth == 0:
-            self.close()
+            exit_result = self._close_with_exception_info(exc_type, exc_value, tb)
         pop_context()
+
+        return exit_result
 
     @contextmanager
     def scope(self, cleanup: bool = True) -> cabc.Iterator[Context]:
@@ -615,9 +618,25 @@ class Context:
         :meth:`call_on_close`, and exit all context managers entered
         with :meth:`with_resource`.
         """
-        self._exit_stack.close()
+        self._close_with_exception_info(None, None, None)
+
+    def _close_with_exception_info(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        tb: TracebackType | None,
+    ) -> bool | None:
+        """Unwind the exit stack by calling its :meth:`__exit__` providing the exception
+        information to allow for exception handling by the various resources registered
+        using :meth;`with_resource`
+
+        :return: Whatever ``exit_stack.__exit__()`` returns.
+        """
+        exit_result = self._exit_stack.__exit__(exc_type, exc_value, tb)
         # In case the context is reused, create a new exit stack.
         self._exit_stack = ExitStack()
+
+        return exit_result
 
     @property
     def command_path(self) -> str:
