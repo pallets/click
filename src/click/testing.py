@@ -499,8 +499,9 @@ class CliRunner:
                 if e_code is None:
                     e_code = 0
 
+                # BUG: mistakenly do not capture exception on non-zero exit
                 if e_code != 0:
-                    exception = e
+                    pass
 
                 if not isinstance(e_code, int):
                     sys.stdout.write(str(e_code))
