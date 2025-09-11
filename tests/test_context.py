@@ -1,5 +1,7 @@
 import logging
+from contextlib import AbstractContextManager
 from contextlib import contextmanager
+from types import TracebackType
 
 import pytest
 
@@ -421,6 +423,97 @@ def test_with_resource():
         assert rv[0] == 1
 
     assert rv == [0]
+
+
+def test_with_resource_exception() -> None:
+    class TestContext(AbstractContextManager[list[int]]):
+        _handle_exception: bool
+        _base_val: int
+        val: list[int]
+
+        def __init__(self, base_val: int = 1, *, handle_exception: bool = True) -> None:
+            self._handle_exception = handle_exception
+            self._base_val = base_val
+
+        def __enter__(self) -> list[int]:
+            self.val = [self._base_val]
+            return self.val
+
+        def __exit__(
+            self,
+            exc_type: type[BaseException] | None,
+            exc_value: BaseException | None,
+            traceback: TracebackType | None,
+        ) -> bool | None:
+            if not exc_type:
+                self.val[0] = self._base_val - 1
+                return None
+
+            self.val[0] = self._base_val + 1
+            return self._handle_exception
+
+    class TestException(Exception):
+        pass
+
+    ctx = click.Context(click.Command("test"))
+
+    base_val = 1
+
+    with ctx.scope():
+        rv = ctx.with_resource(TestContext(base_val=base_val))
+        assert rv[0] == base_val
+
+    assert rv == [base_val - 1]
+
+    with ctx.scope():
+        rv = ctx.with_resource(TestContext(base_val=base_val))
+        raise TestException()
+
+    assert rv == [base_val + 1]
+
+    with pytest.raises(TestException):
+        with ctx.scope():
+            rv = ctx.with_resource(
+                TestContext(base_val=base_val, handle_exception=False)
+            )
+            raise TestException()
+
+    base_val_nested = 11
+    with ctx.scope():
+        rv = ctx.with_resource(TestContext(base_val=base_val))
+        rv_nested = ctx.with_resource(TestContext(base_val=base_val_nested))
+        assert rv[0] == base_val
+        assert rv_nested[0] == base_val_nested
+
+    assert rv == [base_val - 1]
+    assert rv_nested == [base_val_nested - 1]
+
+    with ctx.scope():
+        rv = ctx.with_resource(TestContext(base_val=base_val))
+        rv_nested = ctx.with_resource(TestContext(base_val=base_val_nested))
+        raise TestException()
+
+    # If one of the context "eats" the exceptions they will not be forwarded to other
+    # parts. This is due to how ExitStack unwinding works
+    assert rv_nested == [base_val_nested + 1]
+    assert rv == [base_val - 1]
+
+    with ctx.scope():
+        rv = ctx.with_resource(TestContext(base_val=base_val))
+        rv_nested = ctx.with_resource(
+            TestContext(base_val=base_val_nested, handle_exception=False)
+        )
+        raise TestException()
+
+    assert rv_nested == [base_val_nested + 1]
+    assert rv == [base_val + 1]
+
+    with pytest.raises(TestException):
+        rv = ctx.with_resource(TestContext(base_val=base_val, handle_exception=False))
+        rv_nested = ctx.with_resource(
+            TestContext(base_val=base_val_nested, handle_exception=False)
+        )
+        raise TestException()
 
 
 def test_make_pass_decorator_args(runner):
