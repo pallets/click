@@ -22,6 +22,8 @@ Unreleased
 -   Show correct auto complete value for nargs option in combination with flag option :issue:`2813`
 -   Fix handling of quoted and escaped parameters in Fish autocompletion. :issue:`2995` :pr:`3013`
 -   Lazily import ``shutil``. :pr:`3023`
+-   Properly forward exception information to resources registered with
+    ``click.core.Context.with_resource()``. :issue:`2447` :pr:`3058`
 
 Version 8.2.2
 -------------
