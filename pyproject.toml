@@ -1,6 +1,6 @@
 [project]
 name = "click"
-version = "8.2.1"
+version = "8.2.2"
 description = "Composable command line interface toolkit"
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -139,11 +139,6 @@ ignore = [
 [tool.ruff.lint.isort]
 force-single-line = true
 order-by-type = false
-
-[tool.gha-update]
-tag-only = [
-    "slsa-framework/slsa-github-generator",
-]
 
 [tool.tox]
 env_list = [

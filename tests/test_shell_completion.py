@@ -1,4 +1,6 @@
+import textwrap
 import warnings
+from collections.abc import Mapping
 
 import pytest
 
@@ -218,6 +220,19 @@ def test_option_flag():
     assert _get_words(cli, ["--on"], "a") == ["a1", "a2"]
 
 
+def test_flag_option_with_nargs_option():
+    cli = Command(
+        "cli",
+        add_help_option=False,
+        params=[
+            Argument(["a"], type=Choice(["a1", "a2", "b"])),
+            Option(["--flag"], is_flag=True),
+            Option(["-c"], type=Choice(["p", "q"]), nargs=2),
+        ],
+    )
+    assert _get_words(cli, ["a1", "--flag", "-c"], "") == ["p", "q"]
+
+
 def test_option_custom():
     def custom(ctx, param, incomplete):
         return [incomplete.upper()]
@@ -344,6 +359,7 @@ def test_full_source(runner, shell):
         ("zsh", {"COMP_WORDS": "a b", "COMP_CWORD": "1"}, "plain\nb\nbee\n"),
         ("fish", {"COMP_WORDS": "", "COMP_CWORD": ""}, "plain,a\nplain,b\tbee\n"),
         ("fish", {"COMP_WORDS": "a b", "COMP_CWORD": "b"}, "plain,b\tbee\n"),
+        ("fish", {"COMP_WORDS": 'a "b', "COMP_CWORD": '"b'}, "plain,b\tbee\n"),
     ],
 )
 @pytest.mark.usefixtures("_patch_for_completion")
@@ -351,6 +367,79 @@ def test_full_complete(runner, shell, env, expect):
     cli = Group("cli", commands=[Command("a"), Command("b", help="bee")])
     env["_CLI_COMPLETE"] = f"{shell}_complete"
     result = runner.invoke(cli, env=env)
+    assert result.output == expect
+
+
+@pytest.mark.parametrize(
+    ("env", "expect"),
+    [
+        (
+            {"COMP_WORDS": "", "COMP_CWORD": "0"},
+            textwrap.dedent(
+                """\
+                    plain
+                    a
+                    _
+                    plain
+                    b
+                    bee
+                    plain
+                    c\\:d
+                    cee:dee
+                    plain
+                    c:e
+                    _
+                """
+            ),
+        ),
+        (
+            {"COMP_WORDS": "a c", "COMP_CWORD": "1"},
+            textwrap.dedent(
+                """\
+                    plain
+                    c\\:d
+                    cee:dee
+                    plain
+                    c:e
+                    _
+                """
+            ),
+        ),
+        (
+            {"COMP_WORDS": "a c:", "COMP_CWORD": "1"},
+            textwrap.dedent(
+                """\
+                    plain
+                    c\\:d
+                    cee:dee
+                    plain
+                    c:e
+                    _
+                """
+            ),
+        ),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_zsh_full_complete_with_colons(
+    runner, env: Mapping[str, str], expect: str
+) -> None:
+    cli = Group(
+        "cli",
+        commands=[
+            Command("a"),
+            Command("b", help="bee"),
+            Command("c:d", help="cee:dee"),
+            Command("c:e"),
+        ],
+    )
+    result = runner.invoke(
+        cli,
+        env={
+            **env,
+            "_CLI_COMPLETE": "zsh_complete",
+        },
+    )
     assert result.output == expect
 
 
