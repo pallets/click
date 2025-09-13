@@ -24,6 +24,7 @@ Unreleased
 -   Lazily import ``shutil``. :pr:`3023`
 -   Properly forward exception information to resources registered with
     ``click.core.Context.with_resource()``. :issue:`2447` :pr:`3058`
+-   Fix regression related to EOF handling in CliRunner. :issue:`2939`:pr:`2940`
 
 Version 8.2.2
 -------------
