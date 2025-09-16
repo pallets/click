@@ -35,7 +35,7 @@ Click supports hidden prompts and asking for confirmation. This is useful for pa
 ```
 
 Because this combination of parameters is quite common, this can also be
-replaced with the :func:`password_option` decorator:
+replaced with the {func}`password_option` decorator:
 
 ```python
     @click.command()
