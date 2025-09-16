@@ -1,7 +1,6 @@
 # Advanced Patterns
 
-```{eval-rst}
-.. currentmodule:: click
+```{currentmodule} click
 ```
 
 In addition to common functionality, Click offers some advanced features.
@@ -53,7 +52,7 @@ Here's an example for a `--version` flag:
         click.echo('Hello World!')
 
 
-# What it looks like:
+What it looks like:
 
 
 .. click:run::
@@ -70,8 +69,7 @@ this case, because we would exit the program, we instead do nothing.
 
 ## Callbacks for Validation
 
-```{eval-rst}
-.. versionchanged:: 2.0
+```{versionchanged} 2.0
 ```
 
 If you want to apply custom validation logic, you can do this in the
@@ -173,8 +171,7 @@ the information in a wrapper, however:
 
 ## Token Normalization
 
-```{eval-rst}
-.. versionadded:: 2.0
+```{versionadded} 2.0
 ```
 
 Starting with Click 2.0, it's possible to provide a function used
