@@ -314,7 +314,7 @@ If you want to define an alias for the second option only, then you will need to
 
 ## Flag Value
 
-To have an flag pass a value to the underlying function set `flag_value`. This automatically sets `is_flag=True`. To set a default flag, set `default=True`. Setting flag values can be used to create patterns like this:
+To have an flag pass a value to the underlying function set `flag_value`. This automatically sets `is_flag=True`. To mark the flag as default, set `default=True`. Setting flag values can be used to create patterns like this:
 
 ```{eval-rst}
 .. click:example::
@@ -334,6 +334,26 @@ To have an flag pass a value to the underlying function set `flag_value`. This a
     invoke(info, args=['--lower'])
     invoke(info)
 ```
+
+````{note}
+The `default` value is given to the underlying function as-is. So if you set `default=None`, the value passed to the function is the `None` Python value. Same for any other type.
+
+But there is a special case for flags. If a flag has a `flag_value`, then setting `default=True` is interpreted as *the flag should be activated by default*. So instead of the underlying function receiving the `True` Python value, it will receive the `flag_value`.
+
+Which means, in example above, this option:
+
+```python
+@click.option('--upper', 'transformation', flag_value='upper', default=True)
+```
+
+is equivalent to:
+
+```python
+@click.option('--upper', 'transformation', flag_value='upper', default='upper')
+```
+
+Because the two are equivalent, it is recommended to always use the second form, and set `default` to the actual value you want to pass. And not use the special `True` case. This makes the code more explicit and predictable.
+````
 
 ## Values from Environment Variables
 
@@ -386,10 +406,11 @@ Here are the rules used to parse environment variable values for flag options:
    - If the flag option has a `flag_value` argument, passing that value in the environment variable will activate the flag, in addition to all the cases described above
    - Any other value is interpreted as deactivating the flag
 
-.. caution::
-    For boolean flags with a pair of values, the only recognized environment variable is the one provided to the `envvar` argument.
+```{caution}
+For boolean flags with a pair of values, the only recognized environment variable is the one provided to the `envvar` argument.
 
-    So an option defined as `--flag\--no-flag`, with a `envvar="FLAG"` parameter, there is no magical `NO_FLAG=<anything>` variable that is recognized. Only the `FLAG=<anything>` environment variable is recognized.
+So an option defined as `--flag\--no-flag`, with a `envvar="FLAG"` parameter, there is no magical `NO_FLAG=<anything>` variable that is recognized. Only the `FLAG=<anything>` environment variable is recognized.
+```
 
 Once the status of the flag has been determine to be activated or not, the `flag_value` is used as the value of the flag if it is activated. If the flag is not activated, the value of the flag is set to `None` by default.
 
