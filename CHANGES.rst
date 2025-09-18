@@ -1,9 +1,9 @@
 .. currentmodule:: click
 
-Version 8.3.x
+Version 8.3.0
 --------------
 
-Unreleased
+Released 2025-09-15
 
 -   **Improved flag option handling**: Reworked the relationship between ``flag_value``
     and ``default`` parameters for better consistency:
