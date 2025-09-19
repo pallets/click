@@ -228,24 +228,52 @@ def test_object_propagation(runner):
         assert result.output == "Debug is off\n"
 
 
-def test_other_command_invoke_with_defaults(runner):
+@pytest.mark.parametrize(
+    ("opt_params", "expected"),
+    (
+        # Original tests.
+        ({"type": click.INT, "default": 42}, 42),
+        ({"type": click.INT, "default": "15"}, 15),
+        ({"multiple": True}, ()),
+        # SENTINEL value tests.
+        ({"default": None}, None),
+        ({"type": click.STRING}, None),  # No default specified, should be None.
+        ({"type": click.BOOL, "default": False}, False),
+        ({"type": click.BOOL, "default": True}, True),
+        ({"type": click.FLOAT, "default": 3.14}, 3.14),
+        # Multiple with default.
+        ({"multiple": True, "default": [1, 2, 3]}, (1, 2, 3)),
+        ({"multiple": True, "default": ()}, ()),
+        # Required option without value should use SENTINEL behavior.
+        ({"required": False}, None),
+        # Choice type with default.
+        ({"type": click.Choice(["a", "b", "c"]), "default": "b"}, "b"),
+        # Path type with default.
+        ({"type": click.Path(), "default": "/tmp"}, "/tmp"),
+        # Flag options.
+        ({"is_flag": True, "default": False}, False),
+        ({"is_flag": True, "default": True}, True),
+        # Count option.
+        ({"count": True}, 0),
+        # Hidden option.
+        ({"hidden": True, "default": "secret"}, "secret"),
+    ),
+)
+def test_other_command_invoke_with_defaults(runner, opt_params, expected):
     @click.command()
     @click.pass_context
     def cli(ctx):
         return ctx.invoke(other_cmd)
 
     @click.command()
-    @click.option("-a", type=click.INT, default=42)
-    @click.option("-b", type=click.INT, default="15")
-    @click.option("-c", multiple=True)
+    @click.option("-a", **opt_params)
     @click.pass_context
-    def other_cmd(ctx, a, b, c):
-        return ctx.info_name, a, b, c
+    def other_cmd(ctx, a):
+        return ctx.info_name, a
 
     result = runner.invoke(cli, standalone_mode=False)
-    # invoke should type cast default values, str becomes int, empty
-    # multiple should be empty tuple instead of None
-    assert result.return_value == ("other", 42, 15, ())
+
+    assert result.return_value == ("other", expected)
 
 
 def test_invoked_subcommand(runner):
