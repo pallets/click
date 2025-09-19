@@ -89,23 +89,25 @@ writes to stdout and, if possible, through a pager.
 
 Example:
 
-```python
-@click.command()
-def less():
-    click.echo_via_pager("\n".join(f"Line {idx}" for idx in range(200)))
+```{eval-rst}
+.. click:example::
+    @click.command()
+    def less():
+        click.echo_via_pager("\n".join(f"Line {idx}" for idx in range(200)))
 ```
 
 If you want to use the pager for a lot of text, especially if generating everything in advance would take a lot of time,
 you can pass a generator (or generator function) instead of a string:
 
-```python
-def _generate_output():
-    for idx in range(50000):
-        yield f"Line {idx}\n"
+```{eval-rst}
+.. click:example::
+    def _generate_output():
+        for idx in range(50000):
+            yield f"Line {idx}\n"
 
-@click.command()
-def less():
-    click.echo_via_pager(_generate_output())
+    @click.command()
+    def less():
+        click.echo_via_pager(_generate_output())
 ```
 
 ## Screen Clearing

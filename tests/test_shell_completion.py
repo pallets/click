@@ -220,6 +220,19 @@ def test_option_flag():
     assert _get_words(cli, ["--on"], "a") == ["a1", "a2"]
 
 
+def test_flag_option_with_nargs_option():
+    cli = Command(
+        "cli",
+        add_help_option=False,
+        params=[
+            Argument(["a"], type=Choice(["a1", "a2", "b"])),
+            Option(["--flag"], is_flag=True),
+            Option(["-c"], type=Choice(["p", "q"]), nargs=2),
+        ],
+    )
+    assert _get_words(cli, ["a1", "--flag", "-c"], "") == ["p", "q"]
+
+
 def test_option_custom():
     def custom(ctx, param, incomplete):
         return [incomplete.upper()]
@@ -346,6 +359,7 @@ def test_full_source(runner, shell):
         ("zsh", {"COMP_WORDS": "a b", "COMP_CWORD": "1"}, "plain\nb\nbee\n"),
         ("fish", {"COMP_WORDS": "", "COMP_CWORD": ""}, "plain,a\nplain,b\tbee\n"),
         ("fish", {"COMP_WORDS": "a b", "COMP_CWORD": "b"}, "plain,b\tbee\n"),
+        ("fish", {"COMP_WORDS": 'a "b', "COMP_CWORD": '"b'}, "plain,b\tbee\n"),
     ],
 )
 @pytest.mark.usefixtures("_patch_for_completion")

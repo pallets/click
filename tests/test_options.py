@@ -2,6 +2,9 @@ import enum
 import os
 import re
 import sys
+import tempfile
+from contextlib import nullcontext
+from typing import Literal
 
 if sys.version_info < (3, 11):
     enum.StrEnum = enum.Enum  # type: ignore[assignment]
@@ -10,6 +13,8 @@ import pytest
 
 import click
 from click import Option
+from click import UNPROCESSED
+from click._utils import UNSET
 
 
 def test_prefixes(runner):
@@ -85,7 +90,7 @@ def test_deprecated_prompt(runner):
 
 
 def test_invalid_nargs(runner):
-    with pytest.raises(TypeError, match="nargs=-1"):
+    with pytest.raises(TypeError, match="nargs=-1 is not supported for options."):
 
         @click.command()
         @click.option("--foo", nargs=-1)
@@ -170,38 +175,209 @@ def test_multiple_required(runner):
 
 
 @pytest.mark.parametrize(
-    ("multiple", "nargs", "default"),
+    ("multiple", "nargs", "default", "expected"),
     [
-        (True, 1, []),
-        (True, 1, [1]),
-        # (False, -1, []),
-        # (False, -1, [1]),
-        (False, 2, [1, 2]),
-        # (True, -1, [[]]),
-        # (True, -1, []),
-        # (True, -1, [[1]]),
-        (True, 2, []),
-        (True, 2, [[1, 2]]),
+        # If multiple values are allowed, defaults should be iterable.
+        (True, 1, [], ()),
+        (True, 1, (), ()),
+        (True, 1, tuple(), ()),
+        (True, 1, set(), ()),
+        (True, 1, frozenset(), ()),
+        (True, 1, {}, ()),
+        # Special values.
+        (True, 1, None, ()),
+        (True, 1, UNSET, ()),
+        # Number of values are kept as-is in the default.
+        (True, 1, [1], (1,)),
+        (True, 1, [1, 2], (1, 2)),
+        (True, 1, [1, 2, 3], (1, 2, 3)),
+        (True, 1, [1.1, 2.2], (1.1, 2.2)),
+        (True, 1, ["1", "2"], ("1", "2")),
+        (True, 1, [None, None], (None, None)),
+        # Contrary to list or tuples, native Python types not supported by Click are
+        # not recognized and are converted to the default format: tuple of strings.
+        # Refs: https://github.com/pallets/click/issues/3036
+        (True, 1, {1, 2}, ("1", "2")),
+        (True, 1, frozenset([1, 2]), ("1", "2")),
+        (True, 1, {1: "a", 2: "b"}, ("1", "2")),
+        # Multiple values with nargs > 1.
+        (True, 2, [], ()),
+        (True, 2, (), ()),
+        (True, 2, tuple(), ()),
+        (True, 2, set(), ()),
+        (True, 2, frozenset(), ()),
+        (True, 2, {}, ()),
+        (True, 2, None, ()),
+        (True, 2, UNSET, ()),
+        (True, 2, [[1, 2]], ((1, 2),)),
+        (True, 2, [[1, 2], [3, 4]], ((1, 2), (3, 4))),
+        (True, 2, [[1, 2], [3, 4], [5, 6]], ((1, 2), (3, 4), (5, 6))),
+        (True, 2, [[1.1, 2.2], [3.3, 4.4]], ((1.1, 2.2), (3.3, 4.4))),
+        (True, 2, [["1", "2"], ["3", "4"]], (("1", "2"), ("3", "4"))),
+        (True, 2, [[None, None], [None, None]], ((None, None), (None, None))),
+        (True, 2, [[1, 2.2], ["3", None]], ((1, 2.2), (3, None))),
+        (True, 2, [[1, 2.2], None], ((1, 2.2), None)),
+        # Default of the right length works for non-multiples.
+        (False, 2, [1, 2], (1, 2)),
     ],
 )
-def test_init_good_default_list(runner, multiple, nargs, default):
-    click.Option(["-a"], multiple=multiple, nargs=nargs, default=default)
+def test_good_defaults_for_multiple(runner, multiple, nargs, default, expected):
+    @click.command()
+    @click.option("-a", multiple=multiple, nargs=nargs, default=default)
+    def cmd(a):
+        click.echo(repr(a), nl=False)
+
+    result = runner.invoke(cmd)
+    assert result.output == repr(expected)
 
 
 @pytest.mark.parametrize(
-    ("multiple", "nargs", "default"),
+    ("multiple", "nargs", "default", "exception", "message"),
     [
-        (True, 1, 1),
-        # (False, -1, 1),
-        (False, 2, [1]),
-        (True, 2, [[1]]),
+        # Non-iterables defaults.
+        (
+            True,
+            1,
+            "Yo",
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            1,
+            "",
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            1,
+            True,
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            1,
+            False,
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            1,
+            12,
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            1,
+            7.9,
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        #
+        (
+            False,
+            2,
+            42,
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            2,
+            ["test string which is not a list in the list"],
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        # Multiple options, each with 2 args, but with wrong length.
+        (
+            True,
+            2,
+            (1,),
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            2,
+            (1, 2, 3),
+            None,
+            "Error: Invalid value for '-a': Value must be an iterable.",
+        ),
+        (
+            True,
+            2,
+            [tuple()],
+            ValueError,
+            r"'nargs' must be 0 \(or None\) for type <click\.types\.Tuple object at "
+            r"0x[0-9A-Fa-f]+>, but it was 2\.",
+        ),
+        (
+            True,
+            2,
+            [(1,)],
+            ValueError,
+            r"'nargs' must be 1 \(or None\) for type <click\.types\.Tuple object at "
+            r"0x[0-9A-Fa-f]+>, but it was 2\.",
+        ),
+        (
+            True,
+            2,
+            [(1, 2, 3)],
+            ValueError,
+            r"'nargs' must be 3 \(or None\) for type <click\.types\.Tuple object at "
+            r"0x[0-9A-Fa-f]+>, but it was 2\.",
+        ),
+        # A mix of valid and invalid defaults.
+        (
+            True,
+            2,
+            [[1, 2.2], []],
+            None,
+            "Error: Invalid value for '-a': 2 values are required, but 0 were given.",
+        ),
+        # Default values that are iterable but not of the right length.
+        (
+            False,
+            2,
+            [1],
+            None,
+            "Error: Invalid value for '-a': Takes 2 values but 1 was given.",
+        ),
+        (
+            True,
+            2,
+            [[1]],
+            ValueError,
+            r"'nargs' must be 1 \(or None\) for type <click\.types\.Tuple object at "
+            r"0x[0-9A-Fa-f]+>, but it was 2\.",
+        ),
     ],
 )
-def test_init_bad_default_list(runner, multiple, nargs, default):
-    type = (str, str) if nargs == 2 else None
+def test_bad_defaults_for_multiple(
+    runner, multiple, nargs, default, exception, message
+):
+    if exception:
+        assert issubclass(exception, Exception)
+    else:
+        assert exception is None
 
-    with pytest.raises(ValueError, match="default"):
-        click.Option(["-a"], type=type, multiple=multiple, nargs=nargs, default=default)
+    with (
+        pytest.raises(exception, match=re.compile(message))
+        if exception
+        else nullcontext()
+    ):
+
+        @click.command()
+        @click.option("-a", multiple=multiple, nargs=nargs, default=default)
+        def cmd(a):
+            click.echo(repr(a))
+
+        result = runner.invoke(cmd)
+        assert message in result.stderr
 
 
 @pytest.mark.parametrize("env_key", ["MYPATH", "AUTO_MYPATH"])
@@ -253,7 +429,7 @@ def test_multiple_envvar(runner):
 
 
 @pytest.mark.parametrize(
-    ("name", "value", "expected"),
+    ("envvar_name", "envvar_value", "expected"),
     (
         # Lower-cased variations of value.
         ("SHOUT", "true", True),
@@ -270,17 +446,19 @@ def test_multiple_envvar(runner):
         ("SHOUT", "FaLsE", False),
         ("SHOUT", "falsE", False),
         # Extra spaces around the value.
-        ("SHOUT", "true ", True),
-        ("SHOUT", " true", True),
-        ("SHOUT", " true ", True),
-        ("SHOUT", "false ", False),
-        ("SHOUT", " false", False),
-        ("SHOUT", " false ", False),
+        ("SHOUT", "true    ", True),
+        ("SHOUT", "  true  ", True),
+        ("SHOUT", "    true", True),
+        ("SHOUT", "false   ", False),
+        ("SHOUT", "  false ", False),
+        ("SHOUT", "   false", False),
         # Integer variations.
         ("SHOUT", "1", True),
         ("SHOUT", "0", False),
         # Alternative states.
         ("SHOUT", "t", True),
+        ("SHOUT", "T", True),
+        ("SHOUT", "  T  ", True),
         ("SHOUT", "f", False),
         ("SHOUT", "y", True),
         ("SHOUT", "n", False),
@@ -295,47 +473,69 @@ def test_multiple_envvar(runner):
         ("SHOUT", "       ", False),
         # Variable names are not stripped of spaces and so don't match the
         # flag, which then naturraly takes its default value.
-        ("SHOUT  ", "True", False),
-        ("SHOUT  ", "False", False),
+        ("SHOUT    ", "True", False),
+        ("SHOUT    ", "False", False),
         ("  SHOUT  ", "True", False),
         ("  SHOUT  ", "False", False),
+        ("    SHOUT", "True", False),
+        ("    SHOUT", "False", False),
+        ("SH    OUT", "True", False),
+        ("SH    OUT", "False", False),
         # Same for random and reverse environment variable names: they are not
         # recognized by the option.
         ("RANDOM", "True", False),
         ("NO_SHOUT", "True", False),
         ("NO_SHOUT", "False", False),
+        ("NOSHOUT", "True", False),
+        ("NOSHOUT", "False", False),
     ),
 )
-def test_boolean_envvar_normalization(runner, name, value, expected):
+def test_boolean_flag_envvar(runner, envvar_name, envvar_value, expected):
+    assert isinstance(envvar_name, str)
+    assert isinstance(envvar_value, str) or envvar_value is None
+
     @click.command()
     @click.option("--shout/--no-shout", envvar="SHOUT")
     def cli(shout):
-        click.echo(f"shout: {shout!r}")
+        click.echo(repr(shout), nl=False)
 
-    result = runner.invoke(cli, [], env={name: value})
+    result = runner.invoke(cli, [], env={envvar_name: envvar_value})
     assert result.exit_code == 0
-    assert result.output == f"shout: {expected}\n"
+    assert result.output == repr(expected)
 
 
 @pytest.mark.parametrize(
-    ("name", "value"),
+    "value",
     (
-        ("SHOUT", "tr ue"),
-        ("SHOUT", "10"),
-        ("SHOUT", "01"),
-        ("SHOUT", "00"),
-        ("SHOUT", "11"),
-        ("SHOUT", "randomstring"),
-        ("SHOUT", "None"),
+        # Extra spaces inside the value.
+        "tr ue",
+        "fa lse",
+        # Numbers.
+        "10",
+        "01",
+        "00",
+        "11",
+        "0.0",
+        "1.1",
+        # Random strings.
+        "randomstring",
+        "None",
+        "'None'",
+        "A B",
+        " 1 2 ",
+        "9.3",
+        "a;n",
+        "x:y",
+        "i/o",
     ),
 )
-def test_boolean_envvar_bad_values(runner, name, value):
+def test_boolean_envvar_bad_values(runner, value):
     @click.command()
     @click.option("--shout/--no-shout", envvar="SHOUT")
     def cli(shout):
-        click.echo(f"shout: {shout!r}")
+        click.echo(shout)
 
-    result = runner.invoke(cli, [], env={name: value})
+    result = runner.invoke(cli, [], env={"SHOUT": value})
     assert result.exit_code == 2
     assert (
         f"Invalid value for '--shout': {value!r} is not a valid boolean."
@@ -629,13 +829,37 @@ def test_legacy_options(runner):
     assert result.output == "23\n"
 
 
-def test_missing_option_string_cast():
+@pytest.mark.parametrize(
+    ("value", "expect_missing", "processed_value"),
+    [
+        (UNSET, True, None),
+        (None, False, None),
+        # Default type of the argument is str, so everything is processed as strings.
+        ("", False, ""),
+        ("  ", False, "  "),
+        ("foo", False, "foo"),
+        ("12", False, "12"),
+        (12, False, "12"),
+        (12.1, False, "12.1"),
+        (list(), False, "[]"),
+        (tuple(), False, "()"),
+        (set(), False, "set()"),
+        (frozenset(), False, "frozenset()"),
+        (dict(), False, "{}"),
+    ],
+)
+def test_required_option(value, expect_missing, processed_value):
     ctx = click.Context(click.Command(""))
+    argument = click.Option(["-a"], required=True)
 
-    with pytest.raises(click.MissingParameter) as excinfo:
-        click.Option(["-a"], required=True).process_value(ctx, None)
+    if expect_missing:
+        with pytest.raises(click.MissingParameter) as excinfo:
+            argument.process_value(ctx, value)
+        assert str(excinfo.value) == "Missing parameter: a"
 
-    assert str(excinfo.value) == "Missing parameter: a"
+    else:
+        value = argument.process_value(ctx, value)
+        assert value == processed_value
 
 
 def test_missing_required_flag(runner):
@@ -676,6 +900,13 @@ def test_missing_envvar(runner):
     result = runner.invoke(cli)
     assert result.exit_code == 2
     assert "Error: Missing option '--foo' (env var: 'bar')." in result.output
+
+    cli = click.Command(
+        "cli", params=[click.Option(["--foo"], show_envvar=True, required=True)]
+    )
+    result = runner.invoke(cli)
+    assert result.exit_code == 2
+    assert "Error: Missing option '--foo'." in result.output
 
 
 def test_case_insensitive_choice(runner):
@@ -1093,119 +1324,130 @@ def test_type_from_flag_value():
 
 
 @pytest.mark.parametrize(
-    ("opt_params", "pass_flag", "expected"),
+    ("opt_params", "args", "expected"),
     [
-        # Effect of the presence/absence of flag depending on type
-        ({"type": bool}, False, False),
-        ({"type": bool}, True, True),
-        ({"type": click.BOOL}, False, False),
-        ({"type": click.BOOL}, True, True),
-        ({"type": str}, False, "False"),
-        ({"type": str}, True, "True"),
-        # Effects of default value
-        ({"type": bool, "default": True}, False, True),
-        ({"type": bool, "default": True}, True, True),
-        ({"type": bool, "default": False}, False, False),
-        ({"type": bool, "default": False}, True, True),
-        ({"type": bool, "default": None}, False, False),
-        ({"type": bool, "default": None}, True, True),
-        ({"type": click.BOOL, "default": True}, False, True),
-        ({"type": click.BOOL, "default": True}, True, True),
-        ({"type": click.BOOL, "default": False}, False, False),
-        ({"type": click.BOOL, "default": False}, True, True),
-        ({"type": click.BOOL, "default": None}, False, False),
-        ({"type": click.BOOL, "default": None}, True, True),
-        ({"type": str, "default": True}, False, "True"),
-        ({"type": str, "default": True}, True, "True"),
-        ({"type": str, "default": False}, False, "False"),
-        ({"type": str, "default": False}, True, "True"),
-        ({"type": str, "default": "foo"}, False, "foo"),
-        ({"type": str, "default": "foo"}, True, "foo"),
-        ({"type": str, "default": None}, False, "False"),
-        ({"type": str, "default": None}, True, "True"),
-        # Effects of flag_value
-        ({"type": bool, "flag_value": True}, False, False),
-        ({"type": bool, "flag_value": True}, True, True),
-        ({"type": bool, "flag_value": False}, False, False),
-        ({"type": bool, "flag_value": False}, True, False),
-        ({"type": bool, "flag_value": None}, False, False),
-        ({"type": bool, "flag_value": None}, True, True),
-        ({"type": click.BOOL, "flag_value": True}, False, False),
-        ({"type": click.BOOL, "flag_value": True}, True, True),
-        ({"type": click.BOOL, "flag_value": False}, False, False),
-        ({"type": click.BOOL, "flag_value": False}, True, False),
-        ({"type": click.BOOL, "flag_value": None}, False, False),
-        ({"type": click.BOOL, "flag_value": None}, True, True),
-        ({"type": str, "flag_value": True}, False, "False"),
-        ({"type": str, "flag_value": True}, True, "True"),
-        ({"type": str, "flag_value": False}, False, "False"),
-        ({"type": str, "flag_value": False}, True, "False"),
-        ({"type": str, "flag_value": "foo"}, False, "False"),
-        ({"type": str, "flag_value": "foo"}, True, "foo"),
-        ({"type": str, "flag_value": None}, False, "False"),
-        ({"type": str, "flag_value": None}, True, "True"),
-        # Not passing --foo returns the default value as-is
-        ({"type": bool, "default": True, "flag_value": True}, False, True),
-        ({"type": bool, "default": True, "flag_value": False}, False, True),
-        ({"type": bool, "default": False, "flag_value": True}, False, False),
-        ({"type": bool, "default": False, "flag_value": False}, False, False),
-        ({"type": bool, "default": None, "flag_value": True}, False, False),
-        ({"type": bool, "default": None, "flag_value": False}, False, False),
-        ({"type": str, "default": True, "flag_value": True}, False, "True"),
-        ({"type": str, "default": True, "flag_value": False}, False, "True"),
-        ({"type": str, "default": False, "flag_value": True}, False, "False"),
-        ({"type": str, "default": False, "flag_value": False}, False, "False"),
-        ({"type": str, "default": "foo", "flag_value": True}, False, "foo"),
-        ({"type": str, "default": "foo", "flag_value": False}, False, "foo"),
-        ({"type": str, "default": "foo", "flag_value": "bar"}, False, "foo"),
-        ({"type": str, "default": "foo", "flag_value": None}, False, "foo"),
-        ({"type": str, "default": None, "flag_value": True}, False, "False"),
-        ({"type": str, "default": None, "flag_value": False}, False, "False"),
-        # Passing --foo returns the explicitly set flag_value
-        ({"type": bool, "default": True, "flag_value": True}, True, True),
-        ({"type": bool, "default": True, "flag_value": False}, True, False),
-        ({"type": bool, "default": False, "flag_value": True}, True, True),
-        ({"type": bool, "default": False, "flag_value": False}, True, False),
-        ({"type": bool, "default": None, "flag_value": True}, True, True),
-        ({"type": bool, "default": None, "flag_value": False}, True, False),
-        ({"type": str, "default": True, "flag_value": True}, True, "True"),
-        ({"type": str, "default": True, "flag_value": False}, True, "False"),
-        ({"type": str, "default": False, "flag_value": True}, True, "True"),
-        ({"type": str, "default": False, "flag_value": False}, True, "False"),
-        ({"type": str, "default": "foo", "flag_value": True}, True, "True"),
-        ({"type": str, "default": "foo", "flag_value": False}, True, "False"),
-        ({"type": str, "default": "foo", "flag_value": "bar"}, True, "bar"),
-        ({"type": str, "default": "foo", "flag_value": None}, True, "foo"),
-        ({"type": str, "default": None, "flag_value": True}, True, "True"),
-        ({"type": str, "default": None, "flag_value": False}, True, "False"),
+        # The type passed to the option is responsible to converting the value, whether
+        # we pass the option flag or not.
+        ({"type": bool}, [], False),
+        ({"type": bool}, ["--foo"], True),
+        ({"type": click.BOOL}, [], False),
+        ({"type": click.BOOL}, ["--foo"], True),
+        ({"type": str}, [], None),
+        ({"type": str}, ["--foo"], "True"),
+        # Default value is given as-is to the --foo option when it is not passed,
+        # whatever the type. Now if --foo is passed, the value is always True, whatever
+        # the type. In both case the type of the option is responsible for the
+        # conversion of the value.
+        ({"type": bool, "default": True}, [], True),
+        ({"type": bool, "default": True}, ["--foo"], True),
+        ({"type": bool, "default": False}, [], False),
+        ({"type": bool, "default": False}, ["--foo"], True),
+        # ({"type": bool, "default": "foo"}, [], "foo"),
+        ({"type": bool, "default": "foo"}, ["--foo"], True),
+        ({"type": bool, "default": None}, [], None),
+        ({"type": bool, "default": None}, ["--foo"], True),
+        ({"type": click.BOOL, "default": True}, [], True),
+        ({"type": click.BOOL, "default": True}, ["--foo"], True),
+        ({"type": click.BOOL, "default": False}, [], False),
+        ({"type": click.BOOL, "default": False}, ["--foo"], True),
+        # ({"type": click.BOOL, "default": "foo"}, [], "foo"),
+        ({"type": click.BOOL, "default": "foo"}, ["--foo"], True),
+        ({"type": click.BOOL, "default": None}, [], None),
+        ({"type": click.BOOL, "default": None}, ["--foo"], True),
+        ({"type": str, "default": True}, [], "True"),
+        ({"type": str, "default": True}, ["--foo"], "True"),
+        ({"type": str, "default": False}, [], "False"),
+        ({"type": str, "default": False}, ["--foo"], "True"),
+        ({"type": str, "default": "foo"}, [], "foo"),
+        ({"type": str, "default": "foo"}, ["--foo"], "True"),
+        ({"type": str, "default": None}, [], None),
+        ({"type": str, "default": None}, ["--foo"], "True"),
+        # Flag value is given as-is to the --foo option when it is passed, then
+        # converted by the option type.
+        ({"type": bool, "flag_value": True}, [], False),
+        ({"type": bool, "flag_value": True}, ["--foo"], True),
+        ({"type": bool, "flag_value": False}, [], False),
+        ({"type": bool, "flag_value": False}, ["--foo"], False),
+        ({"type": bool, "flag_value": None}, [], False),
+        ({"type": bool, "flag_value": None}, ["--foo"], None),
+        ({"type": click.BOOL, "flag_value": True}, [], False),
+        ({"type": click.BOOL, "flag_value": True}, ["--foo"], True),
+        ({"type": click.BOOL, "flag_value": False}, [], False),
+        ({"type": click.BOOL, "flag_value": False}, ["--foo"], False),
+        ({"type": click.BOOL, "flag_value": None}, [], False),
+        ({"type": click.BOOL, "flag_value": None}, ["--foo"], None),
+        ({"type": str, "flag_value": True}, [], None),
+        ({"type": str, "flag_value": True}, ["--foo"], "True"),
+        ({"type": str, "flag_value": False}, [], None),
+        ({"type": str, "flag_value": False}, ["--foo"], "False"),
+        ({"type": str, "flag_value": "foo"}, [], None),
+        ({"type": str, "flag_value": "foo"}, ["--foo"], "foo"),
+        ({"type": str, "flag_value": None}, [], None),
+        ({"type": str, "flag_value": None}, ["--foo"], None),
+        # Not passing --foo returns the default value as-is, in its Python type, then
+        # converted by the option type.
+        ({"type": bool, "default": True, "flag_value": True}, [], True),
+        ({"type": bool, "default": True, "flag_value": False}, [], False),
+        ({"type": bool, "default": False, "flag_value": True}, [], False),
+        ({"type": bool, "default": False, "flag_value": False}, [], False),
+        ({"type": bool, "default": None, "flag_value": True}, [], None),
+        ({"type": bool, "default": None, "flag_value": False}, [], None),
+        ({"type": str, "default": True, "flag_value": True}, [], "True"),
+        ({"type": str, "default": True, "flag_value": False}, [], "False"),
+        ({"type": str, "default": False, "flag_value": True}, [], "False"),
+        ({"type": str, "default": False, "flag_value": False}, [], "False"),
+        ({"type": str, "default": "foo", "flag_value": True}, [], "foo"),
+        ({"type": str, "default": "foo", "flag_value": False}, [], "foo"),
+        ({"type": str, "default": "foo", "flag_value": "bar"}, [], "foo"),
+        ({"type": str, "default": "foo", "flag_value": None}, [], "foo"),
+        ({"type": str, "default": None, "flag_value": True}, [], None),
+        ({"type": str, "default": None, "flag_value": False}, [], None),
+        # Passing --foo returns the flag_value that was explicitly set by the user,
+        # with its Python type, but still converted by the option type.
+        ({"type": bool, "default": True, "flag_value": True}, ["--foo"], True),
+        ({"type": bool, "default": True, "flag_value": False}, ["--foo"], False),
+        ({"type": bool, "default": False, "flag_value": True}, ["--foo"], True),
+        ({"type": bool, "default": False, "flag_value": False}, ["--foo"], False),
+        ({"type": bool, "default": None, "flag_value": True}, ["--foo"], True),
+        ({"type": bool, "default": None, "flag_value": False}, ["--foo"], False),
+        ({"type": str, "default": True, "flag_value": True}, ["--foo"], "True"),
+        ({"type": str, "default": True, "flag_value": False}, ["--foo"], "False"),
+        ({"type": str, "default": False, "flag_value": True}, ["--foo"], "True"),
+        ({"type": str, "default": False, "flag_value": False}, ["--foo"], "False"),
+        ({"type": str, "default": "foo", "flag_value": True}, ["--foo"], "True"),
+        ({"type": str, "default": "foo", "flag_value": False}, ["--foo"], "False"),
+        ({"type": str, "default": "foo", "flag_value": "bar"}, ["--foo"], "bar"),
+        ({"type": str, "default": "foo", "flag_value": None}, ["--foo"], None),
+        ({"type": str, "default": None, "flag_value": True}, ["--foo"], "True"),
+        ({"type": str, "default": None, "flag_value": False}, ["--foo"], "False"),
     ],
 )
-def test_flag_value_and_default(runner, opt_params, pass_flag, expected):
+def test_flag_value_and_default(runner, opt_params, args, expected):
     @click.command()
     @click.option("--foo", is_flag=True, **opt_params)
     def cmd(foo):
-        click.echo(repr(foo))
+        click.echo(repr(foo), nl=False)
 
-    result = runner.invoke(cmd, ["--foo"] if pass_flag else [])
-    assert result.output == f"{expected!r}\n"
+    result = runner.invoke(cmd, args)
+    assert result.output == repr(expected)
 
 
 @pytest.mark.parametrize(
-    "opts",
+    ("args", "opts"),
     [
-        {"type": bool, "default": "foo"},
-        {"type": bool, "flag_value": "foo"},
-        {"type": click.BOOL, "default": "foo"},
-        {"type": click.BOOL, "flag_value": "foo"},
+        ([], {"type": bool, "default": "foo"}),
+        ([], {"type": click.BOOL, "default": "foo"}),
+        (["--foo"], {"type": bool, "flag_value": "foo"}),
+        (["--foo"], {"type": click.BOOL, "flag_value": "foo"}),
     ],
 )
-def test_invalid_flag_definition(runner, opts):
+def test_invalid_flag_definition(runner, args, opts):
     @click.command()
     @click.option("--foo", is_flag=True, **opts)
     def cmd(foo):
         click.echo(foo)
 
-    result = runner.invoke(cmd, ["--foo"])
+    result = runner.invoke(cmd, args)
     assert (
         "Error: Invalid value for '--foo': 'foo' is not a valid boolean"
         in result.output
@@ -1213,68 +1455,187 @@ def test_invalid_flag_definition(runner, opts):
 
 
 @pytest.mark.parametrize(
-    ("flag_value", "envvar_value", "expected"),
-    [
-        # Envvar is set to false, so the flag default value is returned.
-        ("bar", "False", "False"),
-        # Same as above with alternative states and blank values.
-        ("bar", "0", "False"),
-        ("bar", "f", "False"),
-        ("bar", "", "False"),
-        # Envvar is set to true, so the flag_value is returned.
-        ("bar", "True", "bar"),
-        ("bar", "1", "bar"),
-        ("bar", "t", "bar"),
-        # So far we have the same cases as the test_flag_value_and_default
-        # test case. Now instead of passing a boolean-like value, let's use
-        # the flag_value as the envvar value.
-        ("bar", "bar", "bar"),
-        # flag_value is expected to be the exact same in the envvar for the flag to be
-        # activated.
-        ("bar", " bar ", "False"),
-        ("bar", "BAR", "False"),
-        ("bar", "random", "False"),
-        ("bar", "bar random", "False"),
-        ("bar", "random bar", "False"),
-        ("BAR", "BAR", "BAR"),
-        ("BAR", "bar", "False"),
-        (" bar ", " bar ", " bar "),
-        (" bar ", "bar", "False"),
-        (" bar ", "BAR", "False"),
-    ],
+    ("default", "args", "expected"),
+    # These test cases are similar to the ones in
+    # tests/test_basic.py::test_flag_value_dual_options, so keep them in sync.
+    (
+        # Each option is returning its own flag_value, whatever the default is.
+        (True, ["--js"], "js"),
+        (True, ["--xml"], "xml"),
+        (False, ["--js"], "js"),
+        (False, ["--xml"], "xml"),
+        (None, ["--js"], "js"),
+        (None, ["--xml"], "xml"),
+        (UNSET, ["--js"], "js"),
+        (UNSET, ["--xml"], "xml"),
+        # Check that the last option wins when both are specified.
+        (True, ["--js", "--xml"], "xml"),
+        (True, ["--xml", "--js"], "js"),
+        # Check that the default is returned as-is when no option is specified.
+        ("js", [], "js"),
+        ("xml", [], "xml"),
+        ("jS", [], "jS"),
+        ("xMl", [], "xMl"),
+        (" ᕕ( ᐛ )ᕗ ", [], " ᕕ( ᐛ )ᕗ "),
+        (None, [], None),
+        # Special case: UNSET is not provided as-is to the callback, but normalized to
+        # None.
+        (UNSET, [], None),
+        # Special case: if default=True and flag_value is set, the value returned is the
+        # flag_value, not the True Python value itself.
+        (True, [], "js"),
+        # Non-string defaults are process as strings by the default Parameter's type.
+        (False, [], "False"),
+        (42, [], "42"),
+        (12.3, [], "12.3"),
+    ),
 )
-def test_envvar_flag_value(runner, flag_value, envvar_value, expected):
-    """Ensure that flag_value is recognized by the envvar."""
+def test_default_dual_option_callback(runner, default, args, expected):
+    """Check how default is processed by the callback when options compete for the same
+    variable name.
+
+    Reproduction of the issue reported in
+    https://github.com/pallets/click/pull/3030#discussion_r2271571819
+    """
+
+    def _my_func(ctx, param, value):
+        # Print the value received by the callback as-is, so we can check for it.
+        return f"Callback value: {value!r}"
 
     @click.command()
-    @click.option(
-        "--upper", type=str, is_flag=True, flag_value=flag_value, envvar="UPPER"
-    )
-    def cmd(upper):
-        click.echo(repr(upper))
+    @click.option("--js", "fmt", flag_value="js", callback=_my_func, default=default)
+    @click.option("--xml", "fmt", flag_value="xml", callback=_my_func)
+    def main(fmt):
+        click.secho(fmt, nl=False)
 
-    result = runner.invoke(cmd, env={"UPPER": envvar_value})
+    result = runner.invoke(main, args)
+    assert result.output == f"Callback value: {expected!r}"
     assert result.exit_code == 0
-    assert result.output == f"{expected!r}\n"
 
 
 @pytest.mark.parametrize(
-    ("option", "expected"),
+    ("flag_value", "envvar_value", "expected"),
     [
-        # Not boolean flags
-        pytest.param(Option(["-a"], type=int), False, id="int option"),
-        pytest.param(Option(["-a"], type=bool), False, id="bool non-flag [None]"),
-        pytest.param(Option(["-a"], default=True), False, id="bool non-flag [True]"),
-        pytest.param(Option(["-a"], default=False), False, id="bool non-flag [False]"),
-        pytest.param(Option(["-a"], flag_value=1), False, id="non-bool flag_value"),
-        # Boolean flags
-        pytest.param(Option(["-a"], is_flag=True), True, id="is_flag=True"),
-        pytest.param(Option(["-a/-A"]), True, id="secondary option [implicit flag]"),
-        pytest.param(Option(["-a"], flag_value=True), True, id="bool flag_value"),
+        # The envvar match exactly the flag value and is case-sensitive.
+        ("bar", "bar", "bar"),
+        ("BAR", "BAR", "BAR"),
+        (" bar ", " bar ", " bar "),
+        ("42", "42", "42"),
+        ("None", "None", "None"),
+        ("True", "True", "True"),
+        ("False", "False", "False"),
+        ("true", "true", "true"),
+        ("false", "false", "false"),
+        ("A B", "A B", "A B"),
+        (" 1 2 ", " 1 2 ", " 1 2 "),
+        ("9.3", "9.3", "9.3"),
+        ("a;n", "a;n", "a;n"),
+        ("x:y", "x:y", "x:y"),
+        ("i/o", "i/o", "i/o"),
+        # Empty or absent envvar is consider unset, so the flag default value is
+        # returned, which is None in this case.
+        ("bar", "", None),
+        ("bar", None, None),
+        ("BAR", "", None),
+        ("BAR", None, None),
+        (" bar ", "", None),
+        (" bar ", None, None),
+        (42, "", None),
+        (42, None, None),
+        ("42", "", None),
+        ("42", None, None),
+        (None, "", None),
+        (None, None, None),
+        ("None", "", None),
+        ("None", None, None),
+        (True, "", None),
+        (True, None, None),
+        ("True", "", None),
+        ("True", None, None),
+        ("true", "", None),
+        ("true", None, None),
+        (False, "", None),
+        (False, None, None),
+        ("False", "", None),
+        ("False", None, None),
+        ("false", "", None),
+        ("false", None, None),
+        # Activate the flag with a value recognized as True by the envvar, which
+        # returns the flag_value.
+        ("bar", "True", "bar"),
+        ("bar", "true", "bar"),
+        ("bar", "trUe", "bar"),
+        ("bar", "  TRUE  ", "bar"),
+        ("bar", "1", "bar"),
+        ("bar", "yes", "bar"),
+        ("bar", "on", "bar"),
+        ("bar", "t", "bar"),
+        ("bar", "y", "bar"),
+        # Deactivating the flag with a value recognized as False by the envvar, which
+        # explicitly return the 'False' as the option is explicitly declared as a
+        # string.
+        ("bar", "False", "False"),
+        ("bar", "false", "False"),
+        ("bar", "faLse", "False"),
+        ("bar", "  FALSE  ", "False"),
+        ("bar", "0", "False"),
+        ("bar", "no", "False"),
+        ("bar", "off", "False"),
+        ("bar", "f", "False"),
+        ("bar", "n", "False"),
+        # Any other value than the flag_value, or a recogned True or False value, fails
+        # to explicitly activate or deactivate the flag. So the flag default value is
+        # returned, which is None in this case.
+        ("bar", " bar ", None),
+        ("bar", "BAR", None),
+        ("bar", "random", None),
+        ("bar", "bar random", None),
+        ("bar", "random bar", None),
+        ("BAR", "bar", None),
+        (" bar ", "bar", None),
+        (" bar ", "BAR", None),
+        (42, "42", None),
+        (42, "foo", None),
+        (None, "foo", None),
+        ("None", "foo", None),
     ],
 )
-def test_bool_flag_auto_detection(option, expected):
-    assert option.is_bool_flag is expected
+def test_envvar_string_flag_value(runner, flag_value, envvar_value, expected):
+    """Ensure that flag_value is recognized by the envvar."""
+
+    @click.command()
+    @click.option("--upper", type=str, flag_value=flag_value, envvar="UPPER")
+    def cmd(upper):
+        click.echo(repr(upper), nl=False)
+
+    result = runner.invoke(cmd, env={"UPPER": envvar_value})
+    assert result.exit_code == 0
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("opt_decls", "opt_params", "expect_is_flag", "expect_is_bool_flag"),
+    [
+        # Not boolean flags.
+        ("-a", {"type": int}, False, False),
+        ("-a", {"type": bool}, False, False),
+        ("-a", {"default": True}, False, False),
+        ("-a", {"default": False}, False, False),
+        ("-a", {"flag_value": 1}, True, False),
+        # Boolean flags.
+        ("-a", {"is_flag": True}, True, True),
+        ("-a/-A", {}, True, True),
+        ("-a", {"flag_value": True}, True, True),
+        # Non-flag with flag_value.
+        ("-a", {"is_flag": False, "flag_value": 1}, False, False),
+    ],
+)
+def test_flag_auto_detection(
+    opt_decls, opt_params, expect_is_flag, expect_is_bool_flag
+):
+    option = Option([opt_decls], **opt_params)
+    assert option.is_flag is expect_is_flag
+    assert option.is_bool_flag is expect_is_bool_flag
 
 
 @pytest.mark.parametrize(
@@ -1306,8 +1667,9 @@ def test_non_flag_with_non_negatable_default(runner):
 
 
 class HashType(enum.Enum):
-    MD5 = enum.auto()
-    SHA1 = enum.auto()
+    MD5 = "MD5"
+    SHA1 = "SHA1"
+    SHA256 = "SHA-256"
 
 
 class Number(enum.IntEnum):
@@ -1316,8 +1678,9 @@ class Number(enum.IntEnum):
 
 
 class Letter(enum.StrEnum):
-    A = enum.auto()
-    B = enum.auto()
+    NAME_1 = "Value-1"
+    NAME_2 = "Value_2"
+    NAME_3 = "42_value"
 
 
 class Color(enum.Flag):
@@ -1333,23 +1696,27 @@ class ColorInt(enum.IntFlag):
 
 
 @pytest.mark.parametrize(
-    ("choices", "metavars"),
+    ("choices", "metavar"),
     [
-        pytest.param(["foo", "bar"], "[TEXT]", id="text choices"),
-        pytest.param([1, 2], "[INTEGER]", id="int choices"),
-        pytest.param([1.0, 2.0], "[FLOAT]", id="float choices"),
-        pytest.param([True, False], "[BOOLEAN]", id="bool choices"),
-        pytest.param(["foo", 1], "[TEXT|INTEGER]", id="text/int choices"),
-        pytest.param(HashType, "[HASHTYPE]", id="enum choices"),
-        pytest.param(Number, "[NUMBER]", id="int enum choices"),
-        pytest.param(Letter, "[LETTER]", id="str enum choices"),
-        pytest.param(Color, "[COLOR]", id="flag enum choices"),
-        pytest.param(ColorInt, "[COLORINT]", id="int flag enum choices"),
+        (["foo", "bar"], "[TEXT]"),
+        ([1, 2], "[INTEGER]"),
+        ([1.0, 2.0], "[FLOAT]"),
+        ([True, False], "[BOOLEAN]"),
+        (["foo", 1], "[TEXT|INTEGER]"),
+        (HashType, "[HASHTYPE]"),
+        (Number, "[NUMBER]"),
+        (Letter, "[LETTER]"),
+        (Color, "[COLOR]"),
+        (ColorInt, "[COLORINT]"),
     ],
 )
-def test_usage_show_choices(runner, choices, metavars):
-    """When show_choices=False is set, the --help output
-    should print choice metavars instead of values.
+def test_choice_usage_rendering(runner, choices, metavar):
+    """BY default ``--help`` prints choice's values in the usage message.
+
+    But ``show_choices=False`` makes ``--help`` prints choice's METAVAR instead of
+    values.
+
+    Also check that usage error message always suggests the actual values.
     """
 
     @click.command()
@@ -1358,22 +1725,35 @@ def test_usage_show_choices(runner, choices, metavars):
         pass
 
     @click.command()
-    @click.option(
-        "-g",
-        type=click.Choice(choices),
-        show_choices=False,
-    )
+    @click.option("-g", type=click.Choice(choices), show_choices=False)
     def cli_without_choices(g):
         pass
 
-    result = runner.invoke(cli_with_choices, ["--help"])
-    assert (
-        f"[{'|'.join(i.name if isinstance(i, enum.Enum) else str(i) for i in choices)}]"
-        in result.output
+    display_values = tuple(
+        i.name if isinstance(i, enum.Enum) else str(i) for i in choices
     )
 
+    # Check that the choices values are rendered as-is in the usage message.
+    result = runner.invoke(cli_with_choices, ["--help"])
+    assert f"[{'|'.join(display_values)}]" in result.stdout
+    assert not result.stderr
+    assert result.exit_code == 0
+
+    # Check that the metavar is rendered instead of the choices values themselves.
     result = runner.invoke(cli_without_choices, ["--help"])
-    assert metavars in result.output
+    assert metavar in result.stdout
+    assert not result.stderr
+    assert result.exit_code == 0
+
+    # Check the usage error message suggests the actual accepted values.
+    for cli in (cli_with_choices, cli_without_choices):
+        result = runner.invoke(cli, ["-g", "random"])
+        assert (
+            "\n\nError: Invalid value for '-g': 'random' is not one of "
+            f"{', '.join(map(repr, display_values))}.\n" in result.stderr
+        )
+        assert not result.stdout
+        assert result.exit_code == 2
 
 
 @pytest.mark.parametrize(
@@ -1394,15 +1774,24 @@ def test_usage_show_choices(runner, choices, metavars):
         ([True, False], False, "False"),
         (["foo", 1], "foo", "foo"),
         (["foo", 1], 1, "1"),
-        # Enum choices are rendered as their names.
+        # Enum choices are rendered as their names, not values.
         # See: https://github.com/pallets/click/issues/2911
         (HashType, HashType.SHA1, "SHA1"),
         # Enum choices allow defaults strings that are their names.
-        (HashType, "SHA1", "SHA1"),
+        (HashType, HashType.SHA256, "SHA256"),
+        (HashType, "SHA256", "SHA256"),
         (Number, Number.TWO, "TWO"),
-        (Letter, Letter.B, "B"),
+        (Number, "TWO", "TWO"),
+        (Letter, Letter.NAME_1, "NAME_1"),
+        (Letter, Letter.NAME_2, "NAME_2"),
+        (Letter, Letter.NAME_3, "NAME_3"),
+        (Letter, "NAME_1", "NAME_1"),
+        (Letter, "NAME_2", "NAME_2"),
+        (Letter, "NAME_3", "NAME_3"),
         (Color, Color.GREEN, "GREEN"),
+        (Color, "GREEN", "GREEN"),
         (ColorInt, ColorInt.GREEN, "GREEN"),
+        (ColorInt, "GREEN", "GREEN"),
     ],
 )
 def test_choice_default_rendering(runner, choices, default, default_string):
@@ -1446,3 +1835,407 @@ def test_duplicate_names_warning(runner, opts_one, opts_two):
 
     with pytest.warns(UserWarning):
         runner.invoke(cli, [])
+
+
+OBJECT_SENTINEL = object()
+"""An object-based sentinel value."""
+
+
+class EnumSentinel(enum.Enum):
+    FALSY_SENTINEL = object()
+
+    def __bool__(self) -> Literal[False]:
+        """Force the sentinel to be falsy to make sure it is not caught by Click
+        internal implementation.
+
+        Falsy sentinels have been discussed in:
+        https://github.com/pallets/click/pull/3030#pullrequestreview-3106604795
+        https://github.com/pallets/click/pull/3030#pullrequestreview-3108471552
+        """
+        return False
+
+
+# Any kind of sentinel value is recognized by Click as a valid flag value.
+@pytest.mark.parametrize("sentinel", (OBJECT_SENTINEL, EnumSentinel.FALSY_SENTINEL))
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    (
+        # Option default to None.
+        ([], None),
+        # Config has no default value, and no flag value, so it requires an argument.
+        (
+            ["--config"],
+            re.compile(re.escape("Error: Option '--config' requires an argument.\n")),
+        ),
+        (
+            ["--no-config", "--config"],
+            re.compile(re.escape("Error: Option '--config' requires an argument.\n")),
+        ),
+        # Passing --no-config defaults to the sentinel value because of the flag_value,
+        # and then the custom type receives that sentinel and returns a message.
+        (["--no-config"], "No configuration file provided."),
+        # Passing --config with an argument returns the file path.
+        (["--config", "foo.conf"], "foo.conf"),
+        # An argument is not allowed for --no-config, so it raises an error.
+        (
+            ["--no-config", "foo.conf"],
+            re.compile(
+                r"Usage: main \[OPTIONS\]\n"
+                r"Try 'main --help' for help.\n"
+                r"\n"
+                r"Error: Got unexpected extra argument (.+)\n"
+            ),
+        ),
+        # Passing --config with an argument that does not exist raises an error.
+        (
+            ["--config", "random-file.conf"],
+            re.compile(
+                r"Usage: main \[OPTIONS\]\n"
+                r"Try 'main --help' for help.\n"
+                r"\n"
+                r"Error: Invalid value for '-c' / '--config': "
+                r"File 'random-file.conf' does not exist.\n"
+            ),
+        ),
+        (
+            ["--config", "--no-config"],
+            re.compile(
+                r"Usage: main \[OPTIONS\]\n"
+                r"Try 'main --help' for help.\n"
+                r"\n"
+                r"Error: Invalid value for '-c' / '--config': "
+                r"File '--no-config' does not exist.\n"
+            ),
+        ),
+        (
+            ["--config", "--no-config", "foo.conf"],
+            re.compile(
+                r"Usage: main \[OPTIONS\]\n"
+                r"Try 'main --help' for help.\n"
+                r"\n"
+                r"Error: Invalid value for '-c' / '--config': "
+                r"File '--no-config' does not exist.\n"
+            ),
+        ),
+        # --config is passed last and overrides the --no-config option.
+        (["--no-config", "--config", "foo.conf"], "foo.conf"),
+    ),
+)
+def test_dual_options_custom_type_sentinel_flag_value(runner, sentinel, args, expected):
+    """Check that an object-based sentinel, used as a flag value, is returned as-is
+    to a custom type that is shared by two options, competing for the same variable
+    name.
+
+    A reproduction of
+    https://github.com/pallets/click/issues/3024#issuecomment-3146511356
+    """
+
+    class ConfigParamType(click.ParamType):
+        """A custom type that accepts a file path or a sentinel value."""
+
+        def convert(self, value, param, ctx):
+            if value is sentinel:
+                return "No configuration file provided."
+            else:
+                return click.Path(exists=True, dir_okay=False).convert(
+                    value, param, ctx
+                )
+
+    @click.command()
+    @click.option("-c", "--config", type=ConfigParamType())
+    @click.option("--no-config", "config", flag_value=sentinel, type=ConfigParamType())
+    def main(config):
+        click.echo(repr(config), nl=False)
+
+    with tempfile.NamedTemporaryFile(mode="w") as named_tempfile:
+        if "foo.conf" in args:
+            named_tempfile.write("Blah blah")
+            named_tempfile.flush()
+            args = [named_tempfile.name if a == "foo.conf" else a for a in args]
+
+        result = runner.invoke(main, args)
+
+        if isinstance(expected, re.Pattern):
+            assert re.match(expected, result.output)
+        else:
+            assert result.output == repr(
+                named_tempfile.name if expected == "foo.conf" else expected
+            )
+
+
+class EngineType(enum.Enum):
+    OSS = enum.auto()
+    PRO = enum.auto()
+    MAX = enum.auto()
+
+
+class Class1:
+    pass
+
+
+class Class2:
+    pass
+
+
+@pytest.mark.parametrize(
+    ("opt_params", "args", "expected"),
+    [
+        # Check that the flag value is returned as-is when the option is passed, and
+        # not normalized to a boolean, even if it is explicitly declared as a flag.
+        ({"type": EngineType, "flag_value": None}, ["--pro"], None),
+        (
+            {"type": EngineType, "is_flag": True, "flag_value": None},
+            ["--pro"],
+            None,
+        ),
+        ({"type": EngineType, "flag_value": EngineType.OSS}, ["--pro"], EngineType.OSS),
+        (
+            {"type": EngineType, "is_flag": True, "flag_value": EngineType.OSS},
+            ["--pro"],
+            EngineType.OSS,
+        ),
+        (
+            {"type": EngineType, "is_flag": True, "default": EngineType.OSS},
+            ["--pro"],
+            EngineType.OSS,
+        ),
+        # The default value is returned as-is when the option is not passed, whatever
+        # the flag value.
+        ({"type": EngineType, "flag_value": None}, [], None),
+        ({"type": EngineType, "is_flag": True, "flag_value": None}, [], None),
+        ({"type": EngineType, "flag_value": EngineType.OSS}, [], None),
+        (
+            {"type": EngineType, "is_flag": True, "flag_value": EngineType.OSS},
+            [],
+            None,
+        ),
+        (
+            {"type": EngineType, "is_flag": True, "default": EngineType.OSS},
+            [],
+            EngineType.OSS,
+        ),
+        # The option has not enough parameters to be detected as flag-like, so it
+        # requires an argument.
+        (
+            {"type": EngineType, "default": EngineType.OSS},
+            ["--pro"],
+            re.compile(re.escape("Error: Option '--pro' requires an argument.\n")),
+        ),
+        ({"type": EngineType, "default": EngineType.OSS}, [], EngineType.OSS),
+        # If a flag value is set, it is returned instead of the default value.
+        (
+            {"type": EngineType, "flag_value": EngineType.OSS, "default": True},
+            ["--pro"],
+            EngineType.OSS,
+        ),
+        (
+            {"type": EngineType, "flag_value": EngineType.OSS, "default": True},
+            [],
+            EngineType.OSS,
+        ),
+        # Type is not specified and default to string, so the default value is
+        # returned as a string, even if it is a boolean. Also, defaults to the
+        # flag_value instead of the default value to support legacy behavior.
+        ({"flag_value": "1", "default": True}, [], "1"),
+        ({"flag_value": "1", "default": 42}, [], "42"),
+        ({"flag_value": EngineType.OSS, "default": True}, [], "EngineType.OSS"),
+        ({"flag_value": EngineType.OSS, "default": 42}, [], "42"),
+        # See: the result is the same if we force the type to be str.
+        ({"type": str, "flag_value": 1, "default": True}, [], "1"),
+        ({"type": str, "flag_value": 1, "default": 42}, [], "42"),
+        ({"type": str, "flag_value": "1", "default": True}, [], "1"),
+        ({"type": str, "flag_value": "1", "default": 42}, [], "42"),
+        (
+            {"type": str, "flag_value": EngineType.OSS, "default": True},
+            [],
+            "EngineType.OSS",
+        ),
+        ({"type": str, "flag_value": EngineType.OSS, "default": 42}, [], "42"),
+        # But having the flag value set to integer is automaticcally recognized by
+        # Click.
+        ({"flag_value": 1, "default": True}, [], 1),
+        ({"flag_value": 1, "default": 42}, [], 42),
+        ({"type": int, "flag_value": 1, "default": True}, [], 1),
+        ({"type": int, "flag_value": 1, "default": 42}, [], 42),
+        ({"type": int, "flag_value": "1", "default": True}, [], 1),
+        ({"type": int, "flag_value": "1", "default": 42}, [], 42),
+    ],
+)
+def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expected):
+    """Test how the type and flag_value influence the returned value.
+
+    Cover cases reported in:
+    https://github.com/pallets/click/issues/3024#issuecomment-3146480714
+    https://github.com/pallets/click/issues/2012#issuecomment-892437060
+    """
+
+    @click.command()
+    @click.option("--pro", **opt_params)
+    def scan(pro):
+        click.echo(repr(pro), nl=False)
+
+    result = runner.invoke(scan, args)
+    if isinstance(expected, re.Pattern):
+        assert re.match(expected, result.output)
+    else:
+        assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("opt1_params", "opt2_params", "args", "expected"),
+    [
+        # Dual options sharing the same variable name, are not competitive, and the
+        # flag value is returned as-is. Especially when the type is force to be
+        # unprocessed.
+        (
+            {"flag_value": EngineType.OSS, "type": UNPROCESSED},
+            {"flag_value": EngineType.PRO, "type": UNPROCESSED},
+            [],
+            None,
+        ),
+        (
+            {"flag_value": EngineType.OSS, "type": UNPROCESSED},
+            {"flag_value": EngineType.PRO, "type": UNPROCESSED},
+            ["--opt1"],
+            EngineType.OSS,
+        ),
+        (
+            {"flag_value": EngineType.OSS, "type": UNPROCESSED},
+            {"flag_value": EngineType.PRO, "type": UNPROCESSED},
+            ["--opt2"],
+            EngineType.PRO,
+        ),
+        # Check that passing exotic flag values like classes is supported, but are
+        # rendered to strings when the type is not specified.
+        (
+            {"flag_value": Class1, "default": True},
+            {"flag_value": Class2},
+            [],
+            re.compile(r"'<test_options.Class1 object at 0x[0-9A-Fa-f]+>'"),
+        ),
+        (
+            {"flag_value": Class1, "default": True},
+            {"flag_value": Class2},
+            ["--opt1"],
+            "<class 'test_options.Class1'>",
+        ),
+        (
+            {"flag_value": Class1, "default": True},
+            {"flag_value": Class2},
+            ["--opt2"],
+            "<class 'test_options.Class2'>",
+        ),
+        # Even the default is processed as a string.
+        ({"flag_value": Class1, "default": "True"}, {"flag_value": Class2}, [], "True"),
+        ({"flag_value": Class1, "default": None}, {"flag_value": Class2}, [], None),
+        # To get the classes as-is, we need to specify the type as UNPROCESSED.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": True},
+            {"flag_value": Class2, "type": UNPROCESSED},
+            [],
+            re.compile(r"<test_options.Class1 object at 0x[0-9A-Fa-f]+>"),
+        ),
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": True},
+            {"flag_value": Class2, "type": UNPROCESSED},
+            ["--opt1"],
+            Class1,
+        ),
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": True},
+            {"flag_value": Class2, "type": UNPROCESSED},
+            ["--opt2"],
+            Class2,
+        ),
+        # Setting the default to a class, an instance of the class is returned instead
+        # of the class itself, because the default is allowed to be callable (and
+        # consummd). And this happens whatever the type is.
+        (
+            {"flag_value": Class1, "default": Class1},
+            {"flag_value": Class2},
+            [],
+            re.compile(r"'<test_options.Class1 object at 0x[0-9A-Fa-f]+>'"),
+        ),
+        (
+            {"flag_value": Class1, "default": Class2},
+            {"flag_value": Class2},
+            [],
+            re.compile(r"'<test_options.Class2 object at 0x[0-9A-Fa-f]+>'"),
+        ),
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": Class1},
+            {"flag_value": Class2, "type": UNPROCESSED},
+            [],
+            re.compile(r"<test_options.Class1 object at 0x[0-9A-Fa-f]+>"),
+        ),
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": Class2},
+            {"flag_value": Class2, "type": UNPROCESSED},
+            [],
+            re.compile(r"<test_options.Class2 object at 0x[0-9A-Fa-f]+>"),
+        ),
+        # Having the flag value set to integer is automaticcally recognized by Click.
+        (
+            {"flag_value": 1, "default": True},
+            {"flag_value": "1"},
+            [],
+            1,
+        ),
+        (
+            {"flag_value": 1, "type": int, "default": True},
+            {"flag_value": "1", "type": int},
+            [],
+            1,
+        ),
+    ],
+)
+def test_custom_type_flag_value_dual_options(
+    runner, opt1_params, opt2_params, args, expected
+):
+    """Test how flag values are processed with dual options competing for the same
+    variable name.
+
+    Reproduce issues reported in:
+    https://github.com/pallets/click/issues/3024#issuecomment-3146508536
+    https://github.com/pallets/click/issues/2012#issue-946471049
+    https://github.com/pallets/click/issues/2012#issuecomment-892437060
+    """
+
+    @click.command()
+    @click.option("--opt1", "dual_option", **opt1_params)
+    @click.option("--opt2", "dual_option", **opt2_params)
+    def cli(dual_option):
+        click.echo(repr(dual_option), nl=False)
+
+    result = runner.invoke(cli, args)
+    if isinstance(expected, re.Pattern):
+        assert re.match(expected, result.output)
+    else:
+        assert result.output == repr(expected)
+
+
+def test_custom_type_frozenset_flag_value(runner):
+    """Check that frozenset is correctly handled as a type, a flag value and a default.
+
+    Reproduces https://github.com/pallets/click/issues/2610
+    """
+
+    @click.command()
+    @click.option(
+        "--without-scm-ignore-files",
+        "scm_ignore_files",
+        is_flag=True,
+        type=frozenset,
+        flag_value=frozenset(),
+        default=frozenset(["git"]),
+    )
+    def rcli(scm_ignore_files):
+        click.echo(repr(scm_ignore_files), nl=False)
+
+    result = runner.invoke(rcli)
+    assert result.stdout == "frozenset({'git'})"
+    assert result.exit_code == 0
+
+    result = runner.invoke(rcli, ["--without-scm-ignore-files"])
+    assert result.stdout == "frozenset()"
+    assert result.exit_code == 0
