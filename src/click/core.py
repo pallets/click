@@ -799,8 +799,15 @@ class Context:
 
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
+                    default_value = param.get_default(ctx)
+                    # Hide the UNSET sentinel for backward compatibility. See:
+                    # https://github.com/pallets/click/issues/3066
+                    # https://github.com/pallets/click/issues/3065
+                    # https://github.com/pallets/click/pull/3068
+                    if default_value is UNSET:
+                        default_value = None
                     kwargs[param.name] = param.type_cast_value(  # type: ignore
-                        ctx, param.get_default(ctx)
+                        ctx, default_value
                     )
 
             # Track all kwargs as params, so that forward() will pass
