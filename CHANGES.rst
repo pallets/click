@@ -6,8 +6,8 @@ Version 8.3.x
 Unreleased
 
 -   Don't discard pager arguments by correctly using subprocess.Popen. :issue:`3039` :pr:`3055`
-
-
+-   Replace ``Sentinel.UNSET`` default values by ``None`` as they're passed through
+    the ``Context.invoke()`` method. :issue:`3066` :issue:`3065` :pr:`3068`
 
 Version 8.3.0
 --------------
