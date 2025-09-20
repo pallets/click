@@ -238,14 +238,15 @@ def test_other_command_invoke_with_defaults(runner):
     @click.option("-a", type=click.INT, default=42)
     @click.option("-b", type=click.INT, default="15")
     @click.option("-c", multiple=True)
+    @click.option("-d",)
     @click.pass_context
-    def other_cmd(ctx, a, b, c):
-        return ctx.info_name, a, b, c
+    def other_cmd(ctx, a, b, c, d):
+        return ctx.info_name, a, b, c, d
 
     result = runner.invoke(cli, standalone_mode=False)
     # invoke should type cast default values, str becomes int, empty
     # multiple should be empty tuple instead of None
-    assert result.return_value == ("other", 42, 15, ())
+    assert result.return_value == ("other", 42, 15, (), None)
 
 
 def test_invoked_subcommand(runner):
