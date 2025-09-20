@@ -238,7 +238,9 @@ def test_other_command_invoke_with_defaults(runner):
     @click.option("-a", type=click.INT, default=42)
     @click.option("-b", type=click.INT, default="15")
     @click.option("-c", multiple=True)
-    @click.option("-d",)
+    @click.option(
+        "-d",
+    )
     @click.pass_context
     def other_cmd(ctx, a, b, c, d):
         return ctx.info_name, a, b, c, d
