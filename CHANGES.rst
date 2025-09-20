@@ -19,7 +19,6 @@ Released 2025-09-15
     :pr:`3030`
 -   Show correct auto complete value for ``nargs`` option in combination with flag
     option :issue:`2813`
--   Show correct auto complete value for nargs option in combination with flag option :issue:`2813`
 -   Fix handling of quoted and escaped parameters in Fish autocompletion. :issue:`2995` :pr:`3013`
 -   Lazily import ``shutil``. :pr:`3023`
 -   Properly forward exception information to resources registered with
