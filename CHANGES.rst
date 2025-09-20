@@ -1,5 +1,13 @@
 .. currentmodule:: click
 
+Version 8.3.1
+--------------
+
+Released TBD
+
+-   **No Sentinel.UNSET seen by users**: Changed how ``UNSET`` is passed from
+    one context to another so that it does not get returned to users.
+
 Version 8.3.0
 --------------
 
