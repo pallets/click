@@ -1,5 +1,12 @@
 .. currentmodule:: click
 
+Version 8.x.x
+--------------
+
+-   Fix readline functionality on Linux platforms. Prompt text is now passed
+    directly to readline instead of being printed separately, allowing proper
+    backspace, line editing, and line wrapping behavior. :issue:`2968` :pr:`2969`
+
 Version 8.3.0
 --------------
 

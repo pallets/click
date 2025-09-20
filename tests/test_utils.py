@@ -227,7 +227,8 @@ def test_prompts_abort(monkeypatch, capsys):
         click.echo("interrupted")
 
     out, err = capsys.readouterr()
-    assert out == "Password:\ninterrupted\n"
+    # On non-Windows, prompt is passed directly to getpass, not echoed separately
+    assert out == "\ninterrupted\n"
 
 
 def test_prompts_eof(runner):
@@ -484,8 +485,8 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     emulate_input("asdlkj\n")
     click.prompt("Prompt to stderr", err=True)
     out, err = capfd.readouterr()
-    assert out == " "
-    assert err == "Prompt to stderr:"
+    assert out == ""
+    assert err == "Prompt to stderr: "
 
     emulate_input("y\n")
     click.confirm("Prompt to stdin")
