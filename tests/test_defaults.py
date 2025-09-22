@@ -84,3 +84,29 @@ def test_flag_default_map(runner):
 
     result = runner.invoke(cli, ["foo", "--help"], default_map={"foo": {"name": True}})
     assert "default: name" in result.output
+
+
+def test_shared_param_prefers_first_default(runner):
+    """test that the first default is chosen when multiple flags share a param name"""
+
+    @click.command
+    @click.option("--red", "color", flag_value="red")
+    @click.option("--green", "color", flag_value="green", default=True)
+    def prefers_green(color):
+        click.echo(color)
+
+    @click.command
+    @click.option("--red", "color", flag_value="red", default=True)
+    @click.option("--green", "color", flag_value="green")
+    def prefers_red(color):
+        click.echo(color)
+
+    result = runner.invoke(prefers_green, [])
+    assert "green" in result.output
+    result = runner.invoke(prefers_green, ["--red"])
+    assert "red" in result.output
+
+    result = runner.invoke(prefers_red, [])
+    assert "red" in result.output
+    result = runner.invoke(prefers_red, ["--green"])
+    assert "green" in result.output
