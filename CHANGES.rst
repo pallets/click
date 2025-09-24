@@ -5,6 +5,15 @@ Version 8.3.x
 
 Unreleased
 
+-   Don't discard pager arguments by correctly using subprocess.Popen. :issue:`3039` :pr:`3055`
+
+
+
+Version 8.3.0
+--------------
+
+Released 2025-09-17
+
 -   **Improved flag option handling**: Reworked the relationship between ``flag_value``
     and ``default`` parameters for better consistency:
 
@@ -19,12 +28,11 @@ Unreleased
     :pr:`3030`
 -   Show correct auto complete value for ``nargs`` option in combination with flag
     option :issue:`2813`
--   Show correct auto complete value for nargs option in combination with flag option :issue:`2813`
 -   Fix handling of quoted and escaped parameters in Fish autocompletion. :issue:`2995` :pr:`3013`
 -   Lazily import ``shutil``. :pr:`3023`
 -   Properly forward exception information to resources registered with
     ``click.core.Context.with_resource()``. :issue:`2447` :pr:`3058`
--   Fix regression related to EOF handling in CliRunner. :issue:`2939`:pr:`2940`
+-   Fix regression related to EOF handling in CliRunner. :issue:`2939` :pr:`2940`
 
 Version 8.2.2
 -------------
