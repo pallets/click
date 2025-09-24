@@ -5,6 +5,8 @@ Version 8.3.x
 
 Unreleased
 
+-   Don't discard pager arguments by correctly using subprocess.Popen. :issue:`3039` :pr:`3055`
+
 
 
 Version 8.3.0
