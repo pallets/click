@@ -139,7 +139,7 @@ wheels = [
 
 [[package]]
 name = "click"
-version = "8.2.2"
+version = "8.3.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },

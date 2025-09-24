@@ -1,6 +1,6 @@
 [project]
 name = "click"
-version = "8.2.2"
+version = "8.3.dev"
 description = "Composable command line interface toolkit"
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -58,7 +58,7 @@ typing = [
 ]
 
 [build-system]
-requires = ["flit_core<4"]
+requires = ["flit_core>=3.11,<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.flit.module]
