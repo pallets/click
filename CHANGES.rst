@@ -5,7 +5,8 @@ Version 8.3.x
 
 Unreleased
 
--   Don't discard pager arguments by correctly using subprocess.Popen. :issue:`3039` :pr:`3055`
+-   Don't discard pager arguments by correctly using ``subprocess.Popen``. :issue:`3039`
+    :pr:`3055`
 -   Replace ``Sentinel.UNSET`` default values by ``None`` as they're passed through
     the ``Context.invoke()`` method. :issue:`3066` :issue:`3065` :pr:`3068`
 
@@ -32,7 +33,7 @@ Released 2025-09-17
 -   Lazily import ``shutil``. :pr:`3023`
 -   Properly forward exception information to resources registered with
     ``click.core.Context.with_resource()``. :issue:`2447` :pr:`3058`
--   Fix regression related to EOF handling in CliRunner. :issue:`2939` :pr:`2940`
+-   Fix regression related to EOF handling in ``CliRunner``. :issue:`2939` :pr:`2940`
 
 Version 8.2.2
 -------------
