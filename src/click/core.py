@@ -1226,8 +1226,15 @@ class Command:
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
             _, args = param.handle_parse_result(ctx, opts, args)
 
-        # after handling *all* parameters, do a pass over the params to rewrite
-        # `UNSET`
+        # We now have all parameters' values into `ctx.params`, but the data may contain
+        # the `UNSET` sentinel.
+        # Convert `UNSET` to `None` to ensure that the user doesn't see `UNSET`.
+        #
+        # Waiting until after the initial parse to convert allows us to treat `UNSET`
+        # more like a missing value when multiple params use the same name.
+        # Refs:
+        # https://github.com/pallets/click/issues/3071
+        # https://github.com/pallets/click/pull/3079
         for name, value in ctx.params.items():
             if value is UNSET:
                 ctx.params[name] = None
@@ -2551,9 +2558,6 @@ class Parameter:
             assert self.name is not None, (
                 f"{self!r} parameter's name should not be None when exposing value."
             )
-            # Do not normalize UNSET values to None at this point
-            # It needs to be done, but doing so too early impacts multiple parameters
-            # targeting the same variable name
             ctx.params[self.name] = value
 
         return value, args
