@@ -1226,6 +1226,19 @@ class Command:
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
             _, args = param.handle_parse_result(ctx, opts, args)
 
+        # We now have all parameters' values into `ctx.params`, but the data may contain
+        # the `UNSET` sentinel.
+        # Convert `UNSET` to `None` to ensure that the user doesn't see `UNSET`.
+        #
+        # Waiting until after the initial parse to convert allows us to treat `UNSET`
+        # more like a missing value when multiple params use the same name.
+        # Refs:
+        # https://github.com/pallets/click/issues/3071
+        # https://github.com/pallets/click/pull/3079
+        for name, value in ctx.params.items():
+            if value is UNSET:
+                ctx.params[name] = None
+
         if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
             ctx.fail(
                 ngettext(
@@ -2538,17 +2551,14 @@ class Parameter:
             # We skip adding the value if it was previously set by another parameter
             # targeting the same variable name. This prevents parameters competing for
             # the same name to override each other.
-            and self.name not in ctx.params
+            and (self.name not in ctx.params or ctx.params[self.name] is UNSET)
         ):
             # Click is logically enforcing that the name is None if the parameter is
             # not to be exposed. We still assert it here to please the type checker.
             assert self.name is not None, (
                 f"{self!r} parameter's name should not be None when exposing value."
             )
-            # Normalize UNSET values to None, as we're about to pass them to the
-            # command function and move them to the pure-Python realm of user-written
-            # code.
-            ctx.params[self.name] = value if value is not UNSET else None
+            ctx.params[self.name] = value
 
         return value, args
 
