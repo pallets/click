@@ -9,6 +9,8 @@ Unreleased
     :pr:`3055`
 -   Replace ``Sentinel.UNSET`` default values by ``None`` as they're passed through
     the ``Context.invoke()`` method. :issue:`3066` :issue:`3065` :pr:`3068`
+-   Fix conversion of ``Sentinel.UNSET`` happening too early, which caused incorrect
+    behavior for multiple parameters using the same name. :issue:`3071` :pr:`3079`
 
 Version 8.3.0
 --------------
