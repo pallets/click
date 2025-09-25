@@ -120,11 +120,7 @@ def prompt(
                          prompt will be "Group by (day, week): ".
 
     .. versionchanged:: 8.3.1
-        The prompt displayed no longer strips trailing whitespace, adding a single
-        trailing space. Instead, ``text`` is now displayed followed by
-        ``prompt_suffix`` with no whitespace manipulation.
-        When ``err`` is True the prompt is sent to ``stderr`` except for the last
-        character which is sent to ``stdout``.
+        A space is no longer appended to the prompt.
 
     .. versionadded:: 8.0
         ``confirmation_prompt`` can be a custom string.
@@ -222,11 +218,7 @@ def confirm(
                 ``stdout``, the same as with echo.
 
     .. versionchanged:: 8.3.1
-        The prompt displayed no longer strips trailing whitespace, adding a single
-        trailing space. Instead, ``text`` is now displayed followed by
-        ``prompt_suffix`` with no whitespace manipulation.
-        When ``err`` is True the prompt is sent to ``stderr`` except for the last
-        character which is sent to ``stdout``.
+        A space is no longer appended to the prompt.
 
     .. versionchanged:: 8.0
         Repeat until input is given if ``default`` is ``None``.
