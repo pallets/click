@@ -119,6 +119,13 @@ def prompt(
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
 
+    .. versionchanged:: 8.3.1
+        The prompt displayed no longer strips trailing whitespace, adding a single
+        trailing space. Instead, ``text`` is now displayed followed by
+        ``prompt_suffix`` with no whitespace manipulation.
+        When ``err`` is True the prompt is sent to ``stderr`` except for the last
+        character which is sent to ``stdout``.
+
     .. versionadded:: 8.0
         ``confirmation_prompt`` can be a custom string.
 
@@ -213,6 +220,13 @@ def confirm(
     :param show_default: shows or hides the default value in the prompt.
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``, the same as with echo.
+
+    .. versionchanged:: 8.3.1
+        The prompt displayed no longer strips trailing whitespace, adding a single
+        trailing space. Instead, ``text`` is now displayed followed by
+        ``prompt_suffix`` with no whitespace manipulation.
+        When ``err`` is True the prompt is sent to ``stderr`` except for the last
+        character which is sent to ``stdout``.
 
     .. versionchanged:: 8.0
         Repeat until input is given if ``default`` is ``None``.
