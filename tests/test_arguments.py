@@ -579,3 +579,40 @@ def test_duplicate_names_warning(runner, args_one, args_two):
 
     with pytest.warns(UserWarning):
         runner.invoke(cli, [])
+
+
+@pytest.mark.parametrize(
+    ("argument_kwargs", "pass_argv"),
+    (
+        # there is a large potential parameter space to explore here
+        # this is just a very small sample of it
+        ({}, ["myvalue"]),
+        ({"nargs": -1}, []),
+        ({"nargs": -1}, ["myvalue"]),
+        ({"default": None}, ["myvalue"]),
+        ({"required": False}, []),
+        ({"required": False}, ["myvalue"]),
+    ),
+)
+def test_argument_custom_class_can_override_type_cast_value_and_never_sees_unset(
+    runner, argument_kwargs, pass_argv
+):
+    """
+    Test that overriding type_cast_value is supported
+
+    In particular, the argument is never passed an UNSET sentinel value.
+    """
+
+    class CustomArgument(click.Argument):
+        def type_cast_value(self, ctx, value):
+            assert value is not UNSET
+            return value
+
+    @click.command()
+    @click.argument("myarg", **argument_kwargs, cls=CustomArgument)
+    def cmd(myarg):
+        click.echo("ok")
+
+    result = runner.invoke(cmd, pass_argv)
+    assert not result.exception
+    assert result.exit_code == 0
