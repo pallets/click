@@ -131,7 +131,7 @@ Instead of setting the `type`, you may set a default and Click will try to infer
 
 ## Multi Value Options
 
-To make an option take multiple values, pass in `nargs`. Note only a fixed number of arguments is supported. The values are passed to the underlying function as a tuple.
+To make an option take multiple values, pass in `nargs`. Note you may pass in any positive integer, but not -1. The values are passed to the underlying function as a tuple.
 
 ```{eval-rst}
 .. click:example::
@@ -195,7 +195,7 @@ used. The above example is thus equivalent to this:
 
 ## Multiple Options
 
-The multiple options format allows you to call the underlying function multiple times with one command line entry. If set, the default must be a list or tuple. Setting a string as a default will be interpreted as list of characters.
+The multiple options format allows options to take an arbitrary number of arguments (which is called variadic). The arguments are passed to the underlying function as a tuple. If set, the default must be a list or tuple. Setting a string as a default will be interpreted as list of characters.
 
 ```{eval-rst}
 .. click:example::
@@ -203,7 +203,9 @@ The multiple options format allows you to call the underlying function multiple 
     @click.command()
     @click.option('--message', '-m', multiple=True)
     def commit(message):
-        click.echo('\n'.join(message))
+        click.echo(message)
+        for m in message:
+            click.echo(m)
 
 .. click:run::
 
