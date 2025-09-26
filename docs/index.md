@@ -1,29 +1,32 @@
-.. rst-class:: hide-header
+```{cssclass} hide-header
+```
 
-Welcome to Click
-================
+# Welcome to Click
 
-.. image:: _static/click-name.svg
-    :align: center
-    :height: 200px
+```{image} _static/click-logo.png
+---
+align: center
+scale: 50%
+target: https://palletsprojects.com/p/click/
+---
+```
 
-Click is a Python package for creating beautiful command line interfaces
-in a composable way with as little code as necessary.  It's the "Command
-Line Interface Creation Kit".  It's highly configurable but comes with
-sensible defaults out of the box.
+Click is a Python package for creating beautiful command line interfaces in a composable way with as little code as
+necessary. It's the "Command Line Interface Creation Kit". It's highly configurable but comes with sensible defaults out
+of the box.
 
-It aims to make the process of writing command line tools quick and fun
-while also preventing any frustration caused by the inability to implement
-an intended CLI API.
+It aims to make the process of writing command line tools quick and fun while also preventing any frustration caused by
+the inability to implement an intended CLI API.
 
 Click in three points:
 
--   arbitrary nesting of commands
--   automatic help page generation
--   supports lazy loading of subcommands at runtime
+- arbitrary nesting of commands
+- automatic help page generation
+- supports lazy loading of subcommands at runtime
 
-What does it look like?  Here is an example of a simple Click program:
+What does it look like? Here is an example of a simple Click program:
 
+```{eval-rst}
 .. click:example::
 
     import click
@@ -51,92 +54,102 @@ It automatically generates nicely formatted help pages:
 .. click:run::
 
     invoke(hello, ['--help'], prog_name='python hello.py')
+```
 
 You can get the library directly from PyPI::
 
+```python
     pip install click
+```
 
-Documentation
-==============
+## Documentation
 
-.. toctree::
-   :maxdepth: 2
+```{toctree}
+---
+maxdepth: 2
+---
+faqs
+```
 
-   faqs
+### Tutorials
 
-Tutorials
-------------
-.. toctree::
-   :maxdepth: 1
+```{toctree}
+---
+maxdepth: 1
+---
+quickstart
+virtualenv
+```
 
-   quickstart
-   virtualenv
+### How to Guides
 
-How to Guides
----------------
-.. toctree::
-   :maxdepth: 1
+```{toctree}
+---
+maxdepth: 1
+---
+entry-points
+setuptools
+support-multiple-versions
+```
 
-   entry-points
-   setuptools
-   support-multiple-versions
+### Conceptual Guides
 
-Conceptual Guides
--------------------
-.. toctree::
-   :maxdepth: 1
+```{toctree}
+---
+maxdepth: 1
+---
+why
+click-concepts
+```
 
-   why
-   click-concepts
+### General Reference
 
-General Reference
---------------------
+```{toctree}
+---
+maxdepth: 1
+---
+parameters
+parameter-types
+options
+option-decorators
+arguments
+commands-and-groups
+commands
+documentation
+prompts
+handling-files
+advanced
+complex
+extending-click
+testing
+utils
+shell-completion
+exceptions
+unicode-support
+wincmd
+```
 
-.. toctree::
-   :maxdepth: 1
+### API Reference
 
-   parameters
-   parameter-types
-   options
-   option-decorators
-   arguments
-   commands-and-groups
-   commands
-   documentation
-   prompts
-   handling-files
-   advanced
-   complex
-   extending-click
-   testing
-   utils
-   shell-completion
-   exceptions
-   unicode-support
-   wincmd
+```{toctree}
+---
+maxdepth: 2
+---
+api
+```
 
-API Reference
--------------------
+## About Project
 
-.. toctree::
-   :maxdepth: 2
+- This documentation is structured according to [Diataxis](https://diataxis.fr/)
+- [Version Policy](https://palletsprojects.com/versions)
+- [Contributing](https://palletsprojects.com/contributing/)
+- [Donate](https://palletsprojects.com/donate)
 
-   api
-
-About Project
-===============
-
-* This documentation is structured according to `Diataxis <https://diataxis.fr/>`_
-
-* `Version Policy <https://palletsprojects.com/versions>`_
-
-* `Contributing <https://palletsprojects.com/contributing/>`_
-
-* `Donate <https://palletsprojects.com/donate>`_
-
-.. toctree::
-   :maxdepth: 1
-
-   contrib
-   license
-   changes
+```{toctree}
+---
+maxdepth: 1
+---
+contrib
+license
+changes
+```
