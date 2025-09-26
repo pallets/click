@@ -3,12 +3,11 @@
 
 # Welcome to Click
 
-```{image} _static/click-logo.png
----
-align: center
-scale: 50%
-target: https://palletsprojects.com/p/click/
----
+```{image} _static/click-name.svg
+:alt: Click project logo
+:height: 200px
+:align: center
+:target: https://palletsprojects.com/p/click/
 ```
 
 Click is a Python package for creating beautiful command line interfaces in a composable way with as little code as
