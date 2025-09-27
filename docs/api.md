@@ -312,7 +312,7 @@ classes and functions.
 
 ## Shell Completion
 
-See `/shell-completion` for information about enabling and
+See {doc}`/shell-completion` for information about enabling and
 customizing Click's shell completion system.
 
 ```{eval-rst}
