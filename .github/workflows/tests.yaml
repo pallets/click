@@ -30,6 +30,18 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: uv run --locked tox run -e ${{ matrix.tox || format('py{0}', matrix.python) }}
+  tests-busybox:
+    name: busybox
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: jirutka/setup-alpine@v1.2.0
+        with:
+          branch: v3.22 # update to get more recent python https://alpinelinux.org/
+      - run: apk add uv python3
+        shell: alpine.sh --root {0}
+      - run: ls -la; uv run --locked tox run
+        shell: alpine.sh {0}
   typing:
     runs-on: ubuntu-latest
     steps:
