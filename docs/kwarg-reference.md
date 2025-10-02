@@ -16,17 +16,18 @@ get proper names.
 ```{table}
 :align: center
 
-| Kwarg    | basic | nargs >= 2  | multiple    | counting   | boolean           | flag value   | ?   |
-| ---------| ----- | ----------- |-------------|------------|-------------------|--------------|-----|
-| type     | Yes   | Yes, Note 1 | Yes, Note 1 | No, Note 2 | No, Note 3        | Yes          |     |
-| default  | Yes   | Yes, Note 4 | Yes, Note 4 | Yes        | Yes               | Yes, Note 5  |     |
-| required | Yes   | Yes         | Yes         | Yes        | Sometimes, Note 6 | No           |     |
-| callback | Yes   | Yes         | Yes         | Yes, Note 7| Yes, Note 7       | Yes, Note 7  |     |
-| nargs    | -     | -           | -           | -          | -                 | -            |     |
-| metavar  | Yes   | Yes         | Yes         | Yes        | Yes               | Yes          |     |
-| expose_value | -     | -           | -           | -          | -                 | -            |     |
-| nargs    | -     | -           | -           | -          | -                 | -            |     |
-
+| Kwarg        | basic      | nargs >= 2  | multiple    | counting   | boolean           | flag value   | ?   |
+| -------------| ---------- | ----------- |-------------|------------|-------------------|--------------|-----|
+| type         | Yes        | Yes, Note 1 | Yes, Note 1 | No, Note 2 | No, Note 3        | Yes          |     |
+| default      | Yes        | Yes, Note 4 | Yes, Note 4 | Yes        | Yes               | Yes, Note 5  |     |
+| required     | Yes        | Yes         | Yes         | Yes        | Sometimes, Note 6 | No           |     |
+| callback     | Yes        | Yes         | Yes         | Yes, Note 7| Yes, Note 7       | Yes, Note 7  |     |
+| nargs        | -          | -           | -           | -          | -                 | -            |     |
+| metavar      | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
+| expose_value | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
+| nargs        | No, Note 8 | Yes         | Yes         | No, Note 9 | No, Note 10       | Yes, Note 11 |     |
+| is_eager     | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
+| envvar       | Yes        | Yes         | Yes         | Yes        | No                | Yes          |     |
 
 ```
 
@@ -39,6 +40,10 @@ Notes:
 1. In addition to normal usage, default may be used to indicate which of the flag values is default, by `default = True`.
 6. In the simple `is_flag=True`, no. In the `--flag/--no-flag`, yes indicating you must select one.
 1. Only use case (that I can think of) is multiple parameter dependent validation
+1. The type is set implicitly, and there is only 1 right value, 1
+9. Breaks but produces a weird error.
+1. Breaks but produces a weird error.
+1. Works, but I think not in the expected way
 
 Abbreviations:
 * NW: No warn. Click does not stop you.
@@ -76,6 +81,48 @@ Note 4:
 .. click:run::
 
     invoke(echo, args=['--echoes', '2', '2'])
+```
+
+Note 9
+nargs x counting
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('--echoes', nargs=2, count=True)
+    def echo(echoes):
+        click.echo(echoes)
+
+.. click:run::
+    invoke(echo, args=['--echoes', '1', '2'])
+```
+
+Note 10
+nargs x boolean
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('--echoes', nargs=2, is_flag=True)
+    def echo(echoes):
+        click.echo(echoes)
+
+.. click:run::
+    invoke(echo, args=['--echoes', '1', '2'])
+```
+
+Note 11
+nargs x boolean
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('--echoes', nargs=2, flag_value=(True, True))
+    def echo(echoes):
+        click.echo(echoes)
+
+.. click:run::
+    invoke(echo, args=['--echoes', ])
 ```
 
 type x multiple
@@ -207,6 +254,7 @@ metavar x multiple
     invoke(echo, args=['--help', ])
     invoke(echo, args=['--echoes', '2', '--echoes', '2'])
 ```
+
 ## Options from class
 
 ```{table}
