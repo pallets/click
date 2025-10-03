@@ -16,19 +16,20 @@ get proper names.
 ```{table}
 :align: center
 
-| Kwarg        | basic      | nargs >= 2  | multiple    | counting   | boolean           | flag value   | ?   |
-| -------------| ---------- | ----------- |-------------|------------|-------------------|--------------|-----|
-| type         | Yes        | Yes, Note 1 | Yes, Note 1 | No, Note 2 | No, Note 3        | Yes          |     |
-| default      | Yes        | Yes, Note 4 | Yes, Note 4 | Yes        | Yes               | Yes, Note 5  |     |
-| required     | Yes        | Yes         | Yes         | Yes        | Sometimes, Note 6 | No           |     |
-| callback     | Yes        | Yes         | Yes         | Yes, Note 7| Yes, Note 7       | Yes, Note 7  |     |
-| nargs        | -          | -           | -           | -          | -                 | -            |     |
-| metavar      | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
-| expose_value | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
-| nargs        | No, Note 8 | Yes         | Yes         | No, Note 9 | No, Note 10       | Yes, Note 11 |     |
-| is_eager     | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
-| envvar       | Yes        | Yes         | Yes         | Yes        | No                | Yes          |     |
-
+| Kwarg          | single arg | nargs >= 2  | multiple    | counting   | boolean           | flag value   | ?   |
+| ---------------| ---------- | ----------- |-------------|------------|-------------------|--------------|-----|
+| type           | Yes        | Yes, Note 1 | Yes, Note 1 | No, Note 2 | No, Note 3        | Yes          |     |
+| required       | Yes        | Yes         | Yes         | Yes        | Sometimes, Note 6 | No           |     |
+| default        | Yes        | Yes, Note 4 | Yes, Note 4 | Yes        | Yes               | Yes, Note 5  |     |
+| callback       | Yes        | Yes         | Yes         | Yes, Note 7| Yes, Note 7       | Yes, Note 7  |     |
+| nargs          | Defines    | Defines     | Yes         | No, Note 9 | No, Note 10       | Yes, Note 11 |     |
+| metavar        | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
+| expose_value   | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
+| is_eager       | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
+| envvar         | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
+| shell complete | Yes        | Yes         | Yes         | Yes        | Yes               | Yes          |     |
+| deprecated     | Yes        | Yes         | Yes         | Yes        | No                | Yes          |     |
+| multiple       | Yes        | Yes         | Defines     | No         | No                | No           |     |
 ```
 
 
@@ -47,6 +48,7 @@ Notes:
 
 Abbreviations:
 * NW: No warn. Click does not stop you.
+* Defines: Sets situation
 
 
 Terms:
@@ -270,18 +272,18 @@ metavar x multiple
 ```{table}
 :align: center
 
-| Kwarg | basic | multi value | multiple | counting |
-| ----- | ----- | ----------- |----------|----------|
-| default | Yes | Note        | ?        |          |
-| type | ?   |             |          |          |
-```
-
-## Arguments from class
-
-```{table}
-:align: center
-
-| Kwarg | basic | multi value | multiple | counting |
-| ----- | ----- | ----------- |----------|----------|
-| default | Yes | Note        | ?        |          |
+| Kwarg          | single arg | nargs >= 2  | nargs == -1 | Placeholder| Placeholder       |
+| ---------------| ---------- | ----------- |-------------|------------|-------------------|
+| type           | Yes        | Yes,        | Yes         | -          | -                 |
+| required       | Yes        | Yes         | Yes         | -          | -                 |
+| default        | Yes        | Yes         | Yes         | -          | -                 |
+| callback       | Yes        | Yes         | Yes         | -          | -                 |
+| nargs          | Defines    | Defines     | Defines     | -          | -                 |
+| metavar        | Yes        | Yes         | Yes         | -          | -                 |
+| expose_value   | Yes        | Yes         | Yes         | -          | -                 |
+| is_eager       | No         | No          | No          | -          | -                 |
+| envvar         | Yes        | Yes         | Yes         | -          | -                 |
+| shell complete | Yes        | Yes         | Yes         | -          | -                 |
+| deprecated     | Yes        | Yes         | Yes         | -          | -                 |
+| multiple       | No         | No          | No          | -          | -                 |
 ```
