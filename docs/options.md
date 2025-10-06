@@ -257,8 +257,7 @@ Boolean options (boolean flags) take the value True or False. The simplest case 
 
 ```
 
-To implement this more explicitly, pass in on-option `/` off-option. Click will automatically set `is_flag=True`. Click always wants you to provide an enable
-and disable flag so that you can change the default later.
+To implement this more explicitly, pass in on-option `/` off-option. Click will automatically set `is_flag=True`.
 
 ```{eval-rst}
 .. click:example::
@@ -279,6 +278,12 @@ and disable flag so that you can change the default later.
     invoke(info, args=['--shout'])
     invoke(info, args=['--no-shout'])
 ```
+
+Use cases for this more explicit pattern include:
+
+* The default can be dynamic so the user can explicitly specify the option with either on or off option, or pass in no option to use the dynamic default.
+* Shell scripts sometimes want to be explicit even when it's the default
+* Shell aliases can set a flag, then an invocation can add a negation of the flag
 
 If a forward slash(`/`) is contained in your option name already, you can split the parameters using `;`. In Windows `/` is commonly used as the prefix character.
 
