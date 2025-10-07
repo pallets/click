@@ -1,5 +1,10 @@
 .. currentmodule:: click
 
+Unreleased
+
+-   If ``flag_value`` is set or no default is provided the flag can be accepted
+    without an argument.:issue:`3084`
+
 Version 8.3.1
 --------------
 
