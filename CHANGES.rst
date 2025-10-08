@@ -4,7 +4,8 @@ Version 8.3.x
 --------------
 
 Unreleased
-
+-   If ``flag_value`` is set or no default is provided the flag can be accepted without an
+    argument. :issue:`3084` :pr:`#3104`
 -   Don't discard pager arguments by correctly using ``subprocess.Popen``. :issue:`3039`
     :pr:`3055`
 -   Replace ``Sentinel.UNSET`` default values by ``None`` as they're passed through
