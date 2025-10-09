@@ -2338,7 +2338,7 @@ class Parameter:
         """Convert and validate a value against the parameter's
         :attr:`type`, :attr:`multiple`, and :attr:`nargs`.
         """
-        if value in (None, UNSET):
+        if value is None:
             if self.multiple or self.nargs == -1:
                 return ()
             else:
@@ -2421,7 +2421,16 @@ class Parameter:
 
         :meta private:
         """
-        value = self.type_cast_value(ctx, value)
+        # shelter `type_cast_value` from ever seeing an `UNSET` value by handling the
+        # cases in which `UNSET` gets special treatment explicitly at this layer
+        #
+        # Refs:
+        # https://github.com/pallets/click/issues/3069
+        if value is UNSET:
+            if self.multiple or self.nargs == -1:
+                value = ()
+        else:
+            value = self.type_cast_value(ctx, value)
 
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)
@@ -3263,13 +3272,22 @@ class Option(Parameter):
 
         return value, source
 
-    def type_cast_value(self, ctx: Context, value: t.Any) -> t.Any:
-        if self.is_flag and not self.required:
-            if value is UNSET:
-                if self.is_bool_flag:
-                    # If the flag is a boolean flag, we return False if it is not set.
-                    value = False
-        return super().type_cast_value(ctx, value)
+    def process_value(self, ctx: Context, value: t.Any) -> t.Any:
+        # process_value has to be overridden on Options in order to capture
+        # `value == UNSET` cases before `type_cast_value()` gets called.
+        #
+        # Refs:
+        # https://github.com/pallets/click/issues/3069
+        if self.is_flag and not self.required and self.is_bool_flag and value is UNSET:
+            value = False
+
+            if self.callback is not None:
+                value = self.callback(ctx, self, value)
+
+            return value
+
+        # in the normal case, rely on Parameter.process_value
+        return super().process_value(ctx, value)
 
 
 class Argument(Parameter):
