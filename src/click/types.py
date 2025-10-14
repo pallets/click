@@ -1219,9 +1219,11 @@ class EmailParamType(ParamType):
             
         value = value.strip()
         
-        # Simple but effective email validation regex
-        # Matches most common email formats without being overly complex
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        # More strict email validation regex
+        # - No leading/trailing dots in local part
+        # - No consecutive dots anywhere
+        # - Domain must have valid structure
+        email_pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9._+%-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$'
         
         if re.match(email_pattern, value):
             return value
