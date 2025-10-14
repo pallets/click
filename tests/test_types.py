@@ -255,3 +255,86 @@ def test_choice_get_invalid_choice_message():
     choice = click.Choice(["a", "b", "c"])
     message = choice.get_invalid_choice_message("d", ctx=None)
     assert message == "'d' is not one of 'a', 'b', 'c'."
+
+
+@pytest.mark.parametrize(
+    "email",
+    [
+        "user@example.com",
+        "test.email@domain.org",
+        "user+tag@example.co.uk",
+        "firstname.lastname@company.com",
+        "user123@test-domain.com",
+        "a@b.co",
+        "user_name@example-site.org",
+        "test@sub.domain.com",
+    ],
+)
+def test_email_valid(email):
+    """Test that valid email addresses are accepted."""
+    email_type = click.EMAIL
+    result = email_type.convert(email, None, None)
+    assert result == email
+
+
+@pytest.mark.parametrize(
+    "invalid_email",
+    [
+        "invalid",
+        "@example.com",
+        "user@",
+        "user@.com",
+        "user@domain",
+        "user space@example.com",
+        "user@domain..com",
+        "user@@example.com",
+        "",
+        "user@domain.c",
+        ".user@example.com",
+        "user.@example.com",
+    ],
+)
+def test_email_invalid(invalid_email):
+    """Test that invalid email addresses are rejected."""
+    email_type = click.EMAIL
+    with pytest.raises(click.BadParameter, match="is not a valid email address"):
+        email_type.convert(invalid_email, None, None)
+
+
+def test_email_strips_whitespace():
+    """Test that email type strips leading and trailing whitespace."""
+    email_type = click.EMAIL
+    result = email_type.convert("  user@example.com  ", None, None)
+    assert result == "user@example.com"
+
+
+def test_email_converts_non_string():
+    """Test that email type converts non-string values to strings first."""
+    email_type = click.EMAIL
+    # This would be an invalid email, but tests the conversion behavior
+    with pytest.raises(click.BadParameter):
+        email_type.convert(12345, None, None)
+
+
+def test_email_repr():
+    """Test the string representation of EMAIL type."""
+    email_type = click.EMAIL
+    assert repr(email_type) == "EMAIL"
+
+
+def test_email_in_command(runner):
+    """Test EMAIL type used in a command."""
+    @click.command()
+    @click.option("--email", type=click.EMAIL)
+    def cmd(email):
+        click.echo(f"Email: {email}")
+
+    # Test valid email
+    result = runner.invoke(cmd, ["--email", "user@example.com"])
+    assert result.exit_code == 0
+    assert "Email: user@example.com" in result.output
+
+    # Test invalid email
+    result = runner.invoke(cmd, ["--email", "invalid-email"])
+    assert result.exit_code != 0
+    assert "is not a valid email address" in result.output

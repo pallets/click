@@ -1198,6 +1198,47 @@ FLOAT = FloatParamType()
 #: also be selected by using ``bool`` as a type.
 BOOL = BoolParamType()
 
+class EmailParamType(ParamType):
+    """A parameter type that validates email addresses.
+    
+    This type validates that the input is a properly formatted email address
+    using a simple but effective regex pattern. It accepts standard email
+    formats like 'user@domain.com' and 'user.name+tag@example.org'.
+    
+    .. versionadded:: 8.2
+    """
+    name = "email"
+
+    def convert(
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
+    ) -> str:
+        import re
+        
+        if not isinstance(value, str):
+            value = str(value)
+            
+        value = value.strip()
+        
+        # Simple but effective email validation regex
+        # Matches most common email formats without being overly complex
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        
+        if re.match(email_pattern, value):
+            return value
+            
+        self.fail(
+            _("{value!r} is not a valid email address.").format(value=value),
+            param,
+            ctx
+        )
+
+    def __repr__(self) -> str:
+        return "EMAIL"
+
+
+#: An email parameter.
+EMAIL = EmailParamType()
+
 #: A UUID parameter.
 UUID = UUIDParameterType()
 
