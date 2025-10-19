@@ -112,6 +112,7 @@ General Reference
    utils
    shell-completion
    exceptions
+   command-line-reference
    unicode-support
    wincmd
 
