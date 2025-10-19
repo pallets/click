@@ -5,14 +5,21 @@
 
 ```{contents}
 ---
-depth: 2
+depth: 1
 local: true
 ---
 ```
 
 ## Exit Codes
 
-When a command is executed from the command line, then an exit code is return. The exit code, also called exit status or exit status code, is a integer that tells you whether the command executed without errors or with errors. Exit code 0 means the command executed without errors. All of the other exit codes are defined by the Operating System, Shell, and/or command.
+When a command is executed from the command line, then an exit code is return. The exit code, also called exit status or exit status code, is a positive integer that tells you whether the command executed with or without errors.
+
+| Exit Code | Meaning                                         |
+|-----------|-------------------------------------------------|
+| 0         | Success — the command completed without errors. |
+| > 0       | Executed with errors                            |
+
+Exit codes greater than zero mean are specific to the Operating System, Shell, and/or command.
 
 To access the exit code, execute the command, then do the following depending:
 
