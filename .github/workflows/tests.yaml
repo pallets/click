@@ -14,6 +14,7 @@ jobs:
       matrix:
         include:
           - {python: '3.14'}
+          - {name: free-threaded-latest, python: '3.14t'}
           - {python: '3.13'}
           - {name: Windows, python: '3.13', os: windows-latest}
           - {name: Mac, python: '3.13', os: macos-latest}
