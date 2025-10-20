@@ -142,7 +142,7 @@ order-by-type = false
 
 [tool.tox]
 env_list = [
-    "py3.13", "py3.12", "py3.11", "py3.10",
+    "py3.14", "py3.13", "py3.12", "py3.11", "py3.10",
     "pypy3.11",
     "style",
     "typing",

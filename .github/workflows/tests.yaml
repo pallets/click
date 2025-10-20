@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - {python: '3.14'}
           - {python: '3.13'}
           - {name: Windows, python: '3.13', os: windows-latest}
           - {name: Mac, python: '3.13', os: macos-latest}
