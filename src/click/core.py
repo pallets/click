@@ -799,8 +799,18 @@ class Context:
 
             for param in other_cmd.params:
                 if param.name not in kwargs and param.expose_value:
+                    default_value = param.get_default(ctx)
+                    # We explicitly hide the :attr:`UNSET` value to the user, as we
+                    # choose to make it an implementation detail. And because ``invoke``
+                    # has been designed as part of Click public API, we return ``None``
+                    # instead. Refs:
+                    # https://github.com/pallets/click/issues/3066
+                    # https://github.com/pallets/click/issues/3065
+                    # https://github.com/pallets/click/pull/3068
+                    if default_value is UNSET:
+                        default_value = None
                     kwargs[param.name] = param.type_cast_value(  # type: ignore
-                        ctx, param.get_default(ctx)
+                        ctx, default_value
                     )
 
             # Track all kwargs as params, so that forward() will pass
@@ -1215,6 +1225,19 @@ class Command:
 
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
             _, args = param.handle_parse_result(ctx, opts, args)
+
+        # We now have all parameters' values into `ctx.params`, but the data may contain
+        # the `UNSET` sentinel.
+        # Convert `UNSET` to `None` to ensure that the user doesn't see `UNSET`.
+        #
+        # Waiting until after the initial parse to convert allows us to treat `UNSET`
+        # more like a missing value when multiple params use the same name.
+        # Refs:
+        # https://github.com/pallets/click/issues/3071
+        # https://github.com/pallets/click/pull/3079
+        for name, value in ctx.params.items():
+            if value is UNSET:
+                ctx.params[name] = None
 
         if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
             ctx.fail(
@@ -2315,7 +2338,7 @@ class Parameter:
         """Convert and validate a value against the parameter's
         :attr:`type`, :attr:`multiple`, and :attr:`nargs`.
         """
-        if value in (None, UNSET):
+        if value is None:
             if self.multiple or self.nargs == -1:
                 return ()
             else:
@@ -2398,7 +2421,16 @@ class Parameter:
 
         :meta private:
         """
-        value = self.type_cast_value(ctx, value)
+        # shelter `type_cast_value` from ever seeing an `UNSET` value by handling the
+        # cases in which `UNSET` gets special treatment explicitly at this layer
+        #
+        # Refs:
+        # https://github.com/pallets/click/issues/3069
+        if value is UNSET:
+            if self.multiple or self.nargs == -1:
+                value = ()
+        else:
+            value = self.type_cast_value(ctx, value)
 
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)
@@ -2528,17 +2560,14 @@ class Parameter:
             # We skip adding the value if it was previously set by another parameter
             # targeting the same variable name. This prevents parameters competing for
             # the same name to override each other.
-            and self.name not in ctx.params
+            and (self.name not in ctx.params or ctx.params[self.name] is UNSET)
         ):
             # Click is logically enforcing that the name is None if the parameter is
             # not to be exposed. We still assert it here to please the type checker.
             assert self.name is not None, (
                 f"{self!r} parameter's name should not be None when exposing value."
             )
-            # Normalize UNSET values to None, as we're about to pass them to the
-            # command function and move them to the pure-Python realm of user-written
-            # code.
-            ctx.params[self.name] = value if value is not UNSET else None
+            ctx.params[self.name] = value
 
         return value, args
 
@@ -3236,13 +3265,22 @@ class Option(Parameter):
 
         return value, source
 
-    def type_cast_value(self, ctx: Context, value: t.Any) -> t.Any:
-        if self.is_flag and not self.required:
-            if value is UNSET:
-                if self.is_bool_flag:
-                    # If the flag is a boolean flag, we return False if it is not set.
-                    value = False
-        return super().type_cast_value(ctx, value)
+    def process_value(self, ctx: Context, value: t.Any) -> t.Any:
+        # process_value has to be overridden on Options in order to capture
+        # `value == UNSET` cases before `type_cast_value()` gets called.
+        #
+        # Refs:
+        # https://github.com/pallets/click/issues/3069
+        if self.is_flag and not self.required and self.is_bool_flag and value is UNSET:
+            value = False
+
+            if self.callback is not None:
+                value = self.callback(ctx, self, value)
+
+            return value
+
+        # in the normal case, rely on Parameter.process_value
+        return super().process_value(ctx, value)
 
 
 class Argument(Parameter):
