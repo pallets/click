@@ -469,3 +469,60 @@ def test_isolation_flushes_unflushed_stderr():
 
     result = runner.invoke(cli)
     assert result.stderr == "gyarados gyarados gyarados"
+
+
+def test_set_filesystem_runner(tmp_path):
+    """Check that using the CliRunner.set_filesystem works and 
+    runs in the given directory.
+    """
+
+    @click.command()
+    @click.argument("cmd", type=str)
+    def listdir(cmd:str):
+        if cmd == "ls":
+            ls = os.listdir()
+            print(ls)
+            cwd = os.getcwd()
+            print(cwd)
+
+    filename = tmp_path / "test.file"
+    with open(filename, "w") as tmp_file:
+        tmp_file.write("Hello World")
+
+    runner = CliRunner()
+    with runner.set_filesystem(tmp_path):
+        result = runner.invoke(listdir, ["ls"])
+    assert result.stdout.splitlines() == ["['test.file']", f"{tmp_path}"]
+    assert result.exit_code == 0
+
+def test_set_filesystem_runner_path_missing(tmp_path):
+    """Check that using the CliRunner.set_filesystem works raises
+    FileNotFoundError when provided a directory that does not exist
+    """
+
+    @click.command()
+    def listdir():
+        pass
+
+    bad_path = tmp_path / "does_not_exist"
+    runner = CliRunner()
+    with pytest.raises(FileNotFoundError):
+        with runner.set_filesystem(bad_path):
+            _ = runner.invoke(listdir, ["ls"])
+
+def test_set_filesystem_runner_path_notdir(tmp_path):
+    """Check that using the CliRunner.set_filesystem works raises
+    FileNotFoundError when provided a path to a non-directory
+    """
+
+    @click.command()
+    def listdir():
+        pass
+
+    bad_path = tmp_path / "not_a_dir"
+    bad_path.touch()
+
+    runner = CliRunner()
+    with pytest.raises(FileNotFoundError):
+        with runner.set_filesystem(bad_path):
+            _ = runner.invoke(listdir, ["ls"])
