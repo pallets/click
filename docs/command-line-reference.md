@@ -10,6 +10,7 @@ local: true
 ---
 ```
 
+(exit-codes)=
 ## Exit Codes
 
 When a command is executed from the command line, then an exit code is return. The exit code, also called exit status or exit status code, is a positive integer that tells you whether the command executed with or without errors.
@@ -45,4 +46,6 @@ To access the exit code, execute the command, then do the following depending:
 
             > echo %ERRORLEVEL%
 
-```
+
+
+For Click specific behavior on exit codes, see {ref}`exception-handling-exit-codes`.
