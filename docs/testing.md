@@ -165,6 +165,46 @@ def test_cat_with_path_specified():
       assert result.output == 'Hello World!\n'
 ```
 
+## Setting a Specific Working Directory
+
+The {meth}`CliRunner.set_filesystem` works the same as
+{meth}`CliRunner.isolated_filesystem`, but instead must be given a directory
+that already exists. Use this to test commands that require a specific directory
+structure or pre-existing files.
+
+
+```{code-block} python
+:caption: has_html.py
+
+import click
+import sys
+
+@click.command()
+def has_html(f):
+   if os.exists("index.html"):
+      click.echo("index.html exists!")
+   else:
+      sys.exit(1)
+```
+
+```{code-block} python
+:caption: test_cat.py
+
+from click.testing import CliRunner
+from has_html import has_html
+
+def test_get_html(tmp_path):
+
+   with open(tmp_path / 'index.html', 'w') as f:
+      f.write('Hello World!')
+
+   runner = CliRunner()
+   with runner.set_filesystem(tmp_path):
+      result = runner.invoke(has_html)
+      assert result.exit_code == 0
+      assert result.output == 'index.html exists!\n'
+```
+
 ## Input Streams
 
 The test wrapper can provide input data for the input stream (stdin). This is very useful for testing prompts.
