@@ -575,3 +575,30 @@ class CliRunner:
                     shutil.rmtree(dt)
                 except OSError:
                     pass
+
+    @contextlib.contextmanager
+    def set_filesystem(
+        self,
+        work_dir: str | os.PathLike[str],
+    ) -> cabc.Iterator[str]:
+        """A context manager that changes the current working directory to the work_dir.
+        This isolates tests that affect the contents of the CWD to prevent them from
+        interfering with each other.
+
+        :param work_dir: A directory provided by the user, that must exist
+        """
+
+        exists = os.path.exists(work_dir) and os.path.isdir(work_dir)
+        if not exists:
+            raise FileNotFoundError(
+                f"work_dir {work_dir} does not exist or is not a directory."
+            )
+
+        cwd = os.getcwd()
+        os.chdir(work_dir)
+
+        try:
+            # emit whatever was sent in, not the Path object
+            yield str(work_dir)
+        finally:
+            os.chdir(cwd)
