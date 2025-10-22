@@ -586,6 +586,8 @@ class CliRunner:
         interfering with each other.
 
         :param work_dir: A directory provided by the user, that must exist
+
+        .. versionchanged::8.3
         """
 
         exists = os.path.exists(work_dir) and os.path.isdir(work_dir)

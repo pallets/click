@@ -15,6 +15,7 @@ Unreleased
     empty. :issue:`3019` :pr:`3021`
 -   When ``Sentinel.UNSET`` is found during parsing, it will skip calls to
     ``type_cast_value``. :issue:`3069` :pr:`3090`
+-   Adds ``CliRunner.set_filesystem()`` method to test in a specific path. :issue:`3123` :pr:`3124`.
 
 Version 8.3.0
 --------------
