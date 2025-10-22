@@ -1,4 +1,4 @@
-.. _exception-handling-exit-codes
+.. _exception-handling-exit-codes:
 
 Exception Handling and Exit Codes
 ==================================
