@@ -598,7 +598,7 @@ class CliRunner:
         os.chdir(work_dir)
 
         try:
-            # emit whatever was sent in, not the Path object
+            # emit whatever was sent in as a string
             yield str(work_dir)
         finally:
             os.chdir(cwd)
