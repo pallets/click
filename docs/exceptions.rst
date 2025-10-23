@@ -84,7 +84,7 @@ The following common subclasses exist:
 Help Pages and Exit Codes
 --------------------------
 
-Triggering the a help page intentionally (by passing in ``--help``) returns exit code 0. If a help page is displayed due to incorrect user provided input, the program returns exit code 2. See :ref:`exit-codes` for more general information.
+Triggering the a help page intentionally (by passing in ``--help``) returns exit code 0. If a help page is displayed due to incorrect user input, the program returns exit code 2. See :ref:`exit-codes` for more general information.
 
 For clarity, here is an example.
 
