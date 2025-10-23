@@ -84,12 +84,13 @@ The following common subclasses exist:
 Help Pages and Exit Codes
 --------------------------
 
-Triggering the a help page intentionally (by passing in ``--help``) returns exit code 0. If a help page is display due to incorrect user provided input, the program returns exit code 2. See :ref:`exit-codes` for more on exit codes.
+Triggering the a help page intentionally (by passing in ``--help``) returns exit code 0. If a help page is displayed due to incorrect user provided input, the program returns exit code 2. See :ref:`exit-codes` for more general information.
 
+For clarity, here is an example.
 
 .. click:example::
 
-    @click.group()
+    @click.group('printer_group')
     def printer_group():
         pass
 
@@ -99,14 +100,27 @@ Triggering the a help page intentionally (by passing in ``--help``) returns exit
         if this:
             click.echo(this)
 
-
-.. click:run::
-    invoke(printer_group, args=[])
-
-The above invocation returns exit code 2 since the user invoked the command incorrect. However, since this is such a common error when first using a command, Click invokes the help page for the user.
-
-
 .. click:run::
     invoke(printer_group, args=['--help'])
 
 The above invocation returns exit code 0.
+
+.. click:run::
+    invoke(printer_group, args=[])
+
+The above invocation returns exit code 2 since the user invoked the command incorrectly. However, since this is such a common error when first using a command, Click invokes the help page for the user. To see that `printer-group` is an invalid invocation, turn `no_args_is_help` off.
+
+.. click:example::
+
+    @click.group('printer_group', no_args_is_help=False)
+    def printer_group():
+        pass
+
+    @printer_group.command('printer')
+    @click.option('--this')
+    def printer(this):
+        if this:
+            click.echo(this)
+
+.. click:run::
+    invoke(printer_group, args=[])

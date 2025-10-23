@@ -45,7 +45,6 @@ To access the exit code, execute the command, then do the following depending:
         .. code-block:: text
 
             > echo %ERRORLEVEL%
-
-
+```
 
 For Click specific behavior on exit codes, see {ref}`exception-handling-exit-codes`.
