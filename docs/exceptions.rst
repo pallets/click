@@ -1,11 +1,17 @@
-Exception Handling
-==================
+.. _exception-handling-exit-codes:
+
+Exception Handling and Exit Codes
+==================================
 
 .. currentmodule:: click
 
 Click internally uses exceptions to signal various error conditions that
 the user of the application might have caused.  Primarily this is things
 like incorrect usage.
+
+.. contents::
+    :depth: 1
+    :local:
 
 Where are Errors Handled?
 -------------------------
@@ -71,3 +77,50 @@ The following common subclasses exist:
     the parameter name if possible.
 *   :exc:`FileError` this is an error that is raised by the
     :exc:`FileType` if Click encounters issues opening the file.
+
+
+.. _help-page-exit-codes:
+
+Help Pages and Exit Codes
+--------------------------
+
+Triggering the a help page intentionally (by passing in ``--help``) returns exit code 0. If a help page is displayed due to incorrect user input, the program returns exit code 2. See :ref:`exit-codes` for more general information.
+
+For clarity, here is an example.
+
+.. click:example::
+
+    @click.group('printer_group')
+    def printer_group():
+        pass
+
+    @printer_group.command('printer')
+    @click.option('--this')
+    def printer(this):
+        if this:
+            click.echo(this)
+
+.. click:run::
+    invoke(printer_group, args=['--help'])
+
+The above invocation returns exit code 0.
+
+.. click:run::
+    invoke(printer_group, args=[])
+
+The above invocation returns exit code 2 since the user invoked the command incorrectly. However, since this is such a common error when first using a command, Click invokes the help page for the user. To see that `printer-group` is an invalid invocation, turn `no_args_is_help` off.
+
+.. click:example::
+
+    @click.group('printer_group', no_args_is_help=False)
+    def printer_group():
+        pass
+
+    @printer_group.command('printer')
+    @click.option('--this')
+    def printer(this):
+        if this:
+            click.echo(this)
+
+.. click:run::
+    invoke(printer_group, args=[])
