@@ -357,9 +357,9 @@ def test_full_source(runner, shell):
         ("bash", {"COMP_WORDS": "a b", "COMP_CWORD": "1"}, "plain,b\n"),
         ("zsh", {"COMP_WORDS": "", "COMP_CWORD": "0"}, "plain\na\n_\nplain\nb\nbee\n"),
         ("zsh", {"COMP_WORDS": "a b", "COMP_CWORD": "1"}, "plain\nb\nbee\n"),
-        ("fish", {"COMP_WORDS": "", "COMP_CWORD": ""}, "plain,a\nplain,b\tbee\n"),
-        ("fish", {"COMP_WORDS": "a b", "COMP_CWORD": "b"}, "plain,b\tbee\n"),
-        ("fish", {"COMP_WORDS": 'a "b', "COMP_CWORD": '"b'}, "plain,b\tbee\n"),
+        ("fish", {"COMP_WORDS": "", "COMP_CWORD": ""}, "plain\na\n_\nplain\nb\nbee\n"),
+        ("fish", {"COMP_WORDS": "a b", "COMP_CWORD": "b"}, "plain\nb\nbee\n"),
+        ("fish", {"COMP_WORDS": 'a "b', "COMP_CWORD": '"b'}, "plain\nb\nbee\n"),
     ],
 )
 @pytest.mark.usefixtures("_patch_for_completion")
