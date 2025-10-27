@@ -1,11 +1,11 @@
-# Command Line Application Design Opinions
+# CLI Design Opinions
 
 ```{currentmodule} click
 ```
 A penny for your thoughts...
 
 ```{contents}
-:depth: 2
+:depth: 1
 :local: true
 ```
 
