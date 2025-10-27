@@ -86,6 +86,7 @@ Conceptual Guides
 .. toctree::
    :maxdepth: 1
 
+   design-opinions
    why
    click-concepts
 
