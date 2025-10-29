@@ -386,7 +386,7 @@ def test_fast_edit(runner):
 @pytest.mark.skipif(platform.system() == "Windows", reason="No sed on Windows.")
 def test_edit(runner):
     with tempfile.NamedTemporaryFile(mode="w") as named_tempfile:
-        named_tempfile.write("a\nb")
+        named_tempfile.write("a\nb\n")
         named_tempfile.flush()
 
         result = click.edit(filename=named_tempfile.name, editor="sed -i~ 's/$/Test/'")
@@ -394,7 +394,14 @@ def test_edit(runner):
 
         # We need ot reopen the file as it becomes unreadable after the edit.
         with open(named_tempfile.name) as reopened_file:
-            assert reopened_file.read() == "aTest\nbTest"
+            # POSIX says that when sed writes a pattern space to output then it
+            # is immediately followed by a newline and so the expected result
+            # should contain the newline.  However, some sed implementations
+            # (e.g. GNU sed) does not terminate the last line in the output
+            # with the newline in a case the input data missed newline at the
+            # end of last line.  Hence the input data (see above) should be
+            # terminated by newline too.
+            assert reopened_file.read() == "aTest\nbTest\n"
 
 
 @pytest.mark.parametrize(
