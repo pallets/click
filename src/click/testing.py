@@ -77,8 +77,8 @@ class BytesIOCopy(io.BytesIO):
         self.copy_to = copy_to
 
     def flush(self) -> None:
-        super().flush()
         self.copy_to.flush()
+        super().flush()
 
     def write(self, b: ReadableBuffer) -> int:
         self.copy_to.write(b)
@@ -106,9 +106,9 @@ class StreamMixer:
 
         .. versionadded:: 8.2.2
         """
-        self.stderr.close()
-        self.stdout.close()
-        self.output.close()
+        del self.stdout
+        del self.stderr
+        del self.output
 
 
 class _NamedTextIOWrapper(io.TextIOWrapper):
