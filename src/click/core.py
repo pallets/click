@@ -2440,7 +2440,37 @@ class Parameter:
             # to None.
             if value is UNSET:
                 value = None
-            value = self.callback(ctx, self, value)
+
+            # Search for parameters with UNSET values in the context.
+            unset_keys = {k: None for k, v in ctx.params.items() if v is UNSET}
+            # No UNSET values, call the callback as usual.
+            if not unset_keys:
+                value = self.callback(ctx, self, value)
+
+            # Legacy case: provide a temporarily manipulated context to the callback
+            # to hide UNSET values as None.
+            #
+            # Refs:
+            # https://github.com/pallets/click/issues/3136
+            # https://github.com/pallets/click/pull/3137
+            else:
+                # Add another layer to the context stack to clearly hint that the
+                # context is temporarily modified.
+                with ctx:
+                    # Update the context parameters to replace UNSET with None.
+                    ctx.params.update(unset_keys)
+                    # Feed these fake context parameters to the callback.
+                    value = self.callback(ctx, self, value)
+                    # Restore the UNSET values in the context parameters.
+                    ctx.params.update(
+                        {
+                            k: UNSET
+                            for k in unset_keys
+                            # Only restore keys that are present and still None, in case
+                            # the callback modified other parameters.
+                            if k in ctx.params and ctx.params[k] is None
+                        }
+                    )
 
         return value
 
