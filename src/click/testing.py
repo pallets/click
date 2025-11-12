@@ -98,18 +98,6 @@ class StreamMixer:
         self.stdout: io.BytesIO = BytesIOCopy(copy_to=self.output)
         self.stderr: io.BytesIO = BytesIOCopy(copy_to=self.output)
 
-    def __del__(self) -> None:
-        """
-        Guarantee that embedded file-like objects are closed in a
-        predictable order, protecting against races between
-        self.output being closed and other streams being flushed on close
-
-        .. versionadded:: 8.2.2
-        """
-        self.stderr.close()
-        self.stdout.close()
-        self.output.close()
-
 
 class _NamedTextIOWrapper(io.TextIOWrapper):
     def __init__(
@@ -118,6 +106,15 @@ class _NamedTextIOWrapper(io.TextIOWrapper):
         super().__init__(buffer, **kwargs)
         self._name = name
         self._mode = mode
+
+    def close(self) -> None:
+        """
+        The buffer this object contains belongs to some other object, so
+        prevent the default __del__ implementation from closing that buffer.
+
+        .. versionadded:: 8.3.2
+        """
+        ...
 
     @property
     def name(self) -> str:
