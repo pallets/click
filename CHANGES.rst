@@ -4,6 +4,8 @@ Unreleased
 
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084`
+-   Prevent ``_NamedTextIOWrapper`` from closing streams owned by ``StreamMixer``.
+    :issue:`824` :issue:`2993` :pr:`3139`
 
 Version 8.3.1
 --------------
