@@ -72,16 +72,20 @@ class BytesIOCopy(io.BytesIO):
     .. versionadded:: 8.2
     """
 
+    copy_to: io.BytesIO
+
     def __init__(self, copy_to: io.BytesIO) -> None:
         super().__init__()
         self.copy_to = copy_to
 
     def flush(self) -> None:
-        self.copy_to.flush()
+        if not self.copy_to.closed:
+            self.copy_to.flush()
         super().flush()
 
     def write(self, b: ReadableBuffer) -> int:
-        self.copy_to.write(b)
+        if not self.copy_to.closed:
+            self.copy_to.write(b)
         return super().write(b)
 
 
@@ -100,9 +104,9 @@ class StreamMixer:
 
     def __del__(self) -> None:
         """
-        Guarantee that embedded file-like objects are closed in a
+        Guarantee that embedded file-like objects are deleted in a
         predictable order, protecting against races between
-        self.output being closed and other streams being flushed on close
+        self.output being deleted and other streams being flushed on deletion.
 
         .. versionadded:: 8.2.2
         """
