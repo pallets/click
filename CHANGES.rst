@@ -1,9 +1,9 @@
 .. currentmodule:: click
 
-Version 8.3.x
+Version 8.3.1
 --------------
 
-Unreleased
+Released 2025-11-15
 
 -   Don't discard pager arguments by correctly using ``subprocess.Popen``. :issue:`3039`
     :pr:`3055`
