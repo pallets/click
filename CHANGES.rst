@@ -17,6 +17,8 @@ Released 2025-11-15
     empty. :issue:`3019` :pr:`3021`
 -   When ``Sentinel.UNSET`` is found during parsing, it will skip calls to
     ``type_cast_value``. :issue:`3069` :pr:`3090`
+-   Fix regression related to ``click.testing.StreamMixer`` finalization in ``CliRunner``
+    that introduced a race condition. :issue:`3110` :pr:`3140`
 
 Version 8.3.0
 --------------
