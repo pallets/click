@@ -1,6 +1,6 @@
 [project]
 name = "click"
-version = "8.3.1"
+version = "8.3.dev"
 description = "Composable command line interface toolkit"
 readme = "README.md"
 license = "BSD-3-Clause"
