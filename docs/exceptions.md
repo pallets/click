@@ -1,0 +1,136 @@
+(exception-handling-exit-codes)=
+
+# Exception Handling and Exit Codes
+
+```{eval-rst}
+.. currentmodule:: click
+```
+
+Click internally uses exceptions to signal various error conditions that
+the user of the application might have caused. Primarily this is things
+like incorrect usage.
+
+```{contents}
+:depth: 1
+:local:
+```
+
+## Where are Errors Handled?
+
+Click's main error handling is happening in {meth}`Command.main`. In
+there it handles all subclasses of {exc}`ClickException` as well as the
+standard {exc}`EOFError` and {exc}`KeyboardInterrupt` exceptions. The
+latter are internally translated into an {exc}`Abort`.
+
+The logic applied is the following:
+
+1. If an {exc}`EOFError` or {exc}`KeyboardInterrupt` happens, reraise it
+   as {exc}`Abort`.
+2. If a {exc}`ClickException` is raised, invoke the
+   {meth}`ClickException.show` method on it to display it and then exit
+   the program with {attr}`ClickException.exit_code`.
+3. If an {exc}`Abort` exception is raised print the string ``Aborted!``
+   to standard error and exit the program with exit code ``1``.
+4. If it goes through well, exit the program with exit code ``0``.
+
+## What if I Don't Want That?
+
+Generally you always have the option to invoke the {meth}`Command.invoke`
+method yourself. For instance if you have a {class}`Command` you can
+invoke it manually like this:
+
+```python
+ctx = command.make_context("command-name", ["args", "go", "here"])
+with ctx:
+    result = command.invoke(ctx)
+```
+
+In this case exceptions will not be handled at all and bubbled up as you
+would expect.
+
+Starting with Click 3.0 you can also use the {meth}`Command.main` method
+but disable the standalone mode which will do two things: disable
+exception handling and disable the implicit {func}`sys.exit` at the end.
+
+So you can do something like this:
+
+```python
+command.main(
+    ["command-name", "args", "go", "here"],
+    standalone_mode=False,
+)
+```
+
+## Which Exceptions Exist?
+
+Click has two exception bases: {exc}`ClickException` which is raised for
+all exceptions that Click wants to signal to the user and {exc}`Abort`
+which is used to instruct Click to abort the execution.
+
+A {exc}`ClickException` has a {meth}`ClickException.show` method which
+can render an error message to stderr or the given file object. If you
+want to use the exception yourself for doing something check the API docs
+about what else they provide.
+
+The following common subclasses exist:
+
+- {exc}`UsageError` to inform the user that something went wrong.
+- {exc}`BadParameter` to inform the user that something went wrong with
+  a specific parameter. These are often handled internally in Click and
+  augmented with extra information if possible. For instance if those
+  are raised from a callback Click will automatically augment it with
+  the parameter name if possible.
+- {exc}`FileError` this is an error that is raised by the
+  {class}`FileType` if Click encounters issues opening the file.
+
+(help-page-exit-codes)=
+
+## Help Pages and Exit Codes
+
+Triggering the a help page intentionally (by passing in ``--help``)
+returns exit code 0. If a help page is displayed due to incorrect user
+input, the program returns exit code 2. See {ref}`exit-codes` for more
+general information.
+
+For clarity, here is an example.
+
+```{eval-rst}
+.. click:example::
+
+    @click.group('printer_group')
+    def printer_group():
+        pass
+
+    @printer_group.command('printer')
+    @click.option('--this')
+    def printer(this):
+        if this:
+            click.echo(this)
+
+.. click:run::
+    invoke(printer_group, args=['--help'])
+
+The above invocation returns exit code 0.
+
+.. click:run::
+    invoke(printer_group, args=[])
+```
+
+The above invocation returns exit code 2 since the user invoked the command incorrectly. However, since this is such a common error when first using a command, Click invokes the help page for the user. To see that `printer-group` is an invalid invocation, turn `no_args_is_help` off.
+
+```{eval-rst}
+.. click:example::
+
+    @click.group('printer_group', no_args_is_help=False)
+    def printer_group():
+        pass
+
+    @printer_group.command('printer')
+    @click.option('--this')
+    def printer(this):
+        if this:
+            click.echo(this)
+
+.. click:run::
+    invoke(printer_group, args=[])
+```
