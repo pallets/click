@@ -1,0 +1,42 @@
+name: Close PRs from Orgs
+
+on:
+  pull_request_target:
+    types: [ opened ]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  close-org-prs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if PR is from an org and close if so
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const isOwner = pr.head.repo.full_name !== pr.base.repo.full_name;
+            const forkOwnerType = pr.head.repo.owner.type;
+            if (isOwner && forkOwnerType === 'Organization') {
+              // Close the PR
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                state: 'closed'
+              });
+              // Leave a comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: `Please don't open PRs from a fork owned by a different organization rather than your account. It causes GitHub to disable the ability for maintainers to push changes, so we can't update this to prepare it for merge.
+
+              To fix this:
+              1. Fork this project with your user account.
+              2. Push this branch there.
+              3. Create the PR again from that fork/branch.
+                `
+              });
+            }
