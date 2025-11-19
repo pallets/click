@@ -85,6 +85,9 @@ testpaths = ["tests"]
 filterwarnings = [
     "error",
 ]
+addopts = [
+    "--numprocesses=auto",
+]
 
 [tool.coverage.run]
 branch = true
