@@ -2278,34 +2278,44 @@ def test_custom_type_frozenset_flag_value(runner):
     assert result.exit_code == 0
 
 
-def test_flag_value_optional_behavior():
-    """Test that options with flag_value and is_flag=False use flag_value
-    when only flag is provided
+@pytest.mark.parametrize(
+    ("flag_type", "args", "expect_output"),
+    [
+        (str, [], "Default\n"),
+        (str, ["--theflag"], "FlagValue\n"),
+        (str, ["--theflag", "value"], "value\n"),
+        (int, [], "0\n"),
+        (int, ["--theflag"], "1\n"),
+        (int, ["--theflag", "2"], "2\n"),
+    ],
+)
+def test_flag_value_on_option_with_zero_or_one_args(flag_type, args, expect_output):
+    """An option with flag_value and is_flag=False can be
+    omitted or used with 0 or 1 args.
 
-    Reproduces https://github.com/pallets/click/issues/3084
+    Regression test for https://github.com/pallets/click/issues/3084
     """
+    if flag_type is str:
+        flagopt = click.option(
+            "--theflag",
+            type=str,
+            is_flag=False,
+            flag_value="FlagValue",
+            default="Default",
+        )
+    elif flag_type is int:
+        flagopt = click.option(
+            "--theflag", type=int, is_flag=False, flag_value=1, default=0
+        )
+    else:
+        raise NotImplementedError(flag_type)
 
     @click.command()
-    @click.option("--name", is_flag=False, flag_value="Flag", default="Default")
-    def hello(name):
-        click.echo(f"Hello, {name}!")
+    @flagopt
+    def cmd(theflag):
+        click.echo(theflag)
 
     runner = CliRunner()
-    result = runner.invoke(hello, ["--name"])
+    result = runner.invoke(cmd, args)
     assert result.exit_code == 0
-    assert result.output == "Hello, Flag!\n"
-
-
-def test_flag_value_with_type_conversion():
-    """Test that flag_value is correctly type-converted when used as an option value."""
-
-    @click.command()
-    @click.option("--count", is_flag=False, flag_value="1", type=int, default=0)
-    def repeat(count):
-        for i in range(count):
-            click.echo(f"Line {i + 1}")
-
-    runner = CliRunner()
-    result = runner.invoke(repeat, ["--count"])
-    assert result.exit_code == 0
-    assert result.output == "Line 1\n"
+    assert result.output == expect_output

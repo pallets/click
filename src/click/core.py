@@ -2684,10 +2684,6 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
 
-    .. versionchanged:: 8.3.dev
-         If ``flag_value`` is set or no default is provided, the flag can be
-         accepted without an argument.
-
     .. versionchanged:: 8.2
         ``envvar`` used with ``flag_value`` will always use the ``flag_value``,
         previously it would use the value of the environment variable.
@@ -2782,10 +2778,10 @@ class Option(Parameter):
             elif self.secondary_opts:
                 is_flag = True
 
-        # Handle options that are not flags but provide a flag_value.
-        # If flag_value is set or no default is provided the flag can be accepted
-        # without an argument.
-        # https://github.com/pallets/click/issues/3084
+        # The option is explicitly not a flag, but to determine whether or not it needs
+        # value, we need to check if `flag_value` or `default` was set. Either one is
+        # sufficient.
+        # Ref: https://github.com/pallets/click/issues/3084
         elif is_flag is False and not self._flag_needs_value:
             self._flag_needs_value = flag_value is not UNSET or self.default is UNSET
 

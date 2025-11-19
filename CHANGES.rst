@@ -2,8 +2,8 @@
 
 Unreleased
 
--   If ``flag_value`` is set or no default is provided the flag can be accepted
-    without an argument.:issue:`3084`
+-   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
+    used without an explicit value. :issue:`3084`
 
 Version 8.3.1
 --------------
