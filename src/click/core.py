@@ -2777,10 +2777,13 @@ class Option(Parameter):
             # Implicitly a flag because secondary options names were given.
             elif self.secondary_opts:
                 is_flag = True
-        # The option is explicitly not a flag. But we do not know yet if it needs a
-        # value or not. So we look at the default value to determine it.
+
+        # The option is explicitly not a flag, but to determine whether or not it needs
+        # value, we need to check if `flag_value` or `default` was set. Either one is
+        # sufficient.
+        # Ref: https://github.com/pallets/click/issues/3084
         elif is_flag is False and not self._flag_needs_value:
-            self._flag_needs_value = self.default is UNSET
+            self._flag_needs_value = flag_value is not UNSET or self.default is UNSET
 
         if is_flag:
             # Set missing default for flags if not explicitly required or prompted.

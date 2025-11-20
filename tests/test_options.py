@@ -15,6 +15,7 @@ import click
 from click import Option
 from click import UNPROCESSED
 from click._utils import UNSET
+from click.testing import CliRunner
 
 
 def test_prefixes(runner):
@@ -2275,3 +2276,46 @@ def test_custom_type_frozenset_flag_value(runner):
     result = runner.invoke(rcli, ["--without-scm-ignore-files"])
     assert result.stdout == "frozenset()"
     assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    ("flag_type", "args", "expect_output"),
+    [
+        (str, [], "Default\n"),
+        (str, ["--theflag"], "FlagValue\n"),
+        (str, ["--theflag", "value"], "value\n"),
+        (int, [], "0\n"),
+        (int, ["--theflag"], "1\n"),
+        (int, ["--theflag", "2"], "2\n"),
+    ],
+)
+def test_flag_value_on_option_with_zero_or_one_args(flag_type, args, expect_output):
+    """An option with flag_value and is_flag=False can be
+    omitted or used with 0 or 1 args.
+
+    Regression test for https://github.com/pallets/click/issues/3084
+    """
+    if flag_type is str:
+        flagopt = click.option(
+            "--theflag",
+            type=str,
+            is_flag=False,
+            flag_value="FlagValue",
+            default="Default",
+        )
+    elif flag_type is int:
+        flagopt = click.option(
+            "--theflag", type=int, is_flag=False, flag_value=1, default=0
+        )
+    else:
+        raise NotImplementedError(flag_type)
+
+    @click.command()
+    @flagopt
+    def cmd(theflag):
+        click.echo(theflag)
+
+    runner = CliRunner()
+    result = runner.invoke(cmd, args)
+    assert result.exit_code == 0
+    assert result.output == expect_output
