@@ -10,6 +10,8 @@ Version 8.3.1
 
 Released 2025-11-15
 
+-   Fix Fish shell completion errors when option help text contains newlines.
+    :issue:`3043`
 -   Don't discard pager arguments by correctly using ``subprocess.Popen``. :issue:`3039`
     :pr:`3055`
 -   Replace ``Sentinel.UNSET`` default values by ``None`` as they're passed through
