@@ -50,6 +50,8 @@ pre-commit = [
 ]
 tests = [
     "pytest",
+    "pytest-randomly",
+    "pytest-xdist",
 ]
 typing = [
     "mypy",
@@ -82,6 +84,9 @@ default-groups = ["dev", "pre-commit", "tests", "typing"]
 testpaths = ["tests"]
 filterwarnings = [
     "error",
+]
+addopts = [
+    "--numprocesses=auto",
 ]
 
 [tool.coverage.run]
