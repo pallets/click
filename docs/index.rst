@@ -128,7 +128,7 @@ API Reference
 About Project
 ===============
 
-* This documentation is structured according to `Diataxis <https://diataxis.fr/>`_
+* This documentation is structured according to `Diataxis <https://diataxis.fr/>`_ and written with `MyST-parser <https://myst-parser.readthedocs.io/en/latest/>`_
 
 * `Version Policy <https://palletsprojects.com/versions>`_
 
