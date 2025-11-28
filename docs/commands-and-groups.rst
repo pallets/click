@@ -255,24 +255,24 @@ the prefix is ``WEB``, then the variable is ``WEB_RUN_SERVER_HOST``.
 
 .. click:example::
 
-   @click.group()
-   @click.option('--debug/--no-debug')
-   def cli(debug):
-       click.echo(f"Debug mode is {'on' if debug else 'off'}")
+    @click.group()
+    @click.option('--debug/--no-debug')
+    def cli(debug):
+        click.echo(f"Debug mode is {'on' if debug else 'off'}")
 
-   @cli.command()
-   @click.option('--username')
-   def greet(username):
-       click.echo(f"Hello {username}!")
+    @cli.command()
+    @click.option('--username')
+    def greet(username):
+        click.echo(f"Hello {username}!")
 
-   if __name__ == '__main__':
-       cli(auto_envvar_prefix='GREETER')
+    if __name__ == '__main__':
+        cli(auto_envvar_prefix='GREETER')
 
 .. click:run::
 
-   invoke(cli, args=['greet',],
-          env={'GREETER_GREET_USERNAME': 'John', 'GREETER_DEBUG': 'false'},
-          auto_envvar_prefix='GREETER')
+    invoke(cli, args=['greet',],
+           env={'GREETER_GREET_USERNAME': 'John', 'GREETER_DEBUG': 'false'},
+           auto_envvar_prefix='GREETER')
 
 Global Context Access
 ^^^^^^^^^^^^^^^^^^^^^^

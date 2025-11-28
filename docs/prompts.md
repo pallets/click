@@ -164,5 +164,5 @@ To describe what the default value will be, set it in ``show_default``.
 
 .. click:run::
 
-   invoke(hello, args=["--help"])
+    invoke(hello, args=["--help"])
 ```

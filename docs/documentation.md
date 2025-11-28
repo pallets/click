@@ -142,7 +142,7 @@ For single option boolean flags, the default remains hidden if the default value
             click.echo('-' * n)
 
 .. click:run::
-   invoke(dots, args=['--help'])
+    invoke(dots, args=['--help'])
 ```
 
 ## Click's Wrapping Behavior

@@ -115,7 +115,6 @@ command called `push`, it would accept `pus` as an alias (so long as it was uniq
 It can be used like this:
 
 ```python
-
     @click.group(cls=AliasedGroup)
     def cli():
         pass

@@ -30,7 +30,7 @@ import click
 @click.command()
 @click.argument('name')
 def hello(name):
-   click.echo(f'Hello {name}!')
+    click.echo(f'Hello {name}!')
 ```
 
 ```{code-block} python
@@ -40,10 +40,10 @@ from click.testing import CliRunner
 from hello import hello
 
 def test_hello_world():
-  runner = CliRunner()
-  result = runner.invoke(hello, ['Peter'])
-  assert result.exit_code == 0
-  assert result.output == 'Hello Peter!\n'
+    runner = CliRunner()
+    result = runner.invoke(hello, ['Peter'])
+    assert result.exit_code == 0
+    assert result.output == 'Hello Peter!\n'
 ```
 
 ## Subcommands
@@ -58,11 +58,11 @@ import click
 @click.group()
 @click.option('--debug/--no-debug', default=False)
 def cli(debug):
-   click.echo(f"Debug mode is {'on' if debug else 'off'}")
+    click.echo(f"Debug mode is {'on' if debug else 'off'}")
 
 @cli.command()
 def sync():
-   click.echo('Syncing')
+    click.echo('Syncing')
 ```
 
 ```{code-block} python
@@ -72,11 +72,11 @@ from click.testing import CliRunner
 from sync import cli
 
 def test_sync():
-  runner = CliRunner()
-  result = runner.invoke(cli, ['--debug', 'sync'])
-  assert result.exit_code == 0
-  assert 'Debug mode is on' in result.output
-  assert 'Syncing' in result.output
+    runner = CliRunner()
+    result = runner.invoke(cli, ['--debug', 'sync'])
+    assert result.exit_code == 0
+    assert 'Debug mode is on' in result.output
+    assert 'Syncing' in result.output
 ```
 
 ## Context Settings
@@ -91,11 +91,11 @@ import click
 
 @click.group()
 def cli():
-   pass
+    pass
 
 @cli.command()
 def sync():
-   click.echo('Syncing')
+    click.echo('Syncing')
 ```
 
 ```{code-block} python
@@ -105,11 +105,11 @@ from click.testing import CliRunner
 from sync import cli
 
 def test_sync():
-  runner = CliRunner()
-  result = runner.invoke(cli, ['sync'], terminal_width=60)
-  assert result.exit_code == 0
-  assert 'Debug mode is on' in result.output
-  assert 'Syncing' in result.output
+    runner = CliRunner()
+    result = runner.invoke(cli, ['sync'], terminal_width=60)
+    assert result.exit_code == 0
+    assert 'Debug mode is on' in result.output
+    assert 'Syncing' in result.output
 ```
 
 ## File System Isolation
@@ -124,7 +124,7 @@ import click
 @click.command()
 @click.argument('f', type=click.File())
 def cat(f):
-   click.echo(f.read())
+    click.echo(f.read())
 ```
 
 ```{code-block} python
@@ -134,14 +134,14 @@ from click.testing import CliRunner
 from cat import cat
 
 def test_cat():
-   runner = CliRunner()
-   with runner.isolated_filesystem():
-      with open('hello.txt', 'w') as f:
-          f.write('Hello World!')
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        with open('hello.txt', 'w') as f:
+            f.write('Hello World!')
 
-      result = runner.invoke(cat, ['hello.txt'])
-      assert result.exit_code == 0
-      assert result.output == 'Hello World!\n'
+        result = runner.invoke(cat, ['hello.txt'])
+        assert result.exit_code == 0
+        assert result.output == 'Hello World!\n'
 ```
 
 Pass in a path to control where the temporary directory is created.
@@ -155,14 +155,14 @@ from click.testing import CliRunner
 from cat import cat
 
 def test_cat_with_path_specified():
-   runner = CliRunner()
-   with runner.isolated_filesystem('~/test_folder'):
-      with open('hello.txt', 'w') as f:
-          f.write('Hello World!')
+    runner = CliRunner()
+    with runner.isolated_filesystem('~/test_folder'):
+        with open('hello.txt', 'w') as f:
+            f.write('Hello World!')
 
-      result = runner.invoke(cat, ['hello.txt'])
-      assert result.exit_code == 0
-      assert result.output == 'Hello World!\n'
+        result = runner.invoke(cat, ['hello.txt'])
+        assert result.exit_code == 0
+        assert result.output == 'Hello World!\n'
 ```
 
 ## Input Streams
@@ -177,7 +177,7 @@ import click
 @click.command()
 @click.option('--foo', prompt=True)
 def prompt(foo):
-   click.echo(f"foo={foo}")
+    click.echo(f"foo={foo}")
 ```
 
 ```{code-block} python
@@ -187,10 +187,10 @@ from click.testing import CliRunner
 from prompt import prompt
 
 def test_prompts():
-   runner = CliRunner()
-   result = runner.invoke(prompt, input='wau wau\n')
-   assert not result.exception
-   assert result.output == 'Foo: wau wau\nfoo=wau wau\n'
+    runner = CliRunner()
+    result = runner.invoke(prompt, input='wau wau\n')
+    assert not result.exception
+    assert result.output == 'Foo: wau wau\nfoo=wau wau\n'
 ```
 
 Prompts will be emulated so they write the input data to
