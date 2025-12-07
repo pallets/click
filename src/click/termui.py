@@ -60,7 +60,7 @@ def hidden_prompt_func(prompt: str) -> str:
 def _build_prompt(
     text: str,
     suffix: str,
-    show_default: bool = False,
+    show_default: bool | str = False,
     default: t.Any | None = None,
     show_choices: bool = True,
     type: ParamType | None = None,
@@ -68,8 +68,12 @@ def _build_prompt(
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += f" ({', '.join(map(str, type.choices))})"
-    if default is not None and show_default:
-        prompt = f"{prompt} [{_format_default(default)}]"
+    if show_default:
+        if isinstance(show_default, str):
+            # Use the custom string for display
+            prompt = f"{prompt} [({show_default})]"
+        elif default is not None:
+            prompt = f"{prompt} [{_format_default(default)}]"
     return f"{prompt}{suffix}"
 
 
@@ -88,7 +92,7 @@ def prompt(
     type: ParamType | t.Any | None = None,
     value_proc: t.Callable[[str], t.Any] | None = None,
     prompt_suffix: str = ": ",
-    show_default: bool = True,
+    show_default: bool | str = True,
     err: bool = False,
     show_choices: bool = True,
 ) -> t.Any:
@@ -112,6 +116,8 @@ def prompt(
                        convert a value.
     :param prompt_suffix: a suffix that should be added to the prompt.
     :param show_default: shows or hides the default value in the prompt.
+        Can also be a string to show a custom value instead of the actual
+        default.
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``, the same as with echo.
     :param show_choices: Show or hide choices if the passed type is a Choice.
