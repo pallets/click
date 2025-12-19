@@ -2,7 +2,7 @@
 
 This short, hands-on tutorial gives developers the minimal set of command-line skills needed to start using or building Click-based CLIs.
 It is written for beginners who may have little or no command line experience.
-All examples provide commands for both macOS/Linux (Bash) and Windows (PowerShell).
+All examples provide commands for both macOS/Linux (Bash) and Windows (cmd).
 
 ```{contents}
 :depth: 2
@@ -18,13 +18,12 @@ Instead of clicking icons or buttons, you type commands into a terminal or conso
 CLIs are powerful tools for developers and system administrators because they allow for automation, scripting, and remote access to systems.
 Examples of popular CLIs include:
 
--   **Bash** (Bourne Again SHell): Common on macOS and Linux systems.
--   **PowerShell**: A powerful CLI for Windows systems.
--   **cmd.exe**: The traditional command prompt on Windows.
+- **Bash** (Bourne Again SHell): Common on macOS and Linux systems.
+- **cmd.exe**: The traditional command prompt on Windows.
 
 ## How does it work?
 
-Users type commands into a CLI shell (e.g., Bash, PowerShell), which interprets and executes them:
+Users type commands into a CLI shell (e.g., Bash, cmd), which interprets and executes them:
 
 **Shell Role:** Acts as an intermediary between the user and the operating system<br>
 **Command Process:**
@@ -34,23 +33,24 @@ The shell parses the command, identifying the action, options, and arguments. It
 
 By the end of this tutorial, you will be able to:
 
--   Identify your OS and shell
--   See the difference between files and directories, and how paths work
--   Move around the filesystem, create a directory and a file
--   Edit the file and print its contents in the terminal
--   Search inside a file (grep-style)
--   View a CLI's help output
+- Identify your OS and shell
+- See the difference between files and directories, and how paths work
+- Move around the filesystem, create a directory and a file
+- Edit the file and print its contents in the terminal
+- Search inside a file (grep-style)
+- View a CLI's help output
 
 ## Prerequisites
 
--   A computer with a shell (macOS / Linux / Windows).
--   A text editor you can run from the terminal (nano, vi, notepad, code, etc.).
+- A computer with a shell (macOS / Linux / Windows).
+- A text editor you can run from the terminal (nano, vi, notepad, code, etc.).
 
 ## Interacting with your command line
 
 Before using the command line, it's helpful to know which operating system and shell you are running. Different systems have slightly different commands; the examples below are grouped by platform so you can copy the commands that match your environment.
 
 ### macOS / Linux
+
 ```bash
 # Show OS/version information
 uname -a
@@ -82,40 +82,8 @@ mycli --help
 python -m mycli --help
 ```
 
-### Windows (PowerShell)
-
-```powershell
-# Show OS/version information
-Get-ComputerInfo | Select-Object OsName, WindowsVersion, OsBuildNumber
-
-# See current directory and list files
-Get-Location
-Get-ChildItem
-
-# Move around: go to C:\Temp, then home, then up a level
-Set-Location C:\Temp
-Set-Location $HOME
-Set-Location ..
-
-# Create a project directory and an empty file
-New-Item -ItemType Directory -Name myproject -Force
-New-Item -ItemType File -Path myproject\hello.txt -Force
-
-# Edit the file with notepad (or code)
-notepad myproject\hello.txt
-
-# Print the file contents to the terminal
-Get-Content myproject\hello.txt
-
-# Search (Select-String) for the word Hello
-Select-String -Pattern "Hello" -Path myproject\hello.txt
-
-# Show help for a CLI (mycli here refers to any command line program e.g git, python, etc.)
-mycli --help
-python -m mycli --help
-```
-
 ### Windows (cmd.exe)
+
 ```bat
 REM Show OS/version information
 ver
@@ -155,7 +123,7 @@ Open the file you created (`myproject/hello.txt`) and add a single line:
 Hello from the command line!
 ```
 
-Save and exit the editor, then verify with `cat` / `Get-Content` / `type` depending on your shell.
+Save and exit the editor, then verify with `cat` / `type` depending on your shell.
 
 ## Short explanations (why these commands matter)
 
@@ -166,10 +134,10 @@ Save and exit the editor, then verify with `cat` / `Get-Content` / `type` depend
 - Grep-style searching is essential for finding text in logs, configs, or code.
 - Most CLIs expose `--help` (or `-h`) which documents commands, options, and usage.
 
-
 ## Quick reference (cheat sheet)
 
 macOS / Linux
+
 ```bash
 pwd             # print working directory
 ls -la          # list files
@@ -182,20 +150,8 @@ grep <pat> <f>  # search
 mycli --help    # CLI help (mycli here refers to any command line program e.g git, python, etc.)
 ```
 
-Windows (PowerShell)
-```powershell
-Get-Location
-Get-ChildItem
-Set-Location <dir>
-New-Item -ItemType Directory -Name <dir>
-New-Item -ItemType File -Path <file>
-notepad <file>
-Get-Content <file>
-Select-String -Pattern <pat> -Path <file>
-mycli --help
-```
-
 Windows (cmd.exe)
+
 ```bat
 echo %CD%
 dir
@@ -209,6 +165,7 @@ mycli --help
 ```
 
 ## Conclusion
+
 Congratulations! You've completed the command line basics tutorial.
 You now have the foundational skills to navigate and interact with your computer using the command line. And you are ready to explore Click-based CLIs and build your own!
 
@@ -218,7 +175,6 @@ These resources will take you deeper:
 
 - Shell basics tutorial: https://swcarpentry.github.io/shell-novice/
 - Bash manual: https://www.gnu.org/software/bash/manual/
-- Windows PowerShell: https://learn.microsoft.com/powershell/
 - Grep manual (GNU): https://www.gnu.org/software/grep/manual/grep.html
 - Filesystem hierarchy (Linux): https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
 - Windows filesystem and paths: https://learn.microsoft.com/windows/win32/fileio/file-paths
