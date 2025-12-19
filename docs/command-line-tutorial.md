@@ -2,7 +2,7 @@
 
 This short, hands-on tutorial gives developers the minimal set of command-line skills needed to start using or building Click-based CLIs.
 It is written for beginners who may have little or no command line experience.
-All examples provide commands for both macOS/Linux (Bash) and Windows (PowerShell). 
+All examples provide commands for both macOS/Linux (Bash) and Windows (PowerShell).
 
 ```{contents}
 :depth: 2
@@ -205,12 +205,12 @@ type nul > <file>
 notepad <file>
 type <file>
 findstr <pat> <file>
-mycli --help 
+mycli --help
 ```
 
 ## Conclusion
 Congratulations! You've completed the command line basics tutorial.
-You now have the foundational skills to navigate and interact with your computer using the command line. And you are ready to explore Click-based CLIs and build your own! 
+You now have the foundational skills to navigate and interact with your computer using the command line. And you are ready to explore Click-based CLIs and build your own!
 
 ## Next steps and further reading
 
