@@ -118,7 +118,49 @@ mycli --help
 python -m mycli --help
 ```
 
-Save and exit the editor, then verify with `cat` / `type` depending on your shell.
+## Short explanations (why these commands matter)
+
+- Operating system information helps you choose the right commands and troubleshoot issues.
+- Directories (folders) contain files and other directories. Paths can be absolute (start at the filesystem root) or relative (start from your current directory).
+- Moving around with `cd` changes your working directory; many commands operate relative to it.
+- Creating and editing small files is how you try things quickly from the terminal without opening a full IDE.
+- Grep-style searching is essential for finding text in logs, configs, or code.
+- Most CLIs expose `--help` (or `-h`) which documents commands, options, and usage.
+
+## Quick reference (cheat sheet)
+
+macOS / Linux
+
+```bash
+pwd             # print working directory
+ls -la          # list files
+cd <dir>        # change directory
+mkdir -p <dir>  # make directory
+touch <file>    # create empty file
+nano <file>     # edit
+cat <file>      # print contents
+grep <pat> <f>  # search
+mycli --help    # CLI help (mycli here refers to any command line program e.g git, python, etc.)
+```
+
+Windows (cmd.exe)
+
+```bat
+echo %CD%
+dir
+cd /d <dir>
+mkdir <dir>
+type nul > <file>
+notepad <file>
+type <file>
+findstr <pat> <file>
+mycli --help
+```
+
+## Conclusion
+
+Congratulations! You've completed the command line basics tutorial.
+You now have the foundational skills to navigate and interact with your computer using the command line. And you are ready to explore Click-based CLIs and build your own!
 
 ## Further Reading
 
