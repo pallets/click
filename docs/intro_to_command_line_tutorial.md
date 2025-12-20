@@ -47,226 +47,78 @@ By the end of this tutorial, you will be able to:
 
 ## Interacting with your command line
 
-Before using the command line, it's important to know which operating system and shell you are running.
-Different systems have slightly different commands, so this knowledge will help you follow tutorials and avoid errors.
+Before using the command line, it's helpful to know which operating system and shell you are running. Different systems have slightly different commands; the examples below are grouped by platform so you can copy the commands that match your environment.
 
-**macOS / Linux**
-
-```bash
-uname -a # Display OS version and system information
-```
-
-**Windows (PowerShell)**
-
-```powershell
-Get-ComputerInfo | Select-Object WindowsVersion, OsName, OsBuildNumber
-```
-
-> **Tip**
->
-> Knowing your OS helps you troubleshoot problems more effectively.
-
-> **Common mistake:**
->
-> Trying to run a Linux command on Windows without an appropriate shell like WSL.
-
-## Files, Directories, and Paths
-
-Command-line tools interact with files and directories:
-
-- **File**: A piece of stored data (text, code, image, etc.).
-- **Directory (folder)**: A container for files or other directories.
-- **Path**: A reference to a file or directory location, either relative or absolute.
-
-**macOS / Linux**
+### macOS / Linux
 
 ```bash
-pwd # Print working directory
-ls # List files and directories
-```
+# Show OS/version information
+uname -a
 
-**Windows (PowerShell)**
+# Print working directory and list files
+pwd
+ls -la
 
-```powershell
-Get-Location
-Get-ChildItem
-```
-
-> **Tip**
->
-> Relative paths start from your current directory; absolute paths start from the root.
-
-> **Common mistake:**
->
-> Confusing relative and absolute paths, which can cause “file not found” errors.
-
-## Navigating the Filesystem
-
-You can move around directories using the `cd` command:
-
-**macOS / Linux**
-
-```bash
-cd /tmp  # Go to /tmp
-cd ~     # Go to your home directory
-cd ..    # Go up one directory level
-```
-
-**Windows (PowerShell)**
-
-```powershell
-cd C:\Temp
-cd $HOME
+# Move around the filesystem
+cd /tmp
+cd ~
 cd ..
-```
 
-> **Tip**
->
-> Use `pwd` (Linux/macOS) or `Get-Location` (Windows) to check your current directory.
-
-> **Common mistake:**
->
-> Forgetting that commands like `cd` are case-sensitive on Linux/macOS.
-
-## Creating Directories
-
-To organize your files, create a directory using:
-
-**macOS / Linux**
-
-```bash
-mkdir myproject  # Make a new directory called myproject
-```
-
-**Windows (PowerShell)**
-
-```powershell
-New-Item -ItemType Directory -Name myproject
-```
-
-> **Tip**
->
-> You can create nested directories with `mkdir -p myproject/subdir` on Linux/macOS.
-
-> **Common mistake:**
->
-> Trying to create a directory that already exists will fail unless using the `-p` flag.
-
-## Creating Files
-
-Create an empty file inside a directory:
-
-**macOS / Linux**
-
-```bash
+# Create a directory and an empty file
+mkdir -p myproject
 touch myproject/hello.txt
-```
 
-**Windows (PowerShell)**
-
-```powershell
-New-Item -ItemType File myproject/hello.txt
-```
-
-> **Tip**
->
-> Files can be created in any directory you have write permissions for.
-
-> **Common mistake:**
->
-> Forgetting to specify the directory and ending up creating the file in the wrong place.
-
-## Editing Files
-
-You can open and edit files with a text editor of your choice:
-
-**macOS / Linux**
-
-```bash
+# Edit the file (simple editor)
 nano myproject/hello.txt
-```
+# What to put in the file
+# Hello from the command line!
 
-**Windows (PowerShell)**
 
-```powershell
-notepad myproject/hello.txt
-```
-
-Add the following line to the file:
-
-```
-Hello from the command line!
-```
-
-> **Tip**
->
-> Try a simple editor like nano or notepad first; later you can use VS Code for larger projects.
-
-> **Common mistake:**
->
-> Forgetting to save the file before exiting the editor.
-
-## Viewing File Contents
-
-Check the contents of a file using these commands:
-
-**macOS / Linux**
-
-```bash
+# Print file contents
 cat myproject/hello.txt
-```
 
-**Windows (PowerShell)**
-
-```powershell
-Get-Content myproject/hello.txt
-```
-
-> **Tip**
->
-> Use these commands to quickly verify your edits.
-
-> **Common mistake:**
->
-> Using `cat` on very large files can flood the terminal; use `less` instead.
-
-## Searching Within Files
-
-Search for specific text inside a file:
-
-**macOS / Linux**
-
-```bash
+# Search inside the file
 grep "Hello" myproject/hello.txt
-```
 
-**Windows (PowerShell)**
-
-```powershell
-Select-String -Pattern "Hello" -Path myproject/hello.txt
-```
-
-> **Tip**
->
-> Use search to verify that text exists or to debug issues in configuration files.
-
-> **Common mistake:**
->
-> Forgetting to quote search patterns with spaces, which can break the command.
-
-## Getting Help for a CLI
-
-Click-based CLIs support the `--help` option, which lists commands and options:
-
-```
+# Show a CLI's help message (mycli here refers to any command line program e.g git, python, etc.)
 mycli --help
-```
-
-If the CLI is implemented as a Python module:
-
-```
 python -m mycli --help
 ```
+
+### Windows (cmd.exe)
+
+```bat
+REM Show OS/version information
+ver
+
+REM Current directory and list files
+echo %CD%
+dir
+
+REM Move around
+cd /d C:\Temp
+cd /d %USERPROFILE%
+cd ..
+
+REM Create directory and file
+mkdir myproject
+type nul > myproject\hello.txt
+
+REM Edit with notepad
+notepad myproject\hello.txt
+
+REM Print file contents
+type myproject\hello.txt
+
+REM Search for Hello (findstr)
+findstr "Hello" myproject\hello.txt
+
+REM Show help for a CLI (mycli here refers to any command line program e.g git, python, etc.)
+mycli --help
+python -m mycli --help
+```
+
+Save and exit the editor, then verify with `cat` / `type` depending on your shell.
 
 ## Further Reading
 
