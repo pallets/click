@@ -162,9 +162,12 @@ mycli --help
 Congratulations! You've completed the command line basics tutorial.
 You now have the foundational skills to navigate and interact with your computer using the command line. And you are ready to explore Click-based CLIs and build your own!
 
-## Further Reading
+## Next steps and Further Reading
 
-- [SW Carpentry](https://swcarpentry.github.io/shell-novice/)
-- [Microsoft Powershell](https://learn.microsoft.com/powershell/)
-- [Ubuntu](https://ubuntu.com/tutorials/command-line-for-beginners)
-- [Python](https://docs.python.org/3/tutorial/venv.html)
+These resources will take you deeper:
+
+- Shell basics tutorial: https://swcarpentry.github.io/shell-novice/
+- Bash manual: https://www.gnu.org/software/bash/manual/
+- Grep manual (GNU): https://www.gnu.org/software/grep/manual/grep.html
+- Filesystem hierarchy (Linux): https://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard
+- Windows filesystem and paths: https://learn.microsoft.com/windows/win32/fileio/file-paths
