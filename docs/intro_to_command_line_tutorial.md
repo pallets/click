@@ -45,7 +45,7 @@ By the end of this tutorial, you will be able to:
 - A computer with a shell (macOS / Linux / Windows).
 - A text editor you can run from the terminal (nano, vi, notepad, code, etc.).
 
-## Understanding Your System
+## Interacting with your command line
 
 Before using the command line, it's important to know which operating system and shell you are running.
 Different systems have slightly different commands, so this knowledge will help you follow tutorials and avoid errors.
