@@ -11,7 +11,7 @@ It aims to make the process of writing command line tools quick and fun
 while also preventing any frustration caused by the inability to
 implement an intended CLI API.
 
-Click in three points:
+Click can be summarized in three points:
 
 -   Arbitrary nesting of commands
 -   Automatic help page generation
