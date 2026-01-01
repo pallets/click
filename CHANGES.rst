@@ -2,6 +2,8 @@
 
 Unreleased
 
+-   Document short option combining behavior and clarify that multi-character
+    short options are not supported. :issue:`2779`
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084`
 
