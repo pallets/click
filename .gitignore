@@ -6,3 +6,11 @@ dist/
 htmlcov/
 .tox/
 docs/_build/
+.venv/
+venv/
+env/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+Thumbs.db
