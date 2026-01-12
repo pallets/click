@@ -11,10 +11,10 @@ decorator. At runtime the decorator invokes the {class}`Option` class. Options i
 
 Useful and often used kwargs are:
 
-- `default`: Passes a default.
+- `default` : The value used if the option is not provided.
 - `help`: Sets help message.
 - `nargs`: Sets the number of arguments.
-- `required`: Makes option required.
+- `required`: Makes the option mandatory.
 - `type`: Sets {ref}`parameter type <parameter-types>`
 
 ```{contents}
@@ -26,11 +26,13 @@ Useful and often used kwargs are:
 
 Click expects you to pass at least two positional arguments to the option decorator. They are option name and function argument name.
 
+The first argument defines the option name on the command line, while the second argument defines the parameter name passed to the function.
+
 ```{eval-rst}
 .. click:example::
 
     @click.command()
-    @click.option('--string-to-echo', 'string_to_echo')
+    @click.option('--string-to-echo', 'string_to_echo', help='Text to print')
     def echo(string_to_echo):
         click.echo(string_to_echo)
 
