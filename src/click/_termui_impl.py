@@ -697,6 +697,7 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
         finally:
             null.close()
     elif WIN:
+        shell = False
         if locate:
             url = _unquote_file(url)
             args = ["explorer", f"/select,{url}"]
@@ -706,8 +707,9 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
                 args.append("/WAIT")
             args.append("")
             args.append(url)
+            shell = True
         try:
-            return subprocess.call(args)
+            return subprocess.call(args, shell=shell)
         except OSError:
             # Command not found
             return 127
