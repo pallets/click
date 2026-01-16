@@ -973,12 +973,10 @@ class Path(ParamType):
     ) -> str | bytes | os.PathLike[str]:
         rv = value
 
-        # Check for dash without mixing bytes and str comparisons to avoid
-        # BytesWarning when running Python with -bb flag.
-        if isinstance(rv, bytes):
-            is_dash = self.file_okay and self.allow_dash and rv == b"-"
-        else:
-            is_dash = self.file_okay and self.allow_dash and rv == "-"
+        # Only compare with str "-" since value type is str | os.PathLike[str].
+        # The original code used `rv in (b"-", "-")` which caused BytesWarning
+        # when running Python with -bb flag (issue #2877).
+        is_dash = self.file_okay and self.allow_dash and rv == "-"
 
         if not is_dash:
             if self.resolve_path:
