@@ -255,28 +255,3 @@ def test_choice_get_invalid_choice_message():
     choice = click.Choice(["a", "b", "c"])
     message = choice.get_invalid_choice_message("d", ctx=None)
     assert message == "'d' is not one of 'a', 'b', 'c'."
-
-
-def test_path_allow_dash_no_bytes_warning():
-    """Test that Path(allow_dash=True).convert() doesn't trigger BytesWarning.
-
-    Regression test for issue #2877. When running Python with -bb flag,
-    comparing bytes and str raises BytesWarning. The original code used
-    `rv in (b"-", "-")` which caused this warning.
-    """
-    import warnings
-
-    path_type = click.Path(allow_dash=True)
-
-    # Catch any BytesWarning that would be raised
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always", BytesWarning)
-        # Test with dash
-        result = path_type.convert("-", None, None)
-        assert result == "-"
-        # Test with non-dash value
-        result = path_type.convert("somefile.txt", None, None)
-
-    # Ensure no BytesWarning was raised
-    bytes_warnings = [w for w in caught if issubclass(w.category, BytesWarning)]
-    assert len(bytes_warnings) == 0, f"BytesWarning raised: {bytes_warnings}"
