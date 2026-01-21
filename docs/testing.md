@@ -196,3 +196,84 @@ def test_prompts():
 Prompts will be emulated so they write the input data to
 the output stream as well. If hidden input is expected then this
 does not happen.
+
+## Running Click's Test Suite
+
+This section covers running Click's own test suite, which is useful for contributors.
+
+### Parallel Test Execution with Tox
+
+Click's tests can be run in parallel using tox:
+
+```bash
+# Run all tox environments in parallel
+tox p
+
+# Or run pytest with parallel execution (requires pytest-xdist)
+pytest -n auto
+```
+
+### Testing Pager Functionality
+
+Click's `echo_via_pager()` function pipes output to an external pager command
+(like `less` or `cat`). Testing this requires special consideration for parallel
+test execution.
+
+#### The Problem with Global Patching
+
+Avoid globally patching `subprocess.Popen` to capture pager output:
+
+```{code-block} python
+:caption: DON'T DO THIS - causes race conditions in parallel tests
+
+from unittest.mock import patch
+from functools import partial
+
+with patch.object(subprocess, "Popen", partial(subprocess.Popen, stdout=f)):
+    click.echo_via_pager(test_input)
+```
+
+This approach fails in parallel tests because:
+
+1. **Global state modification**: Patching `subprocess.Popen` affects all
+   processes, not just the current test.
+2. **Race conditions**: Multiple test processes compete to patch/unpatch
+   the same global object.
+
+#### The Solution: Fake Pager Script
+
+Instead, use a "fake pager" approach with pytest's `tmp_path` fixture:
+
+```{code-block} python
+:caption: conftest.py or test file
+
+@pytest.fixture
+def fake_pager(tmp_path):
+    """Create a fake pager script that writes stdin to a unique output file."""
+    output_file = tmp_path / "pager_output.txt"
+    pager_script = tmp_path / "fake_pager.sh"
+
+    pager_script.write_text(f'#!/bin/sh\ncat > "{output_file}"\n')
+    pager_script.chmod(0o755)
+
+    return pager_script, output_file
+```
+
+```{code-block} python
+:caption: test_pager.py
+
+def test_echo_via_pager(monkeypatch, fake_pager):
+    pager_script, output_file = fake_pager
+    monkeypatch.setitem(os.environ, "PAGER", str(pager_script))
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
+
+    click.echo_via_pager("hello world")
+
+    assert output_file.read_text() == "hello world\n"
+```
+
+This works because:
+
+- Each test gets unique script and output files via `tmp_path`
+- No global Python state is modified
+- Tests run in complete isolation

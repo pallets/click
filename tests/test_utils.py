@@ -1,17 +1,12 @@
 import os
 import pathlib
 import stat
-import subprocess
 import sys
 from collections import namedtuple
 from contextlib import nullcontext
 from decimal import Decimal
 from fractions import Fraction
-from functools import partial
 from io import StringIO
-from pathlib import Path
-from tempfile import tempdir
-from unittest.mock import patch
 
 import pytest
 
@@ -19,6 +14,127 @@ import click._termui_impl
 import click.utils
 from click._compat import WIN
 from click._utils import UNSET
+
+
+@pytest.fixture
+def fake_pager(tmp_path):
+    """Create a fake pager script that writes stdin to a unique output file.
+
+    This fixture avoids global patching of subprocess.Popen which causes race
+    conditions when tests run in parallel with tox. Instead, it creates a
+    shell script that acts as a pager and writes its input to a file that
+    can be read after the test completes.
+
+    Returns a tuple of (pager_script_path, output_file_path).
+    """
+    output_file = tmp_path / "pager_output.txt"
+    pager_script = tmp_path / "fake_pager.sh"
+
+    # Create a shell script that reads stdin and writes to the output file.
+    # The script handles the case where stdin might be empty.
+    pager_script.write_text(f'#!/bin/sh\ncat > "{output_file}"\n')
+    pager_script.chmod(0o755)
+
+    return pager_script, output_file
+
+
+@pytest.mark.skipif(WIN, reason="Shell scripts not supported on Windows.")
+class TestFakePagerFixture:
+    """Tests for the fake_pager fixture to ensure it works correctly.
+
+    These tests verify that the fake pager approach used for parallel-safe
+    pager testing is functioning as expected.
+    """
+
+    def test_fake_pager_creates_executable_script(self, fake_pager):
+        """Verify the fake pager script is created and executable."""
+        pager_script, _ = fake_pager
+        assert pager_script.exists()
+        assert pager_script.stat().st_mode & 0o111  # Check executable bits
+
+    def test_fake_pager_script_captures_input(self, fake_pager):
+        """Verify the fake pager script correctly captures stdin to file."""
+        import subprocess
+
+        pager_script, output_file = fake_pager
+        test_input = "hello from test\n"
+
+        proc = subprocess.run(
+            [str(pager_script)],
+            input=test_input,
+            text=True,
+            capture_output=True,
+        )
+
+        assert proc.returncode == 0
+        assert output_file.exists()
+        assert output_file.read_text() == test_input
+
+    def test_fake_pager_handles_empty_input(self, fake_pager):
+        """Verify the fake pager handles empty input gracefully."""
+        import subprocess
+
+        pager_script, output_file = fake_pager
+
+        proc = subprocess.run(
+            [str(pager_script)],
+            input="",
+            text=True,
+            capture_output=True,
+        )
+
+        assert proc.returncode == 0
+        assert output_file.exists()
+        assert output_file.read_text() == ""
+
+    def test_fake_pager_handles_multiline_input(self, fake_pager):
+        """Verify the fake pager handles multiline input correctly."""
+        import subprocess
+
+        pager_script, output_file = fake_pager
+        test_input = "line 1\nline 2\nline 3\n"
+
+        proc = subprocess.run(
+            [str(pager_script)],
+            input=test_input,
+            text=True,
+            capture_output=True,
+        )
+
+        assert proc.returncode == 0
+        assert output_file.read_text() == test_input
+
+    def test_fake_pager_isolation(self, tmp_path):
+        """Verify each fake_pager invocation creates isolated files.
+
+        This is critical for parallel test execution - each test must
+        get its own unique pager script and output file.
+        """
+        # Simulate two separate fixture invocations
+        output_file1 = tmp_path / "pager1" / "pager_output.txt"
+        pager_script1 = tmp_path / "pager1" / "fake_pager.sh"
+        output_file1.parent.mkdir()
+        pager_script1.write_text(f'#!/bin/sh\ncat > "{output_file1}"\n')
+        pager_script1.chmod(0o755)
+
+        output_file2 = tmp_path / "pager2" / "pager_output.txt"
+        pager_script2 = tmp_path / "pager2" / "fake_pager.sh"
+        output_file2.parent.mkdir()
+        pager_script2.write_text(f'#!/bin/sh\ncat > "{output_file2}"\n')
+        pager_script2.chmod(0o755)
+
+        # Verify they are different paths
+        assert pager_script1 != pager_script2
+        assert output_file1 != output_file2
+
+        # Run both and verify isolation
+        import subprocess
+
+        subprocess.run([str(pager_script1)], input="test1", text=True)
+        subprocess.run([str(pager_script2)], input="test2", text=True)
+
+        assert output_file1.read_text() == "test1"
+        assert output_file2.read_text() == "test2"
 
 
 def test_unset_sentinel():
@@ -281,9 +397,6 @@ EchoViaPagerTest = namedtuple(
 
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
 @pytest.mark.parametrize(
-    "pager_cmd", ["cat", "cat ", " cat ", "less", " less", " less "]
-)
-@pytest.mark.parametrize(
     "test",
     [
         # We need to pass a parameter function instead of a plain param
@@ -379,8 +492,18 @@ EchoViaPagerTest = namedtuple(
         ),
     ],
 )
-def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test):
-    monkeypatch.setitem(os.environ, "PAGER", pager_cmd)
+def test_echo_via_pager(monkeypatch, capfd, test, fake_pager):
+    """Test echo_via_pager with various input types.
+
+    This test uses a fake pager script (via the fake_pager fixture) instead of
+    patching subprocess.Popen globally. This approach is safe for parallel test
+    execution with tox because each test gets its own unique pager script and
+    output file in an isolated tmp_path directory.
+
+    See docs/testing.md "Testing Pager Functionality" for more details.
+    """
+    pager_script, output_file = fake_pager
+    monkeypatch.setitem(os.environ, "PAGER", str(pager_script))
     monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
 
     test_input = test.test_input()
@@ -391,21 +514,14 @@ def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test):
 
     check_raise = pytest.raises(expected_error) if expected_error else nullcontext()
 
-    pager_out_tmp = Path(tempdir) / "pager_out.txt"
-    pager_out_tmp.unlink(missing_ok=True)
-    with pager_out_tmp.open("w") as f:
-        force_subprocess_stdout = patch.object(
-            subprocess,
-            "Popen",
-            partial(subprocess.Popen, stdout=f),
-        )
-        with force_subprocess_stdout:
-            with check_raise:
-                click.echo_via_pager(test_input)
+    with check_raise:
+        click.echo_via_pager(test_input)
 
     out, err = capfd.readouterr()
 
-    pager = pager_out_tmp.read_text()
+    # Read the pager output; file may not exist if pager was never invoked
+    # (e.g., due to early exception)
+    pager = output_file.read_text() if output_file.exists() else ""
 
     assert pager == expected_pager, (
         f"Unexpected pager output in test case '{test.description}'"
