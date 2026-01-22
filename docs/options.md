@@ -24,7 +24,8 @@ Useful and often used kwargs are:
 
 ## Option Decorator
 
-Click expects you to pass at least two positional arguments to the option decorator. They are option name and function argument name.
+Declare an option by passing one or more option names to the decorator. You can also pass a second positional argument to
+set the function argument name explicitly.
 
 ```{eval-rst}
 .. click:example::
@@ -40,7 +41,10 @@ Click expects you to pass at least two positional arguments to the option decora
     invoke(echo, args=['--help'])
 ```
 
-However, if you don't pass in the function argument name, then Click will try to infer it. A simple way to name your option is by taking the function argument, adding two dashes to the front and converting underscores to dashes. In this case, Click will infer the function argument name correctly so you can add only the option name.
+If you don't pass the function argument name, Click will infer it by default. A common pattern is to name your function
+argument with underscores (`string_to_echo`), then pass the option as two dashes plus the dashed version of that name
+(`--string-to-echo`). In that case you only need to pass the option name; Click will derive the function argument name
+for you.
 
 ```{eval-rst}
 .. click:example::
@@ -88,7 +92,8 @@ The chosen positional argument is converted to lower case, up to two dashes are 
 
 ## Basic Example
 
-A simple {class}`click.Option` takes one argument. This will assume the argument is not required. If the decorated function takes an positional argument then None is passed it. This will also assume the type is `str`.
+A simple {class}`click.Option` takes one argument and treats it as optional. If the option is omitted, Click passes
+`None` to the decorated function. By default the argument type is `str`.
 
 ```{eval-rst}
 .. click:example::
