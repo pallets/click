@@ -325,8 +325,8 @@ class _OptionParser:
             arg = state.rargs.pop(0)
             arglen = len(arg)
             # Double dashes always handled explicitly regardless of what
-            # prefixes are valid.
-            if arg == "--":
+            # prefixes are valid. Handle both bytes and string to avoid BytesWarning.
+            if arg == b"--" if isinstance(arg, bytes) else arg == "--":
                 return
             elif arg[:1] in self._opt_prefixes and arglen > 1:
                 self._process_opts(arg, state)
