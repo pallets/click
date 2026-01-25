@@ -251,6 +251,36 @@ def test_invalid_path_with_esc_sequence():
     assert "my\\ndir" in exc_info.value.message
 
 
+def test_path_allow_dash_no_bytes_warning():
+    """Test that Path(allow_dash=True).convert() doesn't raise BytesWarning.
+    
+    This test verifies the fix for issue #2877 where comparing rv in (b"-", "-")
+    would raise BytesWarning when Python is run with -bb flag.
+    """
+    import warnings
+    
+    path_type = click.Path(allow_dash=True)
+    
+    # Test with string dash - should work
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", BytesWarning)
+        result = path_type.convert("-", None, None)
+        assert result == "-"
+    
+    # Test with bytes dash - should also work without BytesWarning
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", BytesWarning)
+        result = path_type.convert(b"-", None, None)
+        assert result == b"-"
+    
+    # Test with regular string path - should work
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", BytesWarning)
+        # Use a path that doesn't need to exist since exists=False by default
+        result = path_type.convert("test.txt", None, None)
+        assert result == "test.txt"
+
+
 def test_choice_get_invalid_choice_message():
     choice = click.Choice(["a", "b", "c"])
     message = choice.get_invalid_choice_message("d", ctx=None)

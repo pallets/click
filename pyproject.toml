@@ -155,8 +155,10 @@ wheel_build_env = ".pkg"
 constrain_package_deps = true
 use_frozen_constraints = true
 dependency_groups = ["tests"]
+set_env.PYTHONDEVMODE = "1"
+set_env.PYTHONWARNINGS = "error::BytesWarning"
 commands = [[
-    "pytest", "-v", "--tb=short", "--basetemp={env_tmp_dir}",
+    "python", "-bb", "-m", "pytest", "-v", "--tb=short", "--basetemp={env_tmp_dir}",
     {replace = "posargs", default = [], extend = true},
 ]]
 
