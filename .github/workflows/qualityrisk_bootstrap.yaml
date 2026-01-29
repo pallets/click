@@ -1,0 +1,46 @@
+name: QualityRisk Bootstrap (Tests + Sonar)
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qualityrisk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (full history for PR diff + sonar)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          pip install -e .
+          pip install pytest
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: SonarQube Cloud scan (SonarCloud)
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ secrets.SONAR_ORG }}
+            -Dsonar.sources=click
+            -Dsonar.tests=tests
+            -Dsonar.python.version=3.11
+            -Dsonar.exclusions=**/docs/**,**/build/**,**/dist/**,**/.venv/**,**/.tox/**
