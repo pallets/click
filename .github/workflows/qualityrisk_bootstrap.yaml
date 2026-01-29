@@ -40,7 +40,7 @@ jobs:
           args: >
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
             -Dsonar.organization=${{ secrets.SONAR_ORG }}
-            -Dsonar.sources=click
+            -Dsonar.inclusions=src/**/*.py
             -Dsonar.tests=tests
             -Dsonar.python.version=3.11
             -Dsonar.exclusions=**/docs/**,**/build/**,**/dist/**,**/.venv/**,**/.tox/**
