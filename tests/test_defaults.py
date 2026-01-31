@@ -110,3 +110,59 @@ def test_shared_param_prefers_first_default(runner):
     assert "red" in result.output
     result = runner.invoke(prefers_red, ["--green"])
     assert "green" in result.output
+
+
+def test_lookup_default_returns_none_not_sentinel(runner):
+    """Test that lookup_default returns None when parameter not in default_map.
+
+    Regression test for issue #3145.
+    """
+
+    @click.command()
+    @click.option("--email")
+    @click.pass_context
+    def cmd(ctx, email):
+        # When key not in default_map, lookup_default should return None
+        result = ctx.lookup_default("nonexistent")
+        assert result is None, f"Expected None, got {result!r}"
+        click.echo("OK")
+
+    result = runner.invoke(cmd)
+    assert result.exit_code == 0
+    assert "OK" in result.output
+
+
+def test_lookup_default_returns_none_with_empty_default_map(runner):
+    """Test that lookup_default returns None even when default_map exists but key missing."""
+
+    @click.command()
+    @click.option("--name", default="test")
+    @click.pass_context
+    def cmd(ctx, name):
+        # Set default_map but query for nonexistent key
+        ctx.default_map = {"other_param": "value"}
+        result = ctx.lookup_default("missing_key")
+        assert result is None, f"Expected None, got {result!r}"
+        click.echo("OK")
+
+    result = runner.invoke(cmd)
+    assert result.exit_code == 0
+    assert "OK" in result.output
+
+
+def test_lookup_default_still_returns_actual_defaults(runner):
+    """Test that lookup_default still returns actual values from default_map."""
+
+    @click.command()
+    @click.option("--name")
+    @click.pass_context
+    def cmd(ctx, name):
+        ctx.default_map = {"email": "test@example.com"}
+        # Should return the actual default when present
+        result = ctx.lookup_default("email")
+        assert result == "test@example.com"
+        click.echo("OK")
+
+    result = runner.invoke(cmd)
+    assert result.exit_code == 0
+    assert "OK" in result.output

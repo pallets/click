@@ -702,8 +702,28 @@ class Context:
         :param call: If the default is a callable, call it. Disable to
             return the callable instead.
 
+        .. versionchanged:: 8.3.2
+            Returns ``None`` instead of internal sentinel when no default
+            is found in the default map.
+
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
+        """
+        value = self._lookup_default(name, call)
+        # Normalize UNSET to None for public API compatibility.
+        # Internal code uses _lookup_default directly to distinguish
+        # between "no value" (UNSET) and "explicitly set to None".
+        if value is UNSET:
+            return None
+        return value
+
+    def _lookup_default(self, name: str, call: bool = True) -> t.Any:
+        """Internal method to get default from default_map.
+
+        Returns UNSET sentinel if no default is found. Use lookup_default()
+        for public API which normalizes UNSET to None.
+
+        :meta private:
         """
         if self.default_map is not None:
             value = self.default_map.get(name, UNSET)
@@ -2278,7 +2298,7 @@ class Parameter:
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
         """
-        value = ctx.lookup_default(self.name, call=False)  # type: ignore
+        value = ctx._lookup_default(self.name, call=False)  # type: ignore
 
         if value is UNSET:
             value = self.default
@@ -2321,7 +2341,7 @@ class Parameter:
                 source = ParameterSource.ENVIRONMENT
 
         if value is UNSET:
-            default_map_value = ctx.lookup_default(self.name)  # type: ignore
+            default_map_value = ctx._lookup_default(self.name)  # type: ignore
             if default_map_value is not UNSET:
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
