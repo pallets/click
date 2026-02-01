@@ -57,18 +57,20 @@ If an identifier for the callback argument is not declared, then Click will try 
 
 More formally, Click will try to infer the callback argument name as follows:
 
-1. If a parameter declaration is a valid [`Python identifier`](https://docs.python.org/3/reference/lexical_analysis.html#identifiers), it is chosen.
-2. If multiple parameter declarations are prefixed with `--`, the one that was declared first is chosen.
-3. Otherwise, the first parameter declaration prefixed with `-` is chosen.
+1. If a positional argument is a valid [Python identifier], it is chosen.
+2. If multiple positional arguments are prefixed with `--`, the one that was declared first is chosen.
+3. Otherwise, the first positional argument prefixed with `-` is chosen.
 
-To get the callback argument name, the chosen parameter declaration is converted to lower case, a leading `-` or `--` is removed if found, and any remaining `-` characters are replaced with `_`.
+[Python identifier]: https://docs.python.org/3/reference/lexical_analysis.html#identifiers
+
+To get the argument name, the chosen positional argument is converted to lower case, a leading `-` or `--` is removed if found, and any remaining `-` characters are replaced with `_`.
 
 ```{eval-rst}
 .. list-table:: Examples
     :widths: 15 15
     :header-rows: 1
 
-    * - Parameter Declarations
+    * - Decorator Arguments
       - Inferred Argument Name
     * - ``"-f", "--foo-bar"``
       - foo_bar
@@ -88,7 +90,7 @@ To get the callback argument name, the chosen parameter declaration is converted
 
 ## Basic Example
 
-A simple {class}`click.Option` takes one argument. By default, it's assumed that the corresponding callback argument is not required and the expected type is `str`. If the callback takes a positional argument but the option is not passed with the command, then `None` is passed to the callback.
+A simple {class}`click.Option` takes one option name. By default, it's assumed that the decorated function argument is not required and the expected type is `str`. If the decorated function takes a positional argument but the option is not passed with the command, then `None` is passed.
 
 ```{eval-rst}
 .. click:example::
