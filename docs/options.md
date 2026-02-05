@@ -63,6 +63,14 @@ More formally, Click will try to infer the function argument name by:
 
 The chosen positional argument is converted to lower case, up to two dashes are removed from the beginning, and other dashes are converted to underscores to get the function argument name.
 
+(combining-short-options)=
+
+## Combining Short Options
+
+Short options can be combined (stacked) into a single argument. For flag options, `-abc` is equivalent to `-a -b -c`.
+
+Click does not support **multi-character short option names**. For example, `-dbg` is interpreted as `-d -b -g`. If you need something longer than one character, use a long option name such as `--debug`.
+
 ```{eval-rst}
 .. list-table:: Examples
     :widths: 15 10
