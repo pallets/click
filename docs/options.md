@@ -24,7 +24,7 @@ Useful and often used kwargs are:
 
 ## Option Decorator
 
-The {func}`option()` decorator accepts parameter declarations as positional arguments. Parameter declarations can consist of any number of option names and, optionally, a single identifier matching an argument name in the decorated callback function.
+The {func}`option()` decorator is usually passed two positional arguments: the option name and the decorated function argument name.
 
 ```{eval-rst}
 .. click:example::
@@ -40,7 +40,7 @@ The {func}`option()` decorator accepts parameter declarations as positional argu
     invoke(echo, args=['--help'])
 ```
 
-If an identifier for the callback argument is not declared, then Click will try to infer it. A simple way to name an option is by prepending `--` to the callback argument name and converting underscores to `-`; this ensures that Click can correctly infer the callback argument name. Consequently, {func}`option()` only requires declarations for the option name(s).
+However, if the decorated function argument name is not passed in, then Click will try to infer it. A simple way to name the option so that Click will infer it correctly is by taking the function argument, adding two dashes to the front and converting underscores to dashes.
 
 ```{eval-rst}
 .. click:example::
@@ -55,13 +55,11 @@ If an identifier for the callback argument is not declared, then Click will try 
     invoke(echo, args=['--string-to-echo', 'Hi!'])
 ```
 
-More formally, Click will try to infer the callback argument name as follows:
+More formally, Click will try to infer the decorated function argument name as follows:
 
-1. If a positional argument is a valid [Python identifier], it is chosen.
-2. If multiple positional arguments are prefixed with `--`, the one that was declared first is chosen.
+1. If a positional argument is a valid [Python identifier](https://docs.python.org/3/reference/lexical_analysis.html#identifiers) (and thus does not have dashes), it is chosen.
+2. If multiple positional arguments are prefixed with `--`, the first one declared is chosen.
 3. Otherwise, the first positional argument prefixed with `-` is chosen.
-
-[Python identifier]: https://docs.python.org/3/reference/lexical_analysis.html#identifiers
 
 To get the argument name, the chosen positional argument is converted to lower case, a leading `-` or `--` is removed if found, and any remaining `-` characters are replaced with `_`.
 
@@ -178,7 +176,7 @@ And on the command line:
     invoke(putitem, args=['--item', 'peter', '1338'])
 ```
 
-By using a tuple literal as `type`, `nargs` gets automatically set to the
+By using a tuple literal as the `type`, `nargs` gets automatically set to the
 length of the tuple and the {class}`click.Tuple` type is automatically
 used. The above example is thus equivalent to this:
 
@@ -456,7 +454,7 @@ every colon (`:`), and for Windows, splitting on every semicolon (`;`).
 
 ## Other Prefix Characters
 
-Click can deal with prefix characters besides `-` for options, including `/` and `+`. Note that alternative prefix characters are generally used very sparingly if at all within POSIX.
+Click can deal with prefix characters besides `-` for options, including `/` and `+`, as well as others. Note that alternative prefix characters are generally used very sparingly if at all within POSIX.
 
 ```{eval-rst}
 .. click:example::
