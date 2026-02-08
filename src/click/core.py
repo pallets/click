@@ -2283,8 +2283,20 @@ class Parameter:
         if value is UNSET:
             value = self.default
 
+        # Don't call the default if it was auto-set from True to flag_value on an Option.
+        # The flag_value is meant to be used as-is, not called. This prevents classes
+        # and other callables used as flag_value from being instantiated when the user
+        # sets default=True. When the user explicitly sets default=SomeCallable, it
+        # should still be called. Refs: https://github.com/pallets/click/issues/3121
         if call and callable(value):
-            value = value()
+            is_auto_flag_value = (
+                isinstance(self, Option)
+                and hasattr(self, "_default_is_auto_flag_value")
+                and self._default_is_auto_flag_value
+                and value is self.flag_value
+            )
+            if not is_auto_flag_value:
+                value = value()
 
         return value
 
@@ -2808,6 +2820,8 @@ class Option(Parameter):
             is_flag and isinstance(self.type, types.BoolParamType)
         )
         self.flag_value: t.Any = flag_value
+        # Track whether default was auto-set from True to flag_value
+        self._default_is_auto_flag_value: bool = False
 
         # Set boolean flag default to False if unset and not required.
         if self.is_bool_flag:
@@ -2822,6 +2836,7 @@ class Option(Parameter):
         # https://github.com/pallets/click/pull/3030/commits/06847da
         if self.default is True and self.flag_value is not UNSET:
             self.default = self.flag_value
+            self._default_is_auto_flag_value = True
 
         # Set the default flag_value if it is not set.
         if self.flag_value is UNSET:
