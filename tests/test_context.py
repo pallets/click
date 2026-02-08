@@ -805,9 +805,7 @@ def test_lookup_default_returns_none_not_sentinel():
     assert ctx.lookup_default("present", call=False) == "hello"
 
     # Case 4: default_map contains a callable
-    ctx = click.Context(
-        cmd, info_name="test", default_map={"func": lambda: "computed"}
-    )
+    ctx = click.Context(cmd, info_name="test", default_map={"func": lambda: "computed"})
     assert ctx.lookup_default("func", call=True) == "computed"
 
     # Case 5: subclass that overrides lookup_default (like in the issue report)
