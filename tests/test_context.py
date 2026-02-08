@@ -780,3 +780,53 @@ def test_propagate_opt_prefixes():
     ctx = click.Context(click.Command("test2"), parent=parent)
 
     assert ctx._opt_prefixes == {"-", "--", "!"}
+
+
+def test_lookup_default_returns_none_not_sentinel():
+    """``lookup_default`` must return ``None`` – not the internal
+    ``UNSET`` sentinel – when the parameter has no entry in the default
+    map.  Regression test for #3145.
+    """
+    cmd = click.Command("test")
+
+    # Case 1: no default_map at all
+    ctx = click.Context(cmd, info_name="test")
+    assert ctx.lookup_default("missing") is None
+    assert ctx.lookup_default("missing", call=False) is None
+
+    # Case 2: default_map exists but does not contain the parameter
+    ctx = click.Context(cmd, info_name="test", default_map={"other": "value"})
+    assert ctx.lookup_default("missing") is None
+    assert ctx.lookup_default("missing", call=False) is None
+
+    # Case 3: default_map contains the parameter – should still work
+    ctx = click.Context(cmd, info_name="test", default_map={"present": "hello"})
+    assert ctx.lookup_default("present") == "hello"
+    assert ctx.lookup_default("present", call=False) == "hello"
+
+    # Case 4: default_map contains a callable
+    ctx = click.Context(
+        cmd, info_name="test", default_map={"func": lambda: "computed"}
+    )
+    assert ctx.lookup_default("func", call=True) == "computed"
+
+    # Case 5: subclass that overrides lookup_default (like in the issue report)
+    class CustomContext(click.Context):
+        def lookup_default(self, name, call=True):
+            default = super().lookup_default(name, call=call)
+            if default is not None:
+                return default
+            # Fall back to a prefix-based lookup
+            prefix = name.split("_", 1)[0]
+            group = getattr(self, "default_map", None) or {}
+            sub = group.get(prefix)
+            if isinstance(sub, dict):
+                return sub.get(name)
+            return None
+
+    ctx = CustomContext(cmd, info_name="test")
+    ctx.default_map = {"app": {"app_email": "test@example.com"}}
+    # The key "app_email" is not at the top level, so lookup_default
+    # returns None, and the subclass falls through to the prefix logic.
+    result = ctx.lookup_default("app_email")
+    assert result == "test@example.com"

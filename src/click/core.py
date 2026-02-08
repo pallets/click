@@ -685,6 +685,22 @@ class Context:
             self.obj = rv = object_type()
         return rv
 
+    def _lookup_default(self, name: str, call: bool = True) -> t.Any:
+        """Internal method that returns :data:`UNSET` when no default is
+        found, allowing callers to distinguish "not set" from ``None``.
+
+        :meta private:
+        """
+        if self.default_map is not None:
+            value = self.default_map.get(name, UNSET)
+
+            if call and callable(value):
+                return value()
+
+            return value
+
+        return UNSET
+
     @t.overload
     def lookup_default(
         self, name: str, call: t.Literal[True] = True
@@ -702,18 +718,19 @@ class Context:
         :param call: If the default is a callable, call it. Disable to
             return the callable instead.
 
+        .. versionchanged:: 8.3.2
+            Returns ``None`` instead of an internal sentinel value when
+            no default is found, restoring the pre-8.3.0 public behavior.
+
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
         """
-        if self.default_map is not None:
-            value = self.default_map.get(name, UNSET)
+        value = self._lookup_default(name, call=call)
 
-            if call and callable(value):
-                return value()
+        if value is UNSET:
+            return None
 
-            return value
-
-        return UNSET
+        return value
 
     def fail(self, message: str) -> t.NoReturn:
         """Aborts the execution of the program with a specific error
@@ -2278,7 +2295,7 @@ class Parameter:
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
         """
-        value = ctx.lookup_default(self.name, call=False)  # type: ignore
+        value = ctx._lookup_default(self.name, call=False)  # type: ignore
 
         if value is UNSET:
             value = self.default
@@ -2321,7 +2338,7 @@ class Parameter:
                 source = ParameterSource.ENVIRONMENT
 
         if value is UNSET:
-            default_map_value = ctx.lookup_default(self.name)  # type: ignore
+            default_map_value = ctx._lookup_default(self.name)  # type: ignore
             if default_map_value is not UNSET:
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
