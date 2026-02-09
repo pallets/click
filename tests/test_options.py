@@ -3,8 +3,8 @@ import os
 import re
 import sys
 import tempfile
-from contextlib import nullcontext
 import typing as t
+from contextlib import nullcontext
 
 if sys.version_info < (3, 11):
     enum.StrEnum = enum.Enum  # type: ignore[assignment]
