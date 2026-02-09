@@ -4,7 +4,7 @@ import re
 import sys
 import tempfile
 from contextlib import nullcontext
-from typing import Literal
+import typing as t
 
 if sys.version_info < (3, 11):
     enum.StrEnum = enum.Enum  # type: ignore[assignment]
@@ -1881,7 +1881,7 @@ OBJECT_SENTINEL = object()
 class EnumSentinel(enum.Enum):
     FALSY_SENTINEL = object()
 
-    def __bool__(self) -> Literal[False]:
+    def __bool__(self) -> t.Literal[False]:
         """Force the sentinel to be falsy to make sure it is not caught by Click
         internal implementation.
 
