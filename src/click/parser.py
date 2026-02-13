@@ -401,7 +401,10 @@ class _OptionParser:
                 if self.ignore_unknown_options:
                     unknown_options.append(ch)
                     continue
-                raise NoSuchOption(opt, ctx=self.ctx)
+                # Include remaining characters in the error message for better context
+                remaining = arg[i - 1 :]
+                full_opt = _normalize_opt(f"{prefix}{remaining}", self.ctx)
+                raise NoSuchOption(full_opt, ctx=self.ctx)
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
                 # next arg, and stop consuming characters of arg.
