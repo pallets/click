@@ -780,3 +780,20 @@ def test_propagate_opt_prefixes():
     ctx = click.Context(click.Command("test2"), parent=parent)
 
     assert ctx._opt_prefixes == {"-", "--", "!"}
+
+
+def test_lookup_default_returns_none_when_missing():
+    """lookup_default should return None, not an internal sentinel,
+    when the key is not in default_map or default_map is None."""
+    cmd = click.Command("test")
+    ctx = click.Context(cmd)
+
+    # No default_map at all
+    assert ctx.lookup_default("missing") is None
+
+    # default_map exists but key is missing
+    ctx.default_map = {"other": "value"}
+    assert ctx.lookup_default("missing") is None
+
+    # default_map has the key
+    assert ctx.lookup_default("other") == "value"
