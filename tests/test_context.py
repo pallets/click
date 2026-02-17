@@ -774,6 +774,64 @@ def test_parameter_source(runner, option_args, invoke_args, expect):
     assert rv.return_value == expect
 
 
+def test_lookup_default_returns_none_for_missing_keys():
+    """Regression test for #3145: lookup_default should return None,
+    not the internal Sentinel.UNSET, when a key is not found.
+
+    In Click 8.3.0 and 8.3.1, lookup_default incorrectly returned
+    the internal UNSET sentinel instead of None, breaking the public API.
+    """
+    ctx = click.Context(click.Command("test"))
+
+    # Test 1: No default_map at all
+    assert ctx.lookup_default("missing") is None
+
+    # Test 2: default_map exists but key is missing
+    ctx.default_map = {"other": "value"}
+    assert ctx.lookup_default("missing") is None
+
+    # Test 3: default_map has the key
+    ctx.default_map = {"key": "value"}
+    assert ctx.lookup_default("key") == "value"
+
+    # Test 4: default_map has key with None value
+    ctx.default_map = {"key": None}
+    assert ctx.lookup_default("key") is None
+
+
+def test_lookup_default_with_callable():
+    """Test that lookup_default calls callable defaults."""
+
+    def get_default():
+        return "computed_value"
+
+    ctx = click.Context(click.Command("test"))
+    ctx.default_map = {"key": get_default}
+
+    # With call=True (default), should return the computed value
+    assert ctx.lookup_default("key") == "computed_value"
+
+    # With call=False, should return the callable itself
+    assert ctx.lookup_default("key", call=False) is get_default
+
+
+def test_lookup_default_internal_returns_unset():
+    """Test that the internal _lookup_default method returns UNSET
+    for internal library use. This is important for code that needs
+    to distinguish between 'not set' and 'set to None'.
+    """
+    from click.core import UNSET
+
+    ctx = click.Context(click.Command("test"))
+
+    # Internal method should return UNSET when key is missing
+    assert ctx._lookup_default("missing") is UNSET
+
+    # Even with no default_map
+    ctx.default_map = None
+    assert ctx._lookup_default("missing") is UNSET
+
+
 def test_propagate_opt_prefixes():
     parent = click.Context(click.Command("test"))
     parent._opt_prefixes = {"-", "--", "!"}
