@@ -708,12 +708,15 @@ class Context:
         if self.default_map is not None:
             value = self.default_map.get(name, UNSET)
 
+            if value is UNSET:
+                return None
+
             if call and callable(value):
                 return value()
 
             return value
 
-        return UNSET
+        return None
 
     def fail(self, message: str) -> t.NoReturn:
         """Aborts the execution of the program with a specific error
@@ -2280,7 +2283,7 @@ class Parameter:
         """
         value = ctx.lookup_default(self.name, call=False)  # type: ignore
 
-        if value is UNSET:
+        if value is None:
             value = self.default
 
         if call and callable(value):
@@ -2322,7 +2325,7 @@ class Parameter:
 
         if value is UNSET:
             default_map_value = ctx.lookup_default(self.name)  # type: ignore
-            if default_map_value is not UNSET:
+            if default_map_value is not None:
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
 

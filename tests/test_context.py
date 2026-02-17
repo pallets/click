@@ -780,3 +780,49 @@ def test_propagate_opt_prefixes():
     ctx = click.Context(click.Command("test2"), parent=parent)
 
     assert ctx._opt_prefixes == {"-", "--", "!"}
+
+
+def test_lookup_default_returns_none_when_not_in_map():
+    """lookup_default should return None, not a sentinel, when the name
+    is not found in the default_map. Regression test for #3145."""
+    cmd = click.Command("test")
+    ctx = click.Context(cmd, info_name="test")
+    ctx.default_map = {"other_param": "value"}
+
+    # When the parameter is not in the default_map, should return None
+    result = ctx.lookup_default("missing_param")
+    assert result is None, f"Expected None, got {result!r} ({type(result)})"
+
+    result_no_call = ctx.lookup_default("missing_param", call=False)
+    assert result_no_call is None, f"Expected None, got {result_no_call!r}"
+
+
+def test_lookup_default_returns_none_when_no_default_map():
+    """lookup_default should return None when default_map is None."""
+    cmd = click.Command("test")
+    ctx = click.Context(cmd, info_name="test")
+    assert ctx.default_map is None
+
+    result = ctx.lookup_default("any_param")
+    assert result is None, f"Expected None, got {result!r} ({type(result)})"
+
+
+def test_lookup_default_returns_value_when_in_map():
+    """lookup_default should return the value when found in default_map."""
+    cmd = click.Command("test")
+    ctx = click.Context(cmd, info_name="test")
+    ctx.default_map = {"my_param": "my_value"}
+
+    assert ctx.lookup_default("my_param") == "my_value"
+
+
+def test_lookup_default_calls_callable_when_call_true():
+    """lookup_default should call callable defaults when call=True."""
+    cmd = click.Command("test")
+    ctx = click.Context(cmd, info_name="test")
+    ctx.default_map = {"my_param": lambda: "computed"}
+
+    assert ctx.lookup_default("my_param", call=True) == "computed"
+    # call=False should return the callable itself
+    result = ctx.lookup_default("my_param", call=False)
+    assert callable(result)
