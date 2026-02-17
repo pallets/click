@@ -17,7 +17,7 @@ This glossary defines key terms used throughout Click's documentation.
        See :doc:`/parameters` for more information.
 
    Command
-       A function decorated with ``@click.command()`` or ``@click.group()`` 
+       A function decorated with ``@click.command()`` or ``@click.group()``
        that can be invoked from the command line. Commands can accept options
        and arguments.
 
