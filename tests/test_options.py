@@ -2148,7 +2148,7 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},
             [],
-            re.compile(r"'<test_options.Class1 object at 0x[0-9A-Fa-f]+>'"),
+            "<class 'test_options.Class1'>",
         ),
         (
             {"flag_value": Class1, "default": True},
@@ -2170,7 +2170,7 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
             {"flag_value": Class1, "type": UNPROCESSED, "default": True},
             {"flag_value": Class2, "type": UNPROCESSED},
             [],
-            re.compile(r"<test_options.Class1 object at 0x[0-9A-Fa-f]+>"),
+            Class1,
         ),
         (
             {"flag_value": Class1, "type": UNPROCESSED, "default": True},

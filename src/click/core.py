@@ -2820,8 +2820,10 @@ class Option(Parameter):
         # and a flag_value set to something else. Refs:
         # https://github.com/pallets/click/issues/3024#issuecomment-3146199461
         # https://github.com/pallets/click/pull/3030/commits/06847da
+        self._default_from_flag_value = False
         if self.default is True and self.flag_value is not UNSET:
             self.default = self.flag_value
+            self._default_from_flag_value = True
 
         # Set the default flag_value if it is not set.
         if self.flag_value is UNSET:
@@ -2884,6 +2886,37 @@ class Option(Parameter):
             hidden=self.hidden,
         )
         return info_dict
+
+    @t.overload
+    def get_default(
+        self, ctx: Context, call: t.Literal[True] = True
+    ) -> t.Any | None: ...
+
+    @t.overload
+    def get_default(
+        self, ctx: Context, call: bool = ...
+    ) -> t.Any | t.Callable[[], t.Any] | None: ...
+
+    def get_default(
+        self, ctx: Context, call: bool = True
+    ) -> t.Any | t.Callable[[], t.Any] | None:
+        value = ctx.lookup_default(self.name, call=False)  # type: ignore
+
+        if value is UNSET:
+            value = self.default
+
+        # Don't call the default if it was set from the flag_value via
+        # the ``default=True`` alignment.  A callable flag_value (e.g. a
+        # class used as a flag value) should be returned as-is, not
+        # instantiated.  See https://github.com/pallets/click/issues/3121
+        if (
+            call
+            and callable(value)
+            and not self._default_from_flag_value
+        ):
+            value = value()
+
+        return value
 
     def get_error_hint(self, ctx: Context) -> str:
         result = super().get_error_hint(ctx)
