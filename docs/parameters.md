@@ -5,7 +5,7 @@
 ```{currentmodule} click
 ```
 
-Click supports only two principle types of parameters for scripts (by design): options and arguments.
+Click supports only two principal types of parameters for scripts (by design): options and arguments.
 
 ## Options
 
@@ -25,7 +25,7 @@ Click supports only two principle types of parameters for scripts (by design): o
 - Are not fully documented by the help page since they may be too specific to be automatically documented. For more see {ref}`documenting-arguments`.
 - Can be pulled from environment variables but only explicitly named ones. For more see {ref}`environment-variables`.
 
-On each principle type you can specify {ref}`parameter-types`. Specifying these types helps Click add details to your help pages and help with the handling of those types.
+On each principal type you can specify {ref}`parameter-types`. Specifying these types helps Click add details to your help pages and help with the handling of those types.
 
 (parameter-names)=
 
