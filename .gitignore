@@ -6,3 +6,5 @@ dist/
 htmlcov/
 .tox/
 docs/_build/
+.venv/
+test_launch_spaces.py
