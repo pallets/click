@@ -698,7 +698,9 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
             null.close()
     elif WIN:
         if locate:
-            url = _unquote_file(url)
+            url = _unquote_file(url).replace(
+                '"', '""'
+            )  # Escape embedded quotes for cmd.exe/explorer
             # Build the command as a plain string so that the path is quoted
             # inside the /select, value. ...
             cmd = f'explorer /select,"{url}"'
