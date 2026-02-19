@@ -157,7 +157,7 @@ To make an option take multiple values, pass in `nargs`. Note you may pass in an
 
 As you can see that by using `nargs` set to a specific number each item in
 the resulting tuple is of the same type. This might not be what you want.
-Commonly you might want to use different types for different indexes in
+commonly you might want to use different types for different indexes in
 the tuple. For this you can directly specify a tuple as type:
 
 ```{eval-rst}
