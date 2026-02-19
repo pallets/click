@@ -295,7 +295,7 @@ def echo(
     # If there is a message and the value looks like bytes, we manually
     # need to find the binary stream and write the message in there.
     # This is done separately so that most stream types will work as you
-    # would expect. Eg: you can write to StringIO for other cases.
+    # would expect. E.g. you can write to StringIO for other cases.
     if isinstance(out, (bytes, bytearray)):
         binary_file = _find_binary_writer(file)
 
