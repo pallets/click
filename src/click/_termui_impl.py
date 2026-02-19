@@ -698,19 +698,23 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
             null.close()
     elif WIN:
         if locate:
-            url = _unquote_file(url)
-            args = ["explorer", f"/select,{url}"]
+                url = _unquote_file(url)
+                # Build the command as a plain string so that the path is quoted
+                # inside the /select, value. ...
+                cmd = f'explorer /select,"{url}"'
         else:
-            args = ["start"]
-            if wait:
-                args.append("/WAIT")
-            args.append("")
-            args.append(url)
+                args = ["start"]
+                if wait:
+                    args.append("/WAIT")
+                args.append("")
+                args.append(url)
         try:
-            return subprocess.call(args)
+                if locate:
+                    return subprocess.call(cmd)  # <-- string, not list
+                return subprocess.call(args)
         except OSError:
-            # Command not found
-            return 127
+                # Command not found
+                return 127
     elif CYGWIN:
         if locate:
             url = _unquote_file(url)
