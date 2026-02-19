@@ -19,7 +19,7 @@ Click supports only two principal types of parameters for scripts (by design): o
 
 ## Arguments
 
-- Are optional with in reason, but not entirely so.
+- Are optional within reason, but not entirely so.
 - Recommended to use for subcommands, urls, or files.
 - Can take an arbitrary number of arguments.
 - Are not fully documented by the help page since they may be too specific to be automatically documented. For more see {ref}`documenting-arguments`.
