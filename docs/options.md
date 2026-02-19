@@ -321,7 +321,7 @@ If you want to define an alias for the second option only, then you will need to
 
 ## Flag Value
 
-To have an flag pass a value to the underlying function set `flag_value`. This automatically sets `is_flag=True`. To mark the flag as default, set `default=True`. Setting flag values can be used to create patterns like this:
+To have a flag pass a value to the underlying function set `flag_value`. This automatically sets `is_flag=True`. To mark the flag as default, set `default=True`. Setting flag values can be used to create patterns like this:
 
 ```{eval-rst}
 .. click:example::
