@@ -464,7 +464,13 @@ class _AtomicFile:
         if self.closed:
             return
         self._f.close()
-        os.replace(self._tmp_filename, self._real_filename)
+        if delete:
+            try:
+                os.unlink(self._tmp_filename)
+            except OSError:
+                pass
+        else:
+            os.replace(self._tmp_filename, self._real_filename)
         self.closed = True
 
     def __getattr__(self, name: str) -> t.Any:
