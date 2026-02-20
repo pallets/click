@@ -145,7 +145,7 @@ def test_cat():
 ```
 
 Pass in a path to control where the temporary directory is created.
-In this case, the directory will not be removed by Click. Its useful
+In this case, the directory will not be removed by Click. It's useful
 to integrate with a framework like Pytest that manages temporary files.
 
 ```{code-block} python
