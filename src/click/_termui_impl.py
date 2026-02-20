@@ -532,6 +532,10 @@ def _tempfilepager(
     import tempfile
 
     fd, filename = tempfile.mkstemp()
+    # Close the file descriptor from mkstemp immediately. The file will
+    # be re-opened below by open_stream for writing. Keeping fd open is
+    # unnecessary and can prevent access on Windows.
+    os.close(fd)
     # TODO: This never terminates if the passed generator never terminates.
     text = "".join(generator)
     if not color:
@@ -545,7 +549,6 @@ def _tempfilepager(
         # Command not found
         pass
     finally:
-        os.close(fd)
         os.unlink(filename)
 
     return True
