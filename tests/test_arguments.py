@@ -399,6 +399,17 @@ def test_nargs_specified_plus_star_ordering(runner):
     ],
 )
 def test_good_defaults_for_nargs(runner, argument_params, args, expected):
+    """Comprehensive check of default-value processing for arguments with
+    ``nargs``.
+
+    .. hint::
+        An option-specific equivalent is available in
+        ``test_options.py::test_good_defaults_for_multiple``.
+
+        A smoke test covering a single basic case is in
+        ``test_defaults.py::test_nargs_plus_multiple``.
+    """
+
     @click.command()
     @click.argument("a", type=int, **argument_params)
     def cmd(a):
