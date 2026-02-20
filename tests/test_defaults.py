@@ -1,3 +1,5 @@
+import pytest
+
 import click
 
 
@@ -110,3 +112,152 @@ def test_shared_param_prefers_first_default(runner):
     assert "red" in result.output
     result = runner.invoke(prefers_red, ["--green"])
     assert "green" in result.output
+
+
+@pytest.mark.parametrize(
+    ("default_map", "key", "expected"),
+    [
+        # Key present in default_map.
+        ({"email": "a@b.com"}, "email", "a@b.com"),
+        # Key missing from default_map.
+        ({"email": "a@b.com"}, "nonexistent", None),
+        # No default_map at all / empty default_map.
+        (None, "anything", None),
+        ({}, "anything", None),
+        # Falsy values are returned as-is.
+        ({"key": None}, "key", None),
+        ({"key": 0}, "key", 0),
+        ({"key": ""}, "key", ""),
+        ({"key": False}, "key", False),
+    ],
+)
+def test_lookup_default_returns_hides_sentinel(default_map, key, expected):
+    """``lookup_default()`` should return ``None`` for missing keys, not :attr:`UNSET`.
+
+    Regression test for https://github.com/pallets/click/issues/3145.
+    """
+    cmd = click.Command("test")
+    ctx = click.Context(cmd)
+    if default_map is not None:
+        ctx.default_map = default_map
+    assert ctx.lookup_default(key) == expected
+
+
+def test_lookup_default_callable_in_default_map(runner):
+    """A callable in ``default_map`` is invoked with ``call=True``
+    (the default) and returned as-is with ``call=False``.
+
+    Click uses both paths internally:
+    - ``get_default()`` passes ``call=False``,
+    - ``resolve_ctx()`` passes ``call=True``.
+    """
+    factory = lambda: "lazy-value"  # noqa: E731
+
+    # Unit-level: call=True invokes, call=False returns as-is.
+    cmd = click.Command("test")
+    ctx = click.Context(cmd)
+    ctx.default_map = {"name": factory}
+    assert ctx.lookup_default("name", call=True) == "lazy-value"
+    assert ctx.lookup_default("name", call=False) is factory
+
+    # Integration: the callable is invoked during value resolution.
+    @click.command()
+    @click.option("--name", default="original", show_default=True)
+    @click.pass_context
+    def cli(ctx, name):
+        click.echo(f"name={name!r}")
+
+    result = runner.invoke(cli, [], default_map={"name": factory})
+    assert not result.exception
+    assert "name='lazy-value'" in result.output
+
+    # Help rendering gets the callable via call=False, so it
+    # shows "(dynamic)" rather than invoking it.
+    result = runner.invoke(cli, ["--help"], default_map={"name": factory})
+    assert not result.exception
+    assert "(dynamic)" in result.output
+
+
+@pytest.mark.parametrize(
+    ("args", "default_map", "expected_value", "expected_source"),
+    [
+        # CLI arg wins over everything.
+        (["--name", "cli"], {"name": "mapped"}, "cli", "COMMANDLINE"),
+        # default_map overrides parameter default.
+        ([], {"name": "mapped"}, "mapped", "DEFAULT_MAP"),
+        # Explicit None in default_map still counts as DEFAULT_MAP.
+        ([], {"name": None}, None, "DEFAULT_MAP"),
+        # Falsy values in default_map are not confused with missing keys.
+        ([], {"name": ""}, "", "DEFAULT_MAP"),
+        ([], {"name": 0}, "0", "DEFAULT_MAP"),
+        # No default_map falls back to parameter default.
+        ([], None, "original", "DEFAULT"),
+    ],
+)
+def test_default_map_source(runner, args, default_map, expected_value, expected_source):
+    """``get_parameter_source()`` reports the correct origin for a parameter
+    value across the resolution chain: CLI > default_map > parameter default.
+    """
+
+    @click.command()
+    @click.option("--name", default="original")
+    @click.pass_context
+    def cli(ctx, name):
+        source = ctx.get_parameter_source("name")
+        click.echo(f"name={name!r} source={source.name}")
+
+    kwargs = {}
+    if default_map is not None:
+        kwargs["default_map"] = default_map
+    result = runner.invoke(cli, args, **kwargs)
+    assert not result.exception
+    assert f"name={expected_value!r}" in result.output
+    assert f"source={expected_source}" in result.output
+
+
+def test_lookup_default_override_respected(runner):
+    """A subclass override of ``lookup_default()`` should be called by Click
+    internals, not bypassed by a private method.
+
+    Reproduce exactly https://github.com/pallets/click/issues/3145 in which a
+    subclass that falls back to prefix-based lookup when the parent returns
+    ``None``.
+
+    Previous attempts in https://github.com/pallets/click/pr/3199 were entirely
+    bypassing the user's overridded method.
+    """
+
+    class CustomContext(click.Context):
+        def lookup_default(self, name, call=True):
+            default = super().lookup_default(name, call=call)
+
+            if default is not None:
+                return default
+
+            # Prefix-based fallback: look up "app" sub-dict for "app_email".
+            prefix = name.split("_", 1)[0]
+            group = getattr(self, "default_map", None) or {}
+            sub = group.get(prefix)
+            if isinstance(sub, dict):
+                return sub.get(name)
+            return default
+
+    @click.command("get-views")
+    @click.option("--app-email", default="original", show_default=True)
+    @click.pass_context
+    def cli(ctx, app_email):
+        click.echo(f"app_email={app_email!r}")
+
+    cli.context_class = CustomContext
+    default_map = {"app": {"app_email": "prefix@example.com"}}
+
+    # resolve_ctx path: the override provides the runtime value.
+    result = runner.invoke(cli, [], default_map=default_map)
+    assert not result.exception
+    assert "app_email='prefix@example.com'" in result.output
+
+    # get_default path: the override is also used when
+    # rendering --help with show_default=True.
+    result = runner.invoke(cli, ["--help"], default_map=default_map)
+    assert not result.exception
+    assert "prefix@example.com" in result.output
