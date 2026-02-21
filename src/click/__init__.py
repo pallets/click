@@ -32,6 +32,7 @@ from .exceptions import BadParameter as BadParameter
 from .exceptions import ClickException as ClickException
 from .exceptions import FileError as FileError
 from .exceptions import MissingParameter as MissingParameter
+from .exceptions import NoSuchCommand as NoSuchCommand
 from .exceptions import NoSuchOption as NoSuchOption
 from .exceptions import UsageError as UsageError
 from .formatting import HelpFormatter as HelpFormatter

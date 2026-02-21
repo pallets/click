@@ -360,10 +360,7 @@ class _OptionParser:
         self, opt: str, explicit_value: str | None, state: _ParsingState
     ) -> None:
         if opt not in self._long_opt:
-            from difflib import get_close_matches
-
-            possibilities = get_close_matches(opt, self._long_opt)
-            raise NoSuchOption(opt, possibilities=possibilities, ctx=self.ctx)
+            raise NoSuchOption(opt, possibilities=self._long_opt, ctx=self.ctx)
 
         option = self._long_opt[opt]
         if option.takes_value:
