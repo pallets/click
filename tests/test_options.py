@@ -290,7 +290,6 @@ def test_good_defaults_for_multiple(runner, multiple, nargs, default, expected):
             None,
             "Error: Invalid value for '-a': Value must be an iterable.",
         ),
-        #
         (
             False,
             2,
@@ -2162,11 +2161,12 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
         ),
         # Check that passing exotic flag values like classes is supported, but are
         # rendered to strings when the type is not specified.
+        # https://github.com/pallets/click/issues/3121
         (
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},
             [],
-            re.compile(r"'<test_options.Class1 object at 0x[0-9A-Fa-f]+>'"),
+            "<class 'test_options.Class1'>",
         ),
         (
             {"flag_value": Class1, "default": True},
@@ -2184,11 +2184,12 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
         ({"flag_value": Class1, "default": "True"}, {"flag_value": Class2}, [], "True"),
         ({"flag_value": Class1, "default": None}, {"flag_value": Class2}, [], None),
         # To get the classes as-is, we need to specify the type as UNPROCESSED.
+        # https://github.com/pallets/click/issues/3121
         (
             {"flag_value": Class1, "type": UNPROCESSED, "default": True},
             {"flag_value": Class2, "type": UNPROCESSED},
             [],
-            re.compile(r"<test_options.Class1 object at 0x[0-9A-Fa-f]+>"),
+            Class1,
         ),
         (
             {"flag_value": Class1, "type": UNPROCESSED, "default": True},
@@ -2267,6 +2268,169 @@ def test_custom_type_flag_value_dual_options(
         assert re.match(expected, result.output)
     else:
         assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("opt_params", "args", "expected"),
+    [
+        # Class flag_value with default=True and UNPROCESSED: the class itself is
+        # returned, NOT an instance. Regression test for
+        # https://github.com/pallets/click/issues/3121
+        ({"flag_value": Class1, "type": UNPROCESSED, "default": True}, [], Class1),
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": True},
+            ["--opt"],
+            Class1,
+        ),
+        # Without UNPROCESSED, the class is str()-ified by the default STRING type.
+        ({"flag_value": Class1, "default": True}, [], "<class 'test_options.Class1'>"),
+        (
+            {"flag_value": Class1, "default": True},
+            ["--opt"],
+            "<class 'test_options.Class1'>",
+        ),
+        # Explicit default=Class1 (not via default=True alignment): callable IS invoked,
+        # because the user explicitly set a callable as the default.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": Class1},
+            [],
+            re.compile(r"<test_options.Class1 object at 0x[0-9A-Fa-f]+>"),
+        ),
+        # Explicit default=Class2, different from flag_value=Class1.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": Class2},
+            [],
+            re.compile(r"<test_options.Class2 object at 0x[0-9A-Fa-f]+>"),
+        ),
+        # Non-callable flag_value with default=True: unaffected by the fix.
+        ({"flag_value": "upper", "default": True}, [], "upper"),
+        ({"flag_value": "upper", "default": True}, ["--opt"], "upper"),
+    ],
+)
+def test_callable_flag_value_not_instantiated(runner, opt_params, args, expected):
+    """A callable ``flag_value`` like a class, with ``default=True`` should not be
+    invoked when resolving the default. This is the single-option variant of
+    the regression reported in https://github.com/pallets/click/issues/3121.
+    """
+
+    @click.command()
+    @click.option("--opt", "value", **opt_params)
+    def cli(value):
+        click.echo(repr(value), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0
+    if isinstance(expected, re.Pattern):
+        assert re.match(expected, result.output)
+    else:
+        assert result.output == repr(expected)
+
+
+def test_callable_flag_value_default_map(runner):
+    """A ``default_map`` entry should override the auto-aligned callable ``flag_value``.
+
+    When ``default=True`` and ``flag_value=SomeClass``, the default is aligned to
+    ``SomeClass``. If ``default_map`` provides a different value (including a
+    callable), it should take precedence and callables from ``default_map`` should
+    still be invoked.
+    """
+
+    @click.command()
+    @click.option("--opt", "value", flag_value=Class1, type=UNPROCESSED, default=True)
+    def cli(value):
+        click.echo(repr(value), nl=False)
+
+    # Static value in default_map overrides the flag_value default.
+    result = runner.invoke(cli, [], default_map={"value": "from-map"})
+    assert result.output == repr("from-map")
+
+    # Callable in default_map is still invoked (not suppressed by the fix).
+    result = runner.invoke(cli, [], default_map={"value": lambda: "lazy-map"})
+    assert result.output == repr("lazy-map")
+
+    # CLI arg still wins over everything.
+    result = runner.invoke(cli, ["--opt"])
+    assert result.output == repr(Class1)
+
+
+def test_callable_flag_value_show_default(runner):
+    """Help text with ``show_default=True`` should display the class name, not
+    instantiate it.
+    """
+
+    @click.command()
+    @click.option(
+        "--opt",
+        "value",
+        flag_value=Class1,
+        type=UNPROCESSED,
+        default=True,
+        show_default=True,
+    )
+    def cli(value):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "Class1" in result.output
+    assert "object at 0x" not in result.output
+
+
+@pytest.mark.parametrize(
+    ("opt_params", "expected_default_attr", "expected_get_default"),
+    [
+        # default=True with callable flag_value: the attribute stays True
+        # (not eagerly aligned), but get_default() resolves to the flag_value.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": True},
+            True,
+            Class1,
+        ),
+        # default=True with non-callable flag_value: same lazy resolution.
+        (
+            {"flag_value": "upper", "default": True},
+            True,
+            "upper",
+        ),
+        # Explicit default (not True): attribute and get_default() agree.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": "custom"},
+            "custom",
+            "custom",
+        ),
+        # No default: attribute and get_default() are both UNSET.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED},
+            UNSET,
+            UNSET,
+        ),
+    ],
+)
+def test_callable_flag_value_get_default_override(
+    runner, opt_params, expected_default_attr, expected_get_default
+):
+    """The ``default=True`` to ``flag_value`` alignment is resolved lazily in
+    ``get_default()`` rather than eagerly in ``__init__``. This means
+    ``option.default`` stays as ``True`` while ``get_default()`` returns the
+    ``flag_value``.
+
+    A user subclass that reads ``self.default`` directly (bypassing
+    ``get_default()``) will see ``True`` instead of the ``flag_value``.
+    """
+
+    @click.command()
+    @click.option("--opt", "value", **opt_params)
+    def cli(value):
+        pass
+
+    opt = cli.params[0]
+
+    # The raw attribute reflects what the user wrote.
+    assert opt.default is expected_default_attr
+
+    # get_default() resolves the alignment lazily.
+    ctx = click.Context(cli)
+    assert opt.get_default(ctx, call=True) is expected_get_default
 
 
 def test_custom_type_frozenset_flag_value(runner):

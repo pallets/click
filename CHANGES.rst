@@ -12,6 +12,8 @@ Unreleased
     logging interaction, multi-threaded safety, and sequential invocation
     isolation. Add high-iteration stress tests behind a ``stress`` marker
     with a dedicated CI job. :pr:`3139`
+-   Fix callable ``flag_value`` being instantiated when used as a default via
+    ``default=True``. :issue:`3121` :pr:`3201` :pr:`3213` :pr:`3225`
 
 Version 8.3.1
 --------------
