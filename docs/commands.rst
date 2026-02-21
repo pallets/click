@@ -23,14 +23,14 @@ command runs when an inner command runs:
 
 .. click:example::
 
+    import click
+
     @click.group()
     @click.option('--debug/--no-debug', default=False)
     def cli(debug):
         click.echo(f"Debug mode is {'on' if debug else 'off'}")
 
-    @cli.command()  # @cli, not @click!
-    def sync():
-        click.echo('Syncing')
+.. click:run::(example outputs)
 
 Here is what this looks like:
 
@@ -164,6 +164,16 @@ When using chaining, there are a few restrictions:
 -   The :attr:`Context.invoked_subcommand` attribute will be ``'*'`` because the
     parser doesn't know the full list of commands that will run yet.
 
+See also the following Click examples in the repository:
+- `aliases example <https://github.com/pallets/click/tree/main/examples/aliases>`_
+
+
+.. warning::
+
+    Only the last command in a chain may use `nargs=-1`.
+    Using it on earlier commands will break parsing of subsequent commands.
+
+
 .. _command-pipelines:
 
 Command Pipelines
@@ -174,6 +184,20 @@ result of the previous command.
 
 A straightforward way to do this is to use :func:`make_pass_decorator` to pass
 a context object to each command, and store and read the data on that object.
+
+Step-by-Step Explanation
+------------------------
+
+1. We create a chainable group using `@click.group(chain=True, invoke_without_command=True)`.
+   - `chain=True` allows multiple subcommands in one call.
+   - `invoke_without_command=True` ensures the result callback runs even if no subcommands are provided.
+
+2. Register a result callback with `@cli.result_callback()`.
+   - This callback receives the return values of all subcommands (`processors`) and other arguments (`fin`).
+
+3. Inside the callback, we create an iterator over the input file and pass it through all processor functions returned by the subcommands.
+
+4. Finally, we print the processed lines to `stdout`.
 
 .. click:example::
 
@@ -198,6 +222,17 @@ a context object to each command, and store and read the data on that object.
 .. click:run::
 
     invoke(cli, prog_name="process", args=["Click", "show", "lower", "show"])
+
+
+See also the following Click examples in the repository:
+- `imagepipe example <https://github.com/pallets/click/tree/main/examples/imagepipe>`_
+
+
+. warning::
+
+    Files used in pipeline processors are closed after each callback.
+    If you need to keep files open, use `click.open_file()` manually.
+
 
 Another way to do this is to collect data returned by each command, then process
 it at the end of the chain. Use the group's :meth:`~Group.result_callback`
