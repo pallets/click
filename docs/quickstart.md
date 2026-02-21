@@ -11,12 +11,12 @@ Install from PyPI:
 pip install click
 ```
 
-Installing into a virtual environment is highly recommended. We suggest {ref}`virtualenv-heading`.
-
+Installing into a virtual environment is highly recommended to avoid dependency conflicts
+with other Python projects on your system. We suggest {ref}`virtualenv-heading`.
 ## Examples
 
-Some standalone examples of Click applications are packaged with Click. They are available in the
-[examples folder](https://github.com/pallets/click/tree/main/examples) of the repo.
+Click includes several standalone example applications that demonstrate common and advanced
+use cases.[examples folder](https://github.com/pallets/click/tree/main/examples) of the repo.
 
 - [inout](https://github.com/pallets/click/tree/main/examples/inout) : A very simple example of an application that can
   read from files and write to files and also accept input from stdin or write to stdout.
