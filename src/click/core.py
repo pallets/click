@@ -1928,7 +1928,19 @@ class Group(Command):
         if cmd is None and not ctx.resilient_parsing:
             if _split_opt(cmd_name)[0]:
                 self.parse_args(ctx, args)
-            ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
+            from difflib import get_close_matches
+
+            available_commands = self.list_commands(ctx)
+            possibilities = get_close_matches(original_cmd_name, available_commands)
+            if possibilities:
+                possibility_str = ", ".join(sorted(possibilities))
+                ctx.fail(
+                    _("No such command {name!r}. Did you mean {possibility}?").format(
+                        name=original_cmd_name, possibility=possibility_str
+                    )
+                )
+            else:
+                ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
         return cmd_name if cmd else None, cmd, args[1:]
 
     def shell_complete(self, ctx: Context, incomplete: str) -> list[CompletionItem]:
