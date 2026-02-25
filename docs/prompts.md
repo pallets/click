@@ -3,8 +3,10 @@
 ```{currentmodule} click
 ```
 
-Click supports prompts in two different places. The first is automated prompts when the parameter handling happens, and
-the second is to ask for prompts at a later point independently.
+Click supports prompts in two places:
+
+- automatic prompts during parameter handling
+- manual prompts later in your command
 
 This can be accomplished with the {func}`prompt` function, which asks for valid input according to a type, or the
 {func}`confirm` function, which asks for confirmation (yes/no).
@@ -62,8 +64,7 @@ What it looks like:
     invoke(hello, input=['John'])
 ```
 
-It is advised that prompt not be used in conjunction with the multiple flag set to True. Instead, prompt in the function
-interactively.
+It is not recommended to use `prompt` with `multiple=True`. Prompt for those values manually inside the function instead.
 
 By default, the user will be prompted for an input if one was not passed through the command line. To turn this behavior
 off, see {ref}`optional-value`.
@@ -104,8 +105,7 @@ option's flag is given, instead of if the option is not provided at all.
     invoke(hello, args=["--name"], input="Prompt")
 ```
 
-If `required=True`, then the option will still prompt if it is not given, but it will also prompt if only the flag is
-given.
+If `required=True`, the option still prompts when omitted, and it also prompts when only the flag is provided.
 
 ## Confirmation Prompts
 
@@ -146,7 +146,7 @@ def hello(username):
     click.echo(f"Hello, {username}!")
 ```
 
-To describe what the default value will be, set it in ``show_default``.
+To describe the callable default in help output, set `show_default`.
 
 ```{eval-rst}
 .. click:example::
