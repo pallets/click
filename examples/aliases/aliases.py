@@ -27,7 +27,7 @@ class Config:
         parser.add_section("aliases")
         for key, value in self.aliases.items():
             parser.set("aliases", key, value)
-        with open(filename, "wb") as file:
+        with open(filename, "w", encoding="utf-8") as file:
             parser.write(file)
 
 
@@ -136,8 +136,16 @@ def status(config):
 @click.option(
     "--config_file", type=click.Path(exists=True, dir_okay=False), default="aliases.ini"
 )
-def alias(config, alias_, cmd, config_file):
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Show what would change without writing the config file.",
+)
+def alias(config, alias_, cmd, config_file, dry_run):
     """Adds an alias to the specified configuration file."""
+    if dry_run:
+        click.echo(f"Would add '{alias_}' as alias for '{cmd}' in '{config_file}'")
+        return
     config.add_alias(alias_, cmd)
     config.write_config(config_file)
     click.echo(f"Added '{alias_}' as alias for '{cmd}'")
