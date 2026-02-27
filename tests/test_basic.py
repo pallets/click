@@ -316,6 +316,12 @@ def test_flag_value_dual_options(runner, default, args, expected):
 
     Covers the regression reported in
     https://github.com/pallets/click/issues/3024#issuecomment-3146199461
+
+    .. hint::
+        Similar to ``test_options.py::test_default_dual_option_callback``.
+
+        ``test_defaults.py::test_shared_param_prefers_first_default``
+        is a smoke-test complement that exercises both default placements.
     """
 
     @click.command()
