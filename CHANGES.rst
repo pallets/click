@@ -13,6 +13,10 @@ Unreleased
     ``semver.Version``. :issue:`3298` :pr:`3299`
 -   Fix pager test pollution under parallel execution by using pytest's
     ``tmp_path`` fixture instead of a shared temporary file path. :pr:`3238`
+-   Patch ``pdb.Pdb`` in ``CliRunner`` isolation so ``pdb.set_trace()``,
+    ``breakpoint()``, and debuggers subclassing ``pdb.Pdb`` (ipdb, pdbpp) can
+    interact with the real terminal instead of the captured I/O streams.
+    :issue:`654` :issue:`824` :issue:`843` :pr:`951` :pr:`3235`
 
 Version 8.3.2
 -------------
