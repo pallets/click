@@ -13,6 +13,7 @@ repos:
     hooks:
       - id: check-merge-conflict
       - id: debug-statements
+        exclude: ^(src/click/testing\.py|tests/test_testing\.py)$
       - id: fix-byte-order-marker
       - id: trailing-whitespace
       - id: end-of-file-fixer
