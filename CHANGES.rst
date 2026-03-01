@@ -4,6 +4,14 @@ Unreleased
 
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084`
+-   Hide ``Sentinel.UNSET`` values as ``None`` when using ``lookup_default()``.
+    :issue:`3136` :pr:`3199` :pr:`3202` :pr:`3209` :pr:`3212` :pr:`3224`
+-   Prevent ``_NamedTextIOWrapper`` from closing streams owned by ``StreamMixer``.
+    :issue:`824` :issue:`2991` :issue:`2993` :issue:`3110` :pr:`3139` :pr:`3140`
+-   Add comprehensive tests for ``CliRunner`` stream lifecycle, covering
+    logging interaction, multi-threaded safety, and sequential invocation
+    isolation. Add high-iteration stress tests behind a ``stress`` marker
+    with a dedicated CI job. :pr:`3139`
 
 Version 8.3.1
 --------------

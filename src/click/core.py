@@ -706,14 +706,14 @@ class Context:
             Added the ``call`` parameter.
         """
         if self.default_map is not None:
-            value = self.default_map.get(name, UNSET)
+            value = self.default_map.get(name)
 
             if call and callable(value):
                 return value()
 
             return value
 
-        return UNSET
+        return None
 
     def fail(self, message: str) -> t.NoReturn:
         """Aborts the execution of the program with a specific error
@@ -2278,9 +2278,12 @@ class Parameter:
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
         """
-        value = ctx.lookup_default(self.name, call=False)  # type: ignore
+        name = self.name
+        value = ctx.lookup_default(name, call=False) if name is not None else None
 
-        if value is UNSET:
+        if value is None and not (
+            ctx.default_map is not None and name is not None and name in ctx.default_map
+        ):
             value = self.default
 
         if call and callable(value):
@@ -2321,8 +2324,10 @@ class Parameter:
                 source = ParameterSource.ENVIRONMENT
 
         if value is UNSET:
-            default_map_value = ctx.lookup_default(self.name)  # type: ignore
-            if default_map_value is not UNSET:
+            default_map_value = ctx.lookup_default(self.name)  # type: ignore[arg-type]
+            if default_map_value is not None or (
+                ctx.default_map is not None and self.name in ctx.default_map
+            ):
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
 

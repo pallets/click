@@ -223,6 +223,18 @@ def test_multiple_required(runner):
     ],
 )
 def test_good_defaults_for_multiple(runner, multiple, nargs, default, expected):
+    """Comprehensive check of default-value processing for options with
+    ``multiple=True`` and/or ``nargs > 1``.
+
+    .. hint::
+        An argument-specific equivalent is in
+        ``test_arguments.py::test_good_defaults_for_nargs``.
+
+        Smoke tests are in ``test_defaults.py``:
+        ``test_multiple_defaults`` (explicit ``type=FLOAT``)
+        and ``test_nargs_plus_multiple`` (``nargs=2``).
+    """
+
     @click.command()
     @click.option("-a", multiple=multiple, nargs=nargs, default=default)
     def cmd(a):
@@ -1533,6 +1545,12 @@ def test_default_dual_option_callback(runner, default, args, expected):
 
     Reproduction of the issue reported in
     https://github.com/pallets/click/pull/3030#discussion_r2271571819
+
+    .. hint::
+        Similar to ``test_basic.py::test_flag_value_dual_options``.
+
+        ``test_defaults.py::test_shared_param_prefers_first_default``
+        is a smoke-test complement that exercises both default placements.
     """
 
     def _my_func(ctx, param, value):
