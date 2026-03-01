@@ -1,6 +1,7 @@
 import pytest
 
 import click
+from click import UNPROCESSED
 
 
 @pytest.mark.parametrize(
@@ -309,3 +310,47 @@ def test_lookup_default_override_respected(runner):
     result = runner.invoke(cli, ["--help"], default_map=default_map)
     assert not result.exception
     assert "prefix@example.com" in result.output
+
+
+class _Marker:
+    """Dummy callable used as a flag_value in default tests."""
+
+    pass
+
+
+@pytest.mark.parametrize(
+    ("default_map", "args", "expected"),
+    [
+        # No default_map: auto-aligned default returns the class, not an instance.
+        (None, [], _Marker),
+        # CLI flag always returns the class.
+        (None, ["--opt"], _Marker),
+        # Static value in default_map overrides the auto-aligned flag_value.
+        ({"value": "from-map"}, [], "from-map"),
+        # Callable in default_map is still invoked (not suppressed by the fix).
+        ({"value": lambda: "lazy-map"}, [], "lazy-map"),
+        # None in default_map overrides the flag_value.
+        ({"value": None}, [], None),
+        # CLI arg wins over default_map.
+        ({"value": "from-map"}, ["--opt"], _Marker),
+    ],
+)
+def test_default_map_with_callable_flag_value(runner, default_map, args, expected):
+    """``default_map`` entries should override the auto-aligned callable ``flag_value``,
+    and callable entries in ``default_map`` should still be invoked.
+
+    Verifies the fix for https://github.com/pallets/click/issues/3121 does not
+    break ``default_map`` precedence.
+    """
+
+    @click.command()
+    @click.option("--opt", "value", flag_value=_Marker, type=UNPROCESSED, default=True)
+    def cli(value):
+        click.echo(repr(value), nl=False)
+
+    kwargs = {}
+    if default_map is not None:
+        kwargs["default_map"] = default_map
+    result = runner.invoke(cli, args, **kwargs)
+    assert result.exit_code == 0
+    assert result.output == repr(expected)
