@@ -596,6 +596,7 @@ def test_option_equals_completion(runner, shell, env, expect):
 
     Fixes https://github.com/pallets/click/issues/2847
     """
+
     @click.command("cli")
     @click.option("--color", type=click.Choice(["red", "green", "blue"]))
     def cli(color):
