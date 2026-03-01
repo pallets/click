@@ -559,3 +559,48 @@ def test_files_closed(runner) -> None:
             assert not current_warnings, "There should be no warnings to start"
             _get_completions(cli, args=[], incomplete="")
             assert not current_warnings, "There should be no warnings after either"
+
+
+@pytest.mark.parametrize(
+    ("shell", "env", "expect"),
+    [
+        # Test --option= format (issue #2847)
+        # When user types --color=<TAB>, completion should include --color= prefix
+        (
+            "bash",
+            {"COMP_WORDS": "cli --color=", "COMP_CWORD": "1"},
+            "plain,--color=red\nplain,--color=green\nplain,--color=blue\n",
+        ),
+        (
+            "bash",
+            {"COMP_WORDS": "cli --color=r", "COMP_CWORD": "1"},
+            "plain,--color=red\n",
+        ),
+        # Space format should still work without prefix
+        (
+            "bash",
+            {"COMP_WORDS": "cli --color ", "COMP_CWORD": "2"},
+            "plain,red\nplain,green\nplain,blue\n",
+        ),
+        # Zsh tests
+        (
+            "zsh",
+            {"COMP_WORDS": "cli --color=", "COMP_CWORD": "1"},
+            "plain\n--color=red\n_\nplain\n--color=green\n_\nplain\n--color=blue\n_\n",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_option_equals_completion(runner, shell, env, expect):
+    """Test that --option=value style completion works correctly.
+
+    Fixes https://github.com/pallets/click/issues/2847
+    """
+    @click.command("cli")
+    @click.option("--color", type=click.Choice(["red", "green", "blue"]))
+    def cli(color):
+        pass
+
+    env["_CLI_COMPLETE"] = f"{shell}_complete"
+    result = runner.invoke(cli, env=env)
+    assert result.output == expect

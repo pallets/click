@@ -296,7 +296,25 @@ class ShellComplete:
         completion.
         """
         args, incomplete = self.get_completion_args()
+
+        # Fix #2847: When completing ``--option=value`` style, the shell
+        # passes ``--option=partial`` as the incomplete value. After
+        # resolving completions, we need to prepend ``--option=`` to each
+        # completion so the shell replaces the whole token correctly.
+        option_prefix = ""
+        if "=" in incomplete:
+            name, _, _ = incomplete.partition("=")
+            if name.startswith("-"):
+                option_prefix = name + "="
+
         completions = self.get_completions(args, incomplete)
+
+        if option_prefix:
+            for item in completions:
+                # Only add prefix to values, not to option names
+                if not str(item.value).startswith("-"):
+                    item.value = option_prefix + str(item.value)
+
         out = [self.format_completion(item) for item in completions]
         return "\n".join(out)
 
