@@ -17,6 +17,10 @@ Unreleased
     ``breakpoint()``, and debuggers subclassing ``pdb.Pdb`` (ipdb, pdbpp) can
     interact with the real terminal instead of the captured I/O streams.
     :issue:`654` :issue:`824` :issue:`843` :pr:`951` :pr:`3235`
+-   Add optional randomized parallel test execution using ``pytest-randomly`` and
+    ``pytest-xdist`` to detect test pollution and race conditions. :pr:`3151`
+-   Add contributor documentation for running stress tests, randomized
+    parallel tests, and Flask smoke tests. :pr:`3151` :pr:`3177`
 
 Version 8.3.2
 -------------
