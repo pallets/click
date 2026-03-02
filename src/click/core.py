@@ -685,6 +685,20 @@ class Context:
             self.obj = rv = object_type()
         return rv
 
+    def _default_map_has(self, name: str | None) -> bool:
+        """Check if :attr:`default_map` contains a real value for ``name``.
+
+        Returns ``False`` when the key is absent, the map is ``None``,
+        ``name`` is ``None``, or the stored value is the internal
+        :data:`UNSET` sentinel.
+        """
+        return (
+            name is not None
+            and self.default_map is not None
+            and name in self.default_map
+            and self.default_map[name] is not UNSET
+        )
+
     @t.overload
     def lookup_default(
         self, name: str, call: t.Literal[True] = True
@@ -705,34 +719,17 @@ class Context:
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
         """
-        if self.default_map is not None:
-            value = self.default_map.get(name)
+        if not self._default_map_has(name):
+            return None
 
-            # Hide the UNSET sentinel from the caller, as it is an
-            # implementation detail. Treat it the same as "key not found".
-            if value is UNSET:
-                return None
+        # Assert to make the type checker happy.
+        assert self.default_map is not None
+        value = self.default_map[name]
 
-            if call and callable(value):
-                return value()
+        if call and callable(value):
+            return value()
 
-            return value
-
-        return None
-
-    def _default_map_has(self, name: str | None) -> bool:
-        """Check if :attr:`default_map` contains a real value for ``name``.
-
-        Returns ``False`` when the key is absent, the map is ``None``,
-        ``name`` is ``None``, or the stored value is the internal
-        :data:`UNSET` sentinel.
-        """
-        return (
-            name is not None
-            and self.default_map is not None
-            and name in self.default_map
-            and self.default_map[name] is not UNSET
-        )
+        return value
 
     def fail(self, message: str) -> t.NoReturn:
         """Aborts the execution of the program with a specific error
