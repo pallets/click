@@ -2336,7 +2336,7 @@ class Parameter:
             if default_map_value is not None or (
                 ctx.default_map is not None
                 and self.name in ctx.default_map
-                and ctx.default_map.get(self.name) is not UNSET
+                and ctx.default_map[self.name] is not UNSET  # type: ignore[index]
             ):
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
