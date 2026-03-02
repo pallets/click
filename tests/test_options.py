@@ -2464,6 +2464,38 @@ def test_custom_type_frozenset_flag_value(runner):
 
 
 @pytest.mark.parametrize(
+    ("default", "args", "expected"),
+    [
+        # default=None: 3-state pattern (e.g. Flask --reload/--no-reload).
+        # https://github.com/pallets/click/issues/3024
+        (None, [], None),
+        (None, ["--flag"], True),
+        (None, ["--no-flag"], False),
+        # default=True: literal value, not substituted with flag_value.
+        # https://github.com/pallets/click/issues/3111
+        (True, [], True),
+        (True, ["--flag"], True),
+        (True, ["--no-flag"], False),
+    ],
+)
+def test_bool_flag_pair_default(runner, default, args, expected):
+    """Boolean flag pairs pass ``default`` through literally.
+
+    Ensures ``default=True`` is not replaced by ``flag_value`` for boolean
+    flags, and that ``default=None`` enables 3-state logic.
+    """
+
+    @click.command()
+    @click.option("--flag/--no-flag", default=default)
+    def cli(flag):
+        click.echo(repr(flag), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
     ("flag_type", "args", "expect_output"),
     [
         (str, [], "Default\n"),
