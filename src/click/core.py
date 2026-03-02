@@ -2819,14 +2819,12 @@ class Option(Parameter):
             if self.default is UNSET and not self.required:
                 self.default = False
 
-        # Support the special case of aligning the default value with the flag_value
-        # for flags whose default is explicitly set to True. Note that as long as we
-        # have this condition, there is no way a flag can have a default set to True,
-        # and a flag_value set to something else. Refs:
+        # The alignement of default to the flag_value is resolved lazily in
+        # get_default() to prevent callable flag_values (like classes) from
+        # being instantiated. Refs:
+        # https://github.com/pallets/click/issues/3121
         # https://github.com/pallets/click/issues/3024#issuecomment-3146199461
         # https://github.com/pallets/click/pull/3030/commits/06847da
-        if self.default is True and self.flag_value is not UNSET:
-            self.default = self.flag_value
 
         # Set the default flag_value if it is not set.
         if self.flag_value is UNSET:
@@ -2889,6 +2887,22 @@ class Option(Parameter):
             hidden=self.hidden,
         )
         return info_dict
+
+    def get_default(
+        self, ctx: Context, call: bool = True
+    ) -> t.Any | t.Callable[[], t.Any] | None:
+        value = super().get_default(ctx, call=False)
+
+        # Lazily resolve default=True to flag_value. Doing this here
+        # (instead of eagerly in __init__) prevents callable flag_values
+        # (like classes) from being instantiated by the callable check below.
+        # https://github.com/pallets/click/issues/3121
+        if value is True and self.is_flag:
+            value = self.flag_value
+        elif call and callable(value):
+            value = value()
+
+        return value
 
     def get_error_hint(self, ctx: Context) -> str:
         result = super().get_error_hint(ctx)
