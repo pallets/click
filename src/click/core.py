@@ -708,6 +708,11 @@ class Context:
         if self.default_map is not None:
             value = self.default_map.get(name)
 
+            # Hide the UNSET sentinel from the caller, as it is an
+            # implementation detail. Treat it the same as "key not found".
+            if value is UNSET:
+                return None
+
             if call and callable(value):
                 return value()
 
@@ -2282,7 +2287,10 @@ class Parameter:
         value = ctx.lookup_default(name, call=False) if name is not None else None
 
         if value is None and not (
-            ctx.default_map is not None and name is not None and name in ctx.default_map
+            ctx.default_map is not None
+            and name is not None
+            and name in ctx.default_map
+            and ctx.default_map[name] is not UNSET
         ):
             value = self.default
 
@@ -2326,7 +2334,9 @@ class Parameter:
         if value is UNSET:
             default_map_value = ctx.lookup_default(self.name)  # type: ignore[arg-type]
             if default_map_value is not None or (
-                ctx.default_map is not None and self.name in ctx.default_map
+                ctx.default_map is not None
+                and self.name in ctx.default_map
+                and ctx.default_map.get(self.name) is not UNSET
             ):
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
