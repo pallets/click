@@ -720,6 +720,20 @@ class Context:
 
         return None
 
+    def _default_map_has(self, name: str | None) -> bool:
+        """Check if :attr:`default_map` contains a real value for ``name``.
+
+        Returns ``False`` when the key is absent, the map is ``None``,
+        ``name`` is ``None``, or the stored value is the internal
+        :data:`UNSET` sentinel.
+        """
+        return (
+            name is not None
+            and self.default_map is not None
+            and name in self.default_map
+            and self.default_map[name] is not UNSET
+        )
+
     def fail(self, message: str) -> t.NoReturn:
         """Aborts the execution of the program with a specific error
         message.
@@ -2286,12 +2300,7 @@ class Parameter:
         name = self.name
         value = ctx.lookup_default(name, call=False) if name is not None else None
 
-        if value is None and not (
-            ctx.default_map is not None
-            and name is not None
-            and name in ctx.default_map
-            and ctx.default_map[name] is not UNSET
-        ):
+        if value is None and not ctx._default_map_has(name):
             value = self.default
 
         if call and callable(value):
@@ -2333,11 +2342,7 @@ class Parameter:
 
         if value is UNSET:
             default_map_value = ctx.lookup_default(self.name)  # type: ignore[arg-type]
-            if default_map_value is not None or (
-                ctx.default_map is not None
-                and self.name in ctx.default_map
-                and ctx.default_map[self.name] is not UNSET  # type: ignore[index]
-            ):
+            if default_map_value is not None or ctx._default_map_has(self.name):
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
 
