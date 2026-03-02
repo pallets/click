@@ -1433,9 +1433,12 @@ def test_type_from_flag_value():
         ({"type": str, "flag_value": None}, [], None),
         ({"type": str, "flag_value": None}, ["--foo"], None),
         # Not passing --foo returns the default value as-is, in its Python type, then
-        # converted by the option type.
+        # converted by the option type. For boolean flags, default=True is a literal
+        # value, not a sentinel meaning "activate flag". So it is NOT substituted with
+        # flag_value. See: https://github.com/pallets/click/issues/3111
+        # https://github.com/pallets/click/pull/3239
         ({"type": bool, "default": True, "flag_value": True}, [], True),
-        ({"type": bool, "default": True, "flag_value": False}, [], False),
+        ({"type": bool, "default": True, "flag_value": False}, [], True),
         ({"type": bool, "default": False, "flag_value": True}, [], False),
         ({"type": bool, "default": False, "flag_value": False}, [], False),
         ({"type": bool, "default": None, "flag_value": True}, [], None),
