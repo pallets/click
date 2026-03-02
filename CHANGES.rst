@@ -14,6 +14,11 @@ Unreleased
     with a dedicated CI job. :pr:`3139`
 -   Fix callable ``flag_value`` being instantiated when used as a default via
     ``default=True``. :issue:`3121` :pr:`3201` :pr:`3213` :pr:`3225`
+-   Fix ``default=True`` with boolean ``flag_value`` always returning the
+    ``flag_value`` instead of ``True``. The ``default=True`` to ``flag_value``
+    substitution now only applies to non-boolean flags, where ``True`` acts as a
+    sentinel meaning "activate this flag by default". For boolean flags,
+    ``default=True`` is returned as a literal value. :issue:`3111` :pr:`3239`
 
 Version 8.3.1
 --------------

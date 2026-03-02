@@ -604,9 +604,13 @@ FLAG_VALUE_PROMPT_CASES = [
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "", True),
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "y", True),
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "n", False),
-    ({"prompt": True, "default": True, "flag_value": False}, [], "[y/N]", "", False),
-    ({"prompt": True, "default": True, "flag_value": False}, [], "[y/N]", "y", True),
-    ({"prompt": True, "default": True, "flag_value": False}, [], "[y/N]", "n", False),
+    # For boolean flags, default=True is a literal value, not a sentinel meaning
+    # "activate flag", so the prompt shows [Y/n] with default=True. See:
+    # https://github.com/pallets/click/issues/3111
+    # https://github.com/pallets/click/pull/3239
+    ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "", True),
+    ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "y", True),
+    ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "n", False),
     # default=False
     ({"prompt": True, "default": False, "flag_value": True}, [], "[y/N]", "", False),
     ({"prompt": True, "default": False, "flag_value": True}, [], "[y/N]", "y", True),
