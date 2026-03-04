@@ -101,21 +101,55 @@ class StreamMixer:
 
 
 class _NamedTextIOWrapper(io.TextIOWrapper):
+    """A :class:`~io.TextIOWrapper` with custom ``name`` and ``mode``
+    that does not close its underlying buffer.
+
+    An optional ``original_fd`` preserves the file descriptor of the
+    stream being replaced, so that C-level consumers that call
+    :meth:`fileno` (``faulthandler``, ``subprocess``, ...) still work.
+    Inspired by pytest's ``capsys``/``capfd`` split: see :doc:`/testing`
+    for details.
+
+    .. versionchanged:: 8.3.3
+        Added ``original_fd`` parameter and :meth:`fileno` override.
+    """
+
     def __init__(
-        self, buffer: t.BinaryIO, name: str, mode: str, **kwargs: t.Any
+        self,
+        buffer: t.BinaryIO,
+        name: str,
+        mode: str,
+        *,
+        original_fd: int = -1,
+        **kwargs: t.Any,
     ) -> None:
         super().__init__(buffer, **kwargs)
         self._name = name
         self._mode = mode
+        self._original_fd = original_fd
 
     def close(self) -> None:
-        """
-        The buffer this object contains belongs to some other object, so
-        prevent the default __del__ implementation from closing that buffer.
+        """The buffer this object contains belongs to some other object,
+        so prevent the default ``__del__`` implementation from closing
+        that buffer.
 
         .. versionadded:: 8.3.2
         """
-        ...
+
+    def fileno(self) -> int:
+        """Return the file descriptor of the original stream, if one was
+        provided at construction time.
+
+        This allows C-level consumers (``faulthandler``, ``subprocess``,
+        signal handlers, ...) to obtain a valid fd without crashing, even
+        though the Python-level writes are redirected to an in-memory
+        buffer.
+
+        .. versionadded:: 8.3.3
+        """
+        if self._original_fd >= 0:
+            return self._original_fd
+        return super().fileno()
 
     @property
     def name(self) -> str:
@@ -321,6 +355,20 @@ class CliRunner:
 
         stream_mixer = StreamMixer()
 
+        # Preserve the original file descriptors so that C-level
+        # consumers (faulthandler, subprocess, etc.) can still obtain a
+        # valid fd from the redirected streams. The original streams
+        # may themselves lack a fileno() (e.g. when CliRunner is used
+        # inside pytest's capsys), so we fall back to -1.
+        def _safe_fileno(stream: t.IO[t.Any]) -> int:
+            try:
+                return stream.fileno()
+            except (AttributeError, io.UnsupportedOperation):
+                return -1
+
+        old_stdout_fd = _safe_fileno(old_stdout)
+        old_stderr_fd = _safe_fileno(old_stderr)
+
         if self.echo_stdin:
             bytes_input = echo_input = t.cast(
                 t.BinaryIO, EchoingStdin(bytes_input, stream_mixer.stdout)
@@ -336,7 +384,11 @@ class CliRunner:
             text_input._CHUNK_SIZE = 1  # type: ignore
 
         sys.stdout = _NamedTextIOWrapper(
-            stream_mixer.stdout, encoding=self.charset, name="<stdout>", mode="w"
+            stream_mixer.stdout,
+            encoding=self.charset,
+            name="<stdout>",
+            mode="w",
+            original_fd=old_stdout_fd,
         )
 
         sys.stderr = _NamedTextIOWrapper(
@@ -345,6 +397,7 @@ class CliRunner:
             name="<stderr>",
             mode="w",
             errors="backslashreplace",
+            original_fd=old_stderr_fd,
         )
 
         @_pause_echo(echo_input)  # type: ignore

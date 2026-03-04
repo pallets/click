@@ -1,3 +1,4 @@
+import faulthandler
 import os
 import pdb
 import sys
@@ -519,3 +520,28 @@ def test_pdb_init_restored_after_invoke():
     runner.invoke(cli)
 
     assert pdb.Pdb.__init__ is original
+
+
+def test_faulthandler_enable(runner):
+    """``faulthandler.enable()`` inside ``CliRunner`` should not crash with
+    ``io.UnsupportedOperation: fileno``.
+
+    ``faulthandler.enable()`` needs a real OS file descriptor to register
+    its signal handler. ``CliRunner`` replaces ``sys.stderr`` with a
+    ``BytesIO`` wrapper that has no ``fileno()``, causing the call to fail.
+
+    Reproduce:https://github.com/pallets/click/issues/2865
+    """
+
+    @click.command()
+    @click.option("--flag", type=bool, default=True)
+    def cli(flag):
+        click.echo("Executing main function...")
+        if flag:
+            click.echo("Registering faulthandler")
+            faulthandler.enable()
+        click.echo("Finished executing main function.")
+
+    result = runner.invoke(cli, ["--flag", True])
+    assert result.exit_code == 0, result.output
+    assert "Finished executing main function." in result.output
