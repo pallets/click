@@ -367,7 +367,21 @@ class ProgressBar(t.Generic[V]):
 
 
 def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
-    """Decide what method to use for paging through text."""
+    """Decide what method to use for paging through text.
+
+    The ``PAGER`` environment variable is split into an ``argv`` list with
+    :func:`shlex.split` in its default POSIX mode so that quotes are
+    stripped from tokens and quoted Windows paths are preserved.
+
+    .. note::
+        ``posix=False`` `was considered but rejected
+        <https://github.com/pallets/click/pull/1477#issuecomment-620231711>`_
+        because it retains quote characters in tokens. The
+        :func:`shlex.quote` approach was also reverted in :pr:`1543`.
+
+    .. seealso::
+        :issue:`1026`, :pr:`1477` and :pr:`2775`.
+    """
     stdout = _default_text_stdout()
 
     # There are no standard streams attached to write to. For example,
@@ -378,8 +392,7 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
     if not isatty(sys.stdin) or not isatty(stdout):
         return _nullpager(stdout, generator, color)
 
-    # Split and normalize the pager command into parts.
-    pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""), posix=False)
+    pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""))
     if pager_cmd_parts:
         if WIN:
             if _tempfilepager(generator, pager_cmd_parts, color):
@@ -411,11 +424,24 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
 def _pipepager(
     generator: cabc.Iterable[str], cmd_parts: list[str], color: bool | None
 ) -> bool:
-    """Page through text by feeding it to another program. Invoking a
-    pager through this might support colors.
+    """Page through text by feeding it to another program.
 
-    Returns `True` if the command was found, `False` otherwise and thus another
-    pager should be attempted.
+    Invokes the pager via :class:`subprocess.Popen` with an ``argv`` list
+    produced by :func:`shlex.split`. The command is resolved to an absolute
+    path with :func:`shutil.which` as recommended by the
+    :mod:`subprocess` docs for Windows compatibility.
+
+    Invoking a pager through this might support colors: if piping to
+    ``less`` and the user hasn't decided on colors, ``LESS=-R`` is set
+    automatically.
+
+    Returns ``True`` if the command was found and executed, ``False``
+    otherwise so another pager can be attempted.
+
+    .. seealso::
+        :pr:`2775` improved error handling: :exc:`BrokenPipeError` is
+        caught specifically, generator exceptions terminate the pager, and
+        ``stdin.close()`` is always called in a ``finally`` block.
     """
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
@@ -509,8 +535,13 @@ def _tempfilepager(
 ) -> bool:
     """Page through text by invoking a program on a temporary file.
 
-    Returns `True` if the command was found, `False` otherwise and thus another
-    pager should be attempted.
+    Used as the primary pager strategy on Windows (where piping to
+    ``more`` adds spurious ``\\r\\n``), and as a fallback on other
+    platforms. The command is resolved to an absolute path with
+    :func:`shutil.which`.
+
+    Returns ``True`` if the command was found and executed, ``False``
+    otherwise so another pager can be attempted.
     """
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
@@ -592,6 +623,15 @@ class Editor:
         return "vi"
 
     def edit_files(self, filenames: cabc.Iterable[str]) -> None:
+        """Open files in the user's editor.
+
+        The editor command is split into an ``argv`` list with
+        :func:`shlex.split` in POSIX mode; see :func:`pager` for rationale.
+
+        .. seealso::
+            :issue:`1026` and :pr:`1477`.
+        """
+        import shlex
         import subprocess
 
         editor = self.get_editor()
@@ -601,11 +641,10 @@ class Editor:
             environ = os.environ.copy()
             environ.update(self.env)
 
-        exc_filename = " ".join(f'"{filename}"' for filename in filenames)
-
         try:
             c = subprocess.Popen(
-                args=f"{editor} {exc_filename}", env=environ, shell=True
+                args=shlex.split(editor) + list(filenames),
+                env=environ,
             )
             exit_code = c.wait()
             if exit_code != 0:
@@ -753,8 +792,6 @@ def _translate_ch_to_exc(ch: str) -> None:
 
     if ch == "\x1a" and WIN:  # Windows, Ctrl+Z
         raise EOFError()
-
-    return None
 
 
 if sys.platform == "win32":
