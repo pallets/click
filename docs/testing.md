@@ -196,3 +196,24 @@ def test_prompts():
 Prompts will be emulated so they write the input data to
 the output stream as well. If hidden input is expected then this
 does not happen.
+
+## Shell Completion
+
+For testing completion suggestions, use {class}`click.shell_completion.ShellComplete`
+to call the completion engine directly.
+
+```{code-block} python
+:caption: test_completion.py
+
+from click.shell_completion import ShellComplete
+from myapp import cli
+
+def _get_completion_values(command, args, incomplete):
+    complete = ShellComplete(command, {}, command.name, "_CLICK_COMPLETE")
+    return [item.value for item in complete.get_completions(args, incomplete)]
+
+def test_option_completion():
+    assert "--env-file" in _get_completion_values(cli, [], "--env")
+```
+
+This pattern is the same approach used by Click's own shell completion tests.
