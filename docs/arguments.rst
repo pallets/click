@@ -7,8 +7,8 @@ Arguments
 
 Arguments are:
 
-*   Are positional in nature.
-*   Similar to a limited version of :ref:`options <options>` that can take an arbitrary number of inputs
+*   Positional by nature.
+*   Similar to a limited version of :ref:`options <options>` that can take an arbitrary number of inputs.
 *   :ref:`Documented manually <documenting-arguments>`.
 
 Useful and often used kwargs are:
@@ -42,12 +42,19 @@ An argument may be assigned a :ref:`parameter type <parameter-types>`. If no typ
 
 .. admonition:: Note on Required Arguments
 
-   It is possible to make an argument required by setting ``required=True``.  It is not recommended since we think command line tools should gracefully degrade into becoming no ops.  We think this because command line tools are often invoked with wildcard inputs and they should not error out if the wildcard is empty.
+   Arguments are required by default when ``nargs > 0`` and no ``default`` is set.
+   To make an argument optional, provide a ``default`` value or set ``required=False``.
+
+   For commands that commonly use wildcard inputs, consider optional arguments so
+   missing matches can gracefully become a no-op.
 
 Multiple Arguments
 -----------------------------------
 
-To set the number of argument use the ``nargs`` kwarg. It can be set to any positive integer and -1. Setting it to -1, makes the number of arguments arbitrary (which is called variadic) and can only be used once. The arguments are then packed as a tuple and passed to the function.
+To set the number of arguments, use the ``nargs`` kwarg. It can be set to any
+positive integer or ``-1``. Setting it to ``-1`` makes the number of arguments
+arbitrary (which is called variadic) and can only be used once. The arguments
+are then packed as a tuple and passed to the function.
 
 .. click:example::
 
@@ -67,7 +74,9 @@ And from the command line:
 
 .. admonition:: Note on Handling Files
 
-    This is not how you should handle files and files paths. This merely used as a simple example. See :ref:`handling-files` to learn more about how to handle files in parameters.
+    This is not how you should handle files and file paths. This is merely a
+    simple example. See :ref:`handling-files` to learn more about how to handle
+    files in parameters.
 
 Argument Escape Sequences
 ---------------------------
@@ -91,7 +100,8 @@ And from the command line:
 
     invoke(touch, ['--', '-foo.txt', 'bar.txt'])
 
-If you don't like the ``--`` marker, you can set ignore_unknown_options to True to avoid checking unknown options:
+If you don't like the ``--`` marker, you can set
+``ignore_unknown_options=True`` to avoid checking unknown options:
 
 .. click:example::
 
