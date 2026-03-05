@@ -26,6 +26,9 @@ Unreleased
     via ``fileno()``, so that ``faulthandler``, ``subprocess``, and other
     C-level consumers no longer crash with ``io.UnsupportedOperation``.
     :issue:`2865`
+-   Change :class:`ParameterSource` to an :class:`~enum.IntEnum` and reorder
+    its members from most to least explicit, so values can be compared to
+    check whether a parameter was explicitly provided. :issue:`2879` :pr:`3248`
 
 Version 8.3.2
 -------------
