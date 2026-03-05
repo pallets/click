@@ -1,4 +1,5 @@
 import faulthandler
+import io
 import os
 import pdb
 import sys
@@ -522,26 +523,191 @@ def test_pdb_init_restored_after_invoke():
     assert pdb.Pdb.__init__ is original
 
 
-def test_faulthandler_enable(runner):
-    """``faulthandler.enable()`` inside ``CliRunner`` should not crash with
-    ``io.UnsupportedOperation: fileno``.
+needs_fd_capture = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="fd capture not supported on Windows",
+)
 
-    ``faulthandler.enable()`` needs a real OS file descriptor to register
-    its signal handler. ``CliRunner`` replaces ``sys.stderr`` with a
-    ``BytesIO`` wrapper that has no ``fileno()``, causing the call to fail.
 
-    Reproduce:https://github.com/pallets/click/issues/2865
+def test_capture_invalid_mode():
+    """Invalid capture mode raises ValueError."""
+    with pytest.raises(ValueError, match="capture"):
+        CliRunner(capture="invalid")  # type: ignore[arg-type]
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows-only test")
+def test_capture_fd_windows_error():
+    """fd capture raises ValueError on Windows."""
+    with pytest.raises(ValueError, match="not supported on Windows"):
+        CliRunner(capture="fd")
+
+
+@needs_fd_capture
+def test_capture_fd_os_write():
+    """capture='fd' captures writes to fd 1/2 that bypass sys.stdout."""
+
+    @click.command()
+    def cli():
+        click.echo("python stdout")
+        os.write(1, b"fd stdout\n")
+        os.write(2, b"fd stderr\n")
+
+    runner = CliRunner(capture="fd")
+    result = runner.invoke(cli)
+    assert "python stdout" in result.stdout
+    assert "fd stdout" in result.stdout
+    assert "fd stderr" in result.stderr
+
+
+@needs_fd_capture
+def test_capture_fd_stale_reference():
+    """capture='fd' captures writes from stale stdout references (issue #2874).
+
+    Simulates ``from sys import stdout`` at import time, which grabs
+    the real stdout connected to fd 1.  The stale object's underlying
+    FileIO uses fd 1, so redirecting fd 1 captures its writes.
+    """
+    # open(1, ..., closefd=False) creates a writer whose underlying
+    # FileIO uses fd 1 directly. This mirrors the real scenario:
+    # the original sys.stdout is a TextIOWrapper -> BufferedWriter ->
+    # FileIO(fd=1).
+    stale_stdout = open(1, "w", closefd=False)  # noqa: SIM115
+
+    @click.command()
+    def cli():
+        stale_stdout.write("stale write\n")
+        stale_stdout.flush()
+        click.echo("normal write")
+
+    runner = CliRunner(capture="fd")
+    result = runner.invoke(cli)
+    assert "normal write" in result.stdout
+    assert "stale write" in result.stdout
+
+
+@needs_fd_capture
+def test_capture_fd_logging_handler(tmp_path):
+    """capture='fd' captures logging output from a handler holding a stale
+    stderr reference (issue #2827).
+
+    stdlib logging.StreamHandler grabs sys.stderr at configuration time.
+    Under normal CliRunner (sys-level capture), the handler still writes
+    to the original stream object and output is lost. fd-level capture
+    redirects the underlying file descriptor, so the writes are captured.
+    """
+    import logging
+
+    # Create a writer backed by the real fd 2, simulating a handler
+    # configured at import time before pytest or CliRunner replaced
+    # sys.stderr. open(2, closefd=False) mirrors the real scenario:
+    # the original sys.stderr is a TextIOWrapper -> BufferedWriter ->
+    # FileIO(fd=2).
+    stale_stderr = open(2, "w", closefd=False)  # noqa: SIM115
+    handler = logging.StreamHandler(stale_stderr)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+
+    logger = logging.getLogger(f"click_test_{tmp_path.name}")
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+    @click.command()
+    def cli():
+        logger.info("log from stale handler")
+        click.echo("normal echo")
+
+    # sys-level capture misses the log line (it bypasses sys.stderr).
+    runner_sys = CliRunner(capture="sys")
+    result_sys = runner_sys.invoke(cli)
+    assert "normal echo" in result_sys.output
+    assert "log from stale handler" not in result_sys.output
+
+    # fd-level capture catches it by redirecting fd 2.
+    runner_fd = CliRunner(capture="fd")
+    result_fd = runner_fd.invoke(cli)
+    assert "normal echo" in result_fd.output
+    assert "log from stale handler" in result_fd.output
+
+    logger.removeHandler(handler)
+
+
+@needs_fd_capture
+def test_capture_fd_faulthandler():
+    """faulthandler.enable() works with capture='fd' (issue #2865)."""
+
+    @click.command()
+    def cli():
+        faulthandler.enable()
+        click.echo("after faulthandler")
+
+    runner = CliRunner(capture="fd")
+    result = runner.invoke(cli)
+    assert result.exit_code == 0
+    assert "after faulthandler" in result.output
+
+
+def test_capture_sys_fileno_raises():
+    """capture='sys' leaves fileno() raising UnsupportedOperation, so user
+    code that does ``os.dup2(w, sys.stdout.fileno())`` cannot mutate the host
+    runner's stdout (issue #3384).
     """
 
     @click.command()
-    @click.option("--flag", type=bool, default=True)
-    def cli(flag):
-        click.echo("Executing main function...")
-        if flag:
-            click.echo("Registering faulthandler")
-            faulthandler.enable()
-        click.echo("Finished executing main function.")
+    def cli():
+        with pytest.raises(io.UnsupportedOperation):
+            sys.stdout.fileno()
+        with pytest.raises(io.UnsupportedOperation):
+            sys.stderr.fileno()
+        click.echo("ok")
 
-    result = runner.invoke(cli, ["--flag", True])
+    runner = CliRunner(capture="sys")
+    result = runner.invoke(cli)
     assert result.exit_code == 0, result.output
-    assert "Finished executing main function." in result.output
+    assert "ok" in result.stdout
+
+
+@needs_fd_capture
+def test_capture_fd_stderr_separation():
+    """capture='fd' properly separates fd-level stdout and stderr."""
+
+    @click.command()
+    def cli():
+        click.echo("py-out")
+        click.echo("py-err", err=True)
+        os.write(1, b"fd-out\n")
+        os.write(2, b"fd-err\n")
+
+    runner = CliRunner(capture="fd")
+    result = runner.invoke(cli)
+    assert "py-out" in result.stdout
+    assert "fd-out" in result.stdout
+    assert "py-err" in result.stderr
+    assert "fd-err" in result.stderr
+    # Mixed output has all of them
+    assert "py-out" in result.output
+    assert "py-err" in result.output
+    assert "fd-out" in result.output
+    assert "fd-err" in result.output
+
+
+@needs_fd_capture
+def test_capture_fd_nesting():
+    """Nested CliRunner.invoke() with fd capture works correctly."""
+
+    @click.command("inner")
+    def inner_cli():
+        click.echo("inner")
+
+    @click.command("outer")
+    def outer_cli():
+        click.echo("outer")
+        os.write(1, b"outer fd\n")
+        inner_runner = CliRunner(capture="fd")
+        inner_result = inner_runner.invoke(inner_cli)
+        click.echo(f"inner captured: {inner_result.stdout.strip()}")
+
+    runner = CliRunner(capture="fd")
+    result = runner.invoke(outer_cli)
+    assert "outer" in result.stdout
+    assert "outer fd" in result.stdout
+    assert "inner captured: inner" in result.stdout
