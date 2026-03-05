@@ -57,6 +57,18 @@ Unreleased
     ``hide_input=True`` fails validation, instead of always showing a
     generic message. Built-in type messages mask the input value.
     :issue:`2809` :pr:`3256`
+-   Add ``capture`` parameter to :class:`CliRunner` with two modes: ``sys``
+    (default) and ``fd``. ``fd`` redirects file descriptors ``1`` and ``2``
+    via :func:`os.dup2` so output that bypasses ``sys.stdout`` (stale stream
+    references, C extensions, subprocesses, ``faulthandler``) is captured
+    with proper isolation. :issue:`854` :issue:`2412` :issue:`2468`
+    :issue:`2497` :issue:`2761` :issue:`2827` :issue:`2865`
+-   Revert the ``8.3.3`` change that exposed the original file descriptor
+    via ``fileno()`` on the redirected ``CliRunner`` streams in the default
+    capture mode. ``os.dup2(w, sys.stdout.fileno())`` calls inside a CLI no
+    longer mutate the host runner's stdout, which broke Pytest's ``fd``-level
+    capture teardown. C-level consumers that need a real ``fd`` should use
+    ``capture="fd"``. :issue:`3384` :pr:`3391`
 
 Version 8.3.3
 -------------
