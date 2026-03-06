@@ -458,6 +458,7 @@ def _pipepager(
         env=env,
         errors="replace",
         text=True,
+        bufsize=1,
     )
     assert c.stdin is not None
     try:
