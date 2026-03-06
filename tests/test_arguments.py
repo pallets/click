@@ -136,6 +136,22 @@ def test_path_allow_dash(runner):
     assert result.exit_code == 0
 
 
+def test_path_allow_dash_no_bytes_warning(runner):
+    """Path with allow_dash should not compare str against bytes."""
+    import warnings
+
+    @click.command()
+    @click.argument("input", type=click.Path(allow_dash=True))
+    def foo(input):
+        click.echo(input)
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", BytesWarning)
+        result = runner.invoke(foo, ["-"])
+    assert result.exit_code == 0
+    assert result.output == "-\n"
+
+
 def test_file_atomics(runner):
     @click.command()
     @click.argument("output", type=click.File("wb", atomic=True))
