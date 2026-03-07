@@ -4,6 +4,8 @@ Unreleased
 
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084`
+-   Fix error message for unrecognized multicharacter short options (e.g. ``-dbg``)
+    to report the full option name instead of just the first character. :issue:`2779`
 
 Version 8.3.1
 --------------

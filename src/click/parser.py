@@ -490,7 +490,17 @@ class _OptionParser:
             # short option code and will instead raise the no option
             # error.
             if arg[:2] not in self._opt_prefixes:
-                self._match_short_opt(arg, state)
+                try:
+                    self._match_short_opt(arg, state)
+                except NoSuchOption as e:
+                    # If the short option parser fails on the very first
+                    # character, the original argument is likely a
+                    # multicharacter short option (e.g. ``-dbg``) that
+                    # wasn't found, so report the full original option
+                    # name instead of just the first character.
+                    if e.option_name == f"{arg[0]}{arg[1]}":
+                        raise NoSuchOption(long_opt, ctx=self.ctx) from None
+                    raise
                 return
 
             if not self.ignore_unknown_options:
