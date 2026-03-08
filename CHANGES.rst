@@ -4,6 +4,9 @@ Unreleased
 
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084`
+-   Fix unknown-option error reporting for malformed multi-character options
+    with a single-character prefix so ``-dbgwrong`` reports ``-dbg`` instead of
+    ``-d`` when ``-dbg`` exists. :issue:`2779`
 
 Version 8.3.1
 --------------
