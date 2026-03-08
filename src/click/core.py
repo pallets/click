@@ -2814,20 +2814,14 @@ class Option(Parameter):
             if self.default is UNSET and not self.required:
                 self.default = False
 
-        # Support the special case of aligning the default value with the
-        # flag_value for flags whose default is explicitly set to True.
-        #
-        # However, when using a *negative* boolean flag (``flag_value=False``) with an
-        # explicit ``default=True``, users generally expect the default to be preserved
-        # (meaning "enabled unless the flag is passed").
-        #
-        # Refs:
+        # Support the special case of aligning the default value with the flag_value
+        # for flags whose default is explicitly set to True. Note that as long as we
+        # have this condition, there is no way a flag can have a default set to True,
+        # and a flag_value set to something else. Refs:
         # https://github.com/pallets/click/issues/3024#issuecomment-3146199461
         # https://github.com/pallets/click/pull/3030/commits/06847da
-        # https://github.com/pallets/click/issues/3111
         if self.default is True and self.flag_value is not UNSET:
-            if not (self.is_bool_flag and self.flag_value is False):
-                self.default = self.flag_value
+            self.default = self.flag_value
 
         # Set the default flag_value if it is not set.
         if self.flag_value is UNSET:

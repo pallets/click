@@ -360,6 +360,14 @@ is equivalent to:
 ```
 
 Because the two are equivalent, it is recommended to always use the second form, and set `default` to the actual value you want to pass. And not use the special `True` case. This makes the code more explicit and predictable.
+
+If you're trying to create a *negative* boolean flag like `--without-xyz` that disables something that is otherwise enabled, prefer the flag/no-flag form instead:
+
+```python
+@click.option("--xyz/--no-xyz", default=True)
+```
+
+A single "negative" flag with `flag_value=False, default=True` will be treated as "activated by default" and therefore defaults to its `flag_value`.
 ````
 
 ## Values from Environment Variables
