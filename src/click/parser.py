@@ -490,8 +490,22 @@ class _OptionParser:
             # short option code and will instead raise the no option
             # error.
             if arg[:2] not in self._opt_prefixes:
-                self._match_short_opt(arg, state)
-                return
+                try:
+                    self._match_short_opt(arg, state)
+                    return
+                except NoSuchOption:
+                    # Preserve the longest known option prefix in errors for
+                    # multi-character options with a single-character prefix.
+                    possible_opt = max(
+                        (opt for opt in self._long_opt if arg.startswith(opt)),
+                        key=len,
+                        default=None,
+                    )
+
+                    if possible_opt is not None:
+                        raise NoSuchOption(possible_opt, ctx=self.ctx) from None
+
+                    raise
 
             if not self.ignore_unknown_options:
                 raise
