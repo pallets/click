@@ -155,6 +155,7 @@ def test_unknown_option_for_multichar_short_option(runner):
     assert "No such option: -dbg" in result.output
     assert "No such option: -d" not in result.output
 
+
 @pytest.mark.parametrize(
     ("value", "expect"),
     [
