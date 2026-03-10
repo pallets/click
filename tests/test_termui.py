@@ -710,3 +710,58 @@ def test_flag_value_prompt(
         assert result.output == expected_output
         assert not result.stderr
         assert result.exit_code == 0 if expected not in (REPEAT, INVALID) else 1
+
+
+class _CustomTypeNoValue(click.ParamType):
+    name = "custom"
+
+    def convert(self, value, param, ctx):
+        if len(value) < 4:
+            self.fail("Password must be at least 4 characters", param, ctx)
+        return value
+
+
+class _CustomTypeWithRawValue(click.ParamType):
+    name = "custom_raw"
+
+    def convert(self, value, param, ctx):
+        if value == "bad":
+            self.fail(f"rejected: {value}", param, ctx)
+        return value
+
+
+@pytest.mark.parametrize(
+    ("type", "expected_fragment", "unexpected_fragment"),
+    [
+        pytest.param(
+            click.INT,
+            "'***' is not a valid integer",
+            "bad",
+            id="builtin-int-masks-repr-value",
+        ),
+        pytest.param(
+            _CustomTypeNoValue(),
+            "Password must be at least 4 characters",
+            None,
+            id="custom-no-value-shows-message",
+        ),
+        pytest.param(
+            _CustomTypeWithRawValue(),
+            "The value you entered was invalid",
+            "bad",
+            id="custom-raw-value-falls-back-to-generic",
+        ),
+    ],
+)
+def test_hide_input_error_message(runner, type, expected_fragment, unexpected_fragment):
+    """https://github.com/pallets/click/issues/2809"""
+
+    @click.command()
+    @click.option("--password", prompt=True, hide_input=True, type=type)
+    def cli(password):
+        click.echo(password)
+
+    result = runner.invoke(cli, input="bad")
+    assert expected_fragment in result.output
+    if unexpected_fragment is not None:
+        assert unexpected_fragment not in result.output

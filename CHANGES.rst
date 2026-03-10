@@ -2,6 +2,10 @@
 
 Unreleased
 
+-   Show custom error messages from types when ``prompt`` with
+    ``hide_input=True`` fails validation, instead of always showing a
+    generic message. Built-in type messages mask the input value.
+    :issue:`2809`
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084`
 -   Hide ``Sentinel.UNSET`` values as ``None`` when using ``lookup_default()``.
