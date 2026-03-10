@@ -401,6 +401,20 @@ class _OptionParser:
                 if self.ignore_unknown_options:
                     unknown_options.append(ch)
                     continue
+
+                multi_short_opt = max(
+                    (
+                        short_opt
+                        for short_opt in self._short_opt
+                        if len(short_opt) > 2 and arg.startswith(short_opt)
+                    ),
+                    key=len,
+                    default=None,
+                )
+
+                if multi_short_opt is not None:
+                    raise NoSuchOption(multi_short_opt, ctx=self.ctx)
+
                 raise NoSuchOption(opt, ctx=self.ctx)
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
@@ -483,6 +497,19 @@ class _OptionParser:
         try:
             self._match_long_opt(norm_long_opt, explicit_value, state)
         except NoSuchOption:
+            single_prefix_long_opt = max(
+                (
+                    opt
+                    for opt in self._long_opt
+                    if len(opt) > 2 and opt[1] not in self._opt_prefixes and arg.startswith(opt)
+                ),
+                key=len,
+                default=None,
+            )
+
+            if single_prefix_long_opt is not None:
+                raise NoSuchOption(single_prefix_long_opt, ctx=self.ctx)
+
             # At this point the long option matching failed, and we need
             # to try with short options.  However there is a special rule
             # which says, that if we have a two character options prefix
