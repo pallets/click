@@ -501,7 +501,9 @@ class _OptionParser:
                 (
                     opt
                     for opt in self._long_opt
-                    if len(opt) > 2 and opt[1] not in self._opt_prefixes and arg.startswith(opt)
+                    if len(opt) > 2
+                    and opt[1] not in self._opt_prefixes
+                    and arg.startswith(opt)
                 ),
                 key=len,
                 default=None,
