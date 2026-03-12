@@ -1223,6 +1223,19 @@ class Command:
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
 
+        # When multiple parameters target the same name (dest), the parser
+        # stores only the last-written value. To ensure the last-invoked
+        # parameter on the command line takes priority during processing,
+        # keep only the last invocation per name in param_order. Earlier
+        # invocations will process as uninvoked (falling through to
+        # defaults), and the existing guard in handle_parse_result
+        # prevents them from overwriting the winning value.
+        # Refs: https://github.com/pallets/click/issues/2786
+        last_for_name: dict[str | None, Parameter] = {}
+        for param in param_order:
+            last_for_name[param.name] = param
+        param_order = [p for p in param_order if last_for_name.get(p.name) is p]
+
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
             _, args = param.handle_parse_result(ctx, opts, args)
 

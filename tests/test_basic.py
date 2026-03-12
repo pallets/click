@@ -328,6 +328,45 @@ def test_flag_value_dual_options(runner, default, args, expected):
     assert result.output == repr(expected)
 
 
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    (
+        # --fetch alone: callback transforms sentinel to fetched value.
+        (["--fetch"], "foo"),
+        # --custom alone: value passed through as-is.
+        (["--custom", "bar"], "bar"),
+        # --custom first, --fetch last: last option wins, callback runs.
+        (["--custom", "bar", "--fetch"], "foo"),
+        # --fetch first, --custom last: last option wins.
+        (["--fetch", "--custom", "bar"], "bar"),
+        # Neither specified: default is None.
+        ([], None),
+    ),
+)
+def test_dual_option_callback_last_wins(runner, args, expected):
+    """When two options share a dest and one has a callback, the last
+    option specified on the command line should win.
+
+    Regression test for https://github.com/pallets/click/issues/2786
+    """
+    SENTINEL = "$_fetch"
+
+    def callback(ctx, param, value):
+        if value is SENTINEL:
+            return "foo"
+        return value
+
+    @click.command()
+    @click.option("--custom", "custom")
+    @click.option("--fetch", "custom", flag_value=SENTINEL, callback=callback)
+    def cli(custom):
+        click.echo(repr(custom), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert result.output == repr(expected)
+
+
 def test_file_option(runner):
     @click.command()
     @click.option("--file", type=click.File("w"))
