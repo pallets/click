@@ -29,7 +29,7 @@ value has been fully converted.
 
 Generally, the order of invocation is driven by the order in which the user
 provides the arguments to the script; if there is an option called `--foo`
-and an option called `--bar` and the user calls it as `--bar --foo`, then 
+and an option called `--bar` and the user calls it as `--bar --foo`, then
 the callback for `bar` will fire before the one for `foo`.
 
 There are three exceptions to this rule which are important to know:
