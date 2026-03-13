@@ -710,3 +710,22 @@ def test_flag_value_prompt(
         assert result.output == expected_output
         assert not result.stderr
         assert result.exit_code == 0 if expected not in (REPEAT, INVALID) else 1
+
+
+def test_string_show_default_in_prompt(runner):
+    """When show_default is a string, the prompt should display that string
+    instead of the actual default value. See pallets/click#2836."""
+
+    @click.command()
+    @click.option(
+        "--name",
+        default="actual_default",
+        show_default="custom label",
+        prompt=True,
+    )
+    def cmd(name):
+        click.echo(name)
+
+    result = runner.invoke(cmd, input="\n", standalone_mode=False)
+    assert "custom label" in result.output
+    assert "actual_default" not in result.output.split("\n")[0]
