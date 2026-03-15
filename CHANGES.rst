@@ -3,7 +3,7 @@
 Unreleased
 
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
-    used without an explicit value. :issue:`3084`
+    used without an explicit value. :issue:`3084` :pr:`3152`
 -   Hide ``Sentinel.UNSET`` values as ``None`` when using ``lookup_default()``.
     :issue:`3136` :pr:`3199` :pr:`3202` :pr:`3209` :pr:`3212` :pr:`3224`
 -   Prevent ``_NamedTextIOWrapper`` from closing streams owned by ``StreamMixer``.
