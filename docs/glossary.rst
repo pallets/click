@@ -21,9 +21,19 @@ This glossary defines key terms used throughout Click's documentation.
        that can be invoked from the command line. Commands can accept options
        and arguments.
 
+   Command Line Application
+       A Python program built with Click that provides a command line interface.
+       Command line applications use commands, options, and arguments to interact
+       with users through the terminal.
+
    Command Line Interface (CLI)
        A text-based interface for interacting with a program through commands,
        options, and arguments. Click helps you build CLIs in Python.
+
+   Command Line Utility
+       A command line application designed to perform a specific task or set of
+       tasks. Command line utilities are often used for system administration,
+       file manipulation, or development workflows.
 
    Context
        An object that carries state between commands in a group hierarchy.
@@ -51,3 +61,8 @@ This glossary defines key terms used throughout Click's documentation.
        The general term for both options and arguments that can be passed
        to a command. Parameters are defined using decorators like
        ``@click.option()`` or ``@click.argument()``.
+
+   Terminal
+       A text-based interface for interacting with the operating system.
+       Also known as a command prompt, console, or shell. Command line
+       interfaces are used within a terminal to run commands and applications.
