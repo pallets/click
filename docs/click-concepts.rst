@@ -65,3 +65,38 @@ Missing parameters:
 
 Most of the time you do not need to be concerned about any of this,
 but it is important to know how it works for some advanced cases.
+
+
+.. _glossary:
+
+Glossary
+--------
+
+This section defines key terms used throughout Click's documentation to ensure
+consistent usage.
+
+.. glossary::
+
+    Option
+        A command-line parameter that is optional and typically starts with
+        ``--`` (e.g., ``--verbose``). Options can accept values or be boolean
+        flags.
+
+    Flag
+        A boolean option that enables or disables a feature when present.
+        Flags do not require a value; their presence alone determines the
+        state (e.g., ``--force``).
+
+    Command Line Application
+        A program that is executed from a terminal or shell prompt. Click
+        specializes in building these applications, which receive input via
+        arguments and options passed on the command line.
+
+    Command Line Utility
+        A synonym for command line application, typically referring to smaller,
+        single-purpose tools that perform specific tasks (e.g., ``ls``, ``grep``).
+
+    Terminal
+        A text-based interface for interacting with a computer. Also known as
+        a command-line interface (CLI), console, or shell. The terminal
+        receives input from the user and displays output from the application.
