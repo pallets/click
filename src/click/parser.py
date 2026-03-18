@@ -386,6 +386,20 @@ class _OptionParser:
 
         option.process(value, state)
 
+    def _get_single_prefix_long_opt_prefix(self, arg: str) -> str | None:
+        norm_arg = _normalize_opt(arg, self.ctx)
+        matches = [
+            opt
+            for opt in self._long_opt
+            if len(opt) > 2
+            and len(norm_arg) > len(opt)
+            and len(_split_opt(opt)[0]) == 1
+            and norm_arg.startswith(opt)
+        ]
+        if not matches:
+            return None
+        return max(matches, key=len)
+
     def _match_short_opt(self, arg: str, state: _ParsingState) -> None:
         stop = False
         i = 1
@@ -401,6 +415,10 @@ class _OptionParser:
                 if self.ignore_unknown_options:
                     unknown_options.append(ch)
                     continue
+                if i == 2:
+                    long_opt_prefix = self._get_single_prefix_long_opt_prefix(arg)
+                    if long_opt_prefix is not None:
+                        raise NoSuchOption(long_opt_prefix, ctx=self.ctx)
                 raise NoSuchOption(opt, ctx=self.ctx)
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
