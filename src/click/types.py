@@ -387,7 +387,9 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
         """
         from click.shell_completion import CompletionItem
 
-        str_choices = map(str, self.choices)
+        str_choices = [
+            c.name if isinstance(c, enum.Enum) else str(c) for c in self.choices
+        ]
 
         if self.case_sensitive:
             matched = (c for c in str_choices if c.startswith(incomplete))

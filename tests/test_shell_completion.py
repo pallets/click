@@ -467,6 +467,19 @@ def test_choice_case_sensitive(value, expect):
     assert completions == expect
 
 
+def test_choice_enum_completion():
+    import enum
+
+    class MyEnum(enum.Enum):
+        foo = "bar"
+        baz = "qux"
+
+    cli = Command("cli", params=[Option(["-c"], type=Choice(MyEnum))])
+    assert _get_words(cli, ["-c"], "") == ["foo", "baz"]
+    assert _get_words(cli, ["-c"], "f") == ["foo"]
+    assert _get_words(cli, ["-c"], "b") == ["baz"]
+
+
 @pytest.fixture()
 def _restore_available_shells(tmpdir):
     prev_available_shells = click.shell_completion._available_shells.copy()
