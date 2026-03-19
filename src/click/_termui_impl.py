@@ -466,6 +466,7 @@ def _pipepager(
                 text = strip_ansi(text)
 
             c.stdin.write(text)
+            c.stdin.flush()
     except BrokenPipeError:
         # In case the pager exited unexpectedly, ignore the broken pipe error.
         pass
