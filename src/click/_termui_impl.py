@@ -701,11 +701,11 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
             url = _unquote_file(url)
             args = ["explorer", f"/select,{url}"]
         else:
-            args = ["start"]
+            # start is a cmd.exe built-in, not an executable; invoke via cmd /c
+            args = ["cmd", "/c", "start"]
             if wait:
                 args.append("/WAIT")
-            args.append("")
-            args.append(url)
+            args.extend(["", url])
         try:
             return subprocess.call(args)
         except OSError:
