@@ -73,6 +73,7 @@ HELLO_COMMAND = (
         "short_help": None,
         "hidden": False,
         "deprecated": False,
+        "usage": "Usage:  [OPTIONS]",
     },
 )
 HELLO_GROUP = (
@@ -85,7 +86,19 @@ HELLO_GROUP = (
         "short_help": None,
         "hidden": False,
         "deprecated": False,
-        "commands": {"hello": HELLO_COMMAND[1]},
+        "usage": "Usage:  [OPTIONS] COMMAND [ARGS]...",
+        "commands": {
+            "hello": {
+                "name": "hello",
+                "params": [NUMBER_OPTION[1], HELP_OPTION[1]],
+                "help": None,
+                "epilog": None,
+                "short_help": None,
+                "hidden": False,
+                "deprecated": False,
+                "usage": "Usage: hello [OPTIONS]",
+            },
+        },
         "chain": False,
     },
 )
@@ -231,8 +244,31 @@ def test_parameter(obj, expect):
                 "short_help": None,
                 "hidden": False,
                 "deprecated": False,
+                "usage": "Usage:  [OPTIONS] COMMAND [ARGS]...",
                 "commands": {
-                    "cli": HELLO_GROUP[1],
+                    "cli": {
+                        "name": "cli",
+                        "params": [HELP_OPTION[1]],
+                        "help": None,
+                        "epilog": None,
+                        "short_help": None,
+                        "hidden": False,
+                        "deprecated": False,
+                        "usage": "Usage: cli [OPTIONS] COMMAND [ARGS]...",
+                        "commands": {
+                            "hello": {
+                                "name": "hello",
+                                "params": [NUMBER_OPTION[1], HELP_OPTION[1]],
+                                "help": None,
+                                "epilog": None,
+                                "short_help": None,
+                                "hidden": False,
+                                "deprecated": False,
+                                "usage": "Usage: cli hello [OPTIONS]",
+                            },
+                        },
+                        "chain": False,
+                    },
                     "test": {
                         "name": "test",
                         "params": [NAME_ARGUMENT[1], HELP_OPTION[1]],
@@ -241,6 +277,7 @@ def test_parameter(obj, expect):
                         "short_help": None,
                         "hidden": False,
                         "deprecated": False,
+                        "usage": "Usage: test [OPTIONS] NAME",
                     },
                 },
                 "chain": False,
