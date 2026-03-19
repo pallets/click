@@ -4,8 +4,8 @@ import pathlib
 import stat
 import subprocess
 import sys
-import time
 import threading
+import time
 from collections import namedtuple
 from contextlib import nullcontext
 from decimal import Decimal
