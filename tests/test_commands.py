@@ -298,6 +298,7 @@ def test_invoked_subcommand(runner):
     assert not result.exception
     assert result.output == "no subcommand, use default\nin subcommand\n"
 
+
 def test_invoke_without_command_usage_shows_optional_subcommand(runner):
     import click
 
