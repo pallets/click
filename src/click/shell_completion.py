@@ -16,6 +16,16 @@ from .core import ParameterSource
 from .utils import echo
 
 
+def _write_shell_output(text: str, *, nl: bool = True) -> None:
+    """Write shell completion output with LF line endings.
+
+    Shells such as zsh can reject CRLF-encoded completion scripts, so
+    write bytes to bypass platform newline translation on text streams.
+    """
+
+    echo(text.encode(), nl=nl)
+
+
 def shell_complete(
     cli: Command,
     ctx_args: cabc.MutableMapping[str, t.Any],
@@ -44,11 +54,11 @@ def shell_complete(
     comp = comp_cls(cli, ctx_args, prog_name, complete_var)
 
     if instruction == "source":
-        echo(comp.source())
+        _write_shell_output(comp.source(), nl=False)
         return 0
 
     if instruction == "complete":
-        echo(comp.complete())
+        _write_shell_output(comp.complete())
         return 0
 
     return 1

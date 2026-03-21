@@ -1,3 +1,4 @@
+import io
 import textwrap
 import warnings
 from collections.abc import Mapping
@@ -9,6 +10,7 @@ from click.core import Argument
 from click.core import Command
 from click.core import Group
 from click.core import Option
+from click.shell_completion import shell_complete
 from click.shell_completion import add_completion_class
 from click.shell_completion import CompletionItem
 from click.shell_completion import ShellComplete
@@ -368,6 +370,20 @@ def test_full_complete(runner, shell, env, expect):
     env["_CLI_COMPLETE"] = f"{shell}_complete"
     result = runner.invoke(cli, env=env)
     assert result.output == expect
+
+
+def test_source_uses_lf_line_endings(monkeypatch):
+    stdout = io.BytesIO()
+    stream = io.TextIOWrapper(stdout, encoding="utf-8", newline="\r\n")
+    monkeypatch.setattr("click.utils._default_text_stdout", lambda: stream)
+
+    cli = Group("cli", commands=[Command("a"), Command("b")])
+    assert shell_complete(cli, {}, "cli", "_CLI_COMPLETE", "zsh_source") == 0
+
+    stream.flush()
+    output = stdout.getvalue()
+    assert b"\r\n" not in output
+    assert b"\n" in output
 
 
 @pytest.mark.parametrize(
