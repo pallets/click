@@ -1248,6 +1248,19 @@ def test_show_default_string(runner):
     assert "[default: (unlimited)]" in message
 
 
+def test_show_default_string_in_prompt(runner):
+    """When show_default is a string and prompt is enabled, the string is
+    shown in the prompt instead of the actual default value."""
+    @click.command()
+    @click.option("--name", default="secret", show_default="custom", prompt=True)
+    def cli(name):
+        click.echo(f"Name: {name}")
+
+    result = runner.invoke(cli, input="\n")
+    assert "Name [custom]: " in result.output
+    assert "secret" not in result.output.split("\n")[0]
+
+
 def test_show_default_with_empty_string(runner):
     """When show_default is True and default is set to an empty string."""
     opt = click.Option(["--limit"], default="", show_default=True)
