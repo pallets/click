@@ -1251,6 +1251,7 @@ def test_show_default_string(runner):
 def test_show_default_string_in_prompt(runner):
     """When show_default is a string and prompt is enabled, the string is
     shown in the prompt instead of the actual default value."""
+
     @click.command()
     @click.option("--name", default="secret", show_default="custom", prompt=True)
     def cli(name):
