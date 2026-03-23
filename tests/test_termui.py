@@ -96,6 +96,32 @@ def test_progressbar_hidden_manual(runner, monkeypatch):
     assert runner.invoke(cli, []).output == ""
 
 
+def test_open_url_windows_locate_quotes_select(monkeypatch):
+    import subprocess
+
+    calls = []
+
+    def fake_call(args, *a, **k):
+        calls.append(args)
+        return 0
+
+    monkeypatch.setattr(subprocess, "call", fake_call)
+    monkeypatch.setattr(click._termui_impl, "WIN", True)
+    monkeypatch.setattr(click._termui_impl, "CYGWIN", False)
+
+    click._termui_impl.open_url(
+        "C:\\Users\\Public\\click demo\\file.txt",
+        locate=True,
+    )
+
+    assert calls == [
+        [
+            "explorer",
+            '/select,"C:\\Users\\Public\\click demo\\file.txt"',
+        ]
+    ]
+
+
 @pytest.mark.parametrize("avg, expected", [([], 0.0), ([1, 4], 2.5)])
 def test_progressbar_time_per_iteration(runner, avg, expected):
     with _create_progress(2, avg=avg) as progress:
