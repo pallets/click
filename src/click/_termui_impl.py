@@ -699,7 +699,7 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
     elif WIN:
         if locate:
             url = _unquote_file(url).replace('"', '""')
-            args = ["explorer", f"/select,\"{url}\""]
+            args = ["explorer", f'/select,"{url}"']
         else:
             args = ["start"]
             if wait:
