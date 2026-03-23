@@ -105,7 +105,10 @@ def test_open_url_windows_locate_quotes_select(monkeypatch):
         calls.append(args)
         return 0
 
+    import sys
+
     monkeypatch.setattr(subprocess, "call", fake_call)
+    monkeypatch.setattr(sys, "platform", "win32")
     monkeypatch.setattr(click._termui_impl, "WIN", True)
     monkeypatch.setattr(click._termui_impl, "CYGWIN", False)
 
