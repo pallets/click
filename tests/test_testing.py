@@ -476,8 +476,8 @@ def test_pathlib_path_in_args_works_with_fix():
     """
     Test that passing pathlib.Path objects to CliRunner.invoke() now works correctly.
 
-    This verifies the fix for: "object of type 'PosixPath' has no len()" when Path objects
-    were passed to Click's argument parser instead of strings.
+    This verifies the fix for: "object of type 'PosixPath' has no len()" when Path
+    objects were passed to Click's argument parser instead of strings.
 
     See: https://github.com/pallets/click/issues/1324
     """
@@ -539,7 +539,8 @@ def test_various_pathlib_objects_work_consistently(path_input):
     """
     Test that all types of pathlib.Path objects work consistently with the fix.
 
-    This ensures automatic Path-to-string conversion works for different Path object types.
+    This ensures automatic Path-to-string conversion works for different Path
+    object types.
     """
 
     @click.command()
