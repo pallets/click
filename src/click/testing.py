@@ -494,6 +494,13 @@ class CliRunner:
 
             if isinstance(args, str):
                 args = shlex.split(args)
+            elif args is not None:
+                # Convert path-like objects to strings to prevent parser errors
+                # See: https://github.com/pallets/click/issues/1324
+                args = [
+                    str(arg) if hasattr(arg, '__fspath__') else arg
+                    for arg in args
+                ]
 
             try:
                 prog_name = extra.pop("prog_name")
