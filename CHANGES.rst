@@ -4,6 +4,9 @@ Unreleased
 
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084`
+-   Fix ``Choice`` shell completion for enum types to use the enum member
+    name instead of ``str()``, which produced unusable values like
+    ``MyEnum.foo`` instead of ``foo``. :issue:`3015`
 
 Version 8.3.1
 --------------
