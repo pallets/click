@@ -588,6 +588,7 @@ def test_direct_parser_still_fails_with_pathlib():
     test_path = Path("/tmp/test")
     with pytest.raises(
         TypeError,
-        match=r"(object of type '(Posix|Windows)Path' has no len|'(Posix|Windows)Path' has no length)",
+        match=r"(object of type '(Posix|Windows)Path' has no len"
+        r"|'(Posix|Windows)Path' has no length)",
     ):
         parser.parse_args([test_path])
