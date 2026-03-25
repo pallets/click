@@ -501,7 +501,7 @@ def test_pathlib_path_in_args_works_with_fix():
     # CliRunner should automatically convert Path to string
     assert result.exit_code == 0
     assert result.exception is None
-    assert "Path: /tmp/test" in result.output
+    assert f"Path: {str(test_path)}" in result.output
 
 
 def test_pathlib_path_string_conversion_works():
@@ -522,7 +522,7 @@ def test_pathlib_path_string_conversion_works():
     # The correct approach: convert Path to string explicitly
     result = runner.invoke(cmd, [str(test_path)])
     assert result.exit_code == 0
-    assert "Path: /tmp/test" in result.output
+    assert f"Path: {str(test_path)}" in result.output
 
 
 @pytest.mark.parametrize(
@@ -588,6 +588,6 @@ def test_direct_parser_still_fails_with_pathlib():
     test_path = Path("/tmp/test")
     with pytest.raises(
         TypeError,
-        match=r"('PosixPath' has no length|object of type 'PosixPath' has no len)",
+        match=r"(object of type '(Posix|Windows)Path' has no len|'(Posix|Windows)Path' has no length)",
     ):
         parser.parse_args([test_path])
