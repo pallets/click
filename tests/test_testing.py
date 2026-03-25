@@ -481,26 +481,27 @@ def test_pathlib_path_in_args_works_with_fix():
 
     See: https://github.com/pallets/click/issues/1324
     """
+
     @click.command()
-    @click.argument('path')
+    @click.argument("path")
     def cmd(path):
         click.echo(f"Path: {path}")
 
     runner = CliRunner()
 
     # This should work fine with strings
-    result = runner.invoke(cmd, ['/tmp/test'])
+    result = runner.invoke(cmd, ["/tmp/test"])
     assert result.exit_code == 0
-    assert 'Path: /tmp/test' in result.output
+    assert "Path: /tmp/test" in result.output
 
     # This should now work with Path objects too (automatic conversion)
-    test_path = Path('/tmp/test')
+    test_path = Path("/tmp/test")
     result = runner.invoke(cmd, [test_path])
 
     # CliRunner should automatically convert Path to string
     assert result.exit_code == 0
     assert result.exception is None
-    assert 'Path: /tmp/test' in result.output
+    assert "Path: /tmp/test" in result.output
 
 
 def test_pathlib_path_string_conversion_works():
@@ -509,35 +510,40 @@ def test_pathlib_path_string_conversion_works():
 
     This demonstrates the correct workaround for the bug.
     """
+
     @click.command()
-    @click.argument('path')
+    @click.argument("path")
     def cmd(path):
         click.echo(f"Path: {path}")
 
     runner = CliRunner()
-    test_path = Path('/tmp/test')
+    test_path = Path("/tmp/test")
 
     # The correct approach: convert Path to string explicitly
     result = runner.invoke(cmd, [str(test_path)])
     assert result.exit_code == 0
-    assert 'Path: /tmp/test' in result.output
+    assert "Path: /tmp/test" in result.output
 
 
-@pytest.mark.parametrize("path_input", [
-    pytest.param(Path("/tmp/test"), id="absolute"),
-    pytest.param(Path("/tmp/test/file.txt"), id="absolute_file"),
-    pytest.param(Path("relative/path"), id="relative"),
-    pytest.param(Path("."), id="current_dir"),
-    pytest.param(Path(".."), id="parent_dir"),
-])
+@pytest.mark.parametrize(
+    "path_input",
+    [
+        pytest.param(Path("/tmp/test"), id="absolute"),
+        pytest.param(Path("/tmp/test/file.txt"), id="absolute_file"),
+        pytest.param(Path("relative/path"), id="relative"),
+        pytest.param(Path("."), id="current_dir"),
+        pytest.param(Path(".."), id="parent_dir"),
+    ],
+)
 def test_various_pathlib_objects_work_consistently(path_input):
     """
     Test that all types of pathlib.Path objects work consistently with the fix.
 
     This ensures automatic Path-to-string conversion works for different Path object types.
     """
+
     @click.command()
-    @click.argument('path')
+    @click.argument("path")
     def cmd(path):
         click.echo(f"Path: {path}")
 
@@ -557,11 +563,12 @@ def test_direct_parser_still_fails_with_pathlib():
     This ensures we haven't changed the core parser behavior - only CliRunner
     now handles Path objects gracefully by converting them to strings.
     """
+    from click.core import Argument
+    from click.core import Context
     from click.parser import _OptionParser
-    from click.core import Context, Argument
 
     @click.command()
-    @click.argument('path')
+    @click.argument("path")
     def cmd(path):
         click.echo(f"Path: {path}")
 
@@ -569,14 +576,14 @@ def test_direct_parser_still_fails_with_pathlib():
     parser = _OptionParser(ctx)
 
     # Add argument to parser
-    arg = Argument(['path'])
+    arg = Argument(["path"])
     arg.add_to_parser(parser, ctx)
 
     # This should still work with strings
-    result = parser.parse_args(['/tmp/test'])
-    assert result[0]['path'] == '/tmp/test'
+    result = parser.parse_args(["/tmp/test"])
+    assert result[0]["path"] == "/tmp/test"
 
     # This should still fail with Path objects (parser behavior unchanged)
-    test_path = Path('/tmp/test')
+    test_path = Path("/tmp/test")
     with pytest.raises(TypeError, match="object of type 'PosixPath' has no len"):
         parser.parse_args([test_path])
