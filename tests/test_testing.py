@@ -586,5 +586,8 @@ def test_direct_parser_still_fails_with_pathlib():
 
     # This should still fail with Path objects (parser behavior unchanged)
     test_path = Path("/tmp/test")
-    with pytest.raises(TypeError, match=r"('PosixPath' has no length|object of type 'PosixPath' has no len)"):
+    with pytest.raises(
+        TypeError,
+        match=r"('PosixPath' has no length|object of type 'PosixPath' has no len)",
+    ):
         parser.parse_args([test_path])
