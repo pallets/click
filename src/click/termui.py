@@ -125,6 +125,10 @@ def prompt(
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
 
+    .. versionchanged:: 8.3.3
+        ``show_default`` can be a string to show a custom value instead
+        of the actual default, matching the help text behavior.
+
     .. versionchanged:: 8.3.1
         A space is no longer appended to the prompt.
 

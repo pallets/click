@@ -2,6 +2,8 @@
 
 Unreleased
 
+-   Show custom ``show_default`` string in prompts, matching the existing
+    help text behavior. :issue:`2836` :pr:`2837` :pr:`3165` :pr:`3262` :pr:`3280`
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084`
 -   Hide ``Sentinel.UNSET`` values as ``None`` when using ``lookup_default()``.
