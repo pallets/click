@@ -74,14 +74,24 @@ class UsageError(ClickException):
             file = get_text_stderr()
         color = None
         hint = ""
-        if (
-            self.ctx is not None
-            and self.ctx.command.get_help_option(self.ctx) is not None
-        ):
-            hint = _("Try '{command} {option}' for help.").format(
-                command=self.ctx.command_path, option=self.ctx.help_option_names[0]
-            )
-            hint = f"{hint}\n"
+        if self.ctx is not None:
+            help_option = self.ctx.command.get_help_option(self.ctx)
+
+            if help_option is not None:
+                help_option_names = set(help_option.opts)
+                hint_option = next(
+                    (
+                        name
+                        for name in self.ctx.help_option_names
+                        if name in help_option_names
+                    ),
+                    help_option.opts[0],
+                )
+
+                hint = _("Try '{command} {option}' for help.").format(
+                    command=self.ctx.command_path, option=hint_option
+                )
+                hint = f"{hint}\n"
         if self.ctx is not None:
             color = self.ctx.color
             echo(f"{self.ctx.get_usage()}\n{hint}", file=file, color=color)

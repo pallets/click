@@ -215,6 +215,27 @@ def test_formatting_usage_error_nested(runner):
     ]
 
 
+def test_formatting_usage_error_shadowed_help_option(runner):
+    @click.group(context_settings={"help_option_names": ["-h", "--help"]})
+    def cmd():
+        pass
+
+    @cmd.command()
+    @click.argument("required_arg")
+    @click.option("--host", "-h")
+    def foo(required_arg, host):
+        pass
+
+    result = runner.invoke(cmd, ["foo"])
+    assert result.exit_code == 2
+    assert result.output.splitlines() == [
+        "Usage: cmd foo [OPTIONS] REQUIRED_ARG",
+        "Try 'cmd foo --help' for help.",
+        "",
+        "Error: Missing argument 'REQUIRED_ARG'.",
+    ]
+
+
 def test_formatting_usage_error_no_help(runner):
     @click.command(add_help_option=False)
     @click.argument("arg")
