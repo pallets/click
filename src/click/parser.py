@@ -490,6 +490,19 @@ class _OptionParser:
             # short option code and will instead raise the no option
             # error.
             if arg[:2] not in self._opt_prefixes:
+                multichar_opt = max(
+                    (
+                        opt
+                        for opt in self._long_opt
+                        if _split_opt(opt)[0] == arg[:1] and arg.startswith(opt)
+                    ),
+                    default=None,
+                    key=len,
+                )
+
+                if multichar_opt is not None and multichar_opt != arg:
+                    raise NoSuchOption(multichar_opt, ctx=self.ctx)
+
                 self._match_short_opt(arg, state)
                 return
 

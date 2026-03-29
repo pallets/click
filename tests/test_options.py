@@ -144,6 +144,17 @@ def test_unknown_options(runner, unknown_flag):
     assert f"No such option: {unknown_flag}" in result.output
 
 
+def test_unknown_multichar_short_option_reports_full_option(runner):
+    @click.command()
+    @click.option("-dbg", is_flag=True)
+    def cli(dbg):
+        pass
+
+    result = runner.invoke(cli, ["-dbgwrong"])
+    assert result.exception
+    assert "No such option: -dbg" in result.output
+
+
 @pytest.mark.parametrize(
     ("value", "expect"),
     [
