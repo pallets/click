@@ -496,6 +496,37 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
     assert "my-default-value" not in result.output
 
 
+def test_show_default_string_in_prompt(runner):
+    """When show_default is a string, the prompt should display that string
+    instead of the raw default value. See issue #2836."""
+
+    @click.command()
+    @click.option(
+        "--arg1",
+        show_default="current value",
+        prompt=True,
+        default="my-default-value",
+    )
+    def cmd(arg1):
+        click.echo(arg1)
+
+    result = runner.invoke(cmd, input="my-input", standalone_mode=False)
+    # The custom show_default string should appear in the prompt
+    assert "current value" in result.output
+    # The raw default value should NOT appear in the prompt
+    assert "my-default-value" not in result.output
+
+
+def test_show_default_true_shows_actual_default_in_prompt(runner):
+    @click.command()
+    @click.option("--arg1", show_default=True, prompt=True, default="my-default-value")
+    def cmd(arg1):
+        pass
+
+    result = runner.invoke(cmd, input="my-input", standalone_mode=False)
+    assert "my-default-value" in result.output
+
+
 REPEAT = object()
 """Sentinel value to indicate that the prompt is expected to be repeated.
 

@@ -60,7 +60,7 @@ def hidden_prompt_func(prompt: str) -> str:
 def _build_prompt(
     text: str,
     suffix: str,
-    show_default: bool = False,
+    show_default: bool | str = False,
     default: t.Any | None = None,
     show_choices: bool = True,
     type: ParamType | None = None,
@@ -68,8 +68,11 @@ def _build_prompt(
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += f" ({', '.join(map(str, type.choices))})"
-    if default is not None and show_default:
-        prompt = f"{prompt} [{_format_default(default)}]"
+    if show_default:
+        if isinstance(show_default, str):
+            prompt = f"{prompt} [{show_default}]"
+        elif default is not None:
+            prompt = f"{prompt} [{_format_default(default)}]"
     return f"{prompt}{suffix}"
 
 
@@ -88,7 +91,7 @@ def prompt(
     type: ParamType | t.Any | None = None,
     value_proc: t.Callable[[str], t.Any] | None = None,
     prompt_suffix: str = ": ",
-    show_default: bool = True,
+    show_default: bool | str = True,
     err: bool = False,
     show_choices: bool = True,
 ) -> t.Any:

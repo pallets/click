@@ -3145,10 +3145,11 @@ class Option(Parameter):
                 default = bool(default)
             return confirm(self.prompt, default)
 
-        # If show_default is set to True/False, provide this to `prompt` as well. For
-        # non-bool values of `show_default`, we use `prompt`'s default behavior
+        # If show_default is set, provide this to `prompt` as well. When
+        # show_default is a string, pass it through so the prompt displays
+        # the custom string instead of the raw default value.
         prompt_kwargs: t.Any = {}
-        if isinstance(self.show_default, bool):
+        if self.show_default is not None:
             prompt_kwargs["show_default"] = self.show_default
 
         return prompt(
