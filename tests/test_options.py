@@ -2362,7 +2362,9 @@ def test_option_edge_case_values(runner, args, expected_exit_code, expected_outp
         ("line1\nline2", True, "line1"),
     ],
 )
-def test_option_default_display_in_help(runner, default, show_default, expected_in_help):
+def test_option_default_display_in_help(
+    runner, default, show_default, expected_in_help
+):
     """Test how different default values are displayed in help text."""
 
     @click.command()
@@ -2420,7 +2422,9 @@ def test_option_envvar_empty_string(runner):
         ({"type": click.Path(exists=True)}, "/nonexistent/path", "does not exist"),
     ],
 )
-def test_option_type_validation_errors(runner, option_args, input_value, expected_error):
+def test_option_type_validation_errors(
+    runner, option_args, input_value, expected_error
+):
     """Test error messages for invalid option type values."""
 
     @click.command()

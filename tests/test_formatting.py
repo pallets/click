@@ -407,7 +407,10 @@ def test_usage_error_missing_multiple_arguments(runner):
         # Extra positional argument
         (["arg1", "extra"], "Got unexpected extra argument (extra)"),
         # Multiple extra arguments - uses plural form
-        (["arg1", "extra1", "extra2"], "Got unexpected extra arguments (extra1 extra2)"),
+        (
+            ["arg1", "extra1", "extra2"],
+            "Got unexpected extra arguments (extra1 extra2)",
+        ),
     ],
 )
 def test_usage_error_extra_arguments(runner, extra_args, expected_error):
