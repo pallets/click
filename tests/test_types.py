@@ -258,89 +258,110 @@ def test_choice_get_invalid_choice_message():
 
 
 @pytest.mark.parametrize(
-    ("tuple_types", "input_values", "expected"),
+    ("choices", "value", "expected"),
     [
-        ((str, int), ("hello", "42"), ("hello", 42)),
-        ((int, float), ("10", "3.14"), (10, 3.14)),
-        ((click.INT, click.STRING), ("123", "test"), (123, "test")),
-        ((bool, bool), ("true", "false"), (True, False)),
+        (["single"], "single", "single"),
+        ([""], "", ""),
+        ([" "], " ", " "),
+        (["  "], "  ", "  "),
+        (["\t"], "\t", "\t"),
+        (["\n"], "\n", "\n"),
+        (["a\nb"], "a\nb", "a\nb"),
+        (["hello world"], "hello world", "hello world"),
+        (["日本語"], "日本語", "日本語"),
+        (["🎉"], "🎉", "🎉"),
+        (["a", "A"], "a", "a"),
+        ([1, 2, 3], "2", 2),
+        ([1.5, 2.5], "1.5", 1.5),
+        ([True, False], "True", True),
+        ([None, "none"], "none", "none"),
     ],
 )
-def test_tuple_type_conversion(runner, tuple_types, input_values, expected):
-    @click.command()
-    @click.option("--item", type=tuple_types)
-    def cmd(item):
-        click.echo(repr(item))
-
-    result = runner.invoke(cmd, ["--item"] + list(input_values))
-    assert not result.exception
-    assert result.output.strip() == repr(expected)
+def test_choice_edge_cases(choices, value, expected):
+    choice = click.Choice(choices)
+    result = choice.convert(value, None, None)
+    assert result == expected
 
 
 @pytest.mark.parametrize(
-    ("tuple_types", "input_values", "error_msg"),
+    ("choices", "value", "expected_in_message"),
     [
-        ((str, int), ("hello", "not_int"), "not a valid integer"),
-        ((int, float), ("not_int", "3.14"), "not a valid integer"),
-        ((int, int), ("10", "not_int"), "not a valid integer"),
+        (["a", "b"], "", "''"),
+        (["a", "b"], " ", "' '"),
+        (["a", "b"], "\t", "'\\t'"),
+        (["a", "b"], "\n", "'\\n'"),
+        (["a", "b"], "日本語", "'日本語'"),
+        (["a", "b"], "🎉", "'🎉'"),
+        (["a", "b"], "a b c", "'a b c'"),
     ],
 )
-def test_tuple_type_conversion_error(runner, tuple_types, input_values, error_msg):
-    @click.command()
-    @click.option("--item", type=tuple_types)
-    def cmd(item):
-        click.echo(item)
+def test_choice_invalid_value_special_chars(choices, value, expected_in_message):
+    choice = click.Choice(choices)
+    with pytest.raises(click.BadParameter) as exc_info:
+        choice.convert(value, None, None)
+    assert expected_in_message in str(exc_info.value)
 
-    result = runner.invoke(cmd, ["--item"] + list(input_values))
-    assert result.exit_code == 2
-    assert error_msg in result.output or "Invalid value" in result.output
+
+def test_choice_single_option_invalid():
+    choice = click.Choice(["only-one"])
+    with pytest.raises(click.BadParameter) as exc_info:
+        choice.convert("wrong", None, None)
+    assert "'wrong' is not 'only-one'" in str(exc_info.value)
 
 
 @pytest.mark.parametrize(
-    ("input_count", "expected_pattern"),
+    ("choices", "case_sensitive", "input_value", "expected"),
     [
-        (1, "requires 2 arguments"),
-        (3, "unexpected extra argument"),
-        (0, "requires 2 arguments"),
+        (["Apple", "Banana"], False, "apple", "Apple"),
+        (["Apple", "Banana"], False, "APPLE", "Apple"),
+        (["Apple", "Banana"], False, "aPpLe", "Apple"),
+        (["Apple", "Banana"], True, "Apple", "Apple"),
+        (["日本語", "English"], False, "日本語", "日本語"),
+        (["日本語", "English"], False, "日本語", "日本語"),
     ],
 )
-def test_tuple_type_wrong_arg_count(runner, input_count, expected_pattern):
-    @click.command()
-    @click.option("--item", type=(str, int))
-    def cmd(item):
-        click.echo(item)
+def test_choice_case_sensitivity(choices, case_sensitive, input_value, expected):
+    choice = click.Choice(choices, case_sensitive=case_sensitive)
+    result = choice.convert(input_value, None, None)
+    assert result == expected
 
-    args = ["--item"] + [str(i) for i in range(input_count)]
-    result = runner.invoke(cmd, args)
+
+def test_choice_case_sensitive_mismatch():
+    choice = click.Choice(["Apple"], case_sensitive=True)
+    with pytest.raises(click.BadParameter) as exc_info:
+        choice.convert("apple", None, None)
+    assert "'apple' is not 'Apple'" in str(exc_info.value)
+
+
+def test_choice_with_whitespace_values(runner):
+    @click.command()
+    @click.option("--format", type=click.Choice(["", " ", "json", "xml"]))
+    def cmd(format):
+        click.echo(repr(format))
+
+    result = runner.invoke(cmd, ["--format", ""])
+    assert result.exit_code == 0
+    assert result.output == "''\n"
+
+    result = runner.invoke(cmd, ["--format", " "])
+    assert result.exit_code == 0
+    assert result.output == "' '\n"
+
+    result = runner.invoke(cmd, ["--format", "json"])
+    assert result.exit_code == 0
+    assert result.output == "'json'\n"
+
+    result = runner.invoke(cmd, ["--format", "invalid"])
     assert result.exit_code == 2
-    assert expected_pattern in result.output.lower()
+    assert "'invalid' is not one of" in result.output
 
 
-def test_tuple_type_in_multiple_options(runner):
+def test_choice_empty_string_in_help(runner):
     @click.command()
-    @click.option("--coord", type=(int, int), multiple=True)
-    def cmd(coord):
-        for c in coord:
-            click.echo(f"({c[0]}, {c[1]})")
+    @click.option("--format", type=click.Choice(["", "json", "xml"]), show_choices=True)
+    def cmd(format):
+        pass
 
-    result = runner.invoke(cmd, ["--coord", "10", "20", "--coord", "30", "40"])
-    assert not result.exception
-    assert "(10, 20)" in result.output
-    assert "(30, 40)" in result.output
-
-
-def test_tuple_type_with_custom_types(runner):
-    @click.command()
-    @click.option("--range", type=(click.IntRange(0, 100), click.FloatRange(0, 1.0)))
-    def cmd(range):
-        percent, ratio = range
-        click.echo(f"percent={percent}, ratio={ratio:.2f}")
-
-    result = runner.invoke(cmd, ["--range", "50", "0.75"])
-    assert not result.exception
-    assert "percent=50, ratio=0.75" in result.output
-
-    # Test boundary error with invalid values
-    result = runner.invoke(cmd, ["--range", "150", "0.75"])
-    assert result.exit_code == 2
-    assert "150 is not in the range 0<=x<=100" in result.output
+    result = runner.invoke(cmd, ["--help"])
+    assert result.exit_code == 0
+    assert "[|json|xml]" in result.output

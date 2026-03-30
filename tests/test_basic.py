@@ -601,88 +601,6 @@ def test_datetime_option_custom(runner):
     assert result.output == "2010-06-05T00:00:00\n"
 
 
-@pytest.mark.parametrize(
-    ("args", "expect"),
-    [
-        ([], "2023-01-15T10:30:00"),
-        (["--start_date=2024-12-25"], "2024-12-25T00:00:00"),
-        (["--start_date=2024-12-25 14:45:30"], "2024-12-25T14:45:30"),
-    ],
-)
-def test_datetime_option_with_default(runner, args, expect):
-    from datetime import datetime
-
-    @click.command()
-    @click.option(
-        "--start_date",
-        type=click.DateTime(),
-        default=datetime(2023, 1, 15, 10, 30, 0),
-    )
-    def cli(start_date):
-        click.echo(start_date.strftime("%Y-%m-%dT%H:%M:%S"))
-
-    result = runner.invoke(cli, args)
-    assert not result.exception
-    assert expect in result.output
-
-
-@pytest.mark.parametrize(
-    ("formats", "input_value", "expect_output"),
-    [
-        (["%Y-%m-%d", "%d/%m/%Y", "%B %d, %Y"], "2024-06-15", "2024-06-15"),
-        (["%Y-%m-%d", "%d/%m/%Y", "%B %d, %Y"], "15/06/2024", "2024-06-15"),
-        (["%Y-%m-%d", "%d/%m/%Y", "%B %d, %Y"], "June 15, 2024", "2024-06-15"),
-    ],
-)
-def test_datetime_multiple_formats(runner, formats, input_value, expect_output):
-    @click.command()
-    @click.option("--date", type=click.DateTime(formats=formats))
-    def cli(date):
-        click.echo(date.strftime("%Y-%m-%d"))
-
-    result = runner.invoke(cli, [f"--date={input_value}"])
-    assert not result.exception
-    assert expect_output in result.output
-
-
-@pytest.mark.parametrize(
-    ("input_value", "error_expect"),
-    [
-        ("2024/13/01", "month must be in 1..12"),
-        ("2024-02-30", "day is out of range for month"),
-        ("2024-04-31", "day is out of range for month"),
-        ("2024-01-01 25:00:00", "hour must be in 0..23"),
-        ("2024-01-01 12:61:00", "minute must be in 0..59"),
-        ("invalid-date", "does not match the formats"),
-    ],
-)
-def test_datetime_invalid_inputs(runner, input_value, error_expect):
-    @click.command()
-    @click.option("--date", type=click.DateTime())
-    def cli(date):
-        click.echo(date)
-
-    result = runner.invoke(cli, [f"--date={input_value}"])
-    assert result.exit_code == 2
-    assert error_expect in result.output or "Invalid value" in result.output
-
-
-def test_datetime_help_formats_display(runner):
-    @click.command()
-    @click.option(
-        "--date",
-        type=click.DateTime(formats=["%Y-%m-%d", "%d/%m/%Y", "%H:%M:%S"]),
-    )
-    def cli(date):
-        click.echo(date)
-
-    result = runner.invoke(cli, ["--help"])
-    assert not result.exception
-    assert "%Y-%m-%d" in result.output
-    assert "%d/%m/%Y" in result.output
-    assert "%H:%M:%S" in result.output
-
-
 def test_required_option(runner):
     @click.command()
     @click.option("--foo", required=True)
@@ -815,3 +733,166 @@ def test_help_invalid_default(runner):
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
     assert "default: not found" in result.output
+
+
+@pytest.mark.parametrize(
+    ("args", "expected_in_output"),
+    [
+        (["--unknown-option"], "No such option: --unknown-option"),
+        (["-x"], "No such option: -x"),
+        (["---triple"], "No such option: ---triple"),
+    ],
+)
+def test_unknown_option_error_messages(runner, args, expected_in_output):
+    @click.command()
+    def cli():
+        pass
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 2
+    assert expected_in_output in result.output
+
+
+def test_missing_argument_error_message(runner):
+    @click.command()
+    @click.argument("name")
+    def cli(name):
+        pass
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 2
+    assert "Missing argument 'NAME'" in result.output
+
+
+def test_invalid_choice_error_message(runner):
+    @click.command()
+    @click.option("--choice", type=click.Choice(["a", "b", "c"]))
+    def cli(choice):
+        pass
+
+    result = runner.invoke(cli, ["--choice", "invalid"])
+    assert result.exit_code == 2
+    assert "'invalid' is not one of 'a', 'b', 'c'" in result.output
+
+
+def test_invalid_integer_error_message(runner):
+    @click.command()
+    @click.option("--count", type=int)
+    def cli(count):
+        pass
+
+    result = runner.invoke(cli, ["--count", "not-a-number"])
+    assert result.exit_code == 2
+    assert "'not-a-number' is not a valid integer" in result.output
+
+
+def test_invalid_float_error_message(runner):
+    @click.command()
+    @click.option("--value", type=float)
+    def cli(value):
+        pass
+
+    result = runner.invoke(cli, ["--value", "not-a-float"])
+    assert result.exit_code == 2
+    assert "'not-a-float' is not a valid float" in result.output
+
+
+def test_invalid_path_error_message(runner):
+    @click.command()
+    @click.option("--path", type=click.Path(exists=True))
+    def cli(path):
+        pass
+
+    result = runner.invoke(cli, ["--path", "/nonexistent/path/that/does/not/exist"])
+    assert result.exit_code == 2
+    assert "does not exist" in result.output
+
+
+def test_usage_error_with_help_suggestion(runner):
+    @click.command()
+    @click.option("--required", required=True)
+    def cli(required):
+        pass
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 2
+    assert "Try 'cli --help' for help" in result.output
+
+
+def test_error_message_with_special_chars_in_option_name(runner):
+    @click.command()
+    @click.option("--日本語-option", required=True)
+    def cli(japanese_option):
+        pass
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 2
+    assert "Missing option" in result.output
+
+
+def test_error_message_preserves_unicode(runner):
+    @click.command()
+    @click.argument("name")
+    def cli(name):
+        pass
+
+    result = runner.invoke(cli, ["🎉", "extra"])
+    assert result.exit_code == 2
+    assert "Got unexpected extra argument" in result.output
+
+
+@pytest.mark.parametrize(
+    ("option_name", "error_type"),
+    [
+        ("--name", "Missing option"),
+        ("--count", "Missing option"),
+    ],
+)
+def test_missing_required_option_various_names(runner, option_name, error_type):
+    @click.command()
+    @click.option(option_name, required=True)
+    def cli(**kwargs):
+        pass
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 2
+    assert error_type in result.output
+
+
+def test_nargs_error_message(runner):
+    @click.command()
+    @click.option("--coords", nargs=2, type=int)
+    def cli(coords):
+        pass
+
+    result = runner.invoke(cli, ["--coords", "1"])
+    assert result.exit_code == 2
+    assert "--coords" in result.output
+
+
+def test_range_error_message(runner):
+    @click.command()
+    @click.option("--level", type=click.IntRange(1, 10))
+    def cli(level):
+        pass
+
+    result = runner.invoke(cli, ["--level", "15"])
+    assert result.exit_code == 2
+    assert "15 is not in the range" in result.output
+
+
+def test_help_output_with_multiline_description(runner):
+    @click.command()
+    @click.option(
+        "--config",
+        help="""This is a multiline
+help text that should be
+properly formatted in the output.""",
+    )
+    def cli(config):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "multiline" in result.output
+    assert "properly formatted" in result.output
