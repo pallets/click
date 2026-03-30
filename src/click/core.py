@@ -3145,17 +3145,25 @@ class Option(Parameter):
                 default = bool(default)
             return confirm(self.prompt, default)
 
-        # If show_default is set to True/False, provide this to `prompt` as well. For
-        # non-bool values of `show_default`, we use `prompt`'s default behavior
+        # If show_default is set to True/False, provide this to `prompt` as well.
+        # If show_default is a string, display that string as the default label
+        # in the prompt (e.g. "Name [show_default]: ") instead of the raw default
+        # value. This matches the behaviour already implemented for the help text.
         prompt_kwargs: t.Any = {}
-        if isinstance(self.show_default, bool):
+        prompt_default = None if default is UNSET else default
+
+        if isinstance(self.show_default, str):
+            # Use the custom string as the displayed default in the prompt.
+            prompt_kwargs["show_default"] = True
+            prompt_default = self.show_default
+        elif isinstance(self.show_default, bool):
             prompt_kwargs["show_default"] = self.show_default
 
         return prompt(
             self.prompt,
             # Use ``None`` to inform the prompt() function to reiterate until a valid
             # value is provided by the user if we have no default.
-            default=None if default is UNSET else default,
+            default=prompt_default,
             type=self.type,
             hide_input=self.hide_input,
             show_choices=self.show_choices,
