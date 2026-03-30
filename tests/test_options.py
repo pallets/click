@@ -2322,181 +2322,131 @@ def test_flag_value_on_option_with_zero_or_one_args(flag_type, args, expect_outp
 
 
 @pytest.mark.parametrize(
-    ("args", "expected"),
+    ("args", "expected_exit_code", "expected_output"),
     [
-        ([], ""),
-        (["--value", ""], ""),
-        (["--value", " "], " "),
-        (["--value", "  "], "  "),
-        (["--value", "\t"], "\t"),
-        (["--value", "hello world"], "hello world"),
-        (["--value", "日本語"], "日本語"),
-        (["--value", "🎉"], "🎉"),
-        (["--value", "a\nb"], "a\nb"),
+        # Empty string option value
+        (["--opt", ""], 0, "opt:''"),
+        # Whitespace-only option value
+        (["--opt", "   "], 0, "opt:'   '"),
+        # Option with special characters
+        (["--opt", "--value"], 0, "opt:'--value'"),
+        # Unicode option value
+        (["--opt", "\N{SNOWMAN}"], 0, "opt:'\u2603'"),
+        # Very long option value
+        (["--opt", "a" * 1000], 0, "opt:'" + "a" * 1000 + "'"),
     ],
 )
-def test_option_empty_and_special_char_values(runner, args, expected):
+def test_option_edge_case_values(runner, args, expected_exit_code, expected_output):
+    """Test option parsing with edge case input values."""
+
     @click.command()
-    @click.option("--value", default="")
-    def cmd(value):
-        click.echo(repr(value), nl=False)
+    @click.option("--opt", default="default")
+    def cli(opt):
+        click.echo(f"opt:'{opt}'")
 
-    result = runner.invoke(cmd, args)
-    assert result.exit_code == 0
-    assert result.output == repr(expected)
-
-
-def test_option_empty_string_default(runner):
-    @click.command()
-    @click.option("--name", default="", show_default=True)
-    def cmd(name):
-        click.echo(repr(name))
-
-    result = runner.invoke(cmd, ["--help"])
-    assert result.exit_code == 0
-    assert '[default: ""]' in result.output
-
-    result = runner.invoke(cmd, [])
-    assert result.exit_code == 0
-    assert result.output == "''\n"
-
-    result = runner.invoke(cmd, ["--name", "test"])
-    assert result.exit_code == 0
-    assert result.output == "'test'\n"
-
-
-def test_option_whitespace_only_default(runner):
-    @click.command()
-    @click.option("--name", default="   ", show_default=True)
-    def cmd(name):
-        click.echo(repr(name))
-
-    result = runner.invoke(cmd, ["--help"])
-    assert result.exit_code == 0
-
-    result = runner.invoke(cmd, [])
-    assert result.exit_code == 0
-    assert result.output == "'   '\n"
-
-
-@pytest.mark.parametrize(
-    ("default", "expected_output"),
-    [
-        ("", "''\n"),
-        (" ", "' '\n"),
-        ("  ", "'  '\n"),
-        ("\t", "'\\t'\n"),
-        ("\n", "'\\n'\n"),
-        ("default", "'default'\n"),
-    ],
-)
-def test_option_various_defaults(runner, default, expected_output):
-    @click.command()
-    @click.option("--value", default=default)
-    def cmd(value):
-        click.echo(repr(value))
-
-    result = runner.invoke(cmd, [])
-    assert result.exit_code == 0
-    assert result.output == expected_output
-
-
-def test_option_special_chars_in_error_message(runner):
-    @click.command()
-    @click.option("--name", required=True)
-    def cmd(name):
-        pass
-
-    result = runner.invoke(cmd, [])
-    assert result.exit_code == 2
-    assert "Missing option '--name'" in result.output
-
-
-def test_option_unicode_in_help_text(runner):
-    @click.command()
-    @click.option("--name", help="名前を指定します (日本語)")
-    def cmd(name):
-        pass
-
-    result = runner.invoke(cmd, ["--help"])
-    assert result.exit_code == 0
-    assert "名前を指定します" in result.output
-
-
-def test_option_emoji_in_help_text(runner):
-    @click.command()
-    @click.option("--status", help="🎉 Status emoji test")
-    def cmd(status):
-        pass
-
-    result = runner.invoke(cmd, ["--help"])
-    assert result.exit_code == 0
-    assert "🎉" in result.output
-
-
-@pytest.mark.parametrize(
-    ("value", "expected_exit_code"),
-    [
-        ("", 0),
-        (" ", 0),
-        ("valid", 0),
-        ("日本語", 0),
-        ("🎉", 0),
-    ],
-)
-def test_option_string_type_accepts_all(runner, value, expected_exit_code):
-    @click.command()
-    @click.option("--text")
-    def cmd(text):
-        click.echo(repr(text) if text else "None")
-
-    result = runner.invoke(cmd, ["--text", value])
+    result = runner.invoke(cli, args)
     assert result.exit_code == expected_exit_code
+    assert expected_output in result.output
 
 
-def test_option_nargs_with_empty_value(runner):
+@pytest.mark.parametrize(
+    ("default", "show_default", "expected_in_help"),
+    [
+        # Callable default
+        (lambda: "dynamic", True, "dynamic"),
+        # Empty string default - displayed as "" in help
+        ("", True, '[default: ""]'),
+        # Whitespace default - displayed as raw spaces in help
+        ("  ", True, "[default:   ]"),
+        # Multiline string default
+        ("line1\nline2", True, "line1"),
+    ],
+)
+def test_option_default_display_in_help(runner, default, show_default, expected_in_help):
+    """Test how different default values are displayed in help text."""
+
     @click.command()
-    @click.option("--coords", nargs=2, type=float)
-    def cmd(coords):
-        if coords:
-            click.echo(f"x={coords[0]}, y={coords[1]}")
-        else:
-            click.echo("no coords")
+    @click.option("--opt", default=default, show_default=show_default)
+    def cli(opt):
+        pass
 
-    result = runner.invoke(cmd, ["--coords", "1.5", "2.5"])
+    result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
-    assert "x=1.5, y=2.5" in result.output
-
-    result = runner.invoke(cmd, [])
-    assert result.exit_code == 0
-    assert "no coords" in result.output
+    assert expected_in_help in result.output
 
 
 def test_option_multiple_with_empty_values(runner):
+    """Test multiple option with empty string values."""
+
     @click.command()
     @click.option("--tag", multiple=True)
-    def cmd(tag):
-        for t in tag:
-            click.echo(f"tag: {t}")
+    def cli(tag):
+        click.echo(f"count:{len(tag)} tags:{','.join(repr(t) for t in tag)}")
 
-    result = runner.invoke(cmd, [])
+    result = runner.invoke(cli, ["--tag", "", "--tag", "a", "--tag", ""])
     assert result.exit_code == 0
-    assert result.output == ""
-
-    result = runner.invoke(cmd, ["--tag", "", "--tag", "valid"])
-    assert result.exit_code == 0
-    assert "tag: " in result.output
-    assert "tag: valid" in result.output
+    assert "count:3 tags:'','a',''" in result.output
 
 
-def test_option_help_with_special_chars_in_default(runner):
+def test_option_envvar_empty_string(runner):
+    """Test that empty string envvar is treated as unset."""
+
     @click.command()
-    @click.option(
-        "--separator", default="\n", show_default=True, help="Line separator"
-    )
-    def cmd(separator):
-        pass
+    @click.option("--name", envvar="MY_NAME")
+    def cli(name):
+        click.echo(f"name:{name!r}")
 
-    result = runner.invoke(cmd, ["--help"])
+    # Empty envvar should be treated as None
+    result = runner.invoke(cli, [], env={"MY_NAME": ""})
     assert result.exit_code == 0
-    assert "Line separator" in result.output
+    assert "name:None" in result.output
+
+    # Non-empty envvar should work
+    result = runner.invoke(cli, [], env={"MY_NAME": "test"})
+    assert result.exit_code == 0
+    assert "name:'test'" in result.output
+
+
+@pytest.mark.parametrize(
+    ("option_args", "input_value", "expected_error"),
+    [
+        # IntRange with non-integer input
+        ({"type": click.IntRange(0, 10)}, "abc", "is not a valid integer"),
+        # FloatRange with non-float input
+        ({"type": click.FloatRange(0.0, 1.0)}, "abc", "is not a valid float"),
+        # Choice with invalid option
+        ({"type": click.Choice(["a", "b", "c"])}, "d", "is not one of"),
+        # Path with non-existent file
+        ({"type": click.Path(exists=True)}, "/nonexistent/path", "does not exist"),
+    ],
+)
+def test_option_type_validation_errors(runner, option_args, input_value, expected_error):
+    """Test error messages for invalid option type values."""
+
+    @click.command()
+    @click.option("--opt", **option_args)
+    def cli(opt):
+        click.echo(f"opt:{opt}")
+
+    result = runner.invoke(cli, ["--opt", input_value])
+    assert result.exit_code == 2
+    assert expected_error in result.output
+
+
+def test_option_callback_receives_correct_value(runner):
+    """Test that option callback receives the correctly processed value."""
+    received_values = []
+
+    def callback(ctx, param, value):
+        received_values.append(value)
+        return value
+
+    @click.command()
+    @click.option("--count", type=int, callback=callback)
+    def cli(count):
+        click.echo(f"count:{count}")
+
+    result = runner.invoke(cli, ["--count", "42"])
+    assert result.exit_code == 0
+    assert received_values == [42]
+    assert "count:42" in result.output

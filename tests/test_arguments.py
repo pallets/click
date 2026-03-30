@@ -616,3 +616,99 @@ def test_argument_custom_class_can_override_type_cast_value_and_never_sees_unset
     result = runner.invoke(cmd, pass_argv)
     assert not result.exception
     assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    ("args", "expected_exit_code", "expected_output"),
+    [
+        # Empty string argument should be passed through
+        ([""], 0, "arg:''"),
+        # Whitespace-only argument
+        (["   "], 0, "arg:'   '"),
+        # Unicode characters
+        (["\N{SNOWMAN}"], 0, "arg:'\u2603'"),
+        # Very long argument
+        (["a" * 1000], 0, "arg:'" + "a" * 1000 + "'"),
+    ],
+)
+def test_argument_edge_cases(runner, args, expected_exit_code, expected_output):
+    """Test argument parsing with edge case inputs."""
+
+    @click.command()
+    @click.argument("arg")
+    def cli(arg):
+        click.echo(f"arg:'{arg}'")
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == expected_exit_code
+    assert expected_output in result.output
+
+
+def test_argument_special_chars_with_dash_separator(runner):
+    """Test that special character arguments work with -- separator."""
+
+    @click.command()
+    @click.argument("arg")
+    def cli(arg):
+        click.echo(f"arg:'{arg}'")
+
+    # Use -- to ensure arguments starting with - are treated as positional
+    result = runner.invoke(cli, ["--", "--foo"])
+    assert result.exit_code == 0
+    assert "arg:'--foo'" in result.output
+
+    result = runner.invoke(cli, ["--", "-x"])
+    assert result.exit_code == 0
+    assert "arg:'-x'" in result.output
+
+
+def test_argument_with_dash_separator(runner):
+    """Test that arguments after -- are treated as positional arguments."""
+
+    @click.command()
+    @click.option("--opt", default="default")
+    @click.argument("arg")
+    def cli(opt, arg):
+        click.echo(f"opt:{opt} arg:{arg}")
+
+    # Without --, -value is treated as an option
+    result = runner.invoke(cli, ["-value"])
+    assert result.exit_code == 2
+    assert "no such option" in result.output.lower()
+
+    # With --, -value is treated as an argument
+    result = runner.invoke(cli, ["--", "-value"])
+    assert result.exit_code == 0
+    assert "opt:default arg:-value" in result.output
+
+
+def test_argument_nargs_zero_values(runner):
+    """Test nargs=-1 with no values provided."""
+
+    @click.command()
+    @click.argument("args", nargs=-1)
+    def cli(args):
+        click.echo(f"count:{len(args)} args:{','.join(args)}")
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0
+    assert "count:0 args:" in result.output
+
+
+def test_argument_required_with_default(runner):
+    """Test that required argument with default works correctly."""
+
+    @click.command()
+    @click.argument("arg", required=True, default="fallback")
+    def cli(arg):
+        click.echo(f"arg:{arg}")
+
+    # When not provided, should use default
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0
+    assert "arg:fallback" in result.output
+
+    # When provided, should use provided value
+    result = runner.invoke(cli, ["provided"])
+    assert result.exit_code == 0
+    assert "arg:provided" in result.output

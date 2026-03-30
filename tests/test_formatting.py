@@ -1,3 +1,5 @@
+import pytest
+
 import click
 
 
@@ -366,3 +368,152 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+
+def test_usage_error_missing_parameter(runner):
+    """Test error messages for missing required parameters."""
+
+    @click.command()
+    @click.argument("arg")
+    def cli(arg):
+        pass
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 2
+    assert "Missing argument 'ARG'" in result.output
+    assert "Usage:" in result.output
+    assert "Try 'cli --help' for help." in result.output
+
+
+def test_usage_error_missing_multiple_arguments(runner):
+    """Test error messages when multiple arguments are missing."""
+
+    @click.command()
+    @click.argument("first")
+    @click.argument("second")
+    def cli(first, second):
+        pass
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 2
+    # Should report the first missing argument
+    assert "Missing argument 'FIRST'" in result.output
+    assert "Usage:" in result.output
+
+
+@pytest.mark.parametrize(
+    ("extra_args", "expected_error"),
+    [
+        # Extra positional argument
+        (["arg1", "extra"], "Got unexpected extra argument (extra)"),
+        # Multiple extra arguments - uses plural form
+        (["arg1", "extra1", "extra2"], "Got unexpected extra arguments (extra1 extra2)"),
+    ],
+)
+def test_usage_error_extra_arguments(runner, extra_args, expected_error):
+    """Test error messages for unexpected extra arguments."""
+
+    @click.command()
+    @click.argument("arg")
+    def cli(arg):
+        pass
+
+    result = runner.invoke(cli, extra_args)
+    assert result.exit_code == 2
+    assert expected_error in result.output
+
+
+@pytest.mark.parametrize(
+    ("option_type", "input_value", "expected_error"),
+    [
+        # Invalid integer
+        (click.INT, "not-a-number", "is not a valid integer"),
+        # Invalid float
+        (click.FLOAT, "not-a-float", "is not a valid float"),
+        # Invalid boolean
+        (click.BOOL, "not-a-bool", "is not a valid boolean"),
+        # Invalid UUID
+        (click.UUID, "not-a-uuid", "is not a valid UUID"),
+    ],
+)
+def test_usage_error_invalid_type(runner, option_type, input_value, expected_error):
+    """Test error messages for invalid type conversions."""
+
+    @click.command()
+    @click.option("--value", type=option_type)
+    def cli(value):
+        pass
+
+    result = runner.invoke(cli, ["--value", input_value])
+    assert result.exit_code == 2
+    assert expected_error in result.output
+    assert "Invalid value for '--value'" in result.output
+
+
+def test_usage_error_nested_command(runner):
+    """Test error messages include correct command path for nested commands."""
+
+    @click.group()
+    def cli():
+        pass
+
+    @cli.group()
+    def sub():
+        pass
+
+    @sub.command()
+    @click.argument("arg")
+    def cmd(arg):
+        pass
+
+    result = runner.invoke(cli, ["sub", "cmd"])
+    assert result.exit_code == 2
+    assert "Missing argument 'ARG'" in result.output
+    assert "Usage: cli sub cmd [OPTIONS] ARG" in result.output
+    assert "Try 'cli sub cmd --help' for help." in result.output
+
+
+def test_help_text_with_unicode(runner):
+    """Test help text correctly displays unicode characters."""
+
+    @click.command()
+    @click.option("--name", help="Your name (e.g., \N{SNOWMAN})")
+    def cli(name):
+        """A command with unicode: \N{SNOWMAN}."""
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "\u2603" in result.output
+
+
+def test_help_text_special_chars_in_defaults(runner):
+    """Test help text with special characters in default values."""
+
+    @click.command()
+    @click.option("--path", default="/path/with spaces", show_default=True)
+    @click.option("--regex", default=".*\\.txt", show_default=True)
+    def cli(path, regex):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "/path/with spaces" in result.output
+    assert ".*\\.txt" in result.output
+
+
+def test_error_message_with_suggestions(runner):
+    """Test error messages include suggestions for similar options."""
+
+    @click.command()
+    @click.option("--verbose", is_flag=True)
+    @click.option("--version", is_flag=True)
+    def cli(verbose, version):
+        pass
+
+    # Typo in option name should suggest similar options
+    result = runner.invoke(cli, ["--verbo"])
+    assert result.exit_code == 2
+    assert "no such option" in result.output.lower()
+    # Click shows possible options when there are similar matches
+    assert "Possible options" in result.output
