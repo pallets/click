@@ -2491,9 +2491,7 @@ def test_option_multiple_with_empty_values(runner):
 
 def test_option_help_with_special_chars_in_default(runner):
     @click.command()
-    @click.option(
-        "--separator", default="\n", show_default=True, help="Line separator"
-    )
+    @click.option("--separator", default="\n", show_default=True, help="Line separator")
     def cmd(separator):
         pass
 
