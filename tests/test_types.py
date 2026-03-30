@@ -255,3 +255,92 @@ def test_choice_get_invalid_choice_message():
     choice = click.Choice(["a", "b", "c"])
     message = choice.get_invalid_choice_message("d", ctx=None)
     assert message == "'d' is not one of 'a', 'b', 'c'."
+
+
+@pytest.mark.parametrize(
+    ("tuple_types", "input_values", "expected"),
+    [
+        ((str, int), ("hello", "42"), ("hello", 42)),
+        ((int, float), ("10", "3.14"), (10, 3.14)),
+        ((click.INT, click.STRING), ("123", "test"), (123, "test")),
+        ((bool, bool), ("true", "false"), (True, False)),
+    ],
+)
+def test_tuple_type_conversion(runner, tuple_types, input_values, expected):
+    @click.command()
+    @click.option("--item", type=tuple_types)
+    def cmd(item):
+        click.echo(repr(item))
+
+    result = runner.invoke(cmd, ["--item"] + list(input_values))
+    assert not result.exception
+    assert result.output.strip() == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("tuple_types", "input_values", "error_msg"),
+    [
+        ((str, int), ("hello", "not_int"), "not a valid integer"),
+        ((int, float), ("not_int", "3.14"), "not a valid integer"),
+        ((int, int), ("10", "not_int"), "not a valid integer"),
+    ],
+)
+def test_tuple_type_conversion_error(runner, tuple_types, input_values, error_msg):
+    @click.command()
+    @click.option("--item", type=tuple_types)
+    def cmd(item):
+        click.echo(item)
+
+    result = runner.invoke(cmd, ["--item"] + list(input_values))
+    assert result.exit_code == 2
+    assert error_msg in result.output or "Invalid value" in result.output
+
+
+@pytest.mark.parametrize(
+    ("input_count", "expected_pattern"),
+    [
+        (1, "requires 2 arguments"),
+        (3, "unexpected extra argument"),
+        (0, "requires 2 arguments"),
+    ],
+)
+def test_tuple_type_wrong_arg_count(runner, input_count, expected_pattern):
+    @click.command()
+    @click.option("--item", type=(str, int))
+    def cmd(item):
+        click.echo(item)
+
+    args = ["--item"] + [str(i) for i in range(input_count)]
+    result = runner.invoke(cmd, args)
+    assert result.exit_code == 2
+    assert expected_pattern in result.output.lower()
+
+
+def test_tuple_type_in_multiple_options(runner):
+    @click.command()
+    @click.option("--coord", type=(int, int), multiple=True)
+    def cmd(coord):
+        for c in coord:
+            click.echo(f"({c[0]}, {c[1]})")
+
+    result = runner.invoke(cmd, ["--coord", "10", "20", "--coord", "30", "40"])
+    assert not result.exception
+    assert "(10, 20)" in result.output
+    assert "(30, 40)" in result.output
+
+
+def test_tuple_type_with_custom_types(runner):
+    @click.command()
+    @click.option("--range", type=(click.IntRange(0, 100), click.FloatRange(0, 1.0)))
+    def cmd(range):
+        percent, ratio = range
+        click.echo(f"percent={percent}, ratio={ratio:.2f}")
+
+    result = runner.invoke(cmd, ["--range", "50", "0.75"])
+    assert not result.exception
+    assert "percent=50, ratio=0.75" in result.output
+
+    # Test boundary error with invalid values
+    result = runner.invoke(cmd, ["--range", "150", "0.75"])
+    assert result.exit_code == 2
+    assert "150 is not in the range 0<=x<=100" in result.output

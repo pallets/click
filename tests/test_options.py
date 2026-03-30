@@ -2319,3 +2319,115 @@ def test_flag_value_on_option_with_zero_or_one_args(flag_type, args, expect_outp
     result = runner.invoke(cmd, args)
     assert result.exit_code == 0
     assert result.output == expect_output
+
+
+@pytest.mark.parametrize(
+    ("option_type", "input_value", "error_pattern"),
+    [
+        (click.INT, "not_an_int", r"not a valid integer"),
+        (click.FLOAT, "not_a_float", r"not a valid float"),
+        (click.UUID, "not_a_uuid", r"not a valid UUID"),
+        (click.IntRange(0, 10), "15", r"not in the range"),
+        (click.FloatRange(0.0, 1.0), "1.5", r"not in the range"),
+    ],
+)
+def test_param_type_error_messages(runner, option_type, input_value, error_pattern):
+    """Test consistent error message formatting for type conversion failures."""
+
+    @click.command()
+    @click.option("--value", type=option_type)
+    def cmd(value):
+        click.echo(value)
+
+    result = runner.invoke(cmd, ["--value", input_value])
+    assert result.exit_code == 2
+    assert re.search(error_pattern, result.output, re.IGNORECASE) is not None
+
+
+@pytest.mark.parametrize(
+    ("option_type", "valid_input", "help_snippet"),
+    [
+        (click.IntRange(1, 100), "50", r"1<=x<=100"),
+        (click.FloatRange(0.0, 1.0), "0.5", r"0<=x<=1"),
+        (click.Choice(["small", "medium", "large"]), "medium", r"small|medium|large"),
+    ],
+)
+def test_type_info_in_help(runner, option_type, valid_input, help_snippet):
+    """Test that type constraints are shown in help output."""
+
+    @click.command()
+    @click.option("--value", type=option_type, help="A value")
+    def cmd(value):
+        click.echo(value)
+
+    # Test help output
+    help_result = runner.invoke(cmd, ["--help"])
+    assert help_result.exit_code == 0
+    assert re.search(help_snippet, help_result.output) is not None
+
+    # Test actual parsing works with valid input
+    parse_result = runner.invoke(cmd, ["--value", valid_input])
+    assert parse_result.exit_code == 0
+
+
+def test_unrecognized_option_suggestions(runner):
+    """Test that helpful suggestions are provided for unrecognized options."""
+
+    @click.command()
+    @click.option("--verbose", is_flag=True)
+    @click.option("--version", is_flag=True)
+    @click.option("--verify", is_flag=True)
+    def cmd(verbose, version, verify):
+        pass
+
+    # Test with similar option
+    result = runner.invoke(cmd, ["--verion"])
+    assert result.exit_code == 2
+    assert "Did you mean" in result.output or "Possible options" in result.output
+
+
+def test_missing_required_multiple_options(runner):
+    """Test error message when multiple required options are missing."""
+
+    @click.command()
+    @click.option("--username", required=True)
+    @click.option("--password", required=True)
+    def login(username, password):
+        click.echo(f"Logging in as {username}")
+
+    result = runner.invoke(login, [])
+    assert result.exit_code == 2
+    # Should mention at least one required option is missing
+    assert "Missing option" in result.output
+
+
+@pytest.mark.parametrize(
+    "bad_args",
+    [
+        ["--username"],  # Option without value
+    ],
+)
+def test_option_missing_value_errors(runner, bad_args):
+    """Test error messages for options missing required values."""
+
+    @click.command()
+    @click.option("--username", required=True)
+    def cmd(username):
+        click.echo(username)
+
+    result = runner.invoke(cmd, bad_args)
+    assert result.exit_code == 2
+    assert "requires an argument" in result.output or "Missing option" in result.output
+
+
+def test_empty_value_different_error_messages(runner):
+    """Test different error scenarios for option values."""
+    # Test missing value for integer type
+    @click.command()
+    @click.option("--count", type=int)
+    def cmd_int(count):
+        click.echo(count)
+
+    result = runner.invoke(cmd_int, ["--count"])
+    assert result.exit_code == 2
+    assert "requires an argument" in result.output
