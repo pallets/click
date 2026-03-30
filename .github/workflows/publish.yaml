@@ -20,6 +20,7 @@ jobs:
         with:
           path: ./dist
   wait:
+    runs-on: ubuntu-latest
     steps:
       - run: sleep 3
   create-release:
