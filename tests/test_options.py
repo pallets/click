@@ -2422,6 +2422,7 @@ def test_option_missing_value_errors(runner, bad_args):
 
 def test_empty_value_different_error_messages(runner):
     """Test different error scenarios for option values."""
+
     # Test missing value for integer type
     @click.command()
     @click.option("--count", type=int)
