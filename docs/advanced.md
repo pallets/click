@@ -213,6 +213,12 @@ whereas {func}`Context.forward` fills in the arguments from the current
 command. Both accept the command as the first argument, and everything else
 is passed onwards as you would expect.
 
+When invoking commands this way, Click does not parse command-line input for
+the invoked command. That means required parameters are not validated the same
+way as shell invocation unless you provide values yourself. For example,
+calling `ctx.invoke(other_cmd)` without values for required arguments can pass
+`None` to the callback.
+
 Example:
 
 ```{eval-rst}
