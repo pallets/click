@@ -205,6 +205,11 @@ class UnprocessedParamType(ParamType):
 
 
 class StringParamType(ParamType):
+    """The text string type.  Backed by the :data:`STRING` constant.
+    Converts values to Python :class:`str`.  When reading from environment
+    variables, bytes are decoded using the filesystem encoding.
+    """
+
     name = "text"
 
     def convert(
@@ -574,6 +579,16 @@ class _NumberRangeBase(_NumberParamTypeBase):
 
 
 class IntParamType(_NumberParamTypeBase):
+    """The integer type.  Backed by the :data:`INT` constant.
+    Converts values to Python :class:`int`.
+
+    .. code-block:: python
+
+        @click.command()
+        @click.option("--count", type=click.INT, default=1)
+        def cmd(count: int) -> None: ...
+    """
+
     name = "integer"
     _number_class = int
 
@@ -608,6 +623,16 @@ class IntRange(_NumberRangeBase, IntParamType):
 
 
 class FloatParamType(_NumberParamTypeBase):
+    """The floating-point number type.  Backed by the :data:`FLOAT` constant.
+    Converts values to Python :class:`float`.
+
+    .. code-block:: python
+
+        @click.command()
+        @click.option("--ratio", type=click.FLOAT, default=0.5)
+        def cmd(ratio: float) -> None: ...
+    """
+
     name = "float"
     _number_class = float
 
@@ -659,6 +684,16 @@ class FloatRange(_NumberRangeBase, FloatParamType):
 
 
 class BoolParamType(ParamType):
+    """The boolean type.  Backed by the :data:`BOOL` constant.
+    Converts truthy string values (e.g. ``"1"``, ``"yes"``, ``"true"``,
+    ``"on"``) to :data:`True` and falsy strings (e.g. ``"0"``, ``"no"``,
+    ``"false"``, ``"off"``) to :data:`False`.
+
+    Primarily used for boolean flags and environment variables rather than
+    plain options; Click automatically uses this type for
+    :func:`option` calls with ``is_flag=True``.
+    """
+
     name = "boolean"
 
     bool_states: dict[str, bool] = {
@@ -728,6 +763,12 @@ class BoolParamType(ParamType):
 
 
 class UUIDParameterType(ParamType):
+    """The UUID type.  Backed by the :data:`UUID` constant.
+    Converts string values to :class:`uuid.UUID` objects.  Accepts standard
+    UUID representations including hyphenated (``"xxxxxxxx-xxxx-..."``) and
+    compact forms.
+    """
+
     name = "uuid"
 
     def convert(
