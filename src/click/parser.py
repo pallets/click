@@ -401,7 +401,9 @@ class _OptionParser:
                 if self.ignore_unknown_options:
                     unknown_options.append(ch)
                     continue
-                raise NoSuchOption(_normalize_opt(arg, self.ctx), ctx=self.ctx)  # Fix #2779
+                raise NoSuchOption(
+                    _normalize_opt(arg, self.ctx), ctx=self.ctx
+                )  # Fix #2779
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
                 # next arg, and stop consuming characters of arg.
