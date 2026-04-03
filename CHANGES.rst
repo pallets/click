@@ -3,7 +3,7 @@
 Version 8.3.2
 --------------
 
-Released 2026-03-16
+Released 2026-04-02
 
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084` :pr:`3152`
