@@ -371,7 +371,7 @@ To pass in a value from a specific environment variable use `envvar`.
     @click.command()
     @click.option('--username', envvar='USERNAME')
     def greet(username):
-       click.echo(f"Hello {username}!")
+        click.echo(f"Hello {username}!")
 
 .. click:run::
 
@@ -386,7 +386,7 @@ If a list is passed to `envvar`, the first environment variable found is picked.
     @click.command()
     @click.option('--username', envvar=['ALT_USERNAME', 'USERNAME'])
     def greet(username):
-       click.echo(f"Hello {username}!")
+        click.echo(f"Hello {username}!")
 
 .. click:run::
 

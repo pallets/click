@@ -309,14 +309,14 @@ import ConfigParser
 
 APP_NAME = 'My Application'
 def read_config():
-cfg = os.path.join(click.get_app_dir(APP_NAME), 'config.ini')
-parser = ConfigParser.RawConfigParser()
-parser.read([cfg])
-rv = {}
-for section in parser.sections():
-    for key, value in parser.items(section):
-        rv[f"{section}.{key}"] = value
-return rv
+    cfg = os.path.join(click.get_app_dir(APP_NAME), 'config.ini')
+    parser = ConfigParser.RawConfigParser()
+    parser.read([cfg])
+    rv = {}
+    for section in parser.sections():
+        for key, value in parser.items(section):
+            rv[f"{section}.{key}"] = value
+    return rv
 ```
 
 ## Showing Progress Bars

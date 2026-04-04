@@ -38,10 +38,10 @@ Because this combination of parameters is quite common, this can also be
 replaced with the {func}`password_option` decorator:
 
 ```python
-    @click.command()
-    @click.password_option()
-    def encrypt(password):
-        click.echo(f"encoded: to {codecs.encode(password, 'rot13')}")
+@click.command()
+@click.password_option()
+def encrypt(password):
+    click.echo(f"encoded: to {codecs.encode(password, 'rot13')}")
 ```
 
 ## Confirmation Option

@@ -115,18 +115,17 @@ command called `push`, it would accept `pus` as an alias (so long as it was uniq
 It can be used like this:
 
 ```python
+@click.group(cls=AliasedGroup)
+def cli():
+    pass
 
-    @click.group(cls=AliasedGroup)
-    def cli():
-        pass
+@cli.command
+def push():
+    pass
 
-    @cli.command
-    def push():
-        pass
-
-    @cli.command
-    def pop():
-        pass
+@cli.command
+def pop():
+    pass
 ```
 
 See the [alias example](https://github.com/pallets/click/tree/main/examples/aliases) in Click's repository for another example.
