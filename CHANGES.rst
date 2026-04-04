@@ -17,6 +17,10 @@ Released 2026-04-02
     with a dedicated CI job. :pr:`3139`
 -   Fix callable ``flag_value`` being instantiated when used as a default via
     ``default=True``. :issue:`3121` :pr:`3201` :pr:`3213` :pr:`3225`
+-   Add optional randomized parallel test execution using ``pytest-randomly`` and
+    ``pytest-xdist`` to detect test pollution and race conditions. :pr:`3151`
+-   Add contributor documentation for running stress tests, randomized
+    parallel tests, and Flask smoke tests. :pr:`3151` :pr:`3177`
 
 Version 8.3.1
 --------------
