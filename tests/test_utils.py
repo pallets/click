@@ -419,8 +419,8 @@ def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test):
 
 
 def test_echo_color_flag(monkeypatch, capfd):
-    isatty = True
-    monkeypatch.setattr(click._compat, "isatty", lambda x: isatty)
+    should_strip_ansi = False
+    monkeypatch.setattr(click._compat, "should_strip_ansi", lambda x: should_strip_ansi)
 
     text = "foo"
     styled_text = click.style(text, fg="red")
@@ -434,12 +434,12 @@ def test_echo_color_flag(monkeypatch, capfd):
     out, err = capfd.readouterr()
     assert out == f"{styled_text}\n"
 
-    isatty = True
+    should_strip_ansi = False
     click.echo(styled_text)
     out, err = capfd.readouterr()
     assert out == f"{styled_text}\n"
 
-    isatty = False
+    should_strip_ansi = True
     # Faking isatty() is not enough on Windows;
     # the implementation caches the colorama wrapped stream
     # so we have to use a new stream for each test
