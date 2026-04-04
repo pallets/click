@@ -78,7 +78,7 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
     last_index = len(words) - 1
 
     for i, word in enumerate(words):
-        total_length += len(word) + (i > 0)
+        total_length += len(word) + (1 if i > 0 else 0)
 
         if total_length > max_length:  # too long, truncate
             break
