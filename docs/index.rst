@@ -71,6 +71,7 @@ Tutorials
 
    quickstart
    virtualenv
+   command-line-tutorial
 
 How to Guides
 ---------------
