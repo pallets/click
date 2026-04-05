@@ -17,6 +17,10 @@ Released 2026-04-02
     with a dedicated CI job. :pr:`3139`
 -   Fix callable ``flag_value`` being instantiated when used as a default via
     ``default=True``. :issue:`3121` :pr:`3201` :pr:`3213` :pr:`3225`
+-   ``CliRunner``'s redirected streams now expose the original file descriptor
+    via ``fileno()``, so that ``faulthandler``, ``subprocess``, and other
+    C-level consumers no longer crash with ``io.UnsupportedOperation``.
+    :issue:`2865`
 
 Version 8.3.1
 --------------
