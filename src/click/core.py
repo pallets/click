@@ -1585,6 +1585,10 @@ class Group(Command):
         if subcommand_metavar is None:
             if chain:
                 subcommand_metavar = "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."
+                if invoke_without_command:
+                    subcommand_metavar = f"[{subcommand_metavar}]"
+            elif invoke_without_command:
+                subcommand_metavar = "[COMMAND] [ARGS]..."
             else:
                 subcommand_metavar = "COMMAND [ARGS]..."
 
