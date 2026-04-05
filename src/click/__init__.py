@@ -14,6 +14,7 @@ from .core import Context as Context
 from .core import Group as Group
 from .core import Option as Option
 from .core import Parameter as Parameter
+from .core import ParameterSource as ParameterSource
 from .decorators import argument as argument
 from .decorators import command as command
 from .decorators import confirmation_option as confirmation_option
