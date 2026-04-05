@@ -370,6 +370,33 @@ def test_full_complete(runner, shell, env, expect):
     assert result.output == expect
 
 
+def test_fish_complete_multiline_help(runner):
+    cli = Command(
+        "cli",
+        params=[
+            Option(
+                ["--at"],
+                help="Attachment with explicit mimetype,\n--at image.jpg image/jpeg",
+            )
+        ],
+    )
+
+    result = runner.invoke(
+        cli,
+        env={
+            "_CLI_COMPLETE": "fish_complete",
+            "COMP_WORDS": "cli --",
+            "COMP_CWORD": "--",
+        },
+    )
+
+    assert (
+        result.output
+        == "plain,--at\tAttachment with explicit mimetype, --at image.jpg image/jpeg\n"
+        "plain,--help\tShow this message and exit.\n"
+    )
+
+
 @pytest.mark.parametrize(
     ("env", "expect"),
     [

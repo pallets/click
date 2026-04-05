@@ -418,7 +418,12 @@ class FishComplete(ShellComplete):
 
     def format_completion(self, item: CompletionItem) -> str:
         if item.help:
-            return f"{item.type},{item.value}\t{item.help}"
+            help_ = " ".join(
+                part.strip() for part in item.help.splitlines() if part.strip()
+            )
+
+            if help_:
+                return f"{item.type},{item.value}\t{help_}"
 
         return f"{item.type},{item.value}"
 
