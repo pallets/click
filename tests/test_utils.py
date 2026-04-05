@@ -9,8 +9,6 @@ from decimal import Decimal
 from fractions import Fraction
 from functools import partial
 from io import StringIO
-from pathlib import Path
-from tempfile import tempdir
 from unittest.mock import patch
 
 import pytest
@@ -379,7 +377,7 @@ EchoViaPagerTest = namedtuple(
         ),
     ],
 )
-def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test):
+def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test, tmp_path):
     monkeypatch.setitem(os.environ, "PAGER", pager_cmd)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
 
@@ -391,8 +389,7 @@ def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test):
 
     check_raise = pytest.raises(expected_error) if expected_error else nullcontext()
 
-    pager_out_tmp = Path(tempdir) / "pager_out.txt"
-    pager_out_tmp.unlink(missing_ok=True)
+    pager_out_tmp = tmp_path / "pager_out.txt"
     with pager_out_tmp.open("w") as f:
         force_subprocess_stdout = patch.object(
             subprocess,
