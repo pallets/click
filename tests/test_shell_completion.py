@@ -559,3 +559,30 @@ def test_files_closed(runner) -> None:
             assert not current_warnings, "There should be no warnings to start"
             _get_completions(cli, args=[], incomplete="")
             assert not current_warnings, "There should be no warnings after either"
+
+
+@pytest.mark.parametrize(
+    ("shell", "env", "expect"),
+    [
+        (
+            "bash",
+            {"COMP_WORDS": "cli --color=", "COMP_CWORD": "1"},
+            "plain,--color=red\nplain,--color=green\nplain,--color=blue\n",
+        ),
+        (
+            "bash",
+            {"COMP_WORDS": "cli --color=r", "COMP_CWORD": "1"},
+            "plain,--color=red\n",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_option_equals_completion(runner, shell, env, expect):
+    """Completing ``--option=value`` prepends the option prefix."""
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["red", "green", "blue"]))],
+    )
+    env["_CLI_COMPLETE"] = f"{shell}_complete"
+    result = runner.invoke(cli, env=env)
+    assert result.output == expect
