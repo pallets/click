@@ -51,6 +51,18 @@ def test_range_fail(type, value, expect):
     assert expect in exc_info.value.message
 
 
+def test_func_param_type_uses_value_error_message():
+    def parse(value):
+        raise ValueError(f"bad value: {value}")
+
+    func_type = click.types.FuncParamType(parse)
+
+    with pytest.raises(click.BadParameter) as exc_info:
+        func_type.convert("nope", None, None)
+
+    assert "bad value: nope" in exc_info.value.message
+
+
 def test_float_range_no_clamp_open():
     with pytest.raises(TypeError):
         click.FloatRange(0, 1, max_open=True, clamp=True)
