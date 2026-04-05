@@ -710,3 +710,22 @@ def test_flag_value_prompt(
         assert result.output == expected_output
         assert not result.stderr
         assert result.exit_code == 0 if expected not in (REPEAT, INVALID) else 1
+
+
+def test_open_url_windows_locate_quotes_path(monkeypatch):
+    calls = []
+
+    def fake_call(args):
+        calls.append(args)
+        return 0
+
+    monkeypatch.setattr(click._termui_impl, "WIN", True)
+    monkeypatch.setattr(click._termui_impl, "CYGWIN", False)
+    monkeypatch.setattr("subprocess.call", fake_call)
+
+    rv = click._termui_impl.open_url(
+        r"C:\Users\Public\click demo\example.txt", locate=True
+    )
+
+    assert rv == 0
+    assert calls == [["explorer", '/select,"C:\\Users\\Public\\click demo\\example.txt"']]
