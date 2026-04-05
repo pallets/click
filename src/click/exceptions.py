@@ -78,8 +78,9 @@ class UsageError(ClickException):
             self.ctx is not None
             and self.ctx.command.get_help_option(self.ctx) is not None
         ):
+            help_names = self.ctx.command.get_help_option_names(self.ctx)
             hint = _("Try '{command} {option}' for help.").format(
-                command=self.ctx.command_path, option=self.ctx.help_option_names[0]
+                command=self.ctx.command_path, option=help_names[0]
             )
             hint = f"{hint}\n"
         if self.ctx is not None:
