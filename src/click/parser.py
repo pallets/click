@@ -141,7 +141,11 @@ class _Option:
         for opt in opts:
             prefix, value = _split_opt(opt)
             if not prefix:
-                raise ValueError(f"Invalid start character for option ({opt})")
+                raise ValueError(
+                    _("Invalid start character for option ({option})").format(
+                        option=opt
+                    )
+                )
             self.prefixes.add(prefix[0])
             if len(prefix) == 1 and len(value) == 1:
                 self._short_opts.append(opt)
