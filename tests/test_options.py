@@ -141,15 +141,15 @@ def test_unknown_options(runner, unknown_flag):
 
     result = runner.invoke(cli, [unknown_flag])
     assert result.exception
-    assert f"No such option: {unknown_flag}" in result.output
+    assert f"No such option '{unknown_flag}'." in result.output
 
 
 @pytest.mark.parametrize(
     ("value", "expect"),
     [
-        ("--cat", "Did you mean --count?"),
-        ("--bounds", "(Possible options: --bound, --count)"),
-        ("--bount", "(Possible options: --bound, --count)"),
+        ("--cat", "Did you mean '--count'?"),
+        ("--bounds", "(Did you mean one of: '--bound', '--count'?)"),
+        ("--bount", "(Did you mean one of: '--bound', '--count'?)"),
     ],
 )
 def test_suggest_possible_options(runner, value, expect):

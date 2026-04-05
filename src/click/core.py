@@ -27,6 +27,7 @@ from .exceptions import ClickException
 from .exceptions import Exit
 from .exceptions import MissingParameter
 from .exceptions import NoArgsIsHelpError
+from .exceptions import NoSuchCommand
 from .exceptions import UsageError
 from .formatting import HelpFormatter
 from .formatting import join_options
@@ -1908,7 +1909,6 @@ class Group(Command):
         self, ctx: Context, args: list[str]
     ) -> tuple[str | None, Command | None, list[str]]:
         cmd_name = make_str(args[0])
-        original_cmd_name = cmd_name
 
         # Get the command
         cmd = self.get_command(ctx, cmd_name)
@@ -1928,7 +1928,7 @@ class Group(Command):
         if cmd is None and not ctx.resilient_parsing:
             if _split_opt(cmd_name)[0]:
                 self.parse_args(ctx, args)
-            ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
+            raise NoSuchCommand(cmd_name, possibilities=self.commands, ctx=ctx)
         return cmd_name if cmd else None, cmd, args[1:]
 
     def shell_complete(self, ctx: Context, incomplete: str) -> list[CompletionItem]:
