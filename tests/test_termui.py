@@ -607,7 +607,6 @@ FLAG_VALUE_PROMPT_CASES = [
     ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "", True),
     ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "y", True),
     ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "n", False),
-
     # default=False
     ({"prompt": True, "default": False, "flag_value": True}, [], "[y/N]", "", False),
     ({"prompt": True, "default": False, "flag_value": True}, [], "[y/N]", "y", True),

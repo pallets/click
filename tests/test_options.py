@@ -1495,10 +1495,14 @@ def test_negative_flag_with_true_default(runner):
         click.echo(repr(enable_xyz), nl=False)
 
     result = runner.invoke(cmd, [])
-    assert result.output == "True", "default=True should be returned when flag is not passed"
+    assert result.output == "True", (
+        "default=True should be returned when flag is not passed"
+    )
 
     result = runner.invoke(cmd, ["--without-xyz"])
-    assert result.output == "False", "flag_value=False should be returned when flag is passed"
+    assert result.output == "False", (
+        "flag_value=False should be returned when flag is passed"
+    )
 
 
 @pytest.mark.parametrize(
