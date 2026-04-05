@@ -73,6 +73,10 @@ classes and functions.
 ```
 
 ```{eval-rst}
+.. autofunction:: get_pager_file
+```
+
+```{eval-rst}
 .. autofunction:: prompt
 ```
 
