@@ -2897,7 +2897,11 @@ class Option(Parameter):
         # (instead of eagerly in __init__) prevents callable flag_values
         # (like classes) from being instantiated by the callable check below.
         # https://github.com/pallets/click/issues/3121
-        if value is True and self.is_flag:
+        # Skip the conversion when flag_value is explicitly False (a negative flag).
+        # For negative flags, default=True is the literal default value — not a signal
+        # to activate the flag. Converting it to False would silently override the
+        # user's explicit default. https://github.com/pallets/click/issues/3111
+        if value is True and self.is_flag and self.flag_value is not False:
             value = self.flag_value
         elif call and callable(value):
             value = value()

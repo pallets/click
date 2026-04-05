@@ -1435,13 +1435,13 @@ def test_type_from_flag_value():
         # Not passing --foo returns the default value as-is, in its Python type, then
         # converted by the option type.
         ({"type": bool, "default": True, "flag_value": True}, [], True),
-        ({"type": bool, "default": True, "flag_value": False}, [], False),
+        ({"type": bool, "default": True, "flag_value": False}, [], True),
         ({"type": bool, "default": False, "flag_value": True}, [], False),
         ({"type": bool, "default": False, "flag_value": False}, [], False),
         ({"type": bool, "default": None, "flag_value": True}, [], None),
         ({"type": bool, "default": None, "flag_value": False}, [], None),
         ({"type": str, "default": True, "flag_value": True}, [], "True"),
-        ({"type": str, "default": True, "flag_value": False}, [], "False"),
+        ({"type": str, "default": True, "flag_value": False}, [], "True"),
         ({"type": str, "default": False, "flag_value": True}, [], "False"),
         ({"type": str, "default": False, "flag_value": False}, [], "False"),
         ({"type": str, "default": "foo", "flag_value": True}, [], "foo"),
@@ -1478,6 +1478,27 @@ def test_flag_value_and_default(runner, opt_params, args, expected):
 
     result = runner.invoke(cmd, args)
     assert result.output == repr(expected)
+
+
+def test_negative_flag_with_true_default(runner):
+    """A negative flag (flag_value=False, default=True) should return True when not
+    passed and False when passed. Regression test for https://github.com/pallets/click/issues/3111."""
+
+    @click.command()
+    @click.option(
+        "--without-xyz",
+        "enable_xyz",
+        flag_value=False,
+        default=True,
+    )
+    def cmd(enable_xyz):
+        click.echo(repr(enable_xyz), nl=False)
+
+    result = runner.invoke(cmd, [])
+    assert result.output == "True", "default=True should be returned when flag is not passed"
+
+    result = runner.invoke(cmd, ["--without-xyz"])
+    assert result.output == "False", "flag_value=False should be returned when flag is passed"
 
 
 @pytest.mark.parametrize(
