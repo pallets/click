@@ -746,3 +746,19 @@ def test_make_default_short_help(value, max_length, alter, expect):
 
     out = click.utils.make_default_short_help(value, max_length)
     assert out == expect
+
+
+def test_open_url_windows_uses_startfile(monkeypatch):
+    """On Windows, open_url should use os.startfile instead of subprocess
+    to avoid depending on the shell built-in 'start' command."""
+    from click._termui_impl import open_url, WIN
+
+    if not WIN:
+        pytest.skip("Windows-only test")
+
+    called_with = []
+    monkeypatch.setattr(os, "startfile", lambda url: called_with.append(url))
+
+    result = open_url("https://example.com")
+    assert result == 0
+    assert called_with == ["https://example.com"]
