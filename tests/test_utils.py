@@ -746,3 +746,30 @@ def test_make_default_short_help(value, max_length, alter, expect):
 
     out = click.utils.make_default_short_help(value, max_length)
     assert out == expect
+
+
+def test_hide_input_shows_custom_error(runner):
+    """With hide_input=True, custom error messages from type validation
+    should still be displayed, not swallowed by a generic message."""
+
+    class StrictPassword(click.ParamType):
+        name = "password"
+
+        def convert(self, value, param, ctx):
+            if len(value) < 8:
+                self.fail("Password must be at least 8 characters", param, ctx)
+            return value
+
+    @click.command()
+    @click.option(
+        "--pw",
+        prompt=True,
+        hide_input=True,
+        type=StrictPassword(),
+    )
+    def cmd(pw):
+        click.echo(f"OK:{pw}")
+
+    result = runner.invoke(cmd, input="short\nlong_enough_pw\n")
+    assert "Password must be at least 8 characters" in result.output
+    assert "OK:long_enough_pw" in result.output
