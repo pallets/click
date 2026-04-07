@@ -69,6 +69,73 @@ The help epilog is printed at the end of the help and is useful for showing exam
     invoke(init, args=['--help'])
 ```
 
+## Internal Help Generation Flow
+
+This section documents the current help page generation flow in Click for
+maintainers working on help-related changes.
+
+There are two main paths that show a help page:
+
+- The user passes ``--help``.
+- ``no_args_is_help`` is enabled and the command is invoked without arguments.
+
+### ``--help`` path
+
+The ``--help`` option is added by
+{meth}`click.Command.get_help_option_names` and
+{meth}`click.Command.get_help_option`. The latter creates a help option using
+{func}`click.decorators.help_option`.
+
+The callback created by {func}`click.decorators.help_option` is the entry point
+for explicit help output. When the option is triggered, it calls
+{meth}`click.Context.get_help`, writes the returned text with {func}`click.echo`,
+then exits the context.
+
+{meth}`click.Context.get_help` delegates directly to
+{meth}`click.Command.get_help`. That method creates a formatter with
+{meth}`click.Context.make_formatter`, calls
+{meth}`click.Command.format_help`, then returns the formatter buffer as a
+string.
+
+{meth}`click.Command.format_help` assembles the help page in four steps:
+
+- {meth}`click.Command.format_usage`
+- {meth}`click.Command.format_help_text`
+- {meth}`click.Command.format_options`
+- {meth}`click.Command.format_epilog`
+
+### Group-specific behavior
+
+{class}`click.Group` extends the base command flow in two important ways.
+
+First, {meth}`click.Group.format_options` calls the base implementation and then
+appends {meth}`click.Group.format_commands`, which builds the ``Commands``
+section for visible subcommands.
+
+Second, {meth}`click.Group.parse_args` handles the group-specific remaining
+arguments after the base parser has processed parameters.
+
+### ``no_args_is_help`` path
+
+{meth}`click.Command.parse_args` and {meth}`click.Group.parse_args` both check
+for the ``no_args_is_help`` case before normal parsing continues. If it applies,
+they raise {class}`click.exceptions.NoArgsIsHelpError`.
+
+{class}`click.exceptions.NoArgsIsHelpError` uses
+{meth}`click.Context.get_help` to populate its message, then its ``show``
+method writes that help page to stderr.
+
+### Rendering
+
+The low-level text rendering is handled by {class}`click.HelpFormatter`.
+Command and group methods decide which sections to emit and in what order.
+{class}`click.HelpFormatter` is responsible for rendering those sections into
+terminal text, including usage wrapping, indentation, headings, paragraphs, and
+definition-list formatting for options and subcommands.
+
+In short, command classes assemble help content, while
+{class}`click.HelpFormatter` renders the final layout.
+
 (documenting-arguments)=
 
 ## Documenting Arguments
