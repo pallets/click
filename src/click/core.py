@@ -3110,7 +3110,7 @@ class Option(Parameter):
                 )[1]
             elif self.is_bool_flag and not self.secondary_opts and not default_value:
                 default_string = ""
-            elif default_value == "":
+            elif isinstance(default_value, str) and default_value == "":
                 default_string = '""'
             else:
                 default_string = str(default_value)
