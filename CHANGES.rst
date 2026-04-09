@@ -21,6 +21,11 @@ Unreleased
     ``pytest-xdist`` to detect test pollution and race conditions. :pr:`3151`
 -   Add contributor documentation for running stress tests, randomized
     parallel tests, and Flask smoke tests. :pr:`3151` :pr:`3177`
+-   Fix ``default=True`` with boolean ``flag_value`` always returning the
+    ``flag_value`` instead of ``True``. The ``default=True`` to ``flag_value``
+    substitution now only applies to non-boolean flags, where ``True`` acts as a
+    sentinel meaning "activate this flag by default". For boolean flags,
+    ``default=True`` is returned as a literal value. :issue:`3111` :pr:`3239`
 
 Version 8.3.2
 -------------

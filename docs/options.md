@@ -341,12 +341,19 @@ To have a flag pass a value to the decorated function set `flag_value`. This aut
     invoke(info)
 ```
 
-````{note}
-The `default` value is given to the decorated function as-is. So if you set `default=None`, the value passed to the function is the `None` Python value. Same for any other type.
+### How `default` and `flag_value` interact
 
-But there is a special case for flags. If a flag has a `flag_value`, then setting `default=True` is interpreted as *the flag should be activated by default*. So instead of the decorated function receiving the `True` Python value, it will receive the `flag_value`.
+The `default` value is given to the underlying function
+as-is. So if you set `default=None`, the function receives
+`None`. Same for any other type.
 
-Which means, in example above, this option:
+But there is a special case for **non-boolean** flags: if a
+flag has a non-boolean `flag_value` (like a string or a
+class), then `default=True` is interpreted as *the flag
+should be activated by default*. The function receives the
+`flag_value`, not the Python `True`.
+
+Which means, in the example above, this option:
 
 ```python
 @click.option('--upper', 'transformation', flag_value='upper', default=True)
@@ -358,8 +365,88 @@ is equivalent to:
 @click.option('--upper', 'transformation', flag_value='upper', default='upper')
 ```
 
-Because the two are equivalent, it is recommended to always set `default` to the actual value you want to pass and avoid using the special `True` case. This makes the code more explicit and predictable.
+Because the two are equivalent, it is recommended to always
+use the second form and set `default` to the actual value
+you want. This makes code more explicit and predictable.
+
+This special case does **not** apply to boolean flags (where
+`flag_value` is `True` or `False`). For boolean flags,
+`default=True` is the literal Python value `True`.
+
+The tables below show the value received by the function for
+each combination of `default`, `flag_value`, and whether
+the flag was passed on the command line.
+
+#### Boolean flags (`is_flag=True`, boolean `flag_value`)
+
+These are flags where `flag_value` is `True` or `False`.
+The `default` value is always passed through literally
+without any special substitution.
+
+| `default` | `flag_value` | Not passed | `--flag` passed |
+|-----------|--------------|------------|-----------------|
+| *(unset)* | *(unset)*    | `False`    | `True`          |
+| `True`    | *(unset)*    | `True`     | `True`          |
+| `False`   | *(unset)*    | `False`    | `True`          |
+| `None`    | *(unset)*    | `None`     | `True`          |
+| `True`    | `True`       | `True`     | `True`          |
+| `True`    | `False`      | `True`     | `False`         |
+| `False`   | `True`       | `False`    | `True`          |
+| `False`   | `False`      | `False`    | `False`         |
+| `None`    | `True`       | `None`     | `True`          |
+| `None`    | `False`      | `None`     | `False`         |
+
+````{tip}
+For a negative flag that defaults to off, prefer the
+explicit pair form `--with-xyz/--without-xyz` over the
+single-flag `flag_value=False, default=True`:
+
+```python
+@click.option('--with-xyz/--without-xyz', 'enable_xyz', default=True)
+```
 ````
+
+#### Boolean flag pairs (`--flag/--no-flag`)
+
+These use secondary option names to provide both an on and
+off switch. The `default` value is always literal.
+
+| `default` | Not passed | `--flag` | `--no-flag` |
+|-----------|------------|----------|-------------|
+| *(unset)* | `False`    | `True`   | `False`     |
+| `True`    | `True`     | `True`   | `False`     |
+| `False`   | `False`    | `True`   | `False`     |
+| `None`    | `None`     | `True`   | `False`     |
+
+#### Non-boolean feature switches (`flag_value` is a string, class, etc.)
+
+For these flags, `default=True` is a **special case**: it
+means "activate this flag by default" and resolves to the
+`flag_value`. All other `default` values are passed through
+literally.
+
+| `default`  | `flag_value` | Not passed  | `--flag` passed |
+|------------|--------------|-------------|-----------------|
+| *(unset)*  | `"upper"`    | `None`      | `"upper"`       |
+| `True`     | `"upper"`    | `"upper"`¹  | `"upper"`       |
+| `"lower"`  | `"upper"`    | `"lower"`   | `"upper"`       |
+| `None`     | `"upper"`    | `None`      | `"upper"`       |
+
+```{hint}
+¹: `default=True` is substituted with `flag_value`.
+```
+
+#### Feature switch groups (multiple flags sharing one variable)
+
+When multiple `flag_value` options target the same parameter
+name, `default=True` on one of them marks it as the default
+choice.
+
+| Definition                                             | Not passed | `--upper` | `--lower` |
+|--------------------------------------------------------|------------|-----------|-----------|
+| `--upper` with `flag_value='upper'`, `default=True`    | `"upper"`  | `"upper"` | `"lower"` |
+| `--upper` with `flag_value='upper'`, `default='upper'` | `"upper"`  | `"upper"` | `"lower"` |
+| Both without `default`                                 | `None`     | `"upper"` | `"lower"` |
 
 ## Values from Environment Variables
 
