@@ -1,7 +1,21 @@
 .. currentmodule:: click
 
+Version 8.3.3
+-------------
+
+Unreleased
+
+-   Use :func:`shlex.split` to split pager and editor commands into ``argv``
+    lists for :class:`subprocess.Popen`, removing ``shell=True``.
+    :issue:`1026` :pr:`1477` :pr:`2775`
+-   Fix ``TypeError`` when rendering help for an option whose default value is
+    an object that doesn't support equality comparison with strings, such as
+    ``semver.Version``. :issue:`3298` :pr:`3299`
+-   Fix pager test pollution under parallel execution by using pytest's
+    ``tmp_path`` fixture instead of a shared temporary file path. :pr:`3238`
+
 Version 8.3.2
---------------
+-------------
 
 Released 2026-04-02
 
@@ -17,12 +31,9 @@ Released 2026-04-02
     with a dedicated CI job. :pr:`3139`
 -   Fix callable ``flag_value`` being instantiated when used as a default via
     ``default=True``. :issue:`3121` :pr:`3201` :pr:`3213` :pr:`3225`
--   Use :func:`shlex.split` to split pager and editor commands into ``argv``
-    lists for :class:`subprocess.Popen`, removing ``shell=True``.
-    :issue:`1026` :pr:`1477` :pr:`2775`
 
 Version 8.3.1
---------------
+-------------
 
 Released 2025-11-15
 
