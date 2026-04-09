@@ -21,6 +21,7 @@ Unreleased
     ``pytest-xdist`` to detect test pollution and race conditions. :pr:`3151`
 -   Add contributor documentation for running stress tests, randomized
     parallel tests, and Flask smoke tests. :pr:`3151` :pr:`3177`
+-   Add support for custom ``show_default`` string in prompts. :pr:`460a142`
 
 Version 8.3.2
 -------------
