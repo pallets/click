@@ -367,21 +367,7 @@ class ProgressBar(t.Generic[V]):
 
 
 def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
-    """Decide what method to use for paging through text.
-
-    The ``PAGER`` environment variable is split into an ``argv`` list with
-    :func:`shlex.split` in its default POSIX mode so that quotes are
-    stripped from tokens and quoted Windows paths are preserved.
-
-    .. note::
-        ``posix=False`` `was considered but rejected
-        <https://github.com/pallets/click/pull/1477#issuecomment-620231711>`_
-        because it retains quote characters in tokens. The
-        :func:`shlex.quote` approach was also reverted in :pr:`1543`.
-
-    .. seealso::
-        :issue:`1026`, :pr:`1477` and :pr:`2775`.
-    """
+    """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
 
     # There are no standard streams attached to write to. For example,
@@ -392,6 +378,11 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
     if not isatty(sys.stdin) or not isatty(stdout):
         return _nullpager(stdout, generator, color)
 
+    # Split using POSIX mode (the default) so that quote characters are
+    # stripped from tokens and quoted Windows paths are preserved.
+    # posix=False was rejected (PR #1477) because it retains quotes in
+    # tokens, and the shlex.quote approach was also reverted (PR #1543).
+    # See also: issue #1026, PR #2775.
     pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""))
     if pager_cmd_parts:
         if WIN:
@@ -437,11 +428,6 @@ def _pipepager(
 
     Returns ``True`` if the command was found and executed, ``False``
     otherwise so another pager can be attempted.
-
-    .. seealso::
-        :pr:`2775` improved error handling: :exc:`BrokenPipeError` is
-        caught specifically, generator exceptions terminate the pager, and
-        ``stdin.close()`` is always called in a ``finally`` block.
     """
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
@@ -623,14 +609,7 @@ class Editor:
         return "vi"
 
     def edit_files(self, filenames: cabc.Iterable[str]) -> None:
-        """Open files in the user's editor.
-
-        The editor command is split into an ``argv`` list with
-        :func:`shlex.split` in POSIX mode; see :func:`pager` for rationale.
-
-        .. seealso::
-            :issue:`1026` and :pr:`1477`.
-        """
+        """Open files in the user's editor."""
         import shlex
         import subprocess
 
@@ -642,6 +621,9 @@ class Editor:
             environ.update(self.env)
 
         try:
+            # Split in POSIX mode (the default) for the same reasons as
+            # in pager(): strips quotes from tokens and preserves quoted
+            # Windows paths. See issue #1026, PR #1477.
             c = subprocess.Popen(
                 args=shlex.split(editor) + list(filenames),
                 env=environ,
