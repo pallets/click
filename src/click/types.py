@@ -973,7 +973,13 @@ class Path(ParamType):
     ) -> str | bytes | os.PathLike[str]:
         rv = value
 
-        is_dash = self.file_okay and self.allow_dash and rv in (b"-", "-")
+        if self.file_okay and self.allow_dash:
+            if isinstance(rv, bytes):
+                is_dash = rv == b"-"
+            else:
+                is_dash = rv == "-"
+        else:
+            is_dash = False
 
         if not is_dash:
             if self.resolve_path:

@@ -1,6 +1,8 @@
 import os.path
 import pathlib
 import platform
+import subprocess
+import sys
 import tempfile
 
 import pytest
@@ -104,6 +106,23 @@ def test_path_type(runner, cls, expect):
     result = runner.invoke(cli, ["a/b/c.txt"], standalone_mode=False)
     assert result.exception is None
     assert result.return_value == expect
+
+
+def test_path_bytes_dash_no_byteswarning():
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-bb",
+            "-c",
+            "from click.types import Path; Path(allow_dash=True).convert(b'-', None, None)",
+        ],
+        cwd=pathlib.Path(__file__).resolve().parents[1],
+        env={**os.environ, "PYTHONPATH": "src"},
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 def _symlinks_supported():
