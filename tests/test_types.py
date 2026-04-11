@@ -110,8 +110,7 @@ def test_path_type(runner, cls, expect):
 
 def test_path_bytes_dash_no_byteswarning():
     code = (
-        "from click.types import Path; "
-        "Path(allow_dash=True).convert(b'-', None, None)"
+        "from click.types import Path; Path(allow_dash=True).convert(b'-', None, None)"
     )
 
     result = subprocess.run(
