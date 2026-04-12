@@ -443,6 +443,47 @@ def test_zsh_full_complete_with_colons(
     assert result.output == expect
 
 
+@pytest.mark.parametrize(
+    ("shell", "env", "expect"),
+    [
+        (
+            "bash",
+            {"COMP_WORDS": "cli --color=a", "COMP_CWORD": "1"},
+            "plain,--color=auto\nplain,--color=always\n",
+        ),
+        (
+            "bash",
+            {"COMP_WORDS": "cli --color=", "COMP_CWORD": "1"},
+            "plain,--color=auto\nplain,--color=always\nplain,--color=never\n",
+        ),
+        (
+            "zsh",
+            {"COMP_WORDS": "cli --color=a", "COMP_CWORD": "1"},
+            "plain\n--color=auto\n_\nplain\n--color=always\n_\n",
+        ),
+        (
+            "fish",
+            {"COMP_WORDS": "cli", "COMP_CWORD": "--color=a"},
+            "plain,--color=auto\nplain,--color=always\n",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_option_eq_complete(runner, shell, env, expect):
+    """Completion for ``--option=value`` includes the option prefix.
+
+    When a shell passes ``--color=a`` as the incomplete token, the
+    completions must be ``--color=auto`` etc. so the shell replaces
+    the entire token correctly.  See :issue:`2847`.
+    """
+    cli = Command(
+        "cli", params=[Option(["--color"], type=Choice(["auto", "always", "never"]))]
+    )
+    env["_CLI_COMPLETE"] = f"{shell}_complete"
+    result = runner.invoke(cli, env=env)
+    assert result.output == expect
+
+
 @pytest.mark.usefixtures("_patch_for_completion")
 def test_context_settings(runner):
     def complete(ctx, param, incomplete):

@@ -297,6 +297,23 @@ class ShellComplete:
         """
         args, incomplete = self.get_completion_args()
         completions = self.get_completions(args, incomplete)
+
+        # When the incomplete value is in ``--option=value`` form, the
+        # shell will replace the entire token with the completion.
+        # Prefix each value with ``--option=`` so the result is
+        # ``--option=completed`` instead of just ``completed``.
+        if "=" in incomplete:
+            name, _, _ = incomplete.partition("=")
+
+            if name.startswith("-"):
+                prefix = f"{name}="
+                completions = [
+                    CompletionItem(
+                        f"{prefix}{c.value}", c.type, c.help, **c._info
+                    )
+                    for c in completions
+                ]
+
         out = [self.format_completion(item) for item in completions]
         return "\n".join(out)
 
