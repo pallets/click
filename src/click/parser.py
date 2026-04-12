@@ -490,6 +490,15 @@ class _OptionParser:
             # short option code and will instead raise the no option
             # error.
             if arg[:2] not in self._opt_prefixes:
+                # If the arg starts with a known long option (e.g. "-dbg")
+                # followed by extra characters, don't fall back to per-character
+                # short option parsing.  That would produce a misleading
+                # "No such option: -d" instead of "No such option: -dbgX".
+                if any(norm_long_opt.startswith(k) for k in self._long_opt):
+                    if not self.ignore_unknown_options:
+                        raise
+                    state.largs.append(arg)
+                    return
                 self._match_short_opt(arg, state)
                 return
 

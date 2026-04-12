@@ -144,6 +144,24 @@ def test_unknown_options(runner, unknown_flag):
     assert f"No such option: {unknown_flag}" in result.output
 
 
+def test_multichar_short_option_error_message(runner):
+    """Wrong extra chars after a multi-char short option give the full option
+    name in the error, not just its first character. Regression test for #2779.
+    """
+
+    @click.command()
+    @click.option("-dbg", is_flag=True)
+    def cli(dbg):
+        pass
+
+    # Passing an option that *starts* with the known option but has extra
+    # characters should report the full unrecognised string, not only "-d".
+    result = runner.invoke(cli, ["-dbgwrong"])
+    assert result.exception
+    assert "No such option: -dbgwrong" in result.output
+    assert "No such option: -d" not in result.output
+
+
 @pytest.mark.parametrize(
     ("value", "expect"),
     [
