@@ -1,7 +1,29 @@
 .. currentmodule:: click
 
+Version 8.3.3
+-------------
+
+Unreleased
+
+-   Use :func:`shlex.split` to split pager and editor commands into ``argv``
+    lists for :class:`subprocess.Popen`, removing ``shell=True``.
+    :issue:`1026` :pr:`1477` :pr:`2775`
+-   Fix ``TypeError`` when rendering help for an option whose default value is
+    an object that doesn't support equality comparison with strings, such as
+    ``semver.Version``. :issue:`3298` :pr:`3299`
+-   Fix pager test pollution under parallel execution by using pytest's
+    ``tmp_path`` fixture instead of a shared temporary file path. :pr:`3238`
+-   Patch ``pdb.Pdb`` in ``CliRunner`` isolation so ``pdb.set_trace()``,
+    ``breakpoint()``, and debuggers subclassing ``pdb.Pdb`` (ipdb, pdbpp) can
+    interact with the real terminal instead of the captured I/O streams.
+    :issue:`654` :issue:`824` :issue:`843` :pr:`951` :pr:`3235`
+-   Add optional randomized parallel test execution using ``pytest-randomly`` and
+    ``pytest-xdist`` to detect test pollution and race conditions. :pr:`3151`
+-   Add contributor documentation for running stress tests, randomized
+    parallel tests, and Flask smoke tests. :pr:`3151` :pr:`3177`
+
 Version 8.3.2
---------------
+-------------
 
 Released 2026-04-02
 
@@ -19,7 +41,7 @@ Released 2026-04-02
     ``default=True``. :issue:`3121` :pr:`3201` :pr:`3213` :pr:`3225`
 
 Version 8.3.1
---------------
+-------------
 
 Released 2025-11-15
 

@@ -134,13 +134,12 @@ About Project
 
 * `Version Policy <https://palletsprojects.com/versions>`_
 
-* `Contributing <https://palletsprojects.com/contributing/>`_
-
 * `Donate <https://palletsprojects.com/donate>`_
 
 .. toctree::
    :maxdepth: 1
 
+   contributing
    contrib
    license
    changes

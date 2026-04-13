@@ -4,6 +4,7 @@ import collections.abc as cabc
 import contextlib
 import io
 import os
+import pdb
 import shlex
 import sys
 import tempfile
@@ -390,11 +391,54 @@ class CliRunner:
         old__getchar_func = termui._getchar
         old_should_strip_ansi = utils.should_strip_ansi  # type: ignore
         old__compat_should_strip_ansi = _compat.should_strip_ansi
+        old_pdb_init = pdb.Pdb.__init__
         termui.visible_prompt_func = visible_input
         termui.hidden_prompt_func = hidden_input
         termui._getchar = _getchar
         utils.should_strip_ansi = should_strip_ansi  # type: ignore
         _compat.should_strip_ansi = should_strip_ansi
+
+        def _patched_pdb_init(
+            self: pdb.Pdb,
+            completekey: str = "tab",
+            stdin: t.IO[str] | None = None,
+            stdout: t.IO[str] | None = None,
+            **kwargs: t.Any,
+        ) -> None:
+            """Default ``pdb.Pdb`` to real terminal streams during
+            ``CliRunner`` isolation.
+
+            Without this patch, ``pdb.Pdb.__init__`` inherits from
+            ``cmd.Cmd`` which falls back to ``sys.stdin``/``sys.stdout``
+            when no explicit streams are provided. During isolation
+            those are ``BytesIO``-backed wrappers, so the debugger
+            reads from an empty buffer and writes to captured output,
+            making interactive debugging impossible.
+
+            By defaulting to ``sys.__stdin__``/``sys.__stdout__`` (the
+            original terminal streams Python preserves regardless of
+            redirection), debuggers can interact with the user while
+            ``click.echo`` output is still captured normally.
+
+            This covers ``pdb.set_trace()``, ``breakpoint()``,
+            ``pdb.post_mortem()``, and debuggers that subclass
+            ``pdb.Pdb`` (ipdb, pdbpp). Explicit ``stdin``/``stdout``
+            arguments are honored and not overridden. Debuggers that
+            do not subclass ``pdb.Pdb`` (pudb, debugpy) are not
+            covered.
+
+            See: https://github.com/pallets/click/issues/654 and
+            https://github.com/pallets/click/issues/824
+            """
+            if stdin is None:
+                stdin = sys.__stdin__
+            if stdout is None:
+                stdout = sys.__stdout__
+            old_pdb_init(
+                self, completekey=completekey, stdin=stdin, stdout=stdout, **kwargs
+            )
+
+        pdb.Pdb.__init__ = _patched_pdb_init  # type: ignore[assignment]
 
         old_env = {}
         try:
@@ -426,6 +470,7 @@ class CliRunner:
             utils.should_strip_ansi = old_should_strip_ansi  # type: ignore
             _compat.should_strip_ansi = old__compat_should_strip_ansi
             formatting.FORCED_WIDTH = old_forced_width
+            pdb.Pdb.__init__ = old_pdb_init  # type: ignore[method-assign]
 
     def invoke(
         self,

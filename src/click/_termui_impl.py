@@ -378,8 +378,12 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
     if not isatty(sys.stdin) or not isatty(stdout):
         return _nullpager(stdout, generator, color)
 
-    # Split and normalize the pager command into parts.
-    pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""), posix=False)
+    # Split using POSIX mode (the default) so that quote characters are
+    # stripped from tokens and quoted Windows paths are preserved.
+    # posix=False was rejected (PR #1477) because it retains quotes in
+    # tokens, and the shlex.quote approach was also reverted (PR #1543).
+    # See also: issue #1026, PR #2775.
+    pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""))
     if pager_cmd_parts:
         if WIN:
             if _tempfilepager(generator, pager_cmd_parts, color):
@@ -411,11 +415,19 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
 def _pipepager(
     generator: cabc.Iterable[str], cmd_parts: list[str], color: bool | None
 ) -> bool:
-    """Page through text by feeding it to another program. Invoking a
-    pager through this might support colors.
+    """Page through text by feeding it to another program.
 
-    Returns `True` if the command was found, `False` otherwise and thus another
-    pager should be attempted.
+    Invokes the pager via :class:`subprocess.Popen` with an ``argv`` list
+    produced by :func:`shlex.split`. The command is resolved to an absolute
+    path with :func:`shutil.which` as recommended by the
+    :mod:`subprocess` docs for Windows compatibility.
+
+    Invoking a pager through this might support colors: if piping to
+    ``less`` and the user hasn't decided on colors, ``LESS=-R`` is set
+    automatically.
+
+    Returns ``True`` if the command was found and executed, ``False``
+    otherwise so another pager can be attempted.
     """
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
@@ -509,8 +521,13 @@ def _tempfilepager(
 ) -> bool:
     """Page through text by invoking a program on a temporary file.
 
-    Returns `True` if the command was found, `False` otherwise and thus another
-    pager should be attempted.
+    Used as the primary pager strategy on Windows (where piping to
+    ``more`` adds spurious ``\\r\\n``), and as a fallback on other
+    platforms. The command is resolved to an absolute path with
+    :func:`shutil.which`.
+
+    Returns ``True`` if the command was found and executed, ``False``
+    otherwise so another pager can be attempted.
     """
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
@@ -592,6 +609,8 @@ class Editor:
         return "vi"
 
     def edit_files(self, filenames: cabc.Iterable[str]) -> None:
+        """Open files in the user's editor."""
+        import shlex
         import subprocess
 
         editor = self.get_editor()
@@ -601,11 +620,13 @@ class Editor:
             environ = os.environ.copy()
             environ.update(self.env)
 
-        exc_filename = " ".join(f'"{filename}"' for filename in filenames)
-
         try:
+            # Split in POSIX mode (the default) for the same reasons as
+            # in pager(): strips quotes from tokens and preserves quoted
+            # Windows paths. See issue #1026, PR #1477.
             c = subprocess.Popen(
-                args=f"{editor} {exc_filename}", env=environ, shell=True
+                args=shlex.split(editor) + list(filenames),
+                env=environ,
             )
             exit_code = c.wait()
             if exit_code != 0:
@@ -753,8 +774,6 @@ def _translate_ch_to_exc(ch: str) -> None:
 
     if ch == "\x1a" and WIN:  # Windows, Ctrl+Z
         raise EOFError()
-
-    return None
 
 
 if sys.platform == "win32":
