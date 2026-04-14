@@ -7,7 +7,7 @@ import os
 import shlex
 import sys
 import tempfile
-import typing as t
+import typing as t as t
 from types import TracebackType
 
 from . import _compat

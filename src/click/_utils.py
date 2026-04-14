@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import enum
-import typing as t
+import typing as t as t
 
 
 class Sentinel(enum.Enum):

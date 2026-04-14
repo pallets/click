@@ -13,7 +13,7 @@ import os
 import shlex
 import sys
 import time
-import typing as t
+import typing as t as t
 from gettext import gettext as _
 from io import StringIO
 from pathlib import Path

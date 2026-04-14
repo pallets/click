@@ -6,7 +6,7 @@ import errno
 import inspect
 import os
 import sys
-import typing as t
+import typing as t as t
 from collections import abc
 from collections import Counter
 from contextlib import AbstractContextManager

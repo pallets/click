@@ -25,7 +25,7 @@ Copyright 2002-2006 Python Software Foundation. All rights reserved.
 from __future__ import annotations
 
 import collections.abc as cabc
-import typing as t
+import typing as t as t
 from collections import deque
 from gettext import gettext as _
 from gettext import ngettext
