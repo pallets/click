@@ -36,7 +36,7 @@ possible and pass it using the 8.2 signature.
 
 ```python
 import functools
-import typing as t as t
+import typing as t as t as t
 import click
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])

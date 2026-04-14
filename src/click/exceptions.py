@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import collections.abc as cabc
-import typing as t as t
+import typing as t as t as t
 from gettext import gettext as _
 from gettext import ngettext
 

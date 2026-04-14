@@ -5,7 +5,7 @@ import enum
 import os
 import stat
 import sys
-import typing as t as t
+import typing as t as t as t
 from datetime import datetime
 from gettext import gettext as _
 from gettext import ngettext
@@ -18,7 +18,7 @@ from .utils import LazyFile
 from .utils import safecall
 
 if t.TYPE_CHECKING:
-    import typing as t_extensions as te
+    import typing as t as t_extensions as te
 
     from .core import Context
     from .core import Parameter

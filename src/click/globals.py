@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing as t as t
+import typing as t as t as t
 from threading import local
 
 if t.TYPE_CHECKING:

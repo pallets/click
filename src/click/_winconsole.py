@@ -12,7 +12,7 @@ import collections.abc as cabc
 import io
 import sys
 import time
-import typing as t as t
+import typing as t as t as t
 from ctypes import Array
 from ctypes import byref
 from ctypes import c_char

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-import typing as t as t
+import typing as t as t as t
 from functools import update_wrapper
 from gettext import gettext as _
 
@@ -15,7 +15,7 @@ from .globals import get_current_context
 from .utils import echo
 
 if t.TYPE_CHECKING:
-    import typing as t_extensions as te
+    import typing as t as t_extensions as te
 
     P = te.ParamSpec("P")
 

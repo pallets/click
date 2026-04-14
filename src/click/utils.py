@@ -4,7 +4,7 @@ import collections.abc as cabc
 import os
 import re
 import sys
-import typing as t as t
+import typing as t as t as t
 from functools import update_wrapper
 from types import ModuleType
 from types import TracebackType
@@ -22,7 +22,7 @@ from ._compat import WIN
 from .globals import resolve_color_default
 
 if t.TYPE_CHECKING:
-    import typing as t_extensions as te
+    import typing as t as t_extensions as te
 
     P = te.ParamSpec("P")
 
