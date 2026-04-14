@@ -2916,31 +2916,29 @@ class Option(Parameter):
     def get_default(
         self, ctx: Context, call: bool = True
     ) -> t.Any | t.Callable[[], t.Any] | None:
-        """For non-boolean flag options, ``default=True`` is treated as a
-        sentinel meaning "activate this flag by default" and is resolved to
-        :attr:`flag_value`. This resolution is performed lazily here (rather
-        than eagerly in :meth:`__init__`) to prevent callable ``flag_value``
-        values (like classes) from being instantiated prematurely.
+        """Return the default value for this option.
 
-        For example, with ``--upper/--lower`` feature switches where
-        ``flag_value="upper"`` and ``default=True``, the default resolves
-        to ``"upper"``.
+        For non-boolean flag options, ``default=True`` is treated as a sentinel
+        meaning "activate this flag by default" and is resolved to
+        :attr:`flag_value`.  For example, with ``--upper/--lower`` feature
+        switches where ``flag_value="upper"`` and ``default=True``, the default
+        resolves to ``"upper"``.
 
         .. caution::
-            This substitution only applies to **non-boolean** flags
+            This substitution only applies to non-boolean flags
             (:attr:`is_bool_flag` is ``False``). For boolean flags, ``True`` is
-            not a sentinel but a legitimate Python value, so ``default=True`` is
-            returned as-is. Without this distinction, ``flag_value=False,
-            default=True`` would silently always return ``False``, regardless of
-            whether the flag was passed or not.
+            a legitimate Python value and ``default=True`` is returned as-is.
 
         .. versionchanged:: 8.3.3
             ``default=True`` is no longer substituted with ``flag_value`` for
-            boolean flags, fixing negative boolean flags like ``flag_value=False,
-            default=True``.
+            boolean flags, fixing negative boolean flags like
+            ``flag_value=False, default=True``.
         """
         value = super().get_default(ctx, call=False)
 
+        # Resolve default=True to flag_value lazily (here instead of
+        # __init__) to prevent callable flag_values (like classes) from
+        # being instantiated by the callable check below.
         if value is True and self.is_flag and not self.is_bool_flag:
             value = self.flag_value
         elif call and callable(value):

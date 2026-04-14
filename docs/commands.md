@@ -3,7 +3,8 @@
 ```{currentmodule} click
 ```
 
-In addition to the capabilities covered in the previous section, Groups have more advanced capabilities that leverage the Context.
+In addition to the capabilities covered in the previous section, Groups have
+more advanced capabilities that leverage the Context.
 
 ```{contents}
 ---

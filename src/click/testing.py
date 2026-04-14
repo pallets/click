@@ -479,9 +479,6 @@ class CliRunner:
             arguments are honored and not overridden. Debuggers that
             do not subclass ``pdb.Pdb`` (pudb, debugpy) are not
             covered.
-
-            See: https://github.com/pallets/click/issues/654 and
-            https://github.com/pallets/click/issues/824
             """
             if stdin is None:
                 stdin = sys.__stdin__
