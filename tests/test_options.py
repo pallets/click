@@ -144,6 +144,43 @@ def test_unknown_options(runner, unknown_flag):
     assert f"No such option: {unknown_flag}" in result.output
 
 
+def test_unknown_multichar_short_option_reports_full_arg(runner):
+    """A typo of a multi-character single-dash option should be reported
+    verbatim, not greedily split into unknown single-char shorts.
+
+    Regression for https://github.com/pallets/click/issues/2779.
+    """
+    cli = click.Command("cli", params=[click.Option(["-dbg"], is_flag=True)])
+    result = runner.invoke(cli, ["-dbgwrong"])
+    assert result.exception
+    assert "No such option: -dbgwrong" in result.output
+    # The close-match suggestion should also appear.
+    assert "-dbg" in result.output
+
+
+def test_short_option_combining_still_works(runner):
+    """Regression guard: ``-abc`` with ``-a``, ``-b``, ``-c`` registered as
+    single-char flags should still be treated as combined shorts, and the
+    first unknown char in the group should still be the one reported."""
+    cli = click.Command(
+        "cli",
+        params=[
+            click.Option(["-a"], is_flag=True),
+            click.Option(["-b"], is_flag=True),
+            click.Option(["-c"], is_flag=True),
+        ],
+    )
+    # All registered: succeeds.
+    result = runner.invoke(cli, ["-abc"])
+    assert result.exit_code == 0
+
+    # Middle-of-group unknown char: still reports that char, not the
+    # whole group.
+    result = runner.invoke(cli, ["-abZ"])
+    assert result.exception
+    assert "No such option: -Z" in result.output
+
+
 @pytest.mark.parametrize(
     ("value", "expect"),
     [

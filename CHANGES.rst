@@ -1,5 +1,15 @@
 .. currentmodule:: click
 
+Unreleased
+----------
+
+-   Report the full argument (and close-match suggestion) when a
+    single-dash token looks like a typo of a multi-character option
+    (``-dbgwrong`` for ``-dbg``) instead of greedily splitting it into
+    single-char shorts. Short-option combining (``-abc``) is unaffected.
+    :issue:`2779`
+
+
 Version 8.3.2
 --------------
 
