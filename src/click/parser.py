@@ -401,6 +401,18 @@ class _OptionParser:
                 if self.ignore_unknown_options:
                     unknown_options.append(ch)
                     continue
+
+                # If a registered single-dash long option (like -dbg)
+                # is a prefix of the original argument, report the
+                # error using the full argument instead of just the
+                # single character that failed to match.
+                norm_arg = _normalize_opt(arg, self.ctx)
+                for long_opt_name in self._long_opt:
+                    if norm_arg.startswith(long_opt_name) and len(
+                        long_opt_name
+                    ) > len(opt):
+                        raise NoSuchOption(norm_arg, ctx=self.ctx)
+
                 raise NoSuchOption(opt, ctx=self.ctx)
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the

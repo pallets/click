@@ -144,6 +144,26 @@ def test_unknown_options(runner, unknown_flag):
     assert f"No such option: {unknown_flag}" in result.output
 
 
+def test_multicharacter_short_option_wrong_option_error(runner):
+    """When a wrong multi-character short option like -dbgwrong is passed,
+    the error should reference the full argument, not just the first char."""
+
+    @click.command()
+    @click.option("-dbg", is_flag=True)
+    def cli(dbg):
+        click.echo(f"dbg={dbg}")
+
+    # Correct usage should work.
+    result = runner.invoke(cli, ["-dbg"])
+    assert not result.exception
+    assert "dbg=True" in result.output
+
+    # Wrong option should mention the full argument, not just '-d'.
+    result = runner.invoke(cli, ["-dbgwrong"])
+    assert result.exit_code != 0
+    assert "No such option: -dbgwrong" in result.output
+
+
 @pytest.mark.parametrize(
     ("value", "expect"),
     [
