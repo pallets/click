@@ -22,6 +22,10 @@ Unreleased
 -   Add contributor documentation for running stress tests, randomized
     parallel tests, and Flask smoke tests. :pr:`3151` :pr:`3177`
 -   Mark ``make_default_short_help`` as private API. :issue:`3189` :pr:`3250`
+-   ``CliRunner``'s redirected streams now expose the original file descriptor
+    via ``fileno()``, so that ``faulthandler``, ``subprocess``, and other
+    C-level consumers no longer crash with ``io.UnsupportedOperation``.
+    :issue:`2865`
 
 Version 8.3.2
 -------------
