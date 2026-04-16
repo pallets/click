@@ -1,22 +1,26 @@
-Basic Commands, Groups, Context
-================================
+# Basic Commands, Groups, Context
 
-.. currentmodule:: click
+```{currentmodule} click
+```
 
-Commands and Groups are the building blocks for Click applications. :class:`Command` wraps a function to make it into a cli command. :class:`Group` wraps Commands and Groups to make them into applications. :class:`Context` is how groups and commands communicate.
+Commands and Groups are the building blocks for Click applications. {class}`Command` wraps a function to make it into a cli command. {class}`Group` wraps Commands and Groups to make them into applications. {class}`Context` is how groups and commands communicate.
 
-.. contents::
-   :depth: 2
-   :local:
+```{contents}
+---
+depth: 2
+local: true
+---
+```
 
-Commands
---------------------
+## Commands
 
-Basic Command Example
-^^^^^^^^^^^^^^^^^^^^^^^
+### Basic Command Example
+
 A simple command decorator takes no arguments.
 
+```{eval-rst}
 .. click:example::
+
     @click.command()
     @click.option('--count', default=1)
     def hello(count):
@@ -25,12 +29,15 @@ A simple command decorator takes no arguments.
 
 .. click:run::
     invoke(hello, args=['--count', '2',])
+```
 
-Renaming Commands
-^^^^^^^^^^^^^^^^^^^
+### Renaming Commands
+
 By default the command is the function name with underscores replaced by dashes. To change this pass the  desired name into the first positional argument.
 
+```{eval-rst}
 .. click:example::
+
     @click.command('say-hello')
     @click.option('--count', default=1)
     def hello(count):
@@ -39,12 +46,15 @@ By default the command is the function name with underscores replaced by dashes.
 
 .. click:run::
     invoke(hello, args=['--count', '2',])
+```
 
-Deprecating Commands
-^^^^^^^^^^^^^^^^^^^^^^
-To mark a command as deprecated pass in ``deprecated=True``
+### Deprecating Commands
 
+To mark a command as deprecated pass in `deprecated=True`
+
+```{eval-rst}
 .. click:example::
+
     @click.command('say-hello', deprecated=True)
     @click.option('--count', default=1)
     def hello(count):
@@ -53,15 +63,17 @@ To mark a command as deprecated pass in ``deprecated=True``
 
 .. click:run::
     invoke(hello, args=['--count', '2',])
+```
 
-Groups
-------------
+## Groups
 
-Basic Group Example
-^^^^^^^^^^^^^^^^^^^^^
+### Basic Group Example
+
 A group wraps one or more commands. After being wrapped, the commands are nested under that group. You can see that on the help pages and in the execution. By default, invoking the group with no command shows the help page.
 
+```{eval-rst}
 .. click:example::
+
     @click.group()
     def greeting():
         click.echo('Starting greeting ...')
@@ -84,14 +96,17 @@ At the command level:
 
     invoke(greeting, args=['say-hello'])
     invoke(greeting, args=['say-hello', '--help'])
+```
 
 As you can see from the above example, the function wrapped by the group decorator executes unless it is interrupted (for example by calling the help).
 
-Renaming Groups
-^^^^^^^^^^^^^^^^^
+### Renaming Groups
+
 To have a name other than the decorated function name as the group name, pass it in as the first positional argument.
 
+```{eval-rst}
 .. click:example::
+
     @click.group('greet-someone')
     def greeting():
         click.echo('Starting greeting ...')
@@ -105,12 +120,13 @@ To have a name other than the decorated function name as the group name, pass it
 .. click:run::
 
     invoke(greeting, args=['say-hello'])
+```
 
-Group Invocation Without Command
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+### Group Invocation Without Command
 
-By default, if a group is passed without a command, the group is not invoked and a command automatically passes ``--help``. To change this, pass ``invoke_without_command=True`` to the group. The context object also includes information about whether or not the group invocation would go to a command nested under it.
+By default, if a group is passed without a command, the group is not invoked and a command automatically passes `--help`. To change this, pass `invoke_without_command=True` to the group. The context object also includes information about whether or not the group invocation would go to a command nested under it.
 
+```{eval-rst}
 .. click:example::
 
     @click.group(invoke_without_command=True)
@@ -129,14 +145,15 @@ By default, if a group is passed without a command, the group is not invoked and
 
     invoke(cli, prog_name='tool', args=[])
     invoke(cli, prog_name='tool', args=['sync'])
+```
 
+### Group Separation
 
+Command {ref}`parameters` attached to a command belong only to that command.
 
-Group Separation
-^^^^^^^^^^^^^^^^^^^
-Command :ref:`parameters` attached to a command belong only to that command.
-
+```{eval-rst}
 .. click:example::
+
     @click.group()
     def greeting():
         pass
@@ -158,19 +175,21 @@ Command :ref:`parameters` attached to a command belong only to that command.
     invoke(greeting, args=['hello', '--count', '2'])
     invoke(greeting, args=['goodbye', '--count', '2'])
     invoke(greeting)
+```
 
 Additionally parameters for a given group belong only to that group and not to the commands under it. What this means is that options and arguments for a specific command have to be specified *after* the command name itself, but *before* any other command names.
 
-This behavior is observable with the ``--help`` option. Suppose we have a group called ``tool`` containing a command called ``sub``.
+This behavior is observable with the `--help` option. Suppose we have a group called `tool` containing a command called `sub`.
 
-- ``tool --help`` returns the help for the whole program (listing subcommands).
-- ``tool sub --help`` returns the help for the ``sub`` subcommand.
-- But ``tool --help sub`` treats ``--help`` as an argument for the main program. Click then invokes the callback for ``--help``, which prints the help and aborts the program before click can process the subcommand.
+- `tool --help` returns the help for the whole program (listing subcommands).
+- `tool sub --help` returns the help for the `sub` subcommand.
+- But `tool --help sub` treats `--help` as an argument for the main program. Click then invokes the callback for `--help`, which prints the help and aborts the program before click can process the subcommand.
 
-Arbitrary Nesting
-^^^^^^^^^^^^^^^^^^^
-:class:`Commands <Command>` are attached to a :class:`Group`. Multiple groups can be attached to another group. Groups containing multiple groups can be attached to a group, and so on. To invoke a command nested under multiple groups, all the groups under which it is nested must be invoked.
+### Arbitrary Nesting
 
+{class}`Commands <Command>` are attached to a {class}`Group`. Multiple groups can be attached to another group. Groups containing multiple groups can be attached to a group, and so on. To invoke a command nested under multiple groups, all the groups under which it is nested must be invoked.
+
+```{eval-rst}
 .. click:example::
 
     @click.group()
@@ -193,11 +212,13 @@ Arbitrary Nesting
 .. click:run::
 
     invoke(cli, args=['session', 'initdb'])
+```
 
-Lazily Attaching Commands
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+### Lazily Attaching Commands
+
 Most examples so far have attached the commands to a group immediately, but commands may be registered later. This could be used to split commands into multiple Python modules. Regardless of how they are attached, the commands are invoked identically.
 
+```{eval-rst}
 .. click:example::
 
     @click.group()
@@ -218,18 +239,19 @@ Most examples so far have attached the commands to a group immediately, but comm
 
     invoke(cli, args=['initdb'])
     invoke(cli, args=['dropdb'])
+```
 
-Context Object
--------------------
-The :class:`Context` object is how commands and groups communicate.
+## Context Object
+The {class}`Context` object is how commands and groups communicate.
 
-Auto Envvar Prefix
-^^^^^^^^^^^^^^^^^^^^
-Automatically built environment variables are supported for options only. To enable this feature, the ``auto_envvar_prefix`` parameter needs to be passed to the script that is invoked.  Each command and parameter is then added as an uppercase underscore-separated variable.  If you have a subcommand
-called ``run`` taking an option called ``reload`` and the prefix is ``WEB``, then the variable is ``WEB_RUN_RELOAD``.
+### Auto Envvar Prefix
+
+Automatically built environment variables are supported for options only. To enable this feature, the `auto_envvar_prefix` parameter needs to be passed to the script that is invoked.  Each command and parameter is then added as an uppercase underscore-separated variable.  If you have a subcommand
+called `run` taking an option called `reload` and the prefix is `WEB`, then the variable is `WEB_RUN_RELOAD`.
 
 Example usage:
 
+```{eval-rst}
 .. click:example::
 
     @click.command()
@@ -246,13 +268,15 @@ And from the command line:
 
     invoke(greet, env={'GREETER_USERNAME': 'john'},
            auto_envvar_prefix='GREETER')
+```
 
-When using ``auto_envvar_prefix`` with command groups, the command name
+When using `auto_envvar_prefix` with command groups, the command name
 needs to be included in the environment variable, between the prefix and
-the parameter name, *i.e.* ``PREFIX_COMMAND_VARIABLE``. If you have a
-subcommand called ``run-server`` taking an option called ``host`` and
-the prefix is ``WEB``, then the variable is ``WEB_RUN_SERVER_HOST``.
+the parameter name, *i.e.* `PREFIX_COMMAND_VARIABLE`. If you have a
+subcommand called `run-server` taking an option called `host` and
+the prefix is `WEB`, then the variable is `WEB_RUN_SERVER_HOST`.
 
+```{eval-rst}
 .. click:example::
 
    @click.group()
@@ -273,31 +297,35 @@ the prefix is ``WEB``, then the variable is ``WEB_RUN_SERVER_HOST``.
    invoke(cli, args=['greet',],
           env={'GREETER_GREET_USERNAME': 'John', 'GREETER_DEBUG': 'false'},
           auto_envvar_prefix='GREETER')
+```
 
-Global Context Access
-^^^^^^^^^^^^^^^^^^^^^^
+### Global Context Access
 
-.. versionadded:: 5.0
+```{versionadded} 5.0
+```
 
 Starting with Click 5.0 it is possible to access the current context from
 anywhere within the same thread through the use of the
-:func:`get_current_context` function which returns it.  This is primarily
+{func}`get_current_context` function which returns it.  This is primarily
 useful for accessing the context bound object as well as some flags that
 are stored on it to customize the runtime behavior.  For instance the
-:func:`echo` function does this to infer the default value of the `color`
+{func}`echo` function does this to infer the default value of the `color`
 flag.
 
-Example usage::
+Example usage:
 
+```python
     def get_current_command_name():
         return click.get_current_context().info_name
+```
 
 It should be noted that this only works within the current thread.  If you
 spawn additional threads then those threads will not have the ability to
 refer to the current context.  If you want to give another thread the
 ability to refer to this context you need to use the context within the
-thread as a context manager::
+thread as a context manager:
 
+```python
     def spawn_thread(ctx, func):
         def wrapper():
             with ctx:
@@ -305,6 +333,7 @@ thread as a context manager::
         t = threading.Thread(target=wrapper)
         t.start()
         return t
+```
 
 Now the thread function can access the context like the main thread would
 do.  However if you do use this for threading you need to be very careful
@@ -313,16 +342,45 @@ allowed to read from the context, but not to perform any modifications on
 it.
 
 
-Detecting the Source of a Parameter
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+### Parameter Source Priority
+
+When a parameter's value is resolved, Click checks several sources
+in the following order of precedence:
+
+1.  **Prompt** (`PROMPT`): interactively provided by the user at a prompt.
+2.  **Command line** (`COMMANDLINE`): provided as a CLI argument or option.
+3.  **Environment variable** (`ENVIRONMENT`): read from an environment variable.
+4.  **Default map** (`DEFAULT_MAP`): looked up from {attr}`Context.default_map`.
+5.  **Default** (`DEFAULT`): the default value defined on the parameter.
+
+{class}`~click.core.ParameterSource` members are ordered from most
+explicit to least explicit. Because it is an {class}`~enum.IntEnum`,
+you can use comparison operators to check how explicitly a value was
+provided:
+
+```python
+source = ctx.get_parameter_source("port")
+
+# True if the value was explicitly set (command line, prompt, or env var).
+if source < click.ParameterSource.DEFAULT_MAP:
+    ...
+
+# True if the value came from any kind of default.
+if source >= click.ParameterSource.DEFAULT_MAP:
+    ...
+```
+
+
+### Detecting the Source of a Parameter
 
 In some situations it's helpful to understand whether or not an option
 or parameter came from the command line, the environment, the default
-value, or :attr:`Context.default_map`. The
-:meth:`Context.get_parameter_source` method can be used to find this
-out. It will return a member of the :class:`~click.core.ParameterSource`
+value, or {attr}`Context.default_map`. The
+{meth}`Context.get_parameter_source` method can be used to find this
+out. It will return a member of the {class}`~click.core.ParameterSource`
 enum.
 
+```{eval-rst}
 .. click:example::
 
     @click.command()
@@ -340,3 +398,4 @@ enum.
     println()
     invoke(cli, prog_name='cli', args=[])
     println()
+```

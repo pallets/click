@@ -196,3 +196,51 @@ def test_prompts():
 Prompts will be emulated so they write the input data to
 the output stream as well. If hidden input is expected then this
 does not happen.
+
+## File Descriptors and Low-Level I/O
+
+{class}`CliRunner` captures output by replacing
+`sys.stdout` and `sys.stderr` with in-memory
+{class}`~io.BytesIO`-backed wrappers. This is
+Python-level redirection: calls to {func}`~click.echo`,
+{func}`print`, or `sys.stdout.write()` are captured, but
+the wrappers have no OS-level file descriptor.
+
+Code that calls `fileno()` on `sys.stdout` or
+`sys.stderr`, like {mod}`faulthandler`,
+{mod}`subprocess`, or C extensions, would normally crash
+with {exc}`io.UnsupportedOperation` inside
+{class}`CliRunner`.
+
+To avoid this, {class}`CliRunner` preserves the original
+stream's file descriptor and exposes it via `fileno()` on
+the replacement wrapper.
+
+This means:
+- **Python-level writes** (`print()`, `click.echo()`,
+  ...) are captured as usual.
+- **fd-level writes** (C code writing directly to the
+  file descriptor) go to the original terminal and are
+  **not** captured.
+
+This is the same trade-off that
+[pytest](https://docs.pytest.org/en/stable/how-to/capture-stdout-stderr.html)
+makes with its two capture modes:
+
+- `capsys`, which captures Python-level output, where
+  `fileno()` raises `UnsupportedOperation` and fd-level
+  writes are not captured.
+- `capfd`, which captures fd-level output via
+  `os.dup2()`, where `fileno()` works and fd-level
+  writes *are* captured.
+
+Rather than implementing a full `capfd`-style mechanism,
+{class}`CliRunner` takes the simpler path: expose the
+original `fd` so that standard library helpers keep
+working, while accepting that their output is not
+captured.
+
+```{versionchanged} 8.3.3
+`fileno()` on the redirected streams now returns the
+original stream's file descriptor instead of raising.
+```

@@ -16,6 +16,30 @@ Unreleased
 -   Treat ``Sentinel.UNSET`` values in a ``default_map`` as absent, so they fall
     through to the next default source instead of being used as the value.
     :issue:`3224` :pr:`3240`
+-   Patch ``pdb.Pdb`` in ``CliRunner`` isolation so ``pdb.set_trace()``,
+    ``breakpoint()``, and debuggers subclassing ``pdb.Pdb`` (ipdb, pdbpp) can
+    interact with the real terminal instead of the captured I/O streams.
+    :issue:`654` :issue:`824` :issue:`843` :pr:`951` :pr:`3235`
+-   Add optional randomized parallel test execution using ``pytest-randomly`` and
+    ``pytest-xdist`` to detect test pollution and race conditions. :pr:`3151`
+-   Add contributor documentation for running stress tests, randomized
+    parallel tests, and Flask smoke tests. :pr:`3151` :pr:`3177`
+-   Show custom ``show_default`` string in prompts, matching the existing
+    help text behavior. :issue:`2836` :pr:`2837` :pr:`3165` :pr:`3262` :pr:`3280`
+    :pr:`3328``
+-   Fix ``default=True`` with boolean ``flag_value`` always returning the
+    ``flag_value`` instead of ``True``. The ``default=True`` to ``flag_value``
+    substitution now only applies to non-boolean flags, where ``True`` acts as a
+    sentinel meaning "activate this flag by default". For boolean flags,
+    ``default=True`` is returned as a literal value. :issue:`3111` :pr:`3239`
+-   Mark ``make_default_short_help`` as private API. :issue:`3189` :pr:`3250`
+-   ``CliRunner``'s redirected streams now expose the original file descriptor
+    via ``fileno()``, so that ``faulthandler``, ``subprocess``, and other
+    C-level consumers no longer crash with ``io.UnsupportedOperation``.
+    :issue:`2865`
+-   Change :class:`ParameterSource` to an :class:`~enum.IntEnum` and reorder
+    its members from most to least explicit, so values can be compared to
+    check whether a parameter was explicitly provided. :issue:`2879` :pr:`3248`
 
 Version 8.3.2
 -------------
