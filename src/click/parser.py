@@ -482,7 +482,7 @@ class _OptionParser:
         # like "-foo" to be matched as long options.
         try:
             self._match_long_opt(norm_long_opt, explicit_value, state)
-        except NoSuchOption:
+        except NoSuchOption as long_opt_exc:
             # At this point the long option matching failed, and we need
             # to try with short options.  However there is a special rule
             # which says, that if we have a two character options prefix
@@ -490,7 +490,16 @@ class _OptionParser:
             # short option code and will instead raise the no option
             # error.
             if arg[:2] not in self._opt_prefixes:
-                self._match_short_opt(arg, state)
+                try:
+                    self._match_short_opt(arg, state)
+                except NoSuchOption as short_opt_exc:
+                    # If the error is about the first character, no valid
+                    # single-char options were found. Re-raise the long
+                    # option error, which has better context for
+                    # multi-character short options (e.g. ``-dbg``).
+                    if short_opt_exc.option_name == f"{arg[0]}{arg[1]}":
+                        raise long_opt_exc from None
+                    raise
                 return
 
             if not self.ignore_unknown_options:

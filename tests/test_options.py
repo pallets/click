@@ -144,6 +144,23 @@ def test_unknown_options(runner, unknown_flag):
     assert f"No such option: {unknown_flag}" in result.output
 
 
+def test_multichar_short_option_wrong_value_error(runner):
+    """Multi-character short options like ``-dbg`` are stored as long
+    options internally. When an unrecognised option like ``-dbgwrong`` is
+    passed, the error should name the full argument, not just its first
+    character (``-d``)."""
+
+    @click.command()
+    @click.option("-dbg", is_flag=True)
+    def cli(dbg):
+        pass
+
+    result = runner.invoke(cli, ["-dbgwrong"])
+    assert result.exception
+    assert "No such option: -dbgwrong" in result.output
+    assert "Did you mean -dbg?" in result.output
+
+
 @pytest.mark.parametrize(
     ("value", "expect"),
     [
