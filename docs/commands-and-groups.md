@@ -342,6 +342,35 @@ allowed to read from the context, but not to perform any modifications on
 it.
 
 
+### Parameter Source Priority
+
+When a parameter's value is resolved, Click checks several sources
+in the following order of precedence:
+
+1.  **Prompt** (`PROMPT`): interactively provided by the user at a prompt.
+2.  **Command line** (`COMMANDLINE`): provided as a CLI argument or option.
+3.  **Environment variable** (`ENVIRONMENT`): read from an environment variable.
+4.  **Default map** (`DEFAULT_MAP`): looked up from {attr}`Context.default_map`.
+5.  **Default** (`DEFAULT`): the default value defined on the parameter.
+
+{class}`~click.core.ParameterSource` members are ordered from most
+explicit to least explicit. Because it is an {class}`~enum.IntEnum`,
+you can use comparison operators to check how explicitly a value was
+provided:
+
+```python
+source = ctx.get_parameter_source("port")
+
+# True if the value was explicitly set (command line, prompt, or env var).
+if source < click.ParameterSource.DEFAULT_MAP:
+    ...
+
+# True if the value came from any kind of default.
+if source >= click.ParameterSource.DEFAULT_MAP:
+    ...
+```
+
+
 ### Detecting the Source of a Parameter
 
 In some situations it's helpful to understand whether or not an option
