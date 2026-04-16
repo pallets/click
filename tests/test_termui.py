@@ -9,6 +9,7 @@ import pytest
 import click._termui_impl
 from click._compat import WIN
 from click._termui_impl import Editor
+from click._utils import UNSET
 from click.exceptions import BadParameter
 from click.exceptions import MissingParameter
 
@@ -715,6 +716,58 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
     # is False
     result = runner.invoke(cmd, input="my-input", standalone_mode=False)
     assert "my-default-value" not in result.output
+
+
+@pytest.mark.parametrize(
+    ("show_default", "default", "user_input", "in_prompt", "not_in_prompt"),
+    [
+        # Regular string replaces the actual default in the prompt.
+        ("custom", "actual", "\n", "(custom)", "actual"),
+        # String with spaces.
+        ("custom label", "actual", "\n", "(custom label)", "actual"),
+        # Unicode characters.
+        ("∞", "0", "\n", "(∞)", None),
+        # Numeric default: custom string hides the number.
+        ("unlimited", 42, "\n", "(unlimited)", "42"),
+        # Explicit default=None: custom string still appears, must provide input.
+        ("computed at runtime", None, "value\n", "(computed at runtime)", None),
+        # No default kwarg at all (internal UNSET sentinel): same as None.
+        ("computed at runtime", UNSET, "value\n", "(computed at runtime)", None),
+        # Empty string is falsy: suppresses any default display.
+        ("", "actual", "\n", None, "actual"),
+    ],
+    ids=[
+        "simple-string",
+        "string-with-spaces",
+        "unicode",
+        "numeric-default",
+        "default-is-none",
+        "default-is-unset",
+        "empty-string-is-falsy",
+    ],
+)
+def test_string_show_default_in_prompt(
+    runner, show_default, default, user_input, in_prompt, not_in_prompt
+):
+    """When show_default is a string, the prompt should display that
+    string in parentheses instead of the actual default value,
+    matching the help text behavior. See pallets/click#2836."""
+
+    option_kwargs = {"show_default": show_default, "prompt": True}
+    if default is not UNSET:
+        option_kwargs["default"] = default
+
+    @click.command()
+    @click.option("--arg1", **option_kwargs)
+    def cmd(arg1):
+        click.echo(arg1)
+
+    result = runner.invoke(cmd, input=user_input, standalone_mode=False)
+    prompt_line = result.output.split("\n")[0]
+    if in_prompt is not None:
+        assert in_prompt in prompt_line
+    if not_in_prompt is not None:
+        assert not_in_prompt not in prompt_line
 
 
 REPEAT = object()
