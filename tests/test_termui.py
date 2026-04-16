@@ -710,3 +710,34 @@ def test_flag_value_prompt(
         assert result.output == expected_output
         assert not result.stderr
         assert result.exit_code == 0 if expected not in (REPEAT, INVALID) else 1
+
+
+@pytest.mark.skipif(not WIN, reason="Windows-only")
+def test_open_url_locate_quotes_path_with_spaces():
+    """launch(locate=True) must quote the path so Explorer handles spaces."""
+    from unittest.mock import patch
+
+    path = r"C:\path with spaces\file.txt"
+
+    with patch("subprocess.call", return_value=0) as mock_call:
+        click._termui_impl.open_url(path, locate=True)
+
+    args = mock_call.call_args[0][0]
+    # The /select, argument must wrap the path in double quotes
+    assert args[0] == "explorer"
+    assert args[1] == f'/select,"{path}"'
+
+
+@pytest.mark.skipif(not WIN, reason="Windows-only")
+def test_open_url_locate_escapes_quotes_in_path():
+    """Embedded double-quotes in path are escaped as \"\"."""
+    from unittest.mock import patch
+
+    path = 'C:\\path\\with "quotes"\\file.txt'
+
+    with patch("subprocess.call", return_value=0) as mock_call:
+        click._termui_impl.open_url(path, locate=True)
+
+    args = mock_call.call_args[0][0]
+    escaped = path.replace('"', '""')
+    assert args[1] == f'/select,"{escaped}"'
