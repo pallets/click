@@ -24,6 +24,16 @@ Unreleased
 -   Show custom ``show_default`` string in prompts, matching the existing
     help text behavior. :issue:`2836` :pr:`2837` :pr:`3165` :pr:`3262` :pr:`3280`
     :pr:`3328``
+-   Fix ``default=True`` with boolean ``flag_value`` always returning the
+    ``flag_value`` instead of ``True``. The ``default=True`` to ``flag_value``
+    substitution now only applies to non-boolean flags, where ``True`` acts as a
+    sentinel meaning "activate this flag by default". For boolean flags,
+    ``default=True`` is returned as a literal value. :issue:`3111` :pr:`3239`
+-   Mark ``make_default_short_help`` as private API. :issue:`3189` :pr:`3250`
+-   ``CliRunner``'s redirected streams now expose the original file descriptor
+    via ``fileno()``, so that ``faulthandler``, ``subprocess``, and other
+    C-level consumers no longer crash with ``io.UnsupportedOperation``.
+    :issue:`2865`
 
 Version 8.3.2
 -------------
