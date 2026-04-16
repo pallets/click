@@ -79,6 +79,7 @@ How to Guides
 
    entry-points
    setuptools
+   standalone-apps
    upgrade-guides
    support-multiple-versions
 
