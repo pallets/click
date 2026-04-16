@@ -698,6 +698,20 @@ class Context:
             self.obj = rv = object_type()
         return rv
 
+    def _default_map_has(self, name: str | None) -> bool:
+        """Check if :attr:`default_map` contains a real value for ``name``.
+
+        Returns ``False`` when the key is absent, the map is ``None``,
+        ``name`` is ``None``, or the stored value is the internal
+        :data:`UNSET` sentinel.
+        """
+        return (
+            name is not None
+            and self.default_map is not None
+            and name in self.default_map
+            and self.default_map[name] is not UNSET
+        )
+
     @t.overload
     def lookup_default(
         self, name: str, call: t.Literal[True] = True
@@ -718,15 +732,17 @@ class Context:
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
         """
-        if self.default_map is not None:
-            value = self.default_map.get(name)
+        if not self._default_map_has(name):
+            return None
 
-            if call and callable(value):
-                return value()
+        # Assert to make the type checker happy.
+        assert self.default_map is not None
+        value = self.default_map[name]
 
-            return value
+        if call and callable(value):
+            return value()
 
-        return None
+        return value
 
     def fail(self, message: str) -> t.NoReturn:
         """Aborts the execution of the program with a specific error
@@ -2294,9 +2310,7 @@ class Parameter:
         name = self.name
         value = ctx.lookup_default(name, call=False) if name is not None else None
 
-        if value is None and not (
-            ctx.default_map is not None and name is not None and name in ctx.default_map
-        ):
+        if value is None and not ctx._default_map_has(name):
             value = self.default
 
         if call and callable(value):
@@ -2338,9 +2352,7 @@ class Parameter:
 
         if value is UNSET:
             default_map_value = ctx.lookup_default(self.name)  # type: ignore[arg-type]
-            if default_map_value is not None or (
-                ctx.default_map is not None and self.name in ctx.default_map
-            ):
+            if default_map_value is not None or ctx._default_map_has(self.name):
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
 

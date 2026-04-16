@@ -13,6 +13,9 @@ Unreleased
     ``semver.Version``. :issue:`3298` :pr:`3299`
 -   Fix pager test pollution under parallel execution by using pytest's
     ``tmp_path`` fixture instead of a shared temporary file path. :pr:`3238`
+-   Treat ``Sentinel.UNSET`` values in a ``default_map`` as absent, so they fall
+    through to the next default source instead of being used as the value.
+    :issue:`3224` :pr:`3240`
 -   Patch ``pdb.Pdb`` in ``CliRunner`` isolation so ``pdb.set_trace()``,
     ``breakpoint()``, and debuggers subclassing ``pdb.Pdb`` (ipdb, pdbpp) can
     interact with the real terminal instead of the captured I/O streams.
