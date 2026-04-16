@@ -78,8 +78,15 @@ class UsageError(ClickException):
             self.ctx is not None
             and self.ctx.command.get_help_option(self.ctx) is not None
         ):
+            # Use the first configured help option name that hasn't been
+            # shadowed by another parameter on this command. For example,
+            # if "-h" is used by a subcommand option, fall back to "--help".
+            _available = set(self.ctx.command.get_help_option_names(self.ctx))
+            _hint_option = next(
+                name for name in self.ctx.help_option_names if name in _available
+            )
             hint = _("Try '{command} {option}' for help.").format(
-                command=self.ctx.command_path, option=self.ctx.help_option_names[0]
+                command=self.ctx.command_path, option=_hint_option
             )
             hint = f"{hint}\n"
         if self.ctx is not None:
