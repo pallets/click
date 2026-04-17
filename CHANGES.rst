@@ -3,7 +3,7 @@
 Version 8.3.3
 -------------
 
-Unreleased
+Released 2026-04-20
 
 -   Use :func:`shlex.split` to split pager and editor commands into ``argv``
     lists for :class:`subprocess.Popen`, removing ``shell=True``.
