@@ -26,7 +26,7 @@ Unreleased
     parallel tests, and Flask smoke tests. :pr:`3151` :pr:`3177`
 -   Show custom ``show_default`` string in prompts, matching the existing
     help text behavior. :issue:`2836` :pr:`2837` :pr:`3165` :pr:`3262` :pr:`3280`
-    :pr:`3328``
+    :pr:`3328`
 -   Fix ``default=True`` with boolean ``flag_value`` always returning the
     ``flag_value`` instead of ``True``. The ``default=True`` to ``flag_value``
     substitution now only applies to non-boolean flags, where ``True`` acts as a

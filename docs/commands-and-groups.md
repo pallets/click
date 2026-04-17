@@ -3,7 +3,10 @@
 ```{currentmodule} click
 ```
 
-Commands and Groups are the building blocks for Click applications. {class}`Command` wraps a function to make it into a cli command. {class}`Group` wraps Commands and Groups to make them into applications. {class}`Context` is how groups and commands communicate.
+Commands and Groups are the building blocks for Click applications.
+{class}`Command` wraps a function to make it into a cli command. {class}`Group`
+wraps Commands and Groups to make them into applications. {class}`Context` is
+how groups and commands communicate.
 
 ```{contents}
 ---
@@ -33,7 +36,8 @@ A simple command decorator takes no arguments.
 
 ### Renaming Commands
 
-By default the command is the function name with underscores replaced by dashes. To change this pass the  desired name into the first positional argument.
+By default the command is the function name with underscores replaced by dashes.
+To change this pass the  desired name into the first positional argument.
 
 ```{eval-rst}
 .. click:example::
@@ -69,7 +73,9 @@ To mark a command as deprecated pass in `deprecated=True`
 
 ### Basic Group Example
 
-A group wraps one or more commands. After being wrapped, the commands are nested under that group. You can see that on the help pages and in the execution. By default, invoking the group with no command shows the help page.
+A group wraps one or more commands. After being wrapped, the commands are nested
+under that group. You can see that on the help pages and in the execution. By
+default, invoking the group with no command shows the help page.
 
 ```{eval-rst}
 .. click:example::
@@ -98,11 +104,13 @@ At the command level:
     invoke(greeting, args=['say-hello', '--help'])
 ```
 
-As you can see from the above example, the function wrapped by the group decorator executes unless it is interrupted (for example by calling the help).
+As you can see from the above example, the function wrapped by the group
+decorator executes unless it is interrupted (for example by calling the help).
 
 ### Renaming Groups
 
-To have a name other than the decorated function name as the group name, pass it in as the first positional argument.
+To have a name other than the decorated function name as the group name, pass it
+in as the first positional argument.
 
 ```{eval-rst}
 .. click:example::
@@ -124,7 +132,11 @@ To have a name other than the decorated function name as the group name, pass it
 
 ### Group Invocation Without Command
 
-By default, if a group is passed without a command, the group is not invoked and a command automatically passes `--help`. To change this, pass `invoke_without_command=True` to the group. The context object also includes information about whether or not the group invocation would go to a command nested under it.
+By default, if a group is passed without a command, the group is not invoked and
+a command automatically passes `--help`. To change this, pass
+`invoke_without_command=True` to the group. The context object also includes
+information about whether or not the group invocation would go to a command
+nested under it.
 
 ```{eval-rst}
 .. click:example::
@@ -177,13 +189,19 @@ Command {ref}`parameters` attached to a command belong only to that command.
     invoke(greeting)
 ```
 
-Additionally parameters for a given group belong only to that group and not to the commands under it. What this means is that options and arguments for a specific command have to be specified *after* the command name itself, but *before* any other command names.
+Additionally parameters for a given group belong only to that group and not to
+the commands under it. What this means is that options and arguments for a
+specific command have to be specified *after* the command name itself, but
+*before* any other command names.
 
-This behavior is observable with the `--help` option. Suppose we have a group called `tool` containing a command called `sub`.
+This behavior is observable with the `--help` option. Suppose we have a group
+called `tool` containing a command called `sub`.
 
 - `tool --help` returns the help for the whole program (listing subcommands).
 - `tool sub --help` returns the help for the `sub` subcommand.
-- But `tool --help sub` treats `--help` as an argument for the main program. Click then invokes the callback for `--help`, which prints the help and aborts the program before click can process the subcommand.
+- But `tool --help sub` treats `--help` as an argument for the main program.
+  Click then invokes the callback for `--help`, which prints the help and aborts
+  the program before click can process the subcommand.
 
 ### Arbitrary Nesting
 
@@ -216,7 +234,10 @@ This behavior is observable with the `--help` option. Suppose we have a group ca
 
 ### Lazily Attaching Commands
 
-Most examples so far have attached the commands to a group immediately, but commands may be registered later. This could be used to split commands into multiple Python modules. Regardless of how they are attached, the commands are invoked identically.
+Most examples so far have attached the commands to a group immediately, but
+commands may be registered later. This could be used to split commands into
+multiple Python modules. Regardless of how they are attached, the commands are
+invoked identically.
 
 ```{eval-rst}
 .. click:example::
@@ -246,8 +267,12 @@ The {class}`Context` object is how commands and groups communicate.
 
 ### Auto Envvar Prefix
 
-Automatically built environment variables are supported for options only. To enable this feature, the `auto_envvar_prefix` parameter needs to be passed to the script that is invoked.  Each command and parameter is then added as an uppercase underscore-separated variable.  If you have a subcommand
-called `run` taking an option called `reload` and the prefix is `WEB`, then the variable is `WEB_RUN_RELOAD`.
+Automatically built environment variables are supported for options only. To
+enable this feature, the `auto_envvar_prefix` parameter needs to be passed to
+the script that is invoked.  Each command and parameter is then added as an
+uppercase underscore-separated variable.  If you have a subcommand
+called `run` taking an option called `reload` and the prefix is `WEB`, then the
+variable is `WEB_RUN_RELOAD`.
 
 Example usage:
 

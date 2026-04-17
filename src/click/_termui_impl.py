@@ -380,9 +380,8 @@ def pager(generator: cabc.Iterable[str], color: bool | None = None) -> None:
 
     # Split using POSIX mode (the default) so that quote characters are
     # stripped from tokens and quoted Windows paths are preserved.
-    # posix=False was rejected (PR #1477) because it retains quotes in
-    # tokens, and the shlex.quote approach was also reverted (PR #1543).
-    # See also: issue #1026, PR #2775.
+    # Non-POSIX mode retains quotes in tokens, and wrapping tokens
+    # with shlex.quote re-introduces quoting issues on Windows.
     pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""))
     if pager_cmd_parts:
         if WIN:
@@ -623,7 +622,7 @@ class Editor:
         try:
             # Split in POSIX mode (the default) for the same reasons as
             # in pager(): strips quotes from tokens and preserves quoted
-            # Windows paths. See issue #1026, PR #1477.
+            # Windows paths.
             c = subprocess.Popen(
                 args=shlex.split(editor) + list(filenames),
                 env=environ,

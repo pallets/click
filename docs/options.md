@@ -7,7 +7,8 @@
 ```
 
 Adding options to commands can be accomplished with the {func}`option`
-decorator. At runtime the decorator invokes the {class}`Option` class. Options in Click are distinct from {ref}`positional arguments <arguments>`.
+decorator. At runtime the decorator invokes the {class}`Option` class. Options
+in Click are distinct from {ref}`positional arguments <arguments>`.
 
 Useful and often used kwargs are:
 
@@ -24,7 +25,8 @@ Useful and often used kwargs are:
 
 ## Option Decorator
 
-The {func}`option()` decorator is usually passed two positional arguments: the option name and the decorated function argument name.
+The {func}`option()` decorator is usually passed two positional arguments: the
+option name and the decorated function argument name.
 
 ```{eval-rst}
 .. click:example::
@@ -40,7 +42,10 @@ The {func}`option()` decorator is usually passed two positional arguments: the o
     invoke(echo, args=['--help'])
 ```
 
-However, if the decorated function argument name is not passed in, then Click will try to infer it. A simple way to name the option so that Click will infer it correctly is by taking the function argument, adding two dashes to the front and converting underscores to dashes.
+However, if the decorated function argument name is not passed in, then Click
+will try to infer it. A simple way to name the option so that Click will infer
+it correctly is by taking the function argument, adding two dashes to the front
+and converting underscores to dashes.
 
 ```{eval-rst}
 .. click:example::
@@ -55,13 +60,17 @@ However, if the decorated function argument name is not passed in, then Click wi
     invoke(echo, args=['--string-to-echo', 'Hi!'])
 ```
 
-More formally, Click will try to infer the decorated function argument name as follows:
+More formally, Click will try to infer the decorated function argument name as
+follows:
 
 1. If a positional argument is a valid [Python identifier](https://docs.python.org/3/reference/lexical_analysis.html#identifiers) (and thus does not have dashes), it is chosen.
-2. If multiple positional arguments are prefixed with `--`, the first one declared is chosen.
+2. If multiple positional arguments are prefixed with `--`, the first one
+  declared is chosen.
 3. Otherwise, the first positional argument prefixed with `-` is chosen.
 
-To get the argument name, the chosen positional argument is converted to lower case, a leading `-` or `--` is removed if found, and any remaining `-` characters are replaced with `_`.
+To get the argument name, the chosen positional argument is converted to lower
+case, a leading `-` or `--` is removed if found, and any remaining `-`
+characters are replaced with `_`.
 
 ```{eval-rst}
 .. list-table:: Examples
@@ -88,7 +97,10 @@ To get the argument name, the chosen positional argument is converted to lower c
 
 ## Basic Example
 
-A simple {class}`click.Option` takes one option name. By default, it's assumed that the decorated function argument is not required and the expected type is `str`. If the decorated function takes a positional argument but the option is not passed with the command, then `None` is passed.
+A simple {class}`click.Option` takes one option name. By default, it's assumed
+that the decorated function argument is not required and the expected type is
+`str`. If the decorated function takes a positional argument but the option is
+not passed with the command, then `None` is passed.
 
 ```{eval-rst}
 .. click:example::
@@ -114,7 +126,8 @@ A simple {class}`click.Option` takes one option name. By default, it's assumed t
 
 ## Setting a Default
 
-Instead of setting the `type`, you may set a default and Click will try to infer the type.
+Instead of setting the `type`, you may set a default and Click will try to infer
+the type.
 
 ```{eval-rst}
 .. click:example::
@@ -131,7 +144,9 @@ Instead of setting the `type`, you may set a default and Click will try to infer
 
 ## Multi Value Options
 
-To make an option take multiple values, pass in `nargs`. Note you may pass in any positive integer, but not -1. The values are passed to the decorated function as a tuple.
+To make an option take multiple values, pass in `nargs`. Note you may pass in
+any positive integer, but not -1. The values are passed to the decorated
+function as a tuple.
 
 ```{eval-rst}
 .. click:example::
@@ -156,7 +171,8 @@ To make an option take multiple values, pass in `nargs`. Note you may pass in an
 ```
 
 By setting `nargs` to a specific number, each item in
-the resulting tuple is of the same type. Alternatively, you might want to use different types for different indexes in
+the resulting tuple is of the same type. Alternatively, you might want to use
+different types for different indexes in
 the tuple. For this you can directly specify a tuple as `type`:
 
 ```{eval-rst}
@@ -194,7 +210,10 @@ used. The above example is thus equivalent to this:
 
 ## Multiple Options
 
-The multiple options format allows options to take an arbitrary number of arguments (which is called variadic). The arguments are passed to the decorated function as a tuple. If set, `default` must be a list or tuple. Setting a string as `default` will be interpreted as a list of characters.
+The multiple options format allows options to take an arbitrary number of
+arguments (which is called variadic). The arguments are passed to the decorated
+function as a tuple. If set, `default` must be a list or tuple. Setting a string
+as `default` will be interpreted as a list of characters.
 
 ```{eval-rst}
 .. click:example::
@@ -213,7 +232,9 @@ The multiple options format allows options to take an arbitrary number of argume
 
 ## Counting
 
-To count the occurrence of an option, set `count=True`. If the option is not passed on the command line, then the count is 0. Counting is commonly used for verbosity.
+To count the occurrence of an option, set `count=True`. If the option is not
+passed on the command line, then the count is 0. Counting is commonly used for
+verbosity.
 
 ```{eval-rst}
 .. click:example::
@@ -233,7 +254,9 @@ To count the occurrence of an option, set `count=True`. If the option is not pas
 
 ## Boolean
 
-Boolean options (boolean flags) take the values `True` or `False`. The simplest case sets the default value to `False` if the flag is not passed, and `True` if it is.
+Boolean options (boolean flags) take the values `True` or `False`. The simplest
+case sets the default value to `False` if the flag is not passed, and `True` if
+it is.
 
 ```{eval-rst}
 .. click:example::
@@ -256,7 +279,8 @@ Boolean options (boolean flags) take the values `True` or `False`. The simplest 
 
 ```
 
-To implement this more explicitly, declare `--{on-option}/--{off-option}`. Click will automatically set `is_flag=True`.
+To implement this more explicitly, declare `--{on-option}/--{off-option}`. Click
+will automatically set `is_flag=True`.
 
 ```{eval-rst}
 .. click:example::
@@ -280,11 +304,15 @@ To implement this more explicitly, declare `--{on-option}/--{off-option}`. Click
 
 Use cases for this more explicit pattern include:
 
-* The default can be dynamic so the user can explicitly specify the option with either on or off option, or pass in no option to use the dynamic default.
+* The default can be dynamic so the user can explicitly specify the option with
+  either on or off option, or pass in no option to use the dynamic default.
 * Shell scripts sometimes want to be explicit even when it's the default
-* Shell aliases can set a flag, then an invocation can add a negation of the flag
+* Shell aliases can set a flag, then an invocation can add a negation of the
+  flag
 
-If a forward slash(`/`) is contained in your option name already, you can split the parameters using `;`. In Windows `/` is commonly used as the prefix character.
+If a forward slash(`/`) is contained in your option name already, you can split
+the parameters using `;`. In Windows `/` is commonly used as the prefix
+character.
 
 ```{eval-rst}
 .. click:example::
@@ -298,7 +326,8 @@ If a forward slash(`/`) is contained in your option name already, you can split 
 ```{versionchanged} 6.0
 ```
 
-If you want to define an alias for the second option only, then you will need to use leading whitespace to disambiguate the format string.
+If you want to define an alias for the second option only, then you will need to
+use leading whitespace to disambiguate the format string.
 
 ```{eval-rst}
 .. click:example::
@@ -320,7 +349,9 @@ If you want to define an alias for the second option only, then you will need to
 
 ## Flag Value
 
-To have a flag pass a value to the decorated function set `flag_value`. This automatically sets `is_flag=True`. To mark the flag as default, set `default=True`. Setting flag values can be used to create patterns like this:
+To have a flag pass a value to the decorated function set `flag_value`. This
+automatically sets `is_flag=True`. To mark the flag as default, set
+`default=True`. Setting flag values can be used to create patterns like this:
 
 ```{eval-rst}
 .. click:example::
@@ -483,20 +514,32 @@ If a list is passed to `envvar`, the first environment variable found is picked.
 
 Variable names are:
  - [Case-insensitive on Windows but not on other platforms](https://github.com/python/cpython/blob/aa9eb5f757ceff461e6e996f12c89e5d9b583b01/Lib/os.py#L777-L789).
- - Not stripped of whitespace and should match the exact name provided to the `envvar` argument.
+ - Not stripped of whitespace and should match the exact name provided to the
+   `envvar` argument.
 
-For flag options, there are two concepts to consider: the activation of the flag driven by the environment variable, and the value of the flag if it is activated.
+For flag options, there are two concepts to consider: the activation of the flag
+driven by the environment variable, and the value of the flag if it is
+activated.
 
-The values read from environment variables are always strings and will require extra processing. We need to transform these strings into boolean values that will determine if the flag is activated or not.
+The values read from environment variables are always strings and will require
+extra processing. We need to transform these strings into boolean values that
+will determine if the flag is activated or not.
 
 Here are the rules used to parse environment variable values for flag options:
    - `true`, `1`, `yes`, `on`, `t`, `y` are interpreted as activating the flag
-   - `false`, `0`, `no`, `off`, `f`, `n` are interpreted as deactivating the flag
-   - The presence of the environment variable without value is interpreted as deactivating the flag
+   - `false`, `0`, `no`, `off`, `f`, `n` are interpreted as deactivating the
+     flag
+   - The presence of the environment variable without value is interpreted as
+     deactivating the flag
    - Empty strings are interpreted as deactivating the flag
-   - Values are case-insensitive, so the `True`, `TRUE`, `tRuE` strings are all interpreted as activating the flag
-   - Values are stripped of leading and trailing whitespace before being interpreted, so the `" True "` string is transformed to `"true"` and thus activates the flag
-   - If the flag option has a `flag_value` argument, passing that value in the environment variable will activate the flag, in addition to all the cases described above
+   - Values are case-insensitive, so the `True`, `TRUE`, `tRuE` strings are all
+     interpreted as activating the flag
+   - Values are stripped of leading and trailing whitespace before being
+     interpreted, so the `" True "` string is transformed to `"true"` and thus
+     activates the flag
+   - If the flag option has a `flag_value` argument, passing that value in the
+     environment variable will activate the flag, in addition to all the cases
+     described above
    - Any other value is interpreted as deactivating the flag
 
 ```{caution}
@@ -505,12 +548,15 @@ For boolean flags with a pair of values, the only recognized environment variabl
 So an option defined as `--flag\--no-flag`, with a `envvar="FLAG"` parameter, there is no magical `NO_FLAG=<anything>` variable that is recognized. Only the `FLAG=<anything>` environment variable is recognized.
 ```
 
-If the flag is activated, its value is set to `flag_value`. Otherwise, the value defaults to `None`.
+If the flag is activated, its value is set to `flag_value`. Otherwise, the value
+defaults to `None`.
 
 ## Multiple Options from Environment Values
 
 As options can accept multiple values, pulling in such values from
-environment variables (which are strings) is a bit more complex. Click handles this by deferring customization of the behavior to the `type`. For both `multiple` and `nargs` with values other than
+environment variables (which are strings) is a bit more complex. Click handles
+this by deferring customization of the behavior to the `type`. For both
+`multiple` and `nargs` with values other than
 `1`, Click will invoke the {meth}`ParamType.split_envvar_value` method to
 perform the splitting.
 
@@ -541,7 +587,9 @@ every colon (`:`), and for Windows, splitting on every semicolon (`;`).
 
 ## Other Prefix Characters
 
-Click can deal with prefix characters besides `-` for options, including `/` and `+`, as well as others. Note that alternative prefix characters are generally used very sparingly if at all within POSIX.
+Click can deal with prefix characters besides `-` for options, including `/` and
+`+`, as well as others. Note that alternative prefix characters are generally
+used very sparingly if at all within POSIX.
 
 ```{eval-rst}
 .. click:example::
@@ -557,7 +605,8 @@ Click can deal with prefix characters besides `-` for options, including `/` and
     invoke(chmod, args=['-w'])
 ```
 
-There are special considerations for using `/` as prefix character. See {ref}`option-boolean-flag` for more.
+There are special considerations for using `/` as prefix character. See
+{ref}`option-boolean-flag` for more.
 
 (optional-value)=
 
