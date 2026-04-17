@@ -51,6 +51,24 @@ def test_range_fail(type, value, expect):
     assert expect in exc_info.value.message
 
 
+@pytest.mark.parametrize(
+    ("type",),
+    [
+        (click.FloatRange(0.0, 1.0),),
+        (click.FloatRange(0.5, 1.5),),
+        (click.FloatRange(max=1.5),),
+        (click.FloatRange(),),
+        (click.FloatRange(0.0, 1.0, clamp=True),),
+        (click.FloatRange(0.0, 1.0, min_open=True),),
+    ],
+)
+def test_float_range_rejects_nan(type):
+    """FloatRange should reject NaN values since NaN is not a valid number
+    and NaN comparisons are always False, bypassing range checks."""
+    with pytest.raises(click.BadParameter, match="not a valid number"):
+        type.convert("nan", None, None)
+
+
 def test_float_range_no_clamp_open():
     with pytest.raises(TypeError):
         click.FloatRange(0, 1, max_open=True, clamp=True)

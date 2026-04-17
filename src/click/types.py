@@ -648,6 +648,22 @@ class FloatRange(_NumberRangeBase, FloatParamType):
         if (min_open or max_open) and clamp:
             raise TypeError("Clamping is not supported for open bounds.")
 
+    def convert(
+        self, value: t.Any, param: Parameter | None, ctx: Context | None
+    ) -> t.Any:
+        import math
+
+        rv = super().convert(value, param, ctx)
+
+        if math.isnan(rv):
+            self.fail(
+                _("{value} is not a valid number.").format(value=rv),
+                param,
+                ctx,
+            )
+
+        return rv
+
     def _clamp(self, bound: float, dir: t.Literal[1, -1], open: bool) -> float:
         if not open:
             return bound
