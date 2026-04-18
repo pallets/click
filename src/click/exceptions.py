@@ -23,6 +23,15 @@ def _join_param_hints(param_hint: cabc.Sequence[str] | str | None) -> str | None
     return param_hint
 
 
+def _format_possibilities(possibilities: list[str]) -> str:
+    possibility_str = ", ".join(repr(p) for p in sorted(possibilities))
+    return ngettext(
+        "Did you mean {possibility}?",
+        "(Did you mean one of: {possibilities}?)",
+        len(possibilities),
+    ).format(possibility=possibility_str, possibilities=possibility_str)
+
+
 class ClickException(Exception):
     """An exception that Click can handle and show to the user."""
 
@@ -206,8 +215,7 @@ class MissingParameter(BadParameter):
 
 
 class NoSuchOption(UsageError):
-    """Raised if click attempted to handle an option that does not
-    exist.
+    """Raised if Click attempted to handle an option that does not exist.
 
     .. versionadded:: 4.0
     """
@@ -216,27 +224,51 @@ class NoSuchOption(UsageError):
         self,
         option_name: str,
         message: str | None = None,
-        possibilities: cabc.Sequence[str] | None = None,
+        possibilities: cabc.Iterable[str] | None = None,
         ctx: Context | None = None,
     ) -> None:
         if message is None:
-            message = _("No such option: {name}").format(name=option_name)
+            message = _("No such option {name!r}.").format(name=option_name)
 
         super().__init__(message, ctx)
         self.option_name = option_name
-        self.possibilities = possibilities
+        self.possibilities: list[str] | None = None
+        if possibilities:
+            from difflib import get_close_matches
+
+            self.possibilities = get_close_matches(option_name, possibilities)
 
     def format_message(self) -> str:
         if not self.possibilities:
             return self.message
+        return f"{self.message} {_format_possibilities(self.possibilities)}"
 
-        possibility_str = ", ".join(sorted(self.possibilities))
-        suggest = ngettext(
-            "Did you mean {possibility}?",
-            "(Possible options: {possibilities})",
-            len(self.possibilities),
-        ).format(possibility=possibility_str, possibilities=possibility_str)
-        return f"{self.message} {suggest}"
+
+class NoSuchCommand(UsageError):
+    """Raised if Click attempted to handle a command that does not exist."""
+
+    def __init__(
+        self,
+        command_name: str,
+        message: str | None = None,
+        possibilities: cabc.Iterable[str] | None = None,
+        ctx: Context | None = None,
+    ) -> None:
+        if message is None:
+            message = _("No such command {name!r}.").format(name=command_name)
+
+        super().__init__(message, ctx)
+        self.command_name = command_name
+        self.possibilities: list[str] | None = None
+        if possibilities:
+            from difflib import get_close_matches
+
+            self.possibilities = get_close_matches(command_name, possibilities)
+
+    def format_message(self) -> str:
+        if not self.possibilities:
+            return self.message
+        return f"{self.message} {_format_possibilities(self.possibilities)}"
 
 
 class BadOptionUsage(UsageError):
