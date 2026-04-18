@@ -1435,7 +1435,7 @@ def test_type_from_flag_value():
         # Not passing --foo returns the default value as-is, in its Python type, then
         # converted by the option type.
         ({"type": bool, "default": True, "flag_value": True}, [], True),
-        ({"type": bool, "default": True, "flag_value": False}, [], False),
+        ({"type": bool, "default": True, "flag_value": False}, [], True),
         ({"type": bool, "default": False, "flag_value": True}, [], False),
         ({"type": bool, "default": False, "flag_value": False}, [], False),
         ({"type": bool, "default": None, "flag_value": True}, [], None),
@@ -1478,6 +1478,21 @@ def test_flag_value_and_default(runner, opt_params, args, expected):
 
     result = runner.invoke(cmd, args)
     assert result.output == repr(expected)
+
+
+def test_negative_boolean_flag_value_preserves_true_default(runner):
+    @click.command()
+    @click.option(
+        "--without-xyz", "enable_xyz", is_flag=True, flag_value=False, default=True
+    )
+    def cmd(enable_xyz):
+        click.echo(repr(enable_xyz), nl=False)
+
+    result = runner.invoke(cmd, [])
+    assert result.output == "True"
+
+    result = runner.invoke(cmd, ["--without-xyz"])
+    assert result.output == "False"
 
 
 @pytest.mark.parametrize(

@@ -2897,7 +2897,11 @@ class Option(Parameter):
         # (instead of eagerly in __init__) prevents callable flag_values
         # (like classes) from being instantiated by the callable check below.
         # https://github.com/pallets/click/issues/3121
-        if value is True and self.is_flag:
+        if (
+            value is True
+            and self.is_flag
+            and not (self.is_bool_flag and self.flag_value is False)
+        ):
             value = self.flag_value
         elif call and callable(value):
             value = value()
