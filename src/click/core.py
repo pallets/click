@@ -651,8 +651,6 @@ class Context:
             parent_command_path = [self.parent.command_path]
 
             if isinstance(self.parent.command, Command):
-                if self.parent.command.options_metavar:
-                    parent_command_path.append(self.parent.command.options_metavar)
                 for param in self.parent.command.get_params(self):
                     if isinstance(param, Argument):
                         metavar = param.make_metavar(self)
