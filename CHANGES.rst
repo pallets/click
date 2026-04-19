@@ -5,6 +5,11 @@ Version 8.3.3
 
 Unreleased
 
+-   Skip evaluation of parameter defaults and invocation of parameter callbacks
+    when :attr:`Context.resilient_parsing` is ``True``, such as during shell
+    completion. This matches the behavior documented for ``resilient_parsing``
+    and avoids side effects from expensive ``default=`` callables and ``callback``
+    functions while completing. :issue:`2614`
 -   Use :func:`shlex.split` to split pager and editor commands into ``argv``
     lists for :class:`subprocess.Popen`, removing ``shell=True``.
     :issue:`1026` :pr:`1477` :pr:`2775`

@@ -559,3 +559,50 @@ def test_files_closed(runner) -> None:
             assert not current_warnings, "There should be no warnings to start"
             _get_completions(cli, args=[], incomplete="")
             assert not current_warnings, "There should be no warnings after either"
+
+
+def test_default_callable_not_called_during_completion():
+    """A callable passed as ``default=`` must not be invoked while shell
+    completion is running, because ``resilient_parsing`` is set and the
+    documentation states that default values are ignored in that mode.
+    """
+    calls = []
+
+    def expensive_default():
+        calls.append("default")
+        return "value"
+
+    cli = Command("cli", params=[Option(["--foo"], default=expensive_default)])
+    _get_completions(cli, [], "-")
+    assert calls == []
+
+
+def test_callback_not_called_during_completion():
+    """A parameter ``callback`` must not fire while shell completion is
+    running, per the documented behavior of ``resilient_parsing``.
+    """
+    calls = []
+
+    def cb(ctx, param, value):
+        calls.append(value)
+        return value
+
+    cli = Command("cli", params=[Option(["--foo"], default="x", callback=cb)])
+    _get_completions(cli, [], "-")
+    assert calls == []
+
+
+def test_bool_flag_callback_not_called_during_completion():
+    """Boolean flag ``callback`` must not fire during shell completion."""
+    calls = []
+
+    def cb(ctx, param, value):
+        calls.append(value)
+        return value
+
+    cli = Command(
+        "cli",
+        params=[Option(["--flag/--no-flag"], default=False, callback=cb)],
+    )
+    _get_completions(cli, [], "-")
+    assert calls == []
