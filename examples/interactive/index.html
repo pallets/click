@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click 交互式命令行向导 - 实验环境</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .card-body {
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .command-list {
+            list-style: none;
+        }
+
+        .command-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .command-item:hover {
+            background: #f0f4ff;
+            border-color: #667eea;
+        }
+
+        .command-item.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .command-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .command-desc {
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .param-list {
+            list-style: none;
+        }
+
+        .param-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+        }
+
+        .param-name {
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 4px;
+        }
+
+        .param-details {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .param-details span {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 5px;
+            margin-top: 3px;
+        }
+
+        .terminal {
+            background: #1a1a2e;
+            color: #00ff88;
+            font-family: 'Consolas', 'Monaco', monospace;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .terminal-line {
+            margin-bottom: 5px;
+        }
+
+        .terminal-prompt {
+            color: #ff6b6b;
+        }
+
+        .terminal-output {
+            color: #00ff88;
+        }
+
+        .terminal-error {
+            color: #ff6b6b;
+        }
+
+        .prompt-dialog {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #667eea;
+        }
+
+        .prompt-text {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #1a1a2e;
+        }
+
+        .prompt-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .prompt-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .prompt-select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .prompt-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .prompt-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e9ecef;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .code-block {
+            background: #1a1a2e;
+            color: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .code-keyword {
+            color: #ff6b6b;
+        }
+
+        .code-string {
+            color: #ffd93d;
+        }
+
+        .code-comment {
+            color: #6c757d;
+        }
+
+        .code-function {
+            color: #6bcb77;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .info-box {
+            background: #e7f5ff;
+            border-left: 4px solid #339af0;
+            padding: 12px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .info-box h4 {
+            color: #1864ab;
+            margin-bottom: 5px;
+        }
+
+        .info-box p {
+            color: #495057;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Click 交互式命令行向导</h1>
+            <p>实验环境 - 测试交互式命令行功能</p>
+        </div>
+
+        <div class="main-content">
+            <div class="card">
+                <div class="card-header">
+                    📋 可用命令
+                </div>
+                <div class="card-body">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="commands">命令列表</div>
+                        <div class="tab" data-tab="examples">使用示例</div>
+                        <div class="tab" data-tab="docs">功能文档</div>
+                    </div>
+
+                    <div id="commands-tab" class="tab-content active">
+                        <div class="info-box">
+                            <h4>💡 提示</h4>
+                            <p>选择一个命令查看详细信息，然后点击"执行命令"按钮运行它。</p>
+                        </div>
+                        <ul class="command-list" id="command-list">
+                            <li class="loading">
+                                <div class="spinner"></div>
+                                加载命令列表...
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div id="examples-tab" class="tab-content">
+                        <div class="section-title">基础示例</div>
+                        <div class="code-block">
+<span class="code-keyword">import</span> click
+<span class="code-keyword">from</span> click <span class="code-keyword">import</span> interactive_command
+
+<span class="code-comment"># 简单的交互式命令</span>
+<span class="code-function">@interactive_command</span>()
+<span class="code-function">@click.option</span>(<span class="code-string">'--name'</span>, <span class="code-keyword">prompt</span>=<span class="code-string">'你的名字?'</span>)
+<span class="code-function">@click.option</span>(<span class="code-string">'--age'</span>, <span class="code-keyword">type</span>=<span class="code-keyword">int</span>, <span class="code-keyword">prompt</span>=<span class="code-string">'你的年龄?'</span>)
+<span class="code-keyword">def</span> <span class="code-function">greet</span>(name, age):
+    click.echo(<span class="code-string">f'你好 {name}，你 {age} 岁了！'</span>)
+                        </div>
+
+                        <div class="section-title" style="margin-top: 20px;">条件提问示例</div>
+                        <div class="code-block">
+<span class="code-keyword">from</span> click <span class="code-keyword">import</span> interactive_option
+
+<span class="code-function">@interactive_command</span>()
+<span class="code-function">@click.option</span>(<span class="code-string">'--project-type'</span>, 
+              <span class="code-keyword">type</span>=click.Choice([<span class="code-string">'python'</span>, <span class="code-string">'javascript'</span>]))
+<span class="code-function">@interactive_option</span>(
+    <span class="code-string">'--python-version'</span>,
+    <span class="code-keyword">interactive_after</span>=<span class="code-string">'project_type'</span>,
+    <span class="code-keyword">interactive_condition</span>=<span class="code-keyword">lambda</span> params: params.get(<span class="code-string">'project_type'</span>) == <span class="code-string">'python'</span>,
+    <span class="code-keyword">prompt</span>=<span class="code-string">'Python 版本?'</span>
+)
+<span class="code-function">@interactive_option</span>(
+    <span class="code-string">'--node-version'</span>,
+    <span class="code-keyword">interactive_after</span>=<span class="code-string">'project_type'</span>,
+    <span class="code-keyword">interactive_condition</span>=<span class="code-keyword">lambda</span> params: params.get(<span class="code-string">'project_type'</span>) == <span class="code-string">'javascript'</span>,
+    <span class="code-keyword">prompt</span>=<span class="code-string">'Node.js 版本?'</span>
+)
+<span class="code-keyword">def</span> <span class="code-function">create_project</span>(project_type, python_version, node_version):
+    <span class="code-keyword">pass</span>
+                        </div>
+                    </div>
+
+                    <div id="docs-tab" class="tab-content">
+                        <div class="section-title">新增功能</div>
+                        
+                        <div class="info-box">
+                            <h4>🎯 InteractiveCommand</h4>
+                            <p>支持交互式模式的命令类。当启用时，会自动提示用户输入所有参数。</p>
+                        </div>
+
+                        <div class="info-box">
+                            <h4>🎯 InteractiveGroup</h4>
+                            <p>支持交互式菜单的命令组。当没有指定子命令时，显示交互式菜单供用户选择。</p>
+                        </div>
+
+                        <div class="info-box">
+                            <h4>🎯 InteractiveOption</h4>
+                            <p>支持条件提问的选项类。可以根据之前的回答决定是否提示该选项。</p>
+                        </div>
+
+                        <div class="section-title" style="margin-top: 20px;">装饰器</div>
+                        
+                        <div class="info-box">
+                            <h4>@interactive_command</h4>
+                            <p>创建交互式命令的装饰器。参数：interactive, interactive_all, interactive_skip</p>
+                        </div>
+
+                        <div class="info-box">
+                            <h4>@interactive_group</h4>
+                            <p>创建交互式命令组的装饰器。参数：interactive, interactive_menu</p>
+                        </div>
+
+                        <div class="info-box">
+                            <h4>@interactive_option</h4>
+                            <p>创建交互式选项的装饰器。支持条件提问：interactive_when, interactive_after, interactive_condition</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    🚀 命令执行
+                </div>
+                <div class="card-body">
+                    <div id="command-details" style="display: none;">
+                        <div class="section-title">命令信息</div>
+                        <div id="command-info" style="margin-bottom: 15px;"></div>
+                        
+                        <div class="section-title">参数列表</div>
+                        <ul class="param-list" id="param-list"></ul>
+                        
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="execute-btn">
+                                ▶️ 执行命令
+                            </button>
+                            <button class="btn btn-secondary" id="clear-btn">
+                                🗑️ 清空输出
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="no-selection" style="text-align: center; padding: 40px; color: #6c757d;">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">👈</div>
+                        <p>请从左侧选择一个命令</p>
+                    </div>
+
+                    <div id="prompt-area" style="display: none; margin-top: 20px;">
+                        <div class="section-title">交互式输入</div>
+                        <div id="prompt-dialog"></div>
+                        <div class="btn-group">
+                            <button class="btn btn-success" id="submit-answer-btn">
+                                ✅ 提交答案
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="output-area" style="display: none; margin-top: 20px;">
+                        <div class="section-title">输出结果</div>
+                        <div class="terminal" id="terminal-output"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        
+        let commandsData = null;
+        let selectedCommand = null;
+        let currentAnswers = [];
+        let currentCommandPath = [];
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-tab`).classList.add('active');
+            });
+        });
+
+        async function loadCommands() {
+            try {
+                const response = await fetch(`${API_BASE}/commands`);
+                commandsData = await response.json();
+                renderCommandList(commandsData.commands);
+            } catch (error) {
+                document.getElementById('command-list').innerHTML = `
+                    <li style="color: #dc3545; padding: 15px;">
+                        ❌ 无法连接到 API 服务器<br>
+                        请确保已运行: python web_api.py
+                    </li>
+                `;
+            }
+        }
+
+        function renderCommandList(group, parentPath = []) {
+            const listEl = document.getElementById('command-list');
+            
+            if (parentPath.length === 0) {
+                listEl.innerHTML = '';
+            }
+
+            if (group.is_group && group.commands) {
+                Object.entries(group.commands).forEach(([name, cmd]) => {
+                    const item = document.createElement('li');
+                    item.className = 'command-item';
+                    item.innerHTML = `
+                        <div class="command-name">
+                            ${cmd.is_group ? '📁' : '📄'} ${name}
+                        </div>
+                        <div class="command-desc">${cmd.short_help || '暂无描述'}</div>
+                    `;
+                    
+                    const cmdPath = [...parentPath, name];
+                    item.addEventListener('click', () => selectCommand(cmd, cmdPath));
+                    listEl.appendChild(item);
+                });
+            }
+        }
+
+        function selectCommand(cmd, path) {
+            selectedCommand = cmd;
+            currentCommandPath = path;
+            currentAnswers = [];
+
+            document.querySelectorAll('.command-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+
+            document.getElementById('no-selection').style.display = 'none';
+            document.getElementById('command-details').style.display = 'block';
+            document.getElementById('prompt-area').style.display = 'none';
+            document.getElementById('output-area').style.display = 'none';
+
+            renderCommandDetails(cmd);
+        }
+
+        function renderCommandDetails(cmd) {
+            const infoEl = document.getElementById('command-info');
+            infoEl.innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <strong>名称:</strong> ${cmd.name}
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong>描述:</strong> ${cmd.help || '暂无描述'}
+                </div>
+                <div>
+                    <strong>类型:</strong> ${cmd.is_group ? '命令组' : '命令'}
+                </div>
+            `;
+
+            const paramListEl = document.getElementById('param-list');
+            paramListEl.innerHTML = '';
+
+            if (cmd.params && cmd.params.length > 0) {
+                cmd.params.forEach(param => {
+                    if (param.name === 'help') return;
+                    
+                    const item = document.createElement('li');
+                    item.className = 'param-item';
+                    
+                    let details = '';
+                    if (param.required) {
+                        details += '<span style="background: #dc3545; color: white;">必需</span>';
+                    }
+                    if (param.has_prompt) {
+                        details += '<span style="background: #28a745; color: white;">交互式</span>';
+                    }
+                    if (param.is_flag) {
+                        details += '<span>标志</span>';
+                    }
+                    if (param.default !== null) {
+                        details += `<span>默认: ${param.default}</span>`;
+                    }
+                    if (param.choices) {
+                        details += `<span>选项: ${param.choices.join(', ')}</span>`;
+                    }
+
+                    item.innerHTML = `
+                        <div class="param-name">--${param.name}</div>
+                        <div class="param-details">
+                            ${param.help || '暂无描述'}
+                            ${details ? `<br>${details}` : ''}
+                        </div>
+                    `;
+                    paramListEl.appendChild(item);
+                });
+            } else {
+                paramListEl.innerHTML = '<li style="padding: 15px; color: #6c757d;">该命令没有参数</li>';
+            }
+        }
+
+        document.getElementById('execute-btn').addEventListener('click', async () => {
+            currentAnswers = [];
+            await executeCommand();
+        });
+
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            document.getElementById('output-area').style.display = 'none';
+            document.getElementById('prompt-area').style.display = 'none';
+            currentAnswers = [];
+        });
+
+        async function executeCommand() {
+            const outputEl = document.getElementById('terminal-output');
+            const outputArea = document.getElementById('output-area');
+            
+            outputArea.style.display = 'block';
+            outputEl.innerHTML = '<div class="terminal-line"><span class="terminal-prompt">$</span> 执行命令中...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/execute`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        command: currentCommandPath,
+                        args: [],
+                        answers: currentAnswers.length > 0 ? currentAnswers : null
+                    })
+                });
+
+                const result = await response.json();
+                handleExecutionResult(result);
+            } catch (error) {
+                outputEl.innerHTML += `
+                    <div class="terminal-line terminal-error">
+                        ❌ 错误: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function handleExecutionResult(result) {
+            const outputEl = document.getElementById('terminal-output');
+            const promptArea = document.getElementById('prompt-area');
+            const promptDialog = document.getElementById('prompt-dialog');
+
+            if (result.stdout) {
+                outputEl.innerHTML += `
+                    <div class="terminal-line terminal-output">
+                        ${result.stdout.replace(/\n/g, '<br>')}
+                    </div>
+                `;
+            }
+
+            if (result.stderr) {
+                outputEl.innerHTML += `
+                    <div class="terminal-line terminal-error">
+                        ${result.stderr.replace(/\n/g, '<br>')}
+                    </div>
+                `;
+            }
+
+            if (result.status === 'waiting_for_input') {
+                promptArea.style.display = 'block';
+                
+                const prompt = result.prompt;
+                let inputHtml = '';
+
+                if (prompt.type === 'confirm') {
+                    inputHtml = `
+                        <div class="prompt-checkbox">
+                            <input type="checkbox" id="prompt-answer" ${prompt.default ? 'checked' : ''}>
+                            <label for="prompt-answer">${prompt.default !== null ? (prompt.default ? '是 (默认)' : '否 (默认)') : '请选择'}</label>
+                        </div>
+                    `;
+                } else if (prompt.choices) {
+                    inputHtml = `
+                        <select class="prompt-select" id="prompt-answer">
+                            ${prompt.choices.map(choice => 
+                                `<option value="${choice}" ${choice === prompt.default ? 'selected' : ''}>${choice}</option>`
+                            ).join('')}
+                        </select>
+                    `;
+                } else {
+                    inputHtml = `
+                        <input type="${prompt.hide_input ? 'password' : 'text'}" 
+                               class="prompt-input" 
+                               id="prompt-answer"
+                               placeholder="${prompt.default !== null ? `默认: ${prompt.default}` : '请输入...'}"
+                               value="${prompt.default !== null ? prompt.default : ''}">
+                    `;
+                }
+
+                promptDialog.innerHTML = `
+                    <div class="prompt-dialog">
+                        <div class="prompt-text">
+                            ${prompt.type === 'confirm' ? '❓' : '💬'} ${prompt.text}
+                        </div>
+                        ${inputHtml}
+                    </div>
+                `;
+
+                outputEl.innerHTML += `
+                    <div class="terminal-line">
+                        <span class="terminal-prompt">?</span> ${prompt.text}
+                    </div>
+                `;
+            } else if (result.status === 'completed') {
+                promptArea.style.display = 'none';
+                outputEl.innerHTML += `
+                    <div class="terminal-line" style="color: #4dabf7;">
+                        ✅ 命令执行完成
+                    </div>
+                `;
+                if (result.result !== undefined) {
+                    outputEl.innerHTML += `
+                        <div class="terminal-line">
+                            结果: ${JSON.stringify(result.result)}
+                        </div>
+                    `;
+                }
+            } else if (result.status === 'error') {
+                promptArea.style.display = 'none';
+                outputEl.innerHTML += `
+                    <div class="terminal-line terminal-error">
+                        ❌ 错误: ${result.error}
+                    </div>
+                `;
+            }
+        }
+
+        document.getElementById('submit-answer-btn').addEventListener('click', async () => {
+            const answerEl = document.getElementById('prompt-answer');
+            let answer;
+
+            if (answerEl.type === 'checkbox') {
+                answer = answerEl.checked;
+            } else if (answerEl.tagName === 'SELECT') {
+                answer = answerEl.value;
+            } else {
+                answer = answerEl.value;
+            }
+
+            currentAnswers.push(answer);
+            
+            const outputEl = document.getElementById('terminal-output');
+            outputEl.innerHTML += `
+                <div class="terminal-line">
+                    <span class="terminal-prompt">></span> ${answer}
+                </div>
+            `;
+
+            await executeCommand();
+        });
+
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const promptArea = document.getElementById('prompt-area');
+                if (promptArea.style.display !== 'none') {
+                    document.getElementById('submit-answer-btn').click();
+                }
+            }
+        });
+
+        loadCommands();
+    </script>
+</body>
+</html>

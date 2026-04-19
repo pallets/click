@@ -70,6 +70,14 @@ from .utils import get_binary_stream as get_binary_stream
 from .utils import get_text_stream as get_text_stream
 from .utils import open_file as open_file
 
+from .interactive import InteractiveCommand as InteractiveCommand
+from .interactive import InteractiveGroup as InteractiveGroup
+from .interactive import InteractiveOption as InteractiveOption
+from .interactive import interactive_command as interactive_command
+from .interactive import interactive_group as interactive_group
+from .interactive import interactive_option as interactive_option
+from .interactive import with_interactive as with_interactive
+
 
 def __getattr__(name: str) -> object:
     import warnings

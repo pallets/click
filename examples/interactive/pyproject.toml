@@ -1,0 +1,22 @@
+[project]
+name = "click-interactive-demo"
+version = "0.1.0"
+description = "Interactive Command Line Wizard Demo for Click"
+requires-python = ">=3.8"
+dependencies = [
+    "flask>=2.0.0",
+    "flask-cors>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+
+[tool.mypy]
+python_version = "3.8"
+strict = true
