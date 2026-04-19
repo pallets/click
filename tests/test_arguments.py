@@ -552,6 +552,41 @@ def test_nested_subcommand_help(runner):
     assert "Usage: cli ARG1 cmd ARG2 subcmd [OPTIONS]" in result.output
 
 
+def test_optional_parent_argument_subcommand_help(runner):
+    @click.group()
+    @click.argument("name", required=False)
+    def cli(name):
+        pass
+
+    @cli.command()
+    def sub():
+        pass
+
+    result = runner.invoke(cli, ["foo", "sub", "--help"])
+    assert not result.exception
+    assert "Usage: cli NAME sub [OPTIONS]" in result.output
+
+
+def test_optional_parent_arguments_nested_subcommand_help(runner):
+    @click.group()
+    @click.argument("name", required=False)
+    def cli(name):
+        pass
+
+    @cli.group()
+    @click.argument("cfg", required=False)
+    def sub(cfg):
+        pass
+
+    @sub.command()
+    def item():
+        pass
+
+    result = runner.invoke(cli, ["foo", "sub", "bar", "item", "--help"])
+    assert not result.exception
+    assert "Usage: cli NAME sub CFG item [OPTIONS]" in result.output
+
+
 def test_when_argument_decorator_is_used_multiple_times_cls_is_preserved():
     class CustomArgument(click.Argument):
         pass

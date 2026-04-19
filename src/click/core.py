@@ -651,7 +651,23 @@ class Context:
             parent_command_path = [self.parent.command_path]
 
             if isinstance(self.parent.command, Command):
+                if self.parent.command.options_metavar:
+                    parent_command_path.append(self.parent.command.options_metavar)
                 for param in self.parent.command.get_params(self):
+                    if isinstance(param, Argument):
+                        metavar = param.make_metavar(self)
+
+                        # Parent arguments that appear before a deeper subcommand
+                        # must already be present in the invocation path.
+                        if not param.required and metavar.startswith("["):
+                            closing = metavar.find("]")
+
+                            if closing != -1:
+                                metavar = metavar[1:closing] + metavar[closing + 1 :]
+
+                        parent_command_path.append(metavar)
+                        continue
+
                     parent_command_path.extend(param.get_usage_pieces(self))
 
             rv = f"{' '.join(parent_command_path)} {rv}"
