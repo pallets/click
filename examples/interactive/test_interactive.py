@@ -165,6 +165,66 @@ def test_should_interactive_prompt_with_condition():
     print("✅ should_interactive_prompt with condition test passed")
 
 
+def test_interactive_group_subcommand():
+    """Test that InteractiveGroup creates InteractiveCommand subcommands."""
+    
+    @interactive_group()
+    def test_grp():
+        pass
+    
+    @test_grp.command()
+    @click.option("--name", prompt="Name?")
+    def greet(name):
+        return name
+    
+    assert isinstance(test_grp, InteractiveGroup)
+    assert test_grp.interactive is True
+    
+    cmd = test_grp.get_command(click.Context(test_grp), "greet")
+    assert cmd is not None
+    assert isinstance(cmd, InteractiveCommand)
+    assert cmd.interactive is True
+    print("✅ InteractiveGroup subcommand test passed")
+
+
+def test_interactive_group_with_custom_cls():
+    """Test that InteractiveGroup respects custom cls parameter."""
+    
+    @interactive_group()
+    def test_grp():
+        pass
+    
+    @test_grp.command(cls=click.Command)
+    @click.option("--name")
+    def hello(name):
+        return name
+    
+    cmd = test_grp.get_command(click.Context(test_grp), "hello")
+    assert cmd is not None
+    assert not isinstance(cmd, InteractiveCommand)
+    print("✅ InteractiveGroup with custom cls test passed")
+
+
+def test_interactive_group_non_interactive():
+    """Test InteractiveGroup with interactive=False."""
+    
+    @interactive_group(interactive=False)
+    def test_grp():
+        pass
+    
+    @test_grp.command()
+    @click.option("--name")
+    def welcome(name):
+        return name
+    
+    assert test_grp.interactive is False
+    
+    cmd = test_grp.get_command(click.Context(test_grp), "welcome")
+    assert cmd is not None
+    assert not isinstance(cmd, InteractiveCommand)
+    print("✅ InteractiveGroup non-interactive test passed")
+
+
 def run_all_tests():
     """Run all tests."""
     print("=" * 60)
@@ -183,6 +243,9 @@ def run_all_tests():
         test_interactive_menu_flag,
         test_should_interactive_prompt,
         test_should_interactive_prompt_with_condition,
+        test_interactive_group_subcommand,
+        test_interactive_group_with_custom_cls,
+        test_interactive_group_non_interactive,
     ]
     
     passed = 0

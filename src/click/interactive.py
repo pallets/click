@@ -281,10 +281,24 @@ class InteractiveGroup(Group):
     def command(
         self, *args: t.Any, **kwargs: t.Any
     ) -> t.Callable[[t.Callable[..., t.Any]], Command] | Command:
-        if self.interactive and "interactive" not in kwargs:
-            kwargs["interactive"] = True
+        from .decorators import command
 
-        return super().command(*args, **kwargs)
+        interactive = kwargs.pop("interactive", self.interactive)
+
+        if interactive and "cls" not in kwargs:
+            kwargs["cls"] = InteractiveCommand
+
+        original_decorator = super().command(*args, **kwargs)
+
+        def wrap_decorator(f: t.Callable[..., t.Any]) -> Command:
+            cmd = original_decorator(f)
+            if interactive and isinstance(cmd, InteractiveCommand):
+                cmd.interactive = interactive
+            return cmd
+
+        if callable(original_decorator):
+            return wrap_decorator
+        return original_decorator
 
 
 def interactive_option(
