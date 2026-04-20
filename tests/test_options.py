@@ -90,6 +90,47 @@ def test_deprecated_prompt(runner):
         click.Option(["--a"], prompt=True, deprecated=True)
 
 
+def test_version_option_uses_distribution_name(runner, monkeypatch):
+    import importlib.metadata
+    import types
+
+    import click.decorators as decorators
+
+    looked_up_names = []
+
+    class FakeFrame:
+        f_back = types.SimpleNamespace(
+            f_globals={"__name__": "mim.cli", "__package__": "mim"}
+        )
+
+    def fake_version(name: str) -> str:
+        looked_up_names.append(name)
+
+        if name == "mim":
+            raise importlib.metadata.PackageNotFoundError(name)
+
+        assert name == "openmim"
+        return "1.2.3"
+
+    monkeypatch.setattr(decorators.inspect, "currentframe", lambda: FakeFrame())
+    monkeypatch.setattr(importlib.metadata, "version", fake_version)
+    monkeypatch.setattr(
+        importlib.metadata,
+        "packages_distributions",
+        lambda: {"mim": ["openmim"]},
+    )
+
+    @click.command()
+    @click.version_option()
+    def cli():
+        pass
+
+    result = runner.invoke(cli, ["--version"])
+    assert result.exit_code == 0
+    assert result.output == "cli, version 1.2.3\n"
+    assert looked_up_names == ["mim", "openmim"]
+
+
 def test_invalid_nargs(runner):
     with pytest.raises(TypeError, match="nargs=-1 is not supported for options."):
 

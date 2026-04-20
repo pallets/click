@@ -434,8 +434,9 @@ def version_option(
     ``package_name``.
 
     If ``package_name`` is not provided, Click will try to detect it by
-    inspecting the stack frames. This will be used to detect the
-    version, so it must match the name of the installed package.
+    inspecting the stack frames. If the top-level import package name
+    differs from the installed distribution name, Click will fall back
+    to :func:`importlib.metadata.packages_distributions` when possible.
 
     :param version: The version number to show. If not provided, Click
         will try to detect it.
@@ -464,7 +465,9 @@ def version_option(
     if message is None:
         message = _("%(prog)s, version %(version)s")
 
-    if version is None and package_name is None:
+    inferred_package_name = version is None and package_name is None
+
+    if inferred_package_name:
         frame = inspect.currentframe()
         f_back = frame.f_back if frame is not None else None
         f_globals = f_back.f_globals if f_back is not None else None
@@ -487,6 +490,7 @@ def version_option(
 
         nonlocal prog_name
         nonlocal version
+        nonlocal package_name
 
         if prog_name is None:
             prog_name = ctx.find_root().info_name
@@ -497,10 +501,26 @@ def version_option(
             try:
                 version = importlib.metadata.version(package_name)
             except importlib.metadata.PackageNotFoundError:
-                raise RuntimeError(
-                    f"{package_name!r} is not installed. Try passing"
-                    " 'package_name' instead."
-                ) from None
+                if inferred_package_name:
+                    distribution_names = (
+                        importlib.metadata.packages_distributions().get(
+                            package_name, ()
+                        )
+                    )
+
+                    if len(distribution_names) == 1:
+                        package_name = distribution_names[0]
+
+                        try:
+                            version = importlib.metadata.version(package_name)
+                        except importlib.metadata.PackageNotFoundError:
+                            pass
+
+                if version is None:
+                    raise RuntimeError(
+                        f"{package_name!r} is not installed. Try passing"
+                        " 'package_name' instead."
+                    ) from None
 
         if version is None:
             raise RuntimeError(
