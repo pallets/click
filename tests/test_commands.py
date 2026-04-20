@@ -573,3 +573,155 @@ def test_abort_exceptions_with_disabled_standalone_mode(runner, exc):
     assert rv.exit_code == 1
     assert isinstance(rv.exception.__cause__, exc)
     assert rv.exception.__cause__.args == ("catch me!",)
+
+
+def test_command_aliases_basic(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command(aliases=["st", "stat"])
+    def status():
+        """Show the status."""
+        click.echo("Status: OK")
+
+    result = runner.invoke(cli, ["status"])
+    assert result.exit_code == 0
+    assert "Status: OK" in result.output
+
+    result = runner.invoke(cli, ["st"])
+    assert result.exit_code == 0
+    assert "Status: OK" in result.output
+
+    result = runner.invoke(cli, ["stat"])
+    assert result.exit_code == 0
+    assert "Status: OK" in result.output
+
+
+def test_command_aliases_not_in_help(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command(aliases=["st"])
+    def status():
+        """Show the status."""
+        click.echo("Status")
+
+    @cli.command()
+    def commit():
+        """Commit changes."""
+        click.echo("Commit")
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "status" in result.output
+    assert "commit" in result.output
+    lines = result.output.split("\n")
+    in_commands = False
+    command_names = []
+    for line in lines:
+        if "Commands:" in line:
+            in_commands = True
+            continue
+        if in_commands and line.strip():
+            parts = line.strip().split()
+            if parts:
+                command_names.append(parts[0])
+    assert "st" not in command_names, "Alias 'st' should not appear as separate command in help"
+
+
+def test_command_aliases_help_shows_canonical_name(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command(aliases=["st"])
+    def status():
+        """Show the status."""
+        pass
+
+    result = runner.invoke(cli, ["st", "--help"])
+    assert result.exit_code == 0
+    assert "Usage: cli status" in result.output
+    usage_line = [line for line in result.output.split("\n") if line.startswith("Usage:")][0]
+    assert usage_line.strip() == "Usage: cli status [OPTIONS]"
+
+
+def test_command_aliases_invoked_subcommand(runner):
+    @click.group()
+    def cli():
+        pass
+
+    invoked_name = []
+
+    @cli.command(aliases=["st"])
+    @click.pass_context
+    def status(ctx):
+        if ctx.parent:
+            invoked_name.append(ctx.parent.invoked_subcommand)
+
+    result = runner.invoke(cli, ["st"])
+    assert result.exit_code == 0
+    assert invoked_name == ["status"], f"Expected ['status'], got {invoked_name}"
+
+
+def test_command_aliases_list_commands(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command(aliases=["st"])
+    def status():
+        pass
+
+    @cli.command()
+    def commit():
+        pass
+
+    ctx = click.Context(cli)
+    commands = cli.list_commands(ctx)
+    assert "status" in commands
+    assert "commit" in commands
+    assert "st" not in commands, "Aliases should not appear in list_commands"
+
+
+def test_command_aliases_with_explicit_add_command():
+    cmd = click.Command("status", aliases=["st", "stat"])
+    group = click.Group()
+    group.add_command(cmd)
+
+    ctx = click.Context(group)
+    assert group.get_command(ctx, "status") is cmd
+    assert group.get_command(ctx, "st") is cmd
+    assert group.get_command(ctx, "stat") is cmd
+
+
+def test_command_aliases_in_commands_list_init():
+    cmd = click.Command("status", aliases=["st"])
+    group = click.Group(commands=[cmd])
+
+    ctx = click.Context(group)
+    assert group.get_command(ctx, "status") is cmd
+    assert group.get_command(ctx, "st") is cmd
+
+
+def test_command_aliases_default_map(runner):
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command(aliases=["st"])
+    @click.option("--name", default="default")
+    def status(name):
+        click.echo(f"Name: {name}")
+
+    result = runner.invoke(cli, ["st"], default_map={"status": {"name": "custom"}})
+    assert result.exit_code == 0
+    assert "Name: custom" in result.output
+
+
+def test_command_aliases_without_group():
+    cmd = click.Command("test", aliases=["t"])
+    assert cmd.name == "test"
+    assert cmd.aliases == ["t"]

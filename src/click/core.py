@@ -946,6 +946,7 @@ class Command:
         no_args_is_help: bool = False,
         hidden: bool = False,
         deprecated: bool | str = False,
+        aliases: list[str] | None = None,
     ) -> None:
         #: the name the command thinks it has.  Upon registering a command
         #: on a :class:`Group` the group will default the command name
@@ -975,6 +976,7 @@ class Command:
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
+        self.aliases: list[str] = aliases or []
 
     def to_info_dict(self, ctx: Context) -> dict[str, t.Any]:
         return {
@@ -985,6 +987,7 @@ class Command:
             "short_help": self.short_help,
             "hidden": self.hidden,
             "deprecated": self.deprecated,
+            "aliases": self.aliases,
         }
 
     def __repr__(self) -> str:
@@ -1576,6 +1579,13 @@ class Group(Command):
         #: The registered subcommands by their exported names.
         self.commands: cabc.MutableMapping[str, Command] = commands
 
+        #: Maps aliases to their canonical command names.
+        self._aliases: cabc.MutableMapping[str, str] = {}
+
+        for cmd_name, cmd in self.commands.items():
+            for alias in cmd.aliases:
+                self._aliases[alias] = cmd_name
+
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
 
@@ -1628,6 +1638,9 @@ class Group(Command):
             raise TypeError("Command has no name.")
         _check_nested_chain(self, name, cmd, register=True)
         self.commands[name] = cmd
+
+        for alias in cmd.aliases:
+            self._aliases[alias] = name
 
     @t.overload
     def command(self, __func: t.Callable[..., t.Any]) -> Command: ...
@@ -1779,7 +1792,15 @@ class Group(Command):
         """Given a context and a command name, this returns a :class:`Command`
         object if it exists or returns ``None``.
         """
-        return self.commands.get(cmd_name)
+        rv = self.commands.get(cmd_name)
+        if rv is not None:
+            return rv
+
+        canonical_name = self._aliases.get(cmd_name)
+        if canonical_name is not None:
+            return self.commands.get(canonical_name)
+
+        return None
 
     def list_commands(self, ctx: Context) -> list[str]:
         """Returns a list of subcommand names in the order they should appear."""
@@ -1929,7 +1950,16 @@ class Group(Command):
             if _split_opt(cmd_name)[0]:
                 self.parse_args(ctx, args)
             ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
-        return cmd_name if cmd else None, cmd, args[1:]
+
+        # Determine what name to return.
+        # - If the user used an alias (looked up via _aliases), return cmd.name
+        # - Otherwise (command was found directly in self.commands, possibly via
+        #   a renamed registration like add_command(cmd, "b")), return cmd_name
+        if cmd is not None:
+            if cmd_name in self._aliases or (cmd_name not in self.commands):
+                return cmd.name, cmd, args[1:]
+            return cmd_name, cmd, args[1:]
+        return None, None, args[1:]
 
     def shell_complete(self, ctx: Context, incomplete: str) -> list[CompletionItem]:
         """Return a list of completions for the incomplete value. Looks

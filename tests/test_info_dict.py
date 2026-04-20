@@ -73,6 +73,7 @@ HELLO_COMMAND = (
         "short_help": None,
         "hidden": False,
         "deprecated": False,
+        "aliases": [],
     },
 )
 HELLO_GROUP = (
@@ -85,6 +86,7 @@ HELLO_GROUP = (
         "short_help": None,
         "hidden": False,
         "deprecated": False,
+        "aliases": [],
         "commands": {"hello": HELLO_COMMAND[1]},
         "chain": False,
     },
@@ -231,6 +233,7 @@ def test_parameter(obj, expect):
                 "short_help": None,
                 "hidden": False,
                 "deprecated": False,
+                "aliases": [],
                 "commands": {
                     "cli": HELLO_GROUP[1],
                     "test": {
@@ -241,6 +244,7 @@ def test_parameter(obj, expect):
                         "short_help": None,
                         "hidden": False,
                         "deprecated": False,
+                        "aliases": [],
                     },
                 },
                 "chain": False,
