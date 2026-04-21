@@ -29,6 +29,9 @@ Unreleased
     non-shadowed help option names, so ``Try '... -h'`` no longer points to a
     subcommand option that shadows ``-h``. All surviving names are shown
     (``-h/--help``). :issue:`2790` :pr:`3208`
+-   Use :func:`os.startfile` on Windows to open URLs in :func:`open_url`,
+    replacing the ``start`` built-in which cannot be invoked without
+    ``shell=True``. :issue:`3164` :pr:`3186`
 
 Version 8.3.3
 -------------
