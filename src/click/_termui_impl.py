@@ -720,17 +720,16 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
         if locate:
             url = _unquote_file(url)
             args = ["explorer", f"/select,{url}"]
+            try:
+                return subprocess.call(args)
+            except OSError:
+                return 127
         else:
-            args = ["start"]
-            if wait:
-                args.append("/WAIT")
-            args.append("")
-            args.append(url)
-        try:
-            return subprocess.call(args)
-        except OSError:
-            # Command not found
-            return 127
+            try:
+                os.startfile(url)  # type: ignore[attr-defined]
+            except OSError:
+                return 127
+            return 0
     elif CYGWIN:
         if locate:
             url = _unquote_file(url)
