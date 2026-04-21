@@ -1,5 +1,11 @@
 .. currentmodule:: click
 
+Version 8.3.3
+--------------
+
+-   Fix ``HelpFormatter.write_usage()`` dropping the usage line when called
+    without any arguments. :issue:`3360`
+
 Version 8.3.2
 --------------
 
