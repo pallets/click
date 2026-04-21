@@ -2714,6 +2714,11 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
 
+    .. versionchanged:: 8.4
+        Non-basic ``flag_value`` types (not ``str``, ``int``, ``float``, or
+        ``bool``) are passed through unchanged instead of being stringified.
+        Previously, ``type=click.UNPROCESSED`` was required to preserve them.
+
     .. versionchanged:: 8.2
         ``envvar`` used with ``flag_value`` will always use the ``flag_value``,
         previously it would use the value of the environment variable.
@@ -2731,7 +2736,8 @@ class Option(Parameter):
         default value is ``False``.
 
     .. versionchanged:: 8.0.1
-        ``type`` is detected from ``flag_value`` if given.
+        ``type`` is detected from ``flag_value`` if given, for basic Python
+        types (``str``, ``int``, ``float``, ``bool``).
     """
 
     param_type_name = "option"
@@ -2831,7 +2837,20 @@ class Option(Parameter):
                     self.type = types.BoolParamType()
                 # Otherwise, guess the type from the flag value.
                 else:
-                    self.type = types.convert_type(None, flag_value)
+                    guessed = types.convert_type(None, flag_value)
+                    if (
+                        isinstance(guessed, types.StringParamType)
+                        and not isinstance(flag_value, str)
+                        and flag_value is not None
+                    ):
+                        # The flag_value type couldn't be auto-detected
+                        # (not str, int, float, or bool). Since flag_value
+                        # is a programmer-provided Python object, not CLI
+                        # input, pass it through unchanged instead of
+                        # stringifying it.
+                        self.type = types.UNPROCESSED
+                    else:
+                        self.type = guessed
 
         self.is_flag: bool = bool(is_flag)
         self.is_bool_flag: bool = bool(

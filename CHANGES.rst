@@ -40,6 +40,11 @@ Unreleased
 -   Change :class:`ParameterSource` to an :class:`~enum.IntEnum` and reorder
     its members from most to least explicit, so values can be compared to
     check whether a parameter was explicitly provided. :issue:`2879` :pr:`3248`
+-   Auto-detect ``type=UNPROCESSED`` for ``flag_value`` of non-basic types
+    (not ``str``, ``int``, ``float``, or ``bool``), so programmer-provided
+    Python objects like classes and enum members are passed through unchanged
+    instead of being stringified. Previously ``type=click.UNPROCESSED`` had
+    to be set explicitly. :issue:`2012` :pr:`3363`
 
 Version 8.3.2
 -------------
