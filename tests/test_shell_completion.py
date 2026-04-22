@@ -559,3 +559,28 @@ def test_files_closed(runner) -> None:
             assert not current_warnings, "There should be no warnings to start"
             _get_completions(cli, args=[], incomplete="")
             assert not current_warnings, "There should be no warnings after either"
+
+
+def test_callable_default_not_invoked_during_completion():
+    """Shell completion sets ``resilient_parsing=True`` internally.
+    A callable ``default`` on an unrelated option must not fire while
+    completing arguments — the performance bug reported in #2614.
+    """
+    call_count = {"n": 0}
+
+    def expensive_default():
+        call_count["n"] += 1
+        return "computed"
+
+    cli = Command(
+        "cli",
+        params=[
+            Option(["--name"], default=expensive_default),
+            Option(["-t", "--test"]),
+        ],
+    )
+
+    # Walk the shell-completion path the same way other tests in this
+    # file do. The callable default on --name must not be invoked.
+    _get_words(cli, [], "-")
+    assert call_count["n"] == 0

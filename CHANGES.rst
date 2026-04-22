@@ -1,5 +1,17 @@
 .. currentmodule:: click
 
+Version 8.3.3
+--------------
+
+Unreleased
+
+-   Skip invoking callable ``default`` values during resilient parsing,
+    which the ``Context.resilient_parsing`` docstring already documents
+    ("parse without any interactivity or callback invocation"). Restores
+    snappy tab-completion for commands that rely on expensive callable
+    defaults. :issue:`2614`
+
+
 Version 8.3.2
 --------------
 

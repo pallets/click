@@ -2332,7 +2332,16 @@ class Parameter:
                 source = ParameterSource.DEFAULT_MAP
 
         if value is UNSET:
-            default_value = self.get_default(ctx)
+            # Under resilient parsing (tab-completion, help rendering),
+            # honor the ``Context.resilient_parsing`` docstring's
+            # "parse without any interactivity or callback invocation"
+            # contract for callable defaults. Passing ``call=False``
+            # returns the callable uninvoked, which keeps completion
+            # snappy for commands that use expensive callable defaults.
+            # See #2614.
+            default_value = self.get_default(
+                ctx, call=not ctx.resilient_parsing
+            )
             if default_value is not UNSET:
                 value = default_value
                 source = ParameterSource.DEFAULT

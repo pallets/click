@@ -780,3 +780,54 @@ def test_propagate_opt_prefixes():
     ctx = click.Context(click.Command("test2"), parent=parent)
 
     assert ctx._opt_prefixes == {"-", "--", "!"}
+
+
+def test_resilient_parsing_skips_callable_default():
+    """A callable ``default`` must not be invoked when
+    ``ctx.resilient_parsing`` is True. The public docstring on
+    :class:`Context.resilient_parsing` promises "Click will parse
+    without any interactivity or callback invocation" — this covers
+    the callable-default form of callback invocation. Regression test
+    for #2614.
+    """
+    call_count = {"n": 0}
+
+    def expensive_default():
+        call_count["n"] += 1
+        return "computed"
+
+    @click.command()
+    @click.option("--name", default=expensive_default)
+    def cli(name):
+        click.echo(name)
+
+    # Under resilient_parsing, the callable must not fire.
+    with click.Context(cli, resilient_parsing=True) as ctx:
+        cli.parse_args(ctx, [])
+    assert call_count["n"] == 0
+
+    # Sanity: the same command under normal parsing still invokes
+    # the callable exactly once (regression guard — the fix must not
+    # change non-resilient behaviour).
+    with click.Context(cli, resilient_parsing=False) as ctx:
+        cli.parse_args(ctx, [])
+    assert call_count["n"] == 1
+
+
+def test_resilient_parsing_preserves_non_callable_default():
+    """The fix scopes only the *invocation of callable defaults* —
+    non-callable defaults must still resolve normally under
+    ``resilient_parsing``. Keeps the fix's scope narrow and makes the
+    out-of-scope "ignore defaults entirely" interpretation a separate
+    future change rather than a silent side-effect of this one.
+    """
+
+    @click.command()
+    @click.option("--name", default="static")
+    def cli(name):
+        click.echo(name)
+
+    with click.Context(cli, resilient_parsing=True) as ctx:
+        cli.parse_args(ctx, [])
+        # Value is resolved into ctx.params.
+        assert ctx.params.get("name") == "static"
