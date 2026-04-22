@@ -372,7 +372,7 @@ class Choice(ParamType, t.Generic[ParamTypeValue]):
         ).format(value=value, choice=choices_str, choices=choices_str)
 
     def __repr__(self) -> str:
-        return f"Choice({list(self.choices)})"
+        return _("Choice({choices})").format(choices=list(self.choices))
 
     def shell_complete(
         self, ctx: Context, param: Parameter, incomplete: str
@@ -853,7 +853,11 @@ class File(ParamType):
 
             return f
         except OSError as e:
-            self.fail(f"'{format_filename(value)}': {e.strerror}", param, ctx)
+            self.fail(
+                f"'{format_filename(value)}': {e.strerror}",
+                param,
+                ctx,
+            )
 
     def shell_complete(
         self, ctx: Context, param: Parameter, incomplete: str

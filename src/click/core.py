@@ -2963,7 +2963,7 @@ class Option(Parameter):
         for decl in decls:
             if decl.isidentifier():
                 if name is not None:
-                    raise TypeError(f"Name '{name}' defined twice")
+                    raise TypeError(_("Name '{name}' defined twice").format(name=name))
                 name = decl
             else:
                 split_char = ";" if decl[:1] == "/" else "/"
@@ -2978,8 +2978,10 @@ class Option(Parameter):
                         secondary_opts.append(second.lstrip())
                     if first == second:
                         raise ValueError(
-                            f"Boolean option {decl!r} cannot use the"
-                            " same flag for true/false."
+                            _(
+                                "Boolean option {decl!r} cannot use the"
+                                " same flag for true/false."
+                            ).format(decl=decl)
                         )
                 else:
                     possible_names.append(_split_opt(decl))
@@ -2995,14 +2997,18 @@ class Option(Parameter):
             if not expose_value:
                 return None, opts, secondary_opts
             raise TypeError(
-                f"Could not determine name for option with declarations {decls!r}"
+                _(
+                    "Could not determine name for option with declarations {decls!r}"
+                ).format(decls=decls)
             )
 
         if not opts and not secondary_opts:
             raise TypeError(
-                f"No options defined but a name was passed ({name})."
-                " Did you mean to declare an argument instead? Did"
-                f" you mean to pass '--{name}'?"
+                _(
+                    "No options defined but a name was passed ({name})."
+                    " Did you mean to declare an argument instead? Did"
+                    " you mean to pass '--{name}'?"
+                ).format(name=name)
             )
 
         return name, opts, secondary_opts
@@ -3437,8 +3443,10 @@ class Argument(Parameter):
             name = name.replace("-", "_").lower()
         else:
             raise TypeError(
-                "Arguments take exactly one parameter declaration, got"
-                f" {len(decls)}: {decls}."
+                _(
+                    "Arguments take exactly one parameter declaration, got"
+                    " {length}: {decls}."
+                ).format(length=len(decls), decls=decls)
             )
         return name, [arg], []
 
