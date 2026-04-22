@@ -125,7 +125,7 @@ To control the appearance of defaults pass `show_default`.
     invoke(dots, args=['--help'])
 ```
 
-For single option boolean flags, the default remains hidden if the default value is False, even if show default is set to true.
+For single option boolean flags, the default remains hidden if the default value is `False`, even if `show_default` is set to `True`.
 
 ```{eval-rst}
 .. click:example::
