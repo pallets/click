@@ -196,7 +196,7 @@ class Context:
     :param info_name: the info name for this invocation.  Generally this
                       is the most descriptive name for the script or
                       command.  For the toplevel script it is usually
-                      the name of the script, for commands below it it's
+                      the name of the script, for commands below that it's
                       the name of the script.
     :param obj: an arbitrary object of user data.
     :param auto_envvar_prefix: the prefix to use for automatic environment
@@ -1095,7 +1095,7 @@ class Command:
 
         # Cache the help option object in private _help_option attribute to
         # avoid creating it multiple times. Not doing this will break the
-        # callback odering by iter_params_for_processing(), which relies on
+        # callback ordering by iter_params_for_processing(), which relies on
         # object comparison.
         if self._help_option is None:
             # Avoid circular import.
@@ -2844,7 +2844,7 @@ class Option(Parameter):
             if self.default is UNSET and not self.required:
                 self.default = False
 
-        # The alignement of default to the flag_value is resolved lazily in
+        # The alignment of default to the flag_value is resolved lazily in
         # get_default() to prevent callable flag_values (like classes) from
         # being instantiated. Refs:
         # https://github.com/pallets/click/issues/3121

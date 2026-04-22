@@ -396,7 +396,7 @@ def test_edit(runner):
         result = click.edit(filename=named_tempfile.name, editor="sed -i~ 's/$/Test/'")
         assert result is None
 
-        # We need ot reopen the file as it becomes unreadable after the edit.
+        # We need to reopen the file as it becomes unreadable after the edit.
         with open(named_tempfile.name) as reopened_file:
             # POSIX says that when sed writes a pattern space to output then it
             # is immediately followed by a newline and so the expected result
