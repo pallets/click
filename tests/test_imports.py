@@ -27,6 +27,7 @@ click.echo(json.dumps(rv))
 
 ALLOWED_IMPORTS = {
     "__future__",
+    "abc",
     "codecs",
     "collections",
     "collections.abc",
