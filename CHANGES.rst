@@ -29,6 +29,10 @@ Unreleased
     non-shadowed help option names, so ``Try '... -h'`` no longer points to a
     subcommand option that shadows ``-h``. All surviving names are shown
     (``-h/--help``). :issue:`2790` :pr:`3208`
+-   Fix readline functionality on non-Windows platforms. Prompt text is now
+    passed directly to readline instead of being printed separately, allowing
+    proper backspace, line editing, and line wrapping behavior. :issue:`2968`
+    :pr:`2969`
 
 Version 8.3.3
 -------------
