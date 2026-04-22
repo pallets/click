@@ -7,6 +7,8 @@ import inspect
 import os
 import sys
 import typing as t
+from abc import ABC
+from abc import abstractmethod
 from collections import abc
 from collections import Counter
 from contextlib import AbstractContextManager
@@ -838,9 +840,7 @@ class Context:
                     # https://github.com/pallets/click/pull/3068
                     if default_value is UNSET:
                         default_value = None
-                    kwargs[param.name] = param.type_cast_value(  # type: ignore
-                        ctx, default_value
-                    )
+                    kwargs[param.name] = param.type_cast_value(ctx, default_value)
 
             # Track all kwargs as params, so that forward() will pass
             # them on in subsequent calls.
@@ -1320,7 +1320,7 @@ class Command:
                     or param.hidden
                     or (
                         not param.multiple
-                        and ctx.get_parameter_source(param.name)  # type: ignore
+                        and ctx.get_parameter_source(param.name)
                         is ParameterSource.COMMANDLINE
                     )
                 ):
@@ -2053,7 +2053,7 @@ def _check_iter(value: t.Any) -> cabc.Iterator[t.Any]:
     return iter(value)
 
 
-class Parameter:
+class Parameter(ABC):
     r"""A parameter to a command comes in two versions: they are either
     :class:`Option`\s or :class:`Argument`\s.  Other subclasses are currently
     not supported by design as some of the internals for parsing are
@@ -2175,7 +2175,7 @@ class Parameter:
         | None = None,
         deprecated: bool | str = False,
     ) -> None:
-        self.name: str | None
+        self.name: str
         self.opts: list[str]
         self.secondary_opts: list[str]
         self.name, self.opts, self.secondary_opts = self._parse_decls(
@@ -2248,17 +2248,17 @@ class Parameter:
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.name}>"
 
+    @abstractmethod
     def _parse_decls(
         self, decls: cabc.Sequence[str], expose_value: bool
-    ) -> tuple[str | None, list[str], list[str]]:
-        raise NotImplementedError()
+    ) -> tuple[str, list[str], list[str]]: ...
 
     @property
     def human_readable_name(self) -> str:
         """Returns the human readable name of this parameter.  This is the
         same as the name for options, but the metavar for arguments.
         """
-        return self.name  # type: ignore
+        return self.name
 
     def make_metavar(self, ctx: Context) -> str:
         if self.metavar is not None:
@@ -2307,10 +2307,9 @@ class Parameter:
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
         """
-        name = self.name
-        value = ctx.lookup_default(name, call=False) if name is not None else None
+        value = ctx.lookup_default(self.name, call=False)
 
-        if value is None and not ctx._default_map_has(name):
+        if value is None and not ctx._default_map_has(self.name):
             value = self.default
 
         if call and callable(value):
@@ -2318,8 +2317,8 @@ class Parameter:
 
         return value
 
-    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
-        raise NotImplementedError()
+    @abstractmethod
+    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None: ...
 
     def consume_value(
         self, ctx: Context, opts: cabc.Mapping[str, t.Any]
@@ -2335,7 +2334,7 @@ class Parameter:
         :meta private:
         """
         # Collect from the parse the value passed by the user to the CLI.
-        value = opts.get(self.name, UNSET)  # type: ignore
+        value = opts.get(self.name, UNSET)
         # If the value is set, it means it was sourced from the command line by the
         # parser, otherwise it left unset by default.
         source = (
@@ -2351,7 +2350,7 @@ class Parameter:
                 source = ParameterSource.ENVIRONMENT
 
         if value is UNSET:
-            default_map_value = ctx.lookup_default(self.name)  # type: ignore[arg-type]
+            default_map_value = ctx.lookup_default(self.name)
             if default_map_value is not None or ctx._default_map_has(self.name):
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
@@ -2587,7 +2586,7 @@ class Parameter:
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
 
-            ctx.set_parameter_source(self.name, source)  # type: ignore
+            ctx.set_parameter_source(self.name, source)
 
             # Display a deprecation warning if necessary.
             if (
@@ -2627,24 +2626,22 @@ class Parameter:
             # the same name to override each other.
             and (self.name not in ctx.params or ctx.params[self.name] is UNSET)
         ):
-            # Click is logically enforcing that the name is None if the parameter is
-            # not to be exposed. We still assert it here to please the type checker.
-            assert self.name is not None, (
-                f"{self!r} parameter's name should not be None when exposing value."
-            )
             ctx.params[self.name] = value
 
         return value, args
 
     def get_help_record(self, ctx: Context) -> tuple[str, str] | None:
-        pass
+        return None
 
     def get_usage_pieces(self, ctx: Context) -> list[str]:
         return []
 
-    def get_error_hint(self, ctx: Context) -> str:
+    def get_error_hint(self, ctx: Context | None) -> str:
         """Get a stringified version of the param for use in error messages to
         indicate which param caused the error.
+
+        .. versionchanged:: 8.4.0
+            ``ctx`` can be ``None``.
         """
         hint_list = self.opts or [self.human_readable_name]
         return " / ".join(f"'{x}'" for x in hint_list)
@@ -2970,7 +2967,7 @@ class Option(Parameter):
 
         return value
 
-    def get_error_hint(self, ctx: Context) -> str:
+    def get_error_hint(self, ctx: Context | None) -> str:
         result = super().get_error_hint(ctx)
         if self.show_envvar and self.envvar is not None:
             result += f" (env var: '{self.envvar}')"
@@ -2978,7 +2975,7 @@ class Option(Parameter):
 
     def _parse_decls(
         self, decls: cabc.Sequence[str], expose_value: bool
-    ) -> tuple[str | None, list[str], list[str]]:
+    ) -> tuple[str, list[str], list[str]]:
         opts = []
         secondary_opts = []
         name = None
@@ -3017,7 +3014,7 @@ class Option(Parameter):
 
         if name is None:
             if not expose_value:
-                return None, opts, secondary_opts
+                return "", opts, secondary_opts
             raise TypeError(
                 f"Could not determine name for option with declarations {decls!r}"
             )
@@ -3433,14 +3430,14 @@ class Argument(Parameter):
     def human_readable_name(self) -> str:
         if self.metavar is not None:
             return self.metavar
-        return self.name.upper()  # type: ignore
+        return self.name.upper()
 
     def make_metavar(self, ctx: Context) -> str:
         if self.metavar is not None:
             return self.metavar
         var = self.type.get_metavar(param=self, ctx=ctx)
         if not var:
-            var = self.name.upper()  # type: ignore
+            var = self.name.upper()
         if self.deprecated:
             var += "!"
         if not self.required:
@@ -3451,10 +3448,10 @@ class Argument(Parameter):
 
     def _parse_decls(
         self, decls: cabc.Sequence[str], expose_value: bool
-    ) -> tuple[str | None, list[str], list[str]]:
+    ) -> tuple[str, list[str], list[str]]:
         if not decls:
             if not expose_value:
-                return None, [], []
+                return "", [], []
             raise TypeError("Argument is marked as exposed, but does not have a name.")
         if len(decls) == 1:
             name = arg = decls[0]
@@ -3469,8 +3466,10 @@ class Argument(Parameter):
     def get_usage_pieces(self, ctx: Context) -> list[str]:
         return [self.make_metavar(ctx)]
 
-    def get_error_hint(self, ctx: Context) -> str:
-        return f"'{self.make_metavar(ctx)}'"
+    def get_error_hint(self, ctx: Context | None) -> str:
+        if ctx is not None:
+            return f"'{self.make_metavar(ctx)}'"
+        return f"'{self.human_readable_name}'"
 
     def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
         parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)
