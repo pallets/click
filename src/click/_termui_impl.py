@@ -707,7 +707,7 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
             args.append("")
             args.append(url)
         try:
-            return subprocess.call(args)
+            return subprocess.call(args, shell=True)
         except OSError:
             # Command not found
             return 127
