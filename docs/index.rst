@@ -96,6 +96,7 @@ General Reference
 --------------------
 
 .. toctree::
+   glossary
    :maxdepth: 1
 
    parameters
