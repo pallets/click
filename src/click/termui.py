@@ -63,7 +63,7 @@ def _build_prompt(
     show_default: bool | str = False,
     default: t.Any | None = None,
     show_choices: bool = True,
-    type: ParamType | None = None,
+    type: ParamType[t.Any] | None = None,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
@@ -87,7 +87,7 @@ def prompt(
     default: t.Any | None = None,
     hide_input: bool = False,
     confirmation_prompt: bool | str = False,
-    type: ParamType | t.Any | None = None,
+    type: ParamType[t.Any] | t.Any | None = None,
     value_proc: t.Callable[[str], t.Any] | None = None,
     prompt_suffix: str = ": ",
     show_default: bool | str = True,
