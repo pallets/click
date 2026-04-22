@@ -40,6 +40,10 @@ Released 2026-04-20
 -   Change :class:`ParameterSource` to an :class:`~enum.IntEnum` and reorder
     its members from most to least explicit, so values can be compared to
     check whether a parameter was explicitly provided. :issue:`2879` :pr:`3248`
+-   The error hint now uses :meth:`Command.get_help_option_names` to pick
+    non-shadowed help option names, so ``Try '... -h'`` no longer points to a
+    subcommand option that shadows ``-h``. All surviving names are shown
+    (``-h/--help``). :issue:`2790` :pr:`3208`
 
 Version 8.3.2
 -------------
