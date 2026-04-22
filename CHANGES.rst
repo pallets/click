@@ -5,6 +5,9 @@ Version 8.3.3
 
 Released 2026-04-20
 
+-   Use :func:`os.startfile` on Windows to open URLs in :func:`open_url`,
+    replacing the ``start`` built-in which cannot be invoked without
+    ``shell=True``. :issue:`3164` :pr:`3186`
 -   Use :func:`shlex.split` to split pager and editor commands into ``argv``
     lists for :class:`subprocess.Popen`, removing ``shell=True``.
     :issue:`1026` :pr:`1477` :pr:`2775`
