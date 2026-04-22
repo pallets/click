@@ -1109,64 +1109,95 @@ class Tuple(CompositeParamType):
         )
 
 
-def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType:
+def _guess_type(
+    ty: type[t.Any] | ParamType | None,
+    default: t.Any | None,
+) -> type[t.Any] | tuple[type[t.Any], ...] | ParamType | None:
+    """Infer a type from *ty* or *default*.
+
+    Returns *ty* unchanged when it is not ``None``.  Otherwise inspects
+    *default* to produce a ``type``, a ``tuple`` of types (for tuple
+    defaults), or ``None``.
+    """
+    if ty is not None:
+        return ty
+
+    if default is None:
+        return None
+
+    if not isinstance(default, (tuple, list)):
+        return type(default)
+
+    # If the default is empty, return None so convert_type falls
+    # through to STRING.
+    if not default:
+        return None
+
+    item = default[0]
+
+    # A sequence of iterables needs to detect the inner types.
+    # Can't call convert_type recursively because that would
+    # incorrectly unwind the tuple to a single type.
+    if isinstance(item, (tuple, list)):
+        return tuple(map(type, item))
+
+    return type(item)
+
+
+@t.overload
+def convert_type(ty: None, default: None = None) -> StringParamType: ...
+
+
+@t.overload
+def convert_type(
+    ty: type[t.Any] | ParamType, default: t.Any | None = None
+) -> ParamType: ...
+
+
+@t.overload
+def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType: ...
+
+
+def convert_type(ty: t.Any | None = None, default: t.Any | None = None) -> ParamType:
     """Find the most appropriate :class:`ParamType` for the given Python
     type. If the type isn't provided, it can be inferred from a default
     value.
     """
-    guessed_type = False
+    guessed = _guess_type(ty, default)
+    is_guessed = guessed is not ty
 
-    if ty is None and default is not None:
-        if isinstance(default, (tuple, list)):
-            # If the default is empty, ty will remain None and will
-            # return STRING.
-            if default:
-                item = default[0]
+    if isinstance(guessed, tuple):
+        return Tuple(guessed)
 
-                # A tuple of tuples needs to detect the inner types.
-                # Can't call convert recursively because that would
-                # incorrectly unwind the tuple to a single type.
-                if isinstance(item, (tuple, list)):
-                    ty = tuple(map(type, item))
-                else:
-                    ty = type(item)
-        else:
-            ty = type(default)
+    if isinstance(guessed, ParamType):
+        return guessed
 
-        guessed_type = True
-
-    if isinstance(ty, tuple):
-        return Tuple(ty)
-
-    if isinstance(ty, ParamType):
-        return ty
-
-    if ty is str or ty is None:
+    if guessed is str or guessed is None:
         return STRING
 
-    if ty is int:
+    if guessed is int:
         return INT
 
-    if ty is float:
+    if guessed is float:
         return FLOAT
 
-    if ty is bool:
+    if guessed is bool:
         return BOOL
 
-    if guessed_type:
+    if is_guessed:
         return STRING
 
     if __debug__:
         try:
-            if issubclass(ty, ParamType):
+            if issubclass(guessed, ParamType):
                 raise AssertionError(
-                    f"Attempted to use an uninstantiated parameter type ({ty})."
+                    f"Attempted to use an uninstantiated parameter type ({guessed})."
                 )
         except TypeError:
-            # ty is an instance (correct), so issubclass fails.
+            # guessed is an instance (correct), so issubclass fails.
             pass
 
-    return FuncParamType(ty)
+    return FuncParamType(guessed)
 
 
 #: A dummy parameter type that just does nothing.  From a user's
