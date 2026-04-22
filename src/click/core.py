@@ -1076,6 +1076,11 @@ class Command:
             help_option(*help_option_names)(self)
             self._help_option = self.params.pop()  # type: ignore[assignment]
 
+            # Use an internal name that won't conflict with user-defined
+            # parameters (e.g. an argument or option named 'help').
+            if self._help_option.name in {p.name for p in self.params}:
+                self._help_option.name = "_click_help_flag"
+
         return self._help_option
 
     def make_parser(self, ctx: Context) -> _OptionParser:
