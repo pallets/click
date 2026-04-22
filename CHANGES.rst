@@ -40,6 +40,9 @@ Released 2026-04-20
 -   Change :class:`ParameterSource` to an :class:`~enum.IntEnum` and reorder
     its members from most to least explicit, so values can be compared to
     check whether a parameter was explicitly provided. :issue:`2879` :pr:`3248`
+-   Split string values from ``default_map`` for parameters with ``nargs > 1``
+    or :class:`Tuple` type, matching environment variable behavior.
+    :issue:`2745` :pr:`3364`
 
 Version 8.3.2
 -------------
