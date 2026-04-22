@@ -40,7 +40,7 @@ class AliasedGroup(click.Group):
     """
 
     def get_command(self, ctx, cmd_name):
-        # Step one: bulitin commands as normal
+        # Step one: built-in commands as normal
         rv = click.Group.get_command(self, ctx, cmd_name)
         if rv is not None:
             return rv

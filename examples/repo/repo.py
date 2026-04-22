@@ -48,7 +48,7 @@ def cli(ctx, repo_home, config, verbose):
     This tool is supposed to look like a distributed version control
     system to show how something like this can be structured.
     """
-    # Create a repo object and remember it as as the context object.  From
+    # Create a repo object and remember it as the context object.  From
     # this point onwards other commands can refer to it by using the
     # @pass_repo decorator.
     ctx.obj = Repo(os.path.abspath(repo_home))

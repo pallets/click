@@ -84,7 +84,7 @@ def test_nargs_plus_multiple(runner):
 
 
 def test_multiple_flag_default(runner):
-    """Default default for flags when multiple=True should be empty tuple."""
+    """Default for flags when multiple=True should be empty tuple."""
 
     @click.command
     # flag due to secondary token
@@ -274,7 +274,7 @@ def test_lookup_default_override_respected(runner):
     ``None``.
 
     Previous attempts in https://github.com/pallets/click/pr/3199 were entirely
-    bypassing the user's overridded method.
+    bypassing the user's overridden method.
     """
 
     class CustomContext(click.Context):

@@ -942,7 +942,7 @@ Released 2018-09-25
     so that changing the working directory does not affect it. :pr:`920`
 -   Fix incorrect completions when defaults are present :issue:`925`,
     :pr:`930`
--   Add copy option attrs so that custom classes can be re-used.
+-   Add copy option attrs so that custom classes can be reused.
     :issue:`926`, :pr:`994`
 -   "x" and "a" file modes now use stdout when file is ``"-"``.
     :pr:`929`
