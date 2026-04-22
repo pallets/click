@@ -40,6 +40,10 @@ Unreleased
 -   Change :class:`ParameterSource` to an :class:`~enum.IntEnum` and reorder
     its members from most to least explicit, so values can be compared to
     check whether a parameter was explicitly provided. :issue:`2879` :pr:`3248`
+-   Fix readline functionality on non-Windows platforms. Prompt text is now
+    passed directly to readline instead of being printed separately, allowing
+    proper backspace, line editing, and line wrapping behavior. :issue:`2968`
+    :pr:`2969`
 
 Version 8.3.2
 -------------
