@@ -366,3 +366,28 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+
+def test_help_formatter_write_usage_no_args():
+    """Test that write_usage outputs correctly when args is empty."""
+    # Regression test for https://github.com/pallets/click/issues/3360
+    formatter = click.HelpFormatter()
+    formatter.write_usage("program")
+    actual = formatter.getvalue()
+    assert actual == "Usage: program \n"
+
+
+def test_help_formatter_write_usage_with_args():
+    """Test that write_usage works correctly with args provided."""
+    formatter = click.HelpFormatter()
+    formatter.write_usage("program", "[OPTIONS] COMMAND [ARGS]...")
+    actual = formatter.getvalue()
+    assert actual == "Usage: program [OPTIONS] COMMAND [ARGS]...\n"
+
+
+def test_help_formatter_write_usage_custom_prefix():
+    """Test that write_usage respects custom prefix."""
+    formatter = click.HelpFormatter()
+    formatter.write_usage("program", "[OPTIONS]", prefix="Usage: ")
+    actual = formatter.getvalue()
+    assert actual == "Usage: program [OPTIONS]\n"
