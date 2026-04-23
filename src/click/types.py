@@ -183,13 +183,16 @@ class FuncParamType(ParamType):
     ) -> t.Any:
         try:
             return self.func(value)
-        except ValueError:
-            try:
-                value = str(value)
-            except UnicodeError:
-                value = value.decode("utf-8", "replace")
+        except ValueError as exc:
+            message = str(exc)
 
-            self.fail(value, param, ctx)
+            if not message:
+                try:
+                    message = str(value)
+                except UnicodeError:
+                    message = value.decode("utf-8", "replace")
+
+            self.fail(message, param, ctx)
 
 
 class UnprocessedParamType(ParamType):
