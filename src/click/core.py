@@ -975,6 +975,8 @@ class Command:
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
+        self._pre_hooks: list[t.Callable[[Context], None]] = []
+        self._post_hooks: list[t.Callable[[Context, t.Any], t.Any | None]] = []
 
     def to_info_dict(self, ctx: Context) -> dict[str, t.Any]:
         return {
@@ -1256,6 +1258,9 @@ class Command:
         """Given a context, this invokes the attached callback (if it exists)
         in the right way.
         """
+        for hook in self._pre_hooks:
+            ctx.invoke(hook, ctx)
+
         if self.deprecated:
             extra_message = (
                 f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
@@ -1265,8 +1270,71 @@ class Command:
             ).format(name=self.name, extra_message=extra_message)
             echo(style(message, fg="red"), err=True)
 
+        rv = None
         if self.callback is not None:
-            return ctx.invoke(self.callback, **ctx.params)
+            rv = ctx.invoke(self.callback, **ctx.params)
+
+        for hook in self._post_hooks:
+            hook_rv = ctx.invoke(hook, ctx, rv)
+            if hook_rv is not None:
+                rv = hook_rv
+
+        return rv
+
+    def pre_hook(self) -> t.Callable[[t.Callable[..., t.Any]], t.Callable[..., t.Any]]:
+        """Register a pre-execution hook.
+
+        The hook will be called before the command's callback is invoked.
+        It receives the :class:`Context` as its only argument.
+
+        Example::
+
+            @click.command()
+            @click.option("--name", default="World")
+            def cli(name):
+                click.echo(f"Hello, {name}!")
+
+            @cli.pre_hook()
+            def log_before(ctx):
+                click.echo(f"About to run command: {ctx.info_name}")
+
+        .. versionadded:: 8.3
+        """
+
+        def decorator(f: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:
+            self._pre_hooks.append(f)
+            return f
+
+        return decorator
+
+    def post_hook(self) -> t.Callable[[t.Callable[..., t.Any]], t.Callable[..., t.Any]]:
+        """Register a post-execution hook.
+
+        The hook will be called after the command's callback is invoked.
+        It receives the :class:`Context` and the return value as arguments.
+        If the hook returns a non-None value, it will replace the original
+        return value.
+
+        Example::
+
+            @click.command()
+            @click.option("--name", default="World")
+            def cli(name):
+                return f"Hello, {name}!"
+
+            @cli.post_hook()
+            def log_after(ctx, rv):
+                click.echo(f"Command {ctx.info_name} returned: {rv}")
+                return rv.upper()
+
+        .. versionadded:: 8.3
+        """
+
+        def decorator(f: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:
+            self._post_hooks.append(f)
+            return f
+
+        return decorator
 
     def shell_complete(self, ctx: Context, incomplete: str) -> list[CompletionItem]:
         """Return a list of completions for the incomplete value. Looks
@@ -1601,6 +1669,13 @@ class Group(Command):
                         "A group in chain mode cannot have optional arguments."
                     )
 
+        self._pre_subcommand_hooks: list[
+            t.Callable[[Context, str, Command], None]
+        ] = []
+        self._post_subcommand_hooks: list[
+            t.Callable[[Context, str, Command, t.Any], t.Any | None]
+        ] = []
+
     def to_info_dict(self, ctx: Context) -> dict[str, t.Any]:
         info_dict = super().to_info_dict(ctx)
         commands = {}
@@ -1775,6 +1850,73 @@ class Group(Command):
 
         return decorator
 
+    def pre_subcommand_hook(
+        self,
+    ) -> t.Callable[[t.Callable[..., t.Any]], t.Callable[..., t.Any]]:
+        """Register a pre-subcommand execution hook.
+
+        The hook will be called before each subcommand's callback is invoked.
+        It receives the :class:`Context`, the subcommand name, and the
+        subcommand :class:`Command` object as arguments.
+
+        Example::
+
+            @click.group()
+            def cli():
+                pass
+
+            @cli.command()
+            def hello():
+                click.echo("Hello!")
+
+            @cli.pre_subcommand_hook()
+            def log_before_subcommand(ctx, cmd_name, cmd):
+                click.echo(f"About to run subcommand: {cmd_name}")
+
+        .. versionadded:: 8.3
+        """
+
+        def decorator(f: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:
+            self._pre_subcommand_hooks.append(f)
+            return f
+
+        return decorator
+
+    def post_subcommand_hook(
+        self,
+    ) -> t.Callable[[t.Callable[..., t.Any]], t.Callable[..., t.Any]]:
+        """Register a post-subcommand execution hook.
+
+        The hook will be called after each subcommand's callback is invoked.
+        It receives the :class:`Context`, the subcommand name, the subcommand
+        :class:`Command` object, and the return value as arguments.
+        If the hook returns a non-None value, it will replace the original
+        return value.
+
+        Example::
+
+            @click.group()
+            def cli():
+                pass
+
+            @cli.command()
+            def hello():
+                return "Hello!"
+
+            @cli.post_subcommand_hook()
+            def log_after_subcommand(ctx, cmd_name, cmd, rv):
+                click.echo(f"Subcommand {cmd_name} returned: {rv}")
+                return rv.upper()
+
+        .. versionadded:: 8.3
+        """
+
+        def decorator(f: t.Callable[..., t.Any]) -> t.Callable[..., t.Any]:
+            self._post_subcommand_hooks.append(f)
+            return f
+
+        return decorator
+
     def get_command(self, ctx: Context, cmd_name: str) -> Command | None:
         """Given a context and a command name, this returns a :class:`Command`
         object if it exists or returns ``None``.
@@ -1842,48 +1984,76 @@ class Group(Command):
                 value = ctx.invoke(self._result_callback, value, **ctx.params)
             return value
 
+        def _invoke_subcommand(
+            sub_ctx: Context, cmd_name: str, cmd: Command
+        ) -> t.Any:
+            for hook in self._pre_subcommand_hooks:
+                ctx.invoke(hook, ctx, cmd_name, cmd)
+
+            with sub_ctx:
+                rv = sub_ctx.command.invoke(sub_ctx)
+
+            for hook in self._post_subcommand_hooks:
+                hook_rv = ctx.invoke(hook, ctx, cmd_name, cmd, rv)
+                if hook_rv is not None:
+                    rv = hook_rv
+
+            return rv
+
+        def _invoke_group_callback() -> t.Any:
+            if self.deprecated:
+                extra_message = (
+                    f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
+                )
+                message = _(
+                    "DeprecationWarning: The command {name!r} is deprecated.{extra_message}"
+                ).format(name=self.name, extra_message=extra_message)
+                echo(style(message, fg="red"), err=True)
+
+            if self.callback is not None:
+                return ctx.invoke(self.callback, **ctx.params)
+            return None
+
         if not ctx._protected_args:
             if self.invoke_without_command:
-                # No subcommand was invoked, so the result callback is
-                # invoked with the group return value for regular
-                # groups, or an empty list for chained groups.
                 with ctx:
                     rv = super().invoke(ctx)
                     return _process_result([] if self.chain else rv)
             ctx.fail(_("Missing command."))
 
-        # Fetch args back out
         args = [*ctx._protected_args, *ctx.args]
         ctx.args = []
         ctx._protected_args = []
 
-        # If we're not in chain mode, we only allow the invocation of a
-        # single command but we also inform the current context about the
-        # name of the command to invoke.
         if not self.chain:
-            # Make sure the context is entered so we do not clean up
-            # resources until the result processor has worked.
             with ctx:
                 cmd_name, cmd, args = self.resolve_command(ctx, args)
                 assert cmd is not None
                 ctx.invoked_subcommand = cmd_name
-                super().invoke(ctx)
-                sub_ctx = cmd.make_context(cmd_name, args, parent=ctx)
-                with sub_ctx:
-                    return _process_result(sub_ctx.command.invoke(sub_ctx))
 
-        # In chain mode we create the contexts step by step, but after the
-        # base command has been invoked.  Because at that point we do not
-        # know the subcommands yet, the invoked subcommand attribute is
-        # set to ``*`` to inform the command that subcommands are executed
-        # but nothing else.
+                for hook in self._pre_hooks:
+                    ctx.invoke(hook, ctx)
+
+                group_rv = _invoke_group_callback()
+
+                sub_ctx = cmd.make_context(cmd_name, args, parent=ctx)
+                sub_rv = _invoke_subcommand(sub_ctx, cmd_name, cmd)
+
+                for hook in self._post_hooks:
+                    hook_rv = ctx.invoke(hook, ctx, sub_rv)
+                    if hook_rv is not None:
+                        sub_rv = hook_rv
+
+                return _process_result(sub_rv)
+
         with ctx:
             ctx.invoked_subcommand = "*" if args else None
-            super().invoke(ctx)
 
-            # Otherwise we make every single context and invoke them in a
-            # chain.  In that case the return value to the result processor
-            # is the list of all invoked subcommand's results.
+            for hook in self._pre_hooks:
+                ctx.invoke(hook, ctx)
+
+            group_rv = _invoke_group_callback()
+
             contexts = []
             while args:
                 cmd_name, cmd, args = self.resolve_command(ctx, args)
@@ -1895,14 +2065,21 @@ class Group(Command):
                     allow_extra_args=True,
                     allow_interspersed_args=False,
                 )
-                contexts.append(sub_ctx)
+                contexts.append((sub_ctx, cmd_name, cmd))
                 args, sub_ctx.args = sub_ctx.args, []
 
             rv = []
-            for sub_ctx in contexts:
-                with sub_ctx:
-                    rv.append(sub_ctx.command.invoke(sub_ctx))
-            return _process_result(rv)
+            for sub_ctx, cmd_name, cmd in contexts:
+                rv.append(_invoke_subcommand(sub_ctx, cmd_name, cmd))
+
+            result = _process_result(rv)
+
+            for hook in self._post_hooks:
+                hook_rv = ctx.invoke(hook, ctx, result)
+                if hook_rv is not None:
+                    result = hook_rv
+
+            return result
 
     def resolve_command(
         self, ctx: Context, args: list[str]
