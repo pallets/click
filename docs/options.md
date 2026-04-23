@@ -230,6 +230,54 @@ as `default` will be interpreted as a list of characters.
     invoke(commit, args=['-m', 'foo', '-m', 'bar', '-m', 'here'])
 ```
 
+## Combining Short Options
+
+Short options that consist of a single character can be combined into a
+single argument. For example, `-a -b -c` can be written as `-abc`. This
+is standard POSIX behavior and applies to any short options, including
+flags and options that take values.
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('-a', is_flag=True)
+    @click.option('-b', is_flag=True)
+    @click.option('-c', is_flag=True)
+    def flags(a, b, c):
+        click.echo(f"a={a} b={b} c={c}")
+
+.. click:run::
+
+    invoke(flags, args=['-a', '-b', '-c'])
+    invoke(flags, args=['-abc'])
+```
+
+When combining options, the last option in the combination can take a
+value. The value can be attached directly or passed as the next argument.
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('-v', is_flag=True)
+    @click.option('-n', type=int)
+    def example(v, n):
+        click.echo(f"v={v} n={n}")
+
+.. click:run::
+
+    invoke(example, args=['-vn', '5'])
+    invoke(example, args=['-vn5'])
+```
+
+```{note}
+Multi-character short options are not supported. An argument like `-abc`
+is always interpreted as the combination of `-a`, `-b`, and `-c`, not as
+a single option named `-abc`. If you need longer option names, use long
+options with `--` prefix instead (e.g., `--abc`).
+```
+
 ## Counting
 
 To count the occurrence of an option, set `count=True`. If the option is not
