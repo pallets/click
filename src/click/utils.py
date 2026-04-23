@@ -219,12 +219,67 @@ class KeepOpenFile:
         return iter(self._file)
 
 
+def _get_styles(
+    fg: int | tuple[int, int, int] | str | None = None,
+    bg: int | tuple[int, int, int] | str | None = None,
+    bold: bool | None = None,
+    dim: bool | None = None,
+    underline: bool | None = None,
+    overline: bool | None = None,
+    italic: bool | None = None,
+    blink: bool | None = None,
+    reverse: bool | None = None,
+    strikethrough: bool | None = None,
+    reset: bool = True,
+) -> dict[str, t.Any]:
+    """Collect style parameters that are not None into a dictionary.
+    This is used to determine if any styling needs to be applied.
+    """
+    styles: dict[str, t.Any] = {}
+
+    if fg is not None:
+        styles["fg"] = fg
+    if bg is not None:
+        styles["bg"] = bg
+    if bold is not None:
+        styles["bold"] = bold
+    if dim is not None:
+        styles["dim"] = dim
+    if underline is not None:
+        styles["underline"] = underline
+    if overline is not None:
+        styles["overline"] = overline
+    if italic is not None:
+        styles["italic"] = italic
+    if blink is not None:
+        styles["blink"] = blink
+    if reverse is not None:
+        styles["reverse"] = reverse
+    if strikethrough is not None:
+        styles["strikethrough"] = strikethrough
+    if not reset:
+        styles["reset"] = reset
+
+    return styles
+
+
 def echo(
     message: t.Any | None = None,
     file: t.IO[t.Any] | None = None,
     nl: bool = True,
     err: bool = False,
     color: bool | None = None,
+    fg: int | tuple[int, int, int] | str | None = None,
+    bg: int | tuple[int, int, int] | str | None = None,
+    bold: bool | None = None,
+    dim: bool | None = None,
+    underline: bool | None = None,
+    overline: bool | None = None,
+    italic: bool | None = None,
+    blink: bool | None = None,
+    reverse: bool | None = None,
+    strikethrough: bool | None = None,
+    reset: bool = True,
 ) -> None:
     """Print a message and newline to stdout or a file. This should be
     used instead of :func:`print` because it provides better support
@@ -249,6 +304,28 @@ def echo(
     :param color: Force showing or hiding colors and other styles. By
         default Click will remove color if the output does not look like
         an interactive terminal.
+    :param fg: The foreground color to use. This can be:
+        - A color name string: ``'black'``, ``'red'``, ``'green'``,
+          ``'yellow'``, ``'blue'``, ``'magenta'``, ``'cyan'``, ``'white'``,
+          or their bright variants like ``'bright_red'``.
+        - An integer in the interval [0, 255] for 256-color mode.
+        - An RGB tuple ``(r, g, b)`` for true-color mode.
+    :param bg: The background color to use. Accepts the same values as ``fg``.
+    :param bold: Enable or disable bold mode.
+    :param dim: Enable or disable dim mode.
+    :param underline: Enable or disable underline.
+    :param overline: Enable or disable overline.
+    :param italic: Enable or disable italic.
+    :param blink: Enable or disable blinking.
+    :param reverse: Enable or disable inverse rendering.
+    :param strikethrough: Enable or disable strikethrough.
+    :param reset: By default a reset-all code is added at the end of the
+        string. This can be disabled to compose styles.
+
+    .. versionchanged:: X.X
+        Added the ``fg``, ``bg``, ``bold``, ``dim``, ``underline``,
+        ``overline``, ``italic``, ``blink``, ``reverse``, ``strikethrough``,
+        and ``reset`` parameters for styling output directly.
 
     .. versionchanged:: 6.0
         Support Unicode output on the Windows console. Click does not
@@ -274,6 +351,27 @@ def echo(
         # pythonw on Windows.
         if file is None:
             return
+
+    # Apply styling if any style parameters are provided.
+    # Bytes and bytearray are passed through without styling.
+    styles = _get_styles(
+        fg=fg,
+        bg=bg,
+        bold=bold,
+        dim=dim,
+        underline=underline,
+        overline=overline,
+        italic=italic,
+        blink=blink,
+        reverse=reverse,
+        strikethrough=strikethrough,
+        reset=reset,
+    )
+
+    if styles and message is not None and not isinstance(message, (bytes, bytearray)):
+        from .termui import style
+
+        message = style(message, **styles)
 
     # Convert non bytes/text into the native string type.
     if message is not None and not isinstance(message, (str, bytes, bytearray)):

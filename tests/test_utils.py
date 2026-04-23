@@ -746,3 +746,110 @@ def test_make_default_short_help(value, max_length, alter, expect):
 
     out = click.utils.make_default_short_help(value, max_length)
     assert out == expect
+
+
+@pytest.mark.parametrize(
+    ("styles", "ref"),
+    [
+        ({"fg": "black"}, "\x1b[30mhello\x1b[0m"),
+        ({"fg": "red"}, "\x1b[31mhello\x1b[0m"),
+        ({"fg": "green"}, "\x1b[32mhello\x1b[0m"),
+        ({"fg": "yellow"}, "\x1b[33mhello\x1b[0m"),
+        ({"fg": "blue"}, "\x1b[34mhello\x1b[0m"),
+        ({"fg": "magenta"}, "\x1b[35mhello\x1b[0m"),
+        ({"fg": "cyan"}, "\x1b[36mhello\x1b[0m"),
+        ({"fg": "white"}, "\x1b[37mhello\x1b[0m"),
+        ({"fg": "bright_red"}, "\x1b[91mhello\x1b[0m"),
+        ({"fg": "bright_green"}, "\x1b[92mhello\x1b[0m"),
+        ({"bg": "black"}, "\x1b[40mhello\x1b[0m"),
+        ({"bg": "red"}, "\x1b[41mhello\x1b[0m"),
+        ({"bg": "green"}, "\x1b[42mhello\x1b[0m"),
+        ({"bg": "yellow"}, "\x1b[43mhello\x1b[0m"),
+        ({"bg": "blue"}, "\x1b[44mhello\x1b[0m"),
+    ],
+)
+def test_echo_style_color_names(styles, ref):
+    f = StringIO()
+    click.echo("hello", file=f, color=True, **styles)
+    assert f.getvalue() == f"{ref}\n"
+
+
+def test_echo_style_256_color():
+    f = StringIO()
+    click.echo("hello", file=f, fg=196, color=True)
+    assert f.getvalue() == "\x1b[38;5;196mhello\x1b[0m\n"
+
+    f = StringIO()
+    click.echo("hello", file=f, bg=117, color=True)
+    assert f.getvalue() == "\x1b[48;5;117mhello\x1b[0m\n"
+
+
+def test_echo_style_rgb_color():
+    f = StringIO()
+    click.echo("hello", file=f, fg=(255, 12, 128), color=True)
+    assert f.getvalue() == "\x1b[38;2;255;12;128mhello\x1b[0m\n"
+
+    f = StringIO()
+    click.echo("hello", file=f, bg=(135, 0, 175), color=True)
+    assert f.getvalue() == "\x1b[48;2;135;0;175mhello\x1b[0m\n"
+
+
+@pytest.mark.parametrize(
+    ("styles", "ref"),
+    [
+        ({"bold": True}, "\x1b[1mhello\x1b[0m"),
+        ({"dim": True}, "\x1b[2mhello\x1b[0m"),
+        ({"underline": True}, "\x1b[4mhello\x1b[0m"),
+        ({"overline": True}, "\x1b[53mhello\x1b[0m"),
+        ({"italic": True}, "\x1b[3mhello\x1b[0m"),
+        ({"blink": True}, "\x1b[5mhello\x1b[0m"),
+        ({"reverse": True}, "\x1b[7mhello\x1b[0m"),
+        ({"strikethrough": True}, "\x1b[9mhello\x1b[0m"),
+    ],
+)
+def test_echo_style_text_styles(styles, ref):
+    f = StringIO()
+    click.echo("hello", file=f, color=True, **styles)
+    assert f.getvalue() == f"{ref}\n"
+
+
+def test_echo_style_combined():
+    f = StringIO()
+    click.echo("hello", file=f, fg="red", bg="blue", bold=True, underline=True, color=True)
+    assert f.getvalue() == "\x1b[31m\x1b[44m\x1b[1m\x1b[4mhello\x1b[0m\n"
+
+
+def test_echo_style_no_reset():
+    f = StringIO()
+    click.echo("hello", file=f, fg="red", reset=False, color=True)
+    assert f.getvalue() == "\x1b[31mhello\n"
+
+
+def test_echo_style_bytes_not_styled(runner):
+    with runner.isolation() as outstreams:
+        click.echo(b"hello", fg="red")
+        assert outstreams[0].getvalue() == b"hello\n"
+
+
+def test_echo_style_with_color_flag(monkeypatch):
+    monkeypatch.setattr(click._compat, "isatty", lambda x: False)
+
+    f = StringIO()
+    click.echo("hello", file=f, fg="red", color=False)
+    assert f.getvalue() == "hello\n"
+
+    f = StringIO()
+    click.echo("hello", file=f, fg="red", color=True)
+    assert f.getvalue() == "\x1b[31mhello\x1b[0m\n"
+
+
+def test_echo_style_none_message():
+    f = StringIO()
+    click.echo(None, file=f, fg="red")
+    assert f.getvalue() == "\n"
+
+
+def test_echo_style_non_string():
+    f = StringIO()
+    click.echo(42, file=f, fg="green", color=True)
+    assert f.getvalue() == "\x1b[32m42\x1b[0m\n"
