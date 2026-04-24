@@ -161,26 +161,30 @@ class HelpFormatter:
         if text_width >= (term_len(usage_prefix) + 20):
             # The arguments will fit to the right of the prefix.
             indent = " " * term_len(usage_prefix)
-            self.write(
-                wrap_text(
-                    args,
-                    text_width,
-                    initial_indent=usage_prefix,
-                    subsequent_indent=indent,
+            if args:
+                self.write(
+                    wrap_text(
+                        args,
+                        text_width,
+                        initial_indent=usage_prefix,
+                        subsequent_indent=indent,
+                    )
                 )
-            )
+            else:
+                self.write(usage_prefix)
+            self.write("\n")
         else:
             # The prefix is too long, put the arguments on the next line.
             self.write(usage_prefix)
             self.write("\n")
             indent = " " * (max(self.current_indent, term_len(prefix)) + 4)
-            self.write(
-                wrap_text(
-                    args, text_width, initial_indent=indent, subsequent_indent=indent
+            if args:
+                self.write(
+                    wrap_text(
+                        args, text_width, initial_indent=indent, subsequent_indent=indent
+                    )
                 )
-            )
-
-        self.write("\n")
+            self.write("\n")
 
     def write_heading(self, heading: str) -> None:
         """Writes a heading into the buffer."""
