@@ -392,6 +392,30 @@ class _OptionParser:
         prefix = arg[0]
         unknown_options = []
 
+        # Before iterating char-by-char, check if the whole arg (or a known
+        # prefix of it) matches a single-dash long option such as -dbg.  This
+        # can happen when the user passes an option that was defined with a
+        # multi-character value (e.g. opts=["-dbg"]) — those are stored in
+        # _long_opt, not _short_opt — so we try to delegate to _match_long_opt
+        # which produces the correct error message.
+        #
+        # Walk from longest prefix to shortest so we prefer the most specific
+        # match (e.g. "-verbose" before "-v").
+        for end in range(len(arg), 1, -1):
+            norm_prefix = _normalize_opt(arg[:end], self.ctx)
+            if norm_prefix in self._long_opt:
+                # Found a known single-dash long option.  Either the user passed
+                # it exactly (end == len(arg)) or they appended extra characters.
+                # Delegate entirely: _match_long_opt handles both the happy path
+                # and the "option doesn't take a value" error with the right name.
+                if end == len(arg):
+                    self._match_long_opt(norm_prefix, None, state)
+                else:
+                    # Extra characters after the option — treat them as an
+                    # explicit value (like "-dbg=value" semantics for -dbg=extra).
+                    self._match_long_opt(norm_prefix, arg[end:], state)
+                return
+
         for ch in arg[1:]:
             opt = _normalize_opt(f"{prefix}{ch}", self.ctx)
             option = self._short_opt.get(opt)
