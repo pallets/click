@@ -230,6 +230,12 @@ def test_formatting_usage_error_no_help(runner):
     ]
 
 
+def test_write_usage_without_args():
+    formatter = click.HelpFormatter()
+    formatter.write_usage("program")
+    assert formatter.getvalue() == "Usage: program\n"
+
+
 def test_formatting_usage_custom_help(runner):
     @click.command(context_settings=dict(help_option_names=["--man"]))
     @click.argument("arg")

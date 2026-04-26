@@ -156,6 +156,12 @@ class HelpFormatter:
             prefix = f"{_('Usage:')} "
 
         usage_prefix = f"{prefix:>{self.current_indent}}{prog} "
+
+        if not args:
+            self.write(usage_prefix.rstrip())
+            self.write("\n")
+            return
+
         text_width = self.width - self.current_indent
 
         if text_width >= (term_len(usage_prefix) + 20):
