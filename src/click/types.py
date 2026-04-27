@@ -544,19 +544,21 @@ class _NumberRangeBase(_NumberParamTypeBase[ParamTypeValue]):
         import operator
 
         rv = super().convert(value, param, ctx)
-        lt_min: bool = self.min is not None and (
+        min = self.min
+        max = self.max
+        lt_min: bool = min is not None and (
             operator.le if self.min_open else operator.lt
-        )(rv, self.min)  # type: ignore[arg-type]
-        gt_max: bool = self.max is not None and (
+        )(rv, min)  # type: ignore[arg-type]
+        gt_max: bool = max is not None and (
             operator.ge if self.max_open else operator.gt
-        )(rv, self.max)  # type: ignore[arg-type]
+        )(rv, max)  # type: ignore[arg-type]
 
         if self.clamp:
-            if lt_min:
-                return self._clamp(self.min, 1, self.min_open)  # type: ignore
+            if min is not None and lt_min:
+                return self._clamp(min, 1, self.min_open)  # type: ignore[arg-type]
 
-            if gt_max:
-                return self._clamp(self.max, -1, self.max_open)  # type: ignore
+            if max is not None and gt_max:
+                return self._clamp(max, -1, self.max_open)  # type: ignore[arg-type]
 
         if lt_min or gt_max:
             self.fail(
