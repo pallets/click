@@ -182,8 +182,8 @@ class FuncParamTypeInfoDict(ParamTypeInfoDict):
     func: t.Callable[[t.Any], t.Any]
 
 
-class FuncParamType(ParamType[t.Any]):
-    def __init__(self, func: t.Callable[[t.Any], t.Any]) -> None:
+class FuncParamType(ParamType[ParamTypeValue]):
+    def __init__(self, func: t.Callable[[t.Any], ParamTypeValue]) -> None:
         self.name: str = func.__name__
         self.func = func
 
@@ -192,7 +192,7 @@ class FuncParamType(ParamType[t.Any]):
 
     def convert(
         self, value: t.Any, param: Parameter | None, ctx: Context | None
-    ) -> t.Any:
+    ) -> ParamTypeValue:
         try:
             return self.func(value)
         except ValueError:
