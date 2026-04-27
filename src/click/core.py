@@ -2773,7 +2773,7 @@ class Option(Parameter):
         )
 
         if prompt is True:
-            if self.name is None:
+            if not self.name:
                 raise TypeError("'name' is required with 'prompt=True'.")
 
             prompt_text: str | None = self.name.replace("_", " ").capitalize()
@@ -3122,7 +3122,7 @@ class Option(Parameter):
                 if (
                     self.allow_from_autoenv
                     and ctx.auto_envvar_prefix is not None
-                    and self.name is not None
+                    and self.name
                 ):
                     envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
 
@@ -3261,11 +3261,7 @@ class Option(Parameter):
         if rv is not None:
             return rv
 
-        if (
-            self.allow_from_autoenv
-            and ctx.auto_envvar_prefix is not None
-            and self.name is not None
-        ):
+        if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None and self.name:
             envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
             rv = os.environ.get(envvar)
 
