@@ -1,5 +1,16 @@
 .. currentmodule:: click
 
+Version 8.3.4
+-------------
+
+Unreleased
+
+-   Fix :meth:`HelpFormatter.write_usage` to write the usage prefix when called
+    with no ``args``. Previously, an empty string was passed through
+    :func:`wrap_text`, which dropped the ``initial_indent`` and produced a
+    blank line. :issue:`3360`
+
+
 Version 8.3.3
 -------------
 

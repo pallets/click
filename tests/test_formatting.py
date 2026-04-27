@@ -366,3 +366,22 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+
+def test_help_formatter_write_usage_no_args():
+    formatter = click.HelpFormatter()
+    formatter.write_usage("program")
+    assert formatter.getvalue() == "Usage: program\n"
+
+
+def test_help_formatter_write_usage_no_args_custom_prefix():
+    formatter = click.HelpFormatter()
+    formatter.write_usage("program", prefix="Try: ")
+    assert formatter.getvalue() == "Try: program\n"
+
+
+def test_help_formatter_write_usage_no_args_indented():
+    formatter = click.HelpFormatter()
+    formatter.current_indent = 10
+    formatter.write_usage("program")
+    assert formatter.getvalue() == "   Usage: program\n"
