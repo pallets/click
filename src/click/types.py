@@ -129,7 +129,9 @@ class ParamType(t.Generic[ParamTypeValue], abc.ABC):
         :param ctx: The current context that arrived at this value. May
             be ``None``.
         """
-        return value  # type: ignore[no-any-return]
+        # The default returns the value as-is so subclasses that only customize
+        # metadata are not forced to redeclare ``convert``.
+        return t.cast("ParamTypeValue", value)
 
     def split_envvar_value(self, rv: str) -> cabc.Sequence[str]:
         """Given a value from an environment variable this splits it up
