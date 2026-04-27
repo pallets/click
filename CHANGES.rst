@@ -1,5 +1,13 @@
 .. currentmodule:: click
 
+Version 8.3.4
+-------------
+
+Unreleased
+
+-   Prevent ``HelpFormatter.write_usage`` from wrapping hyphenated option tokens
+    at internal hyphens when a full token can fit on the next line. :issue:`3362`
+
 Version 8.3.3
 -------------
 

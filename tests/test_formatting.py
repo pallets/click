@@ -84,6 +84,32 @@ def test_wrapping_long_options_strings(runner):
     ]
 
 
+def test_usage_does_not_wrap_hyphenated_options_inside_token():
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+    formatter = click.HelpFormatter(width=65)
+
+    formatter.write_usage("program", " ".join(options))
+
+    assert formatter.getvalue().splitlines() == [
+        "Usage: program --enable-verbose-logging --output-file-path",
+        "               --max-retry-count --disable-cache-mode",
+        "               --config-file-location --user-auth-token",
+        "               --auto-update-interval --force-overwrite-existing",
+        "               --network-timeout-seconds --debug-trace-enabled",
+    ]
+
+
 def test_wrapping_long_command_name(runner):
     @click.group()
     def cli():
