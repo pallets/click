@@ -25,6 +25,7 @@ from .decorators import option as option
 from .decorators import pass_context as pass_context
 from .decorators import pass_obj as pass_obj
 from .decorators import password_option as password_option
+from .decorators import time_it as time_it
 from .decorators import version_option as version_option
 from .exceptions import Abort as Abort
 from .exceptions import BadArgumentUsage as BadArgumentUsage
@@ -70,6 +71,7 @@ from .utils import get_app_dir as get_app_dir
 from .utils import get_binary_stream as get_binary_stream
 from .utils import get_text_stream as get_text_stream
 from .utils import open_file as open_file
+from .utils import timer as timer
 
 
 def __getattr__(name: str) -> object:

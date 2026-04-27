@@ -13,6 +13,7 @@ from .core import Option
 from .core import Parameter
 from .globals import get_current_context
 from .utils import echo
+from .utils import timer
 
 if t.TYPE_CHECKING:
     import typing_extensions as te
@@ -549,3 +550,99 @@ def help_option(*param_decls: str, **kwargs: t.Any) -> t.Callable[[FC], FC]:
     kwargs.setdefault("callback", show_help)
 
     return option(*param_decls, **kwargs)
+
+
+@t.overload
+def time_it(f: FC) -> FC: ...
+
+
+@t.overload
+def time_it(
+    name_or_func: str | None = None,
+    *,
+    name: str | None = None,
+    file: t.IO[t.Any] | None = None,
+    nl: bool = True,
+    color: bool | None = None,
+) -> t.Callable[[FC], FC]: ...
+
+
+def time_it(
+    name_or_func: str | FC | None = None,
+    *,
+    name: str | None = None,
+    file: t.IO[t.Any] | None = None,
+    nl: bool = True,
+    color: bool | None = None,
+) -> FC | t.Callable[[FC], FC]:
+    """Decorator that measures and prints the execution time of a command or function.
+
+    This decorator wraps the decorated function or command and measures the
+    elapsed time when it is executed. The result is printed using Click's
+    :func:`~click.echo` function.
+
+    Example usage::
+
+        @click.command()
+        @click.time_it
+        def my_command():
+            # code to measure
+            pass
+
+        @click.command()
+        @click.time_it("Long operation")
+        def another_command():
+            # code to measure
+            pass
+
+        @click.command()
+        @click.time_it(name="Custom", file=sys.stderr)
+        def yet_another():
+            # code to measure, output to stderr
+            pass
+
+    :param name_or_func: Either a function to decorate, or a name for the timer.
+        This parameter exists for backwards compatibility. Prefer the ``name``
+        keyword argument when not decorating directly.
+    :param name: The name for the timer. If provided, takes precedence over
+        ``name_or_func``.
+    :param file: The file to write the output to. Defaults to stdout.
+    :param nl: Whether to print a newline after the message.
+    :param color: Whether to use ANSI colors for the output.
+    """
+    func: FC | None = None
+    final_name: str | None = None
+
+    if callable(name_or_func):
+        func = t.cast(FC, name_or_func)
+    else:
+        final_name = t.cast(str | None, name_or_func)
+
+    if name is not None:
+        final_name = name
+
+    def decorator(f: FC) -> FC:
+        if isinstance(f, Command):
+            original_invoke = f.invoke
+
+            def timed_invoke(ctx: Context) -> t.Any:
+                nonlocal final_name
+                timer_name = final_name if final_name is not None else ctx.info_name
+                with timer(timer_name, file=file, nl=nl, color=color):
+                    return original_invoke(ctx)
+
+            f.invoke = timed_invoke
+            return f
+        else:
+            def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+                nonlocal final_name
+                timer_name = final_name if final_name is not None else f.__name__
+                with timer(timer_name, file=file, nl=nl, color=color):
+                    return f(*args, **kwargs)
+
+            return t.cast(FC, update_wrapper(wrapper, f))
+
+    if func is not None:
+        return decorator(func)
+
+    return decorator

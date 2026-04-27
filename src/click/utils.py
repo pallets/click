@@ -4,7 +4,9 @@ import collections.abc as cabc
 import os
 import re
 import sys
+import time
 import typing as t
+from contextlib import AbstractContextManager
 from functools import update_wrapper
 from types import ModuleType
 from types import TracebackType
@@ -628,3 +630,103 @@ def _expand_args(
             out.extend(matches)
 
     return out
+
+
+class timer(AbstractContextManager["timer"]):
+    """A context manager for measuring execution time of code blocks.
+
+    This context manager measures the elapsed time of code executed within
+    its context and optionally prints a formatted message with the result.
+
+    Example usage::
+
+        from click import timer
+
+        with timer():
+            # code to measure
+            ...
+
+        with timer("Operation") as t:
+            # code to measure
+            ...
+        print(f"Elapsed: {t.elapsed} seconds")
+
+    :param name: Optional name for the operation being timed.
+    :param file: The file to write the output to. Defaults to stdout.
+    :param nl: Whether to print a newline after the message.
+    :param color: Whether to use ANSI colors for the output.
+    """
+
+    def __init__(
+        self,
+        name: str | None = None,
+        file: t.IO[t.Any] | None = None,
+        nl: bool = True,
+        color: bool | None = None,
+    ) -> None:
+        self.name = name
+        self.file = file
+        self.nl = nl
+        self.color = color
+        self.start_time: float | None = None
+        self.end_time: float | None = None
+
+    def __enter__(self) -> "timer":
+        self.start_time = time.perf_counter()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        self.end_time = time.perf_counter()
+        if self.start_time is not None:
+            self._print_result()
+
+    @property
+    def elapsed(self) -> float:
+        """The elapsed time in seconds.
+
+        :raises RuntimeError: if the timer has not been started (not entered
+            in a with block).
+        """
+        if self.start_time is None:
+            raise RuntimeError("timer has not been started")
+        end = self.end_time if self.end_time is not None else time.perf_counter()
+        return end - self.start_time
+
+    def _format_time(self, seconds: float) -> str:
+        """Format the elapsed time in a human-readable way.
+
+        - < 1ms: format as microseconds
+        - 1ms - 1s: format as milliseconds
+        - 1s - 60s: format as seconds with 3 decimal places
+        - >= 60s: format as minutes and seconds
+        """
+        if seconds < 0.001:
+            return f"{seconds * 1_000_000:.2f} us"
+        elif seconds < 1.0:
+            return f"{seconds * 1_000:.2f} ms"
+        elif seconds < 60.0:
+            return f"{seconds:.3f} s"
+        else:
+            minutes = int(seconds // 60)
+            seconds_remainder = seconds % 60
+            return f"{minutes}m {seconds_remainder:.3f}s"
+
+    def _print_result(self) -> None:
+        """Print the formatted result to the specified file."""
+        if self.start_time is None or self.end_time is None:
+            return
+
+        elapsed = self.end_time - self.start_time
+        formatted = self._format_time(elapsed)
+
+        if self.name:
+            message = f"'{self.name}' finished in {formatted}"
+        else:
+            message = f"Finished in {formatted}"
+
+        echo(message, file=self.file, nl=self.nl, color=self.color)

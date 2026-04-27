@@ -573,3 +573,144 @@ def test_abort_exceptions_with_disabled_standalone_mode(runner, exc):
     assert rv.exit_code == 1
     assert isinstance(rv.exception.__cause__, exc)
     assert rv.exception.__cause__.args == ("catch me!",)
+
+
+class TestTimer:
+    """Tests for the timer context manager."""
+
+    def test_timer_measures_elapsed_time(self):
+        import time
+
+        with click.timer() as t:
+            time.sleep(0.05)
+
+        assert t.elapsed >= 0.05
+        assert t.start_time is not None
+        assert t.end_time is not None
+
+    def test_timer_with_name_outputs_message(self, capsys):
+        tm = click.timer(name="test operation")
+        tm.__enter__()
+        tm.__exit__(None, None, None)
+
+        captured = capsys.readouterr()
+        assert "'test operation' finished in" in captured.out
+
+    def test_timer_format_time(self):
+        tm = click.timer()
+
+        assert "us" in tm._format_time(0.0005)
+        assert "ms" in tm._format_time(0.5)
+        assert "s" in tm._format_time(5.0)
+        assert "m" in tm._format_time(65.5)
+
+    def test_timer_elapsed_during_execution(self):
+        import time
+
+        with click.timer() as tm:
+            time.sleep(0.01)
+            elapsed_during = tm.elapsed
+            time.sleep(0.01)
+
+        assert elapsed_during >= 0.01
+        assert tm.elapsed >= 0.02
+
+    def test_timer_not_entered(self):
+        tm = click.timer()
+        assert tm.start_time is None
+        assert tm.end_time is None
+        with pytest.raises(RuntimeError, match="timer has not been started"):
+            _ = tm.elapsed
+
+
+class TestTimeItDecorator:
+    """Tests for the time_it decorator."""
+
+    def test_time_it_on_command(self, runner):
+        @click.command()
+        @click.time_it
+        def cli():
+            click.echo("done")
+
+        result = runner.invoke(cli, [])
+        assert result.exit_code == 0
+        assert "done" in result.output
+        assert "'cli' finished in" in result.output
+
+    def test_time_it_with_custom_name(self, runner):
+        @click.command()
+        @click.time_it("my custom name")
+        def cli():
+            click.echo("done")
+
+        result = runner.invoke(cli, [])
+        assert result.exit_code == 0
+        assert "'my custom name' finished in" in result.output
+
+    def test_time_it_with_keyword_arguments(self, runner):
+        @click.command()
+        @click.time_it(name="custom_name", nl=False)
+        def cli():
+            click.echo("done")
+
+        result = runner.invoke(cli, [])
+        assert result.exit_code == 0
+        assert "done" in result.output
+        assert "'custom_name' finished in" in result.output
+
+    def test_time_it_preserves_command_functionality(self, runner):
+        @click.command()
+        @click.option("--name", default="world")
+        @click.time_it
+        def cli(name):
+            click.echo(f"Hello, {name}!")
+
+        result = runner.invoke(cli, ["--name", "Alice"])
+        assert result.exit_code == 0
+        assert "Hello, Alice!" in result.output
+        assert "'cli' finished in" in result.output
+
+    def test_time_it_on_regular_function(self):
+        @click.time_it
+        def slow_function(x, y):
+            return x + y
+
+        result = slow_function(1, 2)
+        assert result == 3
+
+    def test_time_it_on_regular_function_with_name(self, capsys):
+        @click.time_it("my func")
+        def add(x, y):
+            return x + y
+
+        result = add(1, 2)
+        assert result == 3
+        captured = capsys.readouterr()
+        assert "'my func' finished in" in captured.out
+
+    def test_time_it_decorator_order_matters(self, runner):
+        @click.time_it
+        @click.command()
+        def cli():
+            click.echo("done")
+
+        result = runner.invoke(cli, [])
+        assert result.exit_code == 0
+        assert "done" in result.output
+        assert "'cli' finished in" in result.output
+
+    def test_time_it_with_group(self, runner):
+        @click.group()
+        @click.time_it
+        def cli():
+            click.echo("group")
+
+        @cli.command()
+        def sub():
+            click.echo("subcommand")
+
+        result = runner.invoke(cli, ["sub"])
+        assert result.exit_code == 0
+        assert "group" in result.output
+        assert "subcommand" in result.output
+        assert "'cli' finished in" in result.output
