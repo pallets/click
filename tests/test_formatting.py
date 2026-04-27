@@ -366,3 +366,24 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+
+def test_write_usage_no_args():
+    """write_usage should output the usage line even when args is empty."""
+    formatter = click.HelpFormatter()
+    formatter.write_usage("program")
+    assert formatter.getvalue() == "Usage: program\n"
+
+
+def test_write_usage_with_args():
+    """write_usage should still work normally with arguments."""
+    formatter = click.HelpFormatter()
+    formatter.write_usage("program", "FILE [OPTIONS]")
+    assert formatter.getvalue() == "Usage: program FILE [OPTIONS]\n"
+
+
+def test_write_usage_no_args_custom_prefix():
+    """write_usage with a custom prefix and no args."""
+    formatter = click.HelpFormatter()
+    formatter.write_usage("program", prefix="Run: ")
+    assert formatter.getvalue() == "Run: program\n"
