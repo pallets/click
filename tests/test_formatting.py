@@ -1,6 +1,12 @@
 import click
 
 
+def test_write_usage_without_args():
+    formatter = click.HelpFormatter()
+    formatter.write_usage("program")
+    assert formatter.getvalue() == "Usage: program\n"
+
+
 def test_basic_functionality(runner):
     @click.command()
     def cli():
