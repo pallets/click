@@ -1,5 +1,17 @@
 .. currentmodule:: click
 
+Version 8.3.4
+-------------
+
+Unreleased
+
+-   ``HelpFormatter.write_usage`` no longer breaks long ``--option-name`` flags
+    at an internal hyphen when the full token would fit on the next line. The
+    underlying :func:`wrap_text` helper gained a ``break_on_hyphens`` keyword
+    so callers can opt in or out, mirroring :class:`textwrap.TextWrapper`.
+    :issue:`3362`
+
+
 Version 8.3.3
 -------------
 

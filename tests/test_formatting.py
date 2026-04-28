@@ -49,6 +49,38 @@ def test_basic_functionality(runner):
     ]
 
 
+def test_usage_does_not_break_options_at_internal_hyphen():
+    """Long ``--option-name`` flags should not be wrapped at an internal
+    hyphen when the whole token would fit on the next line.
+
+    Reproduce: https://github.com/pallets/click/issues/3362
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+    formatter = click.HelpFormatter(width=65)
+    formatter.write_usage("program", " ".join(options))
+    output = formatter.getvalue()
+
+    # No line ends with a dangling hyphen mid-token.
+    for line in output.splitlines():
+        stripped = line.rstrip()
+        assert not stripped.endswith("-"), f"line broken at hyphen: {line!r}"
+
+    # And the original tokens survive intact.
+    for option in options:
+        assert option in output
+
+
 def test_wrapping_long_options_strings(runner):
     @click.group()
     def cli():
