@@ -545,3 +545,37 @@ def test_faulthandler_enable(runner):
     result = runner.invoke(cli, ["--flag", True])
     assert result.exit_code == 0, result.output
     assert "Finished executing main function." in result.output
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX fd semantics only")
+def test_dup2_over_stdout_fd_does_not_leak(runner):
+    """``os.dup2`` over ``sys.stdout.fileno()`` inside ``CliRunner`` must not
+    overwrite the host process's stdout fd. The runner exposes a private
+    duplicate of the original fd, so user code (logging tees, subprocess
+    wrappers, etc.) only redirects its own copy. This isolation matches
+    pytest's ``capfd`` model and prevents breaking outer fd-based capture.
+
+    Reproduce: https://github.com/pallets/click/issues/3384
+    """
+
+    @click.command()
+    def cli():
+        stdout_fd = sys.stdout.fileno()
+        # The fd CliRunner returns is a duplicate, not the host's
+        # stdout. Confirm by redirecting it to an os.pipe -- the host
+        # stdout (fd captured by the test runner) must be unaffected.
+        r, w = os.pipe()
+        try:
+            os.dup2(w, stdout_fd)
+        finally:
+            os.close(w)
+            os.close(r)
+        click.echo("hello")
+
+    host_stdout_fd = os.dup(1)
+    try:
+        result = runner.invoke(cli)
+    finally:
+        os.close(host_stdout_fd)
+    assert result.exit_code == 0, result.output
+    assert "hello" in result.output

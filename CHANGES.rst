@@ -1,5 +1,19 @@
 .. currentmodule:: click
 
+Version 8.3.4
+-------------
+
+Unreleased
+
+-   ``CliRunner`` now exposes a private duplicate of the original ``stdout``
+    and ``stderr`` file descriptors via ``fileno()`` instead of the
+    descriptors themselves. Code under test that calls ``os.dup2`` over the
+    fd from ``sys.stdout.fileno()`` (e.g. logging tees, build tools,
+    subprocess wrappers) no longer overwrites the host process's real
+    ``stdout``/``stderr``, so outer harnesses such as ``pytest`` capture
+    keep working. :issue:`3384`
+
+
 Version 8.3.3
 -------------
 

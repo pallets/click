@@ -107,11 +107,20 @@ class _NamedTextIOWrapper(io.TextIOWrapper):
     An optional ``original_fd`` preserves the file descriptor of the
     stream being replaced, so that C-level consumers that call
     :meth:`fileno` (``faulthandler``, ``subprocess``, ...) still work.
-    Inspired by pytest's ``capsys``/``capfd`` split: see :doc:`/testing`
-    for details.
+    Callers should pass a private duplicate (``os.dup``) of the
+    underlying fd: that way, code that performs ``os.dup2`` over the
+    value returned by :meth:`fileno` redirects only the duplicate and
+    does not clobber the surrounding process's stdout/stderr (e.g.
+    pytest's fd-based capture). Inspired by pytest's ``capsys`` /
+    ``capfd`` split: see :doc:`/testing` for details.
 
     .. versionchanged:: 8.3.3
         Added ``original_fd`` parameter and :meth:`fileno` override.
+
+    .. versionchanged:: 8.3.4
+        ``CliRunner`` now passes a private duplicate of the original
+        fd, so user code performing ``os.dup2`` on the returned value
+        no longer clobbers the host process's stdout/stderr.
     """
 
     def __init__(
@@ -360,14 +369,25 @@ class CliRunner:
         # valid fd from the redirected streams. The original streams
         # may themselves lack a fileno() (e.g. when CliRunner is used
         # inside pytest's capsys), so we fall back to -1.
-        def _safe_fileno(stream: t.IO[t.Any]) -> int:
+        #
+        # We expose a duplicate (``os.dup``) rather than the underlying
+        # fd directly. This is the same isolation pytest's ``capfd``
+        # uses: if the invoked command performs ``os.dup2`` over the fd
+        # returned by ``fileno()`` it only redirects our private copy,
+        # not the original (which an outer harness like pytest may be
+        # capturing). The duplicate is closed when isolation exits.
+        def _safe_dup_fileno(stream: t.IO[t.Any]) -> int:
             try:
-                return stream.fileno()
+                fd = stream.fileno()
             except (AttributeError, io.UnsupportedOperation):
                 return -1
+            try:
+                return os.dup(fd)
+            except OSError:
+                return -1
 
-        old_stdout_fd = _safe_fileno(old_stdout)
-        old_stderr_fd = _safe_fileno(old_stderr)
+        old_stdout_fd = _safe_dup_fileno(old_stdout)
+        old_stderr_fd = _safe_dup_fileno(old_stderr)
 
         if self.echo_stdin:
             bytes_input = echo_input = t.cast(
@@ -514,6 +534,12 @@ class CliRunner:
             sys.stdout = old_stdout
             sys.stderr = old_stderr
             sys.stdin = old_stdin
+            for dup_fd in (old_stdout_fd, old_stderr_fd):
+                if dup_fd >= 0:
+                    try:
+                        os.close(dup_fd)
+                    except OSError:
+                        pass
             termui.visible_prompt_func = old_visible_prompt_func
             termui.hidden_prompt_func = old_hidden_prompt_func
             termui._getchar = old__getchar_func
