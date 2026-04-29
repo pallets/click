@@ -2356,6 +2356,11 @@ class Parameter:
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
 
+                # A string from default_map must be split for multi-value
+                # parameters, matching value_from_envvar behavior.
+                if isinstance(value, str) and self.nargs != 1:
+                    value = self.type.split_envvar_value(value)
+
         if value is UNSET:
             default_value = self.get_default(ctx)
             if default_value is not UNSET:

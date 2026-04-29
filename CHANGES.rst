@@ -17,6 +17,9 @@ Unreleased
         ``dict[str, Any]``.
     -   :class:`CompositeParamType` and the number-range base are now
         generic with abstract methods.
+-   Split string values from ``default_map`` for parameters with ``nargs > 1``
+    or :class:`Tuple` type, matching environment variable behavior.
+    :issue:`2745` :pr:`3364`
 
 Version 8.3.3
 -------------
