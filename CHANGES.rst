@@ -29,27 +29,6 @@ Unreleased
 Version 8.3.3
 -------------
 
-Unreleased
-
--   :class:`ParamType` typing improvements. :pr:`3371`
-
-    -   :class:`ParamType` is now a generic abstract base class,
-        parameterized by its converted value type.
-    -   :meth:`~ParamType.convert` return types are narrowed on all
-        concrete types (``str`` for :class:`STRING`, ``int`` for
-        :class:`INT`, etc.).
-    -   :meth:`~ParamType.to_info_dict` returns specific
-        :class:`~typing.TypedDict` subclasses instead of
-        ``dict[str, Any]``.
-    -   :class:`CompositeParamType` and the number-range base are now
-        generic with abstract methods.
--   Split string values from ``default_map`` for parameters with ``nargs > 1``
-    or :class:`Tuple` type, matching environment variable behavior.
-    :issue:`2745` :pr:`3364`
-
-Version 8.3.3
--------------
-
 Released 2026-04-20
 
 -   Use :func:`shlex.split` to split pager and editor commands into ``argv``
