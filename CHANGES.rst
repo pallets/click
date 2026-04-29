@@ -47,6 +47,8 @@ Unreleased
     ``shell=True``. :issue:`3164` :pr:`3186`
 -   Fix Fish shell completion errors when option help text contains newlines.
     :issue:`3043`
+-   Add :class:`NoSuchCommand` exception with suggestions for misspelled
+    commands. :issue:`3107` :pr:`3228`
 
 Version 8.3.3
 -------------
