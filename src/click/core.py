@@ -2149,7 +2149,7 @@ class Parameter:
     def __init__(
         self,
         param_decls: cabc.Sequence[str] | None = None,
-        type: types.ParamType | t.Any | None = None,
+        type: types.ParamType[t.Any] | t.Any | None = None,
         required: bool = False,
         # XXX The default historically embed two concepts:
         # - the declaration of a Parameter object carrying the default (handy to
@@ -2181,7 +2181,7 @@ class Parameter:
         self.name, self.opts, self.secondary_opts = self._parse_decls(
             param_decls or (), expose_value
         )
-        self.type: types.ParamType = types.convert_type(type, default)
+        self.type: types.ParamType[t.Any] = types.convert_type(type, default)
 
         # Default nargs to what the type tells us if we have that
         # information available.
@@ -2648,7 +2648,7 @@ class Parameter:
         """Return a list of completions for the incomplete value. If a
         ``shell_complete`` function was given during init, it is used.
         Otherwise, the :attr:`type`
-        :meth:`~click.types.ParamType.shell_complete` function is used.
+        :meth:`~click.types.ParamType[t.Any].shell_complete` function is used.
 
         :param ctx: Invocation context for this command.
         :param incomplete: Value being completed. May be empty.
@@ -2749,7 +2749,7 @@ class Option(Parameter):
         multiple: bool = False,
         count: bool = False,
         allow_from_autoenv: bool = True,
-        type: types.ParamType | t.Any | None = None,
+        type: types.ParamType[t.Any] | t.Any | None = None,
         help: str | None = None,
         hidden: bool = False,
         show_choices: bool = True,
@@ -2825,7 +2825,7 @@ class Option(Parameter):
             if type is None:
                 # A flag without a flag_value is a boolean flag.
                 if flag_value is UNSET:
-                    self.type: types.ParamType = types.BoolParamType()
+                    self.type: types.ParamType[t.Any] = types.BoolParamType()
                 # If the flag value is a boolean, use BoolParamType.
                 elif isinstance(flag_value, bool):
                     self.type = types.BoolParamType()
