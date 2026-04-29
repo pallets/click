@@ -17,6 +17,15 @@ Unreleased
         ``dict[str, Any]``.
     -   :class:`CompositeParamType` and the number-range base are now
         generic with abstract methods.
+-   :class:`Parameter` typing improvements. :pr:`2805`
+
+    -   :class:`Parameter` is now an abstract base class, making explicit
+        that it cannot be instantiated directly.
+    -   :attr:`Parameter.name` is now ``str`` instead of ``str | None``.
+        When ``expose_value=False``, the name is set to ``""`` instead
+        of ``None``.
+    -   The ``ctx`` parameter of :meth:`Parameter.get_error_hint` is now
+        typed as ``Context | None``, matching the runtime behavior.
 -   Split string values from ``default_map`` for parameters with ``nargs > 1``
     or :class:`Tuple` type, matching environment variable behavior.
     :issue:`2745` :pr:`3364`
