@@ -1,3 +1,5 @@
+import pytest
+
 import click
 
 
@@ -244,6 +246,71 @@ def test_formatting_usage_custom_help(runner):
         "",
         "Error: Missing argument 'ARG'.",
     ]
+
+
+@pytest.mark.parametrize(
+    ("help_names", "extra_options", "expected_hint"),
+    [
+        # No shadowing, longest name is picked.
+        (["-h", "--help"], [], "Try 'cli foo --help' for help."),
+        # -h shadowed by a subcommand option, --help still available.
+        (
+            ["-h", "--help"],
+            [click.option("--host", "-h")],
+            "Try 'cli foo --help' for help.",
+        ),
+        # --help shadowed, -h still available.
+        (
+            ["-h", "--help"],
+            [click.option("--help-file", "--help")],
+            "Try 'cli foo -h' for help.",
+        ),
+        # Both names shadowed: no hint line at all.
+        (
+            ["-h", "--help"],
+            [click.option("--host", "-h"), click.option("--help-file", "--help")],
+            None,
+        ),
+        # Single custom help name, not shadowed.
+        (["--man"], [], "Try 'cli foo --man' for help."),
+        # Three help names, one shadowed, longest survivor picked.
+        (
+            ["-h", "--help", "--info"],
+            [click.option("--info-file", "--info")],
+            "Try 'cli foo --help' for help.",
+        ),
+    ],
+)
+def test_formatting_usage_error_help_hint(
+    runner, help_names, extra_options, expected_hint
+):
+    """The error hint should only show non-shadowed help option names,
+    picking the longest for readability.
+
+    https://github.com/pallets/click/issues/2790
+    """
+
+    @click.group(context_settings={"help_option_names": help_names})
+    def cli():
+        pass
+
+    @cli.command()
+    @click.argument("required_arg")
+    def foo(required_arg, **kwargs):
+        pass
+
+    for option in extra_options:
+        option(foo)
+
+    result = runner.invoke(cli, ["foo"])
+    assert result.exit_code == 2
+    lines = result.output.splitlines()
+    assert lines[0] == "Usage: cli foo [OPTIONS] REQUIRED_ARG"
+    assert lines[-1] == "Error: Missing argument 'REQUIRED_ARG'."
+    if expected_hint is not None:
+        assert expected_hint in lines
+    else:
+        assert not any(line.startswith("Try ") for line in lines)
 
 
 def test_formatting_custom_type_metavar(runner):

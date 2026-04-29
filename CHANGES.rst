@@ -25,6 +25,10 @@ Unreleased
     Python objects like classes and enum members are passed through unchanged
     instead of being stringified. Previously ``type=click.UNPROCESSED`` had
     to be set explicitly. :issue:`2012` :pr:`3363`
+-   The error hint now uses :meth:`Command.get_help_option_names` to pick
+    non-shadowed help option names, so ``Try '... -h'`` no longer points to a
+    subcommand option that shadows ``-h``. All surviving names are shown
+    (``-h/--help``). :issue:`2790` :pr:`3208`
 
 Version 8.3.3
 -------------
