@@ -70,6 +70,12 @@ The resulting value from an option will always be one of the originally passed c
 regardless of `case_sensitive`.
 ```
 
+```{versionchanged} 8.4.0
+{class}`Choice` is now generic. Parameterize it with the choice value type
+({class}`!Choice[HashType]` for an enum, {class}`!Choice[str]` for plain
+strings) to enable type-checked consumers.
+```
+
 (ranges)=
 
 ### Int and Float Ranges
@@ -153,16 +159,21 @@ To implement a custom type, you need to subclass the {class}`ParamType` class. F
 function that fails with a `ValueError` is also supported, though discouraged. Override the {meth}`~ParamType.convert`
 method to convert the value from a string to the correct type.
 
+{class}`ParamType` is generic in the converted value type: parameterize it with
+the type returned by `convert` so that consumers (and type checkers) can rely
+on the narrowed return type.
+
 The following code implements an integer type that accepts hex and octal numbers in addition to normal integers, and
 converts them into regular integers.
 
 ```python
 import click
 
-class BasedIntParamType(click.ParamType):
+
+class BasedIntParamType(click.ParamType[int]):
     name = "integer"
 
-    def convert(self, value, param, ctx):
+    def convert(self, value, param, ctx) -> int:
         if isinstance(value, int):
             return value
 
@@ -175,6 +186,7 @@ class BasedIntParamType(click.ParamType):
         except ValueError:
             self.fail(f"{value!r} is not a valid integer", param, ctx)
 
+
 BASED_INT = BasedIntParamType()
 ```
 
@@ -184,3 +196,10 @@ conversion fails. The `param` and `ctx` arguments may be `None` in some cases su
 Values from user input or the command line will be strings, but default values and Python arguments may already be the
 correct type. The custom type should check at the top if the value is already valid and pass it through to support those
 cases.
+
+```{versionchanged} 8.4.0
+{class}`ParamType` is now a generic abstract base class. Parameterize it with
+the converted value type ({class}`!ParamType[int]` for an integer-returning
+type) so that {meth}`~ParamType.convert` and downstream consumers carry the
+narrowed type.
+```

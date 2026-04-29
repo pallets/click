@@ -351,6 +351,35 @@ And in action:
     })
 ```
 
+### Multi-value parameters
+
+When a `default_map` value is a string for a parameter with `nargs > 1` or a
+{class}`Tuple` type, the string is split automatically, the same way an
+environment variable would be. By default, values are split on whitespace. See
+[Multiple Options from Environment
+Values](options.md#multiple-options-from-environment-values) for details on
+splitting behavior.
+
+```python
+default_map = {
+    "draw": {
+        "point": "3 4",  # split into ("3", "4") for nargs=2
+        "color": "red",  # passed as-is for nargs=1
+    }
+}
+```
+
+You can also pass an already-structured tuple or list, which will be used as-is
+without splitting:
+
+```python
+default_map = {
+    "draw": {
+        "point": (3, 4),  # used directly
+    }
+}
+```
+
 ## Context Defaults
 
 ```{versionadded} 2.0

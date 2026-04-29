@@ -520,7 +520,7 @@ def test_boolean_flag_envvar(runner, envvar_name, envvar_value, expected):
     "value",
     (
         # Extra spaces inside the value.
-        "tr ue",
+        "tr ue",  # codespell:ignore ue
         "fa lse",
         # Numbers.
         "10",
@@ -999,13 +999,13 @@ def test_argument_custom_class(runner):
             return "I am a default"
 
     @click.command()
-    @click.argument("testarg", cls=CustomArgument, default="you wont see me")
+    @click.argument("testarg", cls=CustomArgument, default="you won't see me")
     def cmd(testarg):
         click.echo(testarg)
 
     result = runner.invoke(cmd)
     assert "I am a default" in result.output
-    assert "you wont see me" not in result.output
+    assert "you won't see me" not in result.output
 
 
 def test_option_custom_class(runner):
@@ -1015,13 +1015,13 @@ def test_option_custom_class(runner):
             return ("--help", "I am a help text")
 
     @click.command()
-    @click.option("--testoption", cls=CustomOption, help="you wont see me")
+    @click.option("--testoption", cls=CustomOption, help="you won't see me")
     def cmd(testoption):
         click.echo(testoption)
 
     result = runner.invoke(cmd, ["--help"])
     assert "I am a help text" in result.output
-    assert "you wont see me" not in result.output
+    assert "you won't see me" not in result.output
 
 
 @pytest.mark.parametrize(
@@ -1068,8 +1068,8 @@ def test_option_custom_class_reusable(runner):
             """a dumb override of a help text for testing"""
             return ("--help", "I am a help text")
 
-    # Assign to a variable to re-use the decorator.
-    testoption = click.option("--testoption", cls=CustomOption, help="you wont see me")
+    # Assign to a variable to reuse the decorator.
+    testoption = click.option("--testoption", cls=CustomOption, help="you won't see me")
 
     @click.command()
     @testoption
@@ -1085,7 +1085,7 @@ def test_option_custom_class_reusable(runner):
     for cmd in (cmd1, cmd2):
         result = runner.invoke(cmd, ["--help"])
         assert "I am a help text" in result.output
-        assert "you wont see me" not in result.output
+        assert "you won't see me" not in result.output
 
 
 @pytest.mark.parametrize("custom_class", (True, False))
