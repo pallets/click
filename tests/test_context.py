@@ -181,6 +181,116 @@ def test_make_pass_meta_decorator_doc():
     assert "passes the test value" in pass_value.__doc__
 
 
+def test_hiding_of_unset_sentinel_in_callbacks():
+    """Fix: https://github.com/pallets/click/issues/3136"""
+
+    def inspect_other_params(ctx, param, value):
+        """A callback that inspects other parameters' values via the context."""
+        assert click.get_current_context() is ctx
+        click.echo(f"callback.my_arg: {ctx.params.get('my_arg')!r}")
+        click.echo(f"callback.my_opt: {ctx.params.get('my_opt')!r}")
+        click.echo(f"callback.my_callback: {ctx.params.get('my_callback')!r}")
+
+        click.echo(f"callback.param: {param!r}")
+        click.echo(f"callback.value: {value!r}")
+
+        return "hard-coded"
+
+    class ParameterInternalCheck(Option):
+        """An option that checks internal state during processing."""
+
+        def process_value(self, ctx, value):
+            """Check that UNSET values are hidden as None in ctx.params within the
+            callback, and then properly restored afterwards.
+            """
+            assert click.get_current_context() is ctx
+            click.echo(f"before_process.my_arg: {ctx.params.get('my_arg')!r}")
+            click.echo(f"before_process.my_opt: {ctx.params.get('my_opt')!r}")
+            click.echo(f"before_process.my_callback: {ctx.params.get('my_callback')!r}")
+
+            value = super().process_value(ctx, value)
+
+            assert click.get_current_context() is ctx
+            click.echo(f"after_process.my_arg: {ctx.params.get('my_arg')!r}")
+            click.echo(f"after_process.my_opt: {ctx.params.get('my_opt')!r}")
+            click.echo(f"after_process.my_callback: {ctx.params.get('my_callback')!r}")
+
+            return value
+
+    def change_other_params(ctx, param, value):
+        """A callback that modifies other parameters' values via the context."""
+        assert click.get_current_context() is ctx
+        click.echo(f"before_change.my_arg: {ctx.params.get('my_arg')!r}")
+        click.echo(f"before_change.my_opt: {ctx.params.get('my_opt')!r}")
+        click.echo(f"before_change.my_callback: {ctx.params.get('my_callback')!r}")
+
+        click.echo(f"before_change.param: {param!r}")
+        click.echo(f"before_change.value: {value!r}")
+
+        ctx.params["my_arg"] = "changed"
+        # Reset to None parameters that where not UNSET to see they are not forced back
+        # to UNSET.
+        ctx.params["my_callback"] = None
+
+        return value
+
+    @click.command
+    @click.argument("my-arg", required=False)
+    @click.option("--my-opt")
+    @click.option("--my-callback", callback=inspect_other_params)
+    @click.option("--check-internal", cls=ParameterInternalCheck)
+    @click.option(
+        "--modifying-callback", cls=ParameterInternalCheck, callback=change_other_params
+    )
+    @click.pass_context
+    def cli(ctx, my_arg, my_opt, my_callback, check_internal, modifying_callback):
+        click.echo(f"cli.my_arg: {my_arg!r}")
+        click.echo(f"cli.my_opt: {my_opt!r}")
+        click.echo(f"cli.my_callback: {my_callback!r}")
+        click.echo(f"cli.check_internal: {check_internal!r}")
+        click.echo(f"cli.modifying_callback: {modifying_callback!r}")
+
+    runner = click.testing.CliRunner()
+    result = runner.invoke(cli)
+
+    assert result.stdout.splitlines() == [
+        # Values of other parameters within the callback are None, not UNSET.
+        "callback.my_arg: None",
+        "callback.my_opt: None",
+        "callback.my_callback: None",
+        "callback.param: <Option my_callback>",
+        "callback.value: None",
+        # Previous UNSET values were not altered by the callback.
+        "before_process.my_arg: Sentinel.UNSET",
+        "before_process.my_opt: Sentinel.UNSET",
+        "before_process.my_callback: 'hard-coded'",
+        "after_process.my_arg: Sentinel.UNSET",
+        "after_process.my_opt: Sentinel.UNSET",
+        "after_process.my_callback: 'hard-coded'",
+        # Changes on other parameters within the callback are restored afterwards.
+        "before_process.my_arg: Sentinel.UNSET",
+        "before_process.my_opt: Sentinel.UNSET",
+        "before_process.my_callback: 'hard-coded'",
+        "before_change.my_arg: None",
+        "before_change.my_opt: None",
+        "before_change.my_callback: 'hard-coded'",
+        "before_change.param: <ParameterInternalCheck modifying_callback>",
+        "before_change.value: None",
+        "after_process.my_arg: 'changed'",
+        "after_process.my_opt: Sentinel.UNSET",
+        "after_process.my_callback: None",
+        # Unset values within the main command are UNSET, but hidden as None.
+        "cli.my_arg: 'changed'",
+        "cli.my_opt: None",
+        "cli.my_callback: None",
+        "cli.check_internal: None",
+        "cli.modifying_callback: None",
+    ]
+    assert not result.stderr
+    assert not result.exception
+    assert result.exit_code == 0
+
+
 def test_context_pushing():
     rv = []
 

@@ -7,17 +7,19 @@ name: Lock inactive closed issues
 on:
   schedule:
     - cron: '0 0 * * *'
-permissions:
-  issues: write
-  pull-requests: write
-  discussions: write
+permissions: {}
 concurrency:
   group: lock
+  cancel-in-progress: true
 jobs:
   lock:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      discussions: write
     steps:
-      - uses: dessant/lock-threads@1bf7ec25051fe7c00bdd17e6a7cf3d7bfb7dc771 # v5.0.1
+      - uses: dessant/lock-threads@7266a7ce5c1df01b1c6db85bf8cd86c737dadbe7 # v6.0.0
         with:
           issue-inactive-days: 14
           pr-inactive-days: 14

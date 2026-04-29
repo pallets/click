@@ -1,6 +1,6 @@
 [project]
 name = "click"
-version = "8.3.dev"
+version = "8.3.3"
 description = "Composable command line interface toolkit"
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -51,6 +51,11 @@ pre-commit = [
 tests = [
     "pytest",
 ]
+tests-random = [
+    "pytest",
+    "pytest-randomly",
+    "pytest-xdist",
+]
 typing = [
     "mypy",
     "pyright",
@@ -83,6 +88,10 @@ testpaths = ["tests"]
 filterwarnings = [
     "error",
 ]
+markers = [
+    "stress: high-iteration stress tests for race conditions (deselect with '-m \"not stress\"')",
+]
+addopts = "-m 'not stress'"
 
 [tool.coverage.run]
 branch = true
@@ -132,9 +141,6 @@ select = [
     "UP",  # pyupgrade
     "W",  # pycodestyle warning
 ]
-ignore = [
-    "UP038",  # keep isinstance tuple
-]
 
 [tool.ruff.lint.isort]
 force-single-line = true
@@ -145,6 +151,7 @@ env_list = [
     "py3.14", "py3.13", "py3.12", "py3.11", "py3.10",
     "py3.14t",
     "pypy3.11",
+    "stress-py3.14", "stress-py3.14t",
     "style",
     "typing",
     "docs",
@@ -163,6 +170,25 @@ commands = [[
     {replace = "posargs", default = [], extend = true},
 ]]
 
+[tool.tox.env.random]
+description = "randomized parallel tests to detect test pollution and race conditions"
+dependency_groups = ["tests-random"]
+commands = [[
+    "pytest", "-v", "--tb=short", "--numprocesses=auto",
+    "--basetemp={env_tmp_dir}",
+    {replace = "posargs", default = [], extend = true},
+]]
+
+[tool.tox.env.stress]
+description = "stress tests for stream lifecycle race conditions"
+commands = [[
+    "pytest", "-v", "--tb=short", "-x", "-m", "stress",
+    "--basetemp={env_tmp_dir}",
+    "--override-ini=addopts=",
+    "tests/test_stream_lifecycle.py",
+    {replace = "posargs", default = [], extend = true},
+]]
+
 [tool.tox.env.style]
 description = "run all pre-commit hooks on all files"
 dependency_groups = ["pre-commit"]
@@ -174,6 +200,7 @@ description = "run static type checkers"
 dependency_groups = ["typing"]
 commands = [
     ["mypy"],
+    ["pyright", "--ignoreexternal", "--verifytypes", "click"],
 ]
 
 [tool.tox.env.docs]

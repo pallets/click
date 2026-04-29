@@ -1,11 +1,15 @@
 import platform
+import shlex
 import tempfile
 import time
+from unittest.mock import patch
 
 import pytest
 
 import click._termui_impl
 from click._compat import WIN
+from click._termui_impl import Editor
+from click._utils import UNSET
 from click.exceptions import BadParameter
 from click.exceptions import MissingParameter
 
@@ -386,15 +390,240 @@ def test_fast_edit(runner):
 @pytest.mark.skipif(platform.system() == "Windows", reason="No sed on Windows.")
 def test_edit(runner):
     with tempfile.NamedTemporaryFile(mode="w") as named_tempfile:
-        named_tempfile.write("a\nb")
+        named_tempfile.write("a\nb\n")
         named_tempfile.flush()
 
         result = click.edit(filename=named_tempfile.name, editor="sed -i~ 's/$/Test/'")
         assert result is None
 
-        # We need ot reopen the file as it becomes unreadable after the edit.
+        # We need to reopen the file as it becomes unreadable after the edit.
         with open(named_tempfile.name) as reopened_file:
-            assert reopened_file.read() == "aTest\nbTest"
+            # POSIX says that when sed writes a pattern space to output then it
+            # is immediately followed by a newline and so the expected result
+            # should contain the newline.  However, some sed implementations
+            # (e.g. GNU sed) does not terminate the last line in the output
+            # with the newline in a case the input data missed newline at the
+            # end of last line.  Hence the input data (see above) should be
+            # terminated by newline too.
+            assert reopened_file.read() == "aTest\nbTest\n"
+
+
+@pytest.mark.parametrize(
+    ("editor_cmd", "filenames", "expected_args"),
+    [
+        pytest.param(
+            "myeditor --wait --flag",
+            ["file1.txt", "file2.txt"],
+            ["myeditor", "--wait", "--flag", "file1.txt", "file2.txt"],
+            id="editor with args",
+        ),
+        pytest.param(
+            "vi",
+            ['file"; rm -rf / ; echo "'],
+            ["vi", 'file"; rm -rf / ; echo "'],
+            id="shell metacharacters in filename",
+        ),
+        # Issue #1026: editor path with spaces must be quoted.
+        pytest.param(
+            '"C:\\Program Files\\Sublime Text 3\\sublime_text.exe"',
+            ["f.txt"],
+            ["C:\\Program Files\\Sublime Text 3\\sublime_text.exe", "f.txt"],
+            id="quoted windows path with spaces",
+        ),
+        # PR #1477: pager/editor command with flags, like ``less -FRSX``.
+        pytest.param(
+            "less -FRSX",
+            ["f.txt"],
+            ["less", "-FRSX", "f.txt"],
+            id="command with flags",
+        ),
+        # Issue #1026: quoted command with ``--wait`` flag.
+        pytest.param(
+            '"my command" --option value arg',
+            ["f.txt"],
+            ["my command", "--option", "value", "arg", "f.txt"],
+            id="quoted command with args",
+        ),
+        # PR #1477: unquoted unix path.
+        pytest.param(
+            "/usr/bin/vim",
+            ["f.txt"],
+            ["/usr/bin/vim", "f.txt"],
+            id="unix absolute path",
+        ),
+        # Issue #1026: macOS path with escaped space.
+        pytest.param(
+            "/Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl",
+            ["f.txt"],
+            ["/Applications/Sublime Text.app/Contents/SharedSupport/bin/subl", "f.txt"],
+            id="escaped space in unix path",
+        ),
+        pytest.param(
+            "  vim  ",
+            ["f.txt"],
+            ["vim", "f.txt"],
+            id="leading and trailing whitespace",
+        ),
+        pytest.param(
+            "vim\tf.txt",
+            [],
+            ["vim", "f.txt"],
+            id="tab-separated tokens",
+        ),
+        pytest.param(
+            "'/Applications/My Editor.app/Contents/MacOS/editor'",
+            ["f.txt"],
+            ["/Applications/My Editor.app/Contents/MacOS/editor", "f.txt"],
+            id="single-quoted path with spaces",
+        ),
+        pytest.param(
+            '"my editor" --wait --new-window',
+            ["file 1.txt", "file 2.txt"],
+            ["my editor", "--wait", "--new-window", "file 1.txt", "file 2.txt"],
+            id="quoted editor with multiple flags and filenames with spaces",
+        ),
+        pytest.param(
+            "vim -u NONE -N",
+            ["f.txt"],
+            ["vim", "-u", "NONE", "-N", "f.txt"],
+            id="multiple short flags",
+        ),
+        pytest.param(
+            "editor",
+            ['file"name.txt'],
+            ["editor", 'file"name.txt'],
+            id="filename with double quote",
+        ),
+        pytest.param(
+            "editor",
+            ["file'name.txt"],
+            ["editor", "file'name.txt"],
+            id="filename with single quote",
+        ),
+    ],
+)
+def test_editor_path_normalization(editor_cmd, filenames, expected_args):
+    with patch("subprocess.Popen") as mock_popen:
+        mock_popen.return_value.wait.return_value = 0
+        Editor(editor=editor_cmd).edit_files(filenames)
+
+        mock_popen.assert_called_once()
+        args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
+        assert args == expected_args
+        assert mock_popen.call_args[1].get("shell") is None
+
+
+@pytest.mark.skipif(not WIN, reason="Windows-specific editor paths")
+@pytest.mark.parametrize(
+    ("editor_cmd", "expected_cmd"),
+    [
+        pytest.param(
+            "notepad",
+            ["notepad"],
+            id="plain notepad",
+        ),
+        pytest.param(
+            '"C:\\Program Files\\Sublime Text 3\\sublime_text.exe" --wait',
+            ["C:\\Program Files\\Sublime Text 3\\sublime_text.exe", "--wait"],
+            id="quoted path with flag",
+        ),
+    ],
+)
+def test_editor_windows_path_normalization(editor_cmd, expected_cmd):
+    """Windows-specific tests: verify ``Popen`` receives unquoted paths that
+    ``subprocess.list2cmdline`` can re-quote for ``CreateProcess``."""
+    with patch("subprocess.Popen") as mock_popen:
+        mock_popen.return_value.wait.return_value = 0
+        Editor(editor=editor_cmd).edit_files(["f.txt"])
+
+        args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
+        assert args == expected_cmd + ["f.txt"]
+        assert mock_popen.call_args[1].get("shell") is None
+
+
+def test_editor_env_passed_through():
+    with patch("subprocess.Popen") as mock_popen:
+        mock_popen.return_value.wait.return_value = 0
+        Editor(editor="vi", env={"MY_VAR": "1"}).edit_files(["f.txt"])
+
+        env = mock_popen.call_args[1].get("env")
+        assert env is not None
+        assert env["MY_VAR"] == "1"
+
+
+def test_editor_failure_exception():
+    with patch("subprocess.Popen") as mock_popen:
+        mock_popen.return_value.wait.return_value = 1
+        with pytest.raises(click.ClickException, match="Editing failed"):
+            Editor(editor="vi").edit_files(["f.txt"])
+
+
+def test_editor_nonexistent_exception():
+    with patch("subprocess.Popen", side_effect=OSError("not found")):
+        with pytest.raises(click.ClickException, match="not found"):
+            Editor(editor="nonexistent").edit_files(["f.txt"])
+
+
+@pytest.mark.parametrize(
+    ("pager_env", "expected_parts"),
+    [
+        # Simple commands.
+        pytest.param("cat", ["cat"], id="simple command"),
+        pytest.param("less", ["less"], id="less"),
+        pytest.param("less -FRSX", ["less", "-FRSX"], id="command with flags"),
+        # Whitespace handling.
+        pytest.param("", [], id="empty string"),
+        pytest.param("   ", [], id="whitespace only"),
+        pytest.param("  less  ", ["less"], id="leading and trailing spaces"),
+        pytest.param("less\t-R", ["less", "-R"], id="tab as separator"),
+        # Quoted Windows paths: quotes are stripped in POSIX mode (the
+        # default), preserving backslashes inside quoted tokens (issue #1026).
+        pytest.param(
+            '"C:\\Program Files\\Git\\usr\\bin\\less.exe"',
+            ["C:\\Program Files\\Git\\usr\\bin\\less.exe"],
+            id="quoted windows path with spaces",
+        ),
+        pytest.param(
+            '"C:\\Program Files\\Git\\usr\\bin\\less.exe" -R',
+            ["C:\\Program Files\\Git\\usr\\bin\\less.exe", "-R"],
+            id="quoted windows path with flag",
+        ),
+        # Single-quoted path.
+        pytest.param(
+            "'/usr/local/bin/my pager'",
+            ["/usr/local/bin/my pager"],
+            id="single-quoted path with spaces",
+        ),
+        # Unix paths.
+        pytest.param("/usr/bin/less", ["/usr/bin/less"], id="unix absolute path"),
+        pytest.param(
+            "/usr/bin/my\\ pager",
+            ["/usr/bin/my pager"],
+            id="escaped space in unix path",
+        ),
+        # PR #1477: POSIX mode (the default) eats unquoted backslashes.
+        # On Windows, users must quote paths that contain backslashes.
+        pytest.param(
+            "C:\\path\\to\\exe /test other\\path",
+            ["C:pathtoexe", "/test", "otherpath"],
+            id="unquoted backslashes eaten in POSIX mode",
+        ),
+    ],
+)
+def test_pager_shlex_split(pager_env, expected_parts):
+    """Verify shlex.split produces the expected argv for PAGER values.
+
+    Tests the splitting logic used by :func:`click._termui_impl.pager` to
+    turn the ``PAGER`` environment variable into an ``argv`` list. See
+    issue #1026, PR #1477, PR #1543, PR #2775.
+    """
+    assert shlex.split(pager_env) == expected_parts
+
+
+def test_editor_unclosed_quote():
+    """An unclosed quote in the editor command raises ValueError."""
+    with pytest.raises(ValueError, match="No closing quotation"):
+        Editor(editor='"unclosed').edit_files(["f.txt"])
 
 
 @pytest.mark.parametrize(
@@ -487,6 +716,58 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
     # is False
     result = runner.invoke(cmd, input="my-input", standalone_mode=False)
     assert "my-default-value" not in result.output
+
+
+@pytest.mark.parametrize(
+    ("show_default", "default", "user_input", "in_prompt", "not_in_prompt"),
+    [
+        # Regular string replaces the actual default in the prompt.
+        ("custom", "actual", "\n", "(custom)", "actual"),
+        # String with spaces.
+        ("custom label", "actual", "\n", "(custom label)", "actual"),
+        # Unicode characters.
+        ("∞", "0", "\n", "(∞)", None),
+        # Numeric default: custom string hides the number.
+        ("unlimited", 42, "\n", "(unlimited)", "42"),
+        # Explicit default=None: custom string still appears, must provide input.
+        ("computed at runtime", None, "value\n", "(computed at runtime)", None),
+        # No default kwarg at all (internal UNSET sentinel): same as None.
+        ("computed at runtime", UNSET, "value\n", "(computed at runtime)", None),
+        # Empty string is falsy: suppresses any default display.
+        ("", "actual", "\n", None, "actual"),
+    ],
+    ids=[
+        "simple-string",
+        "string-with-spaces",
+        "unicode",
+        "numeric-default",
+        "default-is-none",
+        "default-is-unset",
+        "empty-string-is-falsy",
+    ],
+)
+def test_string_show_default_in_prompt(
+    runner, show_default, default, user_input, in_prompt, not_in_prompt
+):
+    """When show_default is a string, the prompt should display that
+    string in parentheses instead of the actual default value,
+    matching the help text behavior. See pallets/click#2836."""
+
+    option_kwargs = {"show_default": show_default, "prompt": True}
+    if default is not UNSET:
+        option_kwargs["default"] = default
+
+    @click.command()
+    @click.option("--arg1", **option_kwargs)
+    def cmd(arg1):
+        click.echo(arg1)
+
+    result = runner.invoke(cmd, input=user_input, standalone_mode=False)
+    prompt_line = result.output.split("\n")[0]
+    if in_prompt is not None:
+        assert in_prompt in prompt_line
+    if not_in_prompt is not None:
+        assert not_in_prompt not in prompt_line
 
 
 REPEAT = object()
@@ -597,9 +878,13 @@ FLAG_VALUE_PROMPT_CASES = [
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "", True),
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "y", True),
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "n", False),
-    ({"prompt": True, "default": True, "flag_value": False}, [], "[y/N]", "", False),
-    ({"prompt": True, "default": True, "flag_value": False}, [], "[y/N]", "y", True),
-    ({"prompt": True, "default": True, "flag_value": False}, [], "[y/N]", "n", False),
+    # For boolean flags, default=True is a literal value, not a sentinel meaning
+    # "activate flag", so the prompt shows [Y/n] with default=True. See:
+    # https://github.com/pallets/click/issues/3111
+    # https://github.com/pallets/click/pull/3239
+    ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "", True),
+    ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "y", True),
+    ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "n", False),
     # default=False
     ({"prompt": True, "default": False, "flag_value": True}, [], "[y/N]", "", False),
     ({"prompt": True, "default": False, "flag_value": True}, [], "[y/N]", "y", True),

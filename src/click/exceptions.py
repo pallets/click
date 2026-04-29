@@ -78,8 +78,12 @@ class UsageError(ClickException):
             self.ctx is not None
             and self.ctx.command.get_help_option(self.ctx) is not None
         ):
+            help_names = self.ctx.command.get_help_option_names(self.ctx)
+            # Pick the longest name (like ``--help`` over ``-h``) for
+            # readability in error messages.
             hint = _("Try '{command} {option}' for help.").format(
-                command=self.ctx.command_path, option=self.ctx.help_option_names[0]
+                command=self.ctx.command_path,
+                option=max(help_names, key=len),
             )
             hint = f"{hint}\n"
         if self.ctx is not None:
@@ -125,7 +129,7 @@ class BadParameter(UsageError):
         if self.param_hint is not None:
             param_hint = self.param_hint
         elif self.param is not None:
-            param_hint = self.param.get_error_hint(self.ctx)  # type: ignore
+            param_hint = self.param.get_error_hint(self.ctx)
         else:
             return _("Invalid value: {message}").format(message=self.message)
 
@@ -161,7 +165,7 @@ class MissingParameter(BadParameter):
         if self.param_hint is not None:
             param_hint: cabc.Sequence[str] | str | None = self.param_hint
         elif self.param is not None:
-            param_hint = self.param.get_error_hint(self.ctx)  # type: ignore
+            param_hint = self.param.get_error_hint(self.ctx)
         else:
             param_hint = None
 

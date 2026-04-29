@@ -228,7 +228,7 @@ def test_file_surrogates(type, tmp_path):
 
     # - common case: �': No such file or directory
     # - special case: Illegal byte sequence
-    # The spacial case is seen with rootless Podman. The root cause is most
+    # The special case is seen with rootless Podman. The root cause is most
     # likely that the path is handled by a user-space program (FUSE).
     match = r"(�': No such file or directory|Illegal byte sequence)"
     with pytest.raises(click.BadParameter, match=match):

@@ -27,6 +27,7 @@ click.echo(json.dumps(rv))
 
 ALLOWED_IMPORTS = {
     "__future__",
+    "abc",
     "codecs",
     "collections",
     "collections.abc",
@@ -49,11 +50,20 @@ ALLOWED_IMPORTS = {
     "threading",
     "types",
     "typing",
+    "uuid",
     "weakref",
 }
 
 if WIN:
-    ALLOWED_IMPORTS.update(["ctypes", "ctypes.wintypes", "msvcrt", "time"])
+    ALLOWED_IMPORTS.update(
+        {
+            "ctypes",
+            "ctypes._layout",
+            "ctypes.wintypes",
+            "msvcrt",
+            "time",
+        }
+    )
 
 
 def test_light_imports():

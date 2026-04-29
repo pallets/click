@@ -79,6 +79,8 @@ How to Guides
 
    entry-points
    setuptools
+   standalone-apps
+   upgrade-guides
    support-multiple-versions
 
 Conceptual Guides
@@ -86,6 +88,7 @@ Conceptual Guides
 .. toctree::
    :maxdepth: 1
 
+   design-opinions
    why
    click-concepts
 
@@ -127,17 +130,16 @@ API Reference
 About Project
 ===============
 
-* This documentation is structured according to `Diataxis <https://diataxis.fr/>`_
+* This documentation is structured according to `Diataxis <https://diataxis.fr/>`_ and written with `MyST <https://myst-parser.readthedocs.io/en/latest/>`_
 
 * `Version Policy <https://palletsprojects.com/versions>`_
-
-* `Contributing <https://palletsprojects.com/contributing/>`_
 
 * `Donate <https://palletsprojects.com/donate>`_
 
 .. toctree::
    :maxdepth: 1
 
+   contributing
    contrib
    license
    changes

@@ -15,6 +15,7 @@ import click
 from click import Option
 from click import UNPROCESSED
 from click._utils import UNSET
+from click.testing import CliRunner
 
 
 def test_prefixes(runner):
@@ -222,6 +223,18 @@ def test_multiple_required(runner):
     ],
 )
 def test_good_defaults_for_multiple(runner, multiple, nargs, default, expected):
+    """Comprehensive check of default-value processing for options with
+    ``multiple=True`` and/or ``nargs > 1``.
+
+    .. hint::
+        An argument-specific equivalent is in
+        ``test_arguments.py::test_good_defaults_for_nargs``.
+
+        Smoke tests are in ``test_defaults.py``:
+        ``test_multiple_defaults`` (explicit ``type=FLOAT``)
+        and ``test_nargs_plus_multiple`` (``nargs=2``).
+    """
+
     @click.command()
     @click.option("-a", multiple=multiple, nargs=nargs, default=default)
     def cmd(a):
@@ -277,7 +290,6 @@ def test_good_defaults_for_multiple(runner, multiple, nargs, default, expected):
             None,
             "Error: Invalid value for '-a': Value must be an iterable.",
         ),
-        #
         (
             False,
             2,
@@ -508,7 +520,7 @@ def test_boolean_flag_envvar(runner, envvar_name, envvar_value, expected):
     "value",
     (
         # Extra spaces inside the value.
-        "tr ue",
+        "tr ue",  # codespell:ignore ue
         "fa lse",
         # Numbers.
         "10",
@@ -987,13 +999,13 @@ def test_argument_custom_class(runner):
             return "I am a default"
 
     @click.command()
-    @click.argument("testarg", cls=CustomArgument, default="you wont see me")
+    @click.argument("testarg", cls=CustomArgument, default="you won't see me")
     def cmd(testarg):
         click.echo(testarg)
 
     result = runner.invoke(cmd)
     assert "I am a default" in result.output
-    assert "you wont see me" not in result.output
+    assert "you won't see me" not in result.output
 
 
 def test_option_custom_class(runner):
@@ -1003,13 +1015,13 @@ def test_option_custom_class(runner):
             return ("--help", "I am a help text")
 
     @click.command()
-    @click.option("--testoption", cls=CustomOption, help="you wont see me")
+    @click.option("--testoption", cls=CustomOption, help="you won't see me")
     def cmd(testoption):
         click.echo(testoption)
 
     result = runner.invoke(cmd, ["--help"])
     assert "I am a help text" in result.output
-    assert "you wont see me" not in result.output
+    assert "you won't see me" not in result.output
 
 
 @pytest.mark.parametrize(
@@ -1056,8 +1068,8 @@ def test_option_custom_class_reusable(runner):
             """a dumb override of a help text for testing"""
             return ("--help", "I am a help text")
 
-    # Assign to a variable to re-use the decorator.
-    testoption = click.option("--testoption", cls=CustomOption, help="you wont see me")
+    # Assign to a variable to reuse the decorator.
+    testoption = click.option("--testoption", cls=CustomOption, help="you won't see me")
 
     @click.command()
     @testoption
@@ -1073,7 +1085,7 @@ def test_option_custom_class_reusable(runner):
     for cmd in (cmd1, cmd2):
         result = runner.invoke(cmd, ["--help"])
         assert "I am a help text" in result.output
-        assert "you wont see me" not in result.output
+        assert "you won't see me" not in result.output
 
 
 @pytest.mark.parametrize("custom_class", (True, False))
@@ -1247,12 +1259,49 @@ def test_show_default_string(runner):
     assert "[default: (unlimited)]" in message
 
 
-def test_show_default_with_empty_string(runner):
-    """When show_default is True and default is set to an empty string."""
-    opt = click.Option(["--limit"], default="", show_default=True)
+def test_string_show_default_shows_custom_string_in_prompt(runner):
+    @click.command()
+    @click.option(
+        "--arg1", show_default="custom", prompt=True, default="my-default-value"
+    )
+    def cmd(arg1):
+        pass
+
+    result = runner.invoke(cmd, input="my-input", standalone_mode=False)
+    assert "(custom)" in result.output
+    assert "my-default-value" not in result.output
+
+
+class _StrictEq:
+    """Object whose ``__eq__`` raises on string comparison (like semver.Version)."""
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            raise ValueError("cannot compare to string")
+        return NotImplemented
+
+    def __str__(self):
+        return "strict"
+
+
+@pytest.mark.parametrize(
+    ("default", "expected"),
+    [
+        ("", '[default: ""]'),
+        (_StrictEq(), "[default: strict]"),
+    ],
+    ids=["empty-string", "non-string-comparable-object"],
+)
+def test_show_default_with_empty_string(runner, default, expected):
+    """The empty-string check in help rendering must not break on objects
+    whose ``__eq__`` raises for string operands.
+
+    Regression test for https://github.com/pallets/click/issues/3298.
+    """
+    opt = click.Option(["--limit"], default=default, show_default=True)
     ctx = click.Context(click.Command("cli"))
     message = opt.get_help_record(ctx)[1]
-    assert '[default: ""]' in message
+    assert expected in message
 
 
 def test_do_not_show_no_default(runner):
@@ -1357,6 +1406,11 @@ def test_type_from_flag_value():
     assert param.type is click.INT
     param = click.Option(["-b", "x"], flag_value=8)
     assert param.type is click.INT
+    # Non-basic types auto-detect as UNPROCESSED to avoid stringification.
+    param = click.Option(["-c", "x"], flag_value=EngineType.OSS)
+    assert param.type is click.UNPROCESSED
+    param = click.Option(["-d", "x"], flag_value=frozenset())
+    assert param.type is click.UNPROCESSED
 
 
 @pytest.mark.parametrize(
@@ -1421,9 +1475,12 @@ def test_type_from_flag_value():
         ({"type": str, "flag_value": None}, [], None),
         ({"type": str, "flag_value": None}, ["--foo"], None),
         # Not passing --foo returns the default value as-is, in its Python type, then
-        # converted by the option type.
+        # converted by the option type. For boolean flags, default=True is a literal
+        # value, not a sentinel meaning "activate flag". So it is NOT substituted with
+        # flag_value. See: https://github.com/pallets/click/issues/3111
+        # https://github.com/pallets/click/pull/3239
         ({"type": bool, "default": True, "flag_value": True}, [], True),
-        ({"type": bool, "default": True, "flag_value": False}, [], False),
+        ({"type": bool, "default": True, "flag_value": False}, [], True),
         ({"type": bool, "default": False, "flag_value": True}, [], False),
         ({"type": bool, "default": False, "flag_value": False}, [], False),
         ({"type": bool, "default": None, "flag_value": True}, [], None),
@@ -1532,6 +1589,12 @@ def test_default_dual_option_callback(runner, default, args, expected):
 
     Reproduction of the issue reported in
     https://github.com/pallets/click/pull/3030#discussion_r2271571819
+
+    .. hint::
+        Similar to ``test_basic.py::test_flag_value_dual_options``.
+
+        ``test_defaults.py::test_shared_param_prefers_first_default``
+        is a smoke-test complement that exercises both default placements.
     """
 
     def _my_func(ctx, param, value):
@@ -2069,13 +2132,13 @@ class Class2:
             [],
             EngineType.OSS,
         ),
-        # Type is not specified and default to string, so the default value is
-        # returned as a string, even if it is a boolean. Also, defaults to the
-        # flag_value instead of the default value to support legacy behavior.
+        # Type is not specified. For string flag_value, STRING type is used and
+        # the default value is converted to string. For non-basic types (like
+        # enums), UNPROCESSED is used and values pass through unchanged.
         ({"flag_value": "1", "default": True}, [], "1"),
         ({"flag_value": "1", "default": 42}, [], "42"),
-        ({"flag_value": EngineType.OSS, "default": True}, [], "EngineType.OSS"),
-        ({"flag_value": EngineType.OSS, "default": 42}, [], "42"),
+        ({"flag_value": EngineType.OSS, "default": True}, [], EngineType.OSS),
+        ({"flag_value": EngineType.OSS, "default": 42}, [], 42),
         # See: the result is the same if we force the type to be str.
         ({"type": str, "flag_value": 1, "default": True}, [], "1"),
         ({"type": str, "flag_value": 1, "default": 42}, [], "42"),
@@ -2141,35 +2204,38 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
             ["--opt2"],
             EngineType.PRO,
         ),
-        # Check that passing exotic flag values like classes is supported, but are
-        # rendered to strings when the type is not specified.
+        # Exotic flag values like classes are passed through unchanged when no
+        # explicit type is given (UNPROCESSED is auto-detected).
+        # https://github.com/pallets/click/issues/2012
+        # https://github.com/pallets/click/issues/3121
         (
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},
             [],
-            re.compile(r"'<test_options.Class1 object at 0x[0-9A-Fa-f]+>'"),
+            Class1,
         ),
         (
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},
             ["--opt1"],
-            "<class 'test_options.Class1'>",
+            Class1,
         ),
         (
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},
             ["--opt2"],
-            "<class 'test_options.Class2'>",
+            Class2,
         ),
-        # Even the default is processed as a string.
+        # String and None defaults pass through unchanged.
         ({"flag_value": Class1, "default": "True"}, {"flag_value": Class2}, [], "True"),
         ({"flag_value": Class1, "default": None}, {"flag_value": Class2}, [], None),
         # To get the classes as-is, we need to specify the type as UNPROCESSED.
+        # https://github.com/pallets/click/issues/3121
         (
             {"flag_value": Class1, "type": UNPROCESSED, "default": True},
             {"flag_value": Class2, "type": UNPROCESSED},
             [],
-            re.compile(r"<test_options.Class1 object at 0x[0-9A-Fa-f]+>"),
+            Class1,
         ),
         (
             {"flag_value": Class1, "type": UNPROCESSED, "default": True},
@@ -2185,18 +2251,18 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
         ),
         # Setting the default to a class, an instance of the class is returned instead
         # of the class itself, because the default is allowed to be callable (and
-        # consummd). And this happens whatever the type is.
+        # consumed). And this happens whatever the type is.
         (
             {"flag_value": Class1, "default": Class1},
             {"flag_value": Class2},
             [],
-            re.compile(r"'<test_options.Class1 object at 0x[0-9A-Fa-f]+>'"),
+            re.compile(r"<test_options.Class1 object at 0x[0-9A-Fa-f]+>"),
         ),
         (
             {"flag_value": Class1, "default": Class2},
             {"flag_value": Class2},
             [],
-            re.compile(r"'<test_options.Class2 object at 0x[0-9A-Fa-f]+>'"),
+            re.compile(r"<test_options.Class2 object at 0x[0-9A-Fa-f]+>"),
         ),
         (
             {"flag_value": Class1, "type": UNPROCESSED, "default": Class1},
@@ -2250,6 +2316,212 @@ def test_custom_type_flag_value_dual_options(
         assert result.output == repr(expected)
 
 
+@pytest.mark.parametrize(
+    ("opt_params", "args", "expected"),
+    [
+        # Class flag_value with default=True and UNPROCESSED: the class itself is
+        # returned, NOT an instance. Regression test for
+        # https://github.com/pallets/click/issues/3121
+        ({"flag_value": Class1, "type": UNPROCESSED, "default": True}, [], Class1),
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": True},
+            ["--opt"],
+            Class1,
+        ),
+        # Without explicit UNPROCESSED, the class still passes through unchanged
+        # because UNPROCESSED is auto-detected for non-basic flag_value types.
+        ({"flag_value": Class1, "default": True}, [], Class1),
+        (
+            {"flag_value": Class1, "default": True},
+            ["--opt"],
+            Class1,
+        ),
+        # Explicit default=Class1 (not via default=True alignment): callable IS invoked,
+        # because the user explicitly set a callable as the default.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": Class1},
+            [],
+            re.compile(r"<test_options.Class1 object at 0x[0-9A-Fa-f]+>"),
+        ),
+        # Explicit default=Class2, different from flag_value=Class1.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": Class2},
+            [],
+            re.compile(r"<test_options.Class2 object at 0x[0-9A-Fa-f]+>"),
+        ),
+        # Non-callable flag_value with default=True: unaffected by the fix.
+        ({"flag_value": "upper", "default": True}, [], "upper"),
+        ({"flag_value": "upper", "default": True}, ["--opt"], "upper"),
+    ],
+)
+def test_callable_flag_value_not_instantiated(runner, opt_params, args, expected):
+    """A callable ``flag_value`` like a class, with ``default=True`` should not be
+    invoked when resolving the default. This is the single-option variant of
+    the regression reported in https://github.com/pallets/click/issues/3121.
+    """
+
+    @click.command()
+    @click.option("--opt", "value", **opt_params)
+    def cli(value):
+        click.echo(repr(value), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0
+    if isinstance(expected, re.Pattern):
+        assert re.match(expected, result.output)
+    else:
+        assert result.output == repr(expected)
+
+
+def test_callable_flag_value_default_map(runner):
+    """A ``default_map`` entry should override the auto-aligned callable ``flag_value``.
+
+    When ``default=True`` and ``flag_value=SomeClass``, the default is aligned to
+    ``SomeClass``. If ``default_map`` provides a different value (including a
+    callable), it should take precedence and callables from ``default_map`` should
+    still be invoked.
+    """
+
+    @click.command()
+    @click.option("--opt", "value", flag_value=Class1, type=UNPROCESSED, default=True)
+    def cli(value):
+        click.echo(repr(value), nl=False)
+
+    # Static value in default_map overrides the flag_value default.
+    result = runner.invoke(cli, [], default_map={"value": "from-map"})
+    assert result.output == repr("from-map")
+
+    # Callable in default_map is still invoked (not suppressed by the fix).
+    result = runner.invoke(cli, [], default_map={"value": lambda: "lazy-map"})
+    assert result.output == repr("lazy-map")
+
+    # CLI arg still wins over everything.
+    result = runner.invoke(cli, ["--opt"])
+    assert result.output == repr(Class1)
+
+
+def test_callable_flag_value_show_default(runner):
+    """Help text with ``show_default=True`` should display the class name, not
+    instantiate it.
+    """
+
+    @click.command()
+    @click.option(
+        "--opt",
+        "value",
+        flag_value=Class1,
+        type=UNPROCESSED,
+        default=True,
+        show_default=True,
+    )
+    def cli(value):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "Class1" in result.output
+    assert "object at 0x" not in result.output
+
+
+@pytest.mark.parametrize(
+    ("opt_params", "expected_default_attr", "expected_get_default"),
+    [
+        # default=True with callable flag_value: the attribute stays True
+        # (not eagerly aligned), but get_default() resolves to the flag_value.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": True},
+            True,
+            Class1,
+        ),
+        # default=True with non-callable flag_value: same lazy resolution.
+        (
+            {"flag_value": "upper", "default": True},
+            True,
+            "upper",
+        ),
+        # Explicit default (not True): attribute and get_default() agree.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED, "default": "custom"},
+            "custom",
+            "custom",
+        ),
+        # No default: attribute and get_default() are both UNSET.
+        (
+            {"flag_value": Class1, "type": UNPROCESSED},
+            UNSET,
+            UNSET,
+        ),
+    ],
+)
+def test_callable_flag_value_get_default_override(
+    runner, opt_params, expected_default_attr, expected_get_default
+):
+    """The ``default=True`` to ``flag_value`` alignment is resolved lazily in
+    ``get_default()`` rather than eagerly in ``__init__``. This means
+    ``option.default`` stays as ``True`` while ``get_default()`` returns the
+    ``flag_value``.
+
+    A user subclass that reads ``self.default`` directly (bypassing
+    ``get_default()``) will see ``True`` instead of the ``flag_value``.
+    """
+
+    @click.command()
+    @click.option("--opt", "value", **opt_params)
+    def cli(value):
+        pass
+
+    opt = cli.params[0]
+
+    # The raw attribute reflects what the user wrote.
+    assert opt.default is expected_default_attr
+
+    # get_default() resolves the alignment lazily.
+    ctx = click.Context(cli)
+    assert opt.get_default(ctx, call=True) is expected_get_default
+
+
+def test_flag_value_not_stringified_for_custom_types(runner):
+    """Non-basic flag_value types are passed through unchanged without
+    requiring ``type=click.UNPROCESSED``.
+
+    Regression test for https://github.com/pallets/click/issues/2012
+    """
+
+    @click.command()
+    @click.option("--cls1", "config_cls", flag_value=Class1, default=True)
+    @click.option("--cls2", "config_cls", flag_value=Class2)
+    def cli(config_cls):
+        click.echo(repr(config_cls), nl=False)
+
+    # Default activates --cls1 (default=True resolves to flag_value).
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0
+    assert result.output == repr(Class1)
+
+    result = runner.invoke(cli, ["--cls1"])
+    assert result.exit_code == 0
+    assert result.output == repr(Class1)
+
+    result = runner.invoke(cli, ["--cls2"])
+    assert result.exit_code == 0
+    assert result.output == repr(Class2)
+
+    # Enum flag_value without explicit type is also preserved.
+    @click.command()
+    @click.option("--oss", "engine", flag_value=EngineType.OSS, default=True)
+    @click.option("--pro", "engine", flag_value=EngineType.PRO)
+    def cli2(engine):
+        click.echo(repr(engine), nl=False)
+
+    result = runner.invoke(cli2, [])
+    assert result.exit_code == 0
+    assert result.output == repr(EngineType.OSS)
+
+    result = runner.invoke(cli2, ["--pro"])
+    assert result.exit_code == 0
+    assert result.output == repr(EngineType.PRO)
+
+
 def test_custom_type_frozenset_flag_value(runner):
     """Check that frozenset is correctly handled as a type, a flag value and a default.
 
@@ -2275,3 +2547,78 @@ def test_custom_type_frozenset_flag_value(runner):
     result = runner.invoke(rcli, ["--without-scm-ignore-files"])
     assert result.stdout == "frozenset()"
     assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    ("default", "args", "expected"),
+    [
+        # default=None: 3-state pattern (e.g. Flask --reload/--no-reload).
+        # https://github.com/pallets/click/issues/3024
+        (None, [], None),
+        (None, ["--flag"], True),
+        (None, ["--no-flag"], False),
+        # default=True: literal value, not substituted with flag_value.
+        # https://github.com/pallets/click/issues/3111
+        (True, [], True),
+        (True, ["--flag"], True),
+        (True, ["--no-flag"], False),
+    ],
+)
+def test_bool_flag_pair_default(runner, default, args, expected):
+    """Boolean flag pairs pass ``default`` through literally.
+
+    Ensures ``default=True`` is not replaced by ``flag_value`` for boolean
+    flags, and that ``default=None`` enables 3-state logic.
+    """
+
+    @click.command()
+    @click.option("--flag/--no-flag", default=default)
+    def cli(flag):
+        click.echo(repr(flag), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("flag_type", "args", "expect_output"),
+    [
+        (str, [], "Default\n"),
+        (str, ["--theflag"], "FlagValue\n"),
+        (str, ["--theflag", "value"], "value\n"),
+        (int, [], "0\n"),
+        (int, ["--theflag"], "1\n"),
+        (int, ["--theflag", "2"], "2\n"),
+    ],
+)
+def test_flag_value_on_option_with_zero_or_one_args(flag_type, args, expect_output):
+    """An option with flag_value and is_flag=False can be
+    omitted or used with 0 or 1 args.
+
+    Regression test for https://github.com/pallets/click/issues/3084
+    """
+    if flag_type is str:
+        flagopt = click.option(
+            "--theflag",
+            type=str,
+            is_flag=False,
+            flag_value="FlagValue",
+            default="Default",
+        )
+    elif flag_type is int:
+        flagopt = click.option(
+            "--theflag", type=int, is_flag=False, flag_value=1, default=0
+        )
+    else:
+        raise NotImplementedError(flag_type)
+
+    @click.command()
+    @flagopt
+    def cmd(theflag):
+        click.echo(theflag)
+
+    runner = CliRunner()
+    result = runner.invoke(cmd, args)
+    assert result.exit_code == 0
+    assert result.output == expect_output
