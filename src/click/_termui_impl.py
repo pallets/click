@@ -391,8 +391,11 @@ def _pager_contextmanager(
     if not isatty(sys.stdin) or not isatty(stdout):
         return _nullpager(stdout, color)
 
-    # Split and normalize the pager command into parts.
-    pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""), posix=False)
+    # Split using POSIX mode (the default) so that quote characters are
+    # stripped from tokens and quoted Windows paths are preserved.
+    # Non-POSIX mode retains quotes in tokens, and wrapping tokens
+    # with shlex.quote re-introduces quoting issues on Windows.
+    pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""))
     if pager_cmd_parts:
         if WIN:
             return _tempfilepager(pager_cmd_parts, color)
@@ -434,8 +437,16 @@ def get_pager_file(color: bool | None = None) -> t.Generator[t.TextIO, None, Non
 def _pipepager(
     cmd_parts: list[str], color: bool | None = None
 ) -> t.Iterator[tuple[t.BinaryIO | t.TextIO, str, bool]]:
-    """Page through text by feeding it to another program. Invoking a
-    pager through this might support colors.
+    """Page through text by feeding it to another program.
+
+    Invokes the pager via :class:`subprocess.Popen` with an ``argv`` list
+    produced by :func:`shlex.split`. The command is resolved to an absolute
+    path with :func:`shutil.which` as recommended by the
+    :mod:`subprocess` docs for Windows compatibility.
+
+    Invoking a pager through this might support colors: if piping to
+    ``less`` and the user hasn't decided on colors, ``LESS=-R`` is set
+    automatically.
     """
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
@@ -530,7 +541,13 @@ def _pipepager(
 def _tempfilepager(
     cmd_parts: list[str], color: bool | None = None
 ) -> t.Iterator[tuple[t.BinaryIO | t.TextIO, str, bool]]:
-    """Page through text by invoking a program on a temporary file."""
+    """Page through text by invoking a program on a temporary file.
+
+    Used as the primary pager strategy on Windows (where piping to
+    ``more`` adds spurious ``\\r\\n``), and as a fallback on other
+    platforms. The command is resolved to an absolute path with
+    :func:`shutil.which`.
+    """
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
         stdout = _default_text_stdout() or StringIO()
@@ -613,6 +630,8 @@ class Editor:
         return "vi"
 
     def edit_files(self, filenames: cabc.Iterable[str]) -> None:
+        """Open files in the user's editor."""
+        import shlex
         import subprocess
 
         editor = self.get_editor()
@@ -622,11 +641,13 @@ class Editor:
             environ = os.environ.copy()
             environ.update(self.env)
 
-        exc_filename = " ".join(f'"{filename}"' for filename in filenames)
-
         try:
+            # Split in POSIX mode (the default) for the same reasons as
+            # in pager(): strips quotes from tokens and preserves quoted
+            # Windows paths.
             c = subprocess.Popen(
-                args=f"{editor} {exc_filename}", env=environ, shell=True
+                args=shlex.split(editor) + list(filenames),
+                env=environ,
             )
             exit_code = c.wait()
             if exit_code != 0:
@@ -721,17 +742,16 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
         if locate:
             url = _unquote_file(url)
             args = ["explorer", f"/select,{url}"]
+            try:
+                return subprocess.call(args)
+            except OSError:
+                return 127
         else:
-            args = ["start"]
-            if wait:
-                args.append("/WAIT")
-            args.append("")
-            args.append(url)
-        try:
-            return subprocess.call(args)
-        except OSError:
-            # Command not found
-            return 127
+            try:
+                os.startfile(url)  # type: ignore[attr-defined]
+            except OSError:
+                return 127
+            return 0
     elif CYGWIN:
         if locate:
             url = _unquote_file(url)
@@ -774,8 +794,6 @@ def _translate_ch_to_exc(ch: str) -> None:
 
     if ch == "\x1a" and WIN:  # Windows, Ctrl+Z
         raise EOFError()
-
-    return None
 
 
 if sys.platform == "win32":

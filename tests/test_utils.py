@@ -9,8 +9,6 @@ from decimal import Decimal
 from fractions import Fraction
 from functools import partial
 from io import StringIO
-from pathlib import Path
-from tempfile import tempdir
 from unittest.mock import patch
 
 import pytest
@@ -227,7 +225,38 @@ def test_prompts_abort(monkeypatch, capsys):
         click.echo("interrupted")
 
     out, err = capsys.readouterr()
-    assert out == "Password:\ninterrupted\n"
+    # On non-Windows, prompt is passed directly to getpass, not echoed separately
+    assert out == "\ninterrupted\n"
+
+
+@pytest.mark.skipif(WIN, reason="Different behavior on windows.")
+@pytest.mark.parametrize(
+    ("call", "expected_prompt"),
+    [
+        (lambda: click.prompt("Name"), "Name: "),
+        (lambda: click.prompt("Pw", hide_input=True), "Pw: "),
+        (lambda: click.prompt("IP", prompt_suffix="."), "IP."),
+        (lambda: click.confirm("OK"), "OK [y/N]: "),
+    ],
+    ids=["prompt", "prompt-hidden", "prompt-custom-suffix", "confirm"],
+)
+def test_full_prompt_passed_to_readline(monkeypatch, call, expected_prompt):
+    """On non-Windows, prompt and confirm pass the full prompt text to the
+    underlying prompt function so readline handles editing correctly.
+
+    https://github.com/pallets/click/issues/2968
+    https://github.com/pallets/click/pull/2969
+    """
+    received = []
+
+    def capture(text):
+        received.append(text)
+        return "y"
+
+    monkeypatch.setattr("click.termui.visible_prompt_func", capture)
+    monkeypatch.setattr("click.termui.hidden_prompt_func", capture)
+    call()
+    assert received == [expected_prompt]
 
 
 def test_prompts_eof(runner):
@@ -379,7 +408,7 @@ EchoViaPagerTest = namedtuple(
         ),
     ],
 )
-def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test):
+def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test, tmp_path):
     monkeypatch.setitem(os.environ, "PAGER", pager_cmd)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
 
@@ -391,8 +420,7 @@ def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test):
 
     check_raise = pytest.raises(expected_error) if expected_error else nullcontext()
 
-    pager_out_tmp = Path(tempdir) / "pager_out.txt"
-    pager_out_tmp.unlink(missing_ok=True)
+    pager_out_tmp = tmp_path / "pager_out.txt"
     with pager_out_tmp.open("w") as f:
         force_subprocess_stdout = patch.object(
             subprocess,
@@ -487,17 +515,21 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     assert out == "Prompt to stdin with no suffix"
     assert err == ""
 
+    # On non-Windows the full prompt goes through redirect_stdout so
+    # nothing leaks to stdout when err=True.
+    # https://github.com/pallets/click/issues/2968
     emulate_input("asdlkj\n")
     click.prompt("Prompt to stderr", err=True)
     out, err = capfd.readouterr()
-    assert out == " "
-    assert err == "Prompt to stderr:"
+    assert out == ""
+    assert err == "Prompt to stderr: "
 
+    # https://github.com/pallets/click/issues/3019
     emulate_input("asdlkj\n")
     click.prompt("Prompt to stderr with no suffix", prompt_suffix="", err=True)
     out, err = capfd.readouterr()
-    assert out == "x"
-    assert err == "Prompt to stderr with no suffi"
+    assert out == ""
+    assert err == "Prompt to stderr with no suffix"
 
     emulate_input("y\n")
     click.confirm("Prompt to stdin")
@@ -511,17 +543,19 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     assert out == "Prompt to stdin with no suffix [y/N]"
     assert err == ""
 
+    # https://github.com/pallets/click/issues/2968
     emulate_input("y\n")
     click.confirm("Prompt to stderr", err=True)
     out, err = capfd.readouterr()
-    assert out == " "
-    assert err == "Prompt to stderr [y/N]:"
+    assert out == ""
+    assert err == "Prompt to stderr [y/N]: "
 
+    # https://github.com/pallets/click/issues/3019
     emulate_input("y\n")
     click.confirm("Prompt to stderr with no suffix", prompt_suffix="", err=True)
     out, err = capfd.readouterr()
-    assert out == "]"
-    assert err == "Prompt to stderr with no suffix [y/N"
+    assert out == ""
+    assert err == "Prompt to stderr with no suffix [y/N]"
 
     monkeypatch.setattr(click.termui, "isatty", lambda x: True)
     monkeypatch.setattr(click.termui, "getchar", lambda: " ")

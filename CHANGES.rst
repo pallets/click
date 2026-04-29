@@ -1,12 +1,112 @@
 .. currentmodule:: click
 
+Version 8.4.0
+-------------
+
 Unreleased
 
+-   :class:`ParamType` typing improvements. :pr:`3371`
+
+    -   :class:`ParamType` is now a generic abstract base class,
+        parameterized by its converted value type.
+    -   :meth:`~ParamType.convert` return types are narrowed on all
+        concrete types (``str`` for :class:`STRING`, ``int`` for
+        :class:`INT`, etc.).
+    -   :meth:`~ParamType.to_info_dict` returns specific
+        :class:`~typing.TypedDict` subclasses instead of
+        ``dict[str, Any]``.
+    -   :class:`CompositeParamType` and the number-range base are now
+        generic with abstract methods.
+-   :class:`Parameter` typing improvements. :pr:`2805`
+
+    -   :class:`Parameter` is now an abstract base class, making explicit
+        that it cannot be instantiated directly.
+    -   :attr:`Parameter.name` is now ``str`` instead of ``str | None``.
+        When ``expose_value=False``, the name is set to ``""`` instead
+        of ``None``.
+    -   The ``ctx`` parameter of :meth:`Parameter.get_error_hint` is now
+        typed as ``Context | None``, matching the runtime behavior.
+-   Split string values from ``default_map`` for parameters with ``nargs > 1``
+    or :class:`Tuple` type, matching environment variable behavior.
+    :issue:`2745` :pr:`3364`
+-   Auto-detect ``type=UNPROCESSED`` for ``flag_value`` of non-basic types
+    (not ``str``, ``int``, ``float``, or ``bool``), so programmer-provided
+    Python objects like classes and enum members are passed through unchanged
+    instead of being stringified. Previously ``type=click.UNPROCESSED`` had
+    to be set explicitly. :issue:`2012` :pr:`3363`
+-   The error hint now uses :meth:`Command.get_help_option_names` to pick
+    non-shadowed help option names, so ``Try '... -h'`` no longer points to a
+    subcommand option that shadows ``-h``. All surviving names are shown
+    (``-h/--help``). :issue:`2790` :pr:`3208`
+-   Fix readline functionality on non-Windows platforms. Prompt text is now
+    passed directly to readline instead of being printed separately, allowing
+    proper backspace, line editing, and line wrapping behavior. :issue:`2968`
+    :pr:`2969`
+-   Use :func:`os.startfile` on Windows to open URLs in :func:`open_url`,
+    replacing the ``start`` built-in which cannot be invoked without
+    ``shell=True``. :issue:`3164` :pr:`3186`
+
+Version 8.3.3
+-------------
+
+Released 2026-04-20
+
+-   Use :func:`shlex.split` to split pager and editor commands into ``argv``
+    lists for :class:`subprocess.Popen`, removing ``shell=True``.
+    :issue:`1026` :pr:`1477` :pr:`2775`
+-   Fix ``TypeError`` when rendering help for an option whose default value is
+    an object that doesn't support equality comparison with strings, such as
+    ``semver.Version``. :issue:`3298` :pr:`3299`
+-   Fix pager test pollution under parallel execution by using pytest's
+    ``tmp_path`` fixture instead of a shared temporary file path. :pr:`3238`
+-   Treat ``Sentinel.UNSET`` values in a ``default_map`` as absent, so they fall
+    through to the next default source instead of being used as the value.
+    :issue:`3224` :pr:`3240`
+-   Patch ``pdb.Pdb`` in ``CliRunner`` isolation so ``pdb.set_trace()``,
+    ``breakpoint()``, and debuggers subclassing ``pdb.Pdb`` (ipdb, pdbpp) can
+    interact with the real terminal instead of the captured I/O streams.
+    :issue:`654` :issue:`824` :issue:`843` :pr:`951` :pr:`3235`
+-   Add optional randomized parallel test execution using ``pytest-randomly`` and
+    ``pytest-xdist`` to detect test pollution and race conditions. :pr:`3151`
+-   Add contributor documentation for running stress tests, randomized
+    parallel tests, and Flask smoke tests. :pr:`3151` :pr:`3177`
+-   Show custom ``show_default`` string in prompts, matching the existing
+    help text behavior. :issue:`2836` :pr:`2837` :pr:`3165` :pr:`3262` :pr:`3280`
+    :pr:`3328`
+-   Fix ``default=True`` with boolean ``flag_value`` always returning the
+    ``flag_value`` instead of ``True``. The ``default=True`` to ``flag_value``
+    substitution now only applies to non-boolean flags, where ``True`` acts as a
+    sentinel meaning "activate this flag by default". For boolean flags,
+    ``default=True`` is returned as a literal value. :issue:`3111` :pr:`3239`
+-   Mark ``make_default_short_help`` as private API. :issue:`3189` :pr:`3250`
+-   ``CliRunner``'s redirected streams now expose the original file descriptor
+    via ``fileno()``, so that ``faulthandler``, ``subprocess``, and other
+    C-level consumers no longer crash with ``io.UnsupportedOperation``.
+    :issue:`2865`
+-   Change :class:`ParameterSource` to an :class:`~enum.IntEnum` and reorder
+    its members from most to least explicit, so values can be compared to
+    check whether a parameter was explicitly provided. :issue:`2879` :pr:`3248`
+
+Version 8.3.2
+-------------
+
+Released 2026-04-02
+
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
-    used without an explicit value. :issue:`3084`
+    used without an explicit value. :issue:`3084` :pr:`3152`
+-   Hide ``Sentinel.UNSET`` values as ``None`` when using ``lookup_default()``.
+    :issue:`3136` :pr:`3199` :pr:`3202` :pr:`3209` :pr:`3212` :pr:`3224`
+-   Prevent ``_NamedTextIOWrapper`` from closing streams owned by ``StreamMixer``.
+    :issue:`824` :issue:`2991` :issue:`2993` :issue:`3110` :pr:`3139` :pr:`3140`
+-   Add comprehensive tests for ``CliRunner`` stream lifecycle, covering
+    logging interaction, multi-threaded safety, and sequential invocation
+    isolation. Add high-iteration stress tests behind a ``stress`` marker
+    with a dedicated CI job. :pr:`3139`
+-   Fix callable ``flag_value`` being instantiated when used as a default via
+    ``default=True``. :issue:`3121` :pr:`3201` :pr:`3213` :pr:`3225`
 
 Version 8.3.1
---------------
+-------------
 
 Released 2025-11-15
 
@@ -890,7 +990,7 @@ Released 2018-09-25
     so that changing the working directory does not affect it. :pr:`920`
 -   Fix incorrect completions when defaults are present :issue:`925`,
     :pr:`930`
--   Add copy option attrs so that custom classes can be re-used.
+-   Add copy option attrs so that custom classes can be reused.
     :issue:`926`, :pr:`994`
 -   "x" and "a" file modes now use stdout when file is ``"-"``.
     :pr:`929`

@@ -4,6 +4,7 @@ import collections.abc as cabc
 import contextlib
 import io
 import os
+import pdb
 import shlex
 import sys
 import tempfile
@@ -98,26 +99,57 @@ class StreamMixer:
         self.stdout: io.BytesIO = BytesIOCopy(copy_to=self.output)
         self.stderr: io.BytesIO = BytesIOCopy(copy_to=self.output)
 
-    def __del__(self) -> None:
-        """
-        Guarantee that embedded file-like objects are closed in a
-        predictable order, protecting against races between
-        self.output being closed and other streams being flushed on close
-
-        .. versionadded:: 8.2.2
-        """
-        self.stderr.close()
-        self.stdout.close()
-        self.output.close()
-
 
 class _NamedTextIOWrapper(io.TextIOWrapper):
+    """A :class:`~io.TextIOWrapper` with custom ``name`` and ``mode``
+    that does not close its underlying buffer.
+
+    An optional ``original_fd`` preserves the file descriptor of the
+    stream being replaced, so that C-level consumers that call
+    :meth:`fileno` (``faulthandler``, ``subprocess``, ...) still work.
+    Inspired by pytest's ``capsys``/``capfd`` split: see :doc:`/testing`
+    for details.
+
+    .. versionchanged:: 8.3.3
+        Added ``original_fd`` parameter and :meth:`fileno` override.
+    """
+
     def __init__(
-        self, buffer: t.BinaryIO, name: str, mode: str, **kwargs: t.Any
+        self,
+        buffer: t.BinaryIO,
+        name: str,
+        mode: str,
+        *,
+        original_fd: int = -1,
+        **kwargs: t.Any,
     ) -> None:
         super().__init__(buffer, **kwargs)
         self._name = name
         self._mode = mode
+        self._original_fd = original_fd
+
+    def close(self) -> None:
+        """The buffer this object contains belongs to some other object,
+        so prevent the default ``__del__`` implementation from closing
+        that buffer.
+
+        .. versionadded:: 8.3.2
+        """
+
+    def fileno(self) -> int:
+        """Return the file descriptor of the original stream, if one was
+        provided at construction time.
+
+        This allows C-level consumers (``faulthandler``, ``subprocess``,
+        signal handlers, ...) to obtain a valid fd without crashing, even
+        though the Python-level writes are redirected to an in-memory
+        buffer.
+
+        .. versionadded:: 8.3.3
+        """
+        if self._original_fd >= 0:
+            return self._original_fd
+        return super().fileno()
 
     @property
     def name(self) -> str:
@@ -323,6 +355,20 @@ class CliRunner:
 
         stream_mixer = StreamMixer()
 
+        # Preserve the original file descriptors so that C-level
+        # consumers (faulthandler, subprocess, etc.) can still obtain a
+        # valid fd from the redirected streams. The original streams
+        # may themselves lack a fileno() (e.g. when CliRunner is used
+        # inside pytest's capsys), so we fall back to -1.
+        def _safe_fileno(stream: t.IO[t.Any]) -> int:
+            try:
+                return stream.fileno()
+            except (AttributeError, io.UnsupportedOperation):
+                return -1
+
+        old_stdout_fd = _safe_fileno(old_stdout)
+        old_stderr_fd = _safe_fileno(old_stderr)
+
         if self.echo_stdin:
             bytes_input = echo_input = t.cast(
                 t.BinaryIO, EchoingStdin(bytes_input, stream_mixer.stdout)
@@ -338,7 +384,11 @@ class CliRunner:
             text_input._CHUNK_SIZE = 1  # type: ignore
 
         sys.stdout = _NamedTextIOWrapper(
-            stream_mixer.stdout, encoding=self.charset, name="<stdout>", mode="w"
+            stream_mixer.stdout,
+            encoding=self.charset,
+            name="<stdout>",
+            mode="w",
+            original_fd=old_stdout_fd,
         )
 
         sys.stderr = _NamedTextIOWrapper(
@@ -347,6 +397,7 @@ class CliRunner:
             name="<stderr>",
             mode="w",
             errors="backslashreplace",
+            original_fd=old_stderr_fd,
         )
 
         @_pause_echo(echo_input)  # type: ignore
@@ -393,11 +444,51 @@ class CliRunner:
         old__getchar_func = termui._getchar
         old_should_strip_ansi = utils.should_strip_ansi  # type: ignore
         old__compat_should_strip_ansi = _compat.should_strip_ansi
+        old_pdb_init = pdb.Pdb.__init__
         termui.visible_prompt_func = visible_input
         termui.hidden_prompt_func = hidden_input
         termui._getchar = _getchar
         utils.should_strip_ansi = should_strip_ansi  # type: ignore
         _compat.should_strip_ansi = should_strip_ansi
+
+        def _patched_pdb_init(
+            self: pdb.Pdb,
+            completekey: str = "tab",
+            stdin: t.IO[str] | None = None,
+            stdout: t.IO[str] | None = None,
+            **kwargs: t.Any,
+        ) -> None:
+            """Default ``pdb.Pdb`` to real terminal streams during
+            ``CliRunner`` isolation.
+
+            Without this patch, ``pdb.Pdb.__init__`` inherits from
+            ``cmd.Cmd`` which falls back to ``sys.stdin``/``sys.stdout``
+            when no explicit streams are provided. During isolation
+            those are ``BytesIO``-backed wrappers, so the debugger
+            reads from an empty buffer and writes to captured output,
+            making interactive debugging impossible.
+
+            By defaulting to ``sys.__stdin__``/``sys.__stdout__`` (the
+            original terminal streams Python preserves regardless of
+            redirection), debuggers can interact with the user while
+            ``click.echo`` output is still captured normally.
+
+            This covers ``pdb.set_trace()``, ``breakpoint()``,
+            ``pdb.post_mortem()``, and debuggers that subclass
+            ``pdb.Pdb`` (ipdb, pdbpp). Explicit ``stdin``/``stdout``
+            arguments are honored and not overridden. Debuggers that
+            do not subclass ``pdb.Pdb`` (pudb, debugpy) are not
+            covered.
+            """
+            if stdin is None:
+                stdin = sys.__stdin__
+            if stdout is None:
+                stdout = sys.__stdout__
+            old_pdb_init(
+                self, completekey=completekey, stdin=stdin, stdout=stdout, **kwargs
+            )
+
+        pdb.Pdb.__init__ = _patched_pdb_init  # type: ignore[assignment]
 
         old_env = {}
         try:
@@ -429,6 +520,7 @@ class CliRunner:
             utils.should_strip_ansi = old_should_strip_ansi  # type: ignore
             _compat.should_strip_ansi = old__compat_should_strip_ansi
             formatting.FORCED_WIDTH = old_forced_width
+            pdb.Pdb.__init__ = old_pdb_init  # type: ignore[method-assign]
 
     def invoke(
         self,
