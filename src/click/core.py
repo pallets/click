@@ -1101,8 +1101,11 @@ class Command:
             # Avoid circular import.
             from .decorators import help_option
 
-            # Apply help_option decorator and pop resulting option
-            help_option(*help_option_names)(self)
+            # Give the auto-generated help option an internal name that can't
+            # collide with a user-defined argument or option called "help".
+            # Its value is never exposed, but the parser still needs a unique
+            # parameter name while resolving arguments and options.
+            help_option(*help_option_names, "__click_internal_help_option")(self)
             self._help_option = self.params.pop()  # type: ignore[assignment]
 
         return self._help_option

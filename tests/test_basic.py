@@ -29,6 +29,22 @@ def test_basic_functionality(runner):
     assert result.exit_code == 0
 
 
+def test_help_argument_name_does_not_shadow_help_option(runner):
+    @click.command()
+    @click.argument("help")
+    def cli(help):
+        click.echo(help)
+
+    result = runner.invoke(cli, ["value"])
+    assert result.exit_code == 0
+    assert result.output == "value\n"
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "Usage: cli [OPTIONS] HELP" in result.output
+    assert "Show this message and exit." in result.output
+
+
 def test_repr():
     @click.command()
     def command():
