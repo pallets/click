@@ -1,5 +1,31 @@
 .. currentmodule:: click
 
+Version 8.4.0
+-------------
+
+Unreleased
+
+-   :class:`ParamType` typing improvements. :pr:`3371`
+
+    -   :class:`ParamType` is now a generic abstract base class,
+        parameterized by its converted value type.
+    -   :meth:`~ParamType.convert` return types are narrowed on all
+        concrete types (``str`` for :class:`STRING`, ``int`` for
+        :class:`INT`, etc.).
+    -   :meth:`~ParamType.to_info_dict` returns specific
+        :class:`~typing.TypedDict` subclasses instead of
+        ``dict[str, Any]``.
+    -   :class:`CompositeParamType` and the number-range base are now
+        generic with abstract methods.
+-   Split string values from ``default_map`` for parameters with ``nargs > 1``
+    or :class:`Tuple` type, matching environment variable behavior.
+    :issue:`2745` :pr:`3364`
+-   Auto-detect ``type=UNPROCESSED`` for ``flag_value`` of non-basic types
+    (not ``str``, ``int``, ``float``, or ``bool``), so programmer-provided
+    Python objects like classes and enum members are passed through unchanged
+    instead of being stringified. Previously ``type=click.UNPROCESSED`` had
+    to be set explicitly. :issue:`2012` :pr:`3363`
+
 Version 8.3.3
 -------------
 
@@ -40,11 +66,6 @@ Unreleased
 -   Change :class:`ParameterSource` to an :class:`~enum.IntEnum` and reorder
     its members from most to least explicit, so values can be compared to
     check whether a parameter was explicitly provided. :issue:`2879` :pr:`3248`
--   Auto-detect ``type=UNPROCESSED`` for ``flag_value`` of non-basic types
-    (not ``str``, ``int``, ``float``, or ``bool``), so programmer-provided
-    Python objects like classes and enum members are passed through unchanged
-    instead of being stringified. Previously ``type=click.UNPROCESSED`` had
-    to be set explicitly. :issue:`2012` :pr:`3363`
 
 Version 8.3.2
 -------------
