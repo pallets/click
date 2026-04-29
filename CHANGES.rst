@@ -42,6 +42,9 @@ Unreleased
     passed directly to readline instead of being printed separately, allowing
     proper backspace, line editing, and line wrapping behavior. :issue:`2968`
     :pr:`2969`
+-   Use :func:`os.startfile` on Windows to open URLs in :func:`open_url`,
+    replacing the ``start`` built-in which cannot be invoked without
+    ``shell=True``. :issue:`3164` :pr:`3186`
 
 Version 8.3.3
 -------------
