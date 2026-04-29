@@ -299,6 +299,24 @@ def test_invoked_subcommand(runner):
     assert result.output == "no subcommand, use default\nin subcommand\n"
 
 
+def test_invoke_without_command_usage_shows_optional_subcommand(runner):
+    import click
+
+    @click.group(invoke_without_command=True)
+    @click.pass_context
+    def cli(ctx):
+        if ctx.invoked_subcommand is not None:
+            return
+
+    @cli.command()
+    def sub():
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "Usage: cli [OPTIONS] [COMMAND] [ARGS]..." in result.output
+
+
 def test_aliased_command_canonical_name(runner):
     class AliasedGroup(click.Group):
         def get_command(self, ctx, cmd_name):
