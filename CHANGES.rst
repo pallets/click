@@ -46,6 +46,8 @@ Version 8.3.2
 
 Released 2026-04-02
 
+-   Document short option combining behavior and clarify that multi-character
+    short options are not supported. :issue:`2779`
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084` :pr:`3152`
 -   Hide ``Sentinel.UNSET`` values as ``None`` when using ``lookup_default()``.
