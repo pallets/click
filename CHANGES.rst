@@ -258,6 +258,8 @@ Released 2025-05-10
         allows the user to search for future output of the generator when
         using less and then aborting the program using ctrl-c.
 
+-   Add ``click.get_pager_file`` for file-like access to an output
+    pager. :pr:`1572`
 -   ``deprecated: bool | str`` can now be used on options and arguments. This
     previously was only available for ``Command``. The message can now also be
     customised by using a ``str`` instead of a ``bool``. :issue:`2263` :pr:`2271`
