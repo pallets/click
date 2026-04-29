@@ -17,6 +17,15 @@ Unreleased
         ``dict[str, Any]``.
     -   :class:`CompositeParamType` and the number-range base are now
         generic with abstract methods.
+-   :class:`Parameter` typing improvements. :pr:`2805`
+
+    -   :class:`Parameter` is now an abstract base class, making explicit
+        that it cannot be instantiated directly.
+    -   :attr:`Parameter.name` is now ``str`` instead of ``str | None``.
+        When ``expose_value=False``, the name is set to ``""`` instead
+        of ``None``.
+    -   The ``ctx`` parameter of :meth:`Parameter.get_error_hint` is now
+        typed as ``Context | None``, matching the runtime behavior.
 -   Split string values from ``default_map`` for parameters with ``nargs > 1``
     or :class:`Tuple` type, matching environment variable behavior.
     :issue:`2745` :pr:`3364`
@@ -29,6 +38,10 @@ Unreleased
     non-shadowed help option names, so ``Try '... -h'`` no longer points to a
     subcommand option that shadows ``-h``. All surviving names are shown
     (``-h/--help``). :issue:`2790` :pr:`3208`
+-   Fix readline functionality on non-Windows platforms. Prompt text is now
+    passed directly to readline instead of being printed separately, allowing
+    proper backspace, line editing, and line wrapping behavior. :issue:`2968`
+    :pr:`2969`
 -   Use :func:`os.startfile` on Windows to open URLs in :func:`open_url`,
     replacing the ``start`` built-in which cannot be invoked without
     ``shell=True``. :issue:`3164` :pr:`3186`
