@@ -33,7 +33,7 @@ Unreleased
 Version 8.3.3
 -------------
 
-Unreleased
+Released 2026-04-20
 
 -   Use :func:`shlex.split` to split pager and editor commands into ``argv``
     lists for :class:`subprocess.Popen`, removing ``shell=True``.
@@ -972,7 +972,7 @@ Released 2018-09-25
     so that changing the working directory does not affect it. :pr:`920`
 -   Fix incorrect completions when defaults are present :issue:`925`,
     :pr:`930`
--   Add copy option attrs so that custom classes can be re-used.
+-   Add copy option attrs so that custom classes can be reused.
     :issue:`926`, :pr:`994`
 -   "x" and "a" file modes now use stdout when file is ``"-"``.
     :pr:`929`

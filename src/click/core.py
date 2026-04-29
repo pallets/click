@@ -196,7 +196,7 @@ class Context:
     :param info_name: the info name for this invocation.  Generally this
                       is the most descriptive name for the script or
                       command.  For the toplevel script it is usually
-                      the name of the script, for commands below it it's
+                      the name of the script, for commands below that it's
                       the name of the script.
     :param obj: an arbitrary object of user data.
     :param auto_envvar_prefix: the prefix to use for automatic environment
@@ -1095,7 +1095,7 @@ class Command:
 
         # Cache the help option object in private _help_option attribute to
         # avoid creating it multiple times. Not doing this will break the
-        # callback odering by iter_params_for_processing(), which relies on
+        # callback ordering by iter_params_for_processing(), which relies on
         # object comparison.
         if self._help_option is None:
             # Avoid circular import.
@@ -2149,7 +2149,7 @@ class Parameter:
     def __init__(
         self,
         param_decls: cabc.Sequence[str] | None = None,
-        type: types.ParamType | t.Any | None = None,
+        type: types.ParamType[t.Any] | t.Any | None = None,
         required: bool = False,
         # XXX The default historically embed two concepts:
         # - the declaration of a Parameter object carrying the default (handy to
@@ -2181,7 +2181,7 @@ class Parameter:
         self.name, self.opts, self.secondary_opts = self._parse_decls(
             param_decls or (), expose_value
         )
-        self.type: types.ParamType = types.convert_type(type, default)
+        self.type: types.ParamType[t.Any] = types.convert_type(type, default)
 
         # Default nargs to what the type tells us if we have that
         # information available.
@@ -2355,6 +2355,11 @@ class Parameter:
             if default_map_value is not None or ctx._default_map_has(self.name):
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
+
+                # A string from default_map must be split for multi-value
+                # parameters, matching value_from_envvar behavior.
+                if isinstance(value, str) and self.nargs != 1:
+                    value = self.type.split_envvar_value(value)
 
         if value is UNSET:
             default_value = self.get_default(ctx)
@@ -2648,7 +2653,7 @@ class Parameter:
         """Return a list of completions for the incomplete value. If a
         ``shell_complete`` function was given during init, it is used.
         Otherwise, the :attr:`type`
-        :meth:`~click.types.ParamType.shell_complete` function is used.
+        :meth:`~click.types.ParamType[t.Any].shell_complete` function is used.
 
         :param ctx: Invocation context for this command.
         :param incomplete: Value being completed. May be empty.
@@ -2714,6 +2719,11 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
 
+    .. versionchanged:: 8.4
+        Non-basic ``flag_value`` types (not ``str``, ``int``, ``float``, or
+        ``bool``) are passed through unchanged instead of being stringified.
+        Previously, ``type=click.UNPROCESSED`` was required to preserve them.
+
     .. versionchanged:: 8.2
         ``envvar`` used with ``flag_value`` will always use the ``flag_value``,
         previously it would use the value of the environment variable.
@@ -2731,7 +2741,8 @@ class Option(Parameter):
         default value is ``False``.
 
     .. versionchanged:: 8.0.1
-        ``type`` is detected from ``flag_value`` if given.
+        ``type`` is detected from ``flag_value`` if given, for basic Python
+        types (``str``, ``int``, ``float``, ``bool``).
     """
 
     param_type_name = "option"
@@ -2749,7 +2760,7 @@ class Option(Parameter):
         multiple: bool = False,
         count: bool = False,
         allow_from_autoenv: bool = True,
-        type: types.ParamType | t.Any | None = None,
+        type: types.ParamType[t.Any] | t.Any | None = None,
         help: str | None = None,
         hidden: bool = False,
         show_choices: bool = True,
@@ -2825,13 +2836,26 @@ class Option(Parameter):
             if type is None:
                 # A flag without a flag_value is a boolean flag.
                 if flag_value is UNSET:
-                    self.type: types.ParamType = types.BoolParamType()
+                    self.type: types.ParamType[t.Any] = types.BoolParamType()
                 # If the flag value is a boolean, use BoolParamType.
                 elif isinstance(flag_value, bool):
                     self.type = types.BoolParamType()
                 # Otherwise, guess the type from the flag value.
                 else:
-                    self.type = types.convert_type(None, flag_value)
+                    guessed = types.convert_type(None, flag_value)
+                    if (
+                        isinstance(guessed, types.StringParamType)
+                        and not isinstance(flag_value, str)
+                        and flag_value is not None
+                    ):
+                        # The flag_value type couldn't be auto-detected
+                        # (not str, int, float, or bool). Since flag_value
+                        # is a programmer-provided Python object, not CLI
+                        # input, pass it through unchanged instead of
+                        # stringifying it.
+                        self.type = types.UNPROCESSED
+                    else:
+                        self.type = guessed
 
         self.is_flag: bool = bool(is_flag)
         self.is_bool_flag: bool = bool(
@@ -2844,7 +2868,7 @@ class Option(Parameter):
             if self.default is UNSET and not self.required:
                 self.default = False
 
-        # The alignement of default to the flag_value is resolved lazily in
+        # The alignment of default to the flag_value is resolved lazily in
         # get_default() to prevent callable flag_values (like classes) from
         # being instantiated. Refs:
         # https://github.com/pallets/click/issues/3121

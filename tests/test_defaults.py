@@ -84,7 +84,7 @@ def test_nargs_plus_multiple(runner):
 
 
 def test_multiple_flag_default(runner):
-    """Default default for flags when multiple=True should be empty tuple."""
+    """Default for flags when multiple=True should be empty tuple."""
 
     @click.command
     # flag due to secondary token
@@ -274,7 +274,7 @@ def test_lookup_default_override_respected(runner):
     ``None``.
 
     Previous attempts in https://github.com/pallets/click/pr/3199 were entirely
-    bypassing the user's overridded method.
+    bypassing the user's overridden method.
     """
 
     class CustomContext(click.Context):
@@ -355,6 +355,43 @@ def test_default_map_with_callable_flag_value(runner, default_map, args, expecte
     result = runner.invoke(cli, args, **kwargs)
     assert result.exit_code == 0
     assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("default_map", "option_kwargs", "cli_args", "expected"),
+    [
+        # String is split for nargs=2 option.
+        ({"point": "3 4"}, {"nargs": 2, "type": int}, [], (3, 4)),
+        # String is split for explicit Tuple type.
+        ({"point": "hello world"}, {"type": (str, str)}, [], ("hello", "world")),
+        # Already-structured tuple passes through unchanged.
+        ({"point": ("a", "b")}, {"nargs": 2}, [], ("a", "b")),
+        # Already-structured list passes through unchanged.
+        ({"point": [5, 6]}, {"nargs": 2, "type": int}, [], (5, 6)),
+        # CLI args override default_map for nargs > 1.
+        (
+            {"point": "3 4"},
+            {"nargs": 2, "type": int},
+            ["--point", "10", "20"],
+            (10, 20),
+        ),
+    ],
+)
+def test_default_map_nargs(runner, default_map, option_kwargs, cli_args, expected):
+    """A string in ``default_map`` for an option with ``nargs > 1`` should be
+    split the same way an environment variable string is split.
+
+    Regression test for https://github.com/pallets/click/issues/2745.
+    """
+
+    @click.command()
+    @click.option("--point", **option_kwargs)
+    def cli(point):
+        click.echo(repr(point))
+
+    result = runner.invoke(cli, cli_args, default_map=default_map)
+    assert result.exit_code == 0
+    assert result.output.strip() == repr(expected)
 
 
 def test_unset_in_default_map(runner):
