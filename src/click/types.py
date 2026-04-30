@@ -1180,7 +1180,7 @@ def convert_type(ty: t.Any | None, default: t.Any | None = None) -> ParamType:
 #:
 #: For path related uses the :class:`Path` type is a better choice but
 #: there are situations where an unprocessed type is useful which is why
-#: it is is provided.
+#: it is provided.
 #:
 #: .. versionadded:: 4.0
 UNPROCESSED = UnprocessedParamType()

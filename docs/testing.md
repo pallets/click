@@ -4,7 +4,8 @@
 .. currentmodule:: click.testing
 ```
 
-Click provides the {ref}`click.testing <testing>` module to help you invoke command line applications and check their behavior.
+Click provides the {ref}`click.testing <testing>` module to help you invoke
+command line applications and check their behavior.
 
 These tools should only be used for testing since they change
 the entire interpreter state for simplicity. They are not thread-safe!
@@ -20,7 +21,9 @@ The examples use [pytest](https://docs.pytest.org/en/stable/) style tests.
 
 The key pieces are:
   - {class}`CliRunner` - used to invoke commands as command line scripts.
-  - {class}`Result` - returned from {meth}`CliRunner.invoke`. Captures output data, exit code, optional exception, and captures the output as bytes and binary data.
+  - {class}`Result` - returned from {meth}`CliRunner.invoke`. Captures output
+    data, exit code, optional exception, and captures the output as bytes and
+    binary data.
 
 ```{code-block} python
 :caption: hello.py
@@ -48,7 +51,8 @@ def test_hello_world():
 
 ## Subcommands
 
-A subcommand name must be specified in the `args` parameter {meth}`CliRunner.invoke`:
+A subcommand name must be specified in the `args` parameter
+{meth}`CliRunner.invoke`:
 
 ```{code-block} python
 :caption: sync.py
@@ -81,7 +85,8 @@ def test_sync():
 
 ## Context Settings
 
-Additional keyword arguments passed to {meth}`CliRunner.invoke` will be used to construct the initial {class}`Context object <click.Context>`.
+Additional keyword arguments passed to {meth}`CliRunner.invoke` will be used to
+construct the initial {class}`Context object <click.Context>`.
 For example, setting a fixed terminal width equal to 60:
 
 ```{code-block} python
@@ -114,7 +119,8 @@ def test_sync():
 
 ## File System Isolation
 
-The {meth}`CliRunner.isolated_filesystem` context manager sets the current working directory to a new, empty folder.
+The {meth}`CliRunner.isolated_filesystem` context manager sets the current
+working directory to a new, empty folder.
 
 ```{code-block} python
 :caption: cat.py
@@ -167,7 +173,8 @@ def test_cat_with_path_specified():
 
 ## Input Streams
 
-The test wrapper can provide input data for the input stream (stdin). This is very useful for testing prompts.
+The test wrapper can provide input data for the input stream (stdin). This is
+very useful for testing prompts.
 
 ```{code-block} python
 :caption: prompt.py
@@ -196,3 +203,51 @@ def test_prompts():
 Prompts will be emulated so they write the input data to
 the output stream as well. If hidden input is expected then this
 does not happen.
+
+## File Descriptors and Low-Level I/O
+
+{class}`CliRunner` captures output by replacing
+`sys.stdout` and `sys.stderr` with in-memory
+{class}`~io.BytesIO`-backed wrappers. This is
+Python-level redirection: calls to {func}`~click.echo`,
+{func}`print`, or `sys.stdout.write()` are captured, but
+the wrappers have no OS-level file descriptor.
+
+Code that calls `fileno()` on `sys.stdout` or
+`sys.stderr`, like {mod}`faulthandler`,
+{mod}`subprocess`, or C extensions, would normally crash
+with {exc}`io.UnsupportedOperation` inside
+{class}`CliRunner`.
+
+To avoid this, {class}`CliRunner` preserves the original
+stream's file descriptor and exposes it via `fileno()` on
+the replacement wrapper.
+
+This means:
+- **Python-level writes** (`print()`, `click.echo()`,
+  ...) are captured as usual.
+- **fd-level writes** (C code writing directly to the
+  file descriptor) go to the original terminal and are
+  **not** captured.
+
+This is the same trade-off that
+[pytest](https://docs.pytest.org/en/stable/how-to/capture-stdout-stderr.html)
+makes with its two capture modes:
+
+- `capsys`, which captures Python-level output, where
+  `fileno()` raises `UnsupportedOperation` and fd-level
+  writes are not captured.
+- `capfd`, which captures fd-level output via
+  `os.dup2()`, where `fileno()` works and fd-level
+  writes *are* captured.
+
+Rather than implementing a full `capfd`-style mechanism,
+{class}`CliRunner` takes the simpler path: expose the
+original `fd` so that standard library helpers keep
+working, while accepting that their output is not
+captured.
+
+```{versionchanged} 8.3.3
+`fileno()` on the redirected streams now returns the
+original stream's file descriptor instead of raising.
+```

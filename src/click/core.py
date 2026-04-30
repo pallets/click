@@ -140,12 +140,25 @@ def iter_params_for_processing(
     return sorted(declaration_order, key=sort_key)
 
 
-class ParameterSource(enum.Enum):
-    """This is an :class:`~enum.Enum` that indicates the source of a
+class ParameterSource(enum.IntEnum):
+    """This is an :class:`~enum.IntEnum` that indicates the source of a
     parameter's value.
 
     Use :meth:`click.Context.get_parameter_source` to get the
     source for a parameter by name.
+
+    Members are ordered from most explicit to least explicit source.
+    This allows comparison to check if a value was explicitly provided:
+
+    .. code-block:: python
+
+        source = ctx.get_parameter_source("port")
+        if source < click.ParameterSource.DEFAULT_MAP:
+            ...  # value was explicitly set
+
+    .. versionchanged:: 8.3.3
+        Use :class:`~enum.IntEnum` and reorder members from most to
+        least explicit. Supports comparison operators.
 
     .. versionchanged:: 8.0
         Use :class:`~enum.Enum` and drop the ``validate`` method.
@@ -154,16 +167,16 @@ class ParameterSource(enum.Enum):
         Added the ``PROMPT`` value.
     """
 
+    PROMPT = enum.auto()
+    """Used a prompt to confirm a default or provide a value."""
     COMMANDLINE = enum.auto()
     """The value was provided by the command line args."""
     ENVIRONMENT = enum.auto()
     """The value was provided with an environment variable."""
-    DEFAULT = enum.auto()
-    """Used the default specified by the parameter."""
     DEFAULT_MAP = enum.auto()
     """Used a default provided by :attr:`Context.default_map`."""
-    PROMPT = enum.auto()
-    """Used a prompt to confirm a default or provide a value."""
+    DEFAULT = enum.auto()
+    """Used the default specified by the parameter."""
 
 
 class Context:
@@ -183,7 +196,7 @@ class Context:
     :param info_name: the info name for this invocation.  Generally this
                       is the most descriptive name for the script or
                       command.  For the toplevel script it is usually
-                      the name of the script, for commands below it it's
+                      the name of the script, for commands below that it's
                       the name of the script.
     :param obj: an arbitrary object of user data.
     :param auto_envvar_prefix: the prefix to use for automatic environment
@@ -685,6 +698,20 @@ class Context:
             self.obj = rv = object_type()
         return rv
 
+    def _default_map_has(self, name: str | None) -> bool:
+        """Check if :attr:`default_map` contains a real value for ``name``.
+
+        Returns ``False`` when the key is absent, the map is ``None``,
+        ``name`` is ``None``, or the stored value is the internal
+        :data:`UNSET` sentinel.
+        """
+        return (
+            name is not None
+            and self.default_map is not None
+            and name in self.default_map
+            and self.default_map[name] is not UNSET
+        )
+
     @t.overload
     def lookup_default(
         self, name: str, call: t.Literal[True] = True
@@ -705,15 +732,17 @@ class Context:
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
         """
-        if self.default_map is not None:
-            value = self.default_map.get(name, UNSET)
+        if not self._default_map_has(name):
+            return None
 
-            if call and callable(value):
-                return value()
+        # Assert to make the type checker happy.
+        assert self.default_map is not None
+        value = self.default_map[name]
 
-            return value
+        if call and callable(value):
+            return value()
 
-        return UNSET
+        return value
 
     def fail(self, message: str) -> t.NoReturn:
         """Aborts the execution of the program with a specific error
@@ -1066,7 +1095,7 @@ class Command:
 
         # Cache the help option object in private _help_option attribute to
         # avoid creating it multiple times. Not doing this will break the
-        # callback odering by iter_params_for_processing(), which relies on
+        # callback ordering by iter_params_for_processing(), which relies on
         # object comparison.
         if self._help_option is None:
             # Avoid circular import.
@@ -2278,9 +2307,10 @@ class Parameter:
         .. versionchanged:: 8.0
             Added the ``call`` parameter.
         """
-        value = ctx.lookup_default(self.name, call=False)  # type: ignore
+        name = self.name
+        value = ctx.lookup_default(name, call=False) if name is not None else None
 
-        if value is UNSET:
+        if value is None and not ctx._default_map_has(name):
             value = self.default
 
         if call and callable(value):
@@ -2321,8 +2351,8 @@ class Parameter:
                 source = ParameterSource.ENVIRONMENT
 
         if value is UNSET:
-            default_map_value = ctx.lookup_default(self.name)  # type: ignore
-            if default_map_value is not UNSET:
+            default_map_value = ctx.lookup_default(self.name)  # type: ignore[arg-type]
+            if default_map_value is not None or ctx._default_map_has(self.name):
                 value = default_map_value
                 source = ParameterSource.DEFAULT_MAP
 
@@ -2558,7 +2588,7 @@ class Parameter:
             if (
                 self.deprecated
                 and value is not UNSET
-                and source not in (ParameterSource.DEFAULT, ParameterSource.DEFAULT_MAP)
+                and source < ParameterSource.DEFAULT_MAP
             ):
                 extra_message = (
                     f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
@@ -2814,14 +2844,12 @@ class Option(Parameter):
             if self.default is UNSET and not self.required:
                 self.default = False
 
-        # Support the special case of aligning the default value with the flag_value
-        # for flags whose default is explicitly set to True. Note that as long as we
-        # have this condition, there is no way a flag can have a default set to True,
-        # and a flag_value set to something else. Refs:
+        # The alignment of default to the flag_value is resolved lazily in
+        # get_default() to prevent callable flag_values (like classes) from
+        # being instantiated. Refs:
+        # https://github.com/pallets/click/issues/3121
         # https://github.com/pallets/click/issues/3024#issuecomment-3146199461
         # https://github.com/pallets/click/pull/3030/commits/06847da
-        if self.default is True and self.flag_value is not UNSET:
-            self.default = self.flag_value
 
         # Set the default flag_value if it is not set.
         if self.flag_value is UNSET:
@@ -2884,6 +2912,39 @@ class Option(Parameter):
             hidden=self.hidden,
         )
         return info_dict
+
+    def get_default(
+        self, ctx: Context, call: bool = True
+    ) -> t.Any | t.Callable[[], t.Any] | None:
+        """Return the default value for this option.
+
+        For non-boolean flag options, ``default=True`` is treated as a sentinel
+        meaning "activate this flag by default" and is resolved to
+        :attr:`flag_value`.  For example, with ``--upper/--lower`` feature
+        switches where ``flag_value="upper"`` and ``default=True``, the default
+        resolves to ``"upper"``.
+
+        .. caution::
+            This substitution only applies to non-boolean flags
+            (:attr:`is_bool_flag` is ``False``). For boolean flags, ``True`` is
+            a legitimate Python value and ``default=True`` is returned as-is.
+
+        .. versionchanged:: 8.3.3
+            ``default=True`` is no longer substituted with ``flag_value`` for
+            boolean flags, fixing negative boolean flags like
+            ``flag_value=False, default=True``.
+        """
+        value = super().get_default(ctx, call=False)
+
+        # Resolve default=True to flag_value lazily (here instead of
+        # __init__) to prevent callable flag_values (like classes) from
+        # being instantiated by the callable check below.
+        if value is True and self.is_flag and not self.is_bool_flag:
+            value = self.flag_value
+        elif call and callable(value):
+            value = value()
+
+        return value
 
     def get_error_hint(self, ctx: Context) -> str:
         result = super().get_error_hint(ctx)
@@ -3091,7 +3152,7 @@ class Option(Parameter):
                 )[1]
             elif self.is_bool_flag and not self.secondary_opts and not default_value:
                 default_string = ""
-            elif default_value == "":
+            elif isinstance(default_value, str) and default_value == "":
                 default_string = '""'
             else:
                 default_string = str(default_value)
@@ -3145,10 +3206,10 @@ class Option(Parameter):
                 default = bool(default)
             return confirm(self.prompt, default)
 
-        # If show_default is set to True/False, provide this to `prompt` as well. For
-        # non-bool values of `show_default`, we use `prompt`'s default behavior
+        # If show_default is given, provide this to `prompt` as well,
+        # otherwise we use `prompt`'s default behavior
         prompt_kwargs: t.Any = {}
-        if isinstance(self.show_default, bool):
+        if self.show_default is not None:
             prompt_kwargs["show_default"] = self.show_default
 
         return prompt(
@@ -3266,7 +3327,7 @@ class Option(Parameter):
             self.is_flag
             and value is True
             and not self.is_bool_flag
-            and source not in (ParameterSource.DEFAULT, ParameterSource.DEFAULT_MAP)
+            and source < ParameterSource.DEFAULT_MAP
         ):
             value = self.flag_value
 
@@ -3276,7 +3337,7 @@ class Option(Parameter):
         elif (
             self.multiple
             and value is not UNSET
-            and source not in (ParameterSource.DEFAULT, ParameterSource.DEFAULT_MAP)
+            and source < ParameterSource.DEFAULT_MAP
             and any(v is FLAG_NEEDS_VALUE for v in value)
         ):
             value = [self.flag_value if v is FLAG_NEEDS_VALUE else v for v in value]
@@ -3285,10 +3346,7 @@ class Option(Parameter):
         # The value wasn't set, or used the param's default, prompt for one to the user
         # if prompting is enabled.
         elif (
-            (
-                value is UNSET
-                or source in (ParameterSource.DEFAULT, ParameterSource.DEFAULT_MAP)
-            )
+            (value is UNSET or source >= ParameterSource.DEFAULT_MAP)
             and self.prompt is not None
             and (self.required or self.prompt_required)
             and not ctx.resilient_parsing
