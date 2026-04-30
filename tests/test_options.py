@@ -144,6 +144,19 @@ def test_unknown_options(runner, unknown_flag):
     assert f"No such option '{unknown_flag}'." in result.output
 
 
+def test_unknown_multichar_short_option_shows_full_name(runner):
+    """Error message should show the full option string, not just the first char."""
+
+    @click.command()
+    def cli():
+        pass
+
+    result = runner.invoke(cli, ["-dbg"])
+    assert result.exception
+    assert "No such option '-dbg'." in result.output
+    assert "No such option '-d'." not in result.output
+
+
 @pytest.mark.parametrize(
     ("value", "expect"),
     [

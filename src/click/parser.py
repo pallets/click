@@ -398,7 +398,7 @@ class _OptionParser:
                 if self.ignore_unknown_options:
                     unknown_options.append(ch)
                     continue
-                raise NoSuchOption(opt, ctx=self.ctx)
+                raise NoSuchOption(arg, ctx=self.ctx)
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
                 # next arg, and stop consuming characters of arg.
