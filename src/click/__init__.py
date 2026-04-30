@@ -33,6 +33,7 @@ from .exceptions import BadParameter as BadParameter
 from .exceptions import ClickException as ClickException
 from .exceptions import FileError as FileError
 from .exceptions import MissingParameter as MissingParameter
+from .exceptions import NoSuchCommand as NoSuchCommand
 from .exceptions import NoSuchOption as NoSuchOption
 from .exceptions import UsageError as UsageError
 from .formatting import HelpFormatter as HelpFormatter
@@ -42,6 +43,7 @@ from .termui import clear as clear
 from .termui import confirm as confirm
 from .termui import echo_via_pager as echo_via_pager
 from .termui import edit as edit
+from .termui import get_pager_file as get_pager_file
 from .termui import getchar as getchar
 from .termui import launch as launch
 from .termui import pause as pause

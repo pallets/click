@@ -1,10 +1,55 @@
 .. currentmodule:: click
 
-Version 8.3.4
+
+Version 8.4.0
 -------------
 
 Unreleased
 
+-   :class:`ParamType` typing improvements. :pr:`3371`
+
+    -   :class:`ParamType` is now a generic abstract base class,
+        parameterized by its converted value type.
+    -   :meth:`~ParamType.convert` return types are narrowed on all
+        concrete types (``str`` for :class:`STRING`, ``int`` for
+        :class:`INT`, etc.).
+    -   :meth:`~ParamType.to_info_dict` returns specific
+        :class:`~typing.TypedDict` subclasses instead of
+        ``dict[str, Any]``.
+    -   :class:`CompositeParamType` and the number-range base are now
+        generic with abstract methods.
+-   :class:`Parameter` typing improvements. :pr:`2805`
+
+    -   :class:`Parameter` is now an abstract base class, making explicit
+        that it cannot be instantiated directly.
+    -   :attr:`Parameter.name` is now ``str`` instead of ``str | None``.
+        When ``expose_value=False``, the name is set to ``""`` instead
+        of ``None``.
+    -   The ``ctx`` parameter of :meth:`Parameter.get_error_hint` is now
+        typed as ``Context | None``, matching the runtime behavior.
+-   Split string values from ``default_map`` for parameters with ``nargs > 1``
+    or :class:`Tuple` type, matching environment variable behavior.
+    :issue:`2745` :pr:`3364`
+-   Auto-detect ``type=UNPROCESSED`` for ``flag_value`` of non-basic types
+    (not ``str``, ``int``, ``float``, or ``bool``), so programmer-provided
+    Python objects like classes and enum members are passed through unchanged
+    instead of being stringified. Previously ``type=click.UNPROCESSED`` had
+    to be set explicitly. :issue:`2012` :pr:`3363`
+-   The error hint now uses :meth:`Command.get_help_option_names` to pick
+    non-shadowed help option names, so ``Try '... -h'`` no longer points to a
+    subcommand option that shadows ``-h``. All surviving names are shown
+    (``-h/--help``). :issue:`2790` :pr:`3208`
+-   Fix readline functionality on non-Windows platforms. Prompt text is now
+    passed directly to readline instead of being printed separately, allowing
+    proper backspace, line editing, and line wrapping behavior. :issue:`2968`
+    :pr:`2969`
+-   Use :func:`os.startfile` on Windows to open URLs in :func:`open_url`,
+    replacing the ``start`` built-in which cannot be invoked without
+    ``shell=True``. :issue:`3164` :pr:`3186`
+-   Fix Fish shell completion errors when option help text contains newlines.
+    :issue:`3043`
+-   Add :class:`NoSuchCommand` exception with suggestions for misspelled
+    commands. :issue:`3107` :pr:`3228`
 -   Use :class:`ValueError` message when conversion in :class:`FuncParamType` would
     fail. :issue:`3105` :pr:`3211`
 
@@ -220,6 +265,8 @@ Released 2025-05-10
         allows the user to search for future output of the generator when
         using less and then aborting the program using ctrl-c.
 
+-   Add ``click.get_pager_file`` for file-like access to an output
+    pager. :pr:`1572`
 -   ``deprecated: bool | str`` can now be used on options and arguments. This
     previously was only available for ``Command``. The message can now also be
     customised by using a ``str`` instead of a ``bool``. :issue:`2263` :pr:`2271`
