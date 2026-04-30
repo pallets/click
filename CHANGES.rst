@@ -4,6 +4,8 @@ Unreleased
 
 -   Fix handling of ``flag_value`` when ``is_flag=False`` to allow such options to be
     used without an explicit value. :issue:`3084`
+-   Use :class:`ValueError` message when conversion in :class:`FuncParamType` would
+    fail. :issue:`3105` :pr:`3211`
 
 Version 8.3.1
 --------------
