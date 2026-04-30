@@ -17,6 +17,9 @@ Unreleased
         ``dict[str, Any]``.
     -   :class:`CompositeParamType` and the number-range base are now
         generic with abstract methods.
+-   Refactor ``convert_type`` to extract type inference into a private
+    ``_guess_type`` helper, and add :func:`typing.overload` signatures.
+    :pr:`3372`
 -   :class:`Parameter` typing improvements. :pr:`2805`
 
     -   :class:`Parameter` is now an abstract base class, making explicit
@@ -46,7 +49,7 @@ Unreleased
     replacing the ``start`` built-in which cannot be invoked without
     ``shell=True``. :issue:`3164` :pr:`3186`
 -   Fix Fish shell completion errors when option help text contains newlines.
-    :issue:`3043`
+    :issue:`3043` :pr:`3126`
 -   Add :class:`NoSuchCommand` exception with suggestions for misspelled
     commands. :issue:`3107` :pr:`3228`
 -   Add ``click.get_pager_file`` for file-like access to an output
