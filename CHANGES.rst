@@ -1,5 +1,13 @@
 .. currentmodule:: click
 
+Version 8.3.4
+-------------
+
+Unreleased
+
+-   Use :class:`ValueError` message when conversion in :class:`FuncParamType` would
+    fail. :issue:`3105` :pr:`3211`
+
 Version 8.3.3
 -------------
 
@@ -58,8 +66,6 @@ Released 2026-04-02
     with a dedicated CI job. :pr:`3139`
 -   Fix callable ``flag_value`` being instantiated when used as a default via
     ``default=True``. :issue:`3121` :pr:`3201` :pr:`3213` :pr:`3225`
--   Use :class:`ValueError` message when conversion in :class:`FuncParamType` would
-    fail. :issue:`3105` :pr:`3211`
 
 Version 8.3.1
 -------------
