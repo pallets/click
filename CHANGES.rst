@@ -49,6 +49,10 @@ Unreleased
     :issue:`3043`
 -   Add :class:`NoSuchCommand` exception with suggestions for misspelled
     commands. :issue:`3107` :pr:`3228`
+-   Show custom error messages from types when :func:`prompt` with
+    ``hide_input=True`` fails validation, instead of always showing a
+    generic message. Built-in type messages mask the input value.
+    :issue:`2809` :pr:`3256`
 
 Version 8.3.3
 -------------

@@ -203,7 +203,20 @@ def prompt(
             result = value_proc(value)
         except UsageError as e:
             if hide_input:
-                echo(_("Error: The value you entered was invalid."), err=err)
+                repr_val = repr(value)
+                if repr_val in e.message:
+                    # Built-in type pattern: mask the repr'd value.
+                    msg = e.message.replace(repr_val, "'***'")
+                elif value in e.message:
+                    # Raw value found: could be a coincidental or
+                    # unquoted match. Ambiguous, use generic.
+                    msg = _("The value you entered was invalid.")
+                else:
+                    # Value not found: show as-is, assuming custom
+                    # types with hide_input=True avoid leaking input.
+                    msg = e.message
+
+                echo(_("Error: {msg}").format(msg=msg), err=err)
             else:
                 echo(_("Error: {e.message}").format(e=e), err=err)
             continue
