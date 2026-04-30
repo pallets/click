@@ -49,7 +49,7 @@ Unreleased
     replacing the ``start`` built-in which cannot be invoked without
     ``shell=True``. :issue:`3164` :pr:`3186`
 -   Fix Fish shell completion errors when option help text contains newlines.
-    :issue:`3043`
+    :issue:`3043` :pr:`3126`
 -   Add :class:`NoSuchCommand` exception with suggestions for misspelled
     commands. :issue:`3107` :pr:`3228`
 
