@@ -50,7 +50,7 @@ V = t.TypeVar("V")
 
 def _unpack_args(
     args: cabc.Sequence[str], nargs_spec: cabc.Sequence[int]
-) -> tuple[cabc.Sequence[str | cabc.Sequence[str | None] | None], list[str]]:
+) -> tuple[cabc.Sequence[str | cabc.Sequence[str | T_UNSET] | T_UNSET], list[str]]:
     """Given an iterable of arguments and an iterable of nargs specifications,
     it returns a tuple with all the unpacked arguments at the first index
     and all remaining arguments as the second.
@@ -65,7 +65,7 @@ def _unpack_args(
     rv: list[str | tuple[str | T_UNSET, ...] | T_UNSET] = []
     spos: int | None = None
 
-    def _fetch(c: deque[V]) -> V | T_UNSET:
+    def _fetch(c: deque[str]) -> str | T_UNSET:
         try:
             if spos is None:
                 return c.popleft()
@@ -75,13 +75,13 @@ def _unpack_args(
             return UNSET
 
     while nargs_spec:
-        nargs = _fetch(nargs_spec)
-
-        if nargs is None:
-            continue
+        if spos is None:
+            nargs = nargs_spec.popleft()
+        else:
+            nargs = nargs_spec.pop()
 
         if nargs == 1:
-            rv.append(_fetch(args))  # type: ignore[arg-type]
+            rv.append(_fetch(args))
         elif nargs > 1:
             x = [_fetch(args) for _ in range(nargs)]
 
@@ -186,12 +186,12 @@ class _Argument:
 
     def process(
         self,
-        value: str | cabc.Sequence[str | None] | None | T_UNSET,
+        value: str | cabc.Sequence[str | T_UNSET] | T_UNSET,
         state: _ParsingState,
     ) -> None:
         if self.nargs > 1:
             assert isinstance(value, cabc.Sequence)
-            holes = sum(1 for x in value if x is UNSET)
+            holes = sum(x is UNSET for x in value)
             if holes == len(value):
                 value = UNSET
             elif holes != 0:
@@ -425,10 +425,10 @@ class _OptionParser:
 
     def _get_value_from_state(
         self, option_name: str, option: _Option, state: _ParsingState
-    ) -> str | cabc.Sequence[str] | T_FLAG_NEEDS_VALUE:
+    ) -> str | cabc.Sequence[str] | T_UNSET | T_FLAG_NEEDS_VALUE:
         nargs = option.nargs
 
-        value: str | cabc.Sequence[str] | T_FLAG_NEEDS_VALUE
+        value: str | cabc.Sequence[str] | T_UNSET | T_FLAG_NEEDS_VALUE
 
         if len(state.rargs) < nargs:
             if option.obj._flag_needs_value:
