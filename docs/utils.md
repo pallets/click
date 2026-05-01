@@ -110,6 +110,19 @@ you can pass a generator (or generator function) instead of a string:
         click.echo_via_pager(_generate_output())
 ```
 
+For more complex programs, which can't easily use a simple generator, you
+can get access to a writable file-like object for the pager, and write to
+that instead:
+
+```{eval-rst}
+.. click:example::
+    @click.command()
+    def less():
+        with click.get_pager_file() as pager:
+            for idx in range(50000):
+                print(idx, file=pager)
+```
+
 ## Screen Clearing
 
 ```{versionadded} 2.0

@@ -58,7 +58,10 @@ def make_str(value: t.Any) -> str:
 
 
 def make_default_short_help(help: str, max_length: int = 45) -> str:
-    """Returns a condensed version of help string."""
+    """Returns a condensed version of help string.
+
+    :meta private:
+    """
     # Consider only the first paragraph.
     paragraph_end = help.find("\n\n")
 

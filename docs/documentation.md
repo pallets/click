@@ -145,6 +145,22 @@ For single option boolean flags, the default remains hidden if the default value
    invoke(dots, args=['--help'])
 ```
 
+## Showing Environment Variables
+
+To control the appearance of environment variables pass `show_envvar`.
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('--username', envvar='USERNAME', show_envvar=True)
+    def greet(username):
+        click.echo(f'Hello {username}!')
+
+.. click:run::
+    invoke(greet, args=['--help'])
+```
+
 ## Click's Wrapping Behavior
 
 Click's default wrapping ignores single new lines and rewraps the text based on the width of the terminal to a maximum of 80 characters by default, but this can be modified with {attr}`~Context.max_content_width`. In the example notice how the second grouping of three lines is rewrapped into a single paragraph.

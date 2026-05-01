@@ -6,3 +6,4 @@ dist/
 htmlcov/
 .tox/
 docs/_build/
+.venv

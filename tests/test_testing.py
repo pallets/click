@@ -1,4 +1,6 @@
+import faulthandler
 import os
+import pdb
 import sys
 from io import BytesIO
 
@@ -469,3 +471,77 @@ def test_isolation_flushes_unflushed_stderr():
 
     result = runner.invoke(cli)
     assert result.stderr == "gyarados gyarados gyarados"
+
+
+def test_pdb_uses_real_streams():
+    """``pdb.Pdb()`` inside ``CliRunner`` defaults to real terminal streams
+    so that interactive debuggers work instead of reading from the
+    captured ``BytesIO`` stdin.
+    """
+
+    @click.command()
+    def cli():
+        debugger = pdb.Pdb()
+        assert debugger.stdin is sys.__stdin__
+        assert debugger.stdout is sys.__stdout__
+        click.echo("after debugger")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, catch_exceptions=False)
+    assert result.output == "after debugger\n"
+
+
+def test_pdb_explicit_streams_honored():
+    """Explicit ``stdin``/``stdout`` arguments to ``pdb.Pdb()`` are not
+    overridden by the ``CliRunner`` patch.
+    """
+
+    @click.command()
+    def cli():
+        custom_in = sys.stdin
+        custom_out = sys.stdout
+        debugger = pdb.Pdb(stdin=custom_in, stdout=custom_out)
+        assert debugger.stdin is custom_in
+        assert debugger.stdout is custom_out
+
+    runner = CliRunner()
+    runner.invoke(cli, catch_exceptions=False)
+
+
+def test_pdb_init_restored_after_invoke():
+    """``pdb.Pdb.__init__`` is restored to its original after invoke."""
+    original = pdb.Pdb.__init__
+
+    @click.command()
+    def cli():
+        pass
+
+    runner = CliRunner()
+    runner.invoke(cli)
+
+    assert pdb.Pdb.__init__ is original
+
+
+def test_faulthandler_enable(runner):
+    """``faulthandler.enable()`` inside ``CliRunner`` should not crash with
+    ``io.UnsupportedOperation: fileno``.
+
+    ``faulthandler.enable()`` needs a real OS file descriptor to register
+    its signal handler. ``CliRunner`` replaces ``sys.stderr`` with a
+    ``BytesIO`` wrapper that has no ``fileno()``, causing the call to fail.
+
+    Reproduce:https://github.com/pallets/click/issues/2865
+    """
+
+    @click.command()
+    @click.option("--flag", type=bool, default=True)
+    def cli(flag):
+        click.echo("Executing main function...")
+        if flag:
+            click.echo("Registering faulthandler")
+            faulthandler.enable()
+        click.echo("Finished executing main function.")
+
+    result = runner.invoke(cli, ["--flag", True])
+    assert result.exit_code == 0, result.output
+    assert "Finished executing main function." in result.output
