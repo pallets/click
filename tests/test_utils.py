@@ -8,7 +8,9 @@ from contextlib import nullcontext
 from decimal import Decimal
 from fractions import Fraction
 from functools import partial
+from io import BytesIO
 from io import StringIO
+from io import TextIOWrapper
 from unittest.mock import patch
 
 import pytest
@@ -95,6 +97,17 @@ def test_echo_custom_file():
     f = StringIO()
     click.echo("hello", file=f)
     assert f.getvalue() == "hello\n"
+
+
+def test_echo_replaces_unencodable_default_stdout(monkeypatch):
+    stream = BytesIO()
+    stdout = TextIOWrapper(stream, encoding="cp1252", errors="surrogateescape")
+    monkeypatch.setattr(sys, "stdout", stdout)
+
+    click.echo("\u2023")
+
+    stdout.flush()
+    assert stream.getvalue() == b"?\n"
 
 
 def test_echo_no_streams(monkeypatch, runner):

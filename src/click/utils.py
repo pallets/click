@@ -267,6 +267,8 @@ def echo(
     .. versionchanged:: 2.0
         Support colors on Windows if colorama is installed.
     """
+    file_is_default = file is None
+
     if file is None:
         if err:
             file = _default_text_stderr()
@@ -321,7 +323,21 @@ def echo(
             elif not color:
                 out = strip_ansi(out)
 
-    file.write(out)  # type: ignore
+    try:
+        file.write(out)  # type: ignore
+    except UnicodeEncodeError:
+        if file_is_default and isinstance(out, str):
+            binary_file = _find_binary_writer(file)
+
+            if binary_file is not None:
+                file.flush()
+                encoding = getattr(file, "encoding", None) or sys.getdefaultencoding()
+                binary_file.write(out.encode(encoding, "replace"))
+                binary_file.flush()
+                return
+
+        raise
+
     file.flush()
 
 
