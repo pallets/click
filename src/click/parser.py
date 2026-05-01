@@ -83,7 +83,7 @@ def _unpack_args(
         if nargs == 1:
             rv.append(_fetch(args))
         elif nargs > 1:
-            x = [_fetch(args) for _ in range(nargs)]
+            x: list[str | T_UNSET] = [_fetch(args) for _ in range(nargs)]
 
             # If we're reversed, we're pulling in the arguments in reverse,
             # so we need to turn them around.
