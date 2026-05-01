@@ -6,6 +6,7 @@ import re
 import sys
 import typing as t
 from functools import update_wrapper
+from gettext import gettext as _
 from types import ModuleType
 from types import TracebackType
 
@@ -333,7 +334,7 @@ def get_binary_stream(name: t.Literal["stdin", "stdout", "stderr"]) -> t.BinaryI
     """
     opener = binary_streams.get(name)
     if opener is None:
-        raise TypeError(f"Unknown standard stream '{name}'")
+        raise TypeError(_("Unknown standard stream '{name}'").format(name=name))
     return opener()
 
 
@@ -354,7 +355,7 @@ def get_text_stream(
     """
     opener = text_streams.get(name)
     if opener is None:
-        raise TypeError(f"Unknown standard stream '{name}'")
+        raise TypeError(_("Unknown standard stream '{name}'").format(name=name))
     return opener(encoding, errors)
 
 
