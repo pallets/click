@@ -425,6 +425,32 @@ def test_formatting_with_options_metavar_empty(runner):
     assert "Usage: cli VAR\n" in result.output
 
 
+def test_help_formatter_write_usage_does_not_break_on_hyphens():
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+
+    formatter = click.HelpFormatter(width=65)
+    formatter.write_usage("program", " ".join(options))
+
+    assert formatter.getvalue() == (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+        "               --config-file-location --user-auth-token\n"
+        "               --auto-update-interval --force-overwrite-existing\n"
+        "               --network-timeout-seconds --debug-trace-enabled\n"
+    )
+
+
 def test_help_formatter_write_text():
     text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
     formatter = click.HelpFormatter(width=len("  Lorem ipsum dolor sit amet,"))
