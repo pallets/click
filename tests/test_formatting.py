@@ -433,3 +433,9 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+
+def test_help_formatter_write_usage_no_args():
+    f = click.HelpFormatter()
+    f.write_usage("program")
+    assert f.getvalue() == "Usage: program\n"
