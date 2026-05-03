@@ -158,27 +158,33 @@ class HelpFormatter:
         usage_prefix = f"{prefix:>{self.current_indent}}{prog} "
         text_width = self.width - self.current_indent
 
-        if text_width >= (term_len(usage_prefix) + 20):
-            # The arguments will fit to the right of the prefix.
-            indent = " " * term_len(usage_prefix)
-            self.write(
-                wrap_text(
-                    args,
-                    text_width,
-                    initial_indent=usage_prefix,
-                    subsequent_indent=indent,
+        if args:
+            if text_width >= (term_len(usage_prefix) + 20):
+                # The arguments will fit to the right of the prefix.
+                indent = " " * term_len(usage_prefix)
+                self.write(
+                    wrap_text(
+                        args,
+                        text_width,
+                        initial_indent=usage_prefix,
+                        subsequent_indent=indent,
+                    )
                 )
-            )
+            else:
+                # The prefix is too long, put the arguments on the next line.
+                self.write(usage_prefix)
+                self.write("\n")
+                indent = " " * (max(self.current_indent, term_len(prefix)) + 4)
+                self.write(
+                    wrap_text(
+                        args,
+                        text_width,
+                        initial_indent=indent,
+                        subsequent_indent=indent,
+                    )
+                )
         else:
-            # The prefix is too long, put the arguments on the next line.
-            self.write(usage_prefix)
-            self.write("\n")
-            indent = " " * (max(self.current_indent, term_len(prefix)) + 4)
-            self.write(
-                wrap_text(
-                    args, text_width, initial_indent=indent, subsequent_indent=indent
-                )
-            )
+            self.write(usage_prefix.rstrip())
 
         self.write("\n")
 

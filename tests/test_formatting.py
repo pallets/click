@@ -433,3 +433,10 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+
+def test_write_usage_with_no_args():
+    """Write usage should print program name even when no args are given."""
+    f = click.HelpFormatter()
+    f.write_usage("program")
+    assert f.getvalue() == "Usage: program\n"
