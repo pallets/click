@@ -63,7 +63,7 @@ def wrap_text(
         replace_whitespace=False,
     )
     if not preserve_paragraphs:
-        return wrapper.fill(text)
+        return wrapper.fill(text) if text else initial_indent
 
     p: list[tuple[int, bool, str]] = []
     buf: list[str] = []
