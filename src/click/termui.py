@@ -83,39 +83,44 @@ def _build_prompt(
     text: str,
     suffix: str,
     show_default: bool | str = False,
-    default: t.Any | None = None,
+    default: V | None = None,
     show_choices: bool = True,
-    type: ParamType[t.Any] | None = None,
+    type: ParamType[V] | V | None = None,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += f" ({', '.join(map(str, type.choices))})"
-    if isinstance(show_default, str):
-        default = f"({show_default})"
-    if default is not None and show_default:
-        prompt = f"{prompt} [{_format_default(default)}]"
-    return f"{prompt}{suffix}"
+    default_preview = ""
+    if show_default:
+        if isinstance(show_default, str):
+            default_preview = f" [({show_default})]"
+        elif default is not None:
+            default_preview = f" [{_format_default(default)}]"
+    return f"{prompt}{default_preview}{suffix}"
 
 
-def _format_default(default: t.Any) -> t.Any:
-    if isinstance(default, (io.IOBase, LazyFile)) and hasattr(default, "name"):
-        return default.name
+def _format_default(default: V) -> V | str:
+    if isinstance(default, (io.IOBase, LazyFile)):
+        name = getattr(default, "name", None)
+
+        if name is not None:
+            return str(name)
 
     return default
 
 
 def prompt(
     text: str,
-    default: t.Any | None = None,
+    default: V | None = None,
     hide_input: bool = False,
     confirmation_prompt: bool | str = False,
-    type: ParamType[t.Any] | t.Any | None = None,
-    value_proc: t.Callable[[str], t.Any] | None = None,
+    type: ParamType[V] | V | None = None,
+    value_proc: t.Callable[[str], V] | None = None,
     prompt_suffix: str = ": ",
     show_default: bool | str = True,
     err: bool = False,
     show_choices: bool = True,
-) -> t.Any:
+) -> V:
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
@@ -192,21 +197,23 @@ def prompt(
         confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
 
     while True:
+        result = None
         while True:
             value = prompt_func(prompt)
             if value:
                 break
             elif default is not None:
-                value = default
+                result = default
                 break
-        try:
-            result = value_proc(value)
-        except UsageError as e:
-            if hide_input:
-                echo(_("Error: The value you entered was invalid."), err=err)
-            else:
-                echo(_("Error: {e.message}").format(e=e), err=err)
-            continue
+        if result is None:
+            try:
+                result = value_proc(value)
+            except UsageError as e:
+                if hide_input:
+                    echo(_("Error: The value you entered was invalid."), err=err)
+                else:
+                    echo(_("Error: {e.message}").format(e=e), err=err)
+                continue
         if not confirmation_prompt:
             return result
         while True:
