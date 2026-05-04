@@ -87,6 +87,24 @@ class ParamType(t.Generic[ParamTypeValue], abc.ABC):
 
         return {"param_type": param_type, "name": name}
 
+    @t.overload
+    def __call__(
+        self,
+        value: None,
+        param: Parameter | None = None,
+        ctx: Context | None = None,
+    ) -> None:
+        ...
+
+    @t.overload
+    def __call__(
+        self,
+        value: t.Any,
+        param: Parameter | None = None,
+        ctx: Context | None = None,
+    ) -> ParamTypeValue:
+        ...
+
     def __call__(
         self,
         value: t.Any,
