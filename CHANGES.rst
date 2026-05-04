@@ -51,6 +51,9 @@ Unreleased
     commands. :issue:`3107` :pr:`3228`
 -   Add ``click.get_pager_file`` for file-like access to an output
     pager. :pr:`1572`
+-   ``click.prompt`` implementation changed slightly so that when the default
+    value is used, it does not do a round trip through the value processor or
+    the type conversion. :pr:`3407`
 
 Version 8.3.3
 -------------

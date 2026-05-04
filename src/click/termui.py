@@ -150,6 +150,11 @@ def prompt(
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
 
+    .. versionchanged:: 8.4.0
+        ``default`` no longer passes through the ``value_proc` callback,
+        nor the constructor of the ``type`` or the type of the ``default``
+        field.
+
     .. versionchanged:: 8.3.3
         ``show_default`` can be a string to show a custom value instead
         of the actual default, matching the help text behavior.
