@@ -1,11 +1,17 @@
+import contextlib
+import io
 import platform
 import shlex
+import shutil
+import subprocess
 import tempfile
 import time
+from functools import partial
 from unittest.mock import patch
 
 import pytest
 
+import click
 import click._termui_impl
 from click._compat import WIN
 from click._termui_impl import Editor
@@ -618,6 +624,160 @@ def test_pager_shlex_split(pager_env, expected_parts):
     issue #1026, PR #1477, PR #1543, PR #2775.
     """
     assert shlex.split(pager_env) == expected_parts
+
+
+def test_get_pager_file_reuses_existing_maybe_strip_ansi(monkeypatch):
+    """An already-wrapped pager stream should be yielded unchanged."""
+    buffer = io.BytesIO()
+    wrapped = click._termui_impl.MaybeStripAnsi(buffer, color=True, encoding="utf-8")
+
+    @contextlib.contextmanager
+    def pager_contextmanager(color=None):
+        yield wrapped, "utf-8", color
+
+    monkeypatch.setattr(
+        click._termui_impl, "_pager_contextmanager", pager_contextmanager
+    )
+
+    with click.get_pager_file(color=True) as pager:
+        assert pager is wrapped
+        pager.write("hello")
+
+    assert buffer.getvalue() == b"hello"
+
+
+def test_get_pager_file_keeps_text_stream_without_buffer(monkeypatch):
+    """
+    A text stream with no ``.buffer`` should not be re-wrapped and have
+    its color field set.
+    """
+
+    class TextStreamWithoutBuffer:
+        encoding = "utf-8"
+
+        def __init__(self):
+            self.value = ""
+            self.color = None
+
+        def write(self, text):
+            self.value += text
+            return len(text)
+
+        def flush(self):
+            pass
+
+    stream = TextStreamWithoutBuffer()
+    styled_text = click.style("hello", fg="red")
+
+    @contextlib.contextmanager
+    def pager_contextmanager(color=None):
+        yield stream, "utf-8", color
+
+    monkeypatch.setattr(
+        click._termui_impl, "_pager_contextmanager", pager_contextmanager
+    )
+
+    with click.get_pager_file(color=False) as pager:
+        assert pager is stream
+        assert pager.color is False
+        pager.write(styled_text)
+
+    assert stream.value == styled_text
+
+
+def _run_get_pager_file_with_real_pager(monkeypatch, tmp_path, writer, color=False):
+    pager_path = shutil.which("cat")
+    assert pager_path is not None, "cat not available"
+
+    pager_out = tmp_path / "pager_out.txt"
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setitem(click._termui_impl.os.environ, "PAGER", pager_path)
+
+    with pager_out.open("w") as f:
+        force_subprocess_stdout = patch.object(
+            subprocess,
+            "Popen",
+            partial(subprocess.Popen, stdout=f),
+        )
+        with force_subprocess_stdout:
+            with click.get_pager_file(color=color) as pager:
+                writer(pager)
+
+    return pager_out.read_text()
+
+
+@pytest.mark.skipif(WIN, reason="Exercises the pipe pager path.")
+def test_get_pager_file_supports_multiple_write_sites(monkeypatch, tmp_path):
+    """Different helpers can write to the same pager stream."""
+
+    def writer(pager):
+        pager.write("prefix\n")
+        click.echo("middle", file=pager)
+        pager.write("suffix\n")
+
+    output = _run_get_pager_file_with_real_pager(monkeypatch, tmp_path, writer)
+
+    assert output == "prefix\nmiddle\nsuffix\n"
+
+
+@pytest.mark.skipif(WIN, reason="Exercises the pipe pager path.")
+@pytest.mark.parametrize(
+    ("text", "color", "expected"),
+    [
+        pytest.param("hello\n", False, "hello\n", id="plain text"),
+        pytest.param(
+            click.style("hello", fg="red") + "\n", False, "hello\n", id="strip ansi"
+        ),
+        pytest.param(
+            click.style("hello", fg="red") + "\n",
+            True,
+            click.style("hello", fg="red") + "\n",
+            id="preserve ansi",
+        ),
+        pytest.param("", False, "", id="empty string"),
+    ],
+)
+def test_get_pager_file_with_real_pager_data_cases(
+    monkeypatch, tmp_path, text, color, expected
+):
+    """Real pager output should match text and color expectations."""
+    output = _run_get_pager_file_with_real_pager(
+        monkeypatch, tmp_path, lambda pager: pager.write(text), color=color
+    )
+
+    assert output == expected
+
+
+def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
+    """Exceptions should still flush the yielded stream in ``finally``."""
+
+    class FlushableTextStream:
+        encoding = "utf-8"
+
+        def __init__(self):
+            self.color = None
+            self.flush_calls = 0
+
+        def flush(self):
+            self.flush_calls += 1
+
+    stream = FlushableTextStream()
+
+    @contextlib.contextmanager
+    def pager_contextmanager(color=None):
+        yield stream, "utf-8", color
+
+    monkeypatch.setattr(
+        click._termui_impl, "_pager_contextmanager", pager_contextmanager
+    )
+
+    with pytest.raises(RuntimeError, match="boom"):
+        with click.get_pager_file() as pager:
+            assert pager is stream
+            raise RuntimeError("boom")
+
+    assert stream.flush_calls == 1
 
 
 def test_editor_unclosed_quote():
