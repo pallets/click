@@ -3358,6 +3358,7 @@ class Option(Parameter):
         elif (
             self.multiple
             and value is not UNSET
+            and isinstance(value, cabc.Iterable)
             and source < ParameterSource.DEFAULT_MAP
             and any(v is FLAG_NEEDS_VALUE for v in value)
         ):
