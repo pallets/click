@@ -32,6 +32,19 @@ from .utils import echo
 
 V = t.TypeVar("V")
 
+
+class _BufferedTextPagerStream(t.Protocol):
+    buffer: t.BinaryIO
+
+
+def _has_binary_buffer(
+    stream: t.BinaryIO | t.TextIO,
+) -> t.TypeGuard[_BufferedTextPagerStream]:
+    # TextIO is wider than TextIOWrapper; text-only streams such as StringIO
+    # are valid TextIO values but do not expose a binary buffer to wrap.
+    return getattr(stream, "buffer", None) is not None
+
+
 if os.name == "nt":
     BEFORE_BAR = "\r"
     AFTER_BAR = "\n"
@@ -423,18 +436,17 @@ def get_pager_file(color: bool | None = None) -> t.Generator[t.TextIO, None, Non
                   default is autodetection.
     """
     with _pager_contextmanager(color=color) as (stream, encoding, color):
-        if not isinstance(stream, MaybeStripAnsi):
-            if hasattr(stream, "buffer"):
-                # Real TextIO with buffer - unwrap and wrap in MaybeStripAnsi
-                stream = MaybeStripAnsi(stream.buffer, color=color, encoding=encoding)
-            elif not getattr(stream, "encoding", None):
-                # BinaryIO - wrap directly in MaybeStripAnsi
-                stream = MaybeStripAnsi(stream, color=color, encoding=encoding)
-            else:
-                # StringIO - add .color attribute only, no ANSI stripping
-                stream.color = color  # type: ignore[attr-defined]
+        # Split streams by capabilities rather than the abstract TextIO /
+        # BinaryIO annotations: buffered text streams can be unwrapped to bytes,
+        # while text-only streams are yielded as-is.
+        if _has_binary_buffer(stream):
+            # Text stream backed by a binary buffer.
+            stream = MaybeStripAnsi(stream.buffer, color=color, encoding=encoding)
+        elif isinstance(stream, t.BinaryIO):
+            # Binary stream
+            stream = MaybeStripAnsi(stream, color=color, encoding=encoding)
         try:
-            yield t.cast(t.TextIO, stream)
+            yield stream
         finally:
             stream.flush()
 
