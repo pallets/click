@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 import collections.abc as cabc
 import inspect
 import io
@@ -25,7 +26,13 @@ from .utils import LazyFile
 if t.TYPE_CHECKING:
     from ._termui_impl import ProgressBar
 
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
+
 V = t.TypeVar("V")
+C = t.TypeVar("C")
 
 # The prompt functions to use.  The doc tools currently override these
 # functions to customize how they work.
@@ -83,9 +90,9 @@ def _build_prompt(
     text: str,
     suffix: str,
     show_default: bool | str = False,
-    default: V | None = None,
+    default: object | None = None,
     show_choices: bool = True,
-    type: ParamType[V] | V | None = None,
+    type: object | None = None,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
@@ -109,13 +116,20 @@ def _format_default(default: V) -> V | str:
     return default
 
 
+def _is_expected_type(
+    default: object,
+    type: ParamType[V, t.Any] | V | None,
+) -> TypeIs[V]:
+    return builtins.type(default) is builtins.type(type)
+
+
 def prompt(
     text: str,
-    default: V | None = None,
+    default: V | C | str | None = None,
     hide_input: bool = False,
     confirmation_prompt: bool | str = False,
-    type: ParamType[V] | V | None = None,
-    value_proc: t.Callable[[str], V] | None = None,
+    type: ParamType[V, C | str] | V | None = None,
+    value_proc: t.Callable[[C | str], V] | None = None,
     prompt_suffix: str = ": ",
     show_default: bool | str = True,
     err: bool = False,
@@ -202,13 +216,19 @@ def prompt(
         confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
 
     while True:
-        result = None
+        result: V | None = None
         while True:
-            value = prompt_func(prompt)
+            value: C | str = prompt_func(prompt)
             if value:
                 break
             elif default is not None:
-                result = default
+                if _is_expected_type(default=default, type=type):
+                    # It's the expected type, don't reparse it.
+                    result = default
+                else:
+                    # It's not the expected type. Pass it through value_proc before
+                    # returning.
+                    value = default
                 break
         if result is None:
             try:

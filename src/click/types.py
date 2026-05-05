@@ -19,6 +19,12 @@ from .utils import format_filename
 from .utils import LazyFile
 from .utils import safecall
 
+# TypeVar(default=...) support.
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:
+    from typing_extensions import TypeVar
+
 if t.TYPE_CHECKING:
     import typing_extensions as te
 
@@ -26,7 +32,8 @@ if t.TYPE_CHECKING:
     from .core import Parameter
     from .shell_completion import CompletionItem
 
-ParamTypeValue = t.TypeVar("ParamTypeValue")
+ParamTypeValue = TypeVar("ParamTypeValue")
+ParamTypeInputValue = TypeVar("ParamTypeInputValue", default=t.Any)
 
 
 class ParamTypeInfoDict(t.TypedDict):
@@ -34,7 +41,7 @@ class ParamTypeInfoDict(t.TypedDict):
     name: str
 
 
-class ParamType(t.Generic[ParamTypeValue], abc.ABC):
+class ParamType(t.Generic[ParamTypeValue, ParamTypeInputValue], abc.ABC):
     """Represents the type of a parameter. Validates and converts values
     from the command line or Python into the correct type.
 
@@ -93,21 +100,19 @@ class ParamType(t.Generic[ParamTypeValue], abc.ABC):
         value: None,
         param: Parameter | None = None,
         ctx: Context | None = None,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @t.overload
     def __call__(
         self,
-        value: t.Any,
+        value: ParamTypeInputValue,
         param: Parameter | None = None,
         ctx: Context | None = None,
-    ) -> ParamTypeValue:
-        ...
+    ) -> ParamTypeValue: ...
 
     def __call__(
         self,
-        value: t.Any,
+        value: ParamTypeInputValue | None,
         param: Parameter | None = None,
         ctx: Context | None = None,
     ) -> ParamTypeValue | None:
@@ -126,7 +131,7 @@ class ParamType(t.Generic[ParamTypeValue], abc.ABC):
         """
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: ParamTypeInputValue, param: Parameter | None, ctx: Context | None
     ) -> ParamTypeValue:
         """Convert the value to the correct type. This is not called if
         the value is ``None`` (the missing value).
