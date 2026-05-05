@@ -1136,14 +1136,13 @@ class Command:
             text = ""
 
         if self.deprecated:
+            localised_deprectated = _("deprecated").upper()
             deprecated_message = (
-                f"(DEPRECATED: {self.deprecated})"
+                f"({localised_deprectated}: {self.deprecated})"
                 if isinstance(self.deprecated, str)
-                else "(DEPRECATED)"
+                else f"({localised_deprectated})"
             )
-            text = _("{text} {deprecated_message}").format(
-                text=text, deprecated_message=deprecated_message
-            )
+            text = f"{_(text)} {deprecated_message}"
 
         return text.strip()
 
@@ -1173,14 +1172,13 @@ class Command:
             text = ""
 
         if self.deprecated:
+            localised_deprectated = _("deprecated").upper()
             deprecated_message = (
-                f"(DEPRECATED: {self.deprecated})"
+                f"({localised_deprectated}: {self.deprecated})"
                 if isinstance(self.deprecated, str)
-                else "(DEPRECATED)"
+                else f"({localised_deprectated})"
             )
-            text = _("{text} {deprecated_message}").format(
-                text=text, deprecated_message=deprecated_message
-            )
+            text = f"{_(text)} {deprecated_message}"
 
         if text:
             formatter.write_paragraph()
