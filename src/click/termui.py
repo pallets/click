@@ -228,11 +228,11 @@ def prompt(
                 else:
                     # It's not the expected type. Pass it through value_proc before
                     # returning.
-                    value = default
+                    value = t.cast(C | str, default) # type: ignore
                 break
         if result is None:
             try:
-                result = value_proc(value)
+                result = t.cast(V, value_proc(value))
             except UsageError as e:
                 if hide_input:
                     echo(_("Error: The value you entered was invalid."), err=err)
