@@ -175,7 +175,6 @@ class ProgressBar(t.Generic[V]):
             if t > 0:
                 return "{d}{day_label} {h:02}:{m:02}:{s:02}".format(
                     d=t,
-                    # TRANSLATORS: The 'd' stands for 'day'.
                     day_label=_("d"),
                     h=hours,
                     m=minutes,
