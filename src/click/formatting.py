@@ -155,6 +155,10 @@ class HelpFormatter:
         if prefix is None:
             prefix = f"{_('Usage:')} "
 
+        if not args:
+            self.write(f"{prefix:>{self.current_indent}}{prog}\n")
+            return
+
         usage_prefix = f"{prefix:>{self.current_indent}}{prog} "
         text_width = self.width - self.current_indent
 

@@ -433,3 +433,26 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+def test_write_usage_empty_args():
+    """write_usage with no args should still print the usage line.
+
+    When args is empty, the usage line should show just "Usage: <prog>"
+    instead of printing a blank line.
+
+    Regression test for https://github.com/pallets/click/issues/3360.
+    """
+    f = click.HelpFormatter()
+    f.write_usage("program")
+    assert f.getvalue() == "Usage: program\n"
+
+    # With a custom prefix
+    f2 = click.HelpFormatter()
+    f2.write_usage("myapp", prefix="MyApp: ")
+    assert f2.getvalue() == "MyApp: myapp\n"
+
+    # Normal case with args should still work
+    f3 = click.HelpFormatter()
+    f3.write_usage("program", "[OPTIONS] COMMAND [ARGS]...")
+    assert "Usage:" in f3.getvalue()
+    assert "[OPTIONS]" in f3.getvalue()
