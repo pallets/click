@@ -70,19 +70,18 @@ EOF = b"\x1a"
 MAX_BYTES_WRITTEN = 32767
 
 if t.TYPE_CHECKING:
-    try:
-        # Using `typing_extensions.Buffer` instead of `collections.abc`
-        # on Windows for some reason does not have `Sized` implemented.
-        from collections.abc import Buffer  # type: ignore
-    except ImportError:
-        from typing_extensions import Buffer
+    from typing_extensions import Buffer
+
+    class _MSVCRTModule(t.Protocol):
+        def get_osfhandle(self, fd: int) -> int: ...
 
 try:
     from ctypes import pythonapi
 except ImportError:
     # On PyPy we cannot get buffers so our ability to operate here is
     # severely limited.
-    get_buffer = None
+    def get_buffer(obj: Buffer, writable: bool = False) -> Array[c_char]:
+        raise TypeError("PyPy does not support the buffer API used by Click")
 else:
 
     class Py_buffer(Structure):
@@ -130,7 +129,8 @@ class _WindowsConsoleReader(_WindowsConsoleRawIOBase):
         return True
 
     def readinto(self, b: Buffer) -> int:
-        bytes_to_be_read = len(b)
+        bytes_to_be_read = memoryview(b).nbytes
+
         if not bytes_to_be_read:
             return 0
         elif bytes_to_be_read % 2:
@@ -173,7 +173,7 @@ class _WindowsConsoleWriter(_WindowsConsoleRawIOBase):
         return _("Windows error: {error}").format(error=errno)
 
     def write(self, b: Buffer) -> int:
-        bytes_to_be_written = len(b)
+        bytes_to_be_written = memoryview(b).nbytes
         buf = get_buffer(b)
         code_units_to_be_written = min(bytes_to_be_written, MAX_BYTES_WRITTEN) // 2
         code_units_written = c_ulong()
@@ -201,7 +201,7 @@ class ConsoleStream:
     def name(self) -> str:
         return self.buffer.name
 
-    def write(self, x: t.AnyStr) -> int:
+    def write(self, x: str | bytes) -> int:
         if isinstance(x, str):
             return self._text_stream.write(x)
         try:
@@ -210,7 +210,7 @@ class ConsoleStream:
             pass
         return self.buffer.write(x)
 
-    def writelines(self, lines: cabc.Iterable[t.AnyStr]) -> None:
+    def writelines(self, lines: cabc.Iterable[str] | cabc.Iterable[bytes]) -> None:
         for line in lines:
             self.write(line)
 
@@ -270,7 +270,7 @@ def _is_console(f: t.TextIO) -> bool:
     except (OSError, io.UnsupportedOperation):
         return False
 
-    handle = msvcrt.get_osfhandle(fileno)
+    handle = t.cast(_MSVCRTModule, msvcrt).get_osfhandle(fileno)
     return bool(GetConsoleMode(handle, byref(DWORD())))
 
 
@@ -278,8 +278,7 @@ def _get_windows_console_stream(
     f: t.TextIO, encoding: str | None, errors: str | None
 ) -> t.TextIO | None:
     if (
-        get_buffer is None
-        or encoding not in {"utf-16-le", None}
+        encoding not in {"utf-16-le", None}
         or errors not in {"strict", None}
         or not _is_console(f)
     ):
