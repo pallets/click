@@ -1042,6 +1042,44 @@ class _StaticMessageType(click.ParamType):
         self.fail("Authentication failed for this account", param, ctx)
 
 
+class _RejectAllRawType(click.ParamType):
+    """Always rejects, with the raw value (unquoted) in the message."""
+
+    name = "reject_all_raw"
+
+    def convert(self, value, param, ctx):
+        self.fail(f"rejected: {value}", param, ctx)
+
+
+class _MultiRawType(click.ParamType):
+    """Mentions the raw value multiple times in the same message."""
+
+    name = "multi_raw"
+
+    def convert(self, value, param, ctx):
+        self.fail(f"got {value} but {value} is bad", param, ctx)
+
+
+class _MultiReprType(click.ParamType):
+    """Mentions ``repr(value)`` multiple times in the same message."""
+
+    name = "multi_repr"
+
+    def convert(self, value, param, ctx):
+        self.fail(f"got {value!r} and {value!r}", param, ctx)
+
+
+class _ApostropheReprType(click.ParamType):
+    """Custom type whose ``repr(value)`` switches to double quotes when
+    the value itself contains a single quote.
+    """
+
+    name = "apostrophe_repr"
+
+    def convert(self, value, param, ctx):
+        self.fail(f"rejected {value!r}", param, ctx)
+
+
 @pytest.mark.parametrize(
     ("type", "user_input", "expected_fragment", "unexpected_fragment"),
     [
@@ -1062,9 +1100,9 @@ class _StaticMessageType(click.ParamType):
         pytest.param(
             _CustomTypeWithRawValue(),
             "bad",
-            "The value you entered was invalid",
+            "rejected: '***'",
             "bad",
-            id="custom-raw-value-falls-back-to-generic",
+            id="custom-raw-value-masked",
         ),
         pytest.param(
             _PasswordLengthType(),
@@ -1076,9 +1114,9 @@ class _StaticMessageType(click.ParamType):
         pytest.param(
             _MixedQuotedAndRawType(),
             "leakybits",
-            "Error:",
+            "got '***' which is the same as '***'",
             "leakybits",
-            id="repr-branch-leaves-raw-occurrence-visible",
+            id="mixed-quoted-and-raw-both-masked-at-source",
         ),
         pytest.param(
             click.IntRange(min=10, max=99),
@@ -1093,6 +1131,60 @@ class _StaticMessageType(click.ParamType):
             "Authentication failed for this account",
             None,
             id="partial-word-match-falls-back-to-generic",
+        ),
+        # When the raw (unquoted) value appears in the message, mask it instead
+        # of replacing the whole message with a generic fallback that throws
+        # useful information away.
+        pytest.param(
+            _RejectAllRawType(),
+            "secret",
+            "rejected: '***'",
+            "secret",
+            id="raw-value-should-be-masked-not-fallback",
+        ),
+        # When the raw value occurs more than
+        # once unquoted, every occurrence must be masked.
+        pytest.param(
+            _MultiRawType(),
+            "secret",
+            "got '***' but '***' is bad",
+            "secret",
+            id="multi-occurrence-raw-mask-all",
+        ),
+        pytest.param(
+            _MultiReprType(),
+            "secret",
+            "got '***' and '***'",
+            "secret",
+            id="multi-occurrence-repr-mask-all",
+        ),
+        pytest.param(
+            _PasswordLengthType(),
+            "a.b*c+",
+            "'***' is too short",
+            "a.b*c+",
+            id="regex-special-chars-must-be-escaped",
+        ),
+        pytest.param(
+            _PasswordLengthType(),
+            "пароль",
+            "'***' is too short",
+            "пароль",
+            id="unicode-value-masked",
+        ),
+        pytest.param(
+            _ApostropheReprType(),
+            "it's",
+            "rejected '***'",
+            "it's",
+            id="apostrophe-in-value-uses-double-quote-repr",
+        ),
+        pytest.param(
+            _MixedQuotedAndRawType(),
+            "leakybits",
+            "got '***' which is the same as '***'",
+            "leakybits",
+            id="mixed-quoted-and-raw-mask-both",
         ),
     ],
 )
@@ -1110,3 +1202,45 @@ def test_hide_input_error_message(
     assert expected_fragment in result.output
     if unexpected_fragment is not None:
         assert unexpected_fragment not in result.output
+
+
+def test_hide_input_confirmation_prompt_mismatch_unaffected(runner):
+    """The ``hide_input`` mask logic only applies to ``value_proc``
+    failures. The separate ``confirmation_prompt`` mismatch path must
+    keep emitting its own message, with no value leak from either entry.
+    """
+
+    @click.command()
+    @click.option("--password", prompt=True, confirmation_prompt=True, hide_input=True)
+    def cli(password):
+        click.echo(f"got: {password}")
+
+    # First pair mismatches, second pair matches.
+    result = runner.invoke(cli, input="firstone\nsecondone\nfinalone\nfinalone\n")
+    assert "Error: The two entered values do not match." in result.output
+    assert "firstone" not in result.output
+    assert "secondone" not in result.output
+    # Successful prompt echoes the final value back via the command body.
+    assert "got: finalone" in result.output
+    assert result.exit_code == 0
+
+
+def test_hide_input_value_never_leaks_when_err_true(runner):
+    """``click.prompt(..., err=True)`` routes its error message to
+    stderr. The masking logic must apply on that path too: the raw
+    input must not appear on either stream.
+    """
+
+    @click.command()
+    def cli():
+        value = click.prompt(
+            "Password",
+            hide_input=True,
+            type=_PasswordLengthType(),
+            err=True,
+        )
+        click.echo(value)
+
+    result = runner.invoke(cli, input="leaky\n", mix_stderr=False)
+    assert "leaky" not in result.stdout
+    assert "leaky" not in result.stderr
