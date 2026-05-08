@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 import collections.abc as cabc
 import inspect
 import io
@@ -25,7 +26,13 @@ from .utils import LazyFile
 if t.TYPE_CHECKING:
     from ._termui_impl import ProgressBar
 
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
+
 V = t.TypeVar("V")
+C = t.TypeVar("C")
 
 # The prompt functions to use.  The doc tools currently override these
 # functions to customize how they work.
@@ -83,39 +90,51 @@ def _build_prompt(
     text: str,
     suffix: str,
     show_default: bool | str = False,
-    default: t.Any | None = None,
+    default: object | None = None,
     show_choices: bool = True,
-    type: ParamType[t.Any] | None = None,
+    type: object | None = None,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += f" ({', '.join(map(str, type.choices))})"
-    if isinstance(show_default, str):
-        default = f"({show_default})"
-    if default is not None and show_default:
-        prompt = f"{prompt} [{_format_default(default)}]"
-    return f"{prompt}{suffix}"
+    default_preview = ""
+    if show_default:
+        if isinstance(show_default, str):
+            default_preview = f" [({show_default})]"
+        elif default is not None:
+            default_preview = f" [{_format_default(default)}]"
+    return f"{prompt}{default_preview}{suffix}"
 
 
-def _format_default(default: t.Any) -> t.Any:
-    if isinstance(default, (io.IOBase, LazyFile)) and hasattr(default, "name"):
-        return default.name
+def _format_default(default: V) -> V | str:
+    if isinstance(default, (io.IOBase, LazyFile)):
+        name = getattr(default, "name", None)
+
+        if name is not None:
+            return str(name)
 
     return default
 
 
+def _is_expected_type(
+    default: object,
+    type: ParamType[V, t.Any] | V | None,
+) -> TypeIs[V]:
+    return builtins.type(default) is builtins.type(type)
+
+
 def prompt(
     text: str,
-    default: t.Any | None = None,
+    default: V | C | str | None = None,
     hide_input: bool = False,
     confirmation_prompt: bool | str = False,
-    type: ParamType[t.Any] | t.Any | None = None,
-    value_proc: t.Callable[[str], t.Any] | None = None,
+    type: ParamType[V, C | str] | V | None = None,
+    value_proc: t.Callable[[C | str], V] | None = None,
     prompt_suffix: str = ": ",
     show_default: bool | str = True,
     err: bool = False,
     show_choices: bool = True,
-) -> t.Any:
+) -> V:
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
@@ -144,6 +163,11 @@ def prompt(
                          For example if type is a Choice of either day or week,
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
+
+    .. versionchanged:: 8.4.0
+        ``default`` no longer passes through the ``value_proc`` callback,
+        nor the constructor of the types of ``type`` or ``default`` field,
+        when it is the same type as ``type``.
 
     .. versionchanged:: 8.3.3
         ``show_default`` can be a string to show a custom value instead
@@ -192,21 +216,29 @@ def prompt(
         confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
 
     while True:
+        result: V | None = None
         while True:
-            value = prompt_func(prompt)
+            value: C | str = prompt_func(prompt)
             if value:
                 break
             elif default is not None:
-                value = default
+                if _is_expected_type(default=default, type=type):
+                    # It's the expected type, don't reparse it.
+                    result = default
+                else:
+                    # It's not the expected type. Pass it through value_proc before
+                    # returning.
+                    value = t.cast(C | str, default)  # type: ignore
                 break
-        try:
-            result = value_proc(value)
-        except UsageError as e:
-            if hide_input:
-                echo(_("Error: The value you entered was invalid."), err=err)
-            else:
-                echo(_("Error: {e.message}").format(e=e), err=err)
-            continue
+        if result is None:
+            try:
+                result = t.cast(V, value_proc(value))
+            except UsageError as e:
+                if hide_input:
+                    echo(_("Error: The value you entered was invalid."), err=err)
+                else:
+                    echo(_("Error: {e.message}").format(e=e), err=err)
+                continue
         if not confirmation_prompt:
             return result
         while True:
