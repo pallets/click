@@ -51,9 +51,12 @@ Unreleased
     commands. :issue:`3107` :pr:`3228`
 -   Add ``click.get_pager_file`` for file-like access to an output
     pager. :pr:`1572`
--   ``click.prompt`` implementation changed slightly so that when the default
-    value is used, it does not do a round trip through the value processor or
-    the type conversion. :pr:`3407`
+-   ``click.prompt`` and ``ParamType`` fully generically typed with the latter
+    receiving a new optional ``ParamTypeInputValue`` generic type for the
+    expected input type that defaults to ``Any``. Additionally,
+    ``click.prompt`` implementation changed slightly so that when a default
+    value is the same type as the expected type, it does not do a round trip
+    through the value processor nor the type conversion. :pr:`3407`
 
 Version 8.3.3
 -------------

@@ -177,6 +177,7 @@ version = "8.3.3"
 source = { editable = "." }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
 ]
 
 [package.dev-dependencies]
@@ -221,7 +222,10 @@ typing = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "colorama", marker = "sys_platform == 'win32'" }]
+requires-dist = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
 
 [package.metadata.requires-dev]
 dev = [

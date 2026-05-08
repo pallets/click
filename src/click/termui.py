@@ -165,9 +165,9 @@ def prompt(
                          prompt will be "Group by (day, week): ".
 
     .. versionchanged:: 8.4.0
-        ``default`` no longer passes through the ``value_proc` callback,
-        nor the constructor of the ``type`` or the type of the ``default``
-        field.
+        ``default`` no longer passes through the ``value_proc`` callback,
+        nor the constructor of the types of ``type`` or ``default`` field,
+        when it is the same type as ``type``.
 
     .. versionchanged:: 8.3.3
         ``show_default`` can be a string to show a custom value instead
@@ -228,7 +228,7 @@ def prompt(
                 else:
                     # It's not the expected type. Pass it through value_proc before
                     # returning.
-                    value = t.cast(C | str, default) # type: ignore
+                    value = t.cast(C | str, default)  # type: ignore
                 break
         if result is None:
             try:

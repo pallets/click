@@ -51,6 +51,7 @@ ALLOWED_IMPORTS = {
     "threading",
     "types",
     "typing",
+    "typing_extensions",
     "uuid",
     "weakref",
 }
