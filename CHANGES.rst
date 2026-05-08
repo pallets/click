@@ -49,6 +49,8 @@ Unreleased
     :issue:`3043`
 -   Add :class:`NoSuchCommand` exception with suggestions for misspelled
     commands. :issue:`3107` :pr:`3228`
+-   Use :class:`ValueError` message when conversion in :class:`FuncParamType` would
+    fail. :issue:`3105` :pr:`3211`
 -   Add ``click.get_pager_file`` for file-like access to an output
     pager. :pr:`1572`
 
