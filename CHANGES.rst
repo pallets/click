@@ -60,6 +60,8 @@ Unreleased
     ``hide_input=True`` fails validation, instead of always showing a
     generic message. Built-in type messages mask the input value.
     :issue:`2809` :pr:`3256`
+-   Mark additional built-in strings with ``gettext()`` to extend translation
+    coverage. :pr:`2902`
 
 Version 8.3.3
 -------------
