@@ -58,6 +58,7 @@ tests-random = [
 ]
 typing = [
     "mypy",
+    "pyrefly",
     "pyright",
     "pytest",
 ]
@@ -124,6 +125,10 @@ ignore_missing_imports = true
 pythonVersion = "3.10"
 include = ["src", "tests/typing"]
 typeCheckingMode = "basic"
+
+[tool.pyrefly]
+python-version = "3.10"
+project-includes = ["src", "tests/typing"]
 
 [tool.ruff]
 extend-exclude = ["examples/"]
@@ -202,6 +207,11 @@ commands = [
     ["mypy"],
     ["pyright", "--ignoreexternal", "--verifytypes", "click"],
 ]
+
+[tool.tox.env.pyrefly]
+description = "run pyrefly type checker"
+dependency_groups = ["typing"]
+commands = [["pyrefly", "check", {replace = "posargs", default = [], extend = true}]]
 
 [tool.tox.env.docs]
 description = "build docs"
