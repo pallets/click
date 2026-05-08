@@ -255,7 +255,7 @@ def confirm(
         text,
         prompt_suffix,
         show_default,
-        _("y/n") if default is None else (_("Y/n") if default else _("y/N")),
+        "y/n" if default is None else ("Y/n" if default else "y/N"),
     )
 
     while True:
@@ -263,9 +263,9 @@ def confirm(
             value = _readline_prompt(visible_prompt_func, prompt, err).lower().strip()
         except (KeyboardInterrupt, EOFError):
             raise Abort() from None
-        if value in (_("y"), _("yes")):
+        if value in ("y", "yes"):
             rv = True
-        elif value in (_("n"), _("no")):
+        elif value in ("n", "no"):
             rv = False
         elif default is not None and value == "":
             rv = default
