@@ -193,7 +193,7 @@ class LazyFile:
     ) -> None:
         self.close_intelligently()
 
-    def __iter__(self) -> cabc.Iterator[t.AnyStr]:
+    def __iter__(self) -> cabc.Iterator[str] | cabc.Iterator[bytes]:
         self.open()
         return iter(self._f)  # type: ignore
 
@@ -219,7 +219,7 @@ class KeepOpenFile:
     def __repr__(self) -> str:
         return repr(self._file)
 
-    def __iter__(self) -> cabc.Iterator[t.AnyStr]:
+    def __iter__(self) -> cabc.Iterator[str] | cabc.Iterator[bytes]:
         return iter(self._file)
 
 
