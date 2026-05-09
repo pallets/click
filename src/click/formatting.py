@@ -158,7 +158,9 @@ class HelpFormatter:
         usage_prefix = f"{prefix:>{self.current_indent}}{prog} "
         text_width = self.width - self.current_indent
 
-        if text_width >= (term_len(usage_prefix) + 20):
+        if not args:
+            self.write(usage_prefix.rstrip())
+        elif text_width >= (term_len(usage_prefix) + 20):
             # The arguments will fit to the right of the prefix.
             indent = " " * term_len(usage_prefix)
             self.write(
