@@ -5,6 +5,10 @@ Version 8.4.0
 
 Unreleased
 
+-   :func:`wrap_text` accepts a ``break_on_hyphens`` parameter.
+    :meth:`HelpFormatter.write_usage` passes ``False`` so option
+    names like ``--max-retry-count`` are not split across lines.
+    :issue:`3362`
 -   :class:`ParamType` typing improvements. :pr:`3371`
 
     -   :class:`ParamType` is now a generic abstract base class,

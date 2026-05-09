@@ -433,3 +433,16 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+
+def test_write_usage_no_break_on_hyphens():
+    f = click.HelpFormatter(width=65)
+    f.write_usage(
+        "program",
+        "--enable-verbose-logging --output-file-path"
+        " --max-retry-count --disable-cache-mode",
+    )
+    assert f.getvalue() == (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+    )
