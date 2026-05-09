@@ -30,7 +30,8 @@ if t.TYPE_CHECKING:
 else:
     OpenBinaryMode = OpenTextMode = str
 
-OpenFileMode = OpenTextMode | OpenBinaryMode
+AnyStr = t.TypeVar("AnyStr", str, bytes)
+OpenFileMode = t.TypeVar("OpenFileMode", OpenTextMode, OpenBinaryMode)
 
 ParamTypeValue = t.TypeVar("ParamTypeValue")
 
@@ -793,7 +794,7 @@ class FileInfoDict(ParamTypeInfoDict):
     encoding: str | None
 
 
-class File(ParamType[t.IO[t.AnyStr]], t.Generic[t.AnyStr]):
+class File(ParamType[t.IO[AnyStr]], t.Generic[AnyStr, OpenFileMode]):
     """Declares a parameter to be a file for reading or writing.  The file
     is automatically closed once the context tears down (after the command
     finished working).
@@ -828,7 +829,7 @@ class File(ParamType[t.IO[t.AnyStr]], t.Generic[t.AnyStr]):
 
     @t.overload
     def __init__(
-        self: File[bytes],
+        self: File[bytes, OpenBinaryMode],
         mode: OpenBinaryMode,
         encoding: str | None = None,
         errors: str | None = "strict",
@@ -838,7 +839,7 @@ class File(ParamType[t.IO[t.AnyStr]], t.Generic[t.AnyStr]):
 
     @t.overload
     def __init__(
-        self: File[str],
+        self: File[str, OpenTextMode],
         mode: OpenTextMode = "r",
         encoding: str | None = None,
         errors: str | None = "strict",
@@ -848,13 +849,13 @@ class File(ParamType[t.IO[t.AnyStr]], t.Generic[t.AnyStr]):
 
     def __init__(
         self,
-        mode: OpenFileMode = "r",
+        mode: OpenBinaryMode | OpenTextMode = "r",
         encoding: str | None = None,
         errors: str | None = "strict",
         lazy: bool | None = None,
         atomic: bool = False,
     ) -> None:
-        self.mode = mode
+        self.mode: OpenFileMode = mode
         self.encoding = encoding
         self.errors = errors
         self.lazy = lazy
@@ -878,14 +879,15 @@ class File(ParamType[t.IO[t.AnyStr]], t.Generic[t.AnyStr]):
 
     def convert(
         self,
-        value: str | os.PathLike[str] | t.IO[t.Any],
+        value: str | os.PathLike[str] | t.IO[AnyStr],
         param: Parameter | None,
         ctx: Context | None,
-    ) -> t.IO[t.AnyStr]:
+    ) -> t.IO[AnyStr]:
         if _is_file_like(value):
-            return t.cast("t.IO[t.AnyStr]", value)
+            return value
+            # return t.cast("t.IO[AnyStr]", value)
 
-        value = t.cast("str | os.PathLike[str]", value)
+        # value = t.cast("str | os.PathLike[str]", value)
 
         try:
             lazy = self.resolve_lazy_flag(value)
@@ -898,7 +900,7 @@ class File(ParamType[t.IO[t.AnyStr]], t.Generic[t.AnyStr]):
                 if ctx is not None:
                     ctx.call_on_close(lf.close_intelligently)
 
-                return t.cast("t.IO[t.AnyStr]", lf)
+                return t.cast("t.IO[AnyStr]", lf)
 
             f, should_close = open_stream(
                 value, self.mode, self.encoding, self.errors, atomic=self.atomic
@@ -915,7 +917,7 @@ class File(ParamType[t.IO[t.AnyStr]], t.Generic[t.AnyStr]):
                 else:
                     ctx.call_on_close(safecall(f.flush))
 
-            return t.cast("t.IO[t.AnyStr]", f)
+            return t.cast("t.IO[AnyStr]", f)
         except OSError as e:
             self.fail(
                 f"'{format_filename(value)}': {e.strerror}",
@@ -940,7 +942,7 @@ class File(ParamType[t.IO[t.AnyStr]], t.Generic[t.AnyStr]):
         return [CompletionItem(incomplete, type="file")]
 
 
-def _is_file_like(value: t.Any) -> te.TypeGuard[t.IO[t.Any]]:
+def _is_file_like(value: t.IO[AnyStr] | t.Any) -> te.TypeIs[t.IO[AnyStr]]:
     return hasattr(value, "read") or hasattr(value, "write")
 
 

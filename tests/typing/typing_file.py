@@ -6,15 +6,17 @@ from typing_extensions import assert_type
 
 import click
 
+import _typeshed as ts 
+
 
 text_file = click.File()
-assert_type(text_file, click.File[str])
+assert_type(text_file, click.File[str, ts.OpenTextMode])
 
 explicit_text_file = click.File("r")
-assert_type(explicit_text_file, click.File[str])
+assert_type(explicit_text_file, click.File[str, ts.OpenTextMode])
 
 binary_file = click.File("rb")
-assert_type(binary_file, click.File[bytes])
+assert_type(binary_file, click.File[bytes, ts.OpenBinaryMode])
 
 
 with click.open_file("test.txt") as text_stream:

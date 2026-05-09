@@ -16,6 +16,7 @@ if t.TYPE_CHECKING:
 else:
     OpenBinaryMode = OpenTextMode = str
 
+AnyStr = t.TypeVar("AnyStr", str, bytes)
 OpenFileMode = OpenTextMode | OpenBinaryMode
 
 CYGWIN = sys.platform.startswith("cygwin")
@@ -386,12 +387,12 @@ def _wrap_io_open(
     mode: OpenFileMode = "r",
     encoding: str | None = None,
     errors: str | None = "strict",
-) -> t.IO[t.Any]:
+) -> t.BinaryIO | t.TextIO:
     """Handles not passing ``encoding`` and ``errors`` in binary mode."""
     if "b" in mode:
-        return open(file, mode)
+        return t.cast(t.BinaryIO, open(file, mode))
 
-    return open(file, mode, encoding=encoding, errors=errors)
+    return t.cast(t.TextIO, open(file, mode, encoding=encoding, errors=errors))
 
 
 @t.overload
@@ -401,7 +402,7 @@ def open_stream(
     encoding: str | None = None,
     errors: str | None = "strict",
     atomic: bool = False,
-) -> tuple[t.BinaryIO, bool]: ...
+) -> tuple[t.IO[bytes], bool]: ...
 
 
 @t.overload
@@ -411,7 +412,7 @@ def open_stream(
     encoding: str | None = None,
     errors: str | None = "strict",
     atomic: bool = False,
-) -> tuple[t.TextIO, bool]: ...
+) -> tuple[t.IO[str], bool]: ...
 
 
 def open_stream(
@@ -420,7 +421,7 @@ def open_stream(
     encoding: str | None = None,
     errors: str | None = "strict",
     atomic: bool = False,
-) -> tuple[t.IO[t.Any], bool]:
+) -> tuple[t.IO[bytes] | t.IO[str], bool]:
     binary = "b" in mode
     filename = os.fspath(filename)
 
@@ -493,21 +494,22 @@ def open_stream(
     if binary:
         binary_f = _wrap_io_open(fd, t.cast("OpenBinaryMode", mode), encoding, errors)
         binary_af = _AtomicFile(binary_f, tmp_filename, os.path.realpath(filename))
-        return t.cast(t.IO[t.Any], binary_af), True
+        return binary_af, True
 
     text_f = _wrap_io_open(fd, t.cast("OpenTextMode", mode), encoding, errors)
     text_af = _AtomicFile(text_f, tmp_filename, os.path.realpath(filename))
     return t.cast(t.IO[t.Any], text_af), True
 
 
-class _AtomicFile(t.Generic[t.AnyStr]):
-    def __init__(
-        self, f: t.IO[t.AnyStr], tmp_filename: str, real_filename: str
-    ) -> None:
-        self._f: t.IO[t.AnyStr] = f
+class _AtomicFile(t.IO[AnyStr], t.Generic[AnyStr]):
+    def __init__(self, f: t.IO[AnyStr], tmp_filename: str, real_filename: str) -> None:
+        self._f: t.IO[AnyStr] = f
         self._tmp_filename = tmp_filename
         self._real_filename = real_filename
-        self.closed = False
+
+    @property
+    def closed(self) -> bool:
+        return self._f.closed
 
     @property
     def name(self) -> str:
@@ -518,12 +520,11 @@ class _AtomicFile(t.Generic[t.AnyStr]):
             return
         self._f.close()
         os.replace(self._tmp_filename, self._real_filename)
-        self.closed = True
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._f, name)
 
-    def __enter__(self) -> _AtomicFile[t.AnyStr]:
+    def __enter__(self) -> _AtomicFile[AnyStr]:
         return self
 
     def __exit__(

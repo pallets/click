@@ -33,8 +33,8 @@ else:
     OpenBinaryMode = OpenTextMode = str
 
 R = t.TypeVar("R")
-
-OpenFileMode = OpenTextMode | OpenBinaryMode
+AnyStr = t.TypeVar("AnyStr", str, bytes)
+OpenFileMode = t.TypeVar("OpenFileMode", OpenTextMode, OpenBinaryMode)
 
 
 def _posixify(name: str) -> str:
@@ -117,7 +117,7 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
     return " ".join(words[:i]) + "..."
 
 
-class LazyFile(t.Generic[t.AnyStr]):
+class LazyFile(t.Generic[AnyStr, OpenFileMode]):
     """A lazy file works like a regular file but it does not fully open
     the file but it does perform some basic checks early to see if the
     filename parameter does make sense.  This is useful for safely opening
@@ -126,7 +126,7 @@ class LazyFile(t.Generic[t.AnyStr]):
 
     @t.overload
     def __init__(
-        self: LazyFile[bytes],
+        self: LazyFile[bytes, OpenBinaryMode],
         filename: str | os.PathLike[str],
         mode: OpenBinaryMode,
         encoding: str | None = None,
@@ -136,7 +136,7 @@ class LazyFile(t.Generic[t.AnyStr]):
 
     @t.overload
     def __init__(
-        self: LazyFile[str],
+        self: LazyFile[str, OpenTextMode],
         filename: str | os.PathLike[str],
         mode: OpenTextMode = "r",
         encoding: str | None = None,
@@ -147,17 +147,17 @@ class LazyFile(t.Generic[t.AnyStr]):
     def __init__(
         self,
         filename: str | os.PathLike[str],
-        mode: OpenFileMode = "r",
+        mode: OpenBinaryMode | OpenTextMode = "r",
         encoding: str | None = None,
         errors: str | None = "strict",
         atomic: bool = False,
     ) -> None:
         self.name: str = os.fspath(filename)
-        self.mode = mode
+        self.mode: OpenFileMode = mode
         self.encoding = encoding
         self.errors = errors
         self.atomic = atomic
-        self._f: t.IO[t.AnyStr] | None
+        self._f: t.IO[AnyStr] | None
         self.should_close: bool
 
         if self.name == "-":
@@ -180,7 +180,7 @@ class LazyFile(t.Generic[t.AnyStr]):
             return repr(self._f)
         return f"<unopened file '{format_filename(self.name)}' {self.mode}>"
 
-    def open(self) -> t.IO[t.AnyStr]:
+    def open(self) -> t.IO[AnyStr]:
         """Opens the file if it's not yet open.  This call might fail with
         a :exc:`FileError`.  Not handling this error will produce an error
         that Click shows.
@@ -195,7 +195,7 @@ class LazyFile(t.Generic[t.AnyStr]):
             from .exceptions import FileError
 
             raise FileError(self.name, hint=e.strerror) from e
-        self._f = t.cast("t.IO[t.AnyStr]", rv)
+        self._f = t.cast("t.IO[AnyStr]", rv)
         return self._f
 
     def close(self) -> None:
@@ -210,7 +210,7 @@ class LazyFile(t.Generic[t.AnyStr]):
         if self.should_close:
             self.close()
 
-    def __enter__(self) -> LazyFile[t.AnyStr]:
+    def __enter__(self) -> LazyFile[AnyStr]:
         return self
 
     def __exit__(
@@ -221,25 +221,26 @@ class LazyFile(t.Generic[t.AnyStr]):
     ) -> None:
         self.close_intelligently()
 
-    def __iter__(self) -> cabc.Iterator[t.AnyStr]:
+    def __iter__(self) -> cabc.Iterator[AnyStr]:
         self.open()
         return iter(self._f)  # type: ignore
 
 
-class KeepOpenFile(t.Generic[t.AnyStr]):
-    @t.overload
-    def __init__(self: KeepOpenFile[bytes], file: t.BinaryIO) -> None: ...
+class KeepOpenFile(t.Generic[AnyStr]):
+    # @t.overload
+    # def __init__(self: KeepOpenFile[bytes], file: t.BinaryIO) -> None: ...
+    #
+    # @t.overload
+    # def __init__(self: KeepOpenFile[str], file: t.TextIO) -> None: ...
 
-    @t.overload
-    def __init__(self: KeepOpenFile[str], file: t.TextIO) -> None: ...
-
-    def __init__(self, file: t.IO[t.Any]) -> None:
-        self._file: t.IO[t.AnyStr] = t.cast("t.IO[t.AnyStr]", file)
+    def __init__(self, file: t.IO[AnyStr]) -> None:
+        # self._file: t.IO[t.AnyStr] = t.cast("t.IO[t.AnyStr]", file)
+        self._file = file
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
 
-    def __enter__(self) -> KeepOpenFile[t.AnyStr]:
+    def __enter__(self) -> KeepOpenFile[AnyStr]:
         return self
 
     def __exit__(
@@ -253,7 +254,7 @@ class KeepOpenFile(t.Generic[t.AnyStr]):
     def __repr__(self) -> str:
         return repr(self._file)
 
-    def __iter__(self) -> cabc.Iterator[t.AnyStr]:
+    def __iter__(self) -> cabc.Iterator[AnyStr]:
         return iter(self._file)
 
 
