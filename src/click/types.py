@@ -20,11 +20,17 @@ from .utils import LazyFile
 from .utils import safecall
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
-
+    from _typeshed import OpenBinaryMode
+    from _typeshed import OpenTextMode
     from .core import Context
     from .core import Parameter
     from .shell_completion import CompletionItem
+    import typing_extensions as te
+
+else:
+    OpenBinaryMode = OpenTextMode = str
+
+OpenFileMode = OpenTextMode | OpenBinaryMode
 
 ParamTypeValue = t.TypeVar("ParamTypeValue")
 
@@ -787,7 +793,7 @@ class FileInfoDict(ParamTypeInfoDict):
     encoding: str | None
 
 
-class File(ParamType[t.IO[t.Any]]):
+class File(ParamType[t.IO[t.AnyStr]], t.Generic[t.AnyStr]):
     """Declares a parameter to be a file for reading or writing.  The file
     is automatically closed once the context tears down (after the command
     finished working).
@@ -820,9 +826,29 @@ class File(ParamType[t.IO[t.Any]]):
     name = "filename"
     envvar_list_splitter: t.ClassVar[str] = os.path.pathsep
 
+    @t.overload
+    def __init__(
+        self: File[bytes],
+        mode: OpenBinaryMode,
+        encoding: str | None = None,
+        errors: str | None = "strict",
+        lazy: bool | None = None,
+        atomic: bool = False,
+    ) -> None: ...
+
+    @t.overload
+    def __init__(
+        self: File[str],
+        mode: OpenTextMode = "r",
+        encoding: str | None = None,
+        errors: str | None = "strict",
+        lazy: bool | None = None,
+        atomic: bool = False,
+    ) -> None: ...
+
     def __init__(
         self,
-        mode: str = "r",
+        mode: OpenFileMode = "r",
         encoding: str | None = None,
         errors: str | None = "strict",
         lazy: bool | None = None,
@@ -855,9 +881,9 @@ class File(ParamType[t.IO[t.Any]]):
         value: str | os.PathLike[str] | t.IO[t.Any],
         param: Parameter | None,
         ctx: Context | None,
-    ) -> t.IO[t.Any]:
+    ) -> t.IO[t.AnyStr]:
         if _is_file_like(value):
-            return value
+            return t.cast("t.IO[t.AnyStr]", value)
 
         value = t.cast("str | os.PathLike[str]", value)
 
@@ -872,7 +898,7 @@ class File(ParamType[t.IO[t.Any]]):
                 if ctx is not None:
                     ctx.call_on_close(lf.close_intelligently)
 
-                return t.cast("t.IO[t.Any]", lf)
+                return t.cast("t.IO[t.AnyStr]", lf)
 
             f, should_close = open_stream(
                 value, self.mode, self.encoding, self.errors, atomic=self.atomic
@@ -889,7 +915,7 @@ class File(ParamType[t.IO[t.Any]]):
                 else:
                     ctx.call_on_close(safecall(f.flush))
 
-            return f
+            return t.cast("t.IO[t.AnyStr]", f)
         except OSError as e:
             self.fail(
                 f"'{format_filename(value)}': {e.strerror}",

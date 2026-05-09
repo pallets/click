@@ -10,6 +10,14 @@ import typing as t
 from types import TracebackType
 from weakref import WeakKeyDictionary
 
+if t.TYPE_CHECKING:
+    from _typeshed import OpenBinaryMode
+    from _typeshed import OpenTextMode
+else:
+    OpenBinaryMode = OpenTextMode = str
+
+OpenFileMode = OpenTextMode | OpenBinaryMode
+
 CYGWIN = sys.platform.startswith("cygwin")
 WIN = sys.platform.startswith("win")
 auto_wrap_for_ansi: t.Callable[[t.TextIO], t.TextIO] | None = None
@@ -355,11 +363,29 @@ def get_text_stderr(encoding: str | None = None, errors: str | None = None) -> t
     return _force_correct_text_writer(sys.stderr, encoding, errors, force_writable=True)
 
 
+@t.overload
 def _wrap_io_open(
     file: str | os.PathLike[str] | int,
-    mode: str,
+    mode: OpenBinaryMode,
     encoding: str | None,
     errors: str | None,
+) -> t.BinaryIO: ...
+
+
+@t.overload
+def _wrap_io_open(
+    file: str | os.PathLike[str] | int,
+    mode: OpenTextMode = "r",
+    encoding: str | None = None,
+    errors: str | None = "strict",
+) -> t.TextIO: ...
+
+
+def _wrap_io_open(
+    file: str | os.PathLike[str] | int,
+    mode: OpenFileMode = "r",
+    encoding: str | None = None,
+    errors: str | None = "strict",
 ) -> t.IO[t.Any]:
     """Handles not passing ``encoding`` and ``errors`` in binary mode."""
     if "b" in mode:
@@ -368,9 +394,29 @@ def _wrap_io_open(
     return open(file, mode, encoding=encoding, errors=errors)
 
 
+@t.overload
 def open_stream(
     filename: str | os.PathLike[str],
-    mode: str = "r",
+    mode: OpenBinaryMode,
+    encoding: str | None = None,
+    errors: str | None = "strict",
+    atomic: bool = False,
+) -> tuple[t.BinaryIO, bool]: ...
+
+
+@t.overload
+def open_stream(
+    filename: str | os.PathLike[str],
+    mode: OpenTextMode = "r",
+    encoding: str | None = None,
+    errors: str | None = "strict",
+    atomic: bool = False,
+) -> tuple[t.TextIO, bool]: ...
+
+
+def open_stream(
+    filename: str | os.PathLike[str],
+    mode: OpenFileMode = "r",
     encoding: str | None = None,
     errors: str | None = "strict",
     atomic: bool = False,
@@ -444,14 +490,21 @@ def open_stream(
     if perm is not None:
         os.chmod(tmp_filename, perm)  # in case perm includes bits in umask
 
-    f = _wrap_io_open(fd, mode, encoding, errors)
-    af = _AtomicFile(f, tmp_filename, os.path.realpath(filename))
-    return t.cast(t.IO[t.Any], af), True
+    if binary:
+        binary_f = _wrap_io_open(fd, t.cast("OpenBinaryMode", mode), encoding, errors)
+        binary_af = _AtomicFile(binary_f, tmp_filename, os.path.realpath(filename))
+        return t.cast(t.IO[t.Any], binary_af), True
+
+    text_f = _wrap_io_open(fd, t.cast("OpenTextMode", mode), encoding, errors)
+    text_af = _AtomicFile(text_f, tmp_filename, os.path.realpath(filename))
+    return t.cast(t.IO[t.Any], text_af), True
 
 
-class _AtomicFile:
-    def __init__(self, f: t.IO[t.Any], tmp_filename: str, real_filename: str) -> None:
-        self._f = f
+class _AtomicFile(t.Generic[t.AnyStr]):
+    def __init__(
+        self, f: t.IO[t.AnyStr], tmp_filename: str, real_filename: str
+    ) -> None:
+        self._f: t.IO[t.AnyStr] = f
         self._tmp_filename = tmp_filename
         self._real_filename = real_filename
         self.closed = False
@@ -470,7 +523,7 @@ class _AtomicFile:
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._f, name)
 
-    def __enter__(self) -> _AtomicFile:
+    def __enter__(self) -> _AtomicFile[t.AnyStr]:
         return self
 
     def __exit__(

@@ -23,11 +23,18 @@ from ._compat import WIN
 from .globals import resolve_color_default
 
 if t.TYPE_CHECKING:
+    from _typeshed import OpenBinaryMode
+    from _typeshed import OpenTextMode
     import typing_extensions as te
 
     P = te.ParamSpec("P")
 
+else:
+    OpenBinaryMode = OpenTextMode = str
+
 R = t.TypeVar("R")
+
+OpenFileMode = OpenTextMode | OpenBinaryMode
 
 
 def _posixify(name: str) -> str:
@@ -110,31 +117,52 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
     return " ".join(words[:i]) + "..."
 
 
-class LazyFile:
+class LazyFile(t.Generic[t.AnyStr]):
     """A lazy file works like a regular file but it does not fully open
     the file but it does perform some basic checks early to see if the
     filename parameter does make sense.  This is useful for safely opening
     files for writing.
     """
 
+    @t.overload
     def __init__(
-        self,
+        self: LazyFile[bytes],
         filename: str | os.PathLike[str],
-        mode: str = "r",
+        mode: OpenBinaryMode,
         encoding: str | None = None,
         errors: str | None = "strict",
         atomic: bool = False,
-    ):
+    ) -> None: ...
+
+    @t.overload
+    def __init__(
+        self: LazyFile[str],
+        filename: str | os.PathLike[str],
+        mode: OpenTextMode = "r",
+        encoding: str | None = None,
+        errors: str | None = "strict",
+        atomic: bool = False,
+    ) -> None: ...
+
+    def __init__(
+        self,
+        filename: str | os.PathLike[str],
+        mode: OpenFileMode = "r",
+        encoding: str | None = None,
+        errors: str | None = "strict",
+        atomic: bool = False,
+    ) -> None:
         self.name: str = os.fspath(filename)
         self.mode = mode
         self.encoding = encoding
         self.errors = errors
         self.atomic = atomic
-        self._f: t.IO[t.Any] | None
+        self._f: t.IO[t.AnyStr] | None
         self.should_close: bool
 
         if self.name == "-":
-            self._f, self.should_close = open_stream(filename, mode, encoding, errors)
+            rv, self.should_close = open_stream(filename, mode, encoding, errors)
+            self._f = t.cast("t.IO[t.AnyStr]", rv)
         else:
             if "r" in mode:
                 # Open and close the file in case we're opening it for
@@ -152,7 +180,7 @@ class LazyFile:
             return repr(self._f)
         return f"<unopened file '{format_filename(self.name)}' {self.mode}>"
 
-    def open(self) -> t.IO[t.Any]:
+    def open(self) -> t.IO[t.AnyStr]:
         """Opens the file if it's not yet open.  This call might fail with
         a :exc:`FileError`.  Not handling this error will produce an error
         that Click shows.
@@ -167,8 +195,8 @@ class LazyFile:
             from .exceptions import FileError
 
             raise FileError(self.name, hint=e.strerror) from e
-        self._f = rv
-        return rv
+        self._f = t.cast("t.IO[t.AnyStr]", rv)
+        return self._f
 
     def close(self) -> None:
         """Closes the underlying file, no matter what."""
@@ -182,7 +210,7 @@ class LazyFile:
         if self.should_close:
             self.close()
 
-    def __enter__(self) -> LazyFile:
+    def __enter__(self) -> LazyFile[t.AnyStr]:
         return self
 
     def __exit__(
@@ -193,19 +221,25 @@ class LazyFile:
     ) -> None:
         self.close_intelligently()
 
-    def __iter__(self) -> cabc.Iterator[str] | cabc.Iterator[bytes]:
+    def __iter__(self) -> cabc.Iterator[t.AnyStr]:
         self.open()
         return iter(self._f)  # type: ignore
 
 
-class KeepOpenFile:
+class KeepOpenFile(t.Generic[t.AnyStr]):
+    @t.overload
+    def __init__(self: KeepOpenFile[bytes], file: t.BinaryIO) -> None: ...
+
+    @t.overload
+    def __init__(self: KeepOpenFile[str], file: t.TextIO) -> None: ...
+
     def __init__(self, file: t.IO[t.Any]) -> None:
-        self._file: t.IO[t.Any] = file
+        self._file: t.IO[t.AnyStr] = t.cast("t.IO[t.AnyStr]", file)
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
 
-    def __enter__(self) -> KeepOpenFile:
+    def __enter__(self) -> KeepOpenFile[t.AnyStr]:
         return self
 
     def __exit__(
@@ -219,7 +253,7 @@ class KeepOpenFile:
     def __repr__(self) -> str:
         return repr(self._file)
 
-    def __iter__(self) -> cabc.Iterator[str] | cabc.Iterator[bytes]:
+    def __iter__(self) -> cabc.Iterator[t.AnyStr]:
         return iter(self._file)
 
 
@@ -359,9 +393,42 @@ def get_text_stream(
     return opener(encoding, errors)
 
 
+@t.overload
 def open_file(
     filename: str | os.PathLike[str],
-    mode: str = "r",
+    mode: OpenBinaryMode,
+    encoding: str | None = None,
+    errors: str | None = "strict",
+    lazy: bool = False,
+    atomic: bool = False,
+) -> t.IO[bytes]: ...
+
+
+@t.overload
+def open_file(
+    filename: str | os.PathLike[str],
+    mode: OpenTextMode = "r",
+    encoding: str | None = None,
+    errors: str | None = "strict",
+    lazy: bool = False,
+    atomic: bool = False,
+) -> t.IO[str]: ...
+
+
+@t.overload
+def open_file(
+    filename: str | os.PathLike[str],
+    mode: OpenFileMode = "r",
+    encoding: str | None = None,
+    errors: str | None = "strict",
+    lazy: bool = False,
+    atomic: bool = False,
+) -> t.IO[str] | t.IO[bytes]: ...
+
+
+def open_file(
+    filename: str | os.PathLike[str],
+    mode: OpenFileMode = "r",
     encoding: str | None = None,
     errors: str | None = "strict",
     lazy: bool = False,
@@ -396,14 +463,12 @@ def open_file(
     .. versionadded:: 3.0
     """
     if lazy:
-        return t.cast(
-            "t.IO[t.Any]", LazyFile(filename, mode, encoding, errors, atomic=atomic)
-        )
+        return t.cast("t.IO[t.Any]", LazyFile(filename, mode, encoding, errors, atomic))
 
     f, should_close = open_stream(filename, mode, encoding, errors, atomic=atomic)
 
     if not should_close:
-        f = t.cast("t.IO[t.Any]", KeepOpenFile(f))
+        return t.cast("t.IO[t.Any]", KeepOpenFile(f))
 
     return f
 
