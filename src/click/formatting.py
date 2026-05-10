@@ -161,14 +161,19 @@ class HelpFormatter:
         if text_width >= (term_len(usage_prefix) + 20):
             # The arguments will fit to the right of the prefix.
             indent = " " * term_len(usage_prefix)
-            self.write(
-                wrap_text(
-                    args,
-                    text_width,
-                    initial_indent=usage_prefix,
-                    subsequent_indent=indent,
+            if args:
+                self.write(
+                    wrap_text(
+                        args,
+                        text_width,
+                        initial_indent=usage_prefix,
+                        subsequent_indent=indent,
+                    )
                 )
-            )
+            else:
+                # No args, but still need to write the "Usage: prog" prefix.
+                # rstrip removes the trailing space added when building usage_prefix.
+                self.write(usage_prefix.rstrip())
         else:
             # The prefix is too long, put the arguments on the next line.
             self.write(usage_prefix)

@@ -433,3 +433,11 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+
+def test_write_usage_no_args():
+    """Regression test for issue #3360: write_usage with empty args
+    should still emit the 'Usage: prog' prefix, not an empty line."""
+    f = click.HelpFormatter()
+    f.write_usage("program")
+    assert f.getvalue() == "Usage: program\n"
