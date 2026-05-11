@@ -626,10 +626,14 @@ def test_pager_shlex_split(pager_env, expected_parts):
 
 
 def _get_real_pager_command() -> str:
-    """Return a platform pager used to exercise the BinaryIO pager branch."""
-    pager_name = "more" if WIN else "cat"
-    pager_path = shutil.which(pager_name)
-    assert pager_path is not None, f"{pager_name} not available"
+    """Return a real pager binary path used to exercise the pipe pager branch.
+
+    ..warning::
+        Unix-only for now: ``more.com`` on Windows is interactive and goes
+        through ``_tempfilepager`` rather than ``_pipepager``.
+    """
+    pager_path = shutil.which("cat")
+    assert pager_path is not None, "cat not available"
     return pager_path
 
 
@@ -655,6 +659,10 @@ def _write_pager_from_multiple_sites(pager):
     pager.write("suffix\n")
 
 
+@pytest.mark.skipif(
+    WIN,
+    reason="Exercises the pipe pager path; Windows uses _tempfilepager.",
+)
 @pytest.mark.parametrize(
     ("writer", "color", "expected"),
     [
@@ -685,7 +693,7 @@ def _write_pager_from_multiple_sites(pager):
 def test_get_pager_file_with_real_pager_binary_stream(
     monkeypatch, capfd, writer, color, expected
 ):
-    """A real pager should exercise the BinaryIO branch on Unix and Windows."""
+    """A real pager should exercise the BinaryIO branch."""
     output = _run_get_pager_file_with_real_pager(
         monkeypatch, capfd, writer, color=color
     )
@@ -693,6 +701,10 @@ def test_get_pager_file_with_real_pager_binary_stream(
     assert output == expected
 
 
+@pytest.mark.skipif(
+    WIN,
+    reason="Exercises the pipe pager path; Windows uses _tempfilepager.",
+)
 @pytest.mark.parametrize(
     ("color", "expected"),
     [
