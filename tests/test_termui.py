@@ -634,7 +634,7 @@ def _get_real_pager_command() -> str:
 
 
 def _run_get_pager_file_with_real_pager(monkeypatch, capfd, writer, color=False):
-    """Run through the platform pager backend selected by ``PAGER``."""
+    """Run through the pipe pager backend selected by ``PAGER``."""
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     monkeypatch.setitem(
         click._termui_impl.os.environ, "PAGER", _get_real_pager_command()
@@ -691,6 +691,69 @@ def test_get_pager_file_with_real_pager_binary_stream(
     )
 
     assert output == expected
+
+
+@pytest.mark.parametrize(
+    ("color", "expected"),
+    [
+        pytest.param(False, "hello\n", id="strip ansi"),
+        pytest.param(True, click.style("hello", fg="red") + "\n", id="preserve ansi"),
+    ],
+)
+def test_echo_via_pager_real_pager_handles_ansi(monkeypatch, capfd, color, expected):
+    """``echo_via_pager`` should honor ``color`` like ``get_pager_file``."""
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setitem(
+        click._termui_impl.os.environ, "PAGER", _get_real_pager_command()
+    )
+
+    click.echo_via_pager(click.style("hello", fg="red"), color=color)
+
+    out, err = capfd.readouterr()
+    assert err == ""
+    assert out == expected
+
+
+def test_get_pager_file_pager_missing_binary_falls_back(monkeypatch, tmp_path):
+    """``PAGER`` pointing to a nonexistent binary falls back to the text stdout."""
+    pager_out = tmp_path / "pager_out.txt"
+
+    monkeypatch.setitem(
+        click._termui_impl.os.environ,
+        "PAGER",
+        "click-tests-nonexistent-pager-9b3f2",
+    )
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+
+    with pager_out.open("w", encoding="utf-8") as text_stream:
+        monkeypatch.setattr(
+            click._termui_impl, "_default_text_stdout", lambda: text_stream
+        )
+
+        with click.get_pager_file() as pager:
+            pager.write("hello\n")
+
+    assert pager_out.read_text(encoding="utf-8") == "hello\n"
+
+
+def test_get_pager_file_pager_unset_falls_back_when_no_default(monkeypatch, tmp_path):
+    """``PAGER`` unset still works when the platform default isn't installed."""
+    pager_out = tmp_path / "pager_out.txt"
+
+    monkeypatch.delitem(click._termui_impl.os.environ, "PAGER", raising=False)
+    monkeypatch.delitem(click._termui_impl.os.environ, "TERM", raising=False)
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setattr(shutil, "which", lambda _name: None)
+
+    with pager_out.open("w", encoding="utf-8") as text_stream:
+        monkeypatch.setattr(
+            click._termui_impl, "_default_text_stdout", lambda: text_stream
+        )
+
+        with click.get_pager_file() as pager:
+            pager.write("hello\n")
+
+    assert pager_out.read_text(encoding="utf-8") == "hello\n"
 
 
 @pytest.mark.parametrize(
