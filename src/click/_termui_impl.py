@@ -431,7 +431,7 @@ def _pager_contextmanager(
 def get_pager_file(color: bool | None = None) -> t.Generator[t.TextIO, None, None]:
     """Context manager.
     Yields a writable file-like object which can be used as an output pager.
-    .. versionadded:: 8.2
+    .. versionadded:: 8.4
     :param color: controls if the pager supports ANSI colors or not.  The
                   default is autodetection.
     """
