@@ -402,6 +402,17 @@ class _OptionParser:
                 if self.ignore_unknown_options:
                     unknown_options.append(ch)
                     continue
+                # If the very first character of the short-option group is
+                # not a registered option, the user most likely intended the
+                # entire token as a single option name (e.g. -dbgwrong).
+                # Raise with the full original argument so the error message
+                # is more helpful. If a later character fails, we keep the
+                # per-character diagnostic (e.g. -abZ where -a and -b are
+                # valid but -Z is not).
+                if i == 2:
+                    raise NoSuchOption(
+                        arg, possibilities=self._long_opt, ctx=self.ctx
+                    )
                 raise NoSuchOption(opt, ctx=self.ctx)
             if option.takes_value:
                 # Any characters left in arg?  Pretend they're the
