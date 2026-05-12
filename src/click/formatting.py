@@ -52,6 +52,12 @@ def wrap_text(
                               each consecutive line.
     :param preserve_paragraphs: if this flag is set then the wrapping will
                                 intelligently handle paragraphs.
+
+    .. versionchanged:: 8.4
+        Width is measured in visible characters. ANSI escape sequences in
+        ``text``, ``initial_indent``, or ``subsequent_indent`` no longer
+        count toward the width budget, so styled input wraps based on what
+        the user sees instead of raw byte length.
     """
     from ._textwrap import TextWrapper
 

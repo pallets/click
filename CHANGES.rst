@@ -53,6 +53,9 @@ Unreleased
     fail. :issue:`3105` :pr:`3211`
 -   Add ``click.get_pager_file`` for file-like access to an output
     pager. :pr:`1572`
+-   :class:`~click.formatting.TextWrapper` and
+    :func:`~click.formatting.wrap_text` now measure line width in visible
+    characters, ignoring ANSI escape sequences. :pr:`3420`
 
 Version 8.3.3
 -------------

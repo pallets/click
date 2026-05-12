@@ -1,6 +1,7 @@
 import pytest
 
 import click
+from click._compat import strip_ansi
 
 
 def test_basic_functionality(runner):
@@ -433,3 +434,68 @@ def test_help_formatter_write_text():
     actual = formatter.getvalue()
     expected = "  Lorem ipsum dolor sit amet,\n  consectetur adipiscing elit\n"
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    ("body", "width", "initial_indent"),
+    [
+        # Styled ``initial_indent`` must be measured by visible width, so the
+        # ``Usage:`` prefix shouldn't push ``[OPTIONS]`` to the second line.
+        # Regression for the asymmetry between ``HelpFormatter.write_usage``
+        # (which sized the prefix with ``term_len``) and ``wrap_text``
+        # (which previously used raw ``len``).
+        pytest.param(
+            "[OPTIONS]",
+            30,
+            "\x1b[38;2;38;139;210m\x1b[1mUsage:\x1b[0m ",
+            id="styled-initial-indent-does-not-break-body",
+        ),
+        # Styled chunks in the body itself wrap on visible width.
+        pytest.param(
+            "\x1b[31malpha\x1b[0m \x1b[31mbeta\x1b[0m"
+            " \x1b[31mgamma\x1b[0m \x1b[31mdelta\x1b[0m",
+            15,
+            "",
+            id="styled-body-wraps-on-visible-width",
+        ),
+        # ``_handle_long_word`` cuts a styled token between visible
+        # characters; the ANSI escape sequence must not be split.
+        pytest.param(
+            "\x1b[31mabcdefghij\x1b[0m",
+            5,
+            "",
+            id="styled-long-word-breaks-on-visible-width",
+        ),
+    ],
+)
+def test_wrap_text_visible_width(body, width, initial_indent):
+    """``wrap_text`` of styled input produces the same line layout as
+    ``wrap_text`` of the ANSI-stripped input.
+
+    ANSI escape bytes must not count toward the width budget, regardless
+    of whether they appear in the body, in ``initial_indent``, or when a
+    styled token has to be broken in the middle.
+    """
+    styled = click.formatting.wrap_text(
+        body, width=width, initial_indent=initial_indent
+    )
+    plain = click.formatting.wrap_text(
+        strip_ansi(body), width=width, initial_indent=strip_ansi(initial_indent)
+    )
+
+    styled_visible = [strip_ansi(line) for line in styled.splitlines()]
+    assert styled_visible == plain.splitlines()
+
+
+def test_write_usage_styled_prefix_keeps_options_on_one_line():
+    """End-to-end: a downstream-styled ``Usage:`` prefix should not split
+    ``[OPTIONS]`` across two lines.
+    """
+    styled_prefix = "\x1b[38;2;38;139;210m\x1b[1mUsage:\x1b[0m "
+
+    formatter = click.HelpFormatter(width=40)
+    formatter.write_usage("cli", "[OPTIONS]", prefix=styled_prefix)
+    rendered = formatter.getvalue()
+
+    visible = strip_ansi(rendered)
+    assert visible == "Usage: cli [OPTIONS]\n"
