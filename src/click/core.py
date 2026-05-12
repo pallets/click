@@ -54,6 +54,36 @@ F = t.TypeVar("F", bound="t.Callable[..., t.Any]")
 V = t.TypeVar("V")
 
 
+async def _await_any(awaitable: t.Awaitable[t.Any]) -> t.Any:
+    return await awaitable
+
+
+def _invoke_command_callback(
+    callback: t.Callable[..., t.Any], *args: t.Any, **kwargs: t.Any
+) -> t.Any:
+    """Run *callback* and drive it with :func:`asyncio.run` if it returns an
+    awaitable (for example when the user defined an ``async def`` command
+    body, including when that coroutine function is wrapped by decorators such
+    as :func:`pass_context`). See :issue:`2033`.
+    """
+    import asyncio
+
+    result = callback(*args, **kwargs)
+    if inspect.isawaitable(result):
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(_await_any(t.cast("t.Awaitable[t.Any]", result)))
+        if inspect.iscoroutine(result):
+            result.close()
+        raise RuntimeError(
+            "Click cannot run this command because an asyncio event loop is"
+            " already running. Use a synchronous callback, or invoke the CLI"
+            " from a context without an active event loop."
+        ) from None
+    return result
+
+
 def _complete_visible_commands(
     ctx: Context, incomplete: str
 ) -> cabc.Iterator[tuple[str, Command]]:
@@ -816,6 +846,12 @@ class Context:
 
         .. versionchanged:: 3.2
             A new context is created, and missing arguments use default values.
+
+        .. versionchanged:: 8.4
+            If the callable returns an awaitable (for example an ``async def``
+            callback, including when only the wrapped function is async, as with
+            :func:`pass_context`), Click runs it to completion using
+            :func:`asyncio.run`.
         """
         if isinstance(callback, Command):
             other_cmd = callback
@@ -851,7 +887,7 @@ class Context:
 
         with augment_usage_errors(self):
             with ctx:
-                return callback(*args, **kwargs)
+                return _invoke_command_callback(callback, *args, **kwargs)
 
     def forward(self, cmd: Command, /, *args: t.Any, **kwargs: t.Any) -> t.Any:
         """Similar to :meth:`invoke` but fills in default keyword

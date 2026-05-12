@@ -71,6 +71,31 @@ And the corresponding help page:
     invoke(hello, args=['--help'], prog_name='python hello.py')
 ```
 
+## Async command callbacks
+
+```{versionadded} 8.4
+```
+
+Command bodies may be defined with `async def`. Click detects the awaitable
+returned from the callback (including when you combine `async def` with
+decorators such as {func}`pass_context`) and runs it to completion with
+{func}`asyncio.run` before returning to the caller.
+
+```{eval-rst}
+.. click:example::
+    import asyncio
+    import click
+
+    @click.command()
+    async def hello():
+        await asyncio.sleep(0)
+        click.echo("Hello World!")
+```
+
+If an asyncio event loop is already running (for example when embedding a
+Click CLI inside `asyncio.run` or another async framework), Click cannot use
+`asyncio.run` again and raises {exc}`RuntimeError` instead.
+
 ## Echoing
 
 Why does this example use {func}`echo` instead of the regular {func}`print` function? The answer to this question is

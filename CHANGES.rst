@@ -5,6 +5,11 @@ Version 8.4.0
 
 Unreleased
 
+-   Command callbacks may be ``async def`` functions. Click runs the returned
+    awaitable to completion using :func:`asyncio.run`, including when the
+    coroutine function is only reached through wrappers such as
+    :func:`pass_context`. If an event loop is already running, Click raises
+    :exc:`RuntimeError` instead of scheduling the coroutine. :issue:`2033`
 -   :class:`ParamType` typing improvements. :pr:`3371`
 
     -   :class:`ParamType` is now a generic abstract base class,
