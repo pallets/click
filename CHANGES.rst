@@ -5,6 +5,10 @@ Version 8.4.0
 
 Unreleased
 
+-   :class:`~click.utils.LazyFile` no longer probe-opens a path for reading
+    when it points at a FIFO (named pipe). The eager open/close would block
+    on a writer and then drain the pipe before the real read. :issue:`2645`
+
 -   :class:`ParamType` typing improvements. :pr:`3371`
 
     -   :class:`ParamType` is now a generic abstract base class,

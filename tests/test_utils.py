@@ -710,6 +710,35 @@ def test_iter_lazyfile(tmpdir):
                 assert e_line == a_line.strip()
 
 
+@pytest.mark.skipif(WIN, reason="os.mkfifo is POSIX-only.")
+def test_lazyfile_skips_probe_open_for_fifo(tmp_path, monkeypatch):
+    """`LazyFile` must not probe-open a FIFO for reading.
+
+    A FIFO blocks on open until a writer connects; the original probe
+    (`open(...).close()`) would drain the pipe before the real read
+    happens. Regression test for issue #2645.
+    """
+    fifo_path = tmp_path / "pipe"
+    os.mkfifo(fifo_path)
+
+    real_open = open
+    opened_paths: list[str] = []
+
+    def tracking_open(file, *args, **kwargs):
+        opened_paths.append(os.fspath(file))
+        return real_open(file, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.open", tracking_open)
+
+    lf = click.utils.LazyFile(str(fifo_path), mode="rb")
+
+    # Construction must not have opened the FIFO — otherwise the next
+    # reader would observe an empty pipe.
+    assert str(fifo_path) not in opened_paths
+    # And the file handle must still be unopened.
+    assert lf._f is None
+
+
 class MockMain:
     __slots__ = "__package__"
 

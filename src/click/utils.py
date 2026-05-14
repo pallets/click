@@ -3,6 +3,7 @@ from __future__ import annotations
 import collections.abc as cabc
 import os
 import re
+import stat
 import sys
 import typing as t
 from functools import update_wrapper
@@ -110,6 +111,13 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
     return " ".join(words[:i]) + "..."
 
 
+def _is_fifo(path: str | os.PathLike[str]) -> bool:
+    try:
+        return stat.S_ISFIFO(os.stat(path).st_mode)
+    except OSError:
+        return False
+
+
 class LazyFile:
     """A lazy file works like a regular file but it does not fully open
     the file but it does perform some basic checks early to see if the
@@ -136,10 +144,12 @@ class LazyFile:
         if self.name == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
         else:
-            if "r" in mode:
+            if "r" in mode and not _is_fifo(filename):
                 # Open and close the file in case we're opening it for
                 # reading so that we can catch at least some errors in
-                # some cases early.
+                # some cases early. Skipped for FIFOs (named pipes):
+                # probe-opening would block until a writer connects and
+                # then drain the pipe before the real read.
                 open(filename, mode).close()
             self._f = None
             self.should_close = True
