@@ -489,8 +489,20 @@ class _OptionParser:
             # which says, that if we have a two character options prefix
             # (applies to "--foo" for instance), we do not dispatch to the
             # short option code and will instead raise the no option
-            # error.
-            if arg[:2] not in self._opt_prefixes:
+            # error.  The same applies to single-dash long options such as
+            # "-foo" when the unknown argument extends a known option and
+            # cannot be interpreted as a known short option.
+            single_dash_long_prefix = any(
+                arg.startswith(opt)
+                and opt[:1] == arg[:1]
+                and opt[:2] not in self._opt_prefixes
+                for opt in self._long_opt
+            )
+            first_short_opt = _normalize_opt(arg[:2], self.ctx) in self._short_opt
+
+            if arg[:2] not in self._opt_prefixes and (
+                first_short_opt or not single_dash_long_prefix
+            ):
                 self._match_short_opt(arg, state)
                 return
 
