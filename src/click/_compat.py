@@ -12,6 +12,24 @@ from weakref import WeakKeyDictionary
 
 CYGWIN = sys.platform.startswith("cygwin")
 WIN = sys.platform.startswith("win")
+
+
+def _is_wsl() -> bool:
+    """Return ``True`` if running under the Windows Subsystem for Linux.
+
+    On WSL, ``xdg-open`` hands off to the Windows host browser and
+    returns almost immediately; if the caller doesn't ``wait()`` on it,
+    the short-lived child becomes a zombie until the Python process
+    exits.
+    """
+    try:
+        return "microsoft" in os.uname().release.lower()
+    except AttributeError:
+        # ``os.uname`` doesn't exist on native Windows.
+        return False
+
+
+WSL = _is_wsl()
 auto_wrap_for_ansi: t.Callable[[t.TextIO], t.TextIO] | None = None
 _ansi_re = re.compile(r"\033\[[;?0-9]*[a-zA-Z]")
 

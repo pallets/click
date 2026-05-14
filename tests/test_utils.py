@@ -780,3 +780,55 @@ def test_make_default_short_help(value, max_length, alter, expect):
 
     out = click.utils.make_default_short_help(value, max_length)
     assert out == expect
+
+
+@pytest.mark.skipif(WIN, reason="open_url xdg-open path is POSIX-only.")
+def test_open_url_waits_on_wsl(monkeypatch):
+    """On WSL, ``open_url`` must ``wait()`` on ``xdg-open`` even when the
+    caller didn't pass ``wait=True``: the child returns almost immediately
+    after handing off to the Windows browser and is otherwise leaked as a
+    zombie process.
+
+    Regression test for issue #2154.
+    """
+    import click._termui_impl as _ti
+
+    waited = False
+
+    class FakeProc:
+        def wait(self):
+            nonlocal waited
+            waited = True
+            return 0
+
+    monkeypatch.setattr(_ti, "WSL", True)
+    monkeypatch.setattr(_ti, "sys", type("S", (), {"platform": "linux"})())
+    monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: FakeProc())
+
+    rc = _ti.open_url("https://example.com", wait=False)
+    assert waited is True
+    assert rc == 0
+
+
+@pytest.mark.skipif(WIN, reason="open_url xdg-open path is POSIX-only.")
+def test_open_url_does_not_wait_off_wsl(monkeypatch):
+    """Outside WSL, ``open_url`` must not block on ``xdg-open`` unless the
+    caller explicitly opted in with ``wait=True`` — many Linux desktops
+    keep ``xdg-open`` running for the lifetime of the launched app."""
+    import click._termui_impl as _ti
+
+    waited = False
+
+    class FakeProc:
+        def wait(self):
+            nonlocal waited
+            waited = True
+            return 0
+
+    monkeypatch.setattr(_ti, "WSL", False)
+    monkeypatch.setattr(_ti, "sys", type("S", (), {"platform": "linux"})())
+    monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: FakeProc())
+
+    rc = _ti.open_url("https://example.com", wait=False)
+    assert waited is False
+    assert rc == 0

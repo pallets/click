@@ -5,6 +5,11 @@ Version 8.4.0
 
 Unreleased
 
+-   :func:`launch` now waits on ``xdg-open`` when running under WSL.
+    The Windows host browser handler returns almost immediately,
+    leaving the unwaited subprocess as a zombie until the Python
+    process exits. :issue:`2154`
+
 -   :class:`ParamType` typing improvements. :pr:`3371`
 
     -   :class:`ParamType` is now a generic abstract base class,
