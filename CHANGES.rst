@@ -57,6 +57,10 @@ Unreleased
     ``hide_input=True`` fails validation, instead of always showing a
     generic message. Built-in type messages mask the input value.
     :issue:`2809` :pr:`3256`
+-   Fix missing space between option help text and the ``(DEPRECATED)``
+    label, and localize the option label so it matches the command label.
+    The label and the ``DeprecationWarning`` reason suffix are now produced
+    by shared helpers. :pr:`3423`
 
 Version 8.3.3
 -------------
