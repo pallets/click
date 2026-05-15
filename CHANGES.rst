@@ -57,6 +57,14 @@ Unreleased
     ``hide_input=True`` fails validation, instead of always showing a
     generic message. Built-in type messages mask the input value.
     :issue:`2809` :pr:`3256`
+-   Fix feature switch groups (several ``flag_value`` options sharing one
+    parameter name) silently dropping an explicit ``default`` when a sibling
+    option without an explicit default was declared first. Arbitration is now
+    source-aware: a more explicit :class:`ParameterSource` always wins, and
+    within ``ParameterSource.DEFAULT``, an option that received an explicit
+    ``default=`` keyword wins over a sibling whose default was auto-derived.
+    The 8.3.x first-wins fallback for remaining ties was reverted to the
+    pre-8.3.x last-wins fallback. :issue:`3403` :pr:`3404`
 
 Version 8.3.3
 -------------
