@@ -57,6 +57,9 @@ Unreleased
     ``hide_input=True`` fails validation, instead of always showing a
     generic message. Built-in type messages mask the input value.
     :issue:`2809` :pr:`3256`
+-   Document short option stacking (``-abc`` is parsed as ``-a -b -c``) and
+    clarify that multi-character short option names are not supported.
+    :issue:`2779` :pr:`3431`
 
 Version 8.3.3
 -------------
