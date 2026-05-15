@@ -118,6 +118,7 @@ General Reference
    command-line-reference
    unicode-support
    wincmd
+   glossary
 
 API Reference
 -------------------
