@@ -2786,7 +2786,11 @@ class Option(Parameter):
                 if isinstance(deprecated, str)
                 else "(DEPRECATED)"
             )
-            help = help + deprecated_message if help is not None else deprecated_message
+            help = (
+                f"{help} {deprecated_message}"
+                if help is not None
+                else deprecated_message
+            )
 
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
