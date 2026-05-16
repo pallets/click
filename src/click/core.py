@@ -1024,7 +1024,7 @@ class Command:
         self.options_metavar = options_metavar
         self.short_help = short_help
         self.add_help_option = add_help_option
-        self._help_option = None
+        self._help_option: Option | None = None
         self.no_args_is_help = no_args_is_help
         self.hidden = hidden
         self.deprecated = deprecated
@@ -1127,7 +1127,7 @@ class Command:
 
             # Apply help_option decorator and pop resulting option
             help_option(*help_option_names)(self)
-            self._help_option = self.params.pop()  # type: ignore[assignment]
+            self._help_option = t.cast(Option, self.params.pop())
 
         return self._help_option
 

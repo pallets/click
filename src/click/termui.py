@@ -716,7 +716,7 @@ def unstyle(text: str) -> str:
 
 def secho(
     message: t.Any | None = None,
-    file: t.IO[t.AnyStr] | None = None,
+    file: t.TextIO | t.BinaryIO | None = None,
     nl: bool = True,
     err: bool = False,
     color: bool | None = None,

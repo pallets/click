@@ -437,7 +437,7 @@ class FishComplete(ShellComplete):
         return f"{item.type}\n{value}\n{help_escaped}"
 
 
-ShellCompleteType = t.TypeVar("ShellCompleteType", bound="type[ShellComplete]")
+ShellCompleteType = t.TypeVar("ShellCompleteType", bound="ShellComplete")
 
 
 _available_shells: dict[str, type[ShellComplete]] = {
@@ -448,8 +448,8 @@ _available_shells: dict[str, type[ShellComplete]] = {
 
 
 def add_completion_class(
-    cls: ShellCompleteType, name: str | None = None
-) -> ShellCompleteType:
+    cls: type[ShellCompleteType], name: str | None = None
+) -> type[ShellCompleteType]:
     """Register a :class:`ShellComplete` subclass under the given name.
     The name will be provided by the completion instruction environment
     variable during completion.

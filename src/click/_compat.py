@@ -10,6 +10,15 @@ import typing as t
 from types import TracebackType
 from weakref import WeakKeyDictionary
 
+if t.TYPE_CHECKING:
+    from _typeshed import OpenBinaryMode
+    from _typeshed import OpenTextMode
+else:
+    OpenBinaryMode = OpenTextMode = str
+
+AnyStr = t.TypeVar("AnyStr", str, bytes)
+OpenFileMode = OpenTextMode | OpenBinaryMode
+
 CYGWIN = sys.platform.startswith("cygwin")
 WIN = sys.platform.startswith("win")
 auto_wrap_for_ansi: t.Callable[[t.TextIO], t.TextIO] | None = None
@@ -355,26 +364,64 @@ def get_text_stderr(encoding: str | None = None, errors: str | None = None) -> t
     return _force_correct_text_writer(sys.stderr, encoding, errors, force_writable=True)
 
 
+@t.overload
 def _wrap_io_open(
     file: str | os.PathLike[str] | int,
-    mode: str,
+    mode: OpenBinaryMode,
     encoding: str | None,
     errors: str | None,
-) -> t.IO[t.Any]:
+) -> t.BinaryIO: ...
+
+
+@t.overload
+def _wrap_io_open(
+    file: str | os.PathLike[str] | int,
+    mode: OpenTextMode = "r",
+    encoding: str | None = None,
+    errors: str | None = "strict",
+) -> t.TextIO: ...
+
+
+def _wrap_io_open(
+    file: str | os.PathLike[str] | int,
+    mode: OpenFileMode = "r",
+    encoding: str | None = None,
+    errors: str | None = "strict",
+) -> t.BinaryIO | t.TextIO:
     """Handles not passing ``encoding`` and ``errors`` in binary mode."""
     if "b" in mode:
-        return open(file, mode)
+        return t.cast(t.BinaryIO, open(file, mode))
 
-    return open(file, mode, encoding=encoding, errors=errors)
+    return t.cast(t.TextIO, open(file, mode, encoding=encoding, errors=errors))
+
+
+@t.overload
+def open_stream(
+    filename: str | os.PathLike[str],
+    mode: OpenBinaryMode,
+    encoding: str | None = None,
+    errors: str | None = "strict",
+    atomic: bool = False,
+) -> tuple[t.IO[bytes], bool]: ...
+
+
+@t.overload
+def open_stream(
+    filename: str | os.PathLike[str],
+    mode: OpenTextMode = "r",
+    encoding: str | None = None,
+    errors: str | None = "strict",
+    atomic: bool = False,
+) -> tuple[t.IO[str], bool]: ...
 
 
 def open_stream(
     filename: str | os.PathLike[str],
-    mode: str = "r",
+    mode: OpenFileMode = "r",
     encoding: str | None = None,
     errors: str | None = "strict",
     atomic: bool = False,
-) -> tuple[t.IO[t.Any], bool]:
+) -> tuple[t.IO[bytes] | t.IO[str], bool]:
     binary = "b" in mode
     filename = os.fspath(filename)
 
@@ -444,17 +491,25 @@ def open_stream(
     if perm is not None:
         os.chmod(tmp_filename, perm)  # in case perm includes bits in umask
 
-    f = _wrap_io_open(fd, mode, encoding, errors)
-    af = _AtomicFile(f, tmp_filename, os.path.realpath(filename))
-    return t.cast(t.IO[t.Any], af), True
+    if binary:
+        binary_f = _wrap_io_open(fd, t.cast("OpenBinaryMode", mode), encoding, errors)
+        binary_af = _AtomicFile(binary_f, tmp_filename, os.path.realpath(filename))
+        return binary_af, True
+
+    text_f = _wrap_io_open(fd, t.cast("OpenTextMode", mode), encoding, errors)
+    text_af = _AtomicFile(text_f, tmp_filename, os.path.realpath(filename))
+    return t.cast(t.IO[t.Any], text_af), True
 
 
-class _AtomicFile:
-    def __init__(self, f: t.IO[t.Any], tmp_filename: str, real_filename: str) -> None:
-        self._f = f
+class _AtomicFile(t.IO[AnyStr], t.Generic[AnyStr]):
+    def __init__(self, f: t.IO[AnyStr], tmp_filename: str, real_filename: str) -> None:
+        self._f: t.IO[AnyStr] = f
         self._tmp_filename = tmp_filename
         self._real_filename = real_filename
-        self.closed = False
+
+    @property
+    def closed(self) -> bool:
+        return self._f.closed
 
     @property
     def name(self) -> str:
@@ -465,12 +520,11 @@ class _AtomicFile:
             return
         self._f.close()
         os.replace(self._tmp_filename, self._real_filename)
-        self.closed = True
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._f, name)
 
-    def __enter__(self) -> _AtomicFile:
+    def __enter__(self) -> _AtomicFile[AnyStr]:
         return self
 
     def __exit__(
