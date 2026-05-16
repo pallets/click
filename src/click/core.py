@@ -93,6 +93,23 @@ def _check_nested_chain(
     raise RuntimeError(message)
 
 
+def _format_deprecated_label(deprecated: bool | str) -> str:
+    """Return the parenthesized deprecation label shown in help text."""
+    label = _("deprecated").upper()
+    if isinstance(deprecated, str):
+        return f"({label}: {deprecated})"
+    return f"({label})"
+
+
+def _format_deprecated_suffix(deprecated: bool | str) -> str:
+    """Return the trailing reason for a ``DeprecationWarning`` message,
+    prefixed with a space, or an empty string when no reason was given.
+    """
+    if isinstance(deprecated, str):
+        return f" {deprecated}"
+    return ""
+
+
 def batch(iterable: cabc.Iterable[V], batch_size: int) -> list[tuple[V, ...]]:
     return list(zip(*repeat(iter(iterable), batch_size), strict=False))
 
@@ -1136,13 +1153,7 @@ class Command:
             text = ""
 
         if self.deprecated:
-            localised_deprectated = _("deprecated").upper()
-            deprecated_message = (
-                f"({localised_deprectated}: {self.deprecated})"
-                if isinstance(self.deprecated, str)
-                else f"({localised_deprectated})"
-            )
-            text = f"{_(text)} {deprecated_message}"
+            text = f"{_(text)} {_format_deprecated_label(self.deprecated)}"
 
         return text.strip()
 
@@ -1172,13 +1183,7 @@ class Command:
             text = ""
 
         if self.deprecated:
-            localised_deprectated = _("deprecated").upper()
-            deprecated_message = (
-                f"({localised_deprectated}: {self.deprecated})"
-                if isinstance(self.deprecated, str)
-                else f"({localised_deprectated})"
-            )
-            text = f"{_(text)} {deprecated_message}"
+            text = f"{_(text)} {_format_deprecated_label(self.deprecated)}"
 
         if text:
             formatter.write_paragraph()
@@ -1285,12 +1290,12 @@ class Command:
         in the right way.
         """
         if self.deprecated:
-            extra_message = (
-                f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
-            )
             message = _(
                 "DeprecationWarning: The command {name!r} is deprecated.{extra_message}"
-            ).format(name=self.name, extra_message=extra_message)
+            ).format(
+                name=self.name,
+                extra_message=_format_deprecated_suffix(self.deprecated),
+            )
             echo(style(message, fg="red"), err=True)
 
         if self.callback is not None:
@@ -2592,16 +2597,13 @@ class Parameter(ABC):
                 and value is not UNSET
                 and source < ParameterSource.DEFAULT_MAP
             ):
-                extra_message = (
-                    f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
-                )
                 message = _(
                     "DeprecationWarning: The {param_type} {name!r} is deprecated."
                     "{extra_message}"
                 ).format(
                     param_type=self.param_type_name,
                     name=self.human_readable_name,
-                    extra_message=extra_message,
+                    extra_message=_format_deprecated_suffix(self.deprecated),
                 )
                 echo(style(message, fg="red"), err=True)
 
@@ -2781,16 +2783,8 @@ class Option(Parameter):
             prompt_text = prompt
 
         if deprecated:
-            deprecated_message = (
-                f"(DEPRECATED: {deprecated})"
-                if isinstance(deprecated, str)
-                else "(DEPRECATED)"
-            )
-            help = (
-                f"{help} {deprecated_message}"
-                if help is not None
-                else deprecated_message
-            )
+            label = _format_deprecated_label(deprecated)
+            help = f"{help} {label}" if help is not None else label
 
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
