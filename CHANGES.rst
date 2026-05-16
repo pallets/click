@@ -5,6 +5,8 @@ Version 8.4.0
 
 Unreleased
 
+-   Don't split hyphenated option names mid-word in the usage line.
+    :issue:`3362`
 -   :class:`ParamType` typing improvements. :pr:`3371`
 
     -   :class:`ParamType` is now a generic abstract base class,

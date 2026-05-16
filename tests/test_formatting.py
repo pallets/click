@@ -614,3 +614,40 @@ def test_command_write_usage_no_args(runner, command_kwargs, expected_usage_line
     cli = click.Command("cli", **command_kwargs)
     result = runner.invoke(cli, ["--help"])
     assert result.output.splitlines()[0] == expected_usage_line
+
+
+def test_write_usage_does_not_break_options_at_hyphen():
+    """Regression for #3362. Hyphenated option names on the usage line
+    used to wrap mid-word (e.g. ``--max-`` and ``retry-count`` on two
+    lines), because ``textwrap.TextWrapper`` defaults to
+    ``break_on_hyphens=True``.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+    ]
+    f = click.HelpFormatter(width=65)
+    f.write_usage("program", " ".join(options))
+
+    for line in f.getvalue().splitlines():
+        # No line should end with a hyphen, which is what would happen if
+        # an option name was split. A trailing space is fine.
+        assert not line.rstrip().endswith("-"), line
+
+
+def test_wrap_text_break_on_hyphens_opt_in():
+    """``wrap_text`` keeps the historical behavior by default and only
+    suppresses hyphen breaks when the caller opts in. Width 25 is wide
+    enough to almost fit ``--alpha-beta --gamma-delta``, so the default
+    wrapper splits the trailing word at its hyphen.
+    """
+    text = "--alpha-beta --gamma-delta"
+    broken = click.formatting.wrap_text(text, width=25)
+    intact = click.formatting.wrap_text(text, width=25, break_on_hyphens=False)
+
+    assert any(line.endswith("-") for line in broken.splitlines())
+    assert not any(line.endswith("-") for line in intact.splitlines())
+    assert "--gamma-delta" in intact
