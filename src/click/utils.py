@@ -117,6 +117,14 @@ class LazyFile:
     files for writing.
     """
 
+    name: str
+    mode: str
+    encoding: str | None
+    errors: str | None
+    atomic: bool
+    _f: t.IO[t.Any] | None
+    should_close: bool
+
     def __init__(
         self,
         filename: str | os.PathLike[str],
@@ -124,14 +132,12 @@ class LazyFile:
         encoding: str | None = None,
         errors: str | None = "strict",
         atomic: bool = False,
-    ):
-        self.name: str = os.fspath(filename)
+    ) -> None:
+        self.name = os.fspath(filename)
         self.mode = mode
         self.encoding = encoding
         self.errors = errors
         self.atomic = atomic
-        self._f: t.IO[t.Any] | None
-        self.should_close: bool
 
         if self.name == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
@@ -199,8 +205,10 @@ class LazyFile:
 
 
 class KeepOpenFile:
+    _file: t.IO[t.Any]
+
     def __init__(self, file: t.IO[t.Any]) -> None:
-        self._file: t.IO[t.Any] = file
+        self._file = file
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
@@ -507,6 +515,8 @@ class PacifyFlushWrapper:
     other cleanup code, and the case where the underlying file is not a broken
     pipe, all calls and attributes are proxied.
     """
+
+    wrapped: t.IO[t.Any]
 
     def __init__(self, wrapped: t.IO[t.Any]) -> None:
         self.wrapped = wrapped
