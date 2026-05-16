@@ -59,6 +59,11 @@ Unreleased
 -   :class:`~click.formatting.TextWrapper` and
     :func:`~click.formatting.wrap_text` now measure line width in visible
     characters, ignoring ANSI escape sequences. :pr:`3420`
+-   Fix :meth:`HelpFormatter.write_usage` emitting only a blank line when
+    called without ``args``. The usage prefix and program name are now
+    written even when no arguments follow, and the trailing separator
+    space is stripped so the line ends at the program name.
+    :issue:`3360` :pr:`3434`
 -   Show custom error messages from types when :func:`prompt` with
     ``hide_input=True`` fails validation, instead of always showing a
     generic message. Built-in type messages mask the input value.

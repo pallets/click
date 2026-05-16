@@ -499,3 +499,118 @@ def test_write_usage_styled_prefix_keeps_options_on_one_line():
 
     visible = strip_ansi(rendered)
     assert visible == "Usage: cli [OPTIONS]\n"
+
+
+@pytest.mark.parametrize(
+    ("formatter_kwargs", "current_indent", "prog", "args", "prefix", "expected"),
+    [
+        # Issue #3360: the default prefix used to emit only
+        # a blank line because ``wrap_text("", initial_indent=usage_prefix)``
+        # returned ``""`` and discarded the prefix.
+        pytest.param(
+            {},
+            0,
+            "Program",
+            "",
+            None,
+            "Usage: Program\n",
+            id="empty-args-default-prefix",
+        ),
+        # A caller-supplied prefix is preserved verbatim.
+        pytest.param(
+            {},
+            0,
+            "Program",
+            "",
+            "Run: ",
+            "Run: Program\n",
+            id="empty-args-custom-prefix",
+        ),
+        # ``current_indent`` is preserved even with no args to render.
+        pytest.param(
+            {},
+            4,
+            "Program",
+            "",
+            None,
+            "Usage: Program\n",
+            id="empty-args-indented",
+        ),
+        # Prog too long to share a line with args: the wrap branch must not
+        # emit a second line.
+        pytest.param(
+            {"width": 20},
+            0,
+            "VeryLongProgramName",
+            "",
+            None,
+            "Usage: VeryLongProgramName\n",
+            id="empty-args-long-prog",
+        ),
+        # With non-empty args, the separator space between prog and args is preserved.
+        pytest.param(
+            {},
+            0,
+            "Program",
+            "[OPTIONS]",
+            None,
+            "Usage: Program [OPTIONS]\n",
+            id="with-args-default-prefix",
+        ),
+    ],
+)
+def test_help_formatter_write_usage(
+    formatter_kwargs, current_indent, prog, args, prefix, expected
+):
+    """``HelpFormatter.write_usage`` renders a single usage line whose
+    trailing separator tracks whether ``args`` is non-empty.
+    """
+    f = click.HelpFormatter(**formatter_kwargs)
+    f.current_indent = current_indent
+    if prefix is None:
+        f.write_usage(prog, args)
+    else:
+        f.write_usage(prog, args, prefix=prefix)
+    assert f.getvalue() == expected
+
+
+def test_help_formatter_write_usage_without_args_styled_prefix():
+    """A downstream-styled prefix is preserved when ``args`` is empty:
+    the ANSI escape sequences survive, only the trailing separator is
+    removed.
+    """
+    styled_prefix = "\x1b[38;2;38;139;210m\x1b[1mUsage:\x1b[0m "
+    f = click.HelpFormatter()
+    f.write_usage("cli", prefix=styled_prefix)
+    rendered = f.getvalue()
+    assert strip_ansi(rendered) == "Usage: cli\n"
+    assert "\x1b[" in rendered
+
+
+@pytest.mark.parametrize(
+    ("command_kwargs", "expected_usage_line"),
+    [
+        # End-to-end regression for #3360: an empty ``options_metavar`` with
+        # no parameters used to render a blank usage line.
+        pytest.param(
+            {"options_metavar": ""},
+            "Usage: cli",
+            id="empty-options-metavar-no-params",
+        ),
+        # End-to-end regression: ``options_metavar=None`` is the documented
+        # way to suppress the ``[OPTIONS]`` slot entirely.
+        pytest.param(
+            {"options_metavar": None},
+            "Usage: cli",
+            id="none-options-metavar-no-params",
+        ),
+    ],
+)
+def test_command_write_usage_no_args(runner, command_kwargs, expected_usage_line):
+    """End-to-end: a command with no parameters and an empty or absent
+    ``options_metavar`` renders a usage line with just the program name,
+    no trailing space.
+    """
+    cli = click.Command("cli", **command_kwargs)
+    result = runner.invoke(cli, ["--help"])
+    assert result.output.splitlines()[0] == expected_usage_line
