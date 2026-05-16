@@ -230,6 +230,48 @@ as `default` will be interpreted as a list of characters.
     invoke(commit, args=['-m', 'foo', '-m', 'bar', '-m', 'here'])
 ```
 
+## Combining short options
+
+Short options made of a single character can be combined into one argument: `-abc` is equivalent to `-a -b -c`. This is the standard POSIX behavior for short option stacking, and it is the reason a repeated flag like `-vvv` works with the [Counting](#counting) feature.
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('-a', is_flag=True)
+    @click.option('-b', is_flag=True)
+    @click.option('-c', is_flag=True)
+    def cli(a, b, c):
+        click.echo(f"a={a} b={b} c={c}")
+
+.. click:run::
+
+    invoke(cli, args=['-a', '-b', '-c'])
+    invoke(cli, args=['-abc'])
+```
+
+If the last option in the combination takes a value, the value can either follow as the next argument or be attached directly:
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('-v', is_flag=True)
+    @click.option('-n', type=int)
+    def cli(v, n):
+        click.echo(f"v={v} n={n}")
+
+.. click:run::
+
+    invoke(cli, args=['-v', '-n', '5'])
+    invoke(cli, args=['-vn', '5'])
+    invoke(cli, args=['-vn5'])
+```
+
+```{note}
+Multi-character short option names are not supported. An argument like `-dbg` is interpreted as the combination of `-d`, `-b`, and `-g`, so Click reports `No such option: -d` if `-d` is not declared. For longer option names, use a long option with the `--` prefix (like `--debug`).
+```
+
 ## Counting
 
 To count the occurrence of an option, set `count=True`. If the option is not

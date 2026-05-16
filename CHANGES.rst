@@ -61,6 +61,9 @@ Unreleased
     label, and localize the option label so it matches the command label.
     The label and the ``DeprecationWarning`` reason suffix are now produced
     by shared helpers. :pr:`3423`
+-   Document short option stacking (``-abc`` is parsed as ``-a -b -c``) and
+    clarify that multi-character short option names are not supported.
+    :issue:`2779` :pr:`3431`
 
 Version 8.3.3
 -------------
