@@ -17,6 +17,9 @@ Unreleased
         ``dict[str, Any]``.
     -   :class:`CompositeParamType` and the number-range base are now
         generic with abstract methods.
+-   Refactor ``convert_type`` to extract type inference into a private
+    ``_guess_type`` helper, and add :func:`typing.overload` signatures.
+    :pr:`3372`
 -   :class:`Parameter` typing improvements. :pr:`2805`
 
     -   :class:`Parameter` is now an abstract base class, making explicit
@@ -46,7 +49,7 @@ Unreleased
     replacing the ``start`` built-in which cannot be invoked without
     ``shell=True``. :issue:`3164` :pr:`3186`
 -   Fix Fish shell completion errors when option help text contains newlines.
-    :issue:`3043`
+    :issue:`3043` :pr:`3126`
 -   Add :class:`NoSuchCommand` exception with suggestions for misspelled
     commands. :issue:`3107` :pr:`3228`
 -   Use :class:`ValueError` message when conversion in :class:`FuncParamType` would
@@ -56,6 +59,39 @@ Unreleased
 -   :class:`~click.formatting.TextWrapper` and
     :func:`~click.formatting.wrap_text` now measure line width in visible
     characters, ignoring ANSI escape sequences. :pr:`3420`
+-   Show custom error messages from types when :func:`prompt` with
+    ``hide_input=True`` fails validation, instead of always showing a
+    generic message. Built-in type messages mask the input value.
+    :issue:`2809` :pr:`3256`
+-   Add ``capture`` parameter to :class:`CliRunner` with two modes: ``sys``
+    (default) and ``fd``. ``fd`` redirects file descriptors ``1`` and ``2``
+    via :func:`os.dup2` so output that bypasses ``sys.stdout`` (stale stream
+    references, C extensions, subprocesses, ``faulthandler``) is captured
+    with proper isolation. :issue:`854` :issue:`2412` :issue:`2468`
+    :issue:`2497` :issue:`2761` :issue:`2827` :issue:`2865`
+-   Revert the ``8.3.3`` change that exposed the original file descriptor
+    via ``fileno()`` on the redirected ``CliRunner`` streams in the default
+    capture mode. ``os.dup2(w, sys.stdout.fileno())`` calls inside a CLI no
+    longer mutate the host runner's stdout, which broke Pytest's ``fd``-level
+    capture teardown. C-level consumers that need a real ``fd`` should use
+    ``capture="fd"``. :issue:`3384` :pr:`3391`
+-   Mark additional built-in strings with ``gettext()`` to extend translation
+    coverage. :pr:`2902`
+-   Fix feature switch groups (several ``flag_value`` options sharing one
+    parameter name) silently dropping an explicit ``default`` when a sibling
+    option without an explicit default was declared first. Arbitration is now
+    source-aware: a more explicit :class:`ParameterSource` always wins, and
+    within ``ParameterSource.DEFAULT``, an option that received an explicit
+    ``default=`` keyword wins over a sibling whose default was auto-derived.
+    The 8.3.x first-wins fallback for remaining ties was reverted to the
+    pre-8.3.x last-wins fallback. :issue:`3403` :pr:`3404`
+-   Fix missing space between option help text and the ``(DEPRECATED)``
+    label, and localize the option label so it matches the command label.
+    The label and the ``DeprecationWarning`` reason suffix are now produced
+    by shared helpers. :pr:`3423`
+-   Document short option stacking (``-abc`` is parsed as ``-a -b -c``) and
+    clarify that multi-character short option names are not supported.
+    :issue:`2779` :pr:`3431`
 
 Version 8.3.3
 -------------
