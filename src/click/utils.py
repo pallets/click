@@ -205,8 +205,10 @@ class LazyFile:
 
 
 class KeepOpenFile:
+    _file: t.IO[t.Any]
+
     def __init__(self, file: t.IO[t.Any]) -> None:
-        self._file: t.IO[t.Any] = file
+        self._file = file
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
