@@ -97,6 +97,9 @@ Unreleased
 -   Document short option stacking (``-abc`` is parsed as ``-a -b -c``) and
     clarify that multi-character short option names are not supported.
     :issue:`2779` :pr:`3431`
+-   Fix shell completion for long option values written with ``=``, so Bash,
+    Zsh, and Fish preserve the ``--option=`` prefix when completing values.
+    :issue:`2847`
 
 Version 8.3.3
 -------------
