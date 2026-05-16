@@ -93,6 +93,23 @@ def _check_nested_chain(
     raise RuntimeError(message)
 
 
+def _format_deprecated_label(deprecated: bool | str) -> str:
+    """Return the parenthesized deprecation label shown in help text."""
+    label = _("deprecated").upper()
+    if isinstance(deprecated, str):
+        return f"({label}: {deprecated})"
+    return f"({label})"
+
+
+def _format_deprecated_suffix(deprecated: bool | str) -> str:
+    """Return the trailing reason for a ``DeprecationWarning`` message,
+    prefixed with a space, or an empty string when no reason was given.
+    """
+    if isinstance(deprecated, str):
+        return f" {deprecated}"
+    return ""
+
+
 def batch(iterable: cabc.Iterable[V], batch_size: int) -> list[tuple[V, ...]]:
     return list(zip(*repeat(iter(iterable), batch_size), strict=False))
 
@@ -454,6 +471,12 @@ class Context:
         self._close_callbacks: list[t.Callable[[], t.Any]] = []
         self._depth = 0
         self._parameter_source: dict[str, ParameterSource] = {}
+        # Tracks whether the option that currently owns each parameter slot in
+        # :attr:`params` had its ``default`` set explicitly by the user. Used
+        # to tie-break feature-switch groups where multiple options share a
+        # parameter name and both fall back to their default value.
+        # Refs: https://github.com/pallets/click/issues/3403
+        self._param_default_explicit: dict[str, bool] = {}
         self._exit_stack = ExitStack()
 
     @property
@@ -1136,13 +1159,7 @@ class Command:
             text = ""
 
         if self.deprecated:
-            localised_deprectated = _("deprecated").upper()
-            deprecated_message = (
-                f"({localised_deprectated}: {self.deprecated})"
-                if isinstance(self.deprecated, str)
-                else f"({localised_deprectated})"
-            )
-            text = f"{_(text)} {deprecated_message}"
+            text = f"{_(text)} {_format_deprecated_label(self.deprecated)}"
 
         return text.strip()
 
@@ -1172,13 +1189,7 @@ class Command:
             text = ""
 
         if self.deprecated:
-            localised_deprectated = _("deprecated").upper()
-            deprecated_message = (
-                f"({localised_deprectated}: {self.deprecated})"
-                if isinstance(self.deprecated, str)
-                else f"({localised_deprectated})"
-            )
-            text = f"{_(text)} {deprecated_message}"
+            text = f"{_(text)} {_format_deprecated_label(self.deprecated)}"
 
         if text:
             formatter.write_paragraph()
@@ -1285,12 +1296,12 @@ class Command:
         in the right way.
         """
         if self.deprecated:
-            extra_message = (
-                f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
-            )
             message = _(
                 "DeprecationWarning: The command {name!r} is deprecated.{extra_message}"
-            ).format(name=self.name, extra_message=extra_message)
+            ).format(
+                name=self.name,
+                extra_message=_format_deprecated_suffix(self.deprecated),
+            )
             echo(style(message, fg="red"), err=True)
 
         if self.callback is not None:
@@ -2195,6 +2206,12 @@ class Parameter(ABC):
         self.multiple = multiple
         self.expose_value = expose_value
         self.default: t.Any | t.Callable[[], t.Any] | None = default
+        # Whether the user passed ``default`` explicitly to the constructor.
+        # Captured before any auto-derived default (like ``False`` for boolean
+        # flags in :class:`Option`) replaces the :data:`UNSET` sentinel, so it
+        # remains ``False`` when the default was inferred rather than chosen.
+        # Refs: https://github.com/pallets/click/issues/3403
+        self._default_explicit: bool = default is not UNSET
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
@@ -2581,10 +2598,16 @@ class Parameter(ABC):
 
         :meta private:
         """
+        # Capture the slot's existing state before we mutate
+        # ``_parameter_source`` so the write decision below can compare our
+        # incoming source against the source of the option that already wrote
+        # the slot (if any).
+        existing_value = ctx.params.get(self.name, UNSET)
+        existing_source = ctx.get_parameter_source(self.name)
+        existing_default_explicit = ctx._param_default_explicit.get(self.name, False)
+
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
-
-            ctx.set_parameter_source(self.name, source)
 
             # Display a deprecation warning if necessary.
             if (
@@ -2592,16 +2615,13 @@ class Parameter(ABC):
                 and value is not UNSET
                 and source < ParameterSource.DEFAULT_MAP
             ):
-                extra_message = (
-                    f" {self.deprecated}" if isinstance(self.deprecated, str) else ""
-                )
                 message = _(
                     "DeprecationWarning: The {param_type} {name!r} is deprecated."
                     "{extra_message}"
                 ).format(
                     param_type=self.param_type_name,
                     name=self.human_readable_name,
-                    extra_message=extra_message,
+                    extra_message=_format_deprecated_suffix(self.deprecated),
                 )
                 echo(style(message, fg="red"), err=True)
 
@@ -2616,15 +2636,32 @@ class Parameter(ABC):
                 # to UNSET, which will be interpreted as a missing value.
                 value = UNSET
 
-        # Add parameter's value to the context.
-        if (
-            self.expose_value
-            # We skip adding the value if it was previously set by another parameter
-            # targeting the same variable name. This prevents parameters competing for
-            # the same name to override each other.
-            and (self.name not in ctx.params or ctx.params[self.name] is UNSET)
-        ):
-            ctx.params[self.name] = value
+        # Arbitrate the slot when several parameters target the same variable
+        # name (feature-switch groups). See: https://github.com/pallets/click/issues/3403
+        slot_empty = existing_value is UNSET
+        more_explicit = existing_source is not None and source < existing_source
+        same_source = existing_source is not None and source == existing_source
+        auto_would_downgrade_explicit = (
+            same_source
+            and source == ParameterSource.DEFAULT
+            and existing_default_explicit
+            and not self._default_explicit
+        )
+        is_winner = (
+            slot_empty
+            or more_explicit
+            or (same_source and not auto_would_downgrade_explicit)
+        )
+
+        if is_winner:
+            ctx.set_parameter_source(self.name, source)
+            if self.expose_value:
+                ctx.params[self.name] = value
+                ctx._param_default_explicit[self.name] = self._default_explicit
+        elif existing_source is None:
+            # Nothing has claimed the slot yet. Record at least our source so downstream
+            # lookups don't return ``None``.
+            ctx.set_parameter_source(self.name, source)
 
         return value, args
 
@@ -2781,12 +2818,8 @@ class Option(Parameter):
             prompt_text = prompt
 
         if deprecated:
-            deprecated_message = (
-                f"(DEPRECATED: {deprecated})"
-                if isinstance(deprecated, str)
-                else "(DEPRECATED)"
-            )
-            help = help + deprecated_message if help is not None else deprecated_message
+            label = _format_deprecated_label(deprecated)
+            help = f"{help} {label}" if help is not None else label
 
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
