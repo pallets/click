@@ -17,6 +17,9 @@ Unreleased
         ``dict[str, Any]``.
     -   :class:`CompositeParamType` and the number-range base are now
         generic with abstract methods.
+-   Refactor ``convert_type`` to extract type inference into a private
+    ``_guess_type`` helper, and add :func:`typing.overload` signatures.
+    :pr:`3372`
 -   :class:`Parameter` typing improvements. :pr:`2805`
 
     -   :class:`Parameter` is now an abstract base class, making explicit
@@ -46,7 +49,7 @@ Unreleased
     replacing the ``start`` built-in which cannot be invoked without
     ``shell=True``. :issue:`3164` :pr:`3186`
 -   Fix Fish shell completion errors when option help text contains newlines.
-    :issue:`3043`
+    :issue:`3043` :pr:`3126`
 -   Add :class:`NoSuchCommand` exception with suggestions for misspelled
     commands. :issue:`3107` :pr:`3228`
 -   Use :class:`ValueError` message when conversion in :class:`FuncParamType` would
@@ -57,6 +60,8 @@ Unreleased
     ``hide_input=True`` fails validation, instead of always showing a
     generic message. Built-in type messages mask the input value.
     :issue:`2809` :pr:`3256`
+-   Mark additional built-in strings with ``gettext()`` to extend translation
+    coverage. :pr:`2902`
 -   Fix feature switch groups (several ``flag_value`` options sharing one
     parameter name) silently dropping an explicit ``default`` when a sibling
     option without an explicit default was declared first. Arbitration is now
