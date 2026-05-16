@@ -3,7 +3,7 @@
 Version 8.4.0
 -------------
 
-Unreleased
+Released 2026-05-17
 
 -   :class:`ParamType` typing improvements. :pr:`3371`
 
