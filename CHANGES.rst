@@ -64,6 +64,8 @@ Unreleased
     written even when no arguments follow, and the trailing separator
     space is stripped so the line ends at the program name.
     :issue:`3360` :pr:`3434`
+-   Fix :meth:`HelpFormatter.write_usage` breaking long option names at
+    internal hyphens when wrapping usage lines. :issue:`3362`
 -   Show custom error messages from types when :func:`prompt` with
     ``hide_input=True`` fails validation, instead of always showing a
     generic message. Built-in type messages mask the input value.
