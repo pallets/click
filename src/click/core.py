@@ -2364,7 +2364,7 @@ class Parameter(ABC):
                 value = envvar_value
                 source = ParameterSource.ENVIRONMENT
 
-        if value is UNSET:
+        if value is UNSET and not ctx.resilient_parsing:
             default_map_value = ctx.lookup_default(self.name)
             if default_map_value is not None or ctx._default_map_has(self.name):
                 value = default_map_value
@@ -2375,7 +2375,7 @@ class Parameter(ABC):
                 if isinstance(value, str) and self.nargs != 1:
                     value = self.type.split_envvar_value(value)
 
-        if value is UNSET:
+        if value is UNSET and not ctx.resilient_parsing:
             default_value = self.get_default(ctx)
             if default_value is not UNSET:
                 value = default_value
@@ -2484,7 +2484,7 @@ class Parameter(ABC):
         if self.required and self.value_is_missing(value):
             raise MissingParameter(ctx=ctx, param=self)
 
-        if self.callback is not None:
+        if self.callback is not None and not ctx.resilient_parsing:
             # Legacy case: UNSET is not exposed directly to the callback, but converted
             # to None.
             if value is UNSET:
@@ -3420,7 +3420,7 @@ class Option(Parameter):
         if self.is_flag and not self.required and self.is_bool_flag and value is UNSET:
             value = False
 
-            if self.callback is not None:
+            if self.callback is not None and not ctx.resilient_parsing:
                 value = self.callback(ctx, self, value)
 
             return value

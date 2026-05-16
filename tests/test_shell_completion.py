@@ -457,6 +457,45 @@ def test_context_settings(runner):
     assert result.output == "plain,a\nplain,b\n"
 
 
+def test_completion_resilient_parsing_skips_defaults_and_callbacks() -> None:
+    calls = []
+
+    def default() -> str:
+        calls.append("default")
+        return "value"
+
+    def default_map() -> str:
+        calls.append("default_map")
+        return "mapped"
+
+    def callback(ctx, param, value):
+        calls.append("callback")
+        return value
+
+    cli = Command(
+        "cli",
+        params=[
+            Option(["--default"], default=default, callback=callback),
+            Option(["--mapped"]),
+            Option(["--other"]),
+        ],
+    )
+    comp = ShellComplete(
+        cli,
+        {"default_map": {"mapped": default_map}},
+        cli.name,
+        "_CLI_COMPLETE",
+    )
+
+    assert [c.value for c in comp.get_completions([], "--")] == [
+        "--default",
+        "--mapped",
+        "--other",
+        "--help",
+    ]
+    assert calls == []
+
+
 @pytest.mark.parametrize(("value", "expect"), [(False, ["Au", "al"]), (True, ["al"])])
 def test_choice_case_sensitive(value, expect):
     cli = Command(
