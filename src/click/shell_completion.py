@@ -421,15 +421,16 @@ class FishComplete(ShellComplete):
         return args, incomplete
 
     def format_completion(self, item: CompletionItem) -> str:
-        """Format completion item for Fish shell.
-
-        Escapes newlines in both value and help text to prevent
-        Fish shell parsing errors.
-
-        .. versionchanged:: 8.3
-            Escape newlines in help text to fix completion errors
-            with multi-line help strings.
         """
+        .. versionchanged:: 8.4
+            Escape newlines in value and help to fix completion errors with
+            multi-line help strings.
+        """
+        # The fish completion script splits each response line on literal
+        # newlines, so any newline in the value or help would corrupt the
+        # frame. Replace them with the two-character escape "\n" so the text
+        # round-trips through fish without breaking the format. The "_"
+        # sentinel for missing help mirrors :class:`ZshComplete`.
         help_ = item.help or "_"
         value = item.value.replace("\n", r"\n")
         help_escaped = help_.replace("\n", r"\n")
