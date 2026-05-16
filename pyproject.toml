@@ -73,6 +73,7 @@ name = "click"
 include = [
     "docs/",
     "tests/",
+    "locales/",
     "CHANGES.rst",
     "uv.lock"
 ]
