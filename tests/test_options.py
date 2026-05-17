@@ -141,15 +141,15 @@ def test_unknown_options(runner, unknown_flag):
 
     result = runner.invoke(cli, [unknown_flag])
     assert result.exception
-    assert f"No such option: {unknown_flag}" in result.output
+    assert f"No such option '{unknown_flag}'." in result.output
 
 
 @pytest.mark.parametrize(
     ("value", "expect"),
     [
-        ("--cat", "Did you mean --count?"),
-        ("--bounds", "(Possible options: --bound, --count)"),
-        ("--bount", "(Possible options: --bound, --count)"),
+        ("--cat", "Did you mean '--count'?"),
+        ("--bounds", "(Did you mean one of: '--bound', '--count'?)"),
+        ("--bount", "(Did you mean one of: '--bound', '--count'?)"),
     ],
 )
 def test_suggest_possible_options(runner, value, expect):
@@ -1406,6 +1406,11 @@ def test_type_from_flag_value():
     assert param.type is click.INT
     param = click.Option(["-b", "x"], flag_value=8)
     assert param.type is click.INT
+    # Non-basic types auto-detect as UNPROCESSED to avoid stringification.
+    param = click.Option(["-c", "x"], flag_value=EngineType.OSS)
+    assert param.type is click.UNPROCESSED
+    param = click.Option(["-d", "x"], flag_value=frozenset())
+    assert param.type is click.UNPROCESSED
 
 
 @pytest.mark.parametrize(
@@ -2127,13 +2132,13 @@ class Class2:
             [],
             EngineType.OSS,
         ),
-        # Type is not specified and default to string, so the default value is
-        # returned as a string, even if it is a boolean. Also, defaults to the
-        # flag_value instead of the default value to support legacy behavior.
+        # Type is not specified. For string flag_value, STRING type is used and
+        # the default value is converted to string. For non-basic types (like
+        # enums), UNPROCESSED is used and values pass through unchanged.
         ({"flag_value": "1", "default": True}, [], "1"),
         ({"flag_value": "1", "default": 42}, [], "42"),
-        ({"flag_value": EngineType.OSS, "default": True}, [], "EngineType.OSS"),
-        ({"flag_value": EngineType.OSS, "default": 42}, [], "42"),
+        ({"flag_value": EngineType.OSS, "default": True}, [], EngineType.OSS),
+        ({"flag_value": EngineType.OSS, "default": 42}, [], 42),
         # See: the result is the same if we force the type to be str.
         ({"type": str, "flag_value": 1, "default": True}, [], "1"),
         ({"type": str, "flag_value": 1, "default": 42}, [], "42"),
@@ -2199,28 +2204,29 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
             ["--opt2"],
             EngineType.PRO,
         ),
-        # Check that passing exotic flag values like classes is supported, but are
-        # rendered to strings when the type is not specified.
+        # Exotic flag values like classes are passed through unchanged when no
+        # explicit type is given (UNPROCESSED is auto-detected).
+        # https://github.com/pallets/click/issues/2012
         # https://github.com/pallets/click/issues/3121
         (
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},
             [],
-            "<class 'test_options.Class1'>",
+            Class1,
         ),
         (
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},
             ["--opt1"],
-            "<class 'test_options.Class1'>",
+            Class1,
         ),
         (
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},
             ["--opt2"],
-            "<class 'test_options.Class2'>",
+            Class2,
         ),
-        # Even the default is processed as a string.
+        # String and None defaults pass through unchanged.
         ({"flag_value": Class1, "default": "True"}, {"flag_value": Class2}, [], "True"),
         ({"flag_value": Class1, "default": None}, {"flag_value": Class2}, [], None),
         # To get the classes as-is, we need to specify the type as UNPROCESSED.
@@ -2245,18 +2251,18 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
         ),
         # Setting the default to a class, an instance of the class is returned instead
         # of the class itself, because the default is allowed to be callable (and
-        # consummd). And this happens whatever the type is.
+        # consumed). And this happens whatever the type is.
         (
             {"flag_value": Class1, "default": Class1},
             {"flag_value": Class2},
             [],
-            re.compile(r"'<test_options.Class1 object at 0x[0-9A-Fa-f]+>'"),
+            re.compile(r"<test_options.Class1 object at 0x[0-9A-Fa-f]+>"),
         ),
         (
             {"flag_value": Class1, "default": Class2},
             {"flag_value": Class2},
             [],
-            re.compile(r"'<test_options.Class2 object at 0x[0-9A-Fa-f]+>'"),
+            re.compile(r"<test_options.Class2 object at 0x[0-9A-Fa-f]+>"),
         ),
         (
             {"flag_value": Class1, "type": UNPROCESSED, "default": Class1},
@@ -2322,12 +2328,13 @@ def test_custom_type_flag_value_dual_options(
             ["--opt"],
             Class1,
         ),
-        # Without UNPROCESSED, the class is str()-ified by the default STRING type.
-        ({"flag_value": Class1, "default": True}, [], "<class 'test_options.Class1'>"),
+        # Without explicit UNPROCESSED, the class still passes through unchanged
+        # because UNPROCESSED is auto-detected for non-basic flag_value types.
+        ({"flag_value": Class1, "default": True}, [], Class1),
         (
             {"flag_value": Class1, "default": True},
             ["--opt"],
-            "<class 'test_options.Class1'>",
+            Class1,
         ),
         # Explicit default=Class1 (not via default=True alignment): callable IS invoked,
         # because the user explicitly set a callable as the default.
@@ -2473,6 +2480,48 @@ def test_callable_flag_value_get_default_override(
     assert opt.get_default(ctx, call=True) is expected_get_default
 
 
+def test_flag_value_not_stringified_for_custom_types(runner):
+    """Non-basic flag_value types are passed through unchanged without
+    requiring ``type=click.UNPROCESSED``.
+
+    Regression test for https://github.com/pallets/click/issues/2012
+    """
+
+    @click.command()
+    @click.option("--cls1", "config_cls", flag_value=Class1, default=True)
+    @click.option("--cls2", "config_cls", flag_value=Class2)
+    def cli(config_cls):
+        click.echo(repr(config_cls), nl=False)
+
+    # Default activates --cls1 (default=True resolves to flag_value).
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0
+    assert result.output == repr(Class1)
+
+    result = runner.invoke(cli, ["--cls1"])
+    assert result.exit_code == 0
+    assert result.output == repr(Class1)
+
+    result = runner.invoke(cli, ["--cls2"])
+    assert result.exit_code == 0
+    assert result.output == repr(Class2)
+
+    # Enum flag_value without explicit type is also preserved.
+    @click.command()
+    @click.option("--oss", "engine", flag_value=EngineType.OSS, default=True)
+    @click.option("--pro", "engine", flag_value=EngineType.PRO)
+    def cli2(engine):
+        click.echo(repr(engine), nl=False)
+
+    result = runner.invoke(cli2, [])
+    assert result.exit_code == 0
+    assert result.output == repr(EngineType.OSS)
+
+    result = runner.invoke(cli2, ["--pro"])
+    assert result.exit_code == 0
+    assert result.output == repr(EngineType.PRO)
+
+
 def test_custom_type_frozenset_flag_value(runner):
     """Check that frozenset is correctly handled as a type, a flag value and a default.
 
@@ -2529,6 +2578,823 @@ def test_bool_flag_pair_default(runner, default, args, expected):
 
     result = runner.invoke(cli, args)
     assert result.exit_code == 0
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("opts", "args", "expected"),
+    [
+        # #3403 reproducer: enable/disable pair with explicit ``default=True``
+        # on the positive flag, declared after (inner decorator) the negative.
+        # https://github.com/pallets/click/issues/3403
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": True}),
+            ],
+            [],
+            True,
+            id="3403-reproducer-no-args",
+        ),
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": True}),
+            ],
+            ["--with-xyz"],
+            True,
+            id="3403-reproducer-with-only",
+        ),
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": True}),
+            ],
+            ["--without-xyz"],
+            False,
+            id="3403-reproducer-without-only",
+        ),
+        # When both flags are passed, the parser keeps the last value seen.
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": True}),
+            ],
+            ["--with-xyz", "--without-xyz"],
+            False,
+            id="3403-reproducer-with-then-without",
+        ),
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": True}),
+            ],
+            ["--without-xyz", "--with-xyz"],
+            True,
+            id="3403-reproducer-without-then-with",
+        ),
+        # Order-independence: explicit ``default=True`` on the OUTER
+        # decorator (declared first) must produce the same behavior.
+        pytest.param(
+            [
+                ("--with-xyz", {"flag_value": True, "default": True}),
+                ("--without-xyz", {"flag_value": False}),
+            ],
+            [],
+            True,
+            id="explicit-default-outer-no-args",
+        ),
+        pytest.param(
+            [
+                ("--with-xyz", {"flag_value": True, "default": True}),
+                ("--without-xyz", {"flag_value": False}),
+            ],
+            ["--without-xyz"],
+            False,
+            id="explicit-default-outer-cmdline-overrides",
+        ),
+        # Explicit ``default=False`` on the negative flag wins over the
+        # auto-derived default of the positive one. Result value is False
+        # either way, but the assertion still guards source tracking.
+        pytest.param(
+            [
+                ("--with-xyz", {"flag_value": True}),
+                ("--without-xyz", {"flag_value": False, "default": False}),
+            ],
+            [],
+            False,
+            id="explicit-default-false-on-negative",
+        ),
+        # Explicit ``default=True`` on the negative flag is unusual but
+        # legal: post-#3239, it is a literal Python value, not a sentinel.
+        pytest.param(
+            [
+                ("--with-xyz", {"flag_value": True}),
+                ("--without-xyz", {"flag_value": False, "default": True}),
+            ],
+            [],
+            True,
+            id="explicit-default-true-on-negative",
+        ),
+        # Both options carry an explicit default: last-wins, so the option
+        # declared last in the source code keeps the slot. Confirms the
+        # explicit-beats-auto tie-break does not also promote first-declared
+        # over a later explicit default.
+        pytest.param(
+            [
+                ("--with-xyz", {"flag_value": True, "default": True}),
+                ("--without-xyz", {"flag_value": False, "default": False}),
+            ],
+            [],
+            False,
+            id="both-explicit-defaults-last-wins",
+        ),
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False, "default": False}),
+                ("--with-xyz", {"flag_value": True, "default": True}),
+            ],
+            [],
+            True,
+            id="both-explicit-defaults-last-wins-swapped",
+        ),
+        # No option has an explicit default: every boolean flag
+        # auto-derives ``default=False`` regardless of its ``flag_value``,
+        # so the slot is False either way. Last-wins applies under the hood
+        # but is not observable because both values are equal.
+        pytest.param(
+            [
+                ("--with-xyz", {"flag_value": True}),
+                ("--without-xyz", {"flag_value": False}),
+            ],
+            [],
+            False,
+            id="both-auto-defaults-positive-first",
+        ),
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True}),
+            ],
+            [],
+            False,
+            id="both-auto-defaults-negative-first",
+        ),
+        # Explicit ``default=False`` matching the auto-derived value:
+        # the explicit option still wins the slot. Confirms tracking is
+        # source-based and not value-based.
+        pytest.param(
+            [
+                ("--with-xyz", {"flag_value": True, "default": False}),
+                ("--without-xyz", {"flag_value": False}),
+            ],
+            [],
+            False,
+            id="explicit-default-matches-auto-still-wins",
+        ),
+        # Three-flag group: the explicit default wins regardless of its
+        # position in the decorator stack.
+        pytest.param(
+            [
+                ("--auto-a", {"flag_value": True}),
+                ("--explicit", {"flag_value": False, "default": False}),
+                ("--auto-b", {"flag_value": True}),
+            ],
+            [],
+            False,
+            id="three-flags-explicit-in-middle",
+        ),
+        pytest.param(
+            [
+                ("--auto-a", {"flag_value": True}),
+                ("--auto-b", {"flag_value": False}),
+                ("--explicit", {"flag_value": True, "default": True}),
+            ],
+            [],
+            True,
+            id="three-flags-explicit-last",
+        ),
+        pytest.param(
+            [
+                ("--explicit", {"flag_value": False, "default": False}),
+                ("--auto-a", {"flag_value": True}),
+                ("--auto-b", {"flag_value": True}),
+            ],
+            [],
+            False,
+            id="three-flags-explicit-first",
+        ),
+        # Three-state pattern: explicit ``default=None`` on one option
+        # must beat a sibling's auto-derived ``False``.
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": None}),
+            ],
+            [],
+            None,
+            id="explicit-default-none-three-state",
+        ),
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": None}),
+            ],
+            ["--with-xyz"],
+            True,
+            id="explicit-default-none-three-state-with",
+        ),
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": None}),
+            ],
+            ["--without-xyz"],
+            False,
+            id="explicit-default-none-three-state-without",
+        ),
+        # Command-line input always beats any default, regardless of
+        # which option carried the explicit default.
+        pytest.param(
+            [
+                ("--with-xyz", {"flag_value": True, "default": True}),
+                ("--without-xyz", {"flag_value": False}),
+            ],
+            ["--without-xyz"],
+            False,
+            id="cmdline-beats-explicit-default",
+        ),
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False, "default": False}),
+                ("--with-xyz", {"flag_value": True}),
+            ],
+            ["--with-xyz"],
+            True,
+            id="cmdline-beats-explicit-default-symmetric",
+        ),
+    ],
+)
+def test_bool_flag_group_competition(runner, opts, args, expected):
+    """Competing boolean flags sharing a single parameter name.
+
+    Verifies the arbitration rules between options that target the same
+    variable name in a feature-switch group.
+
+    Regression test for https://github.com/pallets/click/issues/3403
+    """
+
+    @click.command()
+    def cli(enable_xyz):
+        click.echo(repr(enable_xyz), nl=False)
+
+    for opt_name, opt_kwargs in opts:
+        cli = click.option(opt_name, "enable_xyz", **opt_kwargs)(cli)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("envvar_value", "args", "expected"),
+    [
+        # An env var on one option in the group provides ENVIRONMENT source,
+        # which beats any sibling's DEFAULT regardless of explicit-default.
+        ("1", [], True),
+        ("0", [], False),
+        # Command-line still beats the env var.
+        ("0", ["--with-xyz"], True),
+        ("1", ["--without-xyz"], False),
+    ],
+)
+def test_bool_flag_group_competition_with_envvar(
+    runner, monkeypatch, envvar_value, args, expected
+):
+    monkeypatch.setenv("XYZ", envvar_value)
+
+    @click.command()
+    @click.option("--without-xyz", "enable_xyz", flag_value=False)
+    @click.option(
+        "--with-xyz",
+        "enable_xyz",
+        flag_value=True,
+        default=False,
+        envvar="XYZ",
+    )
+    def cli(enable_xyz):
+        click.echo(repr(enable_xyz), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("default_map", "args", "expected"),
+    [
+        # ``default_map`` provides DEFAULT_MAP source, beating either default.
+        ({"enable_xyz": True}, [], True),
+        ({"enable_xyz": False}, [], False),
+        # Command-line still beats default_map.
+        ({"enable_xyz": False}, ["--with-xyz"], True),
+        ({"enable_xyz": True}, ["--without-xyz"], False),
+    ],
+)
+def test_bool_flag_group_competition_with_default_map(
+    runner, default_map, args, expected
+):
+    @click.command()
+    @click.option("--without-xyz", "enable_xyz", flag_value=False)
+    @click.option("--with-xyz", "enable_xyz", flag_value=True, default=True)
+    def cli(enable_xyz):
+        click.echo(repr(enable_xyz), nl=False)
+
+    result = runner.invoke(cli, args, default_map=default_map)
+    assert result.exit_code == 0, result.output
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("opts", "args", "expected"),
+    [
+        # Non-boolean feature switch group: classic --upper/--lower
+        # pattern. The option with ``default=True`` acts as the default
+        # via the substitution rule (#3239) for non-boolean ``flag_value``.
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": True}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            [],
+            "upper",
+            id="string-default-true-substitutes-to-flag-value",
+        ),
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": True}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            ["--upper"],
+            "upper",
+            id="string-default-true-cmdline-positive",
+        ),
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": True}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            ["--lower"],
+            "lower",
+            id="string-default-true-cmdline-overrides",
+        ),
+        # Explicit literal string default beats sibling's absent default.
+        # Confirms the explicit-beats-absent rule applies regardless of type.
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": "lower"}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            [],
+            "lower",
+            id="string-explicit-default-wins-over-absent",
+        ),
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper"}),
+                ("--lower", {"flag_value": "lower", "default": "upper"}),
+            ],
+            [],
+            "upper",
+            id="string-explicit-default-wins-from-second-position",
+        ),
+        # Empty string as ``flag_value``: still a legal value, including
+        # under the ``default=True`` substitution rule.
+        pytest.param(
+            [
+                ("--empty", {"flag_value": "", "default": True}),
+                ("--filled", {"flag_value": "filled"}),
+            ],
+            [],
+            "",
+            id="empty-string-flag-value-default-true",
+        ),
+        pytest.param(
+            [
+                ("--empty", {"flag_value": "", "default": True}),
+                ("--filled", {"flag_value": "filled"}),
+            ],
+            ["--empty"],
+            "",
+            id="empty-string-flag-value-cmdline",
+        ),
+        # Empty string as ``default``: explicit empty string beats
+        # the sibling's absent default.
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": ""}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            [],
+            "",
+            id="empty-string-explicit-default",
+        ),
+        # ``flag_value=None`` is a legal flag value: when the option is
+        # activated, the function receives ``None``.
+        pytest.param(
+            [
+                ("--none", {"flag_value": None, "default": "fallback"}),
+                ("--other", {"flag_value": "other"}),
+            ],
+            [],
+            "fallback",
+            id="none-flag-value-default-fallback",
+        ),
+        pytest.param(
+            [
+                ("--none", {"flag_value": None, "default": "fallback"}),
+                ("--other", {"flag_value": "other"}),
+            ],
+            ["--none"],
+            None,
+            id="none-flag-value-cmdline-passes-none",
+        ),
+        pytest.param(
+            [
+                ("--none", {"flag_value": None, "default": "fallback"}),
+                ("--other", {"flag_value": "other"}),
+            ],
+            ["--other"],
+            "other",
+            id="none-flag-value-cmdline-passes-other",
+        ),
+        # Explicit ``default=None`` is a real value (not absence) and
+        # must beat a sibling's absent default. Three-state pattern for
+        # non-boolean flag groups.
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": None}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            [],
+            None,
+            id="explicit-default-none-three-state",
+        ),
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": None}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            ["--upper"],
+            "upper",
+            id="explicit-default-none-cmdline-upper",
+        ),
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": None}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            ["--lower"],
+            "lower",
+            id="explicit-default-none-cmdline-lower",
+        ),
+        # Passing ``default=UNSET`` explicitly is the same as not passing
+        # ``default`` at all, so the sibling's explicit default wins.
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": UNSET}),
+                ("--lower", {"flag_value": "lower", "default": "lower"}),
+            ],
+            [],
+            "lower",
+            id="unset-default-equivalent-to-absent",
+        ),
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": UNSET}),
+                ("--lower", {"flag_value": "lower", "default": "lower"}),
+            ],
+            ["--upper"],
+            "upper",
+            id="unset-default-cmdline-still-works",
+        ),
+        # Neither option has a default: the slot resolves to ``None``
+        # because non-boolean flags do not auto-derive a default.
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper"}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            [],
+            None,
+            id="non-boolean-no-defaults-resolves-to-none",
+        ),
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper"}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            ["--upper"],
+            "upper",
+            id="non-boolean-no-defaults-cmdline-still-works",
+        ),
+        # Three-flag string group: explicit default wins from any
+        # position in the decorator stack.
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper"}),
+                ("--mixed", {"flag_value": "MiXeD", "default": "MiXeD"}),
+                ("--lower", {"flag_value": "lower"}),
+            ],
+            [],
+            "MiXeD",
+            id="three-flags-explicit-default-in-middle",
+        ),
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper"}),
+                ("--lower", {"flag_value": "lower"}),
+                ("--default-choice", {"flag_value": "chosen", "default": True}),
+            ],
+            [],
+            "chosen",
+            id="three-flags-default-true-substitution-last",
+        ),
+        # Both options have explicit defaults: last-wins, so the option
+        # declared last keeps the slot, regardless of value type.
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": "first"}),
+                ("--lower", {"flag_value": "lower", "default": "second"}),
+            ],
+            [],
+            "second",
+            id="both-explicit-defaults-string-last-wins",
+        ),
+        # Mixed boolean and non-boolean ``flag_value`` in the same group
+        # is allowed. Both options here carry an explicit default, so last-wins
+        # picks the option declared last regardless of value type. The boolean
+        # ``default=False`` is a literal value (post-#3239), not a sentinel.
+        pytest.param(
+            [
+                ("--bool-flag", {"flag_value": True, "default": False}),
+                ("--str-flag", {"flag_value": "named", "default": "explicit"}),
+            ],
+            [],
+            "explicit",
+            id="mixed-bool-and-string-last-wins",
+        ),
+        pytest.param(
+            [
+                ("--str-flag", {"flag_value": "named", "default": "explicit"}),
+                ("--bool-flag", {"flag_value": True, "default": False}),
+            ],
+            [],
+            False,
+            id="mixed-bool-and-string-last-wins-swapped",
+        ),
+        # Empty string default coexisting with ``default=True``
+        # substitution: ``default=""`` is explicit, ``default=True`` is also
+        # explicit (and substitutes to the option's ``flag_value``). Last-wins
+        # picks the option declared last.
+        pytest.param(
+            [
+                ("--upper", {"flag_value": "upper", "default": True}),
+                ("--blank", {"flag_value": "blank", "default": ""}),
+            ],
+            [],
+            "",
+            id="default-true-vs-empty-string-last-wins",
+        ),
+        pytest.param(
+            [
+                ("--blank", {"flag_value": "blank", "default": ""}),
+                ("--upper", {"flag_value": "upper", "default": True}),
+            ],
+            [],
+            "upper",
+            id="default-true-vs-empty-string-last-wins-swapped",
+        ),
+    ],
+)
+def test_flag_group_competition_non_boolean(runner, opts, args, expected):
+    """Same arbitration rules as :func:`test_bool_flag_group_competition`,
+    but for feature-switch groups with non-boolean ``flag_value``.
+    """
+
+    @click.command()
+    def cli(case):
+        click.echo(repr(case), nl=False)
+
+    for opt_name, opt_kwargs in opts:
+        cli = click.option(opt_name, "case", **opt_kwargs)(cli)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("default_a", "default_b", "args", "expected"),
+    [
+        # ``default=UNSET`` and an absent ``default`` keyword must produce
+        # identical behavior. Both options here are bare boolean flags, so
+        # both auto-derive ``False`` and last-wins applies (``--a`` is
+        # processed last); the value is ``False`` either way.
+        (UNSET, UNSET, [], False),
+        # ``default=UNSET`` on one side, explicit on the other: the explicit
+        # one wins regardless of decorator order.
+        (UNSET, True, [], True),
+        (True, UNSET, [], True),
+        (UNSET, False, [], False),
+        (False, UNSET, [], False),
+        # ``default=None`` is a real value, distinct from ``UNSET``, and
+        # remains explicit even when the sibling carries an explicit
+        # boolean default (3-state).
+        (None, UNSET, [], None),
+        (UNSET, None, [], None),
+        # Explicit ``None`` competing with explicit boolean. The decorator
+        # order in this test puts ``--a`` last in ``params``, so the value
+        # carried by ``default_a`` wins these "both explicit" ties under
+        # last-wins.
+        (None, True, [], None),
+        (True, None, [], True),
+    ],
+)
+def test_flag_group_unset_vs_none_vs_explicit(
+    runner, default_a, default_b, args, expected
+):
+    """``UNSET`` as an explicit ``default`` must be indistinguishable from
+    omitting ``default`` entirely, while ``None`` is a real explicit value.
+    """
+    a_kwargs = {"flag_value": True}
+    if default_a is not UNSET:
+        a_kwargs["default"] = default_a
+    elif default_a is UNSET:
+        # Pass UNSET explicitly to verify it's treated as absent. Skip when
+        # the test wants the absent-keyword case (matches default behavior
+        # because ``Parameter.__init__`` defaults ``default`` to ``UNSET``).
+        a_kwargs["default"] = UNSET
+
+    b_kwargs = {"flag_value": False}
+    if default_b is not UNSET:
+        b_kwargs["default"] = default_b
+    elif default_b is UNSET:
+        b_kwargs["default"] = UNSET
+
+    @click.command()
+    @click.option("--b", "state", **b_kwargs)
+    @click.option("--a", "state", **a_kwargs)
+    def cli(state):
+        click.echo(repr(state), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert result.output == repr(expected)
+
+
+def test_flag_group_competition_duplicate_option_name(runner):
+    """The same option name declared twice on the same command is a user
+    error.
+    """
+
+    @click.command()
+    @click.option("--xyz", default="first")
+    @click.option("--xyz", default="second")
+    def cli(xyz):
+        click.echo(repr(xyz), nl=False)
+
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 1
+    assert isinstance(result.exception, UserWarning)
+    assert "used more than once" in str(result.exception)
+
+
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    [
+        (["--with-xyz", "--with-xyz"], True),
+        (["--without-xyz", "--without-xyz"], False),
+        (["--with-xyz", "--without-xyz", "--with-xyz"], True),
+        (["--without-xyz", "--with-xyz", "--without-xyz"], False),
+    ],
+)
+def test_flag_group_competition_repeated_cmdline(runner, args, expected):
+    """Duplicate flags passed in different order to the CLI."""
+
+    @click.command()
+    @click.option("--without-xyz", "enable_xyz", flag_value=False)
+    @click.option("--with-xyz", "enable_xyz", flag_value=True, default=True)
+    def cli(enable_xyz):
+        click.echo(repr(enable_xyz), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("opts", "args", "expected"),
+    [
+        pytest.param(
+            [
+                ("--a", {"flag_value": "a"}),
+                ("--b", {"flag_value": "b"}),
+                ("--c", {"flag_value": "c"}),
+                ("--d", {"flag_value": "d"}),
+            ],
+            [],
+            None,
+            id="four-flags-no-defaults-resolves-to-none",
+        ),
+        pytest.param(
+            [
+                ("--a", {"flag_value": "a"}),
+                ("--b", {"flag_value": "b", "default": "from-b"}),
+                ("--c", {"flag_value": "c"}),
+                ("--d", {"flag_value": "d"}),
+            ],
+            [],
+            "from-b",
+            id="four-flags-only-second-explicit-wins",
+        ),
+        pytest.param(
+            [
+                ("--a", {"flag_value": "a"}),
+                ("--b", {"flag_value": "b", "default": "from-b"}),
+                ("--c", {"flag_value": "c"}),
+                ("--d", {"flag_value": "d", "default": "from-d"}),
+            ],
+            [],
+            "from-d",
+            id="four-flags-two-explicit-last-wins",
+        ),
+        pytest.param(
+            [
+                ("--a", {"flag_value": "a"}),
+                ("--b", {"flag_value": "b"}),
+                ("--c", {"flag_value": "c"}),
+                ("--d", {"flag_value": "d"}),
+            ],
+            ["--c"],
+            "c",
+            id="four-flags-cmdline-beats-everything",
+        ),
+    ],
+)
+def test_flag_group_competition_four_flags(runner, opts, args, expected):
+    """Arbitration rules applies to groups of any size."""
+
+    @click.command()
+    def cli(case):
+        click.echo(repr(case), nl=False)
+
+    for opt_name, opt_kwargs in opts:
+        cli = click.option(opt_name, "case", **opt_kwargs)(cli)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
+    ("env", "default_map", "args", "expected"),
+    [
+        # ``auto_envvar_prefix`` produces an ``ENVIRONMENT`` source through a
+        # different code path than an explicit ``envvar=`` keyword. It still
+        # must beat any sibling default and be beaten by command-line input.
+        pytest.param(
+            {"AUTO_ENABLE_XYZ": "1"},
+            None,
+            [],
+            True,
+            id="auto-envvar-prefix-beats-default",
+        ),
+        pytest.param(
+            {"AUTO_ENABLE_XYZ": "1"},
+            None,
+            ["--without-xyz"],
+            False,
+            id="auto-envvar-prefix-loses-to-cmdline",
+        ),
+        # ``Sentinel.UNSET`` in ``default_map`` must be skipped (#3224
+        # carve-out): the lookup falls through to the parameter default.
+        # Inside a feature switch group, the explicit ``default=True`` on
+        # ``--with-xyz`` then wins over the sibling's auto-``False``.
+        pytest.param(
+            {},
+            {"enable_xyz": UNSET},
+            [],
+            True,
+            id="unset-default-map-falls-through-to-explicit-default",
+        ),
+        pytest.param(
+            {},
+            {"enable_xyz": False},
+            [],
+            False,
+            id="real-default-map-beats-explicit-default",
+        ),
+    ],
+)
+def test_flag_group_competition_envvar_prefix_and_unset_default_map(
+    runner, monkeypatch, env, default_map, args, expected
+):
+    for name, value in env.items():
+        monkeypatch.setenv(name, value)
+
+    @click.command()
+    @click.option("--without-xyz", "enable_xyz", flag_value=False)
+    @click.option("--with-xyz", "enable_xyz", flag_value=True, default=True)
+    def cli(enable_xyz):
+        click.echo(repr(enable_xyz), nl=False)
+
+    invoke_kwargs = {"auto_envvar_prefix": "AUTO"}
+    if default_map is not None:
+        invoke_kwargs["default_map"] = default_map
+
+    result = runner.invoke(cli, args, **invoke_kwargs)
+    assert result.exit_code == 0, result.output
     assert result.output == repr(expected)
 
 

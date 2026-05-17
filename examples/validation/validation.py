@@ -9,10 +9,10 @@ def validate_count(ctx, param, value):
     return value
 
 
-class URL(click.ParamType):
+class URL(click.ParamType[urlparse.ParseResult]):
     name = "url"
 
-    def convert(self, value, param, ctx):
+    def convert(self, value, param, ctx) -> urlparse.ParseResult:
         if not isinstance(value, tuple):
             value = urlparse.urlparse(value)
             if value.scheme not in ("http", "https"):

@@ -4,13 +4,16 @@ import collections.abc as cabc
 import inspect
 import io
 import itertools
+import re
 import sys
 import typing as t
 from contextlib import AbstractContextManager
+from contextlib import redirect_stdout
 from gettext import gettext as _
 
 from ._compat import isatty
 from ._compat import strip_ansi
+from ._compat import WIN
 from .exceptions import Abort
 from .exceptions import UsageError
 from .globals import resolve_color_default
@@ -51,10 +54,51 @@ _ansi_colors = {
 _ansi_reset_all = "\033[0m"
 
 
+_HIDDEN_INPUT_MASK = "'***'"
+
+
+def _mask_hidden_input(message: str, value: str) -> str:
+    """Replace occurrences of ``value`` in ``message`` with a fixed mask.
+
+    Both ``repr(value)`` (the form built-in :class:`ParamType` errors use
+    via ``{value!r}``) and the raw value are masked. The raw-value pass
+    uses word-boundary lookarounds so a substring like ``"1"`` does not
+    match inside ``"10"``, and ``"ent"`` does not match inside
+    ``"Authentication"``. The empty string is skipped to avoid matching
+    at every boundary.
+    """
+    message = message.replace(repr(value), _HIDDEN_INPUT_MASK)
+    if value:
+        message = re.sub(
+            rf"(?<!\w){re.escape(value)}(?!\w)", _HIDDEN_INPUT_MASK, message
+        )
+    return message
+
+
 def hidden_prompt_func(prompt: str) -> str:
     import getpass
 
     return getpass.getpass(prompt)
+
+
+def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
+    """Call a prompt function, passing the full prompt on non-Windows so
+    readline can handle line editing and cursor positioning correctly.
+
+    On Windows the prompt is written separately via :func:`echo` for
+    colorama support, with only the last character passed to *func*.
+    """
+    if WIN:
+        # Write the prompt separately so that we get nice coloring
+        # through colorama on Windows.
+        echo(text[:-1], nl=False, err=err)
+        # Echo the last character to stdout to work around an issue
+        # where readline causes backspace to clear the whole line.
+        return func(text[-1:])
+    if err:
+        with redirect_stdout(sys.stderr):
+            return func(text)
+    return func(text)
 
 
 def _build_prompt(
@@ -63,7 +107,7 @@ def _build_prompt(
     show_default: bool | str = False,
     default: t.Any | None = None,
     show_choices: bool = True,
-    type: ParamType | None = None,
+    type: ParamType[t.Any] | None = None,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
@@ -87,7 +131,7 @@ def prompt(
     default: t.Any | None = None,
     hide_input: bool = False,
     confirmation_prompt: bool | str = False,
-    type: ParamType | t.Any | None = None,
+    type: ParamType[t.Any] | t.Any | None = None,
     value_proc: t.Callable[[str], t.Any] | None = None,
     prompt_suffix: str = ": ",
     show_default: bool | str = True,
@@ -147,12 +191,7 @@ def prompt(
     def prompt_func(text: str) -> str:
         f = hidden_prompt_func if hide_input else visible_prompt_func
         try:
-            # Write the prompt separately so that we get nice
-            # coloring through colorama on Windows
-            echo(text[:-1], nl=False, err=err)
-            # Echo the last character to stdout to work around an issue where
-            # readline causes backspace to clear the whole line.
-            return f(text[-1:])
+            return _readline_prompt(f, text, err)
         except (KeyboardInterrupt, EOFError):
             # getpass doesn't print a newline if the user aborts input with ^C.
             # Allegedly this behavior is inherited from getpass(3).
@@ -185,10 +224,8 @@ def prompt(
         try:
             result = value_proc(value)
         except UsageError as e:
-            if hide_input:
-                echo(_("Error: The value you entered was invalid."), err=err)
-            else:
-                echo(_("Error: {e.message}").format(e=e), err=err)
+            message = _mask_hidden_input(e.message, value) if hide_input else e.message
+            echo(_("Error: {message}").format(message=message), err=err)
             continue
         if not confirmation_prompt:
             return result
@@ -243,12 +280,7 @@ def confirm(
 
     while True:
         try:
-            # Write the prompt separately so that we get nice
-            # coloring through colorama on Windows
-            echo(prompt[:-1], nl=False, err=err)
-            # Echo the last character to stdout to work around an issue where
-            # readline causes backspace to clear the whole line.
-            value = visible_prompt_func(prompt[-1:]).lower().strip()
+            value = _readline_prompt(visible_prompt_func, prompt, err).lower().strip()
         except (KeyboardInterrupt, EOFError):
             raise Abort() from None
         if value in ("y", "yes"):
@@ -266,6 +298,25 @@ def confirm(
     return rv
 
 
+def get_pager_file(
+    color: bool | None = None,
+) -> t.ContextManager[t.TextIO]:
+    """Context manager.
+
+    Yields a writable file-like object which can be used as an output pager.
+
+    .. versionadded:: 8.2
+
+    :param color: controls if the pager supports ANSI colors or not.  The
+                  default is autodetection.
+    """
+    from ._termui_impl import get_pager_file
+
+    color = resolve_color_default(color)
+
+    return get_pager_file(color=color)
+
+
 def echo_via_pager(
     text_or_generator: cabc.Iterable[str] | t.Callable[[], cabc.Iterable[str]] | str,
     color: bool | None = None,
@@ -281,7 +332,6 @@ def echo_via_pager(
     :param color: controls if the pager supports ANSI colors or not.  The
                   default is autodetection.
     """
-    color = resolve_color_default(color)
 
     if inspect.isgeneratorfunction(text_or_generator):
         i = t.cast("t.Callable[[], cabc.Iterable[str]]", text_or_generator)()
@@ -293,9 +343,9 @@ def echo_via_pager(
     # convert every element of i to a text type if necessary
     text_generator = (el if isinstance(el, str) else str(el) for el in i)
 
-    from ._termui_impl import pager
-
-    return pager(itertools.chain(text_generator, "\n"), color)
+    with get_pager_file(color=color) as pager:
+        for text in itertools.chain(text_generator, "\n"):
+            pager.write(text)
 
 
 @t.overload
@@ -622,13 +672,13 @@ def style(
         try:
             bits.append(f"\033[{_interpret_color(fg)}m")
         except KeyError:
-            raise TypeError(f"Unknown color {fg!r}") from None
+            raise TypeError(_("Unknown color {colour!r}").format(colour=fg)) from None
 
     if bg:
         try:
             bits.append(f"\033[{_interpret_color(bg, 10)}m")
         except KeyError:
-            raise TypeError(f"Unknown color {bg!r}") from None
+            raise TypeError(_("Unknown color {colour!r}").format(colour=bg)) from None
 
     if bold is not None:
         bits.append(f"\033[{1 if bold else 22}m")

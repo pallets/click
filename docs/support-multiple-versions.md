@@ -55,7 +55,7 @@ def add_ctx_arg(f: F) -> F:
 Here's an example ``ParamType`` subclass which uses this:
 
 ```python
-class CommaDelimitedString(click.ParamType):
+class CommaDelimitedString(click.ParamType[str]):
     @add_ctx_arg
     def get_metavar(self, param: click.Parameter, ctx: click.Context | None) -> str:
         return "TEXT,TEXT,..."

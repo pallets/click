@@ -230,6 +230,48 @@ as `default` will be interpreted as a list of characters.
     invoke(commit, args=['-m', 'foo', '-m', 'bar', '-m', 'here'])
 ```
 
+## Combining short options
+
+Short options made of a single character can be combined into one argument: `-abc` is equivalent to `-a -b -c`. This is the standard POSIX behavior for short option stacking, and it is the reason a repeated flag like `-vvv` works with the [Counting](#counting) feature.
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('-a', is_flag=True)
+    @click.option('-b', is_flag=True)
+    @click.option('-c', is_flag=True)
+    def cli(a, b, c):
+        click.echo(f"a={a} b={b} c={c}")
+
+.. click:run::
+
+    invoke(cli, args=['-a', '-b', '-c'])
+    invoke(cli, args=['-abc'])
+```
+
+If the last option in the combination takes a value, the value can either follow as the next argument or be attached directly:
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('-v', is_flag=True)
+    @click.option('-n', type=int)
+    def cli(v, n):
+        click.echo(f"v={v} n={n}")
+
+.. click:run::
+
+    invoke(cli, args=['-v', '-n', '5'])
+    invoke(cli, args=['-vn', '5'])
+    invoke(cli, args=['-vn5'])
+```
+
+```{note}
+Multi-character short option names are not supported. An argument like `-dbg` is interpreted as the combination of `-d`, `-b`, and `-g`, so Click reports `No such option: -d` if `-d` is not declared. For longer option names, use a long option with the `--` prefix (like `--debug`).
+```
+
 ## Counting
 
 To count the occurrence of an option, set `count=True`. If the option is not
@@ -469,15 +511,131 @@ literally.
 
 #### Feature switch groups (multiple flags sharing one variable)
 
-When multiple `flag_value` options target the same parameter
-name, `default=True` on one of them marks it as the default
-choice.
+Several `flag_value` options can target the same parameter name to form a
+feature switch group. The user picks one flag on the command line, and the
+function receives the corresponding `flag_value`. When the user picks none,
+Click falls back to whichever option claims the slot under the arbitration
+rules described below.
+
+##### Non-boolean groups
+
+For non-boolean `flag_value` (strings, enum members, classes, ...), place
+`default=True` on the option that should win when no flag is passed. The
+substitution rule above resolves it to that option's `flag_value`. Any other
+explicit `default` is passed through literally.
 
 | Definition                                             | Not passed | `--upper` | `--lower` |
 |--------------------------------------------------------|------------|-----------|-----------|
 | `--upper` with `flag_value='upper'`, `default=True`    | `"upper"`  | `"upper"` | `"lower"` |
 | `--upper` with `flag_value='upper'`, `default='upper'` | `"upper"`  | `"upper"` | `"lower"` |
-| Both without `default`                                 | `None`     | `"upper"` | `"lower"` |
+| `--upper` with `flag_value='upper'`, `default=None`    | `None`     | `"upper"` | `"lower"` |
+| Neither option carries a `default`                     | `None`     | `"upper"` | `"lower"` |
+
+The third row is the three-state pattern: the function receives `None` when no
+flag is passed, distinguishable from either explicit choice.
+
+##### Boolean groups
+
+When `flag_value` is `True` or `False`, the substitution rule does not apply:
+`default=True` is the literal Python `True`. To make one flag in an
+enable/disable pair the default, set its `default=True` explicitly:
+
+```python
+@click.option("--without-xyz", "enable_xyz", flag_value=False)
+@click.option("--with-xyz", "enable_xyz", flag_value=True, default=True)
+```
+
+| Definition                                              | Not passed | `--with-xyz` | `--without-xyz` |
+|---------------------------------------------------------|------------|--------------|-----------------|
+| `--with-xyz` with `flag_value=True`, `default=True`     | `True`     | `True`       | `False`         |
+| `--without-xyz` with `flag_value=False`, `default=False`| `False`    | `True`       | `False`         |
+| `--with-xyz` with `flag_value=True`, `default=None`     | `None`     | `True`       | `False`         |
+| Neither option carries a `default`                      | `False`    | `True`       | `False`         |
+
+```{tip}
+For most enable/disable cases, the pair form `--with-xyz/--without-xyz` is
+shorter and equivalent. The multi-flag group form is useful when the on and off
+flags need distinct names without a shared stem, or when each flag needs its
+own help text.
+```
+
+##### Arbitration rules
+
+When several options in a group resolve their values simultaneously, only one
+wins the parameter slot. The full arbitration policy (source precedence,
+explicit-beats-auto tie-break, first-declared fallback) is enumerated under
+[Option value resolution](#option-value-resolution).
+
+## Option value resolution
+
+This section enumerates the rules Click applies when computing the value
+delivered to the decorated function for every option. Rules are listed in the
+order they fire during the parsing pipeline.
+
+### Type inference
+
+Without an explicit `type=`, Click infers the parameter type at construction:
+
+1. If `flag_value` is `True` or `False`, the type is {class}`BoolParamType`.
+2. If `flag_value` is an `int`, `float`, or `str`, the type is the matching
+   basic type.
+3. If `flag_value` is any other Python object (a class, an enum member, a
+   `frozenset`, ...), the type is {data}`UNPROCESSED` so the value passes
+   through unchanged.
+4. Otherwise, the type is inferred from `default` if set, falling back to
+   {class}`StringParamType` when neither hint is available.
+
+### `default` interpretation
+
+The literal value passed as `default=` is interpreted differently depending on
+whether the option is a flag and what `flag_value` it carries:
+
+1. `default=UNSET` (the absence sentinel) is treated as if `default` was not
+   passed at all. It does not count as "the user picked nothing", and it does
+   not count as an explicit default for arbitration purposes.
+2. For a bare boolean flag (no `flag_value`, or `flag_value` of `True` or
+   `False`), an unset `default` auto-derives to `False`.
+3. For a non-boolean flag with a `flag_value`, `default=True` is substituted
+   with `flag_value`. This is the "activate this flag by default" shorthand.
+   Any non-`True` `default` is passed through literally.
+4. For a boolean flag with `flag_value` set, `default=True` is the literal
+   Python `True`. The substitution from rule 3 does not apply.
+5. `default=None` is always a real explicit value, distinct from `UNSET`
+   absence.
+6. Any other `default` is delivered to the function unchanged after conversion
+   through the parameter's type.
+
+### Value sources
+
+Click resolves the value of every option from the following
+sources, in order of decreasing precedence:
+
+1. **command line input** ({attr}`ParameterSource.COMMANDLINE`),
+2. **environment variable** named in `envvar=` or derived from `auto_envvar_prefix`
+   ({attr}`ParameterSource.ENVIRONMENT`),
+3. **`default_map` entry** matching the parameter name on the active {class}`Context`
+   ({attr}`ParameterSource.DEFAULT_MAP`),
+4. **parameter default** ({attr}`ParameterSource.DEFAULT`).
+
+The first source that produces a value wins. Environment variables and
+`default_map` entries set to `Sentinel.UNSET` are skipped, so they fall through
+to the next source rather than supplying `UNSET` to the function.
+
+### Slot arbitration
+
+Several options can target the same `name` to form a feature switch group. When
+they do, only one option's value reaches the function. Arbitration applies
+these rules, in order:
+
+1. **By source.** Whichever option resolved its value from the most explicit
+   source wins, regardless of decorator order. Any command-line input beats any
+   default, an environment variable beats a `default_map` entry, and so on.
+2. **Within the default tier, explicit beats auto-derived.** An option that
+   received an explicit `default=` keyword wins over one whose default came
+   from `default` interpretation.
+3. **Otherwise, last declared wins.** When all options in the group resolved
+   from the same source and tier (all auto-derived defaults, or all explicit
+   defaults), the option declared last in the source code keeps the slot.
 
 ## Values from Environment Variables
 

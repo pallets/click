@@ -52,6 +52,12 @@ def wrap_text(
                               each consecutive line.
     :param preserve_paragraphs: if this flag is set then the wrapping will
                                 intelligently handle paragraphs.
+
+    .. versionchanged:: 8.4
+        Width is measured in visible characters. ANSI escape sequences in
+        ``text``, ``initial_indent``, or ``subsequent_indent`` no longer
+        count toward the width budget, so styled input wraps based on what
+        the user sees instead of raw byte length.
     """
     from ._textwrap import TextWrapper
 
@@ -153,10 +159,18 @@ class HelpFormatter:
             ``"Usage: "``.
         """
         if prefix is None:
-            prefix = f"{_('Usage:')} "
+            prefix = "{usage} ".format(usage=_("Usage:"))
 
         usage_prefix = f"{prefix:>{self.current_indent}}{prog} "
         text_width = self.width - self.current_indent
+
+        if not args:
+            # Without args, the prefix's trailing space and the wrap_text
+            # call that would normally place args on the line are both
+            # unnecessary. Emit just the prefix line.
+            self.write(usage_prefix.rstrip(" "))
+            self.write("\n")
+            return
 
         if text_width >= (term_len(usage_prefix) + 20):
             # The arguments will fit to the right of the prefix.

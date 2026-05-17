@@ -1,5 +1,103 @@
 .. currentmodule:: click
 
+Version 8.4.0
+-------------
+
+Unreleased
+
+-   :class:`ParamType` typing improvements. :pr:`3371`
+
+    -   :class:`ParamType` is now a generic abstract base class,
+        parameterized by its converted value type.
+    -   :meth:`~ParamType.convert` return types are narrowed on all
+        concrete types (``str`` for :class:`STRING`, ``int`` for
+        :class:`INT`, etc.).
+    -   :meth:`~ParamType.to_info_dict` returns specific
+        :class:`~typing.TypedDict` subclasses instead of
+        ``dict[str, Any]``.
+    -   :class:`CompositeParamType` and the number-range base are now
+        generic with abstract methods.
+-   Refactor ``convert_type`` to extract type inference into a private
+    ``_guess_type`` helper, and add :func:`typing.overload` signatures.
+    :pr:`3372`
+-   :class:`Parameter` typing improvements. :pr:`2805`
+
+    -   :class:`Parameter` is now an abstract base class, making explicit
+        that it cannot be instantiated directly.
+    -   :attr:`Parameter.name` is now ``str`` instead of ``str | None``.
+        When ``expose_value=False``, the name is set to ``""`` instead
+        of ``None``.
+    -   The ``ctx`` parameter of :meth:`Parameter.get_error_hint` is now
+        typed as ``Context | None``, matching the runtime behavior.
+-   Split string values from ``default_map`` for parameters with ``nargs > 1``
+    or :class:`Tuple` type, matching environment variable behavior.
+    :issue:`2745` :pr:`3364`
+-   Auto-detect ``type=UNPROCESSED`` for ``flag_value`` of non-basic types
+    (not ``str``, ``int``, ``float``, or ``bool``), so programmer-provided
+    Python objects like classes and enum members are passed through unchanged
+    instead of being stringified. Previously ``type=click.UNPROCESSED`` had
+    to be set explicitly. :issue:`2012` :pr:`3363`
+-   The error hint now uses :meth:`Command.get_help_option_names` to pick
+    non-shadowed help option names, so ``Try '... -h'`` no longer points to a
+    subcommand option that shadows ``-h``. All surviving names are shown
+    (``-h/--help``). :issue:`2790` :pr:`3208`
+-   Fix readline functionality on non-Windows platforms. Prompt text is now
+    passed directly to readline instead of being printed separately, allowing
+    proper backspace, line editing, and line wrapping behavior. :issue:`2968`
+    :pr:`2969`
+-   Use :func:`os.startfile` on Windows to open URLs in :func:`open_url`,
+    replacing the ``start`` built-in which cannot be invoked without
+    ``shell=True``. :issue:`3164` :pr:`3186`
+-   Fix Fish shell completion errors when option help text contains newlines.
+    :issue:`3043` :pr:`3126`
+-   Add :class:`NoSuchCommand` exception with suggestions for misspelled
+    commands. :issue:`3107` :pr:`3228`
+-   Use :class:`ValueError` message when conversion in :class:`FuncParamType` would
+    fail. :issue:`3105` :pr:`3211`
+-   Add ``click.get_pager_file`` for file-like access to an output
+    pager. :pr:`1572` :pr:`3405`
+-   :class:`~click.formatting.TextWrapper` and
+    :func:`~click.formatting.wrap_text` now measure line width in visible
+    characters, ignoring ANSI escape sequences. :pr:`3420`
+-   Fix :meth:`HelpFormatter.write_usage` emitting only a blank line when
+    called without ``args``. The usage prefix and program name are now
+    written even when no arguments follow, and the trailing separator
+    space is stripped so the line ends at the program name.
+    :issue:`3360` :pr:`3434`
+-   Show custom error messages from types when :func:`prompt` with
+    ``hide_input=True`` fails validation, instead of always showing a
+    generic message. Built-in type messages mask the input value.
+    :issue:`2809` :pr:`3256`
+-   Add ``capture`` parameter to :class:`CliRunner` with two modes: ``sys``
+    (default) and ``fd``. ``fd`` redirects file descriptors ``1`` and ``2``
+    via :func:`os.dup2` so output that bypasses ``sys.stdout`` (stale stream
+    references, C extensions, subprocesses, ``faulthandler``) is captured
+    with proper isolation. :issue:`854` :issue:`2412` :issue:`2468`
+    :issue:`2497` :issue:`2761` :issue:`2827` :issue:`2865`
+-   Revert the ``8.3.3`` change that exposed the original file descriptor
+    via ``fileno()`` on the redirected ``CliRunner`` streams in the default
+    capture mode. ``os.dup2(w, sys.stdout.fileno())`` calls inside a CLI no
+    longer mutate the host runner's stdout, which broke Pytest's ``fd``-level
+    capture teardown. C-level consumers that need a real ``fd`` should use
+    ``capture="fd"``. :issue:`3384` :pr:`3391`
+-   Mark additional built-in strings with ``gettext()`` to extend translation
+    coverage. :pr:`2902`
+-   Fix feature switch groups (several ``flag_value`` options sharing one
+    parameter name) silently dropping an explicit ``default`` when a sibling
+    option without an explicit default was declared first. Arbitration is now
+    source-aware: a more explicit :class:`ParameterSource` always wins, and
+    within ``ParameterSource.DEFAULT``, an option that received an explicit
+    ``default=`` keyword wins over a sibling whose default was auto-derived.
+    The 8.3.x first-wins fallback for remaining ties was reverted to the
+    pre-8.3.x last-wins fallback. :issue:`3403` :pr:`3404`
+-   Fix missing space between option help text and the ``(DEPRECATED)``
+    label, and localize the option label so it matches the command label.
+    The label and the ``DeprecationWarning`` reason suffix are now produced
+    by shared helpers. :pr:`3423`
+-   Document short option stacking (``-abc`` is parsed as ``-a -b -c``) and
+    clarify that multi-character short option names are not supported.
+    :issue:`2779` :pr:`3431`
+
 Version 8.3.3
 -------------
 

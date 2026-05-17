@@ -1,11 +1,16 @@
+import contextlib
+import io
 import platform
 import shlex
+import shutil
+import sys
 import tempfile
 import time
 from unittest.mock import patch
 
 import pytest
 
+import click
 import click._termui_impl
 from click._compat import WIN
 from click._termui_impl import Editor
@@ -620,6 +625,229 @@ def test_pager_shlex_split(pager_env, expected_parts):
     assert shlex.split(pager_env) == expected_parts
 
 
+def _get_real_pager_command() -> str:
+    """Return a real pager binary path used to exercise the pipe pager branch.
+
+    ..warning::
+        Unix-only for now: ``more.com`` on Windows is interactive and goes
+        through ``_tempfilepager`` rather than ``_pipepager``.
+    """
+    pager_path = shutil.which("cat")
+    assert pager_path is not None, "cat not available"
+    return pager_path
+
+
+def _run_get_pager_file_with_real_pager(monkeypatch, capfd, writer, color=False):
+    """Run through the pipe pager backend selected by ``PAGER``."""
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setitem(
+        click._termui_impl.os.environ, "PAGER", _get_real_pager_command()
+    )
+
+    with click.get_pager_file(color=color) as pager:
+        writer(pager)
+
+    # The real pager writes to the process stdout; stderr should stay quiet.
+    out, err = capfd.readouterr()
+    assert err == ""
+    return out
+
+
+def _write_pager_from_multiple_sites(pager):
+    pager.write("prefix\n")
+    click.echo("middle", file=pager)
+    pager.write("suffix\n")
+
+
+@pytest.mark.skipif(
+    WIN,
+    reason="Exercises the pipe pager path; Windows uses _tempfilepager.",
+)
+@pytest.mark.parametrize(
+    ("writer", "color", "expected"),
+    [
+        pytest.param(
+            _write_pager_from_multiple_sites,
+            False,
+            "prefix\nmiddle\nsuffix\n",
+            id="multiple write sites",
+        ),
+        pytest.param(
+            lambda pager: pager.write("hello\n"), False, "hello\n", id="plain text"
+        ),
+        pytest.param(
+            lambda pager: pager.write(click.style("hello", fg="red") + "\n"),
+            False,
+            "hello\n",
+            id="strip ansi",
+        ),
+        pytest.param(
+            lambda pager: pager.write(click.style("hello", fg="red") + "\n"),
+            True,
+            click.style("hello", fg="red") + "\n",
+            id="preserve ansi",
+        ),
+        pytest.param(lambda pager: pager.write(""), False, "", id="empty string"),
+    ],
+)
+def test_get_pager_file_with_real_pager_binary_stream(
+    monkeypatch, capfd, writer, color, expected
+):
+    """A real pager should exercise the BinaryIO branch."""
+    output = _run_get_pager_file_with_real_pager(
+        monkeypatch, capfd, writer, color=color
+    )
+
+    assert output == expected
+
+
+@pytest.mark.skipif(
+    WIN,
+    reason="Exercises the pipe pager path; Windows uses _tempfilepager.",
+)
+@pytest.mark.parametrize(
+    ("color", "expected"),
+    [
+        pytest.param(False, "hello\n", id="strip ansi"),
+        pytest.param(True, click.style("hello", fg="red") + "\n", id="preserve ansi"),
+    ],
+)
+def test_echo_via_pager_real_pager_handles_ansi(monkeypatch, capfd, color, expected):
+    """``echo_via_pager`` should honor ``color`` like ``get_pager_file``."""
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setitem(
+        click._termui_impl.os.environ, "PAGER", _get_real_pager_command()
+    )
+
+    click.echo_via_pager(click.style("hello", fg="red"), color=color)
+
+    out, err = capfd.readouterr()
+    assert err == ""
+    assert out == expected
+
+
+def test_get_pager_file_pager_missing_binary_falls_back(monkeypatch, tmp_path):
+    """``PAGER`` pointing to a nonexistent binary falls back to the text stdout."""
+    pager_out = tmp_path / "pager_out.txt"
+
+    monkeypatch.setitem(
+        click._termui_impl.os.environ,
+        "PAGER",
+        "click-tests-nonexistent-pager-9b3f2",
+    )
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+
+    with pager_out.open("w", encoding="utf-8") as text_stream:
+        monkeypatch.setattr(
+            click._termui_impl, "_default_text_stdout", lambda: text_stream
+        )
+
+        with click.get_pager_file() as pager:
+            pager.write("hello\n")
+
+    assert pager_out.read_text(encoding="utf-8") == "hello\n"
+
+
+def test_get_pager_file_pager_unset_falls_back_when_no_default(monkeypatch, tmp_path):
+    """``PAGER`` unset still works when the platform default isn't installed."""
+    pager_out = tmp_path / "pager_out.txt"
+
+    monkeypatch.delitem(click._termui_impl.os.environ, "PAGER", raising=False)
+    monkeypatch.delitem(click._termui_impl.os.environ, "TERM", raising=False)
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setattr(shutil, "which", lambda _name: None)
+
+    with pager_out.open("w", encoding="utf-8") as text_stream:
+        monkeypatch.setattr(
+            click._termui_impl, "_default_text_stdout", lambda: text_stream
+        )
+
+        with click.get_pager_file() as pager:
+            pager.write("hello\n")
+
+    assert pager_out.read_text(encoding="utf-8") == "hello\n"
+
+
+@pytest.mark.parametrize(
+    ("color", "expected"),
+    [
+        pytest.param(False, "hello\n", id="strip ansi"),
+        pytest.param(True, click.style("hello", fg="red") + "\n", id="preserve ansi"),
+    ],
+)
+def test_get_pager_file_nullpager_wraps_textio_stream(
+    monkeypatch, tmp_path, color, expected
+):
+    """When paging falls back to a real TextIO stream, ``.buffer`` is wrapped."""
+    pager_out = tmp_path / "pager_out.txt"
+
+    with pager_out.open("w", encoding="utf-8") as text_stream:
+        monkeypatch.setattr(
+            click._termui_impl, "_default_text_stdout", lambda: text_stream
+        )
+        monkeypatch.setattr(
+            click._termui_impl, "isatty", lambda stream: stream is not sys.stdin
+        )
+
+        with click.get_pager_file(color=color) as pager:
+            pager.write(click.style("hello", fg="red") + "\n")
+
+    assert pager_out.read_text(encoding="utf-8") == expected
+
+
+def test_get_pager_file_nullpager_keeps_stringio_stream(monkeypatch):
+    """The no-stdout fallback should keep a text-only stream and set ``.color``."""
+
+    created = []
+
+    def make_stringio():
+        stream = io.StringIO()
+        created.append(stream)
+        return stream
+
+    monkeypatch.setattr(sys, "stdout", None)
+    monkeypatch.setattr(click._termui_impl, "StringIO", make_stringio)
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
+
+    styled_text = click.style("hello", fg="red")
+
+    with click.get_pager_file(color=False) as pager:
+        assert pager is created[0]
+        pager.write(styled_text)
+
+    assert created[0].getvalue() == styled_text
+
+
+def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
+    """Exceptions should still flush the yielded stream in ``finally``."""
+
+    class FlushableTextStream(io.StringIO):
+        def __init__(self):
+            super().__init__()
+            self.color = None
+            self.flush_calls = 0
+
+        def flush(self):
+            self.flush_calls += 1
+
+    stream = FlushableTextStream()
+
+    @contextlib.contextmanager
+    def pager_contextmanager(color=None):
+        yield stream, "utf-8", color
+
+    monkeypatch.setattr(
+        click._termui_impl, "_pager_contextmanager", pager_contextmanager
+    )
+
+    with pytest.raises(RuntimeError, match="boom"):
+        with click.get_pager_file() as pager:
+            assert pager is stream
+            raise RuntimeError("boom")
+
+    assert stream.flush_calls == 1
+
+
 def test_editor_unclosed_quote():
     """An unclosed quote in the editor command raises ValueError."""
     with pytest.raises(ValueError, match="No closing quotation"):
@@ -988,3 +1216,259 @@ def test_flag_value_prompt(
         assert result.output == expected_output
         assert not result.stderr
         assert result.exit_code == 0 if expected not in (REPEAT, INVALID) else 1
+
+
+class _CustomTypeNoValue(click.ParamType):
+    name = "custom"
+
+    def convert(self, value, param, ctx):
+        if len(value) < 4:
+            self.fail("Password must be at least 4 characters", param, ctx)
+        return value
+
+
+class _CustomTypeWithRawValue(click.ParamType):
+    name = "custom_raw"
+
+    def convert(self, value, param, ctx):
+        if value == "bad":
+            self.fail(f"rejected: {value}", param, ctx)
+        return value
+
+
+class _PasswordLengthType(click.ParamType):
+    """Mirrors the issue's original use case: a password validator
+    that references the user-typed value in its error message without
+    quoting it.
+    """
+
+    name = "password"
+
+    def convert(self, value, param, ctx):
+        if len(value) < 10:
+            self.fail(f"{value} is too short", param, ctx)
+        return value
+
+
+class _MixedQuotedAndRawType(click.ParamType):
+    """Custom type that mentions the user input both quoted (built-in
+    pattern) and raw within the same message.
+    """
+
+    name = "mixed"
+
+    def convert(self, value, param, ctx):
+        self.fail(f"got {value!r} which is the same as {value}", param, ctx)
+
+
+class _StaticMessageType(click.ParamType):
+    """Custom type whose error message never references the value."""
+
+    name = "static"
+
+    def convert(self, value, param, ctx):
+        self.fail("Authentication failed for this account", param, ctx)
+
+
+class _RejectAllRawType(click.ParamType):
+    """Always rejects, with the raw value (unquoted) in the message."""
+
+    name = "reject_all_raw"
+
+    def convert(self, value, param, ctx):
+        self.fail(f"rejected: {value}", param, ctx)
+
+
+class _MultiRawType(click.ParamType):
+    """Mentions the raw value multiple times in the same message."""
+
+    name = "multi_raw"
+
+    def convert(self, value, param, ctx):
+        self.fail(f"got {value} but {value} is bad", param, ctx)
+
+
+class _MultiReprType(click.ParamType):
+    """Mentions ``repr(value)`` multiple times in the same message."""
+
+    name = "multi_repr"
+
+    def convert(self, value, param, ctx):
+        self.fail(f"got {value!r} and {value!r}", param, ctx)
+
+
+class _ApostropheReprType(click.ParamType):
+    """Custom type whose ``repr(value)`` switches to double quotes when
+    the value itself contains a single quote.
+    """
+
+    name = "apostrophe_repr"
+
+    def convert(self, value, param, ctx):
+        self.fail(f"rejected {value!r}", param, ctx)
+
+
+@pytest.mark.parametrize(
+    ("type", "user_input", "expected_fragment", "unexpected_fragment"),
+    [
+        pytest.param(
+            click.INT,
+            "bad",
+            "'***' is not a valid integer",
+            "bad",
+            id="builtin-int-masks-repr-value",
+        ),
+        pytest.param(
+            _CustomTypeNoValue(),
+            "bad",
+            "Password must be at least 4 characters",
+            None,
+            id="custom-no-value-shows-message",
+        ),
+        pytest.param(
+            _CustomTypeWithRawValue(),
+            "bad",
+            "rejected: '***'",
+            "bad",
+            id="custom-raw-value-masked",
+        ),
+        pytest.param(
+            _PasswordLengthType(),
+            "PASSWORD",
+            "'***' is too short",
+            "PASSWORD",
+            id="unquoted-custom-message-should-mask-not-fallback",
+        ),
+        pytest.param(
+            _MixedQuotedAndRawType(),
+            "leakybits",
+            "got '***' which is the same as '***'",
+            "leakybits",
+            id="mixed-quoted-and-raw-both-masked-at-source",
+        ),
+        pytest.param(
+            click.IntRange(min=10, max=99),
+            "1",
+            "is not in the range",
+            None,
+            id="intrange-numeric-substring-falls-back-to-generic",
+        ),
+        pytest.param(
+            _StaticMessageType(),
+            "ent",
+            "Authentication failed for this account",
+            None,
+            id="partial-word-match-falls-back-to-generic",
+        ),
+        # When the raw (unquoted) value appears in the message, mask it instead
+        # of replacing the whole message with a generic fallback that throws
+        # useful information away.
+        pytest.param(
+            _RejectAllRawType(),
+            "secret",
+            "rejected: '***'",
+            "secret",
+            id="raw-value-should-be-masked-not-fallback",
+        ),
+        # When the raw value occurs more than
+        # once unquoted, every occurrence must be masked.
+        pytest.param(
+            _MultiRawType(),
+            "secret",
+            "got '***' but '***' is bad",
+            "secret",
+            id="multi-occurrence-raw-mask-all",
+        ),
+        pytest.param(
+            _MultiReprType(),
+            "secret",
+            "got '***' and '***'",
+            "secret",
+            id="multi-occurrence-repr-mask-all",
+        ),
+        pytest.param(
+            _PasswordLengthType(),
+            "a.b*c+",
+            "'***' is too short",
+            "a.b*c+",
+            id="regex-special-chars-must-be-escaped",
+        ),
+        pytest.param(
+            _PasswordLengthType(),
+            "пароль",
+            "'***' is too short",
+            "пароль",
+            id="unicode-value-masked",
+        ),
+        pytest.param(
+            _ApostropheReprType(),
+            "it's",
+            "rejected '***'",
+            "it's",
+            id="apostrophe-in-value-uses-double-quote-repr",
+        ),
+        pytest.param(
+            _MixedQuotedAndRawType(),
+            "leakybits",
+            "got '***' which is the same as '***'",
+            "leakybits",
+            id="mixed-quoted-and-raw-mask-both",
+        ),
+    ],
+)
+def test_hide_input_error_message(
+    runner, type, user_input, expected_fragment, unexpected_fragment
+):
+    """https://github.com/pallets/click/issues/2809"""
+
+    @click.command()
+    @click.option("--password", prompt=True, hide_input=True, type=type)
+    def cli(password):
+        click.echo(password)
+
+    result = runner.invoke(cli, input=user_input)
+    assert expected_fragment in result.output
+    if unexpected_fragment is not None:
+        assert unexpected_fragment not in result.output
+
+
+def test_hide_input_confirmation_prompt_mismatch_unaffected(runner):
+    """The ``hide_input`` mask logic only applies to ``value_proc``
+    failures. The separate ``confirmation_prompt`` mismatch path must
+    keep emitting its own message, with no value leak from either entry.
+    """
+
+    @click.command()
+    @click.option("--password", prompt=True, confirmation_prompt=True, hide_input=True)
+    def cli(password):
+        click.echo(f"got: {password}")
+
+    # First pair mismatches, second pair matches.
+    result = runner.invoke(cli, input="firstone\nsecondone\nfinalone\nfinalone\n")
+    assert "Error: The two entered values do not match." in result.output
+    assert "firstone" not in result.output
+    assert "secondone" not in result.output
+    # Successful prompt echoes the final value back via the command body.
+    assert "got: finalone" in result.output
+    assert result.exit_code == 0
+
+
+def test_hide_input_value_never_leaks_when_err_true(runner):
+    """``click.prompt(..., err=True)`` routes its error message to
+    stderr. The masking logic must apply on that path too: the raw
+    input must not appear on either stream.
+    """
+
+    @click.command()
+    def cli():
+        value = click.prompt(
+            "Password",
+            hide_input=True,
+            type=_PasswordLengthType(),
+            err=True,
+        )
+        click.echo(value)
+
+    result = runner.invoke(cli, input="leaky\n", mix_stderr=False)
+    assert "leaky" not in result.stdout
+    assert "leaky" not in result.stderr

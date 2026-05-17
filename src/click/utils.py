@@ -6,6 +6,7 @@ import re
 import sys
 import typing as t
 from functools import update_wrapper
+from gettext import gettext as _
 from types import ModuleType
 from types import TracebackType
 
@@ -116,6 +117,14 @@ class LazyFile:
     files for writing.
     """
 
+    name: str
+    mode: str
+    encoding: str | None
+    errors: str | None
+    atomic: bool
+    _f: t.IO[t.Any] | None
+    should_close: bool
+
     def __init__(
         self,
         filename: str | os.PathLike[str],
@@ -123,14 +132,12 @@ class LazyFile:
         encoding: str | None = None,
         errors: str | None = "strict",
         atomic: bool = False,
-    ):
-        self.name: str = os.fspath(filename)
+    ) -> None:
+        self.name = os.fspath(filename)
         self.mode = mode
         self.encoding = encoding
         self.errors = errors
         self.atomic = atomic
-        self._f: t.IO[t.Any] | None
-        self.should_close: bool
 
         if self.name == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
@@ -198,8 +205,10 @@ class LazyFile:
 
 
 class KeepOpenFile:
+    _file: t.IO[t.Any]
+
     def __init__(self, file: t.IO[t.Any]) -> None:
-        self._file: t.IO[t.Any] = file
+        self._file = file
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
@@ -333,7 +342,7 @@ def get_binary_stream(name: t.Literal["stdin", "stdout", "stderr"]) -> t.BinaryI
     """
     opener = binary_streams.get(name)
     if opener is None:
-        raise TypeError(f"Unknown standard stream '{name}'")
+        raise TypeError(_("Unknown standard stream '{name}'").format(name=name))
     return opener()
 
 
@@ -354,7 +363,7 @@ def get_text_stream(
     """
     opener = text_streams.get(name)
     if opener is None:
-        raise TypeError(f"Unknown standard stream '{name}'")
+        raise TypeError(_("Unknown standard stream '{name}'").format(name=name))
     return opener(encoding, errors)
 
 
@@ -506,6 +515,8 @@ class PacifyFlushWrapper:
     other cleanup code, and the case where the underlying file is not a broken
     pipe, all calls and attributes are proxied.
     """
+
+    wrapped: t.IO[t.Any]
 
     def __init__(self, wrapped: t.IO[t.Any]) -> None:
         self.wrapped = wrapped

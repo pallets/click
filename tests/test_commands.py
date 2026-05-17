@@ -573,3 +573,35 @@ def test_abort_exceptions_with_disabled_standalone_mode(runner, exc):
     assert rv.exit_code == 1
     assert isinstance(rv.exception.__cause__, exc)
     assert rv.exception.__cause__.args == ("catch me!",)
+
+
+def test_unknown_command(runner):
+    result = runner.invoke(click.Group(), "unknown")
+    assert result.exception
+    assert "No such command 'unknown'." in result.output
+
+
+@pytest.mark.parametrize(
+    ("value", "expect"),
+    [
+        ("pause", "Did you mean 'push'?"),
+        ("decline", "(Did you mean one of: 'declare', 'refine'?)"),
+    ],
+)
+def test_suggest_possible_commands(runner, value, expect):
+    cli = click.Group()
+
+    @cli.command()
+    def push():
+        pass
+
+    @cli.command()
+    def declare():
+        pass
+
+    @cli.command()
+    def refine():
+        pass
+
+    result = runner.invoke(cli, [value])
+    assert expect in result.output

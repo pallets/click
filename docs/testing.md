@@ -204,50 +204,62 @@ Prompts will be emulated so they write the input data to
 the output stream as well. If hidden input is expected then this
 does not happen.
 
-## File Descriptors and Low-Level I/O
+## Capture modes
 
-{class}`CliRunner` captures output by replacing
-`sys.stdout` and `sys.stderr` with in-memory
-{class}`~io.BytesIO`-backed wrappers. This is
-Python-level redirection: calls to {func}`~click.echo`,
-{func}`print`, or `sys.stdout.write()` are captured, but
-the wrappers have no OS-level file descriptor.
+{class}`CliRunner` captures output by replacing `sys.stdout` and `sys.stderr`
+with in-memory wrappers. The `capture` parameter controls which strategy is
+used.
 
-Code that calls `fileno()` on `sys.stdout` or
-`sys.stderr`, like {mod}`faulthandler`,
-{mod}`subprocess`, or C extensions, would normally crash
-with {exc}`io.UnsupportedOperation` inside
-{class}`CliRunner`.
+### `capture="sys"` (default)
 
-To avoid this, {class}`CliRunner` preserves the original
-stream's file descriptor and exposes it via `fileno()` on
-the replacement wrapper.
+Captures Python-level writes (`print()`, `click.echo()`, `sys.stdout.write()`).
+It is fast and sufficient for most Click applications.
 
-This means:
-- **Python-level writes** (`print()`, `click.echo()`,
-  ...) are captured as usual.
-- **fd-level writes** (C code writing directly to the
-  file descriptor) go to the original terminal and are
-  **not** captured.
+Code that holds a reference to the original `sys.stdout` (like a library that
+does `from sys import stdout` at import time) bypasses the capture and its
+output is lost.
 
-This is the same trade-off that
-[pytest](https://docs.pytest.org/en/stable/how-to/capture-stdout-stderr.html)
-makes with its two capture modes:
+In this mode `sys.stdout.fileno()` and `sys.stderr.fileno()` raise
+{exc}`io.UnsupportedOperation`, matching the pre-`8.3.3` behavior. C-level
+consumers ({mod}`faulthandler`, {mod}`subprocess`, C extensions) that expect a
+real file descriptor must opt into the `capture="fd"` mode.
 
-- `capsys`, which captures Python-level output, where
-  `fileno()` raises `UnsupportedOperation` and fd-level
-  writes are not captured.
-- `capfd`, which captures fd-level output via
-  `os.dup2()`, where `fileno()` works and fd-level
-  writes *are* captured.
+### `capture="fd"`
 
-Rather than implementing a full `capfd`-style mechanism,
-{class}`CliRunner` takes the simpler path: expose the
-original `fd` so that standard library helpers keep
-working, while accepting that their output is not
-captured.
+Redirects OS file descriptors `1` and `2` to a temporary file via
+{func}`os.dup2`, inspired by [Pytest's
+`capfd`](https://docs.pytest.org/en/stable/how-to/capture-stdout-stderr.html).
+This catches output that bypasses `sys.stdout`, including:
 
-```{versionchanged} 8.3.3
-`fileno()` on the redirected streams now returns the
-original stream's file descriptor instead of raising.
+- Stale references to the original `sys.stdout` and `sys.stderr`.
+- Logging frameworks that cache the original stream (like `structlog` or the
+  stdlib's `logging` module).
+- C extensions and subprocesses that write directly to `fd 1` or `fd 2`.
+
+```python
+from click.testing import CliRunner
+from myapp import cli
+
+
+def test_captures_everything():
+    runner = CliRunner(capture="fd")
+    result = runner.invoke(cli)
+    # result.stdout contains both Python-level and fd-level output
+    assert "expected output" in result.stdout
+```
+
+In this mode `sys.stdout.fileno()` returns the saved (pre-redirection) `fd`, so
+{mod}`faulthandler` and similar consumers keep working. Writes to `fd 1` and
+`fd 2` land in the capture tmpfile, so `os.dup2()` calls inside the CLI no
+longer leak into the host runner's stdout.
+
+```{note}
+`capture="fd"` is not available on Windows.
+```
+
+```{versionchanged} 8.4.0
+Added the `capture` parameter. The default `sys` mode no longer exposes the
+original `fd` through `fileno()`, reverting the change introduced in `8.3.3`
+that broke Pytest's `fd`-level capture teardown. Use `capture="fd"` to restore
+that behavior with proper isolation.
 ```

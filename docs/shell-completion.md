@@ -120,7 +120,7 @@ indicate special handling for paths, and `help` for shells that support showing 
 In this example, the type will suggest environment variables that start with the incomplete value.
 
 ```python
-class EnvVarType(ParamType):
+class EnvVarType(ParamType[str]):
     name = "envvar"
 
     def shell_complete(self, ctx, param, incomplete):
