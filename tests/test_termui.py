@@ -569,6 +569,20 @@ def test_editor_nonexistent_exception():
             Editor(editor="nonexistent").edit_files(["f.txt"])
 
 
+def test_launch_windows_locate_quotes_path_with_spaces(monkeypatch):
+    monkeypatch.setattr(click._termui_impl.sys, "platform", "win32")
+    monkeypatch.setattr(click._termui_impl, "WIN", True)
+    monkeypatch.setattr(click._termui_impl, "CYGWIN", False)
+
+    with patch("subprocess.call", return_value=0) as mock_call:
+        rv = click._termui_impl.open_url(r"C:\Users\Public\click demo", locate=True)
+
+    assert rv == 0
+    mock_call.assert_called_once_with(
+        ["explorer", r'/select,"C:\Users\Public\click demo"']
+    )
+
+
 @pytest.mark.parametrize(
     ("pager_env", "expected_parts"),
     [
