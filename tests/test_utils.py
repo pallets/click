@@ -780,3 +780,23 @@ def test_make_default_short_help(value, max_length, alter, expect):
 
     out = click.utils.make_default_short_help(value, max_length)
     assert out == expect
+
+
+@pytest.mark.skipif(not WIN, reason="Windows-only behaviour")
+def test_launch_locate_quotes_path_with_spaces():
+    """launch(locate=True) must quote the /select argument so that paths
+    containing spaces are passed correctly to Windows Explorer."""
+    path = r"C:\Users\John Doe\My Documents\report.pdf"
+
+    with patch("subprocess.call") as mock_call:
+        mock_call.return_value = 0
+        click._termui_impl.open_url(path, locate=True)
+
+    mock_call.assert_called_once()
+    args = mock_call.call_args[0][0]
+    # The /select value must be enclosed in double-quotes so Explorer
+    # receives the full path as a single token even when it contains spaces.
+    assert args[0] == "explorer"
+    assert args[1] == f'/select,"{path}"', (
+        f"Expected quoted /select argument, got: {args[1]!r}"
+    )

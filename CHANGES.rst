@@ -5,6 +5,9 @@ Version 8.4.0
 
 Unreleased
 
+-   Quote the ``/select`` argument passed to Windows Explorer in
+    :func:`launch` so that file paths containing spaces are located
+    correctly. :issue:`2994`
 -   :class:`ParamType` typing improvements. :pr:`3371`
 
     -   :class:`ParamType` is now a generic abstract base class,

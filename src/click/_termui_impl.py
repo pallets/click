@@ -758,8 +758,8 @@ def open_url(url: str, wait: bool = False, locate: bool = False) -> int:
             null.close()
     elif WIN:
         if locate:
-            url = _unquote_file(url)
-            args = ["explorer", f"/select,{url}"]
+            url = _unquote_file(url).replace('"', '""')
+            args = ["explorer", f'/select,"{url}"']
             try:
                 return subprocess.call(args)
             except OSError:
