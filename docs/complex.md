@@ -340,7 +340,7 @@ def cli():
 
 There are several events which may trigger lazy loading by running the
 {meth}`Group.get_command` function.
-Some are intuititve, and some are less so.
+Some are intuitive, and some are less so.
 
 All cases are described with respect to the above example, assuming the main program
 name is `cli`.
