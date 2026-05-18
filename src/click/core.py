@@ -2608,6 +2608,7 @@ class Parameter(ABC):
 
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
+            ctx.set_parameter_source(self.name, source)
 
             # Display a deprecation warning if necessary.
             if (
@@ -2654,10 +2655,14 @@ class Parameter(ABC):
         )
 
         if is_winner:
-            ctx.set_parameter_source(self.name, source)
             if self.expose_value:
                 ctx.params[self.name] = value
                 ctx._param_default_explicit[self.name] = self._default_explicit
+        elif existing_source is not None:
+            # ``process_value`` should observe the current parameter's source,
+            # but a losing parameter must not replace the source of the
+            # already-winning value in the slot.
+            ctx.set_parameter_source(self.name, existing_source)
         elif existing_source is None:
             # Nothing has claimed the slot yet. Record at least our source so downstream
             # lookups don't return ``None``.

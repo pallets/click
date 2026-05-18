@@ -774,6 +774,21 @@ def test_parameter_source(runner, option_args, invoke_args, expect):
     assert rv.return_value == expect
 
 
+def test_parameter_source_available_during_type_conversion(runner):
+    class Source(click.ParamType):
+        def convert(self, value, param, ctx):
+            return ctx.get_parameter_source(param.name)
+
+    @click.command()
+    @click.option("--option", default="value", type=Source())
+    def cli(option):
+        click.echo(option.name)
+
+    rv = runner.invoke(cli)
+
+    assert rv.output == "DEFAULT\n"
+
+
 def test_propagate_opt_prefixes():
     parent = click.Context(click.Command("test"))
     parent._opt_prefixes = {"-", "--", "!"}

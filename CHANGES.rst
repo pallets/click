@@ -5,6 +5,9 @@ Version 8.4.1
 
 Unreleased
 
+-   Restore :meth:`Context.get_parameter_source` during type conversion
+    for values sourced from parameter defaults. :issue:`3458`
+
 
 
 Version 8.4.0
