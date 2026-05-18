@@ -301,6 +301,17 @@ class ShellComplete:
         """
         args, incomplete = self.get_completion_args()
         completions = self.get_completions(args, incomplete)
+
+        # In shells that do not split on '=' (e.g. Zsh, Fish), if the
+        # incomplete value started with an option name and '=', we must
+        # prepend it to the completion values so the shell doesn't
+        # replace the whole token with just the value.
+        if "=" in incomplete:
+            prefix, _, _ = incomplete.partition("=")
+            if prefix.startswith("-"):
+                for item in completions:
+                    item.value = f"{prefix}={item.value}"
+
         out = [self.format_completion(item) for item in completions]
         return "\n".join(out)
 
@@ -652,6 +663,10 @@ def _resolve_incomplete(
     elif "=" in incomplete and _start_of_option(ctx, incomplete):
         name, _, incomplete = incomplete.partition("=")
         args.append(name)
+
+    # In bash, COMP_WORDBREAKS might split '=' into its own arg.
+    if args and args[-1] == "=":
+        args.pop()
 
     # The "--" marker tells Click to stop treating values as options
     # even if they start with the option character. If it hasn't been

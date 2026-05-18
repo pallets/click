@@ -375,8 +375,7 @@ def test_full_complete(runner, shell, env, expect):
     [
         (
             {"COMP_WORDS": "", "COMP_CWORD": "0"},
-            textwrap.dedent(
-                """\
+            textwrap.dedent("""\
                     plain
                     a
                     _
@@ -389,34 +388,29 @@ def test_full_complete(runner, shell, env, expect):
                     plain
                     c:e
                     _
-                """
-            ),
+                """),
         ),
         (
             {"COMP_WORDS": "a c", "COMP_CWORD": "1"},
-            textwrap.dedent(
-                """\
+            textwrap.dedent("""\
                     plain
                     c\\:d
                     cee:dee
                     plain
                     c:e
                     _
-                """
-            ),
+                """),
         ),
         (
             {"COMP_WORDS": "a c:", "COMP_CWORD": "1"},
-            textwrap.dedent(
-                """\
+            textwrap.dedent("""\
                     plain
                     c\\:d
                     cee:dee
                     plain
                     c:e
                     _
-                """
-            ),
+                """),
         ),
     ],
 )
@@ -440,6 +434,47 @@ def test_zsh_full_complete_with_colons(
             "_CLI_COMPLETE": "zsh_complete",
         },
     )
+    assert result.output == expect
+
+
+@pytest.mark.parametrize(
+    ("shell", "env", "expect"),
+    [
+        ("bash", {"COMP_WORDS": "cli --opt = a", "COMP_CWORD": "3"}, "plain,a\n"),
+        (
+            "bash",
+            {"COMP_WORDS": "cli --opt =", "COMP_CWORD": "2"},
+            "plain,a\nplain,b\n",
+        ),
+        # zsh doesn't split `=` by default
+        (
+            "zsh",
+            {"COMP_WORDS": "cli --opt=", "COMP_CWORD": "1"},
+            "plain\n--opt=a\n_\nplain\n--opt=b\n_\n",
+        ),
+        (
+            "zsh",
+            {"COMP_WORDS": "cli --opt=a", "COMP_CWORD": "1"},
+            "plain\n--opt=a\n_\n",
+        ),
+        # fish doesn't split `=` by default
+        (
+            "fish",
+            {"COMP_WORDS": "cli --opt=", "COMP_CWORD": "--opt="},
+            "plain\n--opt=a\n_\nplain\n--opt=b\n_\n",
+        ),
+        (
+            "fish",
+            {"COMP_WORDS": "cli --opt=a", "COMP_CWORD": "--opt=a"},
+            "plain\n--opt=a\n_\n",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_full_complete_with_equals(runner, shell, env, expect):
+    cli = Command("cli", params=[Option(["--opt"], type=Choice(["a", "b"]))])
+    env["_CLI_COMPLETE"] = f"{shell}_complete"
+    result = runner.invoke(cli, env=env)
     assert result.output == expect
 
 
