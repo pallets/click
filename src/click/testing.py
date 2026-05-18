@@ -22,10 +22,15 @@ if t.TYPE_CHECKING:
 
     from .core import Command
 
-CaptureMode = t.Literal["sys", "fd"]
+CaptureMode: t.TypeAlias = t.Literal["sys", "fd"]
+ExceptionInfo: t.TypeAlias = tuple[type[BaseException], BaseException, TracebackType]
 
 
 class EchoingStdin:
+    _input: t.BinaryIO
+    _output: t.BinaryIO
+    _paused: bool
+
     def __init__(self, input: t.BinaryIO, output: t.BinaryIO) -> None:
         self._input = input
         self._output = output
@@ -60,7 +65,7 @@ class EchoingStdin:
 
 
 @contextlib.contextmanager
-def _pause_echo(stream: EchoingStdin | None) -> cabc.Iterator[None]:
+def _pause_echo(stream: EchoingStdin | None) -> cabc.Generator[None]:
     if stream is None:
         yield
     else:
@@ -80,10 +85,14 @@ class _FDCapture:
     .. versionadded:: 8.4.0
     """
 
+    _targetfd: int
+    saved_fd: int
+    _tmpfile: t.BinaryIO | None
+
     def __init__(self, targetfd: int) -> None:
         self._targetfd = targetfd
-        self.saved_fd: int = -1
-        self._tmpfile: t.BinaryIO | None = None
+        self.saved_fd = -1
+        self._tmpfile = None
 
     def start(self) -> None:
         self.saved_fd = os.dup(self._targetfd)
@@ -108,6 +117,8 @@ class BytesIOCopy(io.BytesIO):
     .. versionadded:: 8.2
     """
 
+    copy_to: io.BytesIO
+
     def __init__(self, copy_to: io.BytesIO) -> None:
         super().__init__()
         self.copy_to = copy_to
@@ -129,10 +140,14 @@ class StreamMixer:
     .. versionadded:: 8.2
     """
 
+    output: io.BytesIO
+    stdout: BytesIOCopy
+    stderr: BytesIOCopy
+
     def __init__(self) -> None:
-        self.output: io.BytesIO = io.BytesIO()
-        self.stdout: io.BytesIO = BytesIOCopy(copy_to=self.output)
-        self.stderr: io.BytesIO = BytesIOCopy(copy_to=self.output)
+        self.output = io.BytesIO()
+        self.stdout = BytesIOCopy(copy_to=self.output)
+        self.stderr = BytesIOCopy(copy_to=self.output)
 
 
 class _NamedTextIOWrapper(io.TextIOWrapper):
@@ -147,6 +162,10 @@ class _NamedTextIOWrapper(io.TextIOWrapper):
     pre-``8.3.3`` behavior.
     """
 
+    _name: str
+    _mode: str
+    _original_fd: int
+
     def __init__(
         self,
         buffer: t.BinaryIO,
@@ -157,7 +176,7 @@ class _NamedTextIOWrapper(io.TextIOWrapper):
         super().__init__(buffer, **kwargs)
         self._name = name
         self._mode = mode
-        self._original_fd: int = -1
+        self._original_fd = -1
 
     def close(self) -> None:
         """The buffer this object contains belongs to some other object,
@@ -228,6 +247,15 @@ class Result:
         Added ``return_value``.
     """
 
+    runner: CliRunner
+    stdout_bytes: bytes
+    stderr_bytes: bytes
+    output_bytes: bytes
+    return_value: t.Any
+    exit_code: int
+    exception: BaseException | None
+    exc_info: ExceptionInfo | None
+
     def __init__(
         self,
         runner: CliRunner,
@@ -237,9 +265,8 @@ class Result:
         return_value: t.Any,
         exit_code: int,
         exception: BaseException | None,
-        exc_info: tuple[type[BaseException], BaseException, TracebackType]
-        | None = None,
-    ):
+        exc_info: ExceptionInfo | None = None,
+    ) -> None:
         self.runner = runner
         self.stdout_bytes = stdout_bytes
         self.stderr_bytes = stderr_bytes
@@ -321,6 +348,12 @@ class CliRunner:
         ``mix_stderr`` parameter has been removed.
     """
 
+    charset: str
+    env: cabc.Mapping[str, str | None]
+    echo_stdin: bool
+    catch_exceptions: bool
+    capture: CaptureMode
+
     def __init__(
         self,
         charset: str = "utf-8",
@@ -338,10 +371,10 @@ class CliRunner:
                 f"capture={capture!r} is not supported on Windows. Use 'sys'."
             )
         self.charset = charset
-        self.env: cabc.Mapping[str, str | None] = env or {}
+        self.env = env or {}
         self.echo_stdin = echo_stdin
         self.catch_exceptions = catch_exceptions
-        self.capture: CaptureMode = capture
+        self.capture = capture
 
     def get_default_prog_name(self, cli: Command) -> str:
         """Given a command object it will return the default program name
@@ -365,7 +398,7 @@ class CliRunner:
         input: str | bytes | t.IO[t.Any] | None = None,
         env: cabc.Mapping[str, str | None] | None = None,
         color: bool = False,
-    ) -> cabc.Iterator[tuple[io.BytesIO, io.BytesIO, io.BytesIO]]:
+    ) -> cabc.Generator[tuple[io.BytesIO, io.BytesIO, io.BytesIO]]:
         """A context manager that sets up the isolation for invoking of a
         command line tool.  This sets up `<stdin>` with the given input data
         and `os.environ` with the overrides from the given dictionary.
@@ -705,7 +738,7 @@ class CliRunner:
     @contextlib.contextmanager
     def isolated_filesystem(
         self, temp_dir: str | os.PathLike[str] | None = None
-    ) -> cabc.Iterator[str]:
+    ) -> cabc.Generator[str]:
         """A context manager that creates a temporary directory and
         changes the current working directory to it. This isolates tests
         that affect the contents of the CWD to prevent them from
