@@ -726,6 +726,17 @@ def test_echo_via_pager_real_pager_handles_ansi(monkeypatch, capfd, color, expec
     assert out == expected
 
 
+def test_echo_via_pager_keeps_runner_stdout_open(runner):
+    @click.command()
+    def cli():
+        click.echo_via_pager("hello")
+
+    result = runner.invoke(cli)
+
+    assert result.output == "hello\n"
+    assert result.exit_code == 0
+
+
 def test_get_pager_file_pager_missing_binary_falls_back(monkeypatch, tmp_path):
     """``PAGER`` pointing to a nonexistent binary falls back to the text stdout."""
     pager_out = tmp_path / "pager_out.txt"

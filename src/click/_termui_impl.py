@@ -395,6 +395,9 @@ class MaybeStripAnsi(io.TextIOWrapper):
             text = strip_ansi(text)
         return super().write(text)
 
+    def close(self) -> None:
+        """Do not close buffers owned by the pager backend."""
+
 
 def _pager_contextmanager(
     color: bool | None = None,

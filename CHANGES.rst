@@ -5,6 +5,10 @@ Version 8.4.1
 
 Unreleased
 
+-   Prevent :func:`get_pager_file` from closing externally owned text
+    stream buffers when :func:`echo_via_pager` falls back to stdout.
+    :issue:`3449`
+
 
 
 Version 8.4.0
