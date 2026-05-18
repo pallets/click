@@ -119,6 +119,11 @@ class HelpFormatter:
                   width clamped to a maximum of 78.
     """
 
+    indent_increment: int
+    width: int
+    current_indent: int
+    buffer: list[str]
+
     def __init__(
         self,
         indent_increment: int = 2,
@@ -135,8 +140,8 @@ class HelpFormatter:
             if width is None:
                 width = max(min(shutil.get_terminal_size().columns, max_width) - 2, 50)
         self.width = width
-        self.current_indent: int = 0
-        self.buffer: list[str] = []
+        self.current_indent = 0
+        self.buffer = []
 
     def write(self, string: str) -> None:
         """Writes a unicode string into the internal buffer."""
@@ -223,7 +228,7 @@ class HelpFormatter:
 
     def write_dl(
         self,
-        rows: cabc.Sequence[tuple[str, str]],
+        rows: cabc.Iterable[tuple[str, str]],
         col_max: int = 30,
         col_spacing: int = 2,
     ) -> None:
@@ -266,7 +271,7 @@ class HelpFormatter:
                 self.write("\n")
 
     @contextmanager
-    def section(self, name: str) -> cabc.Iterator[None]:
+    def section(self, name: str) -> cabc.Generator[None]:
         """Helpful context manager that writes a paragraph, a heading,
         and the indents.
 
@@ -281,7 +286,7 @@ class HelpFormatter:
             self.dedent()
 
     @contextmanager
-    def indentation(self) -> cabc.Iterator[None]:
+    def indentation(self) -> cabc.Generator[None]:
         """A context manager that increases the indentation."""
         self.indent()
         try:
@@ -294,7 +299,7 @@ class HelpFormatter:
         return "".join(self.buffer)
 
 
-def join_options(options: cabc.Sequence[str]) -> tuple[str, bool]:
+def join_options(options: cabc.Iterable[str]) -> tuple[str, bool]:
     """Given a list of option strings this joins them in the most appropriate
     way and returns them in the form ``(formatted_string,
     any_prefix_is_slash)`` where the second item in the tuple is a flag that
