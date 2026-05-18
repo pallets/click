@@ -81,7 +81,7 @@ exclude = [
 ]
 
 [tool.uv]
-default-groups = ["dev", "pre-commit", "tests", "typing"]
+default-groups = ["dev", "docs", "docs-auto", "gha-update", "pre-commit", "tests", "tests-random", "typing"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
