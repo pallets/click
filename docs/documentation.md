@@ -50,6 +50,46 @@ For subcommands, a short help snippet is generated. By default, it's the first s
     invoke(cli, args=['--help'])
 ```
 
+## Group Help Page
+
+The group help prints sub commands, options, epilog help, and arguments, and prints them together.
+
+```{eval-rst}
+.. click:example::
+
+    import click
+
+    @click.group(
+        help="Example Click app with subcommands, options, and positional arguments.",
+        epilog=("Examples:\n\n\b\n  python hello.py greet Alice --count 2\n"),
+    )
+    def cli() -> None:
+        """Run the example CLI."""
+
+    @cli.command()
+    @click.argument("name")
+    @click.option(
+        "--count",
+        default=1,
+        show_default=True,
+        type=click.IntRange(1, None),
+        help="Number of greetings to print.",
+    )
+    @click.option(
+        "--greeting",
+        default="Hello",
+        show_default=True,
+        help="Greeting prefix to use.",
+    )
+    def greet(name: str, count: int, greeting: str) -> None:
+        """Greet NAME one or more times."""
+        for _ in range(count):
+            click.echo(f"{greeting} {name}!")
+
+.. click:run::
+    invoke(init, args=['--help'])
+```
+
 ## Command Epilog Help
 
 The help epilog is printed at the end of the help and is useful for showing example command usages or referencing additional help resources.
