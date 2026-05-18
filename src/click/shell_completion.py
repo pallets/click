@@ -43,12 +43,13 @@ def shell_complete(
 
     comp = comp_cls(cli, ctx_args, prog_name, complete_var)
 
+    # Write bytes, otherwise Windows text stdout translates LF to CRLF and breaks.
     if instruction == "source":
-        echo(comp.source())
+        echo(comp.source().encode(), nl=False)
         return 0
 
     if instruction == "complete":
-        echo(comp.complete())
+        echo(comp.complete().encode())
         return 0
 
     return 1

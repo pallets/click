@@ -5,6 +5,7 @@ Version 8.4.1
 
 Unreleased
 
+-   Zsh completion scripts parse correctly on Windows. :issue:`3277`
 
 
 Version 8.4.0
