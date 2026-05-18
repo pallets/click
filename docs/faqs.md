@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
 ```
 
-When you pass an environment variable in the argument, it expands it:
+When you pass an environment variable hello in the argument, it expands it:
 
 ```{code-block} powershell
 > Desktop python foo.py '$M0/.viola/2025-01-25-17-20-23-307878'
