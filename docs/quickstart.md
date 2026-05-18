@@ -142,17 +142,17 @@ and registered with a group later with `group.add_command()`. This could be used
 modules.
 
 ```{code-block} python
-    @click.command()
-    def greet():
-        click.echo("Hello, World!")
+@click.command()
+def greet():
+    click.echo("Hello, World!")
 ```
 
 ```{code-block} python
-    @click.group()
-    def group():
-        pass
+@click.group()
+def group():
+    pass
 
-    group.add_command(greet)
+group.add_command(greet)
 ```
 
 ## Adding Parameters
