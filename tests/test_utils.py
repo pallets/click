@@ -15,6 +15,7 @@ import pytest
 
 import click._termui_impl
 import click.utils
+from click._compat import MAC
 from click._compat import WIN
 from click._utils import UNSET
 
@@ -309,6 +310,10 @@ EchoViaPagerTest = namedtuple(
 
 
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
+@pytest.mark.skipif(
+    MAC and sys.version_info >= (3, 13) and sys._is_gil_enabled(),
+    reason="Generator exception tests are flaky in Python 3.14t on macOS.",
+)
 @pytest.mark.parametrize(
     "pager_cmd", ["cat", "cat ", " cat ", "less", " less", " less "]
 )
