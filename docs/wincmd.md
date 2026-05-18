@@ -23,10 +23,12 @@ used for parameters.
 
 ## Unicode Output and Input
 
-Unicode output and input on Windows is implemented through the concept of a dispatching text stream. What this means is
-that when click first needs a text output (or input) stream on windows it goes through a few checks to figure out of a
-windows console is connected or not. If no Windows console is present then the text output stream is returned as such
-and the encoding for that stream is set to `utf-8` like on all platforms.
+Unicode output and input on Windows is implemented through the concept of a
+dispatching text stream. This means that when click first needs a text output
+(or input) stream on windows it goes through a few checks to figure out if a
+windows console is connected or not. If no Windows console is present then the
+text output stream is returned as such and the encoding for that stream is set
+to `utf-8` like on all platforms.
 
 However if a console is connected the stream will instead be emulated and use the cmd.exe unicode APIs to output text
 information. In this case the stream will also use `utf-16-le` as internal encoding. However there is some hackery going
