@@ -106,6 +106,7 @@ click-concepts
 ```{toctree}
 :maxdepth: 1
 
+glossary
 parameters
 parameter-types
 options
