@@ -2609,6 +2609,13 @@ class Parameter(ABC):
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
 
+            # Record the source before invoking ``process_value`` so that a
+            # custom ``ParamType.convert`` can read it via
+            # ``ctx.get_parameter_source`` during conversion. The arbitration
+            # block below restores the prior source if this parameter loses
+            # the slot. Refs: https://github.com/pallets/click/issues/3458
+            ctx.set_parameter_source(self.name, source)
+
             # Display a deprecation warning if necessary.
             if (
                 self.deprecated
@@ -2654,14 +2661,17 @@ class Parameter(ABC):
         )
 
         if is_winner:
-            ctx.set_parameter_source(self.name, source)
+            # Source already set above before ``process_value``.
             if self.expose_value:
                 ctx.params[self.name] = value
                 ctx._param_default_explicit[self.name] = self._default_explicit
-        elif existing_source is None:
-            # Nothing has claimed the slot yet. Record at least our source so downstream
-            # lookups don't return ``None``.
-            ctx.set_parameter_source(self.name, source)
+        elif existing_source is not None:
+            # Lost the slot and another parameter had already claimed it;
+            # restore that parameter's source.
+            ctx.set_parameter_source(self.name, existing_source)
+        # If neither winner nor existing_source, the tentative set above
+        # remains, matching the prior behaviour of recording our source so
+        # downstream lookups don't return ``None``.
 
         return value, args
 

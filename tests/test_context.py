@@ -774,6 +774,56 @@ def test_parameter_source(runner, option_args, invoke_args, expect):
     assert rv.return_value == expect
 
 
+def test_parameter_source_available_in_convert(runner):
+    """``ParamType.convert`` can read ``ctx.get_parameter_source`` for the
+    parameter being converted.
+
+    Regression test for #3458: 8.4 deferred the call to
+    ``set_parameter_source`` until after ``process_value``, so a custom
+    ``ParamType.convert`` saw ``None``.
+    """
+    seen: dict[str, ParameterSource | None] = {}
+
+    class RecordSource(click.ParamType):
+        name = "record_source"
+
+        def convert(self, value, param, ctx):
+            seen[param.name] = ctx.get_parameter_source(param.name)
+            return value
+
+    @click.command()
+    @click.option("--from-default", type=RecordSource(), default="d")
+    @click.option("--from-cli", type=RecordSource())
+    def cli(from_default, from_cli):
+        pass
+
+    result = runner.invoke(cli, ["--from-cli", "x"])
+    assert result.exit_code == 0
+    assert seen["from_default"] is ParameterSource.DEFAULT
+    assert seen["from_cli"] is ParameterSource.COMMANDLINE
+
+
+def test_parameter_source_available_in_convert_envvar(runner):
+    """``ParameterSource.ENVIRONMENT`` is visible to ``convert`` too."""
+    seen: dict[str, ParameterSource | None] = {}
+
+    class RecordSource(click.ParamType):
+        name = "record_source"
+
+        def convert(self, value, param, ctx):
+            seen[param.name] = ctx.get_parameter_source(param.name)
+            return value
+
+    @click.command()
+    @click.option("--name", type=RecordSource(), envvar="MY_NAME")
+    def cli(name):
+        pass
+
+    result = runner.invoke(cli, [], env={"MY_NAME": "from-env"})
+    assert result.exit_code == 0
+    assert seen["name"] is ParameterSource.ENVIRONMENT
+
+
 def test_propagate_opt_prefixes():
     parent = click.Context(click.Command("test"))
     parent._opt_prefixes = {"-", "--", "!"}

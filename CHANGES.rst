@@ -11,6 +11,10 @@ Version 8.4.1
 
 Unreleased
 
+-   Fix ``Context.get_parameter_source`` returning ``None`` when
+    called from a custom ``ParamType.convert``. The source is now
+    recorded before ``process_value`` runs. :issue:`3458`
+
 
 Version 8.4.0
 -------------
