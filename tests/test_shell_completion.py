@@ -1,3 +1,4 @@
+import io
 import textwrap
 import warnings
 from collections.abc import Mapping
@@ -11,6 +12,7 @@ from click.core import Group
 from click.core import Option
 from click.shell_completion import add_completion_class
 from click.shell_completion import CompletionItem
+from click.shell_completion import shell_complete
 from click.shell_completion import ShellComplete
 from click.types import Choice
 from click.types import File
@@ -370,6 +372,20 @@ def test_full_complete(runner, shell, env, expect):
     assert result.output == expect
 
 
+def test_source_uses_lf_line_endings(monkeypatch):
+    stdout = io.BytesIO()
+    stream = io.TextIOWrapper(stdout, encoding="utf-8", newline="\r\n")
+    monkeypatch.setattr("click.utils._default_text_stdout", lambda: stream)
+
+    cli = Group("cli", commands=[Command("a"), Command("b")])
+    assert shell_complete(cli, {}, "cli", "_CLI_COMPLETE", "zsh_source") == 0
+
+    stream.flush()
+    output = stdout.getvalue()
+    assert b"\r\n" not in output
+    assert b"\n" in output
+
+
 @pytest.mark.parametrize(
     ("env", "expect"),
     [
@@ -457,7 +473,8 @@ def test_context_settings(runner):
     assert result.output == "plain,a\nplain,b\n"
 
 
-@pytest.mark.parametrize(("value", "expect"), [(False, ["Au", "al"]), (True, ["al"])])
+# case_sensitive=False normalizes values to lowercase, matching remains case insensitive
+@pytest.mark.parametrize(("value", "expect"), [(False, ["au", "al"]), (True, ["al"])])
 def test_choice_case_sensitive(value, expect):
     cli = Command(
         "cli",
