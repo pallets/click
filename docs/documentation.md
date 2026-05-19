@@ -87,7 +87,7 @@ The group help prints sub commands, options, epilog help, and arguments, and pri
             click.echo(f"{greeting} {name}!")
 
 .. click:run::
-    invoke(init, args=['--help'])
+    invoke(cli, args=['--help'])
 ```
 
 ## Command Epilog Help
