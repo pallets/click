@@ -774,6 +774,60 @@ def test_parameter_source(runner, option_args, invoke_args, expect):
     assert rv.return_value == expect
 
 
+def test_get_parameter_source_available_in_type_convert(runner):
+    """get_parameter_source() must return a non-None value inside ParamType.convert().
+
+    Regression test for https://github.com/pallets/click/issues/3458:
+    click 8.4 deferred ctx.set_parameter_source until after process_value(),
+    so ctx.get_parameter_source() returned None when called from convert().
+    """
+
+    class CapturingType(click.ParamType):
+        name = "capturing"
+
+        def convert(self, value, param, ctx):
+            self.captured_source = ctx.get_parameter_source(param.name)
+            return value
+
+    cap = CapturingType()
+
+    @click.command()
+    @click.option("--opt", type=cap, default="default_val")
+    def cli(opt):
+        pass
+
+    # Default source: should be ParameterSource.DEFAULT, not None.
+    runner.invoke(cli, [])
+    assert cap.captured_source == ParameterSource.DEFAULT
+
+    # CLI source: should be ParameterSource.COMMANDLINE, not None.
+    runner.invoke(cli, ["--opt", "cli_val"])
+    assert cap.captured_source == ParameterSource.COMMANDLINE
+
+
+def test_get_parameter_source_available_in_callback(runner):
+    """get_parameter_source() must return a non-None value inside option callbacks.
+
+    Regression test for https://github.com/pallets/click/issues/3458.
+    """
+    captured = {}
+
+    def cb(ctx, param, value):
+        captured["source"] = ctx.get_parameter_source(param.name)
+        return value
+
+    @click.command()
+    @click.option("--opt", default="default_val", callback=cb)
+    def cli(opt):
+        pass
+
+    runner.invoke(cli, [])
+    assert captured["source"] == ParameterSource.DEFAULT
+
+    runner.invoke(cli, ["--opt", "cli_val"])
+    assert captured["source"] == ParameterSource.COMMANDLINE
+
+
 def test_propagate_opt_prefixes():
     parent = click.Context(click.Command("test"))
     parent._opt_prefixes = {"-", "--", "!"}

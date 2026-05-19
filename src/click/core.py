@@ -2609,6 +2609,12 @@ class Parameter(ABC):
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
 
+            # Register the source early so that ParamType.convert() and option
+            # callbacks can call ctx.get_parameter_source() and receive the
+            # correct value.  The arbitration block below may restore the
+            # previous winner's source if this parameter loses the slot.
+            ctx.set_parameter_source(self.name, source)
+
             # Display a deprecation warning if necessary.
             if (
                 self.deprecated
@@ -2658,10 +2664,13 @@ class Parameter(ABC):
             if self.expose_value:
                 ctx.params[self.name] = value
                 ctx._param_default_explicit[self.name] = self._default_explicit
-        elif existing_source is None:
-            # Nothing has claimed the slot yet. Record at least our source so downstream
-            # lookups don't return ``None``.
-            ctx.set_parameter_source(self.name, source)
+        elif existing_source is not None:
+            # Another parameter already won the slot.  We set our source early
+            # (before process_value) so restore the winner's source now.
+            ctx.set_parameter_source(self.name, existing_source)
+        # else: existing_source is None — our early set stands; we are the first
+        # to claim the slot even though expose_value is False or we lost on
+        # ctx.params but the source slot was empty.
 
         return value, args
 
