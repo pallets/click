@@ -439,16 +439,30 @@ def get_pager_file(color: bool | None = None) -> t.Generator[t.TextIO, None, Non
         # Split streams by capabilities rather than the abstract TextIO /
         # BinaryIO annotations: buffered text streams can be unwrapped to bytes,
         # while text-only streams are yielded as-is.
+        wrapper: MaybeStripAnsi | None = None
         if _has_binary_buffer(stream):
             # Text stream backed by a binary buffer.
-            stream = MaybeStripAnsi(stream.buffer, color=color, encoding=encoding)
+            wrapper = MaybeStripAnsi(stream.buffer, color=color, encoding=encoding)
+            stream = wrapper
         elif isinstance(stream, t.BinaryIO):
             # Binary stream
-            stream = MaybeStripAnsi(stream, color=color, encoding=encoding)
+            wrapper = MaybeStripAnsi(stream, color=color, encoding=encoding)
+            stream = wrapper
         try:
             yield stream
         finally:
             stream.flush()
+            if wrapper is not None:
+                # TextIOWrapper.close (invoked on garbage collection) also
+                # closes the underlying buffer. When the buffer is
+                # sys.stdout.buffer (the _nullpager path), that breaks any
+                # later writes to sys.stdout -- notably CliRunner.invoke's
+                # final sys.stdout.flush(). Detach the wrapper here so the
+                # buffer's lifetime stays with whoever produced it.
+                try:
+                    wrapper.detach()
+                except ValueError:
+                    pass
 
 
 @contextlib.contextmanager

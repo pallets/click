@@ -818,6 +818,54 @@ def test_get_pager_file_nullpager_keeps_stringio_stream(monkeypatch):
     assert created[0].getvalue() == styled_text
 
 
+def test_get_pager_file_nullpager_keeps_buffer_open(monkeypatch):
+    """The wrapper around ``stream.buffer`` must not close the buffer on exit.
+
+    Regression test for #3449: ``CliRunner.invoke`` calls
+    ``sys.stdout.flush()`` after the command returns, which raised
+    ``ValueError: I/O operation on closed file`` because the
+    ``MaybeStripAnsi`` wrapper closed ``sys.stdout.buffer`` on garbage
+    collection.
+    """
+    buffer = io.BytesIO()
+
+    class TextStreamWithBuffer(io.TextIOWrapper):
+        pass
+
+    text_stream = TextStreamWithBuffer(buffer, encoding="utf-8", write_through=True)
+
+    monkeypatch.setattr(
+        click._termui_impl, "_default_text_stdout", lambda: text_stream
+    )
+    monkeypatch.setattr(
+        click._termui_impl, "isatty", lambda stream: stream is not sys.stdin
+    )
+
+    with click.get_pager_file(color=False) as pager:
+        pager.write("hello\n")
+
+    assert not buffer.closed
+    text_stream.write("after\n")
+    text_stream.flush()
+    assert buffer.getvalue() == b"hello\nafter\n"
+
+
+def test_echo_via_pager_with_clirunner(runner):
+    """``echo_via_pager`` must not break ``CliRunner.invoke``'s post-call flush.
+
+    Regression test for #3449.
+    """
+
+    @click.command()
+    def cli():
+        click.echo_via_pager("paged output\n")
+
+    result = runner.invoke(cli)
+    assert result.exception is None
+    assert result.exit_code == 0
+    assert "paged output" in result.output
+
+
 def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
     """Exceptions should still flush the yielded stream in ``finally``."""
 

@@ -11,6 +11,12 @@ Version 8.4.1
 
 Unreleased
 
+-   Fix ``ValueError: I/O operation on closed file`` raised by
+    ``CliRunner.invoke`` when the command uses ``echo_via_pager``.
+    The ``MaybeStripAnsi`` wrapper introduced for ``get_pager_file``
+    closed the underlying ``sys.stdout.buffer`` on garbage
+    collection. :issue:`3449`
+
 
 Version 8.4.0
 -------------
