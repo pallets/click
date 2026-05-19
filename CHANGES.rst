@@ -11,6 +11,7 @@ Unreleased
 -   Shell completion of `Choice` `Enum` values produces a valid completion
     result. :issue:`3015`
 -   Fix empty byte-string handling in echo. :issue:`3487`
+-   Fix closed file error with `echo_via_pager`. :issue:`3449`
 
 
 Version 8.4.0

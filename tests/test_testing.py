@@ -256,6 +256,17 @@ def test_with_color_but_pause_not_blocking():
     assert result.output == ""
 
 
+def test_with_echo_via_pager():
+    @click.command()
+    def cli():
+        click.echo_via_pager("Hello, Click!")
+
+    runner = CliRunner()
+    result = runner.invoke(cli)
+    assert not result.exception
+    assert result.output == "Hello, Click!\n"
+
+
 def test_exit_code_and_output_from_sys_exit():
     # See issue #362
     @click.command()
