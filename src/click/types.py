@@ -408,8 +408,7 @@ class Choice(ParamType[ParamTypeValue], t.Generic[ParamTypeValue]):
         """
         from click.shell_completion import CompletionItem
 
-        str_choices = map(str, self.choices)
-
+        str_choices = [self.normalize_choice(choice, ctx) for choice in self.choices]
         if self.case_sensitive:
             matched = (c for c in str_choices if c.startswith(incomplete))
         else:

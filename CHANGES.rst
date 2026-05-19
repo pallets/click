@@ -6,6 +6,8 @@ Version 8.4.1
 Unreleased
 
 -   Zsh completion scripts parse correctly on Windows. :issue:`3277`
+-   Shell completion of `Choice` `Enum` values produces a valid completion
+    result. :issue:`3015`
 
 
 Version 8.4.0
