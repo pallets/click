@@ -5,6 +5,9 @@ Version 8.5.0
 
 Unreleased
 
+-   Avoid processing uninvoked sibling options that share a parameter name
+    after an invoked option has already produced a callback result. :issue:`2786`
+
 
 Version 8.4.1
 -------------

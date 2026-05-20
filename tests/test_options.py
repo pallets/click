@@ -1613,6 +1613,45 @@ def test_default_dual_option_callback(runner, default, args, expected):
 
 
 @pytest.mark.parametrize(
+    ("args", "expected", "fetch_calls"),
+    [
+        (["--fetch"], "custom=foo\n", 1),
+        (["--custom", "bar"], "custom=bar\n", 0),
+        (["--custom", "bar", "--fetch"], "custom=foo\n", 1),
+        (["--fetch", "--custom", "bar"], "custom=bar\n", 0),
+        ([], "custom=None\n", 0),
+    ],
+)
+def test_shared_dest_flag_callback_value_not_overwritten(
+    runner, args, expected, fetch_calls
+):
+    sentinel = "$_fetch"
+    calls = []
+
+    def fetch():
+        calls.append("fetch")
+        return "foo"
+
+    def callback(ctx, param, value):
+        if value == sentinel:
+            return fetch()
+
+        return value
+
+    @click.command()
+    @click.option("--custom", "custom")
+    @click.option("--fetch", "custom", flag_value=sentinel, callback=callback)
+    def cli(custom):
+        click.echo(f"custom={custom}")
+
+    result = runner.invoke(cli, args)
+
+    assert result.output == expected
+    assert len(calls) == fetch_calls
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
     ("flag_value", "envvar_value", "expected"),
     [
         # The envvar match exactly the flag value and is case-sensitive.

@@ -148,6 +148,19 @@ def iter_params_for_processing(
     This behavior and its effect on callback evaluation is detailed at:
     https://click.palletsprojects.com/en/stable/advanced/#callback-evaluation-order
     """
+    name_counts: dict[str, int] = {}
+
+    for param in declaration_order:
+        if not param.name:
+            continue
+
+        name_counts[param.name] = name_counts.get(param.name, 0) + 1
+
+    invoked_shared_names = {
+        param.name
+        for param in invocation_order
+        if param.name and name_counts.get(param.name, 0) > 1
+    }
 
     def sort_key(item: Parameter) -> tuple[bool, float]:
         try:
@@ -157,7 +170,13 @@ def iter_params_for_processing(
 
         return not item.is_eager, idx
 
-    return sorted(declaration_order, key=sort_key)
+    return [
+        param
+        for param in sorted(declaration_order, key=sort_key)
+        if param in invocation_order
+        or not param.name
+        or param.name not in invoked_shared_names
+    ]
 
 
 class ParameterSource(enum.IntEnum):
