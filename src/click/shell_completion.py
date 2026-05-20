@@ -282,8 +282,9 @@ class ShellComplete:
         :param incomplete: Value being completed. May be empty.
         """
         ctx = _resolve_context(self.cli, self.ctx_args, self.prog_name, args)
-        obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
-        return obj.shell_complete(ctx, incomplete)
+        obj, incomplete, completion_prefix = _resolve_incomplete(ctx, args, incomplete)
+        completions = obj.shell_complete(ctx, incomplete)
+        return _add_completion_prefix(completions, completion_prefix)
 
     def format_completion(self, item: CompletionItem) -> str:
         """Format a completion item into the form recognized by the
@@ -547,6 +548,13 @@ def _start_of_option(ctx: Context, value: str) -> bool:
     return c in ctx._opt_prefixes
 
 
+def _long_option_assignment_prefix(value: str) -> str | None:
+    if value.startswith("--"):
+        return f"{value}="
+
+    return None
+
+
 def _is_incomplete_option(ctx: Context, args: list[str], param: Parameter) -> bool:
     """Determine if the given parameter is an option that needs a value.
 
@@ -570,6 +578,19 @@ def _is_incomplete_option(ctx: Context, args: list[str], param: Parameter) -> bo
             break
 
     return last_option is not None and last_option in param.opts
+
+
+def _add_completion_prefix(
+    completions: list[CompletionItem], prefix: str | None
+) -> list[CompletionItem]:
+    if prefix is None:
+        return completions
+
+    for item in completions:
+        if item.type == "plain":
+            item.value = f"{prefix}{item.value}"
+
+    return completions
 
 
 def _resolve_context(
@@ -635,9 +656,10 @@ def _resolve_context(
 
 def _resolve_incomplete(
     ctx: Context, args: list[str], incomplete: str
-) -> tuple[Command | Parameter, str]:
+) -> tuple[Command | Parameter, str, str | None]:
     """Find the Click object that will handle the completion of the
-    incomplete value. Return the object and the incomplete value.
+    incomplete value. Return the object, the incomplete value, and any
+    completion value prefix.
 
     :param ctx: Invocation context for the command represented by
         the parsed complete args.
@@ -648,18 +670,24 @@ def _resolve_incomplete(
     # value differently. Might keep the value joined, return the "="
     # as a separate item, or return the split name and value. Always
     # split and discard the "=" to make completion easier.
+    completion_prefix = None
+
     if incomplete == "=":
+        if args and _start_of_option(ctx, args[-1]):
+            completion_prefix = _long_option_assignment_prefix(args[-1])
+
         incomplete = ""
     elif "=" in incomplete and _start_of_option(ctx, incomplete):
         name, _, incomplete = incomplete.partition("=")
         args.append(name)
+        completion_prefix = _long_option_assignment_prefix(name)
 
     # The "--" marker tells Click to stop treating values as options
     # even if they start with the option character. If it hasn't been
     # given and the incomplete arg looks like an option, the current
     # command will provide option name completions.
     if "--" not in args and _start_of_option(ctx, incomplete):
-        return ctx.command, incomplete
+        return ctx.command, incomplete, None
 
     params = ctx.command.get_params(ctx)
 
@@ -667,14 +695,14 @@ def _resolve_incomplete(
     # value, the option will provide value completions.
     for param in params:
         if _is_incomplete_option(ctx, args, param):
-            return param, incomplete
+            return param, incomplete, completion_prefix
 
     # It's not an option name or value. The first argument without a
     # parsed value will provide value completions.
     for param in params:
         if _is_incomplete_argument(ctx, param):
-            return param, incomplete
+            return param, incomplete, None
 
     # There were no unparsed arguments, the command may be a group that
     # will provide command name completions.
-    return ctx.command, incomplete
+    return ctx.command, incomplete, None

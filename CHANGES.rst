@@ -11,6 +11,8 @@ Version 8.4.1
 
 Unreleased
 
+-   Shell completion preserves long option names when completing values after
+    ``=``. :issue:`2847`
 -   Zsh completion scripts parse correctly on Windows. :issue:`3277`
 -   Shell completion of `Choice` `Enum` values produces a valid completion
     result. :issue:`3015`

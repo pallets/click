@@ -148,6 +148,66 @@ def test_type_choice():
     assert _get_words(cli, ["-c"], "a2") == ["a2"]
 
 
+@pytest.mark.parametrize(
+    ("args", "incomplete", "expected"),
+    [
+        ([], "--color=", ["--color=auto", "--color=always", "--color=never"]),
+        ([], "--color=a", ["--color=auto", "--color=always"]),
+        ([], "--color=al", ["--color=always"]),
+        ([], "-c=a", ["auto", "always"]),
+        (["--color"], "a", ["auto", "always"]),
+    ],
+)
+def test_long_option_equals_value_completion(args, incomplete, expected):
+    cli = Command(
+        "cli",
+        params=[
+            Option(
+                ["-c", "--color"],
+                type=Choice(["auto", "always", "never"]),
+            )
+        ],
+    )
+    assert _get_words(cli, args, incomplete) == expected
+
+
+def test_long_option_equals_path_completion_keeps_file_marker():
+    cli = Command("cli", params=[Option(["--path"], type=Path())])
+    out = _get_completions(cli, [], "--path=ab")
+    assert len(out) == 1
+    assert out[0].value == "ab"
+    assert out[0].type == "file"
+
+
+@pytest.mark.parametrize(
+    ("shell", "expected"),
+    [
+        ("bash", "plain,--color=auto\nplain,--color=always\n"),
+        ("zsh", "plain\n--color=auto\n_\nplain\n--color=always\n_\n"),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_long_option_equals_full_completion(runner, shell, expected):
+    cli = Command(
+        "cli",
+        params=[
+            Option(
+                ["--color"],
+                type=Choice(["auto", "always", "never"]),
+            )
+        ],
+    )
+    result = runner.invoke(
+        cli,
+        env={
+            "COMP_WORDS": "cli --color=a",
+            "COMP_CWORD": "1",
+            "_CLI_COMPLETE": f"{shell}_complete",
+        },
+    )
+    assert result.output == expected
+
+
 def test_choice_special_characters():
     cli = Command("cli", params=[Option(["-c"], type=Choice(["!1", "!2", "+3"]))])
     assert _get_words(cli, ["-c"], "") == ["!1", "!2", "+3"]
