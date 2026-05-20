@@ -8,6 +8,7 @@ from contextlib import nullcontext
 from decimal import Decimal
 from fractions import Fraction
 from functools import partial
+from io import BytesIO
 from io import StringIO
 from unittest.mock import patch
 
@@ -90,6 +91,13 @@ def test_echo(runner):
     with runner.isolation() as outstreams:
         click.echo(bytearray(b"\x1b[31mx\x1b[39m"), nl=False)
         assert outstreams[0].getvalue() == b"\x1b[31mx\x1b[39m"
+
+
+@pytest.mark.parametrize("message", [b"", bytearray()])
+def test_echo_empty_binary_message_with_newline(message):
+    f = BytesIO()
+    click.echo(message, file=f, nl=True)
+    assert f.getvalue() == b"\n"
 
 
 def test_echo_custom_file():

@@ -294,7 +294,9 @@ def echo(
         out = message
 
     if nl:
-        out = out or ""
+        if out is None:
+            out = ""
+
         if isinstance(out, str):
             out += "\n"
         else:
