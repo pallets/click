@@ -2896,6 +2896,68 @@ def test_bool_flag_group_competition_with_default_map(
 
 
 @pytest.mark.parametrize(
+    ("opts", "args", "invoke_kwargs", "expected_value", "expected_source"),
+    [
+        # https://github.com/pallets/click/issues/3458
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": True}),
+            ],
+            [],
+            {},
+            True,
+            "DEFAULT",
+            id="explicit-default-wins",
+        ),
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": True}),
+            ],
+            ["--without-xyz"],
+            {},
+            False,
+            "COMMANDLINE",
+            id="cmdline-wins",
+        ),
+        pytest.param(
+            [
+                ("--without-xyz", {"flag_value": False}),
+                ("--with-xyz", {"flag_value": True, "default": True}),
+            ],
+            ["--without-xyz"],
+            {"default_map": {"enable_xyz": True}},
+            False,
+            "COMMANDLINE",
+            id="loser-default-map-restores-winner-source",
+        ),
+    ],
+)
+def test_bool_flag_group_parameter_source(
+    runner, opts, args, invoke_kwargs, expected_value, expected_source
+):
+    """``get_parameter_source()`` stays correct for feature-switch groups.
+
+    Regression test for https://github.com/pallets/click/issues/3458.
+    """
+
+    @click.command()
+    @click.pass_context
+    def cli(ctx, enable_xyz):
+        source = ctx.get_parameter_source("enable_xyz")
+        click.echo(f"value={enable_xyz!r} source={source.name}")
+
+    for opt_name, opt_kwargs in opts:
+        cli = click.option(opt_name, "enable_xyz", **opt_kwargs)(cli)
+
+    result = runner.invoke(cli, args, **invoke_kwargs)
+    assert result.exit_code == 0, result.output
+    assert f"value={expected_value!r}" in result.output
+    assert f"source={expected_source}" in result.output
+
+
+@pytest.mark.parametrize(
     ("opts", "args", "expected"),
     [
         # Non-boolean feature switch group: classic --upper/--lower

@@ -1,8 +1,11 @@
+import os
+
 import pytest
 
 import click
 from click import UNPROCESSED
 from click._utils import UNSET
+from click.core import ParameterSource
 
 
 @pytest.mark.parametrize(
@@ -263,6 +266,153 @@ def test_default_map_source(runner, args, default_map, expected_value, expected_
     assert not result.exception
     assert f"name={expected_value!r}" in result.output
     assert f"source={expected_source}" in result.output
+
+
+def test_parameter_source_during_paramtype_convert(runner):
+    """``get_parameter_source()`` is available during ``ParamType.convert``.
+
+    Uses the reproducer from https://github.com/pallets/click/issues/3458.
+    """
+
+    class Source(click.ParamType):
+        name = "source"
+
+        def convert(self, value, param, ctx):
+            return {
+                "value": value,
+                "source": ctx.get_parameter_source(param.name),
+            }
+
+    @click.command()
+    @click.option("--default", type=Source(), default="/tmp/file")
+    @click.option("--nodefault", type=Source())
+    def cli(default, nodefault):
+        click.echo(f"default: {default}")
+        click.echo(f"nodefault: {nodefault}")
+
+    result = runner.invoke(cli, [])
+    assert not result.exception
+    assert "default: {'value': '/tmp/file', 'source': " in result.output
+    assert "'source': None}" not in result.output.split("default:")[1].split("\n")[0]
+    assert (
+        result.output == "default: {'value': '/tmp/file', 'source': "
+        f"{ParameterSource.DEFAULT!r}}}\nnodefault: None\n"
+    )
+
+    result = runner.invoke(cli, ["--default", "cli", "--nodefault", "also"])
+    assert not result.exception
+    assert (
+        "default: {'value': 'cli', 'source': "
+        f"{ParameterSource.COMMANDLINE!r}}}" in result.output
+    )
+    assert (
+        "nodefault: {'value': 'also', 'source': "
+        f"{ParameterSource.COMMANDLINE!r}}}" in result.output
+    )
+
+
+def test_parameter_source_during_eager_callback(runner):
+    """``get_parameter_source()`` is available during eager callbacks.
+
+    Regression test for https://github.com/pallets/click/issues/3458.
+    """
+
+    def eager_cb(ctx, param, value):
+        source = ctx.get_parameter_source(param.name)
+        click.echo(f"callback source={source.name if source else None}")
+
+    @click.command()
+    @click.option(
+        "--flag/--no-flag",
+        default=False,
+        is_eager=True,
+        callback=eager_cb,
+        expose_value=False,
+    )
+    def cli():
+        source = click.get_current_context().get_parameter_source("flag")
+        click.echo(f"final source={source.name}")
+
+    result = runner.invoke(cli, [])
+    assert not result.exception
+    assert "callback source=DEFAULT" in result.output
+    assert "final source=DEFAULT" in result.output
+
+    result = runner.invoke(cli, ["--flag"])
+    assert not result.exception
+    assert "callback source=COMMANDLINE" in result.output
+    assert "final source=COMMANDLINE" in result.output
+
+
+def test_flask_debug_env_not_stomped_by_default_flag(runner, monkeypatch):
+    """Eager callback must not overwrite env when the flag used its default.
+
+    Covers the Flask ``_set_debug`` pattern (pallets/flask#6025). Regression test
+    for https://github.com/pallets/click/issues/3458.
+    """
+
+    monkeypatch.delenv("APP_DEBUG", raising=False)
+
+    def set_debug(ctx, param, value):
+        source = ctx.get_parameter_source(param.name)
+        if source is not None and source in (
+            ParameterSource.DEFAULT,
+            ParameterSource.DEFAULT_MAP,
+        ):
+            return None
+        os.environ["APP_DEBUG"] = "1" if value else "0"
+        return value
+
+    @click.command()
+    @click.option(
+        "--debug/--no-debug",
+        default=False,
+        is_eager=True,
+        expose_value=False,
+        callback=set_debug,
+    )
+    def cli():
+        click.echo(f"APP_DEBUG={os.environ.get('APP_DEBUG', '')}")
+
+    monkeypatch.setenv("APP_DEBUG", "1")
+    result = runner.invoke(cli, [])
+    assert result.exit_code == 0
+    assert result.output.strip() == "APP_DEBUG=1"
+
+    result = runner.invoke(cli, ["--debug"])
+    assert result.exit_code == 0
+    assert result.output.strip() == "APP_DEBUG=1"
+
+    result = runner.invoke(cli, ["--no-debug"])
+    assert result.exit_code == 0
+    assert result.output.strip() == "APP_DEBUG=0"
+
+
+def test_parameter_source_on_parse_result_bypass(runner):
+    """A losing option keeps its provisional source when ``ctx.params[name]``
+    is populated by code that bypassed ``handle_parse_result``.
+
+    This replicate the pattern documented in the "Parameter Modifications" section
+    of ``docs/advanced.md``. This test highlight the current behavior of
+    ``get_parameter_source()`` but is not intended as a contract enforcement.
+    """
+
+    def hijack(ctx, param, value):
+        ctx.params["target"] = "hijacked"
+        return value
+
+    @click.command()
+    @click.option("--hijacker", is_eager=True, callback=hijack, expose_value=False)
+    @click.option("--target", default="default_value")
+    @click.pass_context
+    def cli(ctx, target):
+        source = ctx.get_parameter_source("target")
+        click.echo(f"value={target} source={source.name if source else 'None'}")
+
+    result = runner.invoke(cli, ["--hijacker", "anything"])
+    assert result.exit_code == 0, result.output
+    assert "value=hijacked" in result.output
+    assert "source=DEFAULT" in result.output
 
 
 def test_lookup_default_override_respected(runner):
