@@ -130,11 +130,11 @@ it's good to know that the system works this way.
 ```{eval-rst}
 .. click:example::
 
-    import urllib
+    import urllib.request
 
     def open_url(ctx, param, value):
         if value is not None:
-            ctx.params['fp'] = urllib.urlopen(value)
+            ctx.params['fp'] = urllib.request.urlopen(value)
             return value
 
     @click.command()
@@ -149,7 +149,7 @@ the information in a wrapper, however:
 
 .. click:example::
 
-    import urllib
+    import urllib.request
 
     class URL(object):
 
@@ -159,7 +159,7 @@ the information in a wrapper, however:
 
     def open_url(ctx, param, value):
         if value is not None:
-            return URL(value, urllib.urlopen(value))
+            return URL(value, urllib.request.urlopen(value))
 
     @click.command()
     @click.option('--url', callback=open_url)
@@ -321,7 +321,7 @@ are important to know about how this ignoring of unhandled flag happens:
 - Unknown short options might be partially handled and reassembled if
   necessary. For instance in the above example there is an option
   called `-v` which enables verbose mode. If the command would be
-  ignored with `-va` then the `-v` part would be handled by Click
+  invoked with `-va` then the `-v` part would be handled by Click
   (as it is known) and `-a` would end up in the leftover parameters
   for further processing.
 - Depending on what you plan on doing you might have some success by
