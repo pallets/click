@@ -747,3 +747,16 @@ def test_capture_pytest_matrix(
     # Click output is not leaking into Pytest.
     assert "inside-stdout" not in captured.out
     assert "inside-stderr" not in captured.err
+
+
+def test_echo_via_pager_in_cli_runner() -> None:
+    """CliRunner should not get 'I/O operation on closed file' after echo_via_pager."""
+
+    @click.command()
+    def cli() -> None:
+        click.echo_via_pager("Hello, pager!")
+
+    runner = CliRunner()
+    result = runner.invoke(cli)
+    assert result.exit_code == 0
+    assert "Hello, pager!" in result.output

@@ -449,6 +449,12 @@ def get_pager_file(color: bool | None = None) -> t.Generator[t.TextIO, None, Non
             yield stream
         finally:
             stream.flush()
+            # MaybeStripAnsi wraps an existing buffer (e.g. sys.stdout.buffer).
+            # io.TextIOWrapper takes ownership of the buffer and closes it on
+            # GC, which would silently close sys.stdout. Detach first so the
+            # buffer is not closed when this wrapper is collected.
+            if isinstance(stream, MaybeStripAnsi):
+                stream.detach()
 
 
 @contextlib.contextmanager
