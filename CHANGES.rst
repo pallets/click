@@ -10,6 +10,8 @@ Unreleased
 -   Zsh completion scripts parse correctly on Windows. :issue:`3277`
 -   Shell completion of `Choice` `Enum` values produces a valid completion
     result. :issue:`3015`
+-   Fix empty byte-string handling in echo. :issue:`3487`
+
 
 Version 8.4.0
 -------------

@@ -8,6 +8,7 @@ from contextlib import nullcontext
 from decimal import Decimal
 from fractions import Fraction
 from functools import partial
+from io import BytesIO
 from io import StringIO
 from unittest.mock import patch
 
@@ -96,6 +97,10 @@ def test_echo_custom_file():
     f = StringIO()
     click.echo("hello", file=f)
     assert f.getvalue() == "hello\n"
+
+    b = BytesIO()
+    click.echo(b"", b)
+    assert b.getvalue() == b"\n"
 
 
 def test_echo_no_streams(monkeypatch, runner):

@@ -232,7 +232,7 @@ class KeepOpenFile:
 
 
 def echo(
-    message: t.Any | None = None,
+    message: object = None,
     file: t.IO[t.Any] | None = None,
     nl: bool = True,
     err: bool = False,
@@ -287,14 +287,15 @@ def echo(
         if file is None:
             return
 
-    # Convert non bytes/text into the native string type.
-    if message is not None and not isinstance(message, (str, bytes, bytearray)):
-        out: str | bytes | bytearray | None = str(message)
-    else:
-        out = message
+    match message:
+        case str() | bytes() | bytearray():
+            out = message
+        case None:
+            out = ""
+        case _:
+            out = str(message)
 
     if nl:
-        out = out or ""
         if isinstance(out, str):
             out += "\n"
         else:
@@ -310,7 +311,6 @@ def echo(
     # would expect. Eg: you can write to StringIO for other cases.
     if isinstance(out, (bytes, bytearray)):
         binary_file = _find_binary_writer(file)
-
         if binary_file is not None:
             file.flush()
             binary_file.write(out)
