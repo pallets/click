@@ -294,11 +294,11 @@ def echo(
         out = message
 
     if nl:
-        out = out or ""
-        if isinstance(out, str):
-            out += "\n"
+        if isinstance(out, (bytes, bytearray)):
+            out = out + b"\n"
         else:
-            out += b"\n"
+            out = out or ""
+            out += "\n"
 
     if not out:
         file.flush()
