@@ -2758,7 +2758,7 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
 
-    .. versionchanged:: 8.4
+    .. versionchanged:: 8.4.0
         Non-basic ``flag_value`` types (not ``str``, ``int``, ``float``, or
         ``bool``) are passed through unchanged instead of being stringified.
         Previously, ``type=click.UNPROCESSED`` was required to preserve them.

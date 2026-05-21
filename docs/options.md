@@ -563,7 +563,7 @@ own help text.
 
 When several options in a group resolve their values simultaneously, only one
 wins the parameter slot. The full arbitration policy (source precedence,
-explicit-beats-auto tie-break, first-declared fallback) is enumerated under
+explicit-beats-auto tie-break, last-declared fallback) is enumerated under
 [Option value resolution](#option-value-resolution).
 
 ## Option value resolution
@@ -620,6 +620,12 @@ sources, in order of decreasing precedence:
 The first source that produces a value wins. Environment variables and
 `default_map` entries set to `Sentinel.UNSET` are skipped, so they fall through
 to the next source rather than supplying `UNSET` to the function.
+
+If after the four sources above no explicit value was found (or only a
+`default_map`/`default` value was) and the option declares `prompt=`, Click
+prompts the user for one. The resulting value is recorded as
+{attr}`ParameterSource.PROMPT`, which ranks above every source listed above
+for arbitration purposes (see [Slot arbitration](#slot-arbitration)).
 
 ### Slot arbitration
 
