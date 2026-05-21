@@ -144,8 +144,18 @@ it's good to know that the system works this way.
             click.echo(f"{url}: {fp.code}")
 
 In this case the callback returns the URL unchanged but also passes a
-second `fp` value to the callback. What's more recommended is to pass
-the information in a wrapper, however:
+second `fp` value to the callback.
+
+.. caution::
+
+   Writing to :attr:`~click.Context.params` directly bypasses Click's
+   per-parameter pipeline: :meth:`~click.Context.get_parameter_source` returns
+   ``None`` for it, the value is never run through any :class:`~click.ParamType`
+   conversion. And if the key collides with a declared parameter, then the
+   shared-name arbitration loses information about where the value came from.
+   Prefer the wrapper pattern below when any of those semantics matter.
+
+What's more recommended is to pass the information in a wrapper, however:
 
 .. click:example::
 

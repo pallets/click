@@ -388,6 +388,33 @@ def test_flask_debug_env_not_stomped_by_default_flag(runner, monkeypatch):
     assert result.output.strip() == "APP_DEBUG=0"
 
 
+def test_parameter_source_on_parse_result_bypass(runner):
+    """A losing option keeps its provisional source when ``ctx.params[name]``
+    is populated by code that bypassed ``handle_parse_result``.
+
+    This replicate the pattern documented in the "Parameter Modifications" section
+    of ``docs/advanced.md``. This test highlight the current behavior of
+    ``get_parameter_source()`` but is not intended as a contract enforcement.
+    """
+
+    def hijack(ctx, param, value):
+        ctx.params["target"] = "hijacked"
+        return value
+
+    @click.command()
+    @click.option("--hijacker", is_eager=True, callback=hijack, expose_value=False)
+    @click.option("--target", default="default_value")
+    @click.pass_context
+    def cli(ctx, target):
+        source = ctx.get_parameter_source("target")
+        click.echo(f"value={target} source={source.name if source else 'None'}")
+
+    result = runner.invoke(cli, ["--hijacker", "anything"])
+    assert result.exit_code == 0, result.output
+    assert "value=hijacked" in result.output
+    assert "source=DEFAULT" in result.output
+
+
 def test_lookup_default_override_respected(runner):
     """A subclass override of ``lookup_default()`` should be called by Click
     internals, not bypassed by a private method.

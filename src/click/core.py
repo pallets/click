@@ -2665,7 +2665,10 @@ class Parameter(ABC):
         elif existing_source is not None:
             # Lost arbitration; restore the winning option's source.
             ctx.set_parameter_source(self.name, existing_source)
-        # else: keep the provisional source recorded before process_value.
+        # else: ctx.params[self.name] was populated by code that bypassed
+        # handle_parse_result (from another option's callback for example). Keep
+        # the provisional source recorded before process_value so downstream
+        # lookups don't return ``None``.
 
         return value, args
 
