@@ -3,7 +3,7 @@
 Version 8.4.1
 -------------
 
-Unreleased
+Released 2026-05-21
 
 -   ``get_parameter_source()`` is available during eager callbacks and type
     conversion again. :issue:`3458` :issue:`3484`
