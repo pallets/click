@@ -284,6 +284,10 @@ classes and functions.
 ```
 
 ```{eval-rst}
+.. autoexception:: NoSuchCommand
+```
+
+```{eval-rst}
 .. autoexception:: NoSuchOption
 ```
 

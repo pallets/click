@@ -249,7 +249,10 @@ class NoSuchOption(UsageError):
 
 
 class NoSuchCommand(UsageError):
-    """Raised if Click attempted to handle a command that does not exist."""
+    """Raised if Click attempted to handle a command that does not exist.
+
+    .. versionadded:: 8.4.0
+    """
 
     def __init__(
         self,

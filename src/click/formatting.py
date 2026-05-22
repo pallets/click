@@ -53,7 +53,7 @@ def wrap_text(
     :param preserve_paragraphs: if this flag is set then the wrapping will
                                 intelligently handle paragraphs.
 
-    .. versionchanged:: 8.4
+    .. versionchanged:: 8.4.0
         Width is measured in visible characters. ANSI escape sequences in
         ``text``, ``initial_indent``, or ``subsequent_indent`` no longer
         count toward the width budget, so styled input wraps based on what
