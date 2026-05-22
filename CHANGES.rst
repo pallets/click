@@ -24,8 +24,8 @@ Released 2026-05-21
 -   ``get_parameter_source()`` is available during eager callbacks and type
     conversion again. :issue:`3458` :pr:`3484`
 -   Zsh completion scripts parse correctly on Windows. :issue:`3277` :pr:`3466`
--   Shell completion of `Choice` `Enum` values produces a valid completion
-    result. :issue:`3015`
+-   Shell completion of ``Enum`` values used as ``Choice`` options produces a
+    valid completion result. :issue:`3015` :pr:`3471`
 -   Fix empty byte-string handling in echo. :issue:`3487` :pr:`3493`
 -   Fix closed file error with ``echo_via_pager``. :issue:`3449` :pr:`3482`
 
