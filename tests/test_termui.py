@@ -798,24 +798,18 @@ def test_get_pager_file_nullpager_wraps_textio_stream(
 def test_get_pager_file_nullpager_keeps_stringio_stream(monkeypatch):
     """The no-stdout fallback should keep a text-only stream and set ``.color``."""
 
-    created = []
-
-    def make_stringio():
-        stream = io.StringIO()
-        created.append(stream)
-        return stream
-
+    stream = io.StringIO()
     monkeypatch.setattr(sys, "stdout", None)
-    monkeypatch.setattr(click._termui_impl, "StringIO", make_stringio)
+    monkeypatch.setattr(click._termui_impl, "StringIO", lambda: stream)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
 
     styled_text = click.style("hello", fg="red")
 
     with click.get_pager_file(color=False) as pager:
-        assert pager is created[0]
         pager.write(styled_text)
 
-    assert created[0].getvalue() == styled_text
+    assert not stream.closed
+    assert stream.getvalue() == styled_text
 
 
 def test_get_pager_file_flushes_stream_on_exception(monkeypatch):

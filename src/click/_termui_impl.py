@@ -606,15 +606,35 @@ def _tempfilepager(
         os.unlink(f.name)
 
 
+class _SkipClose:
+    def __init__(self, stream: t.IO[t.Any]) -> None:
+        self.stream = stream
+
+    def __getattr__(self, name: str) -> t.Any:
+        return getattr(self.stream, name)
+
+    @property
+    def buffer(self) -> t.BinaryIO:
+        return _SkipClose(self.stream.buffer)  # type: ignore[attr-defined, return-value]
+
+    def close(self) -> None:
+        pass
+
+
 @contextlib.contextmanager
 def _nullpager(
     stream: t.TextIO, color: bool | None = None
 ) -> t.Iterator[tuple[t.TextIO, str, bool]]:
-    """Simply print unformatted text.  This is the ultimate fallback."""
+    """Simply print unformatted text. This is the ultimate fallback. Don't close the
+    output stream in this case, since it's coming from elsewhere rather than our
+    internal helpers.
+    """
     encoding = get_best_encoding(stream)
+
     if color is None:
         color = False
-    yield stream, encoding, color
+
+    yield _SkipClose(stream), encoding, color  # type: ignore[misc]
 
 
 class Editor:
