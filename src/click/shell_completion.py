@@ -423,8 +423,13 @@ class FishComplete(ShellComplete):
             Escape newlines in value and help to fix completion errors with
             multi-line help strings.
         """
+        # According to https://fishshell.com/docs/current/cmds/complete.html
+        # Command substitutions found in ARGUMENTS should return a newline-
+        # separated list of arguments, and each argument may optionally have a tab
+        # character followed by the argument description.
         if item.help:
-            return f"{item.type},{item.value}\t{item.help}"
+            help_ = item.help.replace("\n", "\\n").replace("\t", " ")
+            return f"{item.type},{item.value}\t{help_}"
 
         return f"{item.type},{item.value}"
 
