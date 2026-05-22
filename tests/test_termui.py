@@ -904,7 +904,8 @@ def test_echo_via_pager_tty_pager_missing(runner, monkeypatch):
 def test_get_pager_file_nullpager_wraps_textio_stream(
     monkeypatch, tmp_path, color, expected
 ):
-    """When paging falls back to a real TextIO stream, ``.buffer`` is wrapped."""
+    """When paging falls back to a real text stream, ANSI styling is stripped or
+    preserved according to ``color``."""
     pager_out = tmp_path / "pager_out.txt"
 
     with pager_out.open("w", encoding="utf-8") as text_stream:
@@ -922,20 +923,20 @@ def test_get_pager_file_nullpager_wraps_textio_stream(
 
 
 def test_get_pager_file_nullpager_keeps_stringio_stream(monkeypatch):
-    """The no-stdout fallback should keep a text-only stream and set ``.color``."""
+    """The no-stdout fallback keeps the text stream open and strips ANSI."""
 
     stream = io.StringIO()
     monkeypatch.setattr(sys, "stdout", None)
     monkeypatch.setattr(click._termui_impl, "StringIO", lambda: stream)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
 
-    styled_text = click.style("hello", fg="red")
-
     with click.get_pager_file(color=False) as pager:
-        pager.write(styled_text)
+        pager.write(click.style("hello", fg="red"))
 
+    # The wrapper must not close a stream it does not own.
     assert not stream.closed
-    assert stream.getvalue() == styled_text
+    # With colors disabled, ANSI styling is stripped.
+    assert stream.getvalue() == "hello"
 
 
 def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
@@ -944,7 +945,6 @@ def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
     class FlushableTextStream(io.StringIO):
         def __init__(self):
             super().__init__()
-            self.color = None
             self.flush_calls = 0
 
         def flush(self):
@@ -954,7 +954,7 @@ def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
 
     @contextlib.contextmanager
     def pager_contextmanager(color=None):
-        yield stream, "utf-8", color
+        yield stream, False
 
     monkeypatch.setattr(
         click._termui_impl, "_pager_contextmanager", pager_contextmanager
@@ -962,10 +962,43 @@ def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
 
     with pytest.raises(RuntimeError, match="boom"):
         with click.get_pager_file() as pager:
-            assert pager is stream
+            pager.write("partial")
             raise RuntimeError("boom")
 
     assert stream.flush_calls == 1
+    assert stream.getvalue() == "partial"
+
+
+def test_get_pager_file_close_does_not_close_borrowed_stream(monkeypatch):
+    """Closing the yielded pager must not close a stream the caller owns.
+
+    ``_PagerWriter.close()`` flushes but deliberately stops there: each pager
+    strategy owns its stream's lifecycle. This is the caller-driven half of
+    ``test_get_pager_file_missing_pager_keeps_borrowed_stream_open``, which
+    covers the same fallback but never calls ``close`` itself.
+
+    Wrapping the borrowed stream in :class:`~click.utils._KeepOpenFile` does not
+    satisfy this: that proxy only covers a ``with`` block and passes an explicit
+    ``close`` straight through. Only the writer's own ``close`` stops it.
+    """
+    stream = io.StringIO()
+    monkeypatch.setattr(click._termui_impl, "_default_text_stdout", lambda: stream)
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    # A tty plus a ``PAGER`` that doesn't resolve sends us through the
+    # ``_pipepager`` (or ``_tempfilepager``) missing-binary fallback branch.
+    monkeypatch.setitem(
+        click._termui_impl.os.environ,
+        "PAGER",
+        "click-tests-nonexistent-pager-9b3f2",
+    )
+
+    with click.get_pager_file() as pager:
+        pager.write("hello\n")
+        pager.close()
+        assert not stream.closed
+
+    assert not stream.closed
+    assert stream.getvalue() == "hello\n"
 
 
 def _force_tempfile_pager(monkeypatch, pager_cmd="cat"):
@@ -1006,11 +1039,9 @@ def _page_with_echo_via_pager():
 def test_tempfile_pager_accepts_text(monkeypatch, capfd, page):
     """The temp file backend must yield a text stream (issues #3731, #3740).
 
-    ``_tempfilepager`` opens its temp file in binary mode and yields the
-    ``_TemporaryFileWrapper`` straight to ``get_pager_file``. That wrapper
-    exposes no ``.buffer``, so the ``_has_binary_buffer`` probe is False and no
-    ``MaybeStripAnsi`` wrapper is installed. The caller then writes ``str`` to a
-    binary handle and gets ``TypeError: a bytes-like object is required``.
+    Regression: a binary-mode temp file handed straight to ``get_pager_file``
+    left the caller writing ``str`` to a binary handle, which raises
+    ``TypeError: a bytes-like object is required``.
     """
     _force_tempfile_pager(monkeypatch)
 
@@ -1032,8 +1063,8 @@ def test_tempfile_pager_accepts_text(monkeypatch, capfd, page):
 def test_tempfile_pager_handles_ansi(monkeypatch, capfd, color, expected):
     """The temp file backend honors ``color`` like the pipe backend does.
 
-    ANSI stripping lives in ``MaybeStripAnsi``, which the binary temp file
-    never gets wrapped in, so ``color`` is silently ignored on this path.
+    Regression: a binary temp file got no ANSI-stripping wrapper, so ``color``
+    was silently ignored on this path.
     """
     _force_tempfile_pager(monkeypatch)
 
