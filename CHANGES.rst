@@ -28,6 +28,8 @@ Released 2026-05-21
     valid completion result. :issue:`3015` :pr:`3471`
 -   Fix empty byte-string handling in echo. :issue:`3487` :pr:`3493`
 -   Fix closed file error with ``echo_via_pager``. :issue:`3449` :pr:`3482`
+-   Fix ``open_url`` on Windows when the file path contains spaces.
+    :issue:`2994` :pr:`3478`
 
 
 Version 8.4.0
