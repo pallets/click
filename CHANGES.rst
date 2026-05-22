@@ -22,7 +22,7 @@ Version 8.4.1
 Released 2026-05-21
 
 -   ``get_parameter_source()`` is available during eager callbacks and type
-    conversion again. :issue:`3458` :issue:`3484`
+    conversion again. :issue:`3458` :pr:`3484`
 -   Zsh completion scripts parse correctly on Windows. :issue:`3277` :pr:`3466`
 -   Shell completion of `Choice` `Enum` values produces a valid completion
     result. :issue:`3015`
