@@ -8,6 +8,7 @@ from contextlib import nullcontext
 from decimal import Decimal
 from fractions import Fraction
 from functools import partial
+from io import BytesIO
 from io import StringIO
 from unittest.mock import patch
 
@@ -96,6 +97,10 @@ def test_echo_custom_file():
     f = StringIO()
     click.echo("hello", file=f)
     assert f.getvalue() == "hello\n"
+
+    b = BytesIO()
+    click.echo(b"", b)
+    assert b.getvalue() == b"\n"
 
 
 def test_echo_no_streams(monkeypatch, runner):
@@ -311,7 +316,7 @@ EchoViaPagerTest = namedtuple(
 
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
 @pytest.mark.skipif(
-    MAC and sys.version_info >= (3, 13) and sys._is_gil_enabled(),
+    MAC and sys.version_info >= (3, 13) and not sys._is_gil_enabled(),
     reason="Generator exception tests are flaky in Python 3.14t on macOS.",
 )
 @pytest.mark.parametrize(

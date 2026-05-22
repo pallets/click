@@ -140,7 +140,12 @@ select = [
     "I",  # isort
     "UP",  # pyupgrade
     "W",  # pycodestyle warning
+    "ICN", #flake8-import-conventions (ICN)
 ]
+
+[tool.ruff.lint.flake8-import-conventions.aliases]
+# Declare the default aliases.
+typing = "t"
 
 [tool.ruff.lint.isort]
 force-single-line = true

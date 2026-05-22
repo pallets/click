@@ -50,6 +50,12 @@ class ParamType(t.Generic[ParamTypeValue], abc.ABC):
     -   It must be able to convert a value if the ``ctx`` and ``param``
         arguments are ``None``. This can occur when converting prompt
         input.
+
+    .. versionchanged:: 8.4.0
+        Now a generic abstract base class. Parameterize with the
+        converted value type (``ParamType[int]`` for an integer-returning
+        type) so that :meth:`convert` and downstream consumers carry the
+        narrowed return type.
     """
 
     is_composite: t.ClassVar[bool] = False
@@ -263,6 +269,11 @@ class Choice(ParamType[ParamTypeValue], t.Generic[ParamTypeValue]):
 
     :param case_sensitive: Set to false to make choices case
         insensitive. Defaults to true.
+
+    .. versionchanged:: 8.4.0
+        Now generic in the choice value type. Parameterize with the type of
+        the choice values (``Choice[HashType]`` for an enum, ``Choice[str]``
+        for plain strings) to enable type-checked consumers.
 
     .. versionchanged:: 8.2.0
         Non-``str`` ``choices`` are now supported. It can additionally be any

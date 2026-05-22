@@ -423,7 +423,7 @@ class FishComplete(ShellComplete):
 
     def format_completion(self, item: CompletionItem) -> str:
         """
-        .. versionchanged:: 8.4
+        .. versionchanged:: 8.4.0
             Escape newlines in value and help to fix completion errors with
             multi-line help strings.
         """

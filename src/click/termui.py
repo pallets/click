@@ -305,7 +305,7 @@ def get_pager_file(
 
     Yields a writable file-like object which can be used as an output pager.
 
-    .. versionadded:: 8.2
+    .. versionadded:: 8.4.0
 
     :param color: controls if the pager supports ANSI colors or not.  The
                   default is autodetection.

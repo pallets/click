@@ -6,14 +6,24 @@ Version 8.5.0
 Unreleased
 
 
-Version 8.4.1
+Version 8.4.2
 -------------
 
 Unreleased
 
--   Zsh completion scripts parse correctly on Windows. :issue:`3277`
+
+Version 8.4.1
+-------------
+
+Released 2026-05-21
+
+-   ``get_parameter_source()`` is available during eager callbacks and type
+    conversion again. :issue:`3458` :issue:`3484`
+-   Zsh completion scripts parse correctly on Windows. :issue:`3277` :pr:`3466`
 -   Shell completion of `Choice` `Enum` values produces a valid completion
     result. :issue:`3015`
+-   Fix empty byte-string handling in echo. :issue:`3487`
+-   Fix closed file error with `echo_via_pager`. :issue:`3449`
 
 Version 8.4.0
 -------------
@@ -54,8 +64,8 @@ Released 2026-05-17
     to be set explicitly. :issue:`2012` :pr:`3363`
 -   The error hint now uses :meth:`Command.get_help_option_names` to pick
     non-shadowed help option names, so ``Try '... -h'`` no longer points to a
-    subcommand option that shadows ``-h``. All surviving names are shown
-    (``-h/--help``). :issue:`2790` :pr:`3208`
+    subcommand option that shadows ``-h``. The longest surviving name is
+    shown (``--help`` over ``-h``) for readability. :issue:`2790` :pr:`3208`
 -   Fix readline functionality on non-Windows platforms. Prompt text is now
     passed directly to readline instead of being printed separately, allowing
     proper backspace, line editing, and line wrapping behavior. :issue:`2968`
@@ -71,8 +81,7 @@ Released 2026-05-17
     fail. :issue:`3105` :pr:`3211`
 -   Add ``click.get_pager_file`` for file-like access to an output
     pager. :pr:`1572` :pr:`3405`
--   :class:`~click.formatting.TextWrapper` and
-    :func:`~click.formatting.wrap_text` now measure line width in visible
+-   :func:`~click.formatting.wrap_text` now measures line width in visible
     characters, ignoring ANSI escape sequences. :pr:`3420`
 -   Fix :meth:`HelpFormatter.write_usage` emitting only a blank line when
     called without ``args``. The usage prefix and program name are now
@@ -88,7 +97,7 @@ Released 2026-05-17
     via :func:`os.dup2` so output that bypasses ``sys.stdout`` (stale stream
     references, C extensions, subprocesses, ``faulthandler``) is captured
     with proper isolation. :issue:`854` :issue:`2412` :issue:`2468`
-    :issue:`2497` :issue:`2761` :issue:`2827` :issue:`2865`
+    :issue:`2497` :issue:`2761` :issue:`2827` :issue:`2865` :pr:`3391`
 -   Revert the ``8.3.3`` change that exposed the original file descriptor
     via ``fileno()`` on the redirected ``CliRunner`` streams in the default
     capture mode. ``os.dup2(w, sys.stdout.fileno())`` calls inside a CLI no

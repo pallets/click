@@ -2609,6 +2609,11 @@ class Parameter(ABC):
         with augment_usage_errors(ctx, param=self):
             value, source = self.consume_value(ctx, opts)
 
+            # Record the source before processing so eager callbacks and type
+            # conversion can inspect it. Restored after arbitration if this
+            # option loses a feature-switch group.
+            ctx.set_parameter_source(self.name, source)
+
             # Display a deprecation warning if necessary.
             if (
                 self.deprecated
@@ -2654,14 +2659,16 @@ class Parameter(ABC):
         )
 
         if is_winner:
-            ctx.set_parameter_source(self.name, source)
             if self.expose_value:
                 ctx.params[self.name] = value
                 ctx._param_default_explicit[self.name] = self._default_explicit
-        elif existing_source is None:
-            # Nothing has claimed the slot yet. Record at least our source so downstream
-            # lookups don't return ``None``.
-            ctx.set_parameter_source(self.name, source)
+        elif existing_source is not None:
+            # Lost arbitration; restore the winning option's source.
+            ctx.set_parameter_source(self.name, existing_source)
+        # else: ctx.params[self.name] was populated by code that bypassed
+        # handle_parse_result (from another option's callback for example). Keep
+        # the provisional source recorded before process_value so downstream
+        # lookups don't return ``None``.
 
         return value, args
 
@@ -2751,7 +2758,7 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
 
-    .. versionchanged:: 8.4
+    .. versionchanged:: 8.4.0
         Non-basic ``flag_value`` types (not ``str``, ``int``, ``float``, or
         ``bool``) are passed through unchanged instead of being stringified.
         Previously, ``type=click.UNPROCESSED`` was required to preserve them.
