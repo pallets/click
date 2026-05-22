@@ -1,7 +1,4 @@
-```{eval-rst}
-.. rst-class:: hide-header
-```
-
+{.hide-header}
 # Welcome to Click
 
 ```{image} _static/click-name.svg
