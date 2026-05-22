@@ -79,7 +79,7 @@ Released 2026-05-17
     :pr:`2969`
 -   Use :func:`os.startfile` on Windows to open URLs in :func:`open_url`,
     replacing the ``start`` built-in which cannot be invoked without
-    ``shell=True``. :issue:`3164` :pr:`3186`
+    ``shell=True``. :issue:`2868` :issue:`3164` :pr:`3186`
 -   Fix Fish shell completion errors when option help text contains newlines.
     :issue:`3043` :pr:`3126`
 -   Add :class:`NoSuchCommand` exception with suggestions for misspelled
