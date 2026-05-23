@@ -24,8 +24,7 @@ Some standalone examples of Click applications are packaged with Click. They are
   performs custom validation of parameters in different ways.
 - [naval](https://github.com/pallets/click/tree/main/examples/naval) : Port of the [docopt](http://docopt.org/) naval
   example.
-- [colors](https://github.com/pallets/click/tree/main/examples/colors) : A simple example that colorizes text. Uses
-  colorama on Windows.
+- [colors](https://github.com/pallets/click/tree/main/examples/colors) : A simple example that colorizes text.
 - [aliases](https://github.com/pallets/click/tree/main/examples/aliases) : An advanced example that implements
   {ref}`aliases`.
 - [imagepipe](https://github.com/pallets/click/tree/main/examples/imagepipe) : A complex example that implements some
@@ -81,7 +80,7 @@ What this means is that the {func}`echo` function applies some error correction 
 instead of dying with a {exc}`UnicodeError`.
 
 The echo function also supports color and other styles in output. It will automatically remove styles if the output
-stream is a file. On Windows, colorama is automatically installed and used. See {ref}`ansi-colors`.
+stream is a file. See {ref}`ansi-colors`.
 
 If you don't need this, you can also use the `print()` construct / function.
 
