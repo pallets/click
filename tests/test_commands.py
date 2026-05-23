@@ -492,6 +492,22 @@ def test_deprecated_in_help_messages(runner, doc, deprecated):
 
 
 @pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])
+@pytest.mark.parametrize("doc", ["", None])
+def test_deprecated_empty_help_no_leading_space(runner, doc, deprecated):
+    """A command with empty or missing help text must render the deprecation
+    label at the normal indentation, without a stray leading space.
+    """
+
+    @click.command(deprecated=deprecated, help=doc)
+    def cli():
+        pass
+
+    out = runner.invoke(cli, ["--help"]).output
+    assert "\n  (DEPRECATED" in out
+    assert "\n   (DEPRECATED" not in out
+
+
+@pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])
 def test_deprecated_in_invocation(runner, deprecated):
     @click.command(deprecated=deprecated)
     def deprecated_cmd():

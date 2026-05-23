@@ -58,6 +58,20 @@ def test_deprecated_usage(runner, deprecated):
         assert deprecated in result.output
 
 
+@pytest.mark.parametrize(
+    ("deprecated", "expected"),
+    [(True, "(DEPRECATED)"), ("USE B INSTEAD", "(DEPRECATED: USE B INSTEAD)")],
+)
+@pytest.mark.parametrize("help_text", ["", None])
+def test_deprecated_empty_help_no_leading_space(help_text, deprecated, expected):
+    """An option with empty or missing help text must not gain a stray leading
+    space before the deprecation label.
+    """
+    opt = click.Option(["--foo"], help=help_text, deprecated=deprecated)
+    ctx = click.Context(click.Command("cli"))
+    assert opt.get_help_record(ctx)[1] == expected
+
+
 @pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])
 def test_deprecated_warning(runner, deprecated):
     @click.command()
