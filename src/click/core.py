@@ -1623,8 +1623,15 @@ class Group(Command):
         self.invoke_without_command = invoke_without_command
 
         if subcommand_metavar is None:
+            # When the group can run without a subcommand, the leading command
+            # token is optional, so wrap it in brackets to reflect that.
             if chain:
-                subcommand_metavar = "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."
+                if invoke_without_command:
+                    subcommand_metavar = "[COMMAND1] [ARGS]... [COMMAND2 [ARGS]...]..."
+                else:
+                    subcommand_metavar = "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."
+            elif invoke_without_command:
+                subcommand_metavar = "[COMMAND] [ARGS]..."
             else:
                 subcommand_metavar = "COMMAND [ARGS]..."
 

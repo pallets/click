@@ -310,6 +310,14 @@ The default placeholder variable ([meta variable](https://en.wikipedia.org/wiki/
 
 ```
 
+```{admonition} Optional elements are bracketed
+:class: note
+
+   The usage line follows a consistent convention: an element is optional when it is enclosed in square brackets and required when it appears outside them. A required argument appears as `FOO` and an optional one as `[FOO]`, with a variadic argument adding a trailing `...` (so `[FOO]...`). A single pair of brackets can group several tokens, so a chained group renders an extra command and its arguments as one optional, repeatable unit: `[COMMAND2 [ARGS]...]...`. A {class}`Group` that can run without naming a subcommand (`invoke_without_command=True`) also brackets the leading command, showing `[COMMAND]` instead of `COMMAND`. The `[OPTIONS]` placeholder is always bracketed, since adding options is itself optional.
+
+   This mirrors the conventional utility-argument syntax for optional arguments and operands ([POSIX §12.1](https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html), [`man-pages(7)`](https://man7.org/linux/man-pages/man7/man-pages.7.html)), where a bracketed expression followed by `...` denotes zero or more occurrences. A subcommand name is a positional operand, so Click brackets it under the same rule.
+```
+
 ## Help Parameter Customization
 
 Help parameters are automatically added by Click for any command. The default is `--help` but can be overridden by the context setting {attr}`~Context.help_option_names`. Click also performs automatic conflict resolution on the default help parameter, so if a command itself implements a parameter named `help` then the default help will not be run.
