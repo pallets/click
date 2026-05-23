@@ -8,7 +8,7 @@ import click
 from click._compat import WIN
 
 
-def test_open_file(runner):
+def test_open_file(runner, tmp_path):
     @click.command()
     @click.argument("filename")
     def cli(filename):
@@ -17,17 +17,16 @@ def test_open_file(runner):
 
         click.echo("meep")
 
-    with runner.isolated_filesystem():
-        with open("hello.txt", "w") as f:
-            f.write("Cool stuff")
+    hello = tmp_path / "hello.txt"
+    hello.write_text("Cool stuff")
 
-        result = runner.invoke(cli, ["hello.txt"])
-        assert result.exception is None
-        assert result.output == "Cool stuff\nmeep\n"
+    result = runner.invoke(cli, [str(hello)])
+    assert result.exception is None
+    assert result.output == "Cool stuff\nmeep\n"
 
-        result = runner.invoke(cli, ["-"], input="foobar")
-        assert result.exception is None
-        assert result.output == "foobar\nmeep\n"
+    result = runner.invoke(cli, ["-"], input="foobar")
+    assert result.exception is None
+    assert result.output == "foobar\nmeep\n"
 
 
 def test_open_file_pathlib_dash(runner):
@@ -57,66 +56,62 @@ def test_open_file_ignore_errors_stdin(runner):
     assert result.exception is None
 
 
-def test_open_file_respects_ignore(runner):
-    with runner.isolated_filesystem():
-        with open("test.txt", "w") as f:
-            f.write("Hello world!")
+def test_open_file_respects_ignore(tmp_path):
+    path = tmp_path / "test.txt"
+    path.write_text("Hello world!")
 
-        with click.open_file("test.txt", encoding="utf8", errors="ignore") as f:
-            assert f.errors == "ignore"
-
-
-def test_open_file_ignore_invalid_utf8(runner):
-    with runner.isolated_filesystem():
-        with open("test.txt", "wb") as f:
-            f.write(b"\xe2\x28\xa1")
-
-        with click.open_file("test.txt", encoding="utf8", errors="ignore") as f:
-            f.read()
+    with click.open_file(str(path), encoding="utf8", errors="ignore") as f:
+        assert f.errors == "ignore"
 
 
-def test_open_file_ignore_no_encoding(runner):
-    with runner.isolated_filesystem():
-        with open("test.bin", "wb") as f:
-            f.write(os.urandom(16))
+def test_open_file_ignore_invalid_utf8(tmp_path):
+    path = tmp_path / "test.txt"
+    path.write_bytes(b"\xe2\x28\xa1")
 
-        with click.open_file("test.bin", errors="ignore") as f:
-            f.read()
+    with click.open_file(str(path), encoding="utf8", errors="ignore") as f:
+        f.read()
+
+
+def test_open_file_ignore_no_encoding(tmp_path):
+    path = tmp_path / "test.bin"
+    path.write_bytes(os.urandom(16))
+
+    with click.open_file(str(path), errors="ignore") as f:
+        f.read()
 
 
 @pytest.mark.skipif(WIN, reason="os.chmod() is not fully supported on Windows.")
 @pytest.mark.parametrize("permissions", [0o400, 0o444, 0o600, 0o644])
-def test_open_file_atomic_permissions_existing_file(runner, permissions):
-    with runner.isolated_filesystem():
-        with open("existing.txt", "w") as f:
-            f.write("content")
-        os.chmod("existing.txt", permissions)
+def test_open_file_atomic_permissions_existing_file(runner, tmp_path, permissions):
+    existing = tmp_path / "existing.txt"
+    existing.write_text("content")
+    os.chmod(existing, permissions)
 
-        @click.command()
-        @click.argument("filename")
-        def cli(filename):
-            click.open_file(filename, "w", atomic=True).close()
+    @click.command()
+    @click.argument("filename")
+    def cli(filename):
+        click.open_file(filename, "w", atomic=True).close()
 
-        result = runner.invoke(cli, ["existing.txt"])
-        assert result.exception is None
-        assert stat.S_IMODE(os.stat("existing.txt").st_mode) == permissions
+    result = runner.invoke(cli, [str(existing)])
+    assert result.exception is None
+    assert stat.S_IMODE(os.stat(existing).st_mode) == permissions
 
 
 @pytest.mark.skipif(WIN, reason="os.stat() is not fully supported on Windows.")
-def test_open_file_atomic_permissions_new_file(runner):
-    with runner.isolated_filesystem():
+def test_open_file_atomic_permissions_new_file(runner, tmp_path):
+    @click.command()
+    @click.argument("filename")
+    def cli(filename):
+        click.open_file(filename, "w", atomic=True).close()
 
-        @click.command()
-        @click.argument("filename")
-        def cli(filename):
-            click.open_file(filename, "w", atomic=True).close()
+    # Create a test file to get the expected permissions for new files
+    # according to the current umask.
+    probe = tmp_path / "test.txt"
+    with open(probe, "w"):
+        pass
+    permissions = stat.S_IMODE(os.stat(probe).st_mode)
 
-        # Create a test file to get the expected permissions for new files
-        # according to the current umask.
-        with open("test.txt", "w"):
-            pass
-        permissions = stat.S_IMODE(os.stat("test.txt").st_mode)
-
-        result = runner.invoke(cli, ["new.txt"])
-        assert result.exception is None
-        assert stat.S_IMODE(os.stat("new.txt").st_mode) == permissions
+    new = tmp_path / "new.txt"
+    result = runner.invoke(cli, [str(new)])
+    assert result.exception is None
+    assert stat.S_IMODE(os.stat(new).st_mode) == permissions
