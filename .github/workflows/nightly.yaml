@@ -1,0 +1,42 @@
+name: Nightly race tests
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+jobs:
+  race-tests:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {name: Random 3.14, python: '3.14', tox: random}
+          - {name: Random 3.14t, python: '3.14t', tox: random}
+          - {name: Random 3.13, python: '3.13', tox: random}
+          - {name: Random 3.12, python: '3.12', tox: random}
+          - {name: Random 3.11, python: '3.11', tox: random}
+          - {name: Random 3.10, python: '3.10', tox: random}
+          - {name: Random Windows, python: '3.14', tox: random, os: windows-latest}
+          - {name: Random Mac, python: '3.14', tox: random, os: macos-latest}
+          - {name: Stress 3.14, python: '3.14', tox: stress-py3.14}
+          - {name: Stress 3.14t, python: '3.14t', tox: stress-py3.14t}
+          - {name: Stress Mac 3.14t, python: '3.14t', tox: stress-py3.14t, os: macos-latest}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+        with:
+          enable-cache: true
+          prune-cache: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ matrix.python }}
+      - run: uv run --locked --no-default-groups --group dev tox run
+        env:
+          TOX_ENV: ${{ matrix.tox }}

@@ -419,9 +419,9 @@ class FishComplete(ShellComplete):
 
     def format_completion(self, item: CompletionItem) -> str:
         """
-        .. versionchanged:: 8.4.0
-            Escape newlines in value and help to fix completion errors with
-            multi-line help strings.
+        .. versionchanged:: 8.4.2
+            Escape newlines and replace tabs with spaces in the help text to
+            fix completion errors with multi-line help strings.
         """
         # According to https://fishshell.com/docs/current/cmds/complete.html
         # Command substitutions found in ARGUMENTS should return a newline-
