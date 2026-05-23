@@ -5,6 +5,11 @@ Version 8.4.2
 
 Unreleased
 
+-   Fix Fish shell completion broken in ``8.4.0`` by :pr:`3126`. Newlines and
+    tabs in option help text are now escaped, keeping the original completion
+    format while still supporting multi-line help. :issue:`3502`
+    :issue:`3043` :pr:`3504` :pr:`3508`
+
 
 Version 8.4.1
 -------------

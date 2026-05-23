@@ -12,6 +12,7 @@ from click.core import Group
 from click.core import Option
 from click.shell_completion import add_completion_class
 from click.shell_completion import CompletionItem
+from click.shell_completion import FishComplete
 from click.shell_completion import shell_complete
 from click.shell_completion import ShellComplete
 from click.types import Choice
@@ -359,9 +360,9 @@ def test_full_source(runner, shell):
         ("bash", {"COMP_WORDS": "a b", "COMP_CWORD": "1"}, "plain,b\n"),
         ("zsh", {"COMP_WORDS": "", "COMP_CWORD": "0"}, "plain\na\n_\nplain\nb\nbee\n"),
         ("zsh", {"COMP_WORDS": "a b", "COMP_CWORD": "1"}, "plain\nb\nbee\n"),
-        ("fish", {"COMP_WORDS": "", "COMP_CWORD": ""}, "plain\na\n_\nplain\nb\nbee\n"),
-        ("fish", {"COMP_WORDS": "a b", "COMP_CWORD": "b"}, "plain\nb\nbee\n"),
-        ("fish", {"COMP_WORDS": 'a "b', "COMP_CWORD": '"b'}, "plain\nb\nbee\n"),
+        ("fish", {"COMP_WORDS": "", "COMP_CWORD": ""}, "plain,a\nplain,b\tbee\n"),
+        ("fish", {"COMP_WORDS": "a b", "COMP_CWORD": "b"}, "plain,b\tbee\n"),
+        ("fish", {"COMP_WORDS": 'a "b', "COMP_CWORD": '"b'}, "plain,b\tbee\n"),
     ],
 )
 @pytest.mark.usefixtures("_patch_for_completion")
@@ -578,48 +579,9 @@ def test_files_closed(runner) -> None:
             assert not current_warnings, "There should be no warnings after either"
 
 
-@pytest.mark.usefixtures("_patch_for_completion")
-def test_fish_multiline_help_complete(runner):
-    """Test Fish completion with multi-line help text doesn't cause errors."""
-    cli = Command(
-        "cli",
-        params=[
-            Option(
-                ["--at", "--attachment-type"],
-                type=(str, str),
-                multiple=True,
-                help=(
-                    "\b\nAttachment with explicit mimetype,\n--at image.jpg image/jpeg"
-                ),
-            ),
-            Option(["--other"], help="Normal help"),
-        ],
-    )
-
-    result = runner.invoke(
-        cli,
-        env={
-            "COMP_WORDS": "cli --",
-            "COMP_CWORD": "--",
-            "_CLI_COMPLETE": "fish_complete",
-        },
-    )
-
-    # Should not fail
-    assert result.exit_code == 0
-
-    # Output should contain escaped newlines, not literal newlines
-    # Fish expects: plain\n--at\n{help_with_\\n}
-    lines = result.output.split("\n")
-
-    # Find the --at completion block (3 lines: type, value, help)
-    for i in range(0, len(lines) - 2, 3):
-        if lines[i] == "plain" and lines[i + 1] in ("--at", "--attachment-type"):
-            help_line = lines[i + 2]
-            # Help should have escaped newlines (\\n), not actual newlines
-            assert "\\n" in help_line
-            # Should contain the example text
-            assert "image.jpg" in help_line.replace("\\n", " ")
-            break
-    else:
-        pytest.fail("--at completion not found in output")
+def test_fish_format_completion_escapes_help():
+    fc = FishComplete(Command("x"), {}, "x", "_X_COMPLETE")
+    item = CompletionItem("--at", help="first\nsecond\tthird")
+    # The newline is escaped to the literal characters backslash-n and the tab
+    # becomes a space, so each completion stays on one line for fish.
+    assert fc.format_completion(item) == "plain,--at\tfirst\\nsecond third"
