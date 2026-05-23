@@ -12,6 +12,7 @@ from click.core import Group
 from click.core import Option
 from click.shell_completion import add_completion_class
 from click.shell_completion import CompletionItem
+from click.shell_completion import FishComplete
 from click.shell_completion import shell_complete
 from click.shell_completion import ShellComplete
 from click.types import Choice
@@ -576,3 +577,11 @@ def test_files_closed(runner) -> None:
             assert not current_warnings, "There should be no warnings to start"
             _get_completions(cli, args=[], incomplete="")
             assert not current_warnings, "There should be no warnings after either"
+
+
+def test_fish_format_completion_escapes_help():
+    fc = FishComplete(Command("x"), {}, "x", "_X_COMPLETE")
+    item = CompletionItem("--at", help="first\nsecond\tthird")
+    # The newline is escaped to the literal characters backslash-n and the tab
+    # becomes a space, so each completion stays on one line for fish.
+    assert fc.format_completion(item) == "plain,--at\tfirst\\nsecond third"
