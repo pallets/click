@@ -415,7 +415,7 @@ def test_flag_value_dual_options(runner, default, args, expected):
     assert result.output == repr(expected)
 
 
-def test_file_option(runner):
+def test_file_option(runner, tmp_path):
     @click.command()
     @click.option("--file", type=click.File("w"))
     def input(file):
@@ -426,9 +426,9 @@ def test_file_option(runner):
     def output(file):
         click.echo(file.read())
 
-    with runner.isolated_filesystem():
-        result_in = runner.invoke(input, ["--file=example.txt"])
-        result_out = runner.invoke(output, ["--file=example.txt"])
+    example = tmp_path / "example.txt"
+    result_in = runner.invoke(input, [f"--file={example}"])
+    result_out = runner.invoke(output, [f"--file={example}"])
 
     assert not result_in.exception
     assert result_in.output == ""
@@ -436,7 +436,7 @@ def test_file_option(runner):
     assert result_out.output == "Hello World!\n\n"
 
 
-def test_file_lazy_mode(runner):
+def test_file_lazy_mode(runner, tmp_path):
     do_io = False
 
     @click.command()
@@ -450,50 +450,50 @@ def test_file_lazy_mode(runner):
     def output(file):
         pass
 
-    with runner.isolated_filesystem():
-        os.mkdir("example.txt")
+    example = tmp_path / "example.txt"
+    example.mkdir()
 
-        do_io = True
-        result_in = runner.invoke(input, ["--file=example.txt"])
-        assert result_in.exit_code == 1
+    do_io = True
+    result_in = runner.invoke(input, [f"--file={example}"])
+    assert result_in.exit_code == 1
 
-        do_io = False
-        result_in = runner.invoke(input, ["--file=example.txt"])
-        assert result_in.exit_code == 0
+    do_io = False
+    result_in = runner.invoke(input, [f"--file={example}"])
+    assert result_in.exit_code == 0
 
-        result_out = runner.invoke(output, ["--file=example.txt"])
-        assert result_out.exception
+    result_out = runner.invoke(output, [f"--file={example}"])
+    assert result_out.exception
 
     @click.command()
     @click.option("--file", type=click.File("w", lazy=False))
     def input_non_lazy(file):
         file.write("Hello World!\n")
 
-    with runner.isolated_filesystem():
-        os.mkdir("example.txt")
-        result_in = runner.invoke(input_non_lazy, ["--file=example.txt"])
-        assert result_in.exit_code == 2
-        assert "Invalid value for '--file': 'example.txt'" in result_in.output
+    non_lazy = tmp_path / "non_lazy.txt"
+    non_lazy.mkdir()
+    result_in = runner.invoke(input_non_lazy, [f"--file={non_lazy}"])
+    assert result_in.exit_code == 2
+    assert f"Invalid value for '--file': '{non_lazy}'" in result_in.output
 
 
-def test_path_option(runner):
+def test_path_option(runner, tmp_path):
     @click.command()
     @click.option("-O", type=click.Path(file_okay=False, exists=True, writable=True))
     def write_to_dir(o):
         with open(os.path.join(o, "foo.txt"), "wb") as f:
             f.write(b"meh\n")
 
-    with runner.isolated_filesystem():
-        os.mkdir("test")
+    test_dir = tmp_path / "test"
+    test_dir.mkdir()
 
-        result = runner.invoke(write_to_dir, ["-O", "test"])
-        assert not result.exception
+    result = runner.invoke(write_to_dir, ["-O", str(test_dir)])
+    assert not result.exception
 
-        with open("test/foo.txt", "rb") as f:
-            assert f.read() == b"meh\n"
+    with open(test_dir / "foo.txt", "rb") as f:
+        assert f.read() == b"meh\n"
 
-        result = runner.invoke(write_to_dir, ["-O", "test/foo.txt"])
-        assert "is a file" in result.output
+    result = runner.invoke(write_to_dir, ["-O", str(test_dir / "foo.txt")])
+    assert "is a file" in result.output
 
     @click.command()
     @click.option("-f", type=click.Path(exists=True))
@@ -501,25 +501,23 @@ def test_path_option(runner):
         click.echo(f"is_file={os.path.isfile(f)}")
         click.echo(f"is_dir={os.path.isdir(f)}")
 
-    with runner.isolated_filesystem():
-        result = runner.invoke(showtype, ["-f", "xxx"])
-        assert "does not exist" in result.output
+    result = runner.invoke(showtype, ["-f", str(tmp_path / "xxx")])
+    assert "does not exist" in result.output
 
-        result = runner.invoke(showtype, ["-f", "."])
-        assert "is_file=False" in result.output
-        assert "is_dir=True" in result.output
+    result = runner.invoke(showtype, ["-f", str(tmp_path)])
+    assert "is_file=False" in result.output
+    assert "is_dir=True" in result.output
 
     @click.command()
     @click.option("-f", type=click.Path())
     def exists(f):
         click.echo(f"exists={os.path.exists(f)}")
 
-    with runner.isolated_filesystem():
-        result = runner.invoke(exists, ["-f", "xxx"])
-        assert "exists=False" in result.output
+    result = runner.invoke(exists, ["-f", str(tmp_path / "xxx")])
+    assert "exists=False" in result.output
 
-        result = runner.invoke(exists, ["-f", "."])
-        assert "exists=True" in result.output
+    result = runner.invoke(exists, ["-f", str(tmp_path)])
+    assert "exists=True" in result.output
 
 
 def test_choice_option(runner):
