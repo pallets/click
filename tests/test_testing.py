@@ -3,6 +3,7 @@ import io
 import os
 import pdb
 import sys
+import threading
 from io import BytesIO
 
 import pytest
@@ -452,6 +453,62 @@ def test_isolated_runner_custom_tempdir(runner, tmp_path):
 
     assert os.path.exists(d)
     os.rmdir(d)
+
+
+def test_isolated_runner_serializes_threads(tmp_path):
+    runner_1 = CliRunner()
+    runner_2 = CliRunner()
+    first_entered = threading.Event()
+    first_may_exit = threading.Event()
+    second_entered = threading.Event()
+    errors = []
+    first_dir = ""
+    second_dir = ""
+
+    def first_worker():
+        nonlocal first_dir
+
+        try:
+            with runner_1.isolated_filesystem(temp_dir=tmp_path) as d:
+                first_dir = d
+                first_entered.set()
+
+                with open("first.txt", "w", encoding="utf-8") as f:
+                    f.write("first")
+
+                assert first_may_exit.wait(timeout=1)
+        except BaseException as e:
+            errors.append(e)
+
+    def second_worker():
+        nonlocal second_dir
+
+        try:
+            with runner_2.isolated_filesystem(temp_dir=tmp_path) as d:
+                second_dir = d
+                second_entered.set()
+
+                with open("second.txt", "w", encoding="utf-8") as f:
+                    f.write("second")
+        except BaseException as e:
+            errors.append(e)
+
+    thread_1 = threading.Thread(target=first_worker)
+    thread_2 = threading.Thread(target=second_worker)
+    thread_1.start()
+    assert first_entered.wait(timeout=1)
+    thread_2.start()
+    assert not second_entered.wait(timeout=0.2)
+    first_may_exit.set()
+    thread_1.join()
+    assert second_entered.wait(timeout=1)
+    thread_2.join()
+
+    if errors:
+        raise errors[0]
+
+    assert os.path.exists(os.path.join(first_dir, "first.txt"))
+    assert os.path.exists(os.path.join(second_dir, "second.txt"))
 
 
 def test_isolation_stderr_errors():
