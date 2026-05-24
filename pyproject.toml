@@ -14,9 +14,6 @@ classifiers = [
     "Typing :: Typed",
 ]
 requires-python = ">=3.10"
-dependencies = [
-    "colorama; platform_system == 'Windows'",
-]
 
 [project.urls]
 Donate = "https://palletsprojects.com/donate"
@@ -113,12 +110,6 @@ files = ["src", "tests/typing"]
 show_error_codes = true
 pretty = true
 strict = true
-
-[[tool.mypy.overrides]]
-module = [
-    "colorama.*",
-]
-ignore_missing_imports = true
 
 [tool.pyright]
 pythonVersion = "3.10"

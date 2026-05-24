@@ -52,7 +52,7 @@ click.echo('Hello World!', err=True)
 ```{versionadded} 2.0
 ```
 
-The {func}`echo` function supports ANSI colors and styles. On Windows this uses [colorama](https://pypi.org/project/colorama/).
+The {func}`echo` function supports ANSI colors and styles.
 
 Primarily this means that:
 
@@ -60,8 +60,13 @@ Primarily this means that:
 - the {func}`echo` function will transparently connect to the terminal on Windows and translate ANSI codes to terminal
   API calls. This means that colors will work on Windows the same way they do on other operating systems.
 
-On Windows, Click uses colorama without calling `colorama.init()`. You can still call that in your code, but it's not
-required for Click.
+:::{admonition} Older Windows Support
+:class: note
+
+Recent Windows 11 supports ANSI styling by default, in both Terminal and cmd.exe.
+If you need to support color output on older versions of Windows, install
+[colorama](https://pypi.org/project/colorama/) and call `colorama.init()`.
+:::
 
 For styling a string, the {func}`style` function can be used:
 

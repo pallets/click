@@ -13,7 +13,6 @@ from types import TracebackType
 from ._compat import _default_text_stderr
 from ._compat import _default_text_stdout
 from ._compat import _find_binary_writer
-from ._compat import auto_wrap_for_ansi
 from ._compat import binary_streams
 from ._compat import open_stream
 from ._compat import should_strip_ansi
@@ -262,6 +261,9 @@ def echo(
         default Click will remove color if the output does not look like
         an interactive terminal.
 
+    .. versionchanged:: 8.5
+        Colorama is no longer used for color on Windows.
+
     .. versionchanged:: 6.0
         Support Unicode output on the Windows console. Click does not
         modify ``sys.stdout``, so ``sys.stdout.write()`` and ``print()``
@@ -319,16 +321,8 @@ def echo(
 
     # ANSI style code support. For no message or bytes, nothing happens.
     # When outputting to a file instead of a terminal, strip codes.
-    else:
-        color = resolve_color_default(color)
-
-        if should_strip_ansi(file, color):
-            out = strip_ansi(out)
-        elif WIN:
-            if auto_wrap_for_ansi is not None:
-                file = auto_wrap_for_ansi(file, color)  # type: ignore
-            elif not color:
-                out = strip_ansi(out)
+    elif should_strip_ansi(file, resolve_color_default(color)):
+        out = strip_ansi(out)
 
     file.write(out)  # type: ignore
     file.flush()
