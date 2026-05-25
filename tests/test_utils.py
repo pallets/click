@@ -4,6 +4,7 @@ import stat
 import subprocess
 import sys
 from collections import namedtuple
+from contextlib import contextmanager
 from contextlib import nullcontext
 from decimal import Decimal
 from fractions import Fraction
@@ -299,6 +300,66 @@ def _test_gen_func_echo(file=None):
 def _test_simulate_keyboard_interrupt(file=None):
     yield "output_before_keyboard_interrupt"
     raise KeyboardInterrupt()
+
+
+def test_echo_via_pager_flushes_generator_chunks(monkeypatch):
+    class RecordingPager:
+        def __init__(self):
+            self.flushes = []
+            self.writes = []
+
+        def write(self, text):
+            self.writes.append(text)
+
+        def flush(self):
+            self.flushes.append("".join(self.writes))
+
+    pager = RecordingPager()
+
+    @contextmanager
+    def get_pager_file(color=None):
+        yield pager
+
+    monkeypatch.setattr(click.termui, "get_pager_file", get_pager_file)
+
+    def generate():
+        yield "first"
+        assert pager.flushes == ["first"]
+        yield "second"
+
+    click.echo_via_pager(generate())
+
+    assert pager.writes == ["first", "second", "\n"]
+    assert pager.flushes == ["first", "firstsecond", "firstsecond\n"]
+
+
+def test_echo_via_pager_ignores_broken_pipe_during_flush(monkeypatch):
+    class BrokenPipePager:
+        def __init__(self):
+            self.writes = []
+
+        def write(self, text):
+            self.writes.append(text)
+
+        def flush(self):
+            raise BrokenPipeError
+
+    pager = BrokenPipePager()
+
+    @contextmanager
+    def pager_contextmanager(color=None):
+        try:
+            yield pager, "utf-8", color
+        except BrokenPipeError:
+            pass
+
+    monkeypatch.setattr(
+        click._termui_impl, "_pager_contextmanager", pager_contextmanager
+    )
+
+    click.echo_via_pager(["hello", "ignored"])
+
+    assert pager.writes == ["hello"]
 
 
 EchoViaPagerTest = namedtuple(
