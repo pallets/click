@@ -3296,8 +3296,8 @@ def test_flag_group_unset_vs_none_vs_explicit(
 
 
 def test_flag_group_competition_duplicate_option_name(runner):
-    """The same option name declared twice on the same command is a user
-    error.
+    """The same option name declared twice on the same command emits a
+    ``UserWarning`` flagging the duplicate.
     """
 
     @click.command()
@@ -3306,10 +3306,8 @@ def test_flag_group_competition_duplicate_option_name(runner):
     def cli(xyz):
         click.echo(repr(xyz), nl=False)
 
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 1
-    assert isinstance(result.exception, UserWarning)
-    assert "used more than once" in str(result.exception)
+    with pytest.warns(UserWarning, match=r"--xyz is used more than once"):
+        runner.invoke(cli, [])
 
 
 @pytest.mark.parametrize(
