@@ -299,6 +299,33 @@ def test_invoked_subcommand(runner):
     assert result.output == "no subcommand, use default\nin subcommand\n"
 
 
+@pytest.mark.parametrize(
+    ("chain", "invoke_without_command", "metavar"),
+    [
+        (False, False, "COMMAND [ARGS]..."),
+        (False, True, "[COMMAND] [ARGS]..."),
+        (True, False, "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."),
+        (True, True, "[COMMAND1] [ARGS]... [COMMAND2 [ARGS]...]..."),
+    ],
+)
+def test_subcommand_metavar_marks_optional(
+    runner, chain, invoke_without_command, metavar
+):
+    """The leading subcommand token is bracketed only when it is optional."""
+
+    @click.group(chain=chain, invoke_without_command=invoke_without_command)
+    def cli():
+        pass
+
+    @cli.command()
+    def sub():
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert result.output.splitlines()[0] == f"Usage: cli [OPTIONS] {metavar}"
+
+
 def test_aliased_command_canonical_name(runner):
     class AliasedGroup(click.Group):
         def get_command(self, ctx, cmd_name):
