@@ -5,6 +5,9 @@ Version 8.5.0
 
 Unreleased
 
+-   Add a glossary of command-line terms to the general reference docs.
+    :issue:`3077`
+
 -   Supported versions of Windows enable ANSI terminal styles by default.
     Colorama is no longer a dependency and is not used. :issue:`2986` :pr:`3505`
 
