@@ -36,13 +36,16 @@ class ClickException(Exception):
     """An exception that Click can handle and show to the user."""
 
     #: The exit code for this exception.
-    exit_code = 1
+    exit_code: t.ClassVar[int] = 1
+
+    show_color: t.Final[bool | None]
+    message: t.Final[str]
 
     def __init__(self, message: str) -> None:
         super().__init__(message)
         # The context will be removed by the time we print the message, so cache
         # the color settings here to be used later on (in `show`)
-        self.show_color: bool | None = resolve_color_default()
+        self.show_color = resolve_color_default()
         self.message = message
 
     def format_message(self) -> str:
@@ -71,12 +74,15 @@ class UsageError(ClickException):
                 fill in the context automatically in some situations.
     """
 
-    exit_code = 2
+    exit_code: t.ClassVar[int] = 2
+
+    ctx: Context | None
+    cmd: t.Final[Command | None]
 
     def __init__(self, message: str, ctx: Context | None = None) -> None:
         super().__init__(message)
         self.ctx = ctx
-        self.cmd: Command | None = self.ctx.command if self.ctx else None
+        self.cmd = self.ctx.command if self.ctx else None
 
     def show(self, file: t.IO[t.Any] | None = None) -> None:
         if file is None:
@@ -123,6 +129,9 @@ class BadParameter(UsageError):
                        each item is quoted and separated.
     """
 
+    param: Parameter | None
+    param_hint: cabc.Sequence[str] | str | None
+
     def __init__(
         self,
         message: str,
@@ -158,6 +167,8 @@ class MissingParameter(BadParameter):
                        the given `param`.  Valid values are ``'parameter'``,
                        ``'option'`` or ``'argument'``.
     """
+
+    param_type: t.Final[str | None]
 
     def __init__(
         self,
@@ -224,6 +235,9 @@ class NoSuchOption(UsageError):
     .. versionadded:: 4.0
     """
 
+    option_name: t.Final[str]
+    possibilities: t.Final[list[str] | None]
+
     def __init__(
         self,
         option_name: str,
@@ -236,11 +250,14 @@ class NoSuchOption(UsageError):
 
         super().__init__(message, ctx)
         self.option_name = option_name
-        self.possibilities: list[str] | None = None
+
         if possibilities:
             from difflib import get_close_matches
 
-            self.possibilities = get_close_matches(option_name, possibilities)
+            possibilities_ = get_close_matches(option_name, possibilities)
+        else:
+            possibilities_ = None
+        self.possibilities = possibilities_
 
     def format_message(self) -> str:
         if not self.possibilities:
@@ -254,6 +271,9 @@ class NoSuchCommand(UsageError):
     .. versionadded:: 8.4.0
     """
 
+    command_name: t.Final[str]
+    possibilities: t.Final[list[str] | None]
+
     def __init__(
         self,
         command_name: str,
@@ -266,11 +286,14 @@ class NoSuchCommand(UsageError):
 
         super().__init__(message, ctx)
         self.command_name = command_name
-        self.possibilities: list[str] | None = None
+
         if possibilities:
             from difflib import get_close_matches
 
-            self.possibilities = get_close_matches(command_name, possibilities)
+            possibilities_ = get_close_matches(command_name, possibilities)
+        else:
+            possibilities_ = None
+        self.possibilities = possibilities_
 
     def format_message(self) -> str:
         if not self.possibilities:
@@ -287,6 +310,8 @@ class BadOptionUsage(UsageError):
 
     :param option_name: the name of the option being used incorrectly.
     """
+
+    option_name: t.Final[str]
 
     def __init__(
         self, option_name: str, message: str, ctx: Context | None = None
@@ -305,8 +330,9 @@ class BadArgumentUsage(UsageError):
 
 
 class NoArgsIsHelpError(UsageError):
+    ctx: Context
+
     def __init__(self, ctx: Context) -> None:
-        self.ctx: Context
         super().__init__(ctx.get_help(), ctx=ctx)
 
     def show(self, file: t.IO[t.Any] | None = None) -> None:
@@ -316,12 +342,15 @@ class NoArgsIsHelpError(UsageError):
 class FileError(ClickException):
     """Raised if a file cannot be opened."""
 
+    ui_filename: t.Final[str]
+    filename: t.Final[str]
+
     def __init__(self, filename: str, hint: str | None = None) -> None:
         if hint is None:
             hint = _("unknown error")
 
         super().__init__(hint)
-        self.ui_filename: str = format_filename(filename)
+        self.ui_filename = format_filename(filename)
         self.filename = filename
 
     def format_message(self) -> str:
@@ -343,5 +372,7 @@ class Exit(RuntimeError):
 
     __slots__ = ("exit_code",)
 
+    exit_code: t.Final[int]
+
     def __init__(self, code: int = 0) -> None:
-        self.exit_code: int = code
+        self.exit_code = code
