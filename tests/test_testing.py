@@ -440,20 +440,72 @@ def test_file_stdin_attrs(runner):
 
 
 def test_isolated_runner(runner):
-    with runner.isolated_filesystem() as d:
-        assert os.path.exists(d)
+    import warnings
 
-    assert not os.path.exists(d)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        with runner.isolated_filesystem() as d:
+            assert os.path.exists(d)
+
+        assert not os.path.exists(d)
 
 
 def test_isolated_runner_custom_tempdir(runner, tmp_path):
-    with runner.isolated_filesystem(temp_dir=tmp_path) as d:
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        with runner.isolated_filesystem(temp_dir=tmp_path) as d:
+            assert os.path.exists(d)
+
         assert os.path.exists(d)
-
-    assert os.path.exists(d)
-    os.rmdir(d)
+        os.rmdir(d)
 
 
+def test_isolated_filesystem_deprecation_warning():
+    """isolated_filesystem() emits a DeprecationWarning."""
+    runner = CliRunner()
+
+    with pytest.warns(DeprecationWarning, match="not thread-safe"):
+        with runner.isolated_filesystem() as d:
+            assert os.path.exists(d)
+
+
+def test_isolated_filesystem_thread_safety():
+    """Concurrent calls to isolated_filesystem() should not interfere.
+
+    The lock serializes os.chdir calls so that each thread's CWD is
+    restored correctly before the next thread runs. Without the lock,
+    concurrent os.chdir calls would corrupt each other's CWD restoration.
+    """
+    import threading
+    import warnings
+
+    runner = CliRunner()
+    original_cwd = os.getcwd()
+    errors: list[str] = []
+    lock = threading.Lock()
+
+    def worker():
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", DeprecationWarning)
+                with runner.isolated_filesystem() as d:
+                    # Inside the lock, CWD should be d
+                    assert os.getcwd() == d, f"CWD {os.getcwd()!r} != temp dir {d!r}"
+        except Exception as e:
+            with lock:
+                errors.append(str(e))
+
+    threads = [threading.Thread(target=worker) for _ in range(10)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert not errors, f"Thread errors: {errors}"
+    # After all threads complete, CWD should be restored
+    assert os.getcwd() == original_cwd, f"CWD not restored: {os.getcwd()!r} != {original_cwd!r}"
 def test_isolation_stderr_errors():
     """Writing to stderr should escape invalid characters instead of
     raising a UnicodeEncodeError.

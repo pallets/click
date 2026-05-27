@@ -8,7 +8,9 @@ import pdb
 import shlex
 import sys
 import tempfile
+import threading
 import typing as t
+import warnings
 from types import TracebackType
 
 from . import _compat
@@ -320,6 +322,8 @@ class CliRunner:
     .. versionchanged:: 8.2
         ``mix_stderr`` parameter has been removed.
     """
+
+    _chdir_lock: threading.Lock = threading.Lock()
 
     def __init__(
         self,
@@ -715,22 +719,36 @@ class CliRunner:
             directory. If given, the created directory is not removed
             when exiting.
 
+        .. deprecated:: 8.5
+            ``isolated_filesystem`` is deprecated and will be removed in a
+            future version. It uses ``os.chdir`` which is not thread-safe.
+            Use per-thread temporary directories instead.
+
         .. versionchanged:: 8.0
             Added the ``temp_dir`` parameter.
         """
-        cwd = os.getcwd()
+        warnings.warn(
+            "CliRunner.isolated_filesystem is deprecated and will be removed"
+            " in a future version. It uses os.chdir which is not thread-safe."
+            " Use per-thread temporary directories instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         dt = tempfile.mkdtemp(dir=temp_dir)
-        os.chdir(dt)
 
-        try:
-            yield dt
-        finally:
-            os.chdir(cwd)
+        with self._chdir_lock:
+            cwd = os.getcwd()
+            os.chdir(dt)
 
-            if temp_dir is None:
-                import shutil
+            try:
+                yield dt
+            finally:
+                os.chdir(cwd)
 
-                try:
-                    shutil.rmtree(dt)
-                except OSError:
-                    pass
+        if temp_dir is None:
+            import shutil
+
+            try:
+                shutil.rmtree(dt)
+            except OSError:
+                pass
