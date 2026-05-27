@@ -1189,7 +1189,8 @@ class Command:
             text = ""
 
         if self.deprecated:
-            text = f"{_(text)} {_format_deprecated_label(self.deprecated)}"
+            label = _format_deprecated_label(self.deprecated)
+            text = f"{_(text)} {label}" if text else label
 
         if text:
             formatter.write_paragraph()
@@ -2826,7 +2827,7 @@ class Option(Parameter):
 
         if deprecated:
             label = _format_deprecated_label(deprecated)
-            help = f"{help} {label}" if help is not None else label
+            help = f"{help} {label}" if help else label
 
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt
