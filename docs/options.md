@@ -352,7 +352,7 @@ Use cases for this more explicit pattern include:
 * Shell aliases can set a flag, then an invocation can add a negation of the
   flag
 
-If a forward slash(`/`) is contained in your option name already, you can split
+If a forward slash (`/`) is contained in your option name already, you can split
 the parameters using `;`. In Windows `/` is commonly used as the prefix
 character.
 
@@ -709,7 +709,7 @@ Here are the rules used to parse environment variable values for flag options:
 ```{caution}
 For boolean flags with a pair of values, the only recognized environment variable is the one provided to the `envvar` argument.
 
-So an option defined as `--flag\--no-flag`, with a `envvar="FLAG"` parameter, there is no magical `NO_FLAG=<anything>` variable that is recognized. Only the `FLAG=<anything>` environment variable is recognized.
+So an option defined as `--flag/--no-flag`, with an `envvar="FLAG"` parameter, there is no magical `NO_FLAG=<anything>` variable that is recognized. Only the `FLAG=<anything>` environment variable is recognized.
 ```
 
 If the flag is activated, its value is set to `flag_value`. Otherwise, the value
