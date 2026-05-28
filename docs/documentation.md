@@ -15,7 +15,7 @@ Simple example:
 .. click:example::
 
     @click.command()
-    @click.argument('name')
+    @click.argument('name', help='The name to print')
     @click.option('--count', default=1, help='number of greetings')
     def hello(name: str, count: int):
         """This script prints hello and a name one or more times."""
@@ -113,8 +113,10 @@ The help epilog is printed at the end of the help and is useful for showing exam
 
 ## Documenting Arguments
 
-{class}`click.argument` does not take a `help` parameter. This follows the Unix Command Line Tools convention of using arguments only for necessary things and documenting them in the command help text
-by name. This should then be done via the docstring.
+{class}`click.argument` accepts an optional `help` parameter that is shown in
+the ``Positional arguments`` section of the help page. You can still document
+arguments in the command docstring, especially when you want to describe them
+in the main help text by name.
 
 A brief example:
 
@@ -122,7 +124,7 @@ A brief example:
 .. click:example::
 
     @click.command()
-    @click.argument('filename')
+    @click.argument('filename', help='The file to print.')
     def touch(filename):
         """Print FILENAME."""
         click.echo(filename)
@@ -131,7 +133,7 @@ A brief example:
     invoke(touch, args=['--help'])
 ```
 
-Or more explicitly:
+Or more explicitly in the docstring:
 
 ```{eval-rst}
 .. click:example::
