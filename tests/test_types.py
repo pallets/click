@@ -235,6 +235,10 @@ def test_path_surrogates(tmp_path, monkeypatch):
     path.unlink()
 
 
+@pytest.mark.skipif(
+    not _non_utf8_filenames_supported(),
+    reason="The current OS or FS doesn't support non-UTF-8 filenames.",
+)
 @pytest.mark.parametrize(
     "type",
     [
@@ -254,6 +258,10 @@ def test_file_surrogates(type, tmp_path):
         type.convert(path, None, None)
 
 
+@pytest.mark.skipif(
+    not _non_utf8_filenames_supported(),
+    reason="The current OS or FS doesn't support non-UTF-8 filenames.",
+)
 def test_file_error_surrogates():
     message = FileError(filename="\udcff").format_message()
     assert message == "Could not open file '�': unknown error"
