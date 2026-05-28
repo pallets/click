@@ -130,11 +130,11 @@ it's good to know that the system works this way.
 ```{eval-rst}
 .. click:example::
 
-    import urllib
+    import urllib.request
 
     def open_url(ctx, param, value):
         if value is not None:
-            ctx.params['fp'] = urllib.urlopen(value)
+            ctx.params['fp'] = urllib.request.urlopen(value)
             return value
 
     @click.command()
@@ -159,17 +159,16 @@ What's more recommended is to pass the information in a wrapper, however:
 
 .. click:example::
 
-    import urllib
+    import urllib.request
 
-    class URL(object):
-
+    class URL:
         def __init__(self, url, fp):
             self.url = url
             self.fp = fp
 
     def open_url(ctx, param, value):
         if value is not None:
-            return URL(value, urllib.urlopen(value))
+            return URL(value, urllib.request.urlopen(value))
 
     @click.command()
     @click.option('--url', callback=open_url)
@@ -196,7 +195,7 @@ token to lowercase:
 ```{eval-rst}
 .. click:example::
 
-    CONTEXT_SETTINGS = dict(token_normalize_func=lambda x: x.lower())
+    CONTEXT_SETTINGS = {'token_normalize_func': lambda x: x.lower()}
 
     @click.command(context_settings=CONTEXT_SETTINGS)
     @click.option('--name', default='Pete')
@@ -291,17 +290,14 @@ In the end, the result looks something like this:
 ```{eval-rst}
 .. click:example::
 
-    import sys
     from subprocess import call
 
-    @click.command(context_settings=dict(
-        ignore_unknown_options=True,
-    ))
+    @click.command(context_settings={'ignore_unknown_options': True})
     @click.option('-v', '--verbose', is_flag=True, help='Enables verbose mode')
     @click.argument('timeit_args', nargs=-1, type=click.UNPROCESSED)
     def cli(verbose, timeit_args):
         """A fake wrapper around Python's timeit."""
-        cmdline = ['echo', 'python', '-mtimeit'] + list(timeit_args)
+        cmdline = ['echo', 'python', '-mtimeit', *timeit_args]
         if verbose:
             click.echo(f"Invoking: {' '.join(cmdline)}")
         call(cmdline)
@@ -331,7 +327,7 @@ are important to know about how this ignoring of unhandled flag happens:
 - Unknown short options might be partially handled and reassembled if
   necessary. For instance in the above example there is an option
   called `-v` which enables verbose mode. If the command would be
-  ignored with `-va` then the `-v` part would be handled by Click
+  invoked with `-va` then the `-v` part would be handled by Click
   (as it is known) and `-a` would end up in the leftover parameters
   for further processing.
 - Depending on what you plan on doing you might have some success by
@@ -409,8 +405,8 @@ cleanup function.
 @click.group()
 @click.option("--name", default="repo.db")
 @click.pass_context
-def cli(ctx, repo_home):
-    ctx.obj = db = open_db(repo_home)
+def cli(ctx, name):
+    ctx.obj = db = open_db(name)
 
     @ctx.call_on_close
     def close_db():

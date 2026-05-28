@@ -299,6 +299,33 @@ def test_invoked_subcommand(runner):
     assert result.output == "no subcommand, use default\nin subcommand\n"
 
 
+@pytest.mark.parametrize(
+    ("chain", "invoke_without_command", "metavar"),
+    [
+        (False, False, "COMMAND [ARGS]..."),
+        (False, True, "[COMMAND] [ARGS]..."),
+        (True, False, "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."),
+        (True, True, "[COMMAND1] [ARGS]... [COMMAND2 [ARGS]...]..."),
+    ],
+)
+def test_subcommand_metavar_marks_optional(
+    runner, chain, invoke_without_command, metavar
+):
+    """The leading subcommand token is bracketed only when it is optional."""
+
+    @click.group(chain=chain, invoke_without_command=invoke_without_command)
+    def cli():
+        pass
+
+    @cli.command()
+    def sub():
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert result.output.splitlines()[0] == f"Usage: cli [OPTIONS] {metavar}"
+
+
 def test_aliased_command_canonical_name(runner):
     class AliasedGroup(click.Group):
         def get_command(self, ctx, cmd_name):
@@ -489,6 +516,22 @@ def test_deprecated_in_help_messages(runner, doc, deprecated):
 
     if isinstance(deprecated, str):
         assert deprecated in result.output
+
+
+@pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])
+@pytest.mark.parametrize("doc", ["", None])
+def test_deprecated_empty_help_no_leading_space(runner, doc, deprecated):
+    """A command with empty or missing help text must render the deprecation
+    label at the normal indentation, without a stray leading space.
+    """
+
+    @click.command(deprecated=deprecated, help=doc)
+    def cli():
+        pass
+
+    out = runner.invoke(cli, ["--help"]).output
+    assert "\n  (DEPRECATED" in out
+    assert "\n   (DEPRECATED" not in out
 
 
 @pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])

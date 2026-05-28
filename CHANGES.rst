@@ -18,6 +18,11 @@ Unreleased
     tabs in option help text are now escaped, keeping the original completion
     format while still supporting multi-line help. :issue:`3502`
     :issue:`3043` :pr:`3504` :pr:`3508`
+-   Deprecated commands and options with empty or missing help text no longer
+    render a stray leading space before the ``(DEPRECATED)`` label. :pr:`3509`
+-   A :class:`Group` with ``invoke_without_command=True`` marks its subcommand as
+    optional in the usage help, showing ``[COMMAND]`` instead of ``COMMAND``.
+    :issue:`3059` :pr:`3507`
 
 
 Version 8.4.1

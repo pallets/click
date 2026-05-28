@@ -1189,7 +1189,8 @@ class Command:
             text = ""
 
         if self.deprecated:
-            text = f"{_(text)} {_format_deprecated_label(self.deprecated)}"
+            label = _format_deprecated_label(self.deprecated)
+            text = f"{_(text)} {label}" if text else label
 
         if text:
             formatter.write_paragraph()
@@ -1622,8 +1623,15 @@ class Group(Command):
         self.invoke_without_command = invoke_without_command
 
         if subcommand_metavar is None:
+            # When the group can run without a subcommand, the leading command
+            # token is optional, so wrap it in brackets to reflect that.
             if chain:
-                subcommand_metavar = "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."
+                if invoke_without_command:
+                    subcommand_metavar = "[COMMAND1] [ARGS]... [COMMAND2 [ARGS]...]..."
+                else:
+                    subcommand_metavar = "COMMAND1 [ARGS]... [COMMAND2 [ARGS]...]..."
+            elif invoke_without_command:
+                subcommand_metavar = "[COMMAND] [ARGS]..."
             else:
                 subcommand_metavar = "COMMAND [ARGS]..."
 
@@ -2826,7 +2834,7 @@ class Option(Parameter):
 
         if deprecated:
             label = _format_deprecated_label(deprecated)
-            help = f"{help} {label}" if help is not None else label
+            help = f"{help} {label}" if help else label
 
         self.prompt = prompt_text
         self.confirmation_prompt = confirmation_prompt

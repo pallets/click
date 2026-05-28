@@ -222,6 +222,11 @@ class ShellComplete:
     be provided by subclasses.
     """
 
+    cli: Command
+    ctx_args: cabc.MutableMapping[str, t.Any]
+    prog_name: str
+    complete_var: str
+
     def __init__(
         self,
         cli: Command,
@@ -305,8 +310,8 @@ class ShellComplete:
 class BashComplete(ShellComplete):
     """Shell completion for Bash."""
 
-    name = "bash"
-    source_template = _SOURCE_BASH
+    name: t.ClassVar[str] = "bash"
+    source_template: t.ClassVar[str] = _SOURCE_BASH
 
     @staticmethod
     def _check_version() -> None:
@@ -364,8 +369,8 @@ class BashComplete(ShellComplete):
 class ZshComplete(ShellComplete):
     """Shell completion for Zsh."""
 
-    name = "zsh"
-    source_template = _SOURCE_ZSH
+    name: t.ClassVar[str] = "zsh"
+    source_template: t.ClassVar[str] = _SOURCE_ZSH
 
     def get_completion_args(self) -> tuple[list[str], str]:
         cwords = split_arg_string(os.environ["COMP_WORDS"])
@@ -400,8 +405,8 @@ class ZshComplete(ShellComplete):
 class FishComplete(ShellComplete):
     """Shell completion for Fish."""
 
-    name = "fish"
-    source_template = _SOURCE_FISH
+    name: t.ClassVar[str] = "fish"
+    source_template: t.ClassVar[str] = _SOURCE_FISH
 
     def get_completion_args(self) -> tuple[list[str], str]:
         cwords = split_arg_string(os.environ["COMP_WORDS"])
