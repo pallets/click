@@ -424,6 +424,7 @@ def version_option(
     package_name: str | None = None,
     prog_name: str | None = None,
     message: str | None = None,
+    module_name: str | None = None,
     **kwargs: t.Any,
 ) -> t.Callable[[FC], FC]:
     """Add a ``--version`` option which immediately prints the version
@@ -441,15 +442,25 @@ def version_option(
         will try to detect it.
     :param param_decls: One or more option names. Defaults to the single
         value ``"--version"``.
-    :param package_name: The package name to detect the version from. If
-        not provided, Click will try to detect it.
+    :param package_name: The name of the installed distribution to look
+        up the version from via ``importlib.metadata``. If not provided,
+        Click will try to detect it from the calling module.
     :param prog_name: The name of the CLI to show in the message. If not
         provided, it will be detected from the command.
     :param message: The message to show. The values ``%(prog)s``,
         ``%(package)s``, and ``%(version)s`` are available. Defaults to
         ``"%(prog)s, version %(version)s"``.
+    :param module_name: The Python import name of the calling module.
+        Used for auto-detection when the module name differs from the
+        installed distribution name (e.g., ``module_name="PIL"`` with
+        ``package_name="Pillow"``). If not provided, Click will try to
+        detect it from the stack frame.
     :param kwargs: Extra arguments are passed to :func:`option`.
     :raise RuntimeError: ``version`` could not be detected.
+
+    .. versionchanged:: 8.2
+        Add the ``module_name`` parameter to separate module name from
+        distribution package name for auto-detection.
 
     .. versionchanged:: 8.0
         Add the ``package_name`` parameter, and the ``%(package)s``
@@ -464,7 +475,7 @@ def version_option(
     if message is None:
         message = _("%(prog)s, version %(version)s")
 
-    if version is None and package_name is None:
+    if module_name is None and version is None:
         frame = inspect.currentframe()
         f_back = frame.f_back if frame is not None else None
         f_globals = f_back.f_globals if f_back is not None else None
@@ -473,13 +484,18 @@ def version_option(
         del frame
 
         if f_globals is not None:
-            package_name = f_globals.get("__name__")
+            module_name = f_globals.get("__name__")
 
-            if package_name == "__main__":
-                package_name = f_globals.get("__package__")
+            if module_name == "__main__":
+                module_name = f_globals.get("__package__")
 
-            if package_name:
-                package_name = package_name.partition(".")[0]
+            if module_name:
+                module_name = module_name.partition(".")[0]
+
+    # If package_name was not explicitly set, default to the detected module name.
+    # This preserves backwards compatibility for cases where module_name == package_name.
+    if package_name is None:
+        package_name = module_name
 
     def callback(ctx: Context, param: Parameter, value: bool) -> None:
         if not value or ctx.resilient_parsing:
@@ -497,6 +513,13 @@ def version_option(
             try:
                 version = importlib.metadata.version(package_name)
             except importlib.metadata.PackageNotFoundError:
+                if module_name is not None and module_name != package_name:
+                    raise RuntimeError(
+                        f"{package_name!r} is not installed. "
+                        f"Module name {module_name!r} does not match the installed "
+                        f"distribution name. Pass 'package_name' explicitly, or pass "
+                        f"'version' directly."
+                    ) from None
                 raise RuntimeError(
                     f"{package_name!r} is not installed. Try passing"
                     " 'package_name' instead."
