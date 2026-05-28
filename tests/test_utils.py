@@ -716,6 +716,21 @@ def test_iter_lazyfile(tmpdir):
                 assert e_line == a_line.strip()
 
 
+@pytest.mark.skipif(WIN, reason="Named pipes are not supported on Windows.")
+def test_lazyfile_does_not_eagerly_open_fifo(tmp_path, monkeypatch):
+    path = tmp_path / "fifo"
+    os.mkfifo(path)
+
+    def fail_open(*args, **kwargs):
+        pytest.fail("LazyFile should not eagerly open FIFOs")
+
+    with monkeypatch.context() as m:
+        m.setattr("builtins.open", fail_open)
+        lazy_file = click.utils.LazyFile(path)
+
+    assert lazy_file._f is None
+
+
 class MockMain:
     __slots__ = "__package__"
 

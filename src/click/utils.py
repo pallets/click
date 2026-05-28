@@ -3,6 +3,7 @@ from __future__ import annotations
 import collections.abc as cabc
 import os
 import re
+import stat
 import sys
 import typing as t
 from functools import update_wrapper
@@ -44,6 +45,13 @@ def safecall(func: t.Callable[P, R]) -> t.Callable[P, R | None]:
         return None
 
     return update_wrapper(wrapper, func)
+
+
+def _is_fifo(filename: str | os.PathLike[str]) -> bool:
+    try:
+        return stat.S_ISFIFO(os.stat(filename).st_mode)
+    except OSError:
+        return False
 
 
 def make_str(value: t.Any) -> str:
@@ -141,7 +149,7 @@ class LazyFile:
         if self.name == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
         else:
-            if "r" in mode:
+            if "r" in mode and not _is_fifo(filename):
                 # Open and close the file in case we're opening it for
                 # reading so that we can catch at least some errors in
                 # some cases early.
