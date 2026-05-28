@@ -3251,6 +3251,57 @@ def test_flag_group_competition_non_boolean(runner, opts, args, expected):
 
 
 @pytest.mark.parametrize(
+    ("args", "expected", "fetched"),
+    [
+        # The plain value option is used: callback never fetches.
+        (["--custom", "bar"], "bar", False),
+        # Only the flag is used: its callback must process the flag_value and
+        # the result must not be clobbered by the sibling value option, which
+        # the user never invoked.
+        (["--fetch"], "foo", True),
+        # Both used, flag last: the flag's processed value wins.
+        (["--custom", "bar", "--fetch"], "foo", True),
+        # Both used, value option last: the explicit value wins and, because
+        # the parser stores it under the shared name, the callback sees the
+        # value rather than the flag sentinel, so no fetch happens.
+        (["--fetch", "--custom", "bar"], "bar", False),
+    ],
+)
+def test_flag_group_callback_not_clobbered_by_sibling(runner, args, expected, fetched):
+    """A flag option's ``callback`` result must survive when a sibling option
+    shares its parameter name but was not invoked.
+
+    When only the flag is given, the parser stores the flag's ``flag_value``
+    under the shared name. The sibling value option must not adopt that value
+    as if the user had typed it, which would otherwise overwrite the callback's
+    processed result with the raw sentinel.
+
+    Regression test for https://github.com/pallets/click/issues/2786
+    """
+    sentinel = "$_fetch"
+    calls = []
+
+    def callback(ctx, param, value):
+        if value is sentinel:
+            calls.append(value)
+            return "foo"
+        return value
+
+    @click.command()
+    @click.option("--custom", "custom")
+    @click.option("--fetch", "custom", flag_value=sentinel, callback=callback)
+    def cli(custom):
+        click.echo(repr(custom), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0, result.output
+    assert result.output == repr(expected)
+    # The external resource must be fetched exactly once when --fetch is used.
+    assert bool(calls) is fetched
+    assert len(calls) <= 1
+
+
+@pytest.mark.parametrize(
     ("default_a", "default_b", "args", "expected"),
     [
         # ``default=UNSET`` and an absent ``default`` keyword must produce

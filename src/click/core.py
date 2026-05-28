@@ -477,6 +477,12 @@ class Context:
         # parameter name and both fall back to their default value.
         # Refs: https://github.com/pallets/click/issues/3403
         self._param_default_explicit: dict[str, bool] = {}
+        # The parameters that the parser actually saw on the command line, in
+        # invocation order. Used so that an option which shares a parameter name
+        # with a sibling (a feature-switch group) does not adopt the sibling's
+        # parsed value as if the user had provided it for this option too.
+        # Refs: https://github.com/pallets/click/issues/2786
+        self._invoked_params: list[Parameter] = []
         self._exit_stack = ExitStack()
 
     @property
@@ -1276,6 +1282,7 @@ class Command:
 
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
+        ctx._invoked_params = param_order
 
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
             _, args = param.handle_parse_result(ctx, opts, args)
@@ -2350,6 +2357,11 @@ class Parameter(ABC):
             value = self.default
 
         if call and callable(value):
+            # In resilient parsing mode (e.g. shell completion) skip
+            # evaluating callable defaults — they may be expensive and have
+            # side effects we don't want during completion. See issue #2614.
+            if ctx.resilient_parsing:
+                return None
             value = value()
 
         return value
@@ -2372,6 +2384,21 @@ class Parameter(ABC):
         """
         # Collect from the parse the value passed by the user to the CLI.
         value = opts.get(self.name, UNSET)
+
+        # When several parameters share the same name (a feature-switch group),
+        # the parser stores their values under that single name. A value is only
+        # ours if this parameter was actually invoked; otherwise it was set by a
+        # sibling option and must not be treated as if the user provided it here.
+        # Falling through to UNSET lets this option resolve its own default and
+        # avoids clobbering the invoked sibling's processed value.
+        # Refs: https://github.com/pallets/click/issues/2786
+        if (
+            value is not UNSET
+            and self not in ctx._invoked_params
+            and ctx._invoked_params
+        ):
+            value = UNSET
+
         # If the value is set, it means it was sourced from the command line by the
         # parser, otherwise it left unset by default.
         source = (
