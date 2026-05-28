@@ -27,8 +27,6 @@ from __future__ import annotations
 import collections.abc as cabc
 import typing as t
 from collections import deque
-from gettext import gettext as _
-from gettext import ngettext
 
 from ._utils import FLAG_NEEDS_VALUE
 from ._utils import UNSET
@@ -36,6 +34,8 @@ from .exceptions import BadArgumentUsage
 from .exceptions import BadOptionUsage
 from .exceptions import NoSuchOption
 from .exceptions import UsageError
+from .locales import gettext as _
+from .locales import ngettext
 
 if t.TYPE_CHECKING:
     from ._utils import T_FLAG_NEEDS_VALUE

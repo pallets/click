@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import collections.abc as cabc
 import typing as t
-from gettext import gettext as _
-from gettext import ngettext
 
 from ._compat import get_text_stderr
 from .globals import resolve_color_default
+from .locales import gettext as _
+from .locales import ngettext
 from .utils import echo
 from .utils import format_filename
 

@@ -1,0 +1,180 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: bg_BG"
+"Plural-Forms: nplurals=2; plural=n == 1 ? 0 : 1;"
+
+msgid  "{editor}: Editing failed"
+msgstr "{editor}: Редактирането се провалили"
+
+msgid  "{editor}: Editing failed: {e}"
+msgstr "{editor}: Редактирането се провалили: {e}"
+
+msgid  "Aborted!"
+msgstr "Авария!"
+
+msgid  "Show this message and exit."
+msgstr "Покажи това съобщение и излез."
+
+msgid  "Usage:"
+msgstr "Използване:"
+
+msgid  "(Deprecated) {text}"
+msgstr "(Депрекиран) {text}"
+
+msgid  "Options"
+msgstr "Опции"
+
+msgid        "Got unexpected extra argument ({args})"
+msgid_plural "Got unexpected extra arguments ({args})"
+msgstr[0]    "Получен е неочакван допълнителен аргумент ({args})"
+msgstr[1]    "Получени са неочаквани допълнителни аргументи ({args})"
+
+msgid  "DeprecationWarning: The command {name!r} is deprecated."
+msgstr "DeprecationWarning: Командата {name!r} е депрекирана."
+
+msgid  "Commands"
+msgstr "Команди"
+
+msgid  "Missing command."
+msgstr "Липсва команда."
+
+msgid  "No such command {name!r}."
+msgstr "Няма команда {name!r}."
+
+msgid        "Argument {name!r} takes {nargs} values but 1 was given."
+msgid_plural "Argument {name!r} takes {nargs} values but {len} were given."
+msgstr[0]    "Аргументът {name!r} приема {nargs} стойности, но е дадена 1."
+msgstr[1]    "Аргументът {name!r} приема {nargs} стойности, но са дадени {len}."
+
+msgid  "env var: {var}"
+msgstr "променлива на средата: {var}"
+
+msgid  "default: {default}"
+msgstr "по подразбиране: {default}"
+
+msgid  "required"
+msgstr "задължително"
+
+msgid  "%(prog)s, version %(version)s"
+msgstr "%(prog)s, версия %(version)s"
+
+msgid  "Show the version and exit."
+msgstr "Покажи версията и излез."
+
+msgid  "Error: {message}"
+msgstr "Грешка: {message}"
+
+msgid  "Try '{command} {option}' for help."
+msgstr "Опитайте '{command} {option}' за помощ."
+
+msgid  "Invalid value: {message}"
+msgstr "Невалидна стойност."
+
+msgid  "Invalid value for {param_hint}: {message}"
+msgstr "Невалидна стойност за {param_hint}: {message}"
+
+msgid  "Missing argument."
+msgstr "Липсващ аргумент."
+
+msgid  "Missing option."
+msgstr "Липсваща опция."
+
+msgid  "Missing parameter."
+msgstr "Липсващ параметър."
+
+msgid  "Missing {param_type}."
+msgstr "Липсва {param_type}."
+
+msgid  "Missing parameter: {param_name}"
+msgstr "Липсващ параметър: {param_name}"
+
+msgid  "No such option: {name}"
+msgstr "Няма такава опция: {name}."
+
+msgid        "Did you mean {possibility}?"
+msgid_plural "(Possible options: {possibilities})"
+msgstr[0]    "Имали сте предвид {possibility}?"
+msgstr[1]    "(Възможни варианти {possibilities})"
+
+msgid  "unknown error"
+msgstr "неизвестна грешка"
+
+msgid  "Could not open file {filename!r}: {message}"
+msgstr "Не можах да отворя файла {filename!r}: {message}"
+
+msgid  "Argument {name!r} takes {nargs} values."
+msgstr "Аргументът {name!r} приема {nargs} стойности."
+
+msgid  "Option {name!r} does not take a value."
+msgstr "Опцията {name!r} не приема стойности."
+
+msgid        "Option {name!r} requires an argument."
+msgid_plural "Option {name!r} requires {nargs} arguments."
+msgstr[0]    "Опцията {name!r} изисква аргумент."
+msgstr[1]    "Опцията {name!r} изисква {nargs} аргумента."
+
+msgid  "Repeat for confirmation"
+msgstr "Повторете за потвърждение"
+
+msgid  "Error: The value you entered was invalid."
+msgstr "Грешка: Въведената стойност е невалидна."
+
+msgid  "Error: The two entered values do not match."
+msgstr "Грешка: Двете въведени стойности не съвпадат."
+
+msgid  "Error: invalid input."
+msgstr "Грешка: невалидна въведена стойност."
+
+msgid  "Press any key to continue..."
+msgstr "Натиснете произволен клавиш, за да продължите..."
+
+msgid  "Choose from:\n\t{choices}"
+msgstr "Изберете сред:\n\t{choices}"
+
+msgid        "{value!r} is not {choice}."
+msgid_plural "{value!r} is not one of {choices}."
+msgstr[0]    "{value!r} не съвпада с {choice}."
+msgstr[1]    "{value!r} не е сред {choices}."
+
+msgid        "{value!r} does not match the format {format}."
+msgid_plural "{value!r} is not one of {choices}."
+msgstr[0]    "{value!r} няма формат {format}."
+msgstr[1]    "{value!r} не е сред форматите {formats}."
+
+msgid  "{value!r} is not a valid {number_type}."
+msgstr "{value!r} не е валидно {number_type}."
+
+msgid  "{value!r} is not a valid {range}."
+msgstr "{value!r} не в диапазона {range}."
+
+msgid  "{value!r} is not a valid boolean."
+msgstr "{value!r} не е валидна булева стойност."
+
+msgid  "{value!r} is not a valid UUID."
+msgstr "{value!r} не е валидно UUID."
+
+msgid  "file"
+msgstr "файл"
+
+msgid  "directory"
+msgstr "директория"
+
+msgid  "path"
+msgstr "път"
+
+msgid  "{name} {filename!r} does not exist."
+msgstr "{name} {filename!r} не съществува."
+
+msgid  "{name} {filename!r} is a file."
+msgstr "{name} {filename!r} е файл."
+
+msgid  "{name} {filename!r} is a directory."
+msgstr "{name} {filename!r} е директория."
+
+msgid  "{name} {filename!r} is not writable."
+msgstr "не е позволено записването в {name} {filename!r}."
+
+msgid  "{name} {filename!r} is not readable."
+msgstr "не е позволено четенето от {name} {filename!r}."

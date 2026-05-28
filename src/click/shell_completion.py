@@ -4,7 +4,6 @@ import collections.abc as cabc
 import os
 import re
 import typing as t
-from gettext import gettext as _
 
 from .core import Argument
 from .core import Command
@@ -13,6 +12,7 @@ from .core import Group
 from .core import Option
 from .core import Parameter
 from .core import ParameterSource
+from .locales import gettext as _
 from .utils import echo
 
 
