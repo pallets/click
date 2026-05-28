@@ -9,6 +9,9 @@ Unreleased
     Colorama is no longer a dependency and is not used. :issue:`2986` :pr:`3505`
 -   :class:`Argument` accepts a ``help`` parameter, and help output includes
     a ``Positional arguments`` section when argument help is available. :issue:`2983` :pr:`3473`
+-   ``test_file_surrogates`` and ``test_file_error_surrogates`` now skip on
+    filesystems that do not support non-UTF-8 filenames, matching the existing
+    guard on ``test_path_surrogates``. :issue:`2634`
 
 
 Version 8.4.2
