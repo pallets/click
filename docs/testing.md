@@ -117,6 +117,55 @@ def test_sync():
   assert 'Syncing' in result.output
 ```
 
+## Shell Completion
+
+Shell completion can be tested without installing the completion script into a
+real shell. Create a {class}`~click.shell_completion.ShellComplete` instance for
+the command and call
+{meth}`~click.shell_completion.ShellComplete.get_completions` with the already
+parsed arguments and the incomplete word.
+
+```{code-block} python
+:caption: test_completion.py
+
+import click
+from click.shell_completion import ShellComplete
+
+
+def _get_completions(cli, args, incomplete):
+   comp = ShellComplete(cli, {}, cli.name, "_CLI_COMPLETE")
+   return comp.get_completions(args, incomplete)
+
+
+def _get_words(cli, args, incomplete):
+   return [item.value for item in _get_completions(cli, args, incomplete)]
+
+
+def complete_names(ctx, param, incomplete):
+   names = ["alice", "bob", "carol"]
+   return [name for name in names if name.startswith(incomplete)]
+
+
+@click.command()
+@click.option("--count", type=int)
+@click.argument("name", shell_complete=complete_names)
+def hello(count, name):
+   click.echo(f"{name}: {count}")
+
+
+def test_option_completion():
+   assert _get_words(hello, [], "--c") == ["--count"]
+
+
+def test_argument_completion():
+   assert _get_words(hello, [], "a") == ["alice"]
+```
+
+Use this style to test Click's completion logic directly. To test the
+shell-specific output format, invoke the command with the same environment
+variables that the generated completion script would set, such as
+`_CLI_COMPLETE=bash_complete` and `COMP_WORDS`.
+
 ## File System Isolation
 
 The {meth}`CliRunner.isolated_filesystem` context manager sets the current
