@@ -8,6 +8,7 @@ import pdb
 import shlex
 import sys
 import tempfile
+import threading
 import typing as t
 from types import TracebackType
 
@@ -24,7 +25,7 @@ if t.TYPE_CHECKING:
 
 CaptureMode: t.TypeAlias = t.Literal["sys", "fd"]
 ExceptionInfo: t.TypeAlias = tuple[type[BaseException], BaseException, TracebackType]
-
+_isolated_filesystem_lock = threading.Lock()
 
 class EchoingStdin:
     _input: t.BinaryIO
@@ -750,20 +751,23 @@ class CliRunner:
 
         .. versionchanged:: 8.0
             Added the ``temp_dir`` parameter.
+
+        .. versionchanged:: 8.x
+            Added a module-level lock to prevent threads from racing on chdir
         """
         cwd = os.getcwd()
         dt = tempfile.mkdtemp(dir=temp_dir)
-        os.chdir(dt)
+        with _isolated_filesystem_lock:
+            os.chdir(dt)
+            try:
+                yield dt
+            finally:
+                os.chdir(cwd)
 
-        try:
-            yield dt
-        finally:
-            os.chdir(cwd)
+                if temp_dir is None:
+                    import shutil
 
-            if temp_dir is None:
-                import shutil
-
-                try:
-                    shutil.rmtree(dt)
-                except OSError:
-                    pass
+                    try:
+                        shutil.rmtree(dt)
+                    except OSError:
+                        pass

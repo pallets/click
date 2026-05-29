@@ -3,6 +3,7 @@ import io
 import os
 import pdb
 import sys
+import threading
 from io import BytesIO
 
 import pytest
@@ -453,6 +454,23 @@ def test_isolated_runner_custom_tempdir(runner, tmp_path):
     assert os.path.exists(d)
     os.rmdir(d)
 
+def test_isolated_filesystem(runner):
+    """isolated_filesystem should give each thread its own working directory.
+    """
+    def worker(name, results, barrier):
+        barrier.wait()
+        with runner.isolated_filesystem() as path:
+            results[name] = (path, os.getcwd())
+            assert os.path.exists(path)
+
+    barrier = threading.Barrier(2)
+    results = {}
+    t1 = threading.Thread(target=worker, args=("worker_1", results, barrier))
+    t2 = threading.Thread(target=worker, args=("worker_2", results, barrier))
+    t1.start(); t2.start(); t1.join(); t2.join()
+
+    for promised, actual in results.values():
+        assert os.path.realpath(promised) == os.path.realpath(actual)
 
 def test_isolation_stderr_errors():
     """Writing to stderr should escape invalid characters instead of
