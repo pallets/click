@@ -16,7 +16,6 @@ import pytest
 
 import click._termui_impl
 import click.utils
-from click._compat import MAC
 from click._compat import WIN
 from click._utils import UNSET
 
@@ -286,6 +285,11 @@ def _test_gen_func():
 
 
 def _test_gen_func_fails():
+    raise RuntimeError("This is a test.")
+    yield  # unreachable, keeps this a generator function
+
+
+def _test_gen_func_yields_then_fails():
     yield "test"
     raise RuntimeError("This is a test.")
 
@@ -315,10 +319,6 @@ EchoViaPagerTest = namedtuple(
 
 
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
-@pytest.mark.skipif(
-    MAC and sys.version_info >= (3, 13) and not sys._is_gil_enabled(),
-    reason="Generator exception tests are flaky in Python 3.14t on macOS.",
-)
 @pytest.mark.parametrize(
     "pager_cmd", ["cat", "cat ", " cat ", "less", " less", " less "]
 )
@@ -454,6 +454,75 @@ def test_echo_via_pager(monkeypatch, capfd, pager_cmd, test, tmp_path):
     assert err == expected_stderr, (
         f"Unexpected stderr in test case '{test.description}'"
     )
+
+
+@pytest.mark.skipif(WIN, reason="Different behavior on windows.")
+def test_echo_via_pager_yields_before_exception(monkeypatch, tmp_path):
+    """A generator that yields then raises: click writes the partial output to
+    the pager stream before propagating the exception.
+
+    The pager file content is intentionally NOT asserted: pipe-drain timing
+    between click and the pager subprocess is outside click's control
+    (#2899, #3470). Spying on ``MaybeStripAnsi.write`` records what click sent
+    to the pager, which is deterministic regardless of scheduling.
+    """
+    monkeypatch.setitem(os.environ, "PAGER", "cat")
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
+
+    writes: list[str] = []
+    real_write = click._termui_impl.MaybeStripAnsi.write
+
+    def spy(self, text):
+        writes.append(text)
+        return real_write(self, text)
+
+    monkeypatch.setattr(click._termui_impl.MaybeStripAnsi, "write", spy)
+
+    pager_out_tmp = tmp_path / "pager_out.txt"
+    with (
+        pager_out_tmp.open("w") as f,
+        patch.object(subprocess, "Popen", partial(subprocess.Popen, stdout=f)),
+        pytest.raises(RuntimeError, match="This is a test."),
+    ):
+        click.echo_via_pager(_test_gen_func_yields_then_fails())
+
+    assert "".join(writes) == "test", (
+        f"click should have written the yielded chunk before exception, got {writes!r}"
+    )
+
+
+@pytest.mark.stress
+@pytest.mark.skipif(WIN, reason="Different behavior on windows.")
+@pytest.mark.parametrize("_", range(1000))
+def test_stress_echo_via_pager_exception_cleanup(_, monkeypatch, tmp_path):
+    """Repeated exceptions during ``echo_via_pager`` must not leak subprocesses.
+
+    Regression coverage for the cleanup path in ``_pipepager``'s exception
+    handler (issue #2899, PR #3470). Each iteration spawns a real pager
+    subprocess, raises before any data is written and check there is no leak.
+    """
+    monkeypatch.setitem(os.environ, "PAGER", "cat")
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
+
+    spawned: list[subprocess.Popen] = []
+    real_popen = subprocess.Popen
+
+    def tracking_popen(*args, **kwargs):
+        p = real_popen(*args, **kwargs)
+        spawned.append(p)
+        return p
+
+    pager_out_tmp = tmp_path / "pager_out.txt"
+    with (
+        pager_out_tmp.open("w") as f,
+        patch.object(subprocess, "Popen", partial(tracking_popen, stdout=f)),
+        pytest.raises(RuntimeError),
+    ):
+        click.echo_via_pager(_test_gen_func_fails())
+
+    assert spawned, "pager subprocess was never started"
+    for p in spawned:
+        assert p.returncode is not None, "pager subprocess not reaped"
 
 
 def test_echo_color_flag(monkeypatch, capfd):

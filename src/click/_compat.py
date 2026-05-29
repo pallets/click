@@ -12,7 +12,6 @@ from weakref import WeakKeyDictionary
 
 CYGWIN = sys.platform.startswith("cygwin")
 WIN = sys.platform.startswith("win")
-MAC = sys.platform == "darwin"
 auto_wrap_for_ansi: t.Callable[[t.TextIO], t.TextIO] | None = None
 _ansi_re = re.compile(r"\033\[[;?0-9]*[a-zA-Z]")
 

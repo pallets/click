@@ -185,12 +185,11 @@ commands = [[
 ]]
 
 [tool.tox.env.stress]
-description = "stress tests for stream lifecycle race conditions"
+description = "high-iteration stress tests for race conditions"
 commands = [[
     "pytest", "-v", "--tb=short", "-x", "-m", "stress",
     "--basetemp={env_tmp_dir}",
     "--override-ini=addopts=",
-    "tests/test_stream_lifecycle.py",
     {replace = "posargs", default = [], extend = true},
 ]]
 
