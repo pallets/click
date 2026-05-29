@@ -14,6 +14,9 @@ Unreleased
 -   A :class:`Group` with ``invoke_without_command=True`` marks its subcommand as
     optional in the usage help, showing ``[COMMAND]`` instead of ``COMMAND``.
     :issue:`3059` :pr:`3507`
+-   ``echo_via_pager`` flushes after each write, so passing a generator streams
+    output to the pager incrementally instead of staying hidden until the pipe
+    buffer fills. :issue:`3242` :issue:`2542` :pr:`3534`
 
 
 Version 8.4.1
