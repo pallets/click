@@ -42,6 +42,10 @@ classes and functions.
 ```
 
 ```{eval-rst}
+.. autofunction:: custom_version_option
+```
+
+```{eval-rst}
 .. autofunction:: help_option
 ```
 
