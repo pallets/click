@@ -25,6 +25,8 @@ Unreleased
 -   A :class:`Group` with ``invoke_without_command=True`` marks its subcommand as
     optional in the usage help, showing ``[COMMAND]`` instead of ``COMMAND``.
     :issue:`3059` :pr:`3507`
+-   Lock the ``chdir`` in :meth:`CliRunner.isolated_filesystem` so it is
+    safe to use from multiple threads. :issue:`3501`
 
 
 Version 8.4.1
