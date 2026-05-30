@@ -726,6 +726,44 @@ def test_echo_via_pager_real_pager_handles_ansi(monkeypatch, capfd, color, expec
     assert out == expected
 
 
+def test_echo_via_pager_streams_each_write(monkeypatch):
+    """Each write is flushed so a slow generator streams to the pager
+    incrementally instead of buffering until the end (issues #3242, #2542).
+    """
+    calls = []
+
+    class RecordingStream(io.StringIO):
+        def __init__(self):
+            super().__init__()
+            self.color = None
+
+        def write(self, s):
+            calls.append("write")
+            return super().write(s)
+
+        def flush(self):
+            calls.append("flush")
+
+    stream = RecordingStream()
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
+    monkeypatch.setattr(click._termui_impl, "_default_text_stdout", lambda: stream)
+
+    def generate():
+        yield "a\n"
+        yield "b\n"
+        yield "c\n"
+
+    click.echo_via_pager(generate())
+
+    # No two writes are adjacent: every chunk is flushed before the next one,
+    # so the pager sees output as it is produced.
+    assert not any(
+        calls[i] == "write" and calls[i + 1] == "write" for i in range(len(calls) - 1)
+    )
+    assert calls.count("write") == 4  # three chunks plus the trailing newline
+    assert stream.getvalue() == "a\nb\nc\n\n"
+
+
 def test_get_pager_file_pager_missing_binary_falls_back(monkeypatch, tmp_path):
     """``PAGER`` pointing to a nonexistent binary falls back to the text stdout."""
     pager_out = tmp_path / "pager_out.txt"
