@@ -142,6 +142,51 @@ def test_argument_default():
     assert _get_words(cli, ["x"], "b") == ["b"]
 
 
+def test_completion_skips_defaults_and_callbacks():
+    calls = []
+
+    def default():
+        calls.append("default")
+        return "value"
+
+    def callback(ctx, param, value):
+        calls.append(f"callback:{value}")
+        return value
+
+    cli = Command(
+        "cli",
+        params=[
+            Option(["--name"], default=default, callback=callback),
+            Argument(["arg"], type=Choice(["a"])),
+        ],
+    )
+
+    assert _get_words(cli, [], "") == ["a"]
+    assert calls == []
+
+    assert _get_words(cli, ["--name", "value"], "") == ["a"]
+    assert calls == []
+
+
+def test_completion_skips_flag_callback_for_missing_value():
+    calls = []
+
+    def callback(ctx, param, value):
+        calls.append(value)
+        return value
+
+    cli = Command(
+        "cli",
+        params=[
+            Option(["--flag"], is_flag=True, callback=callback),
+            Argument(["arg"], type=Choice(["a"])),
+        ],
+    )
+
+    assert _get_words(cli, [], "") == ["a"]
+    assert calls == []
+
+
 def test_type_choice():
     cli = Command("cli", params=[Option(["-c"], type=Choice(["a1", "a2", "b"]))])
     assert _get_words(cli, ["-c"], "") == ["a1", "a2", "b"]
