@@ -174,6 +174,18 @@ def test_option_count():
     assert _get_words(cli, ["-c"], "-") == ["--help"]
 
 
+def test_option_callable_default_ignored():
+    calls = []
+
+    def default():
+        calls.append(None)
+        return "value"
+
+    cli = Command("cli", params=[Option(["--name"], default=default)])
+    assert _get_words(cli, [], "-") == ["--name", "--help"]
+    assert calls == []
+
+
 def test_option_optional():
     cli = Command(
         "cli",
