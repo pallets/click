@@ -635,7 +635,8 @@ class IntRange(_NumberRangeBase[int], IntParamType):
     corresponding boundary is not included in the range.
 
     If ``clamp`` is enabled, a value outside the range is clamped to the
-    boundary instead of failing.
+    boundary instead of failing. If a boundary is open, the value is
+    clamped to the nearest integer that is still inside the range.
 
     .. versionchanged:: 8.0
         Added the ``min_open`` and ``max_open`` parameters.
