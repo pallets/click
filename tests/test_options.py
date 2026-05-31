@@ -3349,6 +3349,37 @@ def test_flag_group_competition_repeated_cmdline(runner, args, expected):
     assert result.output == repr(expected)
 
 
+def test_shared_option_callback_result_not_overridden_by_absent_option(runner):
+    """A sibling option that wasn't invoked must not replace a callback result.
+
+    Regression test for https://github.com/pallets/click/issues/2786.
+    """
+
+    sentinel = "$_fetch"
+    fetches = 0
+
+    def fetch_value(ctx, param, value):
+        nonlocal fetches
+
+        if value == sentinel:
+            fetches += 1
+            return "fetched"
+
+        return value
+
+    @click.command()
+    @click.option("--custom", "custom")
+    @click.option("--fetch", "custom", flag_value=sentinel, callback=fetch_value)
+    def cli(custom):
+        click.echo(custom, nl=False)
+
+    result = runner.invoke(cli, ["--fetch"])
+
+    assert result.exit_code == 0, result.output
+    assert result.output == "fetched"
+    assert fetches == 1
+
+
 @pytest.mark.parametrize(
     ("opts", "args", "expected"),
     [

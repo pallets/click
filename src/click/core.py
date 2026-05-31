@@ -471,6 +471,7 @@ class Context:
         self._close_callbacks: list[t.Callable[[], t.Any]] = []
         self._depth = 0
         self._parameter_source: dict[str, ParameterSource] = {}
+        self._parameter_order: list[Parameter] = []
         # Tracks whether the option that currently owns each parameter slot in
         # :attr:`params` had its ``default`` set explicitly by the user. Used
         # to tie-break feature-switch groups where multiple options share a
@@ -1276,6 +1277,7 @@ class Command:
 
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
+        ctx._parameter_order = param_order
 
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
             _, args = param.handle_parse_result(ctx, opts, args)
@@ -2627,9 +2629,17 @@ class Parameter(ABC):
         existing_value = ctx.params.get(self.name, UNSET)
         existing_source = ctx.get_parameter_source(self.name)
         existing_default_explicit = ctx._param_default_explicit.get(self.name, False)
+        previous_value_wins = (
+            self not in ctx._parameter_order
+            and existing_source is not None
+            and existing_source < ParameterSource.DEFAULT
+        )
 
         with augment_usage_errors(ctx, param=self):
-            value, source = self.consume_value(ctx, opts)
+            if previous_value_wins:
+                value, source = existing_value, existing_source
+            else:
+                value, source = self.consume_value(ctx, opts)
 
             # Record the source before processing so eager callbacks and type
             # conversion can inspect it. Restored after arbitration if this
@@ -2654,7 +2664,8 @@ class Parameter(ABC):
 
             # Process the value through the parameter's type.
             try:
-                value = self.process_value(ctx, value)
+                if not previous_value_wins:
+                    value = self.process_value(ctx, value)
             except Exception:
                 if not ctx.resilient_parsing:
                     raise
