@@ -9,6 +9,7 @@ from .parser import _split_opt
 
 # Can force a width.  This is used by the test system
 FORCED_WIDTH: int | None = None
+FORCED_HELP_WIDTH: int | None = None
 
 
 def measure_table(rows: cabc.Iterable[tuple[str, str]]) -> tuple[int, ...]:
@@ -218,7 +219,7 @@ class HelpFormatter:
         self.write(
             wrap_text(
                 text,
-                self.width,
+                FORCED_HELP_WIDTH or self.width,
                 initial_indent=indent,
                 subsequent_indent=indent,
                 preserve_paragraphs=True,

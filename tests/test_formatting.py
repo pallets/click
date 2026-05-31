@@ -145,6 +145,24 @@ def test_formatting_empty_help_lines(runner):
     ]
 
 
+def test_default_runner_help_width_matches_explicit_width(runner):
+    @click.command()
+    @click.help_option("-h", "--help")
+    def cli():
+        """
+        Identify the changes that need to be made to the 'old'
+        scan file (-o or --old) in order to generate the 'new' scan file (-n or
+        --new).  Write the results to a .json file (-j or --json-file) at a
+        user-designated location.  If no file option is selected, print the JSON
+        results to the console.
+        """
+
+    result = runner.invoke(cli, ["--help"])
+    result_large_width = runner.invoke(cli, ["--help"], terminal_width=1000)
+
+    assert result.output == result_large_width.output
+
+
 def test_formatting_usage_error(runner):
     @click.command()
     @click.argument("arg")

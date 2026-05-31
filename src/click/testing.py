@@ -433,7 +433,9 @@ class CliRunner:
         old_stdout = sys.stdout
         old_stderr = sys.stderr
         old_forced_width = formatting.FORCED_WIDTH
+        old_forced_help_width = formatting.FORCED_HELP_WIDTH
         formatting.FORCED_WIDTH = 80
+        formatting.FORCED_HELP_WIDTH = 1000
 
         env = self.make_env(env)
 
@@ -588,6 +590,7 @@ class CliRunner:
             utils.should_strip_ansi = old_should_strip_ansi  # type: ignore
             _compat.should_strip_ansi = old__compat_should_strip_ansi
             formatting.FORCED_WIDTH = old_forced_width
+            formatting.FORCED_HELP_WIDTH = old_forced_help_width
             pdb.Pdb.__init__ = old_pdb_init  # type: ignore[method-assign]
 
     def invoke(
@@ -680,6 +683,11 @@ class CliRunner:
             except KeyError:
                 prog_name = self.get_default_prog_name(cli)
 
+            old_forced_help_width = formatting.FORCED_HELP_WIDTH
+
+            if "terminal_width" in extra:
+                formatting.FORCED_HELP_WIDTH = None
+
             try:
                 return_value = cli.main(args=args or (), prog_name=prog_name, **extra)
             except SystemExit as e:
@@ -706,6 +714,7 @@ class CliRunner:
                 exit_code = 1
                 exc_info = sys.exc_info()
             finally:
+                formatting.FORCED_HELP_WIDTH = old_forced_help_width
                 sys.stdout.flush()
                 sys.stderr.flush()
 
