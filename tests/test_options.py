@@ -1038,6 +1038,22 @@ def test_option_custom_class(runner):
     assert "you won't see me" not in result.output
 
 
+def test_option_custom_class_does_not_need_to_be_hashable(runner):
+    class CustomOption(click.Option):
+        def __eq__(self, other):
+            return self is other
+
+    @click.command()
+    @click.option("--testoption", cls=CustomOption)
+    def cmd(testoption):
+        return testoption
+
+    result = runner.invoke(
+        cmd, ["--testoption", "value"], standalone_mode=False, catch_exceptions=False
+    )
+    assert result.return_value == "value"
+
+
 @pytest.mark.parametrize(
     ("param_decl", "option_kwargs", "pass_argv"),
     (
@@ -1624,6 +1640,37 @@ def test_default_dual_option_callback(runner, default, args, expected):
     result = runner.invoke(main, args)
     assert result.output == f"Callback value: {expected!r}"
     assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    ("args", "expected"),
+    (
+        (["--fetch"], "fetched"),
+        (["--custom", "local", "--fetch"], "fetched"),
+        (["--fetch", "--custom", "local"], "local"),
+    ),
+)
+def test_same_name_value_option_does_not_override_flag_callback_result(
+    runner, args, expected
+):
+    sentinel = "$_fetch"
+
+    def fetch_value(ctx, param, value):
+        if value == sentinel:
+            return "fetched"
+
+        return value
+
+    @click.command()
+    @click.option("--custom", "custom")
+    @click.option("--fetch", "custom", flag_value=sentinel, callback=fetch_value)
+    def cli(custom):
+        return custom
+
+    result = runner.invoke(
+        cli, args, standalone_mode=False, catch_exceptions=False
+    )
+    assert result.return_value == expected
 
 
 @pytest.mark.parametrize(

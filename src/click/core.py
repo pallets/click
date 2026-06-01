@@ -471,6 +471,7 @@ class Context:
         self._close_callbacks: list[t.Callable[[], t.Any]] = []
         self._depth = 0
         self._parameter_source: dict[str, ParameterSource] = {}
+        self._parameter_invocations: set[int] = set()
         # Tracks whether the option that currently owns each parameter slot in
         # :attr:`params` had its ``default`` set explicitly by the user. Used
         # to tie-break feature-switch groups where multiple options share a
@@ -1276,6 +1277,7 @@ class Command:
 
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
+        ctx._parameter_invocations = {id(param) for param in param_order}
 
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
             _, args = param.handle_parse_result(ctx, opts, args)
@@ -2674,10 +2676,18 @@ class Parameter(ABC):
             and existing_default_explicit
             and not self._default_explicit
         )
+        same_source_wins = (
+            same_source
+            and not auto_would_downgrade_explicit
+            and (
+                source != ParameterSource.COMMANDLINE
+                or id(self) in ctx._parameter_invocations
+            )
+        )
         is_winner = (
             slot_empty
             or more_explicit
-            or (same_source and not auto_would_downgrade_explicit)
+            or same_source_wins
         )
 
         if is_winner:
