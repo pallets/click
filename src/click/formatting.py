@@ -67,6 +67,7 @@ def wrap_text(
         initial_indent=initial_indent,
         subsequent_indent=subsequent_indent,
         replace_whitespace=False,
+        break_on_hyphens=False,
     )
     if not preserve_paragraphs:
         return wrapper.fill(text)

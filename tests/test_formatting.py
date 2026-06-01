@@ -436,6 +436,30 @@ def test_help_formatter_write_text():
     assert actual == expected
 
 
+def test_wrap_text_does_not_break_at_hyphens():
+    """wrap_text must not split tokens at hyphens.
+
+    CLI option names such as ``--enable-verbose-logging`` should never be
+    broken in the middle at a hyphen; wrapping must happen only at
+    whitespace boundaries.  Regression for :issue:`3362`.
+    """
+    args = (
+        "--enable-verbose-logging --output-file-path --max-retry-count"
+        " --disable-cache-mode --config-file-location"
+    )
+    result = click.formatting.wrap_text(
+        args,
+        width=65,
+        initial_indent="Usage: program ",
+        subsequent_indent="               ",
+    )
+    for line in result.splitlines():
+        stripped = line.rstrip()
+        assert not stripped.endswith(
+            "-"
+        ), f"wrap_text broke a token at a hyphen: {stripped!r}"
+
+
 @pytest.mark.parametrize(
     ("body", "width", "initial_indent"),
     [
