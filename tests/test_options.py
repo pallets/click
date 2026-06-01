@@ -2850,6 +2850,52 @@ def test_bool_flag_group_competition(runner, opts, args, expected):
     assert result.output == repr(expected)
 
 
+def test_flag_value_group_callback_not_overridden(runner):
+    """A ``flag_value`` option's processed value must survive a sibling default.
+
+    When a non-invoked option shares its ``name`` with an invoked
+    ``flag_value`` option, the non-invoked option must not adopt the flag's
+    raw command-line value (the ``flag_value`` sentinel) and overwrite the
+    value already produced by the flag option's callback.
+
+    Regression test for https://github.com/pallets/click/issues/2786
+    """
+    sentinel = "$_fetch"
+    calls = []
+
+    def callback(ctx, param, value):
+        if value == sentinel:
+            calls.append(value)
+            return "foo"
+        return value
+
+    @click.command()
+    @click.option("--custom", "custom")
+    @click.option("--fetch", "custom", flag_value=sentinel, callback=callback)
+    def cli(custom):
+        click.echo(repr(custom), nl=False)
+
+    # Only the plain option: value passes through untouched.
+    result = runner.invoke(cli, ["--custom", "bar"])
+    assert result.exit_code == 0, result.output
+    assert result.output == repr("bar")
+
+    # Only the flag option: the callback's result must be used, and the
+    # callback must run exactly once (no sentinel leaking through).
+    calls.clear()
+    result = runner.invoke(cli, ["--fetch"])
+    assert result.exit_code == 0, result.output
+    assert result.output == repr("foo")
+    assert calls == [sentinel]
+
+    # Both options: the later flag option wins, callback runs once.
+    calls.clear()
+    result = runner.invoke(cli, ["--custom", "bar", "--fetch"])
+    assert result.exit_code == 0, result.output
+    assert result.output == repr("foo")
+    assert calls == [sentinel]
+
+
 @pytest.mark.parametrize(
     ("envvar_value", "args", "expected"),
     [

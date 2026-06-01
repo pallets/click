@@ -477,6 +477,12 @@ class Context:
         # parameter name and both fall back to their default value.
         # Refs: https://github.com/pallets/click/issues/3403
         self._param_default_explicit: dict[str, bool] = {}
+        # The parameters actually seen by the parser on the command line, in
+        # invocation order. Used so that an option which shares its ``name``
+        # with another option does not consume a command-line value that was
+        # produced by its sibling (and was never given for this option).
+        # Refs: https://github.com/pallets/click/issues/2786
+        self._invoked_params: set[Parameter] = set()
         self._exit_stack = ExitStack()
 
     @property
@@ -1276,6 +1282,8 @@ class Command:
 
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
+
+        ctx._invoked_params = set(param_order)
 
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
             _, args = param.handle_parse_result(ctx, opts, args)
@@ -2372,6 +2380,24 @@ class Parameter(ABC):
         """
         # Collect from the parse the value passed by the user to the CLI.
         value = opts.get(self.name, UNSET)
+
+        # The parser stores command-line values keyed by ``name``. When several
+        # options share the same ``name`` (a feature-switch group), the value in
+        # ``opts`` belongs to whichever sibling the user actually invoked. An
+        # option that was *not* invoked must not adopt that value as if it were
+        # its own command-line input, otherwise it overwrites the sibling's
+        # already-processed value (including the result of its callback).
+        # Refs: https://github.com/pallets/click/issues/2786
+        if (
+            value is not UNSET
+            and self not in ctx._invoked_params
+            and any(
+                p is not self and p.name == self.name
+                for p in ctx._invoked_params
+            )
+        ):
+            value = UNSET
+
         # If the value is set, it means it was sourced from the command line by the
         # parser, otherwise it left unset by default.
         source = (

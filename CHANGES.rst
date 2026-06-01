@@ -9,6 +9,11 @@ Unreleased
     Colorama is no longer a dependency and is not used. :issue:`2986` :pr:`3505`
 -   :class:`Argument` accepts a ``help`` parameter, and help output includes
     a ``Positional arguments`` section when argument help is available. :issue:`2983` :pr:`3473`
+-   Options that share a parameter name (a feature-switch group) no longer
+    overwrite each other's value. An option that was not given on the
+    command line no longer adopts a sibling option's value, so the value
+    produced by the invoked option's ``callback`` is preserved.
+    :issue:`2786`
 
 
 Version 8.4.2
