@@ -2684,11 +2684,7 @@ class Parameter(ABC):
                 or id(self) in ctx._parameter_invocations
             )
         )
-        is_winner = (
-            slot_empty
-            or more_explicit
-            or same_source_wins
-        )
+        is_winner = slot_empty or more_explicit or same_source_wins
 
         if is_winner:
             if self.expose_value:

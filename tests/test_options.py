@@ -1667,9 +1667,7 @@ def test_same_name_value_option_does_not_override_flag_callback_result(
     def cli(custom):
         return custom
 
-    result = runner.invoke(
-        cli, args, standalone_mode=False, catch_exceptions=False
-    )
+    result = runner.invoke(cli, args, standalone_mode=False, catch_exceptions=False)
     assert result.return_value == expected
 
 
