@@ -585,3 +585,25 @@ def test_fish_format_completion_escapes_help():
     # The newline is escaped to the literal characters backslash-n and the tab
     # becomes a space, so each completion stays on one line for fish.
     assert fc.format_completion(item) == "plain,--at\tfirst\\nsecond third"
+
+
+def test_default_callback_not_called_during_completion():
+    """A default callback must not be evaluated while generating completions.
+
+    ``ctx.resilient_parsing`` is enabled during completion, and the docs
+    promise that default values (including default callbacks) are ignored in
+    that mode. See issue #2614.
+    """
+    called = []
+
+    def expensive_default():
+        called.append(True)
+        return "computed"
+
+    @click.command()
+    @click.option("--thing", default=expensive_default)
+    def cli(thing):
+        pass
+
+    _get_completions(cli, args=[], incomplete="")
+    assert not called, "default callback was evaluated during completion"

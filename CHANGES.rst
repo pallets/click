@@ -16,6 +16,10 @@ Version 8.4.2
 
 Unreleased
 
+-   A parameter's default value is no longer evaluated during shell
+    completion. ``resilient_parsing`` is honored when sourcing the default, so
+    expensive default callbacks are not called while generating completions.
+    :issue:`2614`
 -   Fix Fish shell completion broken in ``8.4.0`` by :pr:`3126`. Newlines and
     tabs in option help text are now escaped, keeping the original completion
     format while still supporting multi-line help. :issue:`3502`

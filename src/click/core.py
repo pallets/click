@@ -2369,6 +2369,11 @@ class Parameter(ABC):
         If no value is found, an internal sentinel value is returned.
 
         :meta private:
+
+        .. versionchanged:: 8.4.2
+            The parameter's default value is no longer applied when
+            ``ctx.resilient_parsing`` is enabled, such as during shell
+            completion.
         """
         # Collect from the parse the value passed by the user to the CLI.
         value = opts.get(self.name, UNSET)
@@ -2397,7 +2402,7 @@ class Parameter(ABC):
                 if isinstance(value, str) and self.nargs != 1:
                     value = self.type.split_envvar_value(value)
 
-        if value is UNSET:
+        if value is UNSET and not ctx.resilient_parsing:
             default_value = self.get_default(ctx)
             if default_value is not UNSET:
                 value = default_value
