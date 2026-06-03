@@ -283,8 +283,15 @@ class ShellComplete:
         :param incomplete: Value being completed. May be empty.
         """
         ctx = _resolve_context(self.cli, self.ctx_args, self.prog_name, args)
+        option_value = _split_option_value(ctx, incomplete)
         obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
-        return obj.shell_complete(ctx, incomplete)
+        completions = obj.shell_complete(ctx, incomplete)
+
+        if option_value is not None and isinstance(obj, Option):
+            option_name, _ = option_value
+            _add_completion_prefix(completions, f"{option_name}=")
+
+        return completions
 
     def format_completion(self, item: CompletionItem) -> str:
         """Format a completion item into the form recognized by the
@@ -548,6 +555,22 @@ def _start_of_option(ctx: Context, value: str) -> bool:
     return c in ctx._opt_prefixes
 
 
+def _split_option_value(ctx: Context, value: str) -> tuple[str, str] | None:
+    """Split ``--option=value`` into the option name and value."""
+    if "=" not in value or not _start_of_option(ctx, value):
+        return None
+
+    name, _, value = value.partition("=")
+    return name, value
+
+
+def _add_completion_prefix(completions: list[CompletionItem], prefix: str) -> None:
+    """Prefix shell word completions that replace an entire option value."""
+    for item in completions:
+        if item.type == "plain":
+            item.value = f"{prefix}{item.value}"
+
+
 def _is_incomplete_option(ctx: Context, args: list[str], param: Parameter) -> bool:
     """Determine if the given parameter is an option that needs a value.
 
@@ -649,10 +672,12 @@ def _resolve_incomplete(
     # value differently. Might keep the value joined, return the "="
     # as a separate item, or return the split name and value. Always
     # split and discard the "=" to make completion easier.
+    option_value = _split_option_value(ctx, incomplete)
+
     if incomplete == "=":
         incomplete = ""
-    elif "=" in incomplete and _start_of_option(ctx, incomplete):
-        name, _, incomplete = incomplete.partition("=")
+    elif option_value is not None:
+        name, incomplete = option_value
         args.append(name)
 
     # The "--" marker tells Click to stop treating values as options
