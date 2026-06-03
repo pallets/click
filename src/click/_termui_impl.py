@@ -29,6 +29,7 @@ from ._compat import term_len
 from ._compat import WIN
 from .exceptions import ClickException
 from .utils import echo
+from .utils import KeepOpenFile
 
 V = t.TypeVar("V")
 
@@ -441,17 +442,28 @@ def get_pager_file(color: bool | None = None) -> t.Generator[t.TextIO, None, Non
     with _pager_contextmanager(color=color) as (stream, encoding, color):
         # Split streams by capabilities rather than the abstract TextIO /
         # BinaryIO annotations: buffered text streams can be unwrapped to bytes,
-        # while text-only streams are yielded as-is.
+        # while other streams are yielded as-is.
+        wrapper: MaybeStripAnsi | None = None
         if _has_binary_buffer(stream):
             # Text stream backed by a binary buffer.
-            stream = MaybeStripAnsi(stream.buffer, color=color, encoding=encoding)
-        elif isinstance(stream, t.BinaryIO):
-            # Binary stream
-            stream = MaybeStripAnsi(stream, color=color, encoding=encoding)
+            wrapper = MaybeStripAnsi(stream.buffer, color=color, encoding=encoding)
+            stream = wrapper
         try:
-            yield stream
+            # Narrow the BinaryIO | TextIO union that _pager_contextmanager
+            # yields; the caller writes text to the pager.
+            yield t.cast(t.TextIO, stream)
         finally:
-            stream.flush()
+            try:
+                stream.flush()
+            finally:
+                # Hand the binary buffer back to the pager that produced it
+                # rather than letting this TextIOWrapper close it on garbage
+                # collection. The pager owns the buffer's lifecycle: subprocess
+                # pipes and temp files are closed by their own helpers, while a
+                # borrowed stdout must stay open for the caller. detach() runs
+                # even if flush() raised, so the buffer is never closed here.
+                if wrapper is not None:
+                    wrapper.detach()
 
 
 @contextlib.contextmanager
@@ -471,8 +483,11 @@ def _pipepager(
     """
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
+        # No usable pager: fall back to stdout through _nullpager so it gets the
+        # same borrowed-stream handling and the caller's stream is not closed.
         stdout = _default_text_stdout() or StringIO()
-        yield stdout, "utf-8", False
+        with _nullpager(stdout, color) as rv:
+            yield rv
         return
 
     import shutil
@@ -482,8 +497,11 @@ def _pipepager(
 
     cmd_filepath = shutil.which(cmd)
     if not cmd_filepath:
+        # No usable pager: fall back to stdout through _nullpager so it gets the
+        # same borrowed-stream handling and the caller's stream is not closed.
         stdout = _default_text_stdout() or StringIO()
-        yield stdout, "utf-8", False
+        with _nullpager(stdout, color) as rv:
+            yield rv
         return
 
     # Produces a normalized absolute path string.
@@ -571,8 +589,11 @@ def _tempfilepager(
     """
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
+        # No usable pager: fall back to stdout through _nullpager so it gets the
+        # same borrowed-stream handling and the caller's stream is not closed.
         stdout = _default_text_stdout() or StringIO()
-        yield stdout, "utf-8", False
+        with _nullpager(stdout, color) as rv:
+            yield rv
         return
 
     import shutil
@@ -582,8 +603,11 @@ def _tempfilepager(
 
     cmd_filepath = shutil.which(cmd)
     if not cmd_filepath:
+        # No usable pager: fall back to stdout through _nullpager so it gets the
+        # same borrowed-stream handling and the caller's stream is not closed.
         stdout = _default_text_stdout() or StringIO()
-        yield stdout, "utf-8", False
+        with _nullpager(stdout, color) as rv:
+            yield rv
         return
 
     # Produces a normalized absolute path string.
@@ -609,21 +633,6 @@ def _tempfilepager(
         os.unlink(f.name)
 
 
-class _SkipClose:
-    def __init__(self, stream: t.IO[t.Any]) -> None:
-        self.stream = stream
-
-    def __getattr__(self, name: str) -> t.Any:
-        return getattr(self.stream, name)
-
-    @property
-    def buffer(self) -> t.BinaryIO:
-        return _SkipClose(self.stream.buffer)  # type: ignore[attr-defined, return-value]
-
-    def close(self) -> None:
-        pass
-
-
 @contextlib.contextmanager
 def _nullpager(
     stream: t.TextIO, color: bool | None = None
@@ -631,13 +640,17 @@ def _nullpager(
     """Simply print unformatted text. This is the ultimate fallback. Don't close the
     output stream in this case, since it's coming from elsewhere rather than our
     internal helpers.
+
+    The stream is wrapped in :class:`~click.utils.KeepOpenFile` so that, as a
+    borrowed stream, it is not closed by a ``with`` block. The wrapper that
+    :func:`get_pager_file` builds around it is detached rather than closed.
     """
     encoding = get_best_encoding(stream)
 
     if color is None:
         color = False
 
-    yield _SkipClose(stream), encoding, color  # type: ignore[misc]
+    yield KeepOpenFile(stream), encoding, color  # type: ignore[misc]
 
 
 class Editor:

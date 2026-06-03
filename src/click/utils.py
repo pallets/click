@@ -205,6 +205,18 @@ class LazyFile:
 
 
 class KeepOpenFile:
+    """Proxy a file object but keep it open across a ``with`` block.
+
+    Wraps a borrowed file (such as ``sys.stdin`` or ``sys.stdout``) so that
+    leaving a ``with`` block does not close it, as used by :func:`open_file`
+    for the ``-`` filename. The caller stays responsible for the file: an
+    explicit :meth:`close` still passes through to the wrapped object.
+
+    Dunder methods are proxied explicitly: implicit special-method lookups
+    bypass :meth:`__getattr__`, because Python resolves them on the type rather
+    than the instance.
+    """
+
     _file: t.IO[t.Any]
 
     def __init__(self, file: t.IO[t.Any]) -> None:

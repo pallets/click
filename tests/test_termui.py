@@ -1,4 +1,5 @@
 import contextlib
+import gc
 import io
 import platform
 import shlex
@@ -804,6 +805,61 @@ def test_get_pager_file_pager_unset_falls_back_when_no_default(monkeypatch, tmp_
             pager.write("hello\n")
 
     assert pager_out.read_text(encoding="utf-8") == "hello\n"
+
+
+def test_get_pager_file_missing_pager_keeps_borrowed_stream_open(monkeypatch):
+    """A missing ``PAGER`` must not close the borrowed stdout (issue #3449).
+
+    The ``8.4.0`` regression was only fixed for the no-tty ``_nullpager`` path;
+    the ``_pipepager``/``_tempfilepager`` fallbacks (reached in a tty when
+    ``PAGER`` resolves to nothing) used to close the borrowed stream too.
+    """
+    buffer = io.BytesIO()
+    stream = io.TextIOWrapper(buffer, encoding="utf-8")
+
+    monkeypatch.setitem(
+        click._termui_impl.os.environ,
+        "PAGER",
+        "click-tests-nonexistent-pager-9b3f2",
+    )
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setattr(click._termui_impl, "_default_text_stdout", lambda: stream)
+
+    with click.get_pager_file() as pager:
+        pager.write("hello\n")
+
+    # Drop the wrapper reference and force finalization: the old bug closed the
+    # borrowed buffer when the TextIOWrapper built by get_pager_file was
+    # garbage-collected.
+    del pager
+    gc.collect()
+
+    assert not buffer.closed
+    assert not stream.closed
+    assert buffer.getvalue().replace(b"\r\n", b"\n") == b"hello\n"
+
+
+def test_echo_via_pager_tty_pager_missing(runner, monkeypatch):
+    """``echo_via_pager`` through the tty fallback keeps ``CliRunner`` working.
+
+    Regression for issue #3449 via the pager fallback: a tty with ``PAGER``
+    pointing at a missing binary used to close the runner's stdout, breaking
+    ``CliRunner.invoke``.
+    """
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setitem(
+        click._termui_impl.os.environ,
+        "PAGER",
+        "click-tests-nonexistent-pager-9b3f2",
+    )
+
+    @click.command()
+    def cli():
+        click.echo_via_pager("Hello, Click!")
+
+    result = runner.invoke(cli)
+    assert not result.exception
+    assert result.output == "Hello, Click!\n"
 
 
 @pytest.mark.parametrize(

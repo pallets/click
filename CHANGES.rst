@@ -17,6 +17,10 @@ Unreleased
 -   ``echo_via_pager`` flushes after each write, so passing a generator streams
     output to the pager incrementally instead of staying hidden until the pipe
     buffer fills. :issue:`3242` :issue:`2542` :pr:`3534`
+-   ``echo_via_pager`` and ``get_pager_file`` no longer close a borrowed stdout
+    stream when no external pager runs, completing the partial
+    ``I/O operation on closed file`` fix from :pr:`3482`. :issue:`3449`
+    :pr:`3533`
 
 
 Version 8.4.1
