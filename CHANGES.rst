@@ -10,7 +10,7 @@ Unreleased
 -   :class:`Argument` accepts a ``help`` parameter, and help output includes
     a ``Positional arguments`` section when argument help is available. :issue:`2983` :pr:`3473`
 -   :class:`FloatRange` with ``clamp`` enabled always returns a ``float``,
-    even when the boundary was given as an ``int``. :issue:`3547`
+    even when the boundary was given as an ``int``. :issue:`3547` :pr:`3548`
 
 
 Version 8.4.2
