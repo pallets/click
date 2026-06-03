@@ -670,6 +670,10 @@ class FloatRange(_NumberRangeBase[float], FloatParamType):
     boundary instead of failing. This is not supported if either
     boundary is marked ``open``.
 
+    .. versionchanged:: 8.5
+        A clamped value is always a ``float``, even when the boundary was
+        given as an ``int``.
+
     .. versionchanged:: 8.0
         Added the ``min_open`` and ``max_open`` parameters.
     """
@@ -693,7 +697,10 @@ class FloatRange(_NumberRangeBase[float], FloatParamType):
 
     def _clamp(self, bound: float, dir: t.Literal[1, -1], open: bool) -> float:
         if not open:
-            return bound
+            # The boundary may have been passed as an ``int`` (e.g.
+            # ``FloatRange(0, 1)``); coerce it so clamping always returns
+            # a ``float``.
+            return self._number_class(bound)
 
         # Could use math.nextafter here, but clamping an
         # open float range doesn't seem to be particularly useful. It's

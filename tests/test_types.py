@@ -81,6 +81,14 @@ def test_float_range_no_clamp_open():
         sneaky.convert("1.5", None, None)
 
 
+@pytest.mark.parametrize("value", ["2.5", "-2.5"])
+def test_float_range_clamp_returns_float(value):
+    """Clamping always returns a ``float``, even when the boundary was
+    given as an ``int``. https://github.com/pallets/click/issues/3547"""
+    result = click.FloatRange(0, 1, clamp=True).convert(value, None, None)
+    assert type(result) is float
+
+
 @pytest.mark.parametrize(
     ("nargs", "multiple", "default", "expect"),
     [
