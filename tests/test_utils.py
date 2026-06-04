@@ -716,6 +716,27 @@ def test_iter_lazyfile(tmpdir):
                 assert e_line == a_line.strip()
 
 
+def test_lazyfile_read_validates_regular_file(tmp_path):
+    path = tmp_path / "file.txt"
+    path.write_text("content")
+
+    with patch("click.utils.open") as open_:
+        click.utils.LazyFile(path, "r")
+
+    open_.assert_called_once_with(path, "r")
+
+
+@pytest.mark.skipif(WIN, reason="Named pipes are not supported on Windows.")
+def test_lazyfile_read_skips_fifo_validation(tmp_path):
+    path = tmp_path / "pipe"
+    os.mkfifo(path)
+
+    with patch("click.utils.open") as open_:
+        click.utils.LazyFile(path, "rb")
+
+    open_.assert_not_called()
+
+
 class MockMain:
     __slots__ = "__package__"
 
