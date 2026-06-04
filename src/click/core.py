@@ -3022,7 +3022,7 @@ class Option(Parameter):
         # being instantiated by the callable check below.
         if value is True and self.is_flag and not self.is_bool_flag:
             value = self.flag_value
-        elif call and callable(value):
+        elif call and callable(value) and not ctx.resilient_parsing:
             value = value()
 
         return value
