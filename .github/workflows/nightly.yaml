@@ -9,12 +9,13 @@ concurrency:
   cancel-in-progress: false
 jobs:
   race-tests:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
+    name: ${{ matrix.config.name }} (${{ matrix.branch }})
+    runs-on: ${{ matrix.config.os || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
-        include:
+        branch: [main, stable]
+        config:
           - {name: Random 3.14, python: '3.14', tox: random}
           - {name: Random 3.14t, python: '3.14t', tox: random}
           - {name: Random 3.13, python: '3.13', tox: random}
@@ -30,13 +31,14 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          ref: ${{ matrix.branch }}
       - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           enable-cache: true
           prune-cache: false
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
-          python-version: ${{ matrix.python }}
+          python-version: ${{ matrix.config.python }}
       - run: uv run --locked --no-default-groups --group dev tox run
         env:
-          TOX_ENV: ${{ matrix.tox }}
+          TOX_ENV: ${{ matrix.config.tox }}
