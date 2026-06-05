@@ -532,6 +532,16 @@ def test_editor_path_normalization(editor_cmd, filenames, expected_args):
             ["C:\\Program Files\\Sublime Text 3\\sublime_text.exe", "--wait"],
             id="quoted path with flag",
         ),
+        pytest.param(
+            "code",
+            ["code", "--wait"],
+            id="vscode-adds-wait",
+        ),
+        pytest.param(
+            "code --wait",
+            ["code", "--wait"],
+            id="vscode-keeps-existing-wait",
+        ),
     ],
 )
 def test_editor_windows_path_normalization(editor_cmd, expected_cmd):

@@ -673,18 +673,36 @@ class Editor:
         import subprocess
 
         editor = self.get_editor()
+        args = shlex.split(editor)
         environ: dict[str, str] | None = None
 
         if self.env:
             environ = os.environ.copy()
             environ.update(self.env)
 
+        if WIN and args:
+            editor_name = os.path.basename(args[0]).lower()
+
+            if (
+                editor_name
+                in {
+                    "code",
+                    "code.cmd",
+                    "code.exe",
+                    "code-insiders",
+                    "code-insiders.cmd",
+                    "code-insiders.exe",
+                }
+                and "--wait" not in args
+            ):
+                args.append("--wait")
+
         try:
             # Split in POSIX mode (the default) for the same reasons as
             # in pager(): strips quotes from tokens and preserves quoted
             # Windows paths.
             c = subprocess.Popen(
-                args=shlex.split(editor) + list(filenames),
+                args=args + list(filenames),
                 env=environ,
             )
             exit_code = c.wait()
