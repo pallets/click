@@ -1,5 +1,5 @@
 # Changes
 
-```{eval-rst}
-.. include:: ../CHANGES.rst
+
+```{include} ../CHANGES.md
 ```
