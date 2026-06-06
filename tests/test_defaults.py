@@ -166,6 +166,18 @@ def test_shared_param_prefers_first_default(runner):
     result = runner.invoke(prefers_red, ["--green"])
     assert "green" in result.output
 
+def test_shared_param_default_three_options(runner):
+    @click.command
+    @click.option("--red", "color", flag_value="red")
+    @click.option("--green", "color", flag_value="green", default=True)
+    @click.option("--blue", "color", flag_value="blue")
+    def cli(color):
+        click.echo(color)
+
+    assert "green" in runner.invoke(cli, []).output
+    assert "red" in runner.invoke(cli, ["--red"]).output
+    assert "blue" in runner.invoke(cli, ["--blue"]).output
+
 
 @pytest.mark.parametrize(
     ("default_map", "key", "expected"),
