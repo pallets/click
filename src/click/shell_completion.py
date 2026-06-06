@@ -222,6 +222,9 @@ class ShellComplete:
     be provided by subclasses.
     """
 
+    keep_option_prefix: t.ClassVar[bool] = False
+    """Whether completions for ``--option=value`` should include ``--option=``."""
+
     cli: Command
     ctx_args: cabc.MutableMapping[str, t.Any]
     prog_name: str
@@ -303,6 +306,20 @@ class ShellComplete:
         """
         args, incomplete = self.get_completion_args()
         completions = self.get_completions(args, incomplete)
+
+        if (
+            self.keep_option_prefix
+            and incomplete.startswith("--")
+            and "=" in incomplete
+        ):
+            prefix, _, _ = incomplete.partition("=")
+            completions = [
+                CompletionItem(
+                    f"{prefix}={item.value}", item.type, item.help, **item._info
+                )
+                for item in completions
+            ]
+
         out = [self.format_completion(item) for item in completions]
         return "\n".join(out)
 
@@ -312,6 +329,7 @@ class BashComplete(ShellComplete):
 
     name: t.ClassVar[str] = "bash"
     source_template: t.ClassVar[str] = _SOURCE_BASH
+    keep_option_prefix: t.ClassVar[bool] = True
 
     @staticmethod
     def _check_version() -> None:
@@ -371,6 +389,7 @@ class ZshComplete(ShellComplete):
 
     name: t.ClassVar[str] = "zsh"
     source_template: t.ClassVar[str] = _SOURCE_ZSH
+    keep_option_prefix: t.ClassVar[bool] = True
 
     def get_completion_args(self) -> tuple[list[str], str]:
         cwords = split_arg_string(os.environ["COMP_WORDS"])

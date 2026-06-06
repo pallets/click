@@ -373,6 +373,50 @@ def test_full_complete(runner, shell, env, expect):
     assert result.output == expect
 
 
+@pytest.mark.parametrize(
+    ("shell", "env", "expect"),
+    [
+        (
+            "bash",
+            {"COMP_WORDS": "cli --color=r", "COMP_CWORD": "1"},
+            "plain,--color=red\n",
+        ),
+        (
+            "zsh",
+            {"COMP_WORDS": "cli --color=r", "COMP_CWORD": "1"},
+            "plain\n--color=red\n_\n",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_full_complete_long_option_value_with_equals(runner, shell, env, expect):
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["red", "green"]))],
+    )
+    env["_CLI_COMPLETE"] = f"{shell}_complete"
+    result = runner.invoke(cli, env=env)
+    assert result.output == expect
+
+
+@pytest.mark.parametrize(
+    ("shell", "env", "expect"),
+    [
+        ("bash", {"COMP_WORDS": "cli --color r", "COMP_CWORD": "2"}, "plain,red\n"),
+        ("zsh", {"COMP_WORDS": "cli --color r", "COMP_CWORD": "2"}, "plain\nred\n_\n"),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_full_complete_long_option_value_with_space(runner, shell, env, expect):
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["red", "green"]))],
+    )
+    env["_CLI_COMPLETE"] = f"{shell}_complete"
+    result = runner.invoke(cli, env=env)
+    assert result.output == expect
+
+
 def test_source_uses_lf_line_endings(monkeypatch):
     stdout = io.BytesIO()
     stream = io.TextIOWrapper(stdout, encoding="utf-8", newline="\r\n")
