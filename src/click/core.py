@@ -2674,10 +2674,21 @@ class Parameter(ABC):
             and existing_default_explicit
             and not self._default_explicit
         )
+        unprocessed_would_downgrade_callback = (
+            same_source
+            and source == ParameterSource.COMMANDLINE
+            and self.callback is None
+            and existing_value is not UNSET
+            and existing_value != value
+        )
         is_winner = (
             slot_empty
             or more_explicit
-            or (same_source and not auto_would_downgrade_explicit)
+            or (
+                same_source
+                and not auto_would_downgrade_explicit
+                and not unprocessed_would_downgrade_callback
+            )
         )
 
         if is_winner:

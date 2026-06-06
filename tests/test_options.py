@@ -1626,6 +1626,32 @@ def test_default_dual_option_callback(runner, default, args, expected):
     assert result.exit_code == 0
 
 
+def test_shared_option_callback_value_is_preserved(runner):
+    marker = "$_fetch"
+
+    def fetch_value(ctx, param, value):
+        if value == marker:
+            return "fetched"
+
+        return value
+
+    @click.command()
+    @click.option("--custom", "custom")
+    @click.option("--fetch", "custom", flag_value=marker, callback=fetch_value)
+    def cli(custom):
+        click.echo(custom)
+
+    for args, expected in (
+        (["--fetch"], "fetched"),
+        (["--custom", "typed", "--fetch"], "fetched"),
+        (["--fetch", "--custom", "typed"], "typed"),
+    ):
+        result = runner.invoke(cli, args)
+
+        assert result.output == f"{expected}\n"
+        assert result.exit_code == 0
+
+
 @pytest.mark.parametrize(
     ("flag_value", "envvar_value", "expected"),
     [
