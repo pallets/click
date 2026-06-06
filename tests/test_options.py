@@ -3320,10 +3320,11 @@ def test_flag_group_competition_duplicate_option_name(runner):
     def cli(xyz):
         click.echo(repr(xyz), nl=False)
 
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 1
-    assert isinstance(result.exception, UserWarning)
-    assert "used more than once" in str(result.exception)
+    with pytest.warns(UserWarning, match="used more than once"):
+        result = runner.invoke(cli, [])
+
+    assert result.exit_code == 0
+    assert result.output == "'second'"
 
 
 @pytest.mark.parametrize(
