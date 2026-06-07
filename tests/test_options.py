@@ -1627,6 +1627,41 @@ def test_default_dual_option_callback(runner, default, args, expected):
 
 
 @pytest.mark.parametrize(
+    ("args", "expected"),
+    [
+        # --fetch alone: the flag callback result must win and not be overwritten
+        # by the unspecified --custom option that shares the same name.
+        (["--fetch"], "fetched"),
+        (["--custom", "given"], "given"),
+        # The option specified last wins when both are given.
+        (["--custom", "given", "--fetch"], "fetched"),
+        (["--fetch", "--custom", "given"], "given"),
+        ([], None),
+    ],
+)
+def test_value_option_does_not_override_sibling_flag_callback(runner, args, expected):
+    """A value option and a flag_value option sharing a name must not let the one
+    the user did not pass overwrite the value produced by the other's callback.
+
+    Regression test for https://github.com/pallets/click/issues/2786
+    """
+    sentinel = "__fetch__"
+
+    def resolve(ctx, param, value):
+        return "fetched" if value == sentinel else value
+
+    @click.command()
+    @click.option("--custom", "custom")
+    @click.option("--fetch", "custom", flag_value=sentinel, callback=resolve)
+    def cli(custom):
+        click.echo(repr(custom), nl=False)
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0
+    assert result.output == repr(expected)
+
+
+@pytest.mark.parametrize(
     ("flag_value", "envvar_value", "expected"),
     [
         # The envvar match exactly the flag value and is case-sensitive.

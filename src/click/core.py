@@ -507,6 +507,12 @@ class Context:
         # parameter name and both fall back to their default value.
         # Refs: https://github.com/pallets/click/issues/3403
         self._param_default_explicit = {}
+        # Parameters the parser actually produced a value for. Used so a
+        # parameter sharing its name with another (feature-switch groups) does
+        # not claim a value contributed by a sibling option it didn't receive.
+        # ``None`` means the parser hasn't populated it yet.
+        # Refs: https://github.com/pallets/click/issues/2786
+        self._params_from_parser: set[Parameter] | None = None
         self._exit_stack = ExitStack()
 
     @property
@@ -1320,6 +1326,7 @@ class Command:
 
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
+        ctx._params_from_parser = set(param_order)
 
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
             _, args = param.handle_parse_result(ctx, opts, args)
@@ -2440,6 +2447,18 @@ class Parameter(ABC):
         """
         # Collect from the parse the value passed by the user to the CLI.
         value = opts.get(self.name, UNSET)
+        # When several parameters share the same name (feature-switch groups),
+        # the parser records the value under that shared name. If this parameter
+        # was not the one the user actually provided, the value belongs to a
+        # sibling and must not be claimed here, otherwise this parameter could
+        # overwrite the value the winning option produced.
+        # Refs: https://github.com/pallets/click/issues/2786
+        if (
+            value is not UNSET
+            and ctx._params_from_parser is not None
+            and self not in ctx._params_from_parser
+        ):
+            value = UNSET
         # If the value is set, it means it was sourced from the command line by the
         # parser, otherwise it left unset by default.
         source = (
