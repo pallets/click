@@ -1,4 +1,5 @@
 import contextlib
+import gc
 import io
 import platform
 import shlex
@@ -726,6 +727,44 @@ def test_echo_via_pager_real_pager_handles_ansi(monkeypatch, capfd, color, expec
     assert out == expected
 
 
+def test_echo_via_pager_streams_each_write(monkeypatch):
+    """Each write is flushed so a slow generator streams to the pager
+    incrementally instead of buffering until the end (issues #3242, #2542).
+    """
+    calls = []
+
+    class RecordingStream(io.StringIO):
+        def __init__(self):
+            super().__init__()
+            self.color = None
+
+        def write(self, s):
+            calls.append("write")
+            return super().write(s)
+
+        def flush(self):
+            calls.append("flush")
+
+    stream = RecordingStream()
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
+    monkeypatch.setattr(click._termui_impl, "_default_text_stdout", lambda: stream)
+
+    def generate():
+        yield "a\n"
+        yield "b\n"
+        yield "c\n"
+
+    click.echo_via_pager(generate())
+
+    # No two writes are adjacent: every chunk is flushed before the next one,
+    # so the pager sees output as it is produced.
+    assert not any(
+        calls[i] == "write" and calls[i + 1] == "write" for i in range(len(calls) - 1)
+    )
+    assert calls.count("write") == 4  # three chunks plus the trailing newline
+    assert stream.getvalue() == "a\nb\nc\n\n"
+
+
 def test_get_pager_file_pager_missing_binary_falls_back(monkeypatch, tmp_path):
     """``PAGER`` pointing to a nonexistent binary falls back to the text stdout."""
     pager_out = tmp_path / "pager_out.txt"
@@ -766,6 +805,61 @@ def test_get_pager_file_pager_unset_falls_back_when_no_default(monkeypatch, tmp_
             pager.write("hello\n")
 
     assert pager_out.read_text(encoding="utf-8") == "hello\n"
+
+
+def test_get_pager_file_missing_pager_keeps_borrowed_stream_open(monkeypatch):
+    """A missing ``PAGER`` must not close the borrowed stdout (issue #3449).
+
+    The ``8.4.0`` regression was only fixed for the no-tty ``_nullpager`` path;
+    the ``_pipepager``/``_tempfilepager`` fallbacks (reached in a tty when
+    ``PAGER`` resolves to nothing) used to close the borrowed stream too.
+    """
+    buffer = io.BytesIO()
+    stream = io.TextIOWrapper(buffer, encoding="utf-8")
+
+    monkeypatch.setitem(
+        click._termui_impl.os.environ,
+        "PAGER",
+        "click-tests-nonexistent-pager-9b3f2",
+    )
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setattr(click._termui_impl, "_default_text_stdout", lambda: stream)
+
+    with click.get_pager_file() as pager:
+        pager.write("hello\n")
+
+    # Drop the wrapper reference and force finalization: the old bug closed the
+    # borrowed buffer when the TextIOWrapper built by get_pager_file was
+    # garbage-collected.
+    del pager
+    gc.collect()
+
+    assert not buffer.closed
+    assert not stream.closed
+    assert buffer.getvalue().replace(b"\r\n", b"\n") == b"hello\n"
+
+
+def test_echo_via_pager_tty_pager_missing(runner, monkeypatch):
+    """``echo_via_pager`` through the tty fallback keeps ``CliRunner`` working.
+
+    Regression for issue #3449 via the pager fallback: a tty with ``PAGER``
+    pointing at a missing binary used to close the runner's stdout, breaking
+    ``CliRunner.invoke``.
+    """
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setitem(
+        click._termui_impl.os.environ,
+        "PAGER",
+        "click-tests-nonexistent-pager-9b3f2",
+    )
+
+    @click.command()
+    def cli():
+        click.echo_via_pager("Hello, Click!")
+
+    result = runner.invoke(cli)
+    assert not result.exception
+    assert result.output == "Hello, Click!\n"
 
 
 @pytest.mark.parametrize(

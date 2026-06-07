@@ -335,6 +335,10 @@ def echo_via_pager(
     with get_pager_file(color=color) as pager:
         for text in itertools.chain(text_generator, "\n"):
             pager.write(text)
+            # Flush after each write so a slow generator streams to the pager
+            # incrementally rather than staying invisible until the pipe buffer
+            # fills (~8 KB).
+            pager.flush()
 
 
 @t.overload

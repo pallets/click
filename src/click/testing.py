@@ -22,7 +22,10 @@ if t.TYPE_CHECKING:
 
     from .core import Command
 
-CaptureMode: t.TypeAlias = t.Literal["sys", "fd"]
+if sys.platform == "win32":
+    CaptureMode: t.TypeAlias = t.Literal["sys"]  # pyright: ignore[reportRedeclaration]
+else:
+    CaptureMode: t.TypeAlias = t.Literal["sys", "fd"]  # pyright: ignore[reportRedeclaration]
 ExceptionInfo: t.TypeAlias = tuple[type[BaseException], BaseException, TracebackType]
 
 

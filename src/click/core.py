@@ -48,6 +48,8 @@ from .utils import make_str
 from .utils import PacifyFlushWrapper
 
 if t.TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .shell_completion import CompletionItem
 
 F = t.TypeVar("F", bound="t.Callable[..., t.Any]")
@@ -117,7 +119,7 @@ def batch(iterable: cabc.Iterable[V], batch_size: int) -> list[tuple[V, ...]]:
 @contextmanager
 def augment_usage_errors(
     ctx: Context, param: Parameter | None = None
-) -> cabc.Iterator[None]:
+) -> cabc.Generator[None]:
     """Context manager that attaches extra information to exceptions."""
     try:
         yield
@@ -303,6 +305,34 @@ class Context:
     #: .. versionadded:: 8.0
     formatter_class: type[HelpFormatter] = HelpFormatter
 
+    parent: Context | None
+    command: Command
+    info_name: str | None
+    params: dict[str, t.Any]
+    args: list[str]
+    _protected_args: list[str]
+    _opt_prefixes: set[str]
+    obj: t.Any
+    _meta: dict[str, t.Any]
+    default_map: cabc.MutableMapping[str, t.Any] | None
+    invoked_subcommand: str | None
+    terminal_width: int | None
+    max_content_width: int | None
+    allow_extra_args: bool
+    allow_interspersed_args: bool
+    ignore_unknown_options: bool
+    help_option_names: list[str]
+    token_normalize_func: t.Callable[[str], str] | None
+    resilient_parsing: bool
+    auto_envvar_prefix: str | None
+    color: bool | None
+    show_default: bool | None
+    _close_callbacks: list[t.Callable[[], t.Any]]
+    _depth: int
+    _parameter_source: dict[str, ParameterSource]
+    _param_default_explicit: dict[str, bool]
+    _exit_stack: ExitStack
+
     def __init__(
         self,
         command: Command,
@@ -330,23 +360,23 @@ class Context:
         self.info_name = info_name
         #: Map of parameter names to their parsed values. Parameters
         #: with ``expose_value=False`` are not stored.
-        self.params: dict[str, t.Any] = {}
+        self.params = {}
         #: the leftover arguments.
-        self.args: list[str] = []
+        self.args = []
         #: protected arguments.  These are arguments that are prepended
         #: to `args` when certain parsing scenarios are encountered but
         #: must be never propagated to another arguments.  This is used
         #: to implement nested parsing.
-        self._protected_args: list[str] = []
+        self._protected_args = []
         #: the collected prefixes of the command's options.
-        self._opt_prefixes: set[str] = set(parent._opt_prefixes) if parent else set()
+        self._opt_prefixes = set(parent._opt_prefixes) if parent else set()
 
         if obj is None and parent is not None:
             obj = parent.obj
 
         #: the user object stored.
-        self.obj: t.Any = obj
-        self._meta: dict[str, t.Any] = getattr(parent, "meta", {})
+        self.obj = obj
+        self._meta = getattr(parent, "meta", {})
 
         #: A dictionary (-like object) with defaults for parameters.
         if (
@@ -357,7 +387,7 @@ class Context:
         ):
             default_map = parent.default_map.get(info_name)
 
-        self.default_map: cabc.MutableMapping[str, t.Any] | None = default_map
+        self.default_map = default_map
 
         #: This flag indicates if a subcommand is going to be executed. A
         #: group callback can use this information to figure out if it's
@@ -369,20 +399,20 @@ class Context:
         #: any commands are executed.  It is however not possible to
         #: figure out which ones.  If you require this knowledge you
         #: should use a :func:`result_callback`.
-        self.invoked_subcommand: str | None = None
+        self.invoked_subcommand = None
 
         if terminal_width is None and parent is not None:
             terminal_width = parent.terminal_width
 
         #: The width of the terminal (None is autodetection).
-        self.terminal_width: int | None = terminal_width
+        self.terminal_width = terminal_width
 
         if max_content_width is None and parent is not None:
             max_content_width = parent.max_content_width
 
         #: The maximum width of formatted content (None implies a sensible
         #: default which is 80 for most things).
-        self.max_content_width: int | None = max_content_width
+        self.max_content_width = max_content_width
 
         if allow_extra_args is None:
             allow_extra_args = command.allow_extra_args
@@ -400,7 +430,7 @@ class Context:
         #: options or not.
         #:
         #: .. versionadded:: 3.0
-        self.allow_interspersed_args: bool = allow_interspersed_args
+        self.allow_interspersed_args = allow_interspersed_args
 
         if ignore_unknown_options is None:
             ignore_unknown_options = command.ignore_unknown_options
@@ -413,7 +443,7 @@ class Context:
         #: forward all arguments.
         #:
         #: .. versionadded:: 4.0
-        self.ignore_unknown_options: bool = ignore_unknown_options
+        self.ignore_unknown_options = ignore_unknown_options
 
         if help_option_names is None:
             if parent is not None:
@@ -422,19 +452,19 @@ class Context:
                 help_option_names = ["--help"]
 
         #: The names for the help options.
-        self.help_option_names: list[str] = help_option_names
+        self.help_option_names = help_option_names
 
         if token_normalize_func is None and parent is not None:
             token_normalize_func = parent.token_normalize_func
 
         #: An optional normalization function for tokens.  This is
         #: options, choices, commands etc.
-        self.token_normalize_func: t.Callable[[str], str] | None = token_normalize_func
+        self.token_normalize_func = token_normalize_func
 
         #: Indicates if resilient parsing is enabled.  In that case Click
         #: will do its best to not cause any failures and default values
         #: will be ignored. Useful for completion.
-        self.resilient_parsing: bool = resilient_parsing
+        self.resilient_parsing = resilient_parsing
 
         # If there is no envvar prefix yet, but the parent has one and
         # the command on this level has a name, we can expand the envvar
@@ -454,29 +484,29 @@ class Context:
         if auto_envvar_prefix is not None:
             auto_envvar_prefix = auto_envvar_prefix.replace("-", "_")
 
-        self.auto_envvar_prefix: str | None = auto_envvar_prefix
+        self.auto_envvar_prefix = auto_envvar_prefix
 
         if color is None and parent is not None:
             color = parent.color
 
         #: Controls if styling output is wanted or not.
-        self.color: bool | None = color
+        self.color = color
 
         if show_default is None and parent is not None:
             show_default = parent.show_default
 
         #: Show option default values when formatting help text.
-        self.show_default: bool | None = show_default
+        self.show_default = show_default
 
-        self._close_callbacks: list[t.Callable[[], t.Any]] = []
+        self._close_callbacks = []
         self._depth = 0
-        self._parameter_source: dict[str, ParameterSource] = {}
+        self._parameter_source = {}
         # Tracks whether the option that currently owns each parameter slot in
         # :attr:`params` had its ``default`` set explicitly by the user. Used
         # to tie-break feature-switch groups where multiple options share a
         # parameter name and both fall back to their default value.
         # Refs: https://github.com/pallets/click/issues/3403
-        self._param_default_explicit: dict[str, bool] = {}
+        self._param_default_explicit = {}
         self._exit_stack = ExitStack()
 
     @property
@@ -512,7 +542,7 @@ class Context:
             "auto_envvar_prefix": self.auto_envvar_prefix,
         }
 
-    def __enter__(self) -> Context:
+    def __enter__(self) -> Self:
         self._depth += 1
         push_context(self)
         return self
@@ -532,7 +562,7 @@ class Context:
         return exit_result
 
     @contextmanager
-    def scope(self, cleanup: bool = True) -> cabc.Iterator[Context]:
+    def scope(self, cleanup: bool = True) -> cabc.Generator[Context]:
         """This helper method can be used with the context object to promote
         it to the current thread local (see :func:`get_current_context`).
         The default behavior of this is to invoke the cleanup functions which
@@ -985,6 +1015,20 @@ class Command:
     #: the default for the :attr:`Context.ignore_unknown_options` flag.
     ignore_unknown_options = False
 
+    name: str | None
+    context_settings: cabc.MutableMapping[str, t.Any]
+    callback: t.Callable[..., t.Any] | None
+    params: list[Parameter]
+    help: str | None
+    epilog: str | None
+    options_metavar: str | None
+    short_help: str | None
+    add_help_option: bool
+    _help_option: Option | None
+    no_args_is_help: bool
+    hidden: bool
+    deprecated: bool | str
+
     def __init__(
         self,
         name: str | None,
@@ -1010,7 +1054,7 @@ class Command:
             context_settings = {}
 
         #: an optional dictionary with defaults passed to the context.
-        self.context_settings: cabc.MutableMapping[str, t.Any] = context_settings
+        self.context_settings = context_settings
 
         #: the callback to execute when the command fires.  This might be
         #: `None` in which case nothing happens.
@@ -1018,7 +1062,7 @@ class Command:
         #: the list of parameters for this command in the order they
         #: should show up in the help page and execute.  Eager parameters
         #: will automatically be handled before non eager ones.
-        self.params: list[Parameter] = params or []
+        self.params = params or []
         self.help = help
         self.epilog = epilog
         self.options_metavar = options_metavar
@@ -1607,6 +1651,12 @@ class Group(Command):
     group_class: type[Group] | type[type] | None = None
     # Literal[type] isn't valid, so use Type[type]
 
+    commands: cabc.MutableMapping[str, Command]
+    invoke_without_command: bool
+    subcommand_metavar: str
+    chain: bool
+    _result_callback: t.Callable[..., t.Any] | None
+
     def __init__(
         self,
         name: str | None = None,
@@ -1628,7 +1678,7 @@ class Group(Command):
             commands = {c.name: c for c in commands if c.name is not None}
 
         #: The registered subcommands by their exported names.
-        self.commands: cabc.MutableMapping[str, Command] = commands
+        self.commands = commands
 
         if no_args_is_help is None:
             no_args_is_help = not invoke_without_command
@@ -2034,6 +2084,8 @@ class CommandCollection(Group):
         group, then each of its sources.
     """
 
+    sources: list[Group]
+
     def __init__(
         self,
         name: str | None = None,
@@ -2042,7 +2094,7 @@ class CommandCollection(Group):
     ) -> None:
         super().__init__(name, **kwargs)
         #: The list of registered groups.
-        self.sources: list[Group] = sources or []
+        self.sources = sources or []
 
     def add_source(self, group: Group) -> None:
         """Add a group as a source of commands."""
@@ -2074,7 +2126,7 @@ class CommandCollection(Group):
         return sorted(rv)
 
 
-def _check_iter(value: t.Any) -> cabc.Iterator[t.Any]:
+def _check_iter(value: cabc.Iterable[V]) -> cabc.Iterator[V]:
     """Check if the value is iterable but not a string. Raises a type
     error, or return an iterator over the value.
     """
@@ -2177,6 +2229,25 @@ class Parameter(ABC):
 
     param_type_name = "parameter"
 
+    name: str
+    opts: list[str]
+    secondary_opts: list[str]
+    # `Parameter.type` is annotated in `__init__` to avoid confusing mypy
+    required: bool
+    callback: t.Callable[[Context, Parameter, t.Any], t.Any] | None
+    nargs: int
+    multiple: bool
+    expose_value: bool
+    default: t.Any | t.Callable[[], t.Any] | None
+    _default_explicit: bool
+    is_eager: bool
+    metavar: str | None
+    envvar: str | cabc.Sequence[str] | None
+    _custom_shell_complete: (
+        t.Callable[[Context, Parameter, str], list[CompletionItem] | list[str]] | None
+    )
+    deprecated: bool | str
+
     def __init__(
         self,
         param_decls: cabc.Sequence[str] | None = None,
@@ -2206,9 +2277,6 @@ class Parameter(ABC):
         | None = None,
         deprecated: bool | str = False,
     ) -> None:
-        self.name: str
-        self.opts: list[str]
-        self.secondary_opts: list[str]
         self.name, self.opts, self.secondary_opts = self._parse_decls(
             param_decls or (), expose_value
         )
@@ -2227,13 +2295,13 @@ class Parameter(ABC):
         self.nargs = nargs
         self.multiple = multiple
         self.expose_value = expose_value
-        self.default: t.Any | t.Callable[[], t.Any] | None = default
+        self.default = default
         # Whether the user passed ``default`` explicitly to the constructor.
         # Captured before any auto-derived default (like ``False`` for boolean
         # flags in :class:`Option`) replaces the :data:`UNSET` sentinel, so it
         # remains ``False`` when the default was inferred rather than chosen.
         # Refs: https://github.com/pallets/click/issues/3403
-        self._default_explicit: bool = default is not UNSET
+        self._default_explicit = default is not UNSET
         self.is_eager = is_eager
         self.metavar = metavar
         self.envvar = envvar
@@ -2808,6 +2876,24 @@ class Option(Parameter):
 
     param_type_name = "option"
 
+    prompt: str | None
+    confirmation_prompt: bool | str
+    prompt_required: bool
+    hide_input: bool
+    hidden: bool
+
+    _flag_needs_value: bool
+    is_flag: bool
+    is_bool_flag: bool
+    flag_value: t.Any
+
+    count: bool
+    allow_from_autoenv: bool
+    help: str | None
+    show_default: bool | str | None
+    show_choices: bool
+    show_envvar: bool
+
     def __init__(
         self,
         param_decls: cabc.Sequence[str] | None = None,
@@ -2840,7 +2926,7 @@ class Option(Parameter):
             if not self.name:
                 raise TypeError("'name' is required with 'prompt=True'.")
 
-            prompt_text: str | None = self.name.replace("_", " ").capitalize()
+            prompt_text = self.name.replace("_", " ").capitalize()
         elif prompt is False:
             prompt_text = None
         else:
@@ -2914,11 +3000,9 @@ class Option(Parameter):
                     else:
                         self.type = guessed
 
-        self.is_flag: bool = bool(is_flag)
-        self.is_bool_flag: bool = bool(
-            is_flag and isinstance(self.type, types.BoolParamType)
-        )
-        self.flag_value: t.Any = flag_value
+        self.is_flag = bool(is_flag)
+        self.is_bool_flag = self.is_flag and isinstance(self.type, types.BoolParamType)
+        self.flag_value = flag_value
 
         # Set boolean flag default to False if unset and not required.
         if self.is_bool_flag:

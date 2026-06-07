@@ -1,4 +1,5 @@
-#
+{.hide-header}
+# Welcome to Click
 
 ```{image} _static/click-name.svg
 :align: center
