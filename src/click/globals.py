@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import typing as t
 from threading import local
 
@@ -54,14 +55,31 @@ def pop_context() -> None:
 def resolve_color_default(color: bool | None = None) -> bool | None:
     """Internal helper to get the default value of the color flag.  If a
     value is passed it's returned unchanged, otherwise it's looked up from
-    the current context.
+    the current context, then from the environment.
+
+    When neither the ``color`` argument nor the active context expresses a
+    preference, the ``NO_COLOR`` and ``FORCE_COLOR`` environment variables are
+    consulted, mirroring how the Python interpreter itself decides whether to
+    colorize output. A non-empty ``NO_COLOR`` disables color and takes
+    precedence over a non-empty ``FORCE_COLOR``, which forces it on; empty
+    values are ignored.
+
+    .. versionchanged:: 8.5
+        The ``NO_COLOR`` and ``FORCE_COLOR`` environment variables are
+        respected as a fallback.
     """
     if color is not None:
         return color
 
     ctx = get_current_context(silent=True)
 
-    if ctx is not None:
+    if ctx is not None and ctx.color is not None:
         return ctx.color
+
+    if os.environ.get("NO_COLOR"):
+        return False
+
+    if os.environ.get("FORCE_COLOR"):
+        return True
 
     return None

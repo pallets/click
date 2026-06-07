@@ -855,3 +855,76 @@ def test_make_default_short_help(value, max_length, alter, expect):
 
     out = click.utils.make_default_short_help(value, max_length)
     assert out == expect
+
+
+def test_echo_no_color_env(monkeypatch, capfd):
+    monkeypatch.setattr(click._compat, "isatty", lambda x: True)
+    monkeypatch.delenv("FORCE_COLOR", raising=False)
+    monkeypatch.setenv("NO_COLOR", "1")
+    styled = click.style("foo", fg="red")
+
+    click.echo(styled)
+    out, _ = capfd.readouterr()
+    assert out == "foo\n"  # color stripped despite an interactive terminal
+
+
+def test_echo_force_color_env(monkeypatch, capfd):
+    monkeypatch.setattr(click._compat, "isatty", lambda x: False)
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    monkeypatch.setenv("FORCE_COLOR", "1")
+    styled = click.style("foo", fg="red")
+
+    click.echo(styled)
+    out, _ = capfd.readouterr()
+    assert out == f"{styled}\n"  # color kept despite a non-interactive stream
+
+
+def test_echo_no_color_takes_precedence_over_force_color(monkeypatch, capfd):
+    monkeypatch.setattr(click._compat, "isatty", lambda x: True)
+    monkeypatch.setenv("NO_COLOR", "1")
+    monkeypatch.setenv("FORCE_COLOR", "1")
+    styled = click.style("foo", fg="red")
+
+    click.echo(styled)
+    out, _ = capfd.readouterr()
+    assert out == "foo\n"
+
+
+def test_echo_empty_color_env_is_ignored(monkeypatch, capfd):
+    # Empty values are not a preference, so auto-detection (a tty here) wins.
+    monkeypatch.setattr(click._compat, "isatty", lambda x: True)
+    monkeypatch.setenv("NO_COLOR", "")
+    monkeypatch.setenv("FORCE_COLOR", "")
+    styled = click.style("foo", fg="red")
+
+    click.echo(styled)
+    out, _ = capfd.readouterr()
+    assert out == f"{styled}\n"
+
+
+def test_echo_explicit_color_arg_overrides_color_env(monkeypatch, capfd):
+    monkeypatch.setattr(click._compat, "isatty", lambda x: True)
+    monkeypatch.setenv("NO_COLOR", "1")
+    styled = click.style("foo", fg="red")
+
+    click.echo(styled, color=True)
+    out, _ = capfd.readouterr()
+    assert out == f"{styled}\n"  # explicit color=True beats NO_COLOR
+
+
+def test_resolve_color_default_reads_color_env(monkeypatch):
+    from click.globals import resolve_color_default
+
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    monkeypatch.delenv("FORCE_COLOR", raising=False)
+    assert resolve_color_default() is None
+    assert resolve_color_default(True) is True
+    assert resolve_color_default(False) is False
+
+    monkeypatch.setenv("NO_COLOR", "1")
+    assert resolve_color_default() is False
+    assert resolve_color_default(True) is True  # explicit preference wins
+
+    monkeypatch.delenv("NO_COLOR")
+    monkeypatch.setenv("FORCE_COLOR", "1")
+    assert resolve_color_default() is True
