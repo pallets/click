@@ -20,18 +20,27 @@ Unreleased
 - A {class}`Group` with `invoke_without_command=True` marks its subcommand as
   optional in the usage help, showing `[COMMAND]` instead of `COMMAND`.
   {issue}`3059` {pr}`3507`
+- `echo_via_pager` flushes after each write, so passing a generator streams
+  output to the pager incrementally instead of staying hidden until the pipe
+  buffer fills. {issue}`3242` {issue}`2542` {pr}`3534`
+- `echo_via_pager` and `get_pager_file` no longer close a borrowed stdout
+  stream when no external pager runs, completing the partial
+  `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
+  {pr}`3533`
 
 ## Version 8.4.1
 
 Released 2026-05-21
 
 - `get_parameter_source()` is available during eager callbacks and type
-  conversion again. {issue}`3458` {issue}`3484`
+  conversion again. {issue}`3458` {pr}`3484`
 - Zsh completion scripts parse correctly on Windows. {issue}`3277` {pr}`3466`
-- Shell completion of `Choice` `Enum` values produces a valid completion
-  result. {issue}`3015`
-- Fix empty byte-string handling in echo. {issue}`3487`
-- Fix closed file error with `echo_via_pager`. {issue}`3449`
+- Shell completion of `Enum` values used as `Choice` options produces a
+  valid completion result. {issue}`3015` {pr}`3471`
+- Fix empty byte-string handling in echo. {issue}`3487` {pr}`3493`
+- Fix closed file error with `echo_via_pager`. {issue}`3449` {pr}`3482`
+- Fix `open_url` on Windows when the file path contains spaces.
+  {issue}`2994` {pr}`3478`
 
 ## Version 8.4.0
 
@@ -86,7 +95,7 @@ Released 2026-05-17
 
 - Use {func}`os.startfile` on Windows to open URLs in {func}`open_url`,
   replacing the `start` built-in which cannot be invoked without
-  `shell=True`. {issue}`3164` {pr}`3186`
+  `shell=True`. {issue}`2868` {issue}`3164` {pr}`3186`
 
 - Fix Fish shell completion errors when option help text contains newlines.
   {issue}`3043` {pr}`3126`
