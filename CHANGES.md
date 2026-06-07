@@ -6,7 +6,7 @@ Unreleased
   `FORCE_COLOR` environment variables when no explicit color preference is
   set by the caller or context, matching the behavior of the Python
   interpreter. `NO_COLOR` takes precedence and empty values are ignored.
-  {issue}`3022`
+  {issue}`3022` {pr}`3568`
 - Supported versions of Windows enable ANSI terminal styles by default.
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
