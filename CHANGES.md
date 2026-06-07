@@ -9,6 +9,7 @@ Unreleased
 - When several options share a name (feature-switch groups), an option the
   user did not pass no longer overwrites the value produced by the one they
   did, so the passed option's callback result is preserved. {issue}`2786`
+  {pr}`3567`
 
 ## Version 8.4.2
 
