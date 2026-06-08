@@ -142,6 +142,60 @@ def test_argument_default():
     assert _get_words(cli, ["x"], "b") == ["b"]
 
 
+def test_resilient_parsing_skips_default_callbacks():
+    def default():
+        raise AssertionError("default should not be called")
+
+    cli = Command(
+        "cli",
+        params=[
+            Option(["--expensive"], default=default),
+            Option(["--color"], type=Choice(["auto", "always", "never"])),
+        ],
+    )
+
+    assert _get_words(cli, ["--color"], "a") == ["auto", "always"]
+
+
+def test_resilient_parsing_skips_parameter_callbacks():
+    def callback(ctx, param, value):
+        raise AssertionError("callback should not be called")
+
+    cli = Command(
+        "cli",
+        params=[
+            Option(["--expensive"], default="value", callback=callback),
+            Option(["--color"], type=Choice(["auto", "always", "never"])),
+        ],
+    )
+
+    assert _get_words(cli, ["--color"], "a") == ["auto", "always"]
+
+
+def test_resilient_parsing_skips_default_map_callbacks():
+    def default():
+        raise AssertionError("default map should not be called")
+
+    cli = Command(
+        "cli",
+        params=[
+            Option(["--expensive"]),
+            Option(["--color"], type=Choice(["auto", "always", "never"])),
+        ],
+    )
+    comp = ShellComplete(
+        cli,
+        {"default_map": {"expensive": default}},
+        cli.name,
+        "_CLICK_COMPLETE",
+    )
+
+    assert [c.value for c in comp.get_completions(["--color"], "a")] == [
+        "auto",
+        "always",
+    ]
+
+
 def test_type_choice():
     cli = Command("cli", params=[Option(["-c"], type=Choice(["a1", "a2", "b"]))])
     assert _get_words(cli, ["-c"], "") == ["a1", "a2", "b"]
