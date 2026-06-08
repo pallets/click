@@ -471,9 +471,18 @@ class CliRunner:
             errors="backslashreplace",
         )
 
+        def _normalize_prompt(prompt: str | None) -> str:
+            # Prompts are written directly to stdout here rather than through
+            # ``echo``, so honor ``color=False`` by stripping ANSI codes as
+            # ``echo`` would.
+            prompt = prompt or ""
+            if not color:
+                prompt = _compat.strip_ansi(prompt)
+            return prompt
+
         @_pause_echo(echo_input)  # type: ignore
         def visible_input(prompt: str | None = None) -> str:
-            sys.stdout.write(prompt or "")
+            sys.stdout.write(_normalize_prompt(prompt))
             try:
                 val = next(text_input).rstrip("\r\n")
             except StopIteration as e:
@@ -484,7 +493,7 @@ class CliRunner:
 
         @_pause_echo(echo_input)  # type: ignore
         def hidden_input(prompt: str | None = None) -> str:
-            sys.stdout.write(f"{prompt or ''}\n")
+            sys.stdout.write(f"{_normalize_prompt(prompt)}\n")
             sys.stdout.flush()
             try:
                 return next(text_input).rstrip("\r\n")

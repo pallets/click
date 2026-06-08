@@ -256,6 +256,28 @@ def test_with_color_but_pause_not_blocking():
     assert result.output == ""
 
 
+def test_prompt_strips_ansi_with_color_false():
+    @click.command()
+    def cli():
+        click.prompt(click.style("Name", fg="green"))
+        click.prompt(click.style("Secret", fg="green"), hide_input=True)
+        click.confirm(click.style("Continue", fg="green"))
+
+    runner = CliRunner()
+
+    result = runner.invoke(cli, input="x\ns\ny\n", color=False)
+    assert result.output == "Name: x\nSecret: \nContinue [y/N]: y\n"
+    assert not result.exception
+
+    result = runner.invoke(cli, input="x\ns\ny\n", color=True)
+    assert result.output == (
+        f"{click.style('Name', fg='green')}: x\n"
+        f"{click.style('Secret', fg='green')}: \n"
+        f"{click.style('Continue', fg='green')} [y/N]: y\n"
+    )
+    assert not result.exception
+
+
 def test_with_echo_via_pager():
     @click.command()
     def cli():
