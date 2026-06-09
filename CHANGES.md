@@ -2,6 +2,10 @@
 
 Unreleased
 
+- Fix Bash shell completion when ``=`` is in ``COMP_WORDBREAKS``, causing
+  ``--option=value`` to be split into separate tokens. Fix Zsh shell completion
+  so that ``--option=value`` completions include the ``--option=`` prefix,
+  allowing the shell to replace the whole word correctly. {issue}`2847`
 - Supported versions of Windows enable ANSI terminal styles by default.
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes

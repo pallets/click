@@ -585,3 +585,60 @@ def test_fish_format_completion_escapes_help():
     # The newline is escaped to the literal characters backslash-n and the tab
     # becomes a space, so each completion stays on one line for fish.
     assert fc.format_completion(item) == "plain,--at\tfirst\\nsecond third"
+
+
+@pytest.mark.parametrize(
+    ("env", "expect"),
+    [
+        # Bash splits "--color=auto" into ["--color", "=", "auto"] when
+        # COMP_WORDBREAKS includes "=". Completions should still be returned.
+        (
+            {"COMP_WORDS": "cli --color =", "COMP_CWORD": "2"},
+            "plain,auto\nplain,always\nplain,never\n",
+        ),
+        (
+            {"COMP_WORDS": "cli --color = al", "COMP_CWORD": "3"},
+            "plain,always\n",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_bash_completion_with_equals_separator(runner, env, expect):
+    """Bash splits ``--opt=val`` into ``--opt``, ``=``, ``val`` when ``=`` is
+    in ``COMP_WORDBREAKS``. Completion should recognise the option and return
+    value completions."""
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["auto", "always", "never"]))],
+    )
+    env["_CLI_COMPLETE"] = "bash_complete"
+    result = runner.invoke(cli, env=env)
+    assert result.output == expect
+
+
+@pytest.mark.parametrize(
+    ("env", "expect"),
+    [
+        # Zsh keeps "--color=auto" as one word; completions must preserve the
+        # "--color=" prefix so that compadd replaces the whole token.
+        (
+            {"COMP_WORDS": "cli --color=", "COMP_CWORD": "1"},
+            "plain\n--color=auto\n_\nplain\n--color=always\n_\nplain\n--color=never\n_\n",
+        ),
+        (
+            {"COMP_WORDS": "cli --color=al", "COMP_CWORD": "1"},
+            "plain\n--color=always\n_\n",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_zsh_completion_with_equals_separator(runner, env, expect):
+    """Zsh passes ``--opt=val`` as a single word; completions must include the
+    ``--opt=`` prefix so that the shell replaces the whole word correctly."""
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["auto", "always", "never"]))],
+    )
+    env["_CLI_COMPLETE"] = "zsh_complete"
+    result = runner.invoke(cli, env=env)
+    assert result.output == expect

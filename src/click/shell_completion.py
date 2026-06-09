@@ -360,6 +360,23 @@ class BashComplete(ShellComplete):
         except IndexError:
             incomplete = ""
 
+        # Bash may split ``--option=value`` into ``["--option", "=", "value"]``
+        # when ``=`` is in ``COMP_WORDBREAKS``. Reassemble the option and its
+        # partial value so that ``_resolve_incomplete`` can handle it normally.
+        #
+        # .. versionchanged:: 8.5.0
+        #     Reassemble ``--option = value`` tokens split by ``COMP_WORDBREAKS``.
+        if incomplete and args and args[-1] == "=":
+            # args[-2] is the option name, args[-1] is "=", incomplete is the value
+            if len(args) >= 2 and _start_of_option_str(args[-2]):
+                incomplete = args[-2] + "=" + incomplete
+                args = args[:-2]
+        elif not incomplete and args and args[-1] == "=":
+            # cursor is right after "=", value is empty
+            if len(args) >= 2 and _start_of_option_str(args[-2]):
+                incomplete = args[-2] + "="
+                args = args[:-2]
+
         return args, incomplete
 
     def format_completion(self, item: CompletionItem) -> str:
@@ -383,6 +400,40 @@ class ZshComplete(ShellComplete):
             incomplete = ""
 
         return args, incomplete
+
+    def complete(self) -> str:
+        args, incomplete = self.get_completion_args()
+
+        # Zsh passes ``--option=value`` as a single word. ``_resolve_incomplete``
+        # already strips the ``--option=`` prefix internally, but the returned
+        # completion values are bare (e.g. ``always`` instead of
+        # ``--color=always``). Zsh's ``compadd`` replaces the *whole* current
+        # word, so we must restore the prefix on every completion value.
+        #
+        # .. versionchanged:: 8.5.0
+        #     Prepend ``--option=`` prefix to completions for ``--option=value``
+        #     words so Zsh replaces the whole token correctly.
+        option_prefix = ""
+        if "=" in incomplete and _start_of_option_str(incomplete):
+            option_prefix, _, _ = incomplete.partition("=")
+            option_prefix += "="
+            # Pass the original ``incomplete`` unchanged; ``_resolve_incomplete``
+            # will strip the prefix itself when resolving the parameter.
+
+        completions = self.get_completions(args, incomplete)
+
+        if option_prefix:
+            completions = [
+                CompletionItem(
+                    f"{option_prefix}{item.value}",
+                    type=item.type,
+                    help=item.help,
+                )
+                for item in completions
+            ]
+
+        out = [self.format_completion(item) for item in completions]
+        return "\n".join(out)
 
     def format_completion(self, item: CompletionItem) -> str:
         help_ = item.help or "_"
@@ -546,6 +597,11 @@ def _start_of_option(ctx: Context, value: str) -> bool:
 
     c = value[0]
     return c in ctx._opt_prefixes
+
+
+def _start_of_option_str(value: str) -> bool:
+    """Check if *value* looks like an option name (starts with ``-``)."""
+    return bool(value) and value[0] == "-"
 
 
 def _is_incomplete_option(ctx: Context, args: list[str], param: Parameter) -> bool:
