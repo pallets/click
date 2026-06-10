@@ -1560,3 +1560,47 @@ def test_hide_input_value_never_leaks_when_err_true(runner):
     result = runner.invoke(cli, input="leaky\n", mix_stderr=False)
     assert "leaky" not in result.stdout
     assert "leaky" not in result.stderr
+
+
+@pytest.mark.parametrize("color", [False, True])
+def test_prompt_strips_ansi_when_color_disabled(runner, color):
+    """Since 8.4 the full prompt is passed to ``input()`` and bypasses
+    ``echo``, so ANSI codes must be stripped separately when color is
+    disabled. https://github.com/pallets/click/issues/3572
+    """
+    styled = click.style("Name", fg="green")
+
+    @click.command()
+    def cli():
+        click.prompt(styled, default="x")
+
+    result = runner.invoke(cli, input="\n", color=color)
+    expected = f"{styled} [x]: \n" if color else "Name [x]: \n"
+    assert result.output == expected
+
+
+@pytest.mark.parametrize("color", [False, True])
+def test_confirm_strips_ansi_when_color_disabled(runner, color):
+    """See ``test_prompt_strips_ansi_when_color_disabled``."""
+    styled = click.style("Continue?", fg="green")
+
+    @click.command()
+    def cli():
+        click.confirm(styled, abort=True)
+
+    result = runner.invoke(cli, input="y\n", color=color)
+    expected = f"{styled} [y/N]: y\n" if color else "Continue? [y/N]: y\n"
+    assert result.output == expected
+
+
+def test_confirm_err_strips_ansi_when_color_disabled(runner):
+    """The prompt is redirected to stderr with ``err=True``; ANSI codes
+    must be stripped on that stream as well.
+    """
+
+    @click.command()
+    def cli():
+        click.confirm(click.style("Continue?", fg="green"), err=True)
+
+    result = runner.invoke(cli, input="y\n")
+    assert result.stderr == "Continue? [y/N]: y\n"

@@ -11,6 +11,7 @@ from contextlib import AbstractContextManager
 from contextlib import redirect_stdout
 from gettext import gettext as _
 
+from . import _compat
 from ._compat import isatty
 from ._compat import strip_ansi
 from .exceptions import Abort
@@ -84,6 +85,12 @@ def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
     """Call a prompt function, passing the full prompt on non-Windows so
     readline can handle line editing and cursor positioning correctly.
     """
+    # The prompt bypasses ``echo``, so ANSI codes must be stripped here
+    # when color is disabled. Look up ``should_strip_ansi`` through the
+    # module as ``CliRunner`` replaces it during isolation.
+    stream = sys.stderr if err else sys.stdout
+    if _compat.should_strip_ansi(stream, resolve_color_default()):
+        text = strip_ansi(text)
     if err:
         with redirect_stdout(sys.stderr):
             return func(text)

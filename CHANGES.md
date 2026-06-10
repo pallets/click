@@ -27,6 +27,9 @@ Unreleased
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
   {pr}`3533`
+- `prompt` and `confirm` strip ANSI codes from the prompt text again when
+  color is disabled. The prompt is passed to `input()` directly since 8.4.0,
+  bypassing `echo` and its ANSI handling. {issue}`3572` {pr}`3575`
 
 ## Version 8.4.1
 
