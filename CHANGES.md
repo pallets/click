@@ -27,6 +27,8 @@ Unreleased
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
   {pr}`3533`
+- The test suite no longer relies on warnings being treated as errors, so it
+  passes when run with the default warning filter. {issue}`3476`
 
 ## Version 8.4.1
 
