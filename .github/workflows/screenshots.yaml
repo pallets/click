@@ -1,0 +1,66 @@
+name: Documentation Screenshots
+
+on:
+  workflow_dispatch:  # Manual trigger
+    inputs:
+      regenerate:
+        description: 'Regenerate all screenshots'
+        required: false
+        default: 'false'
+        type: boolean
+  push:
+    branches: [main]
+    paths:
+      - 'docs/_scripts/**'
+      - 'examples/**'
+      - '.github/workflows/screenshots.yaml'
+
+jobs:
+  capture:
+    name: Capture screenshots
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -e ".[docs]"
+          python -m pip install playwright
+          playwright install chromium --with-deps
+
+      - name: Capture screenshot: basic help
+        run: |
+          python docs/_scripts/capture.py \
+            --command "python -m click --help" \
+            --output docs/_static/screenshots \
+            --font-size 14
+
+      - name: Capture screenshot: complex example
+        run: |
+          python docs/_scripts/capture.py \
+            --command "python examples/nested.py --help" \
+            --output docs/_static/screenshots \
+            --font-size 14
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: doc-screenshots
+          path: docs/_static/screenshots/
+          retention-days: 7
+
+      - name: Commit changes (if any)
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "github-actions[bot]"
+            git add docs/_static/screenshots/
+            git commit -m "docs: regenerate screenshots [ci skip]" || true
+          fi
