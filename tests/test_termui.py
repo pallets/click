@@ -1034,6 +1034,24 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
     assert "my-default-value" not in result.output
 
 
+def test_confirm_strips_ansi_when_color_disabled(runner):
+    @click.command()
+    def cli():
+        click.confirm(click.style("Continue?", fg="green"))
+
+    result = runner.invoke(cli, input="y\n", color=False)
+    assert "\x1b" not in result.output
+
+
+def test_prompt_strips_ansi_when_color_disabled(runner):
+    @click.command()
+    def cli():
+        click.prompt(click.style("Name", fg="green"))
+
+    result = runner.invoke(cli, input="click\n", color=False)
+    assert "\x1b" not in result.output
+
+
 @pytest.mark.parametrize(
     ("show_default", "default", "user_input", "in_prompt", "not_in_prompt"),
     [

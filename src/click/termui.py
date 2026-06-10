@@ -12,6 +12,7 @@ from contextlib import redirect_stdout
 from gettext import gettext as _
 
 from ._compat import isatty
+from ._compat import should_strip_ansi
 from ._compat import strip_ansi
 from .exceptions import Abort
 from .exceptions import UsageError
@@ -84,6 +85,9 @@ def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
     """Call a prompt function, passing the full prompt on non-Windows so
     readline can handle line editing and cursor positioning correctly.
     """
+    file = sys.stderr if err else sys.stdout
+    if should_strip_ansi(file, resolve_color_default(None)):
+        text = strip_ansi(text)
     if err:
         with redirect_stdout(sys.stderr):
             return func(text)

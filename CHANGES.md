@@ -27,6 +27,8 @@ Unreleased
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
   {pr}`3533`
+- `confirm` and `prompt` strip ANSI color codes from the prompt text when
+  color is disabled, matching `echo`. {issue}`3572`
 
 ## Version 8.4.1
 
