@@ -279,6 +279,21 @@ def test_invalid_path_with_esc_sequence():
     assert "my\\ndir" in exc_info.value.message
 
 
+def test_path_allow_dash_no_bytes_warning():
+    """Path.convert with allow_dash does not trigger BytesWarning.
+
+    The dash check compares against bytes and str, which raises
+    BytesWarning under ``python -bb``. See https://github.com/pallets/click/issues/2877.
+    """
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", BytesWarning)
+        result = click.Path(allow_dash=True).convert("-", None, None)
+
+    assert result == "-"
+
+
 def test_choice_get_invalid_choice_message():
     choice = click.Choice(["a", "b", "c"])
     message = choice.get_invalid_choice_message("d", ctx=None)

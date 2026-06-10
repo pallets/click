@@ -2,6 +2,9 @@
 
 Unreleased
 
+- `Path.convert` no longer triggers `BytesWarning` when `allow_dash` is
+  enabled. The dash check now compares against a string instead of mixing
+  bytes and string. {issue}`2877`
 - Supported versions of Windows enable ANSI terminal styles by default.
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
