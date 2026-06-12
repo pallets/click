@@ -3324,7 +3324,7 @@ def test_flag_group_competition_duplicate_option_name(runner):
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        result = runner.invoke(cli, [])
+        runner.invoke(cli, [])
 
     assert any("used more than once" in str(warning.message) for warning in w)
 
