@@ -739,3 +739,16 @@ def test_help_invalid_default(runner):
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
     assert "default: not found" in result.output
+
+def test_click_exception_shows_notes(runner):
+    """ClickException.show() should display __notes__ after the message."""
+
+    @click.command()
+    def cli():
+        exc = click.ClickException("something went wrong")
+        exc.__notes__ = ["here is some additional context"]
+        raise exc
+
+    result = runner.invoke(cli)
+    assert "Error: something went wrong" in result.output
+    assert "here is some additional context" in result.output    

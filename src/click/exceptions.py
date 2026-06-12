@@ -64,6 +64,9 @@ class ClickException(Exception):
             color=self.show_color,
         )
 
+        for note in getattr(self, "__notes__", []):
+            echo(note, file=file, color=self.show_color)
+
 
 class UsageError(ClickException):
     """An internal exception that signals a usage error.  This typically
@@ -94,8 +97,6 @@ class UsageError(ClickException):
             and self.ctx.command.get_help_option(self.ctx) is not None
         ):
             help_names = self.ctx.command.get_help_option_names(self.ctx)
-            # Pick the longest name (like ``--help`` over ``-h``) for
-            # readability in error messages.
             hint = _("Try '{command} {option}' for help.").format(
                 command=self.ctx.command_path,
                 option=max(help_names, key=len),
@@ -109,6 +110,9 @@ class UsageError(ClickException):
             file=file,
             color=color,
         )
+
+        for note in getattr(self, "__notes__", []):
+            echo(note, file=file, color=color)
 
 
 class BadParameter(UsageError):
