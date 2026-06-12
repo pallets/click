@@ -473,6 +473,8 @@ class CliRunner:
 
         @_pause_echo(echo_input)  # type: ignore
         def visible_input(prompt: str | None = None) -> str:
+            if prompt and not color:
+                prompt = _compat.strip_ansi(prompt)
             sys.stdout.write(prompt or "")
             try:
                 val = next(text_input).rstrip("\r\n")
