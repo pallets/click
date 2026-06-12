@@ -283,8 +283,20 @@ class ShellComplete:
         :param incomplete: Value being completed. May be empty.
         """
         ctx = _resolve_context(self.cli, self.ctx_args, self.prog_name, args)
+        equal_completion_prefix = _equal_option_completion_prefix(ctx, incomplete)
         obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
-        return obj.shell_complete(ctx, incomplete)
+        completions = obj.shell_complete(ctx, incomplete)
+
+        if (
+            equal_completion_prefix is not None
+            and isinstance(obj, Option)
+            and equal_completion_prefix[:-1] in obj.opts
+        ):
+            completions = _prefix_plain_completions(
+                completions, equal_completion_prefix
+            )
+
+        return completions
 
     def format_completion(self, item: CompletionItem) -> str:
         """Format a completion item into the form recognized by the
@@ -546,6 +558,37 @@ def _start_of_option(ctx: Context, value: str) -> bool:
 
     c = value[0]
     return c in ctx._opt_prefixes
+
+
+def _equal_option_completion_prefix(ctx: Context, incomplete: str) -> str | None:
+    """Return the ``--option=`` prefix from an incomplete option value."""
+    if "=" not in incomplete or not _start_of_option(ctx, incomplete):
+        return None
+
+    name, _, _ = incomplete.partition("=")
+    return f"{name}="
+
+
+def _prefix_plain_completions(
+    completions: list[CompletionItem], prefix: str
+) -> list[CompletionItem]:
+    prefixed_completions = []
+
+    for item in completions:
+        if item.type != "plain":
+            prefixed_completions.append(item)
+            continue
+
+        prefixed_completions.append(
+            CompletionItem(
+                f"{prefix}{item.value}",
+                type=item.type,
+                help=item.help,
+                **item._info,
+            )
+        )
+
+    return prefixed_completions
 
 
 def _is_incomplete_option(ctx: Context, args: list[str], param: Parameter) -> bool:

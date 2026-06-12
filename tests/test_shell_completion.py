@@ -149,6 +149,21 @@ def test_type_choice():
     assert _get_words(cli, ["-c"], "a2") == ["a2"]
 
 
+def test_long_option_equal_choice():
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["auto", "always", "never"]))],
+    )
+    assert _get_words(cli, [], "--color=") == [
+        "--color=auto",
+        "--color=always",
+        "--color=never",
+    ]
+    assert _get_words(cli, [], "--color=a") == ["--color=auto", "--color=always"]
+    assert _get_words(cli, [], "--color=al") == ["--color=always"]
+    assert _get_words(cli, ["--color"], "al") == ["always"]
+
+
 def test_choice_special_characters():
     cli = Command("cli", params=[Option(["-c"], type=Choice(["!1", "!2", "+3"]))])
     assert _get_words(cli, ["-c"], "") == ["!1", "!2", "+3"]
@@ -370,6 +385,30 @@ def test_full_complete(runner, shell, env, expect):
     cli = Group("cli", commands=[Command("a"), Command("b", help="bee")])
     env["_CLI_COMPLETE"] = f"{shell}_complete"
     result = runner.invoke(cli, env=env)
+    assert result.output == expect
+
+
+@pytest.mark.parametrize(
+    ("shell", "expect"),
+    [
+        ("bash", "plain,--color=always\n"),
+        ("zsh", "plain\n--color=always\n_\n"),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_full_complete_long_option_equal_choice(runner, shell, expect):
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["auto", "always", "never"]))],
+    )
+    result = runner.invoke(
+        cli,
+        env={
+            "COMP_WORDS": "cli --color=al",
+            "COMP_CWORD": "1",
+            "_CLI_COMPLETE": f"{shell}_complete",
+        },
+    )
     assert result.output == expect
 
 
