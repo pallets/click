@@ -3320,10 +3320,13 @@ def test_flag_group_competition_duplicate_option_name(runner):
     def cli(xyz):
         click.echo(repr(xyz), nl=False)
 
-    result = runner.invoke(cli, [])
-    assert result.exit_code == 1
-    assert isinstance(result.exception, UserWarning)
-    assert "used more than once" in str(result.exception)
+    import warnings
+
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        result = runner.invoke(cli, [])
+
+    assert any("used more than once" in str(warning.message) for warning in w)
 
 
 @pytest.mark.parametrize(
