@@ -11,6 +11,7 @@ from contextlib import AbstractContextManager
 from contextlib import redirect_stdout
 from gettext import gettext as _
 
+from . import _compat
 from ._compat import isatty
 from ._compat import strip_ansi
 from .exceptions import Abort
@@ -81,9 +82,13 @@ def hidden_prompt_func(prompt: str) -> str:
 
 
 def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
-    """Call a prompt function, passing the full prompt on non-Windows so
-    readline can handle line editing and cursor positioning correctly.
+    """Call a prompt function, passing the full prompt so readline can
+    handle line editing and cursor positioning correctly. ANSI codes are
+    stripped when the output stream does not support them.
     """
+    stream = sys.stderr if err else sys.stdout
+    if _compat.should_strip_ansi(stream):
+        text = strip_ansi(text)
     if err:
         with redirect_stdout(sys.stderr):
             return func(text)
@@ -155,6 +160,10 @@ def prompt(
                          For example if type is a Choice of either day or week,
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
+
+    .. versionchanged:: 8.4.2
+        ANSI codes in the prompt text are stripped when the output stream
+        does not support them, restoring the behavior from before 8.4.0.
 
     .. versionchanged:: 8.3.3
         ``show_default`` can be a string to show a custom value instead
@@ -250,6 +259,10 @@ def confirm(
     :param show_default: shows or hides the default value in the prompt.
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``, the same as with echo.
+
+    .. versionchanged:: 8.4.2
+        ANSI codes in the prompt text are stripped when the output stream
+        does not support them, restoring the behavior from before 8.4.0.
 
     .. versionchanged:: 8.3.1
         A space is no longer appended to the prompt.

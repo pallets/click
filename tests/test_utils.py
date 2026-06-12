@@ -264,6 +264,20 @@ def test_full_prompt_passed_to_readline(monkeypatch, call, expected_prompt):
     assert received == [expected_prompt]
 
 
+def test_confirm_strips_ansi_with_color_false(runner):
+    """ANSI style codes in the confirm prompt are stripped when color=False.
+
+    https://github.com/pallets/click/issues/3572
+    """
+
+    @click.command()
+    def cmd():
+        click.confirm(click.style("Hello World!", fg="green"), abort=True)
+
+    result = runner.invoke(cmd, input="Y", color=False)
+    assert result.output == "Hello World! [y/N]: Y\n"
+
+
 def test_prompts_eof(runner):
     """If too few lines of input are given, prompt should exit, not hang."""
 

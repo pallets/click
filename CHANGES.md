@@ -27,6 +27,9 @@ Unreleased
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
   {pr}`3533`
+- `confirm` and `prompt` strip ANSI style codes from the prompt text
+  when the output stream does not support them (e.g. `color=False` in
+  `CliRunner`), restoring the behavior from before 8.4.0. {issue}`3572`
 
 ## Version 8.4.1
 
