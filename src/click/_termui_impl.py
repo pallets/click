@@ -350,6 +350,11 @@ class ProgressBar(t.Generic[V]):
     def finish(self) -> None:
         self.eta_known = False
         self.current_item = None
+
+        if self._completed_intervals > 0:
+            self.make_step(self._completed_intervals)
+            self._completed_intervals = 0
+
         self.finished = True
 
     def generator(self) -> cabc.Iterator[V]:
