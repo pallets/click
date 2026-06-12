@@ -740,6 +740,7 @@ def test_help_invalid_default(runner):
     assert result.exit_code == 0
     assert "default: not found" in result.output
 
+
 def test_version_option_resolves_import_name_to_distribution(runner, monkeypatch):
     """When ``package_name`` (detected or passed) is an import name that
     differs from its installed distribution name (``PIL`` vs ``Pillow``),
