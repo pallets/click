@@ -18,6 +18,8 @@ Unreleased
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
   {pr}`3533`
+- Fix CLI usage symopsis for optional arguments producing double square brackets
+  `[[a|b|c]]...` whose type already brackets their metavar. {pr}`3578`
 
 ## Version 8.4.1
 

@@ -569,6 +569,46 @@ def test_choice_argument_none(runner):
     assert result.output.startswith("Usage: cli [OPTIONS] {not-none|none}\n")
 
 
+def test_choice_argument_optional_metavar(runner):
+    """Optional Choice arguments reuse the type's brackets instead of doubling.
+
+    Without this the usage line for a ``Choice`` argument with ``nargs=-1`` or
+    ``required=False`` rendered as ``[[a|b|c]]``: one pair from ``Choice`` to
+    enumerate values, a second pair from ``Argument`` to mark it optional.
+    """
+
+    @click.command()
+    @click.argument("method", type=click.Choice(["foo", "bar", "baz"]), nargs=-1)
+    def cli_variadic(method):
+        pass
+
+    @click.command()
+    @click.argument("method", type=click.Choice(["foo", "bar", "baz"]), required=False)
+    def cli_optional(method):
+        pass
+
+    variadic = runner.invoke(cli_variadic, ["--help"]).output
+    assert "Usage: cli-variadic [OPTIONS] [foo|bar|baz]...\n" in variadic
+    assert "[[foo|bar|baz]]" not in variadic
+
+    optional = runner.invoke(cli_optional, ["--help"]).output
+    assert "Usage: cli-optional [OPTIONS] [foo|bar|baz]\n" in optional
+    assert "[[foo|bar|baz]]" not in optional
+
+
+def test_datetime_argument_optional_metavar(runner):
+    """``DateTime`` arguments behave the same way as ``Choice``."""
+
+    @click.command()
+    @click.argument("when", type=click.DateTime(formats=["%Y-%m-%d"]), required=False)
+    def cli(when):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert "Usage: cli [OPTIONS] [%Y-%m-%d]\n" in result.output
+    assert "[[%Y-%m-%d]]" not in result.output
+
+
 def test_datetime_option_default(runner):
     @click.command()
     @click.option("--start_date", type=click.DateTime())

@@ -3571,9 +3571,14 @@ class Argument(Parameter):
         var = self.type.get_metavar(param=self, ctx=ctx)
         if not var:
             var = self.name.upper()
+        # Types like ``Choice`` and ``DateTime`` already surround their metavar
+        # with square brackets to enumerate the allowed values. Reuse those
+        # outer brackets as the optional-argument indicator instead of wrapping
+        # the metavar in a second pair, which would produce ``[[a|b|c]]``.
+        already_bracketed = var.startswith("[") and var.endswith("]")
         if self.deprecated:
             var += "!"
-        if not self.required:
+        if not self.required and not already_bracketed:
             var = f"[{var}]"
         if self.nargs != 1:
             var += "..."
