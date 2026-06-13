@@ -350,6 +350,15 @@ class ProgressBar(t.Generic[V]):
     def finish(self) -> None:
         self.eta_known = False
         self.current_item = None
+
+        # Flush any remaining batched intervals so that pos reflects the
+        # actual number of completed steps when the bar finishes.  Without
+        # this, show_pos would display a stale count (e.g. "14/20" instead
+        # of "20/20") when update_min_steps doesn't evenly divide length.
+        if self._completed_intervals:
+            self.make_step(self._completed_intervals)
+            self._completed_intervals = 0
+
         self.finished = True
 
     def generator(self) -> cabc.Iterator[V]:
