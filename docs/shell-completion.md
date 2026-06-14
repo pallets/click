@@ -225,7 +225,7 @@ class MyshComplete(ShellComplete):
         return args, ""
 ```
 
-Finally, implement {meth}`~ShellComplete.format_completion`. This is called to format each {class}`CompletionItem` into a string. For example, the Bash implementation returns `f"{item.type},{item.value}` (it doesn't support help strings), and the Zsh implementation returns each part separated by a newline, replacing empty help with a `_` placeholder. This format is entirely up to what you parse with your completion script.
+Finally, implement {meth}`~ShellComplete.format_completion`. This is called to format each {class}`CompletionItem` into a string. For example, the Bash implementation returns `f"{item.type},{item.value}"` (it doesn't support help strings), and the Zsh implementation returns each part separated by a newline, replacing empty help with a `_` placeholder. This format is entirely up to what you parse with your completion script.
 
 The `type` value is usually `plain`, but it can be another value that the completion script can switch on. For example,
 `file` or `dir` can tell the shell to handle path completion, since the shell is better at that than Click.
