@@ -263,3 +263,37 @@ original `fd` through `fileno()`, reverting the change introduced in `8.3.3`
 that broke Pytest's `fd`-level capture teardown. Use `capture="fd"` to restore
 that behavior with proper isolation.
 ```
+
+## Testing Shell Completion
+
+Click builds {doc}`/shell-completion` through the
+{class}`~click.shell_completion.ShellComplete` class. You can check what your CLI
+suggests for a given partial command line without invoking a real shell: construct a
+`ShellComplete` for your command and call
+{meth}`~click.shell_completion.ShellComplete.get_completions`, which returns a list of
+{class}`~click.shell_completion.CompletionItem` objects.
+
+```{code-block} python
+from click.shell_completion import ShellComplete
+
+from myapp import cli
+
+
+def _complete(args, incomplete):
+    completer = ShellComplete(cli, {}, cli.name, "_MYAPP_COMPLETE")
+    return [item.value for item in completer.get_completions(args, incomplete)]
+
+
+def test_completion():
+    # Suggestions when the user hasn't typed anything yet.
+    assert _complete([], "") == ["clean", "sync"]
+    # Suggestions are filtered by the partial word being completed.
+    assert _complete([], "sy") == ["sync"]
+```
+
+The arguments to `ShellComplete` are the command (a {class}`~click.Command` or
+{class}`~click.Group`), the completion context (an empty dict is fine for most tests),
+the program name, and the completion environment variable (conventionally
+`_{PROG_NAME}_COMPLETE`, uppercased). For `get_completions`, `args` is the list of
+words already completed on the command line and `incomplete` is the partial word
+currently being typed.
