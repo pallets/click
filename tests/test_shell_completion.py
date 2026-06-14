@@ -585,3 +585,28 @@ def test_fish_format_completion_escapes_help():
     # The newline is escaped to the literal characters backslash-n and the tab
     # becomes a space, so each completion stays on one line for fish.
     assert fc.format_completion(item) == "plain,--at\tfirst\\nsecond third"
+
+
+def test_long_option_eq_completion():
+    """Completions for --opt=<partial> must include the --opt= prefix so
+    the shell replaces the whole token instead of just the value part.
+
+    Regression test for https://github.com/pallets/click/issues/2847
+    """
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["auto", "always", "never"]))],
+    )
+    # Empty value after =
+    assert _get_words(cli, [], "--color=") == [
+        "--color=auto",
+        "--color=always",
+        "--color=never",
+    ]
+    # Partial value after =
+    assert _get_words(cli, [], "--color=a") == ["--color=auto", "--color=always"]
+    # Full value after = (single match)
+    assert _get_words(cli, [], "--color=al") == ["--color=always"]
+    # Without = the prefix is NOT applied (existing behaviour unchanged)
+    assert _get_words(cli, ["--color"], "") == ["auto", "always", "never"]
+    assert _get_words(cli, ["--color"], "a") == ["auto", "always"]
