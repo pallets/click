@@ -350,6 +350,13 @@ class ProgressBar(t.Generic[V]):
     def finish(self) -> None:
         self.eta_known = False
         self.current_item = None
+        # The bar has completed. With a custom ``update_min_steps`` the final
+        # partial interval may never have been flushed into ``pos`` (e.g.
+        # ``length=20`` with ``update_min_steps=7`` stops at 14), which left
+        # ``show_pos`` rendering "14/20" while the bar and percentage already
+        # showed 100%. Snap ``pos`` to ``length`` so all three agree.
+        if self.length is not None:
+            self.pos = self.length
         self.finished = True
 
     def generator(self) -> cabc.Iterator[V]:

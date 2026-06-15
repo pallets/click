@@ -304,6 +304,26 @@ def test_progressbar_update(runner, monkeypatch):
     assert "100%          " in lines[4]
 
 
+def test_progressbar_update_min_steps_completion(runner, monkeypatch):
+    """When ``update_min_steps`` does not divide ``length`` evenly, the final
+    render must still show full completion for ``show_pos`` (regression #3571).
+    """
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(20), show_pos=True, update_min_steps=7
+        ) as progress:
+            for _ in progress:
+                print("")
+
+    output = runner.invoke(cli, []).output
+    lines = [line for line in output.split("\n") if "[" in line]
+    # The bar/percentage already render full; ``show_pos`` should agree.
+    assert "20/20" in lines[-1]
+
+
 def test_progressbar_item_show_func(runner, monkeypatch):
     """item_show_func should show the current item being yielded."""
 

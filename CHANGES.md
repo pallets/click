@@ -11,6 +11,10 @@ Unreleased
 
 Unreleased
 
+- `progressbar` with `show_pos=True` now shows full completion at the end
+  even when `update_min_steps` does not divide `length` evenly. The position
+  is snapped to `length` when the bar finishes, matching the already-complete
+  bar and percentage. {issue}`3571` {pr}`3598`
 - Fix Fish shell completion broken in `8.4.0` by {pr}`3126`. Newlines and
   tabs in option help text are now escaped, keeping the original completion
   format while still supporting multi-line help. {issue}`3502`
