@@ -348,6 +348,14 @@ class ProgressBar(t.Generic[V]):
             self._completed_intervals = 0
 
     def finish(self) -> None:
+        # Flush any steps that were below the ``update_min_steps`` threshold
+        # so the final position reflects all completed work. Otherwise, with
+        # an ``update_min_steps`` that does not divide ``length`` evenly,
+        # ``pos`` would stop short of ``length`` (e.g. showing ``14/20``).
+        if self._completed_intervals:
+            self.pos += self._completed_intervals
+            self._completed_intervals = 0
+
         self.eta_known = False
         self.current_item = None
         self.finished = True

@@ -6,6 +6,9 @@ Unreleased
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
   a `Positional arguments` section when argument help is available. {issue}`2983` {pr}`3473`
+- A {func}`progressbar` with `show_pos=True` and an `update_min_steps` that
+  does not divide the length evenly reports the full position at the end
+  instead of stopping short (e.g. `20/20` instead of `14/20`). {issue}`3571`
 
 ## Version 8.4.2
 
