@@ -9,6 +9,7 @@ Unreleased
 - A {func}`progressbar` with `show_pos=True` and an `update_min_steps` that
   does not divide the length evenly reports the full position at the end
   instead of stopping short (e.g. `20/20` instead of `14/20`). {issue}`3571`
+  {pr}`3600`
 
 ## Version 8.4.2
 
