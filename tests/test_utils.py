@@ -785,6 +785,29 @@ def test_iter_lazyfile(tmpdir):
                 assert e_line == a_line.strip()
 
 
+def test_lazyfile_read_fifo_skips_eager_open(monkeypatch):
+    fifo_mode = stat.S_IFIFO | 0o644
+    opened = []
+
+    monkeypatch.setattr(
+        click.utils.os,
+        "stat",
+        lambda filename: os.stat_result((fifo_mode, *([0] * 9))),
+    )
+
+    def record_open(*args, **kwargs):
+        opened.append((args, kwargs))
+        raise AssertionError("FIFO should not be opened during LazyFile init")
+
+    monkeypatch.setattr("builtins.open", record_open)
+
+    lf = click.utils.LazyFile("fifo", "rb")
+
+    assert lf._f is None
+    assert lf.should_close
+    assert opened == []
+
+
 class MockMain:
     __slots__ = "__package__"
 
