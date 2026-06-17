@@ -149,6 +149,26 @@ def test_type_choice():
     assert _get_words(cli, ["-c"], "a2") == ["a2"]
 
 
+@pytest.mark.parametrize(
+    ("incomplete", "expect"),
+    [
+        ("--color=", ["--color=auto", "--color=always", "--color=never"]),
+        ("--color=a", ["--color=auto", "--color=always"]),
+        ("--color=al", ["--color=always"]),
+    ],
+)
+def test_long_option_eq_value_choice(incomplete, expect):
+    cli = Command(
+        "cli",
+        params=[
+            Option(["--color"], type=Choice(["auto", "always", "never"])),
+        ],
+    )
+
+    assert _get_words(cli, [], incomplete) == expect
+    assert _get_words(cli, ["--color"], "al") == ["always"]
+
+
 def test_choice_special_characters():
     cli = Command("cli", params=[Option(["-c"], type=Choice(["!1", "!2", "+3"]))])
     assert _get_words(cli, ["-c"], "") == ["!1", "!2", "+3"]
