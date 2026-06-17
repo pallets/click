@@ -350,6 +350,74 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progress_bar_final_position_with_show_pos_and_update_min_steps(
+    runner, monkeypatch
+):
+    """When ``update_min_steps`` is not a divisor of ``length`` and the final
+    leftover interval is below the threshold, the bar must still display the
+    final position (e.g. ``20/20`` not ``14/20``) when the context exits.
+
+    Regression test for pallets/click#3571.
+    """
+
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(20), show_pos=True, update_min_steps=7
+        ) as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    result = runner.invoke(cli, [], standalone_mode=False, catch_exceptions=False)
+
+    # The last carriage-return-separated segment is the final rendered
+    # line that the terminal cursor rests on.
+    final_line = result.output.rstrip("\n").rsplit("\r", 1)[-1]
+    assert "20/20" in final_line, f"final line should show 20/20 but was {final_line!r}"
+    assert (
+        "14/20" not in final_line
+    ), f"final line still shows stale 14/20: {final_line!r}"
+
+
+def test_progress_bar_final_position_update_min_steps_divides_length(
+    runner, monkeypatch
+):
+    """The fix must not regress the already-working case where
+    ``update_min_steps`` divides ``length`` evenly (the last interval
+    triggers the final render normally)."""
+
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(10), show_pos=True, update_min_steps=5
+        ) as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    result = runner.invoke(cli, [], standalone_mode=False, catch_exceptions=False)
+    final_line = result.output.rstrip("\n").rsplit("\r", 1)[-1]
+    assert "10/10" in final_line, f"expected 10/10 in {final_line!r}"
+
+
+def test_progress_bar_final_position_no_show_pos(runner, monkeypatch):
+    """When ``show_pos=False`` the percentage display must also show 100%
+    at the end, not the pre-final-truncation percentage."""
+
+    @click.command()
+    def cli():
+        with click.progressbar(range(20), update_min_steps=7) as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    result = runner.invoke(cli, [], standalone_mode=False, catch_exceptions=False)
+    final_line = result.output.rstrip("\n").rsplit("\r", 1)[-1]
+    assert "100%" in final_line, f"expected 100% in {final_line!r}"
+    assert " 70%" not in final_line, f"stale 70%: {final_line!r}"
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")

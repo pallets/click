@@ -156,6 +156,14 @@ class ProgressBar(t.Generic[V]):
     def render_finish(self) -> None:
         if self.hidden or not self._is_atty:
             return
+        # If the final ``update_min_steps`` interval did not trigger a
+        # render before exit, advance ``pos`` to ``length`` so the last
+        # visible line reflects the actual completion (and not, e.g.,
+        # ``14/20`` when the bar truly reached 20). See pallets/click#3571.
+        if self.length is not None and self.pos < self.length:
+            self.pos = self.length
+            self.finished = True
+            self.render_progress()
         self.file.write(AFTER_BAR)
         self.file.flush()
 
