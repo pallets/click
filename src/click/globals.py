@@ -10,6 +10,7 @@ _local = local()
 
 
 @t.overload
+def get_current_context(silent: t.Literal[False] = False) -> Context: ...
 
 
 @t.overload
