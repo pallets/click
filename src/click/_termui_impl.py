@@ -351,6 +351,12 @@ class ProgressBar(t.Generic[V]):
         self.eta_known = False
         self.current_item = None
         self.finished = True
+        # A finished bar is at 100% (``pct`` returns 1.0), so the reported
+        # position must match the length. Otherwise an ``update_min_steps``
+        # remainder that never triggered ``make_step`` leaves ``pos`` short,
+        # showing e.g. "14/20" next to a full bar.
+        if self.length is not None:
+            self.pos = self.length
 
     def generator(self) -> cabc.Iterator[V]:
         """Return a generator which yields the items added to the bar

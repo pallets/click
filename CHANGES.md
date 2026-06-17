@@ -27,6 +27,9 @@ Unreleased
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
   {pr}`3533`
+- {func}`progressbar` shows the full position on completion, e.g. `20/20`,
+  when `update_min_steps` is not a divisor of the length, matching the full
+  bar instead of stopping short. {issue}`3571`
 
 ## Version 8.4.1
 
