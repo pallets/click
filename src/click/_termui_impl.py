@@ -342,7 +342,12 @@ class ProgressBar(t.Generic[V]):
 
         self._completed_intervals += n_steps
 
-        if self._completed_intervals >= self.update_min_steps:
+        complete = (
+            self.length is not None
+            and self.pos + self._completed_intervals >= self.length
+        )
+
+        if complete or self._completed_intervals >= self.update_min_steps:
             self.make_step(self._completed_intervals)
             self.render_progress()
             self._completed_intervals = 0

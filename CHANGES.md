@@ -27,6 +27,9 @@ Unreleased
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
   {pr}`3533`
+- Progress bars with `show_pos=True` and `update_min_steps` greater than 1
+  now render the final position when the last update is smaller than the
+  update threshold. {issue}`3571`
 
 ## Version 8.4.1
 

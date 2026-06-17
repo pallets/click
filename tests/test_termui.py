@@ -340,6 +340,23 @@ def test_progressbar_update_with_item_show_func(runner, monkeypatch):
     assert "Custom 4" in lines[2]
 
 
+def test_progressbar_update_min_steps_shows_final_position(runner, monkeypatch):
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(20), show_pos=True, update_min_steps=7
+        ) as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    output = runner.invoke(cli, []).output
+
+    lines = [line for line in output.split("\n") if "[" in line]
+
+    assert "20/20" in lines[-1]
+
+
 def test_progress_bar_update_min_steps(runner):
     bar = _create_progress(update_min_steps=5)
     bar.update(3)
@@ -348,6 +365,17 @@ def test_progress_bar_update_min_steps(runner):
     bar.update(2)
     assert bar._completed_intervals == 0
     assert bar.pos == 5
+
+
+def test_progress_bar_update_min_steps_flushes_at_length(runner):
+    bar = _create_progress(length=20, update_min_steps=7)
+    bar.update(7)
+    bar.update(7)
+    bar.update(6)
+
+    assert bar._completed_intervals == 0
+    assert bar.pos == 20
+    assert bar.finished
 
 
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
