@@ -3250,6 +3250,32 @@ def test_flag_group_competition_non_boolean(runner, opts, args, expected):
     assert result.output == repr(expected)
 
 
+def test_shared_dest_option_does_not_override_flag_callback_value(runner):
+    sentinel = "$_fetch"
+    calls = 0
+
+    def callback(ctx, param, value):
+        nonlocal calls
+
+        if value == sentinel:
+            calls += 1
+            return "fetched"
+
+        return value
+
+    @click.command()
+    @click.option("--custom", "custom")
+    @click.option("--fetch", "custom", flag_value=sentinel, callback=callback)
+    def cli(custom):
+        click.echo(custom)
+
+    result = runner.invoke(cli, ["--fetch"])
+
+    assert result.exit_code == 0, result.output
+    assert result.output == "fetched\n"
+    assert calls == 1
+
+
 @pytest.mark.parametrize(
     ("default_a", "default_b", "args", "expected"),
     [

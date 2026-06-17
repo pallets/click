@@ -27,6 +27,9 @@ Unreleased
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
   {pr}`3533`
+- Options that share a callback destination no longer let an uninvoked
+  sibling override the value returned by an invoked flag option's callback.
+  {issue}`2786`
 
 ## Version 8.4.1
 

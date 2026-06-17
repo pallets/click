@@ -312,6 +312,7 @@ class Context:
     args: list[str]
     _protected_args: list[str]
     _opt_prefixes: set[str]
+    _parser_invoked_params: frozenset[Parameter]
     obj: t.Any
     _meta: dict[str, t.Any]
     default_map: cabc.MutableMapping[str, t.Any] | None
@@ -370,6 +371,7 @@ class Context:
         self._protected_args = []
         #: the collected prefixes of the command's options.
         self._opt_prefixes = set(parent._opt_prefixes) if parent else set()
+        self._parser_invoked_params = frozenset()
 
         if obj is None and parent is not None:
             obj = parent.obj
@@ -1320,6 +1322,7 @@ class Command:
 
         parser = self.make_parser(ctx)
         opts, args, param_order = parser.parse_args(args=args)
+        ctx._parser_invoked_params = frozenset(param_order)
 
         for param in iter_params_for_processing(param_order, self.get_params(ctx)):
             _, args = param.handle_parse_result(ctx, opts, args)
@@ -3474,6 +3477,9 @@ class Option(Parameter):
 
         :meta private:
         """
+        if self not in ctx._parser_invoked_params and self.name in opts:
+            opts = {key: value for key, value in opts.items() if key != self.name}
+
         value, source = super().consume_value(ctx, opts)
 
         # The parser will emit a sentinel value if the option is allowed to as a flag
