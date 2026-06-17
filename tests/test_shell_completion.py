@@ -485,6 +485,17 @@ def test_choice_case_sensitive(value, expect):
     assert completions == expect
 
 
+# case_sensitive=False uses casefold() so that unicode chars like ß->ss match
+def test_choice_case_sensitive_unicode():
+    cli = Command(
+        "cli",
+        params=[Option(["-c"], type=Choice(["Straße", "München"], case_sensitive=False))],
+    )
+    # "Straß" lowercased is "straß", but casefolded is "strass".
+    # The stored choice is "strasse" (casefold of "Straße"), so only casefold matches.
+    completions = _get_words(cli, ["-c"], "Straß")
+    assert completions == ["strasse"]
+
 @pytest.fixture()
 def _restore_available_shells(tmpdir):
     prev_available_shells = click.shell_completion._available_shells.copy()
