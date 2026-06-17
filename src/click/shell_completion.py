@@ -283,6 +283,13 @@ class ShellComplete:
         :param incomplete: Value being completed. May be empty.
         """
         ctx = _resolve_context(self.cli, self.ctx_args, self.prog_name, args)
+        incomplete_option = _find_incomplete_option(ctx, args)
+
+        if incomplete_option is not None and not _start_of_option(ctx, incomplete):
+            ctx = _resolve_context(
+                self.cli, self.ctx_args, self.prog_name, args[:incomplete_option]
+            )
+
         obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
         return obj.shell_complete(ctx, incomplete)
 
@@ -548,29 +555,45 @@ def _start_of_option(ctx: Context, value: str) -> bool:
     return c in ctx._opt_prefixes
 
 
-def _is_incomplete_option(ctx: Context, args: list[str], param: Parameter) -> bool:
+def _find_incomplete_option_for_param(
+    ctx: Context, args: list[str], param: Parameter
+) -> int | None:
     """Determine if the given parameter is an option that needs a value.
 
     :param args: List of complete args before the incomplete value.
     :param param: Option object being checked.
     """
     if not isinstance(param, Option):
-        return False
+        return None
 
     if param.is_flag or param.count:
-        return False
-
-    last_option = None
+        return None
 
     for index, arg in enumerate(reversed(args)):
         if index + 1 > param.nargs:
             break
 
         if _start_of_option(ctx, arg):
-            last_option = arg
+            if arg in param.opts:
+                return len(args) - index - 1
+
             break
 
-    return last_option is not None and last_option in param.opts
+    return None
+
+
+def _find_incomplete_option(ctx: Context, args: list[str]) -> int | None:
+    for param in ctx.command.get_params(ctx):
+        index = _find_incomplete_option_for_param(ctx, args, param)
+
+        if index is not None:
+            return index
+
+    return None
+
+
+def _is_incomplete_option(ctx: Context, args: list[str], param: Parameter) -> bool:
+    return _find_incomplete_option_for_param(ctx, args, param) is not None
 
 
 def _resolve_context(

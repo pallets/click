@@ -127,6 +127,44 @@ def test_argument_order():
     assert _get_words(cli, ["x", "b"], "d") == ["d"]
 
 
+def test_option_complete_has_parsed_argument():
+    seen = []
+
+    def complete(ctx, param, incomplete):
+        seen.append(dict(ctx.params))
+        return ["x"]
+
+    cli = Command(
+        "cli",
+        params=[
+            Argument(["kind"]),
+            Option(["--test"], shell_complete=complete),
+        ],
+    )
+
+    assert _get_words(cli, ["foo", "--test"], "") == ["x"]
+    assert seen == [{"kind": "foo", "test": None}]
+
+
+def test_argument_complete_has_parsed_option():
+    seen = []
+
+    def complete(ctx, param, incomplete):
+        seen.append(dict(ctx.params))
+        return ["x"]
+
+    cli = Command(
+        "cli",
+        params=[
+            Option(["--test"]),
+            Argument(["kind"], shell_complete=complete),
+        ],
+    )
+
+    assert _get_words(cli, ["--test", "bar"], "") == ["x"]
+    assert seen == [{"test": "bar", "kind": None}]
+
+
 def test_argument_default():
     cli = Command(
         "cli",
