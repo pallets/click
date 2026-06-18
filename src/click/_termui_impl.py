@@ -351,6 +351,12 @@ class ProgressBar(t.Generic[V]):
         self.eta_known = False
         self.current_item = None
         self.finished = True
+        # Ensure final state is rendered even when update_min_steps
+        # caused the last update to be skipped.
+        if self._completed_intervals > 0:
+            self.make_step(self._completed_intervals)
+            self.render_progress()
+            self._completed_intervals = 0
 
     def generator(self) -> cabc.Iterator[V]:
         """Return a generator which yields the items added to the bar
