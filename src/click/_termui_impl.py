@@ -350,6 +350,13 @@ class ProgressBar(t.Generic[V]):
     def finish(self) -> None:
         self.eta_known = False
         self.current_item = None
+        # Flush any remaining accumulated steps that have not yet met
+        # the update_min_steps threshold, so the final position is
+        # rendered correctly when length is not evenly divisible by
+        # update_min_steps. See pallets/click#3571.
+        if self._completed_intervals:
+            self.make_step(self._completed_intervals)
+            self._completed_intervals = 0
         self.finished = True
 
     def generator(self) -> cabc.Iterator[V]:
