@@ -1,9 +1,0 @@
-$ colors_
-
-  colors is a simple example that shows how you can
-  colorize text.
-
-Usage:
-
-  $ pip install --editable .
-  $ colors

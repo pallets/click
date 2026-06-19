@@ -350,6 +350,32 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progressbar_final_render_when_update_min_steps_uneven(runner, monkeypatch):
+    """Progressbar shows 100% when update_min_steps doesn't divide length evenly.
+
+    Regression test for #3571: if the last batch of items doesn't reach
+    update_min_steps, the final render_progress() was never called, so the
+    bar never showed full completion.
+    """
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(20), show_pos=True, update_min_steps=7
+        ) as progress:
+            for _ in progress:
+                pass
+
+    output = runner.invoke(cli, []).output
+    lines = [line for line in output.split("\n") if "[" in line]
+
+    # The last rendered line must show 20/20 (full completion).
+    # Note: show_pos=True disables show_percent by default (one or the other),
+    # so we check for the position indicator "20/20" rather than "100%".
+    assert "20/20" in lines[-1], f"Final line does not show 20/20: {lines[-1]!r}"
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
