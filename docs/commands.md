@@ -228,7 +228,7 @@ def cli(fin):
 
 @cli.result_callback()
 def process_pipeline(processors, fin):
-    iterator = (x.rstrip("\r\n") for x in input)
+    iterator = (x.rstrip("\r\n") for x in fin)
 
     for processor in processors:
         iterator = processor(iterator)
