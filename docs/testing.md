@@ -83,6 +83,40 @@ def test_sync():
   assert 'Syncing' in result.output
 ```
 
+## Shell Completion
+
+Use {class}`click.shell_completion.ShellComplete` to test shell completion
+suggestions without invoking a real shell. Pass completed arguments in `args`,
+and pass the word currently being completed in `incomplete`.
+
+```{code-block} python
+:caption: greet.py
+
+import click
+
+@click.command()
+@click.option("--format", "output_format", type=click.Choice(["json", "text"]))
+def greet(output_format):
+   click.echo(f"format={output_format}")
+```
+
+```{code-block} python
+:caption: test_greet.py
+
+from click.shell_completion import ShellComplete
+from greet import greet
+
+def get_completion_values(cli, args, incomplete):
+   complete = ShellComplete(cli, {}, cli.name, "_GREET_COMPLETE")
+   return [item.value for item in complete.get_completions(args, incomplete)]
+
+def test_shell_completion_suggests_options():
+   assert get_completion_values(greet, [], "--f") == ["--format"]
+
+def test_shell_completion_suggests_choice_values():
+   assert get_completion_values(greet, ["--format"], "j") == ["json"]
+```
+
 ## Context Settings
 
 Additional keyword arguments passed to {meth}`CliRunner.invoke` will be used to
