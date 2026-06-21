@@ -451,8 +451,8 @@ class Choice(ParamType[_ValueT_co], t.Generic[_ValueT_co]):
         if self.case_sensitive:
             matched = (c for c in str_choices if c.startswith(incomplete))
         else:
-            incomplete = incomplete.lower()
-            matched = (c for c in str_choices if c.lower().startswith(incomplete))
+            incomplete = incomplete.casefold()
+            matched = (c for c in str_choices if c.casefold().startswith(incomplete))
 
         return [CompletionItem(c) for c in matched]
 
