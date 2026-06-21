@@ -7,6 +7,7 @@ import shutil
 import sys
 import tempfile
 import time
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -517,6 +518,29 @@ def test_editor_path_normalization(editor_cmd, filenames, expected_args):
         args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
         assert args == expected_args
         assert mock_popen.call_args[1].get("shell") is None
+
+
+@pytest.mark.parametrize(
+    ("filename", "expected_filenames"),
+    [
+        pytest.param("f.txt", ["f.txt"], id="str"),
+        pytest.param(Path("f.txt"), ["f.txt"], id="pathlib.Path"),
+        pytest.param(["a.txt", "b.txt"], ["a.txt", "b.txt"], id="iterable of str"),
+        pytest.param(
+            [Path("a.txt"), Path("b.txt")],
+            ["a.txt", "b.txt"],
+            id="iterable of pathlib.Path",
+        ),
+    ],
+)
+def test_edit_filename_pathlike(filename, expected_filenames):
+    """``edit(filename=...)`` accepts str and os.PathLike, single or iterable."""
+    with patch("subprocess.Popen") as mock_popen:
+        mock_popen.return_value.wait.return_value = 0
+        click.edit(filename=filename, editor="editor")
+
+        args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
+        assert args == ["editor", *expected_filenames]
 
 
 @pytest.mark.skipif(not WIN, reason="Windows-specific editor paths")
