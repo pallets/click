@@ -7,7 +7,7 @@ Unreleased
 - {class}`Argument` accepts a `help` parameter, and help output includes
   a `Positional arguments` section when argument help is available. {issue}`2983` {pr}`3473`
 - {func}`edit` accepts {class}`os.PathLike` objects, such as
-  {class}`pathlib.Path`, for the `filename` argument. {issue}`2869`
+  {class}`pathlib.Path`, for the `filename` argument. {issue}`2869` {pr}`3622`
 
 ## Version 8.4.2
 
