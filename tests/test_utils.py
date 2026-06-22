@@ -217,6 +217,56 @@ def test_confirm_repeat(runner):
     assert result.output == "A [y/n]: \nError: invalid input\nA [y/n]: y\n"
 
 
+def test_confirm_strips_ansi_with_color_false(runner):
+    """confirm() should strip ANSI codes from styled text when color=False."""
+
+    @click.command()
+    def cli():
+        if click.confirm(click.style("Hello World!", fg="green"), abort=True):
+            click.echo("yes")
+
+    result = runner.invoke(cli, input="y\n", color=False)
+    assert "\x1b[" not in result.output
+    assert result.output == "Hello World! [y/N]: y\nyes\n"
+
+
+def test_confirm_preserves_ansi_with_color_true(runner):
+    """confirm() should preserve ANSI codes in styled text when color=True."""
+
+    @click.command()
+    def cli():
+        if click.confirm(click.style("Hello World!", fg="green"), abort=True):
+            click.echo("yes")
+
+    result = runner.invoke(cli, input="y\n", color=True)
+    assert "\x1b[" in result.output
+
+
+def test_prompt_strips_ansi_with_color_false(runner):
+    """prompt() should strip ANSI codes from styled text when color=False."""
+
+    @click.command()
+    def cli():
+        value = click.prompt(click.style("Name", fg="blue"))
+        click.echo(f"Got: {value}")
+
+    result = runner.invoke(cli, input="test\n", color=False)
+    assert "\x1b[" not in result.output
+    assert result.output == "Name: test\nGot: test\n"
+
+
+def test_prompt_preserves_ansi_with_color_true(runner):
+    """prompt() should preserve ANSI codes in styled text when color=True."""
+
+    @click.command()
+    def cli():
+        value = click.prompt(click.style("Name", fg="blue"))
+        click.echo(f"Got: {value}")
+
+    result = runner.invoke(cli, input="test\n", color=True)
+    assert "\x1b[" in result.output
+
+
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
 def test_prompts_abort(monkeypatch, capsys):
     def f(_):

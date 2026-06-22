@@ -13,6 +13,7 @@ from gettext import gettext as _
 
 from ._compat import isatty
 from ._compat import strip_ansi
+from . import _compat
 from .exceptions import Abort
 from .exceptions import UsageError
 from .globals import resolve_color_default
@@ -196,11 +197,17 @@ def prompt(
         text, prompt_suffix, show_default, default, show_choices, type
     )
 
+    if _compat.should_strip_ansi(sys.stderr if err else sys.stdout):
+        prompt = strip_ansi(prompt)
+
     if confirmation_prompt:
         if confirmation_prompt is True:
             confirmation_prompt = _("Repeat for confirmation")
 
         confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
+
+        if _compat.should_strip_ansi(sys.stderr if err else sys.stdout):
+            confirmation_prompt = strip_ansi(confirmation_prompt)
 
     while True:
         while True:
@@ -266,6 +273,9 @@ def confirm(
         show_default,
         "y/n" if default is None else ("Y/n" if default else "y/N"),
     )
+
+    if _compat.should_strip_ansi(sys.stderr if err else sys.stdout):
+        prompt = strip_ansi(prompt)
 
     while True:
         try:
