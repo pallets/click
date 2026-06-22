@@ -2461,9 +2461,16 @@ class Parameter(ABC):
                 source = ParameterSource.DEFAULT_MAP
 
                 # A string from default_map must be split for multi-value
-                # parameters, matching value_from_envvar behavior.
-                if isinstance(value, str) and self.nargs != 1:
-                    value = self.type.split_envvar_value(value)
+                # parameters, matching value_from_envvar behavior. This
+                # includes "multiple" options, not just nargs != 1, and
+                # batches the items when both apply.
+                if isinstance(value, str) and (self.nargs != 1 or self.multiple):
+                    split_value = self.type.split_envvar_value(value)
+
+                    if self.multiple and self.nargs != 1:
+                        value = batch(split_value, self.nargs)
+                    else:
+                        value = split_value
 
         if value is UNSET:
             default_value = self.get_default(ctx)

@@ -6,6 +6,10 @@ Unreleased
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
   a `Positional arguments` section when argument help is available. {issue}`2983` {pr}`3473`
+- A string in `default_map` for a `multiple` option is split into separate
+  values, matching how an environment variable string is split. Previously
+  only `nargs > 1` options were split, so a `multiple` option failed with
+  "Value must be an iterable." {issue}`2745` {pr}`3624`
 
 ## Version 8.4.2
 

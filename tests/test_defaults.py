@@ -525,11 +525,23 @@ def test_default_map_with_callable_flag_value(runner, default_map, args, expecte
             ["--point", "10", "20"],
             (10, 20),
         ),
+        # String is split for a multiple option (nargs == 1).
+        ({"point": "a b c"}, {"multiple": True}, [], ("a", "b", "c")),
+        # String is split and batched for a multiple option with nargs > 1.
+        (
+            {"point": "1 2 3 4"},
+            {"multiple": True, "nargs": 2, "type": int},
+            [],
+            ((1, 2), (3, 4)),
+        ),
+        # Already-structured value for a multiple option passes through.
+        ({"point": ["a", "b"]}, {"multiple": True}, [], ("a", "b")),
     ],
 )
 def test_default_map_nargs(runner, default_map, option_kwargs, cli_args, expected):
-    """A string in ``default_map`` for an option with ``nargs > 1`` should be
-    split the same way an environment variable string is split.
+    """A string in ``default_map`` for a multi-value option (``nargs > 1`` or
+    ``multiple``) should be split the same way an environment variable string
+    is split.
 
     Regression test for https://github.com/pallets/click/issues/2745.
     """
