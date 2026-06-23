@@ -502,7 +502,7 @@ def split_arg_string(string: str) -> list[str]:
     lex = shlex.shlex(string, posix=True)
     lex.whitespace_split = True
     lex.commenters = ""
-    out = []
+    out = []  # type: list[str]
 
     try:
         out.extend(lex)
