@@ -555,6 +555,109 @@ def test_echo_color_flag(monkeypatch, capfd):
     assert out == f"{styled_text}\n"
 
 
+@pytest.mark.parametrize(
+    ("no_color", "force_color", "expected"),
+    [
+        # Neither variable set -> no preference, fall back to detection.
+        (None, None, None),
+        # NO_COLOR disables color for any non-empty value, regardless of it.
+        ("1", None, False),
+        ("0", None, False),
+        ("false", None, False),
+        # FORCE_COLOR enables color for any non-empty value, regardless of it.
+        (None, "1", True),
+        (None, "0", True),
+        (None, "false", True),
+        # NO_COLOR takes precedence over FORCE_COLOR (matches CPython).
+        ("1", "1", False),
+        # Empty values do not count as "set".
+        ("", None, None),
+        (None, "", None),
+        ("", "", None),
+    ],
+)
+def test_resolve_color_default_env(monkeypatch, no_color, force_color, expected):
+    for name, value in (("NO_COLOR", no_color), ("FORCE_COLOR", force_color)):
+        if value is None:
+            monkeypatch.delenv(name, raising=False)
+        else:
+            monkeypatch.setenv(name, value)
+
+    assert click.globals.resolve_color_default() is expected
+
+
+@pytest.mark.parametrize("color", [True, False])
+def test_resolve_color_default_explicit_overrides_env(monkeypatch, color):
+    # An explicit value always wins over the environment variables.
+    monkeypatch.setenv("NO_COLOR", "1")
+    monkeypatch.setenv("FORCE_COLOR", "1")
+    assert click.globals.resolve_color_default(color) is color
+
+
+@pytest.mark.parametrize("isatty", [True, False])
+def test_echo_no_color_env(monkeypatch, capfd, isatty):
+    """``NO_COLOR`` strips style from ``echo`` output regardless of whether
+    the destination is a terminal (https://no-color.org/)."""
+    monkeypatch.setattr(click._compat, "isatty", lambda x: isatty)
+    monkeypatch.delenv("FORCE_COLOR", raising=False)
+    monkeypatch.setenv("NO_COLOR", "1")
+
+    text = "foo"
+    styled_text = click.style(text, fg="red")
+    click.echo(styled_text)
+    out, err = capfd.readouterr()
+    assert out == f"{text}\n"
+
+
+@pytest.mark.parametrize("isatty", [True, False])
+def test_echo_force_color_env(monkeypatch, capfd, isatty):
+    """``FORCE_COLOR`` keeps style in ``echo`` output even when the
+    destination is not a terminal (https://force-color.org/)."""
+    monkeypatch.setattr(click._compat, "isatty", lambda x: isatty)
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    monkeypatch.setenv("FORCE_COLOR", "1")
+
+    styled_text = click.style("foo", fg="red")
+    click.echo(styled_text)
+    out, err = capfd.readouterr()
+    assert out == f"{styled_text}\n"
+
+
+def test_echo_no_color_precedence_over_force_color(monkeypatch, capfd):
+    """When both are set, ``NO_COLOR`` wins."""
+    monkeypatch.setattr(click._compat, "isatty", lambda x: False)
+    monkeypatch.setenv("NO_COLOR", "1")
+    monkeypatch.setenv("FORCE_COLOR", "1")
+
+    text = "foo"
+    styled_text = click.style(text, fg="red")
+    click.echo(styled_text)
+    out, err = capfd.readouterr()
+    assert out == f"{text}\n"
+
+
+def test_echo_color_arg_overrides_color_env(monkeypatch, capfd):
+    """An explicit ``color`` argument overrides the environment variables."""
+    monkeypatch.setattr(click._compat, "isatty", lambda x: False)
+
+    text = "foo"
+    styled_text = click.style(text, fg="red")
+
+    # color=True overrides NO_COLOR.
+    monkeypatch.setenv("NO_COLOR", "1")
+    monkeypatch.delenv("FORCE_COLOR", raising=False)
+    click.echo(styled_text, color=True)
+    out, err = capfd.readouterr()
+    assert out == f"{styled_text}\n"
+
+    # color=False overrides FORCE_COLOR.
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    monkeypatch.setenv("FORCE_COLOR", "1")
+    click.echo(styled_text, color=False)
+    out, err = capfd.readouterr()
+    assert out == f"{text}\n"
+
+
 def test_prompt_cast_default(capfd, monkeypatch):
     monkeypatch.setattr(sys, "stdin", StringIO("\n"))
     value = click.prompt("value", default="100", type=int)

@@ -6,6 +6,12 @@ Unreleased
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
   a `Positional arguments` section when argument help is available. {issue}`2983` {pr}`3473`
+- `echo` and `secho` honor the `NO_COLOR` (<https://no-color.org/>) and
+  `FORCE_COLOR` (<https://force-color.org/>) environment variables when no
+  explicit color preference is given by an argument or the context. A
+  variable counts as set when it has a non-empty value, regardless of the
+  value, and `NO_COLOR` takes precedence over `FORCE_COLOR`. {issue}`3022`
+  {pr}`3629`
 
 ## Version 8.4.2
 
@@ -493,7 +499,7 @@ Released 2023-07-06
 - Make the decorators returned by `@argument()` and `@option()` reusable when the
   `cls` parameter is used. {issue}`2294`
 - Don't fail when writing filenames to streams with strict errors. Replace invalid
-  bytes with the replacement character (`�`). {issue}`2395`
+  bytes with the replacement character (`ï¿½`). {issue}`2395`
 - Remove unnecessary attempt to detect MSYS2 environment. {issue}`2355`
 - Remove outdated and unnecessary detection of App Engine environment. {pr}`2554`
 - `echo()` does not fail when no streams are attached, such as with `pythonw` on

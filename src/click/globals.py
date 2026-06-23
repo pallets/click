@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import typing as t
 from threading import local
 
@@ -54,14 +55,27 @@ def pop_context() -> None:
 def resolve_color_default(color: bool | None = None) -> bool | None:
     """Internal helper to get the default value of the color flag.  If a
     value is passed it's returned unchanged, otherwise it's looked up from
-    the current context.
+    the current context.  If neither provides an explicit preference, the
+    ``NO_COLOR`` and ``FORCE_COLOR`` environment variables are honored.
     """
     if color is not None:
         return color
 
     ctx = get_current_context(silent=True)
 
-    if ctx is not None:
+    if ctx is not None and ctx.color is not None:
         return ctx.color
+
+    # No explicit preference was given, so fall back to the de facto
+    # NO_COLOR (https://no-color.org/) and FORCE_COLOR
+    # (https://force-color.org/) standards. A variable is considered set
+    # when it has a non-empty value, regardless of what that value is.
+    # NO_COLOR takes precedence over FORCE_COLOR, matching the behavior of
+    # the CPython interpreter itself.
+    if os.environ.get("NO_COLOR"):
+        return False
+
+    if os.environ.get("FORCE_COLOR"):
+        return True
 
     return None
