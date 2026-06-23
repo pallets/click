@@ -183,6 +183,8 @@ class _Option:
 
 
 class _Argument:
+    __slots__ = ("dest", "nargs", "obj")
+
     def __init__(self, obj: CoreArgument, dest: str | None, nargs: int = 1):
         self.dest = dest
         self.nargs = nargs
@@ -214,6 +216,8 @@ class _Argument:
 
 
 class _ParsingState:
+    __slots__ = ("__weakref__", "largs", "opts", "order", "rargs")
+
     def __init__(self, rargs: list[str]) -> None:
         self.opts: dict[str, t.Any] = {}
         self.largs: list[str] = []
