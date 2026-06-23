@@ -350,6 +350,39 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progress_bar_update_min_steps_finish(runner):
+    """``finish`` applies steps recorded below the ``update_min_steps``
+    threshold so the final position is accurate (issue #3571)."""
+    bar = _create_progress(length=20, update_min_steps=7)
+    for _ in range(20):
+        bar.update(1)
+    # 20 == 7 + 7 + 6; the last 6 steps did not reach the threshold and so
+    # were not yet applied to ``pos``.
+    assert bar.pos == 14
+    assert bar._completed_intervals == 6
+    bar.finish()
+    assert bar.pos == 20
+    assert bar._completed_intervals == 0
+
+
+def test_progressbar_show_pos_final_completion(runner, monkeypatch):
+    """With ``show_pos`` and an ``update_min_steps`` that does not divide
+    ``length``, the final render still shows full completion (issue #3571)."""
+
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(20), show_pos=True, update_min_steps=7
+        ) as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    output = runner.invoke(cli, []).output
+    lines = [line for line in output.split("\n") if "[" in line]
+    assert "20/20" in lines[-1]
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")

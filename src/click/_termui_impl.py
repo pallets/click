@@ -348,6 +348,15 @@ class ProgressBar(t.Generic[V]):
             self._completed_intervals = 0
 
     def finish(self) -> None:
+        # Apply any steps that were recorded but not yet rendered because
+        # they did not meet ``update_min_steps``. Without this the final
+        # position can lag behind the real progress (e.g. showing "14/20"
+        # instead of "20/20") when ``update_min_steps`` is not a divisor of
+        # ``length``.
+        if self._completed_intervals:
+            self.pos += self._completed_intervals
+            self._completed_intervals = 0
+
         self.eta_known = False
         self.current_item = None
         self.finished = True
