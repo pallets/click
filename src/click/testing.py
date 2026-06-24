@@ -471,9 +471,16 @@ class CliRunner:
             errors="backslashreplace",
         )
 
+        def write_prompt(prompt: str | None) -> None:
+            if prompt is None:
+                return
+            if should_strip_ansi(sys.stdout):
+                prompt = _compat.strip_ansi(prompt)
+            sys.stdout.write(prompt)
+
         @_pause_echo(echo_input)  # type: ignore
         def visible_input(prompt: str | None = None) -> str:
-            sys.stdout.write(prompt or "")
+            write_prompt(prompt)
             try:
                 val = next(text_input).rstrip("\r\n")
             except StopIteration as e:
@@ -484,7 +491,8 @@ class CliRunner:
 
         @_pause_echo(echo_input)  # type: ignore
         def hidden_input(prompt: str | None = None) -> str:
-            sys.stdout.write(f"{prompt or ''}\n")
+            write_prompt(prompt)
+            sys.stdout.write("\n")
             sys.stdout.flush()
             try:
                 return next(text_input).rstrip("\r\n")

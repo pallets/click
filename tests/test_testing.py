@@ -225,6 +225,38 @@ def test_with_color():
     assert not result.exception
 
 
+@pytest.mark.parametrize(
+    ("command", "user_input", "expected"),
+    [
+        (
+            lambda: click.prompt(click.style("Name", fg="green")),
+            "alice\n",
+            "Name: alice\n",
+        ),
+        (
+            lambda: click.prompt(click.style("Password", fg="green"), hide_input=True),
+            "secret\n",
+            "Password: \n",
+        ),
+        (
+            lambda: click.confirm(click.style("Hello World!", fg="green"), abort=True),
+            "Y\n",
+            "Hello World! [y/N]: Y\n",
+        ),
+    ],
+    ids=["prompt", "hidden-prompt", "confirm"],
+)
+def test_prompt_strips_ansi_when_color_disabled(command, user_input, expected):
+    @click.command()
+    def cli():
+        command()
+
+    runner = CliRunner()
+    result = runner.invoke(cli, input=user_input, color=False)
+    assert result.output == expected
+    assert result.exit_code == 0
+
+
 def test_with_color_errors():
     class CLIError(ClickException):
         def format_message(self) -> str:
