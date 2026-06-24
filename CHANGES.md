@@ -27,6 +27,9 @@ Unreleased
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
   {pr}`3533`
+- A `progressbar` with `show_pos=True` and an `update_min_steps` that does not
+  divide the total length shows the full position when it finishes, instead of
+  stopping at the last rendered step. {issue}`3571` {pr}`3632`
 
 ## Version 8.4.1
 

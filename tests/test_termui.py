@@ -350,6 +350,20 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progressbar_update_min_steps_completes(runner, monkeypatch):
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+
+    # update_min_steps that does not divide the length leaves some steps
+    # below the render threshold when iteration ends. The bar should still
+    # finish at the full position rather than stopping short.
+    with click.progressbar(range(20), show_pos=True, update_min_steps=7) as bar:
+        for _ in bar:
+            pass
+
+    assert bar.pos == bar.length
+    assert bar.format_pos() == "20/20"
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
