@@ -1,6 +1,6 @@
 ## Version 8.4.2
 
-Unreleased
+Released 2026-06-24
 
 - Fix Fish shell completion broken in `8.4.0` by {pr}`3126`. Newlines and
   tabs in option help text are now escaped, keeping the original completion
