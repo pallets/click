@@ -350,6 +350,29 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progressbar_show_pos_with_update_min_steps(runner, monkeypatch):
+    """show_pos should show full completion when update_min_steps doesn't
+    divide length evenly. Regression test for pallets/click#3571."""
+
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(20),
+            show_pos=True,
+            update_min_steps=7,
+        ) as bar:
+            for _ in bar:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    output = runner.invoke(cli, []).output
+
+    # The final rendered line should show 20/20, not 14/20.
+    lines = [line for line in output.split("\n") if "[" in line]
+    last_bar_line = lines[-1]
+    assert "20/20" in last_bar_line
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")

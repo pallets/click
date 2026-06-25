@@ -351,6 +351,8 @@ class ProgressBar(t.Generic[V]):
         self.eta_known = False
         self.current_item = None
         self.finished = True
+        if self.length is not None:
+            self.pos = self.length
 
     def generator(self) -> cabc.Iterator[V]:
         """Return a generator which yields the items added to the bar
