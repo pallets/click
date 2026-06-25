@@ -399,6 +399,14 @@ class ZshComplete(ShellComplete):
         #
         # See issue #1812 and issue #2703 for further context.
         value = item.value.replace(":", r"\:") if help_ != "_" else item.value
+        # The zsh completion script reads the response with `(@f)`, which
+        # splits on newlines, and consumes exactly three newline-delimited
+        # fields (type, value, help) per item. A literal newline in the
+        # value or help adds an extra field and desyncs every item that
+        # follows, so escape newlines to the two-character sequence "\n"
+        # to keep each item on three lines, mirroring :class:`FishComplete`.
+        value = value.replace("\n", r"\n")
+        help_ = help_.replace("\n", r"\n")
         return f"{item.type}\n{value}\n{help_}"
 
 

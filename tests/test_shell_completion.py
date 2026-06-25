@@ -15,6 +15,7 @@ from click.shell_completion import CompletionItem
 from click.shell_completion import FishComplete
 from click.shell_completion import shell_complete
 from click.shell_completion import ShellComplete
+from click.shell_completion import ZshComplete
 from click.types import Choice
 from click.types import File
 from click.types import Path
@@ -585,3 +586,21 @@ def test_fish_format_completion_escapes_help():
     # The newline is escaped to the literal characters backslash-n and the tab
     # becomes a space, so each completion stays on one line for fish.
     assert fc.format_completion(item) == "plain,--at\tfirst\\nsecond third"
+
+
+def test_zsh_format_completion_escapes_newlines():
+    zc = ZshComplete(Command("x"), {}, "x", "_X_COMPLETE")
+    item = CompletionItem("--at", help="first\nsecond")
+    # The zsh script consumes exactly three newline-delimited fields per item,
+    # so newlines in the value/help are escaped to backslash-n to keep the
+    # frame intact. Without escaping the help newline would add a fourth field
+    # and desync every following completion.
+    assert zc.format_completion(item) == "plain\n--at\nfirst\\nsecond"
+    assert zc.format_completion(item).count("\n") == 2
+
+
+def test_zsh_format_completion_escapes_newline_in_value():
+    zc = ZshComplete(Command("x"), {}, "x", "_X_COMPLETE")
+    item = CompletionItem("a\nb", help="help")
+    assert zc.format_completion(item) == "plain\na\\nb\nhelp"
+    assert zc.format_completion(item).count("\n") == 2
