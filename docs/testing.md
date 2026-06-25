@@ -83,6 +83,55 @@ def test_sync():
   assert 'Syncing' in result.output
 ```
 
+## Shell Completion
+
+Shell completion behavior can be tested without starting an interactive shell.
+Use {class}`~click.shell_completion.ShellComplete` with your command object,
+then call
+{meth}`~click.shell_completion.ShellComplete.get_completions`.
+The `args` list contains the completed words after the command name, and
+`incomplete` is the word currently being completed.
+
+```{code-block} python
+:caption: test_completion.py
+
+import click
+from click.shell_completion import ShellComplete
+
+
+def complete_color(ctx, param, incomplete):
+    colors = ["blue", "black", "green"]
+    return [color for color in colors if color.startswith(incomplete)]
+
+
+@click.command()
+@click.argument("color", shell_complete=complete_color)
+@click.option("--count", type=int)
+def cli(color, count):
+    click.echo(f"{color}: {count}")
+
+
+def get_completion_words(args, incomplete):
+    completion = ShellComplete(cli, {}, cli.name, "_CLI_COMPLETE")
+    return [
+        item.value
+        for item in completion.get_completions(args, incomplete)
+    ]
+
+
+def test_option_completion():
+    assert get_completion_words([], "--") == ["--count", "--help"]
+
+
+def test_argument_completion():
+    assert get_completion_words([], "bl") == ["blue", "black"]
+```
+
+This tests Click's completion logic directly. To test shell-specific output,
+invoke the command with {meth}`CliRunner.invoke` and pass the completion
+environment variables for the shell, such as `_CLI_COMPLETE`,
+`COMP_WORDS`, and `COMP_CWORD`.
+
 ## Context Settings
 
 Additional keyword arguments passed to {meth}`CliRunner.invoke` will be used to
