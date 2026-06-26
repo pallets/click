@@ -228,6 +228,7 @@ Register-ArgumentCompleter -Native -CommandName %(prog_name)s -ScriptBlock {
 
     if (-not $response) { return }
 
+    $prefix = "$wordToComplete*"
     $lines = $response -split "`n"
     for ($i = 0; $i + 2 -lt $lines.Count; $i += 3) {
         $type = $lines[$i]
@@ -240,15 +241,16 @@ Register-ArgumentCompleter -Native -CommandName %(prog_name)s -ScriptBlock {
             [System.Management.Automation.CompletionResult]::new(
                 $value, $value, 'ParameterValue', $tip)
         } elseif ($type -eq 'dir') {
-            Get-ChildItem -Directory -Path "$wordToComplete*" -ErrorAction SilentlyContinue |
+            Get-ChildItem -Directory -Path $prefix -ErrorAction SilentlyContinue |
                 ForEach-Object {
                     [System.Management.Automation.CompletionResult]::new(
                         $_.FullName, $_.Name, 'ProviderContainer', $_.FullName)
                 }
         } elseif ($type -eq 'file') {
-            Get-ChildItem -Path "$wordToComplete*" -ErrorAction SilentlyContinue |
+            Get-ChildItem -Path $prefix -ErrorAction SilentlyContinue |
                 ForEach-Object {
-                    $kind = if ($_.PSIsContainer) { 'ProviderContainer' } else { 'ProviderItem' }
+                    $kind = 'ProviderItem'
+                    if ($_.PSIsContainer) { $kind = 'ProviderContainer' }
                     [System.Management.Automation.CompletionResult]::new(
                         $_.FullName, $_.Name, $kind, $_.FullName)
                 }
