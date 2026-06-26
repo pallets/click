@@ -2,6 +2,10 @@
 
 Unreleased
 
+- Add built-in shell completion support for PowerShell (Windows PowerShell
+  5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
+  completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate
+  the completion script.
 - Supported versions of Windows enable ANSI terminal styles by default.
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
