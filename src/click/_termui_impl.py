@@ -382,6 +382,10 @@ class ProgressBar(t.Generic[V]):
                 yield rv
                 self.update(1)
 
+            if self._completed_intervals:
+                self.make_step(self._completed_intervals)
+                self._completed_intervals = 0
+
             self.finish()
             self.render_progress()
 
