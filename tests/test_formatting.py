@@ -501,6 +501,58 @@ def test_write_usage_styled_prefix_keeps_options_on_one_line():
     assert visible == "Usage: cli [OPTIONS]\n"
 
 
+def test_write_usage_does_not_break_options_on_hyphens():
+    """Issue #3362: when a long hyphenated option lands at the wrap limit,
+    ``write_usage`` must wrap on whitespace and keep the option token intact
+    instead of splitting it at an internal hyphen.
+    """
+    formatter = click.HelpFormatter(width=50)
+    formatter.write_usage(
+        "mytool",
+        "[--enable-verbose-logging] [--disable-color-output]"
+        " [--use-experimental-feature]",
+    )
+    lines = formatter.getvalue().splitlines()
+
+    # No line is broken inside an option at a hyphen.
+    for line in lines:
+        assert not line.rstrip().endswith("-")
+
+    # Each hyphenated option appears whole on a single line.
+    for option in (
+        "[--enable-verbose-logging]",
+        "[--disable-color-output]",
+        "[--use-experimental-feature]",
+    ):
+        assert any(option in line for line in lines)
+
+
+def test_write_usage_breaks_options_on_hyphens_end_to_end(runner):
+    """End-to-end: a command with long hyphenated option names renders a
+    usage line without splitting an option at an internal hyphen.
+    """
+
+    @click.command()
+    @click.option("--enable-verbose-logging", is_flag=True)
+    @click.option("--disable-color-output", is_flag=True)
+    @click.option("--use-experimental-feature", is_flag=True)
+    def cli(enable_verbose_logging, disable_color_output, use_experimental_feature):
+        pass
+
+    result = runner.invoke(cli, ["--help"], terminal_width=50)
+    assert not result.exception
+
+    usage_lines = []
+    for line in result.output.splitlines():
+        if line.startswith("Usage:") or line.startswith(" "):
+            usage_lines.append(line)
+        elif usage_lines:
+            break
+
+    for line in usage_lines:
+        assert not line.rstrip().endswith("-")
+
+
 @pytest.mark.parametrize(
     ("formatter_kwargs", "current_indent", "prog", "args", "prefix", "expected"),
     [

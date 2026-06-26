@@ -6,6 +6,9 @@ Unreleased
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
   a `Positional arguments` section when argument help is available. {issue}`2983` {pr}`3473`
+- The usage line no longer breaks a long hyphenated option (such as
+  `--enable-verbose-logging`) at an internal hyphen when wrapping. Options
+  are kept whole and wrapped on whitespace instead. {issue}`3362`
 
 ## Version 8.4.2
 
