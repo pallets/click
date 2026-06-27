@@ -485,6 +485,21 @@ def test_choice_case_sensitive(value, expect):
     assert completions == expect
 
 
+def test_long_option_equals_value_completion():
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["auto", "always", "never"]))],
+    )
+
+    assert _get_words(cli, [], "--color=") == [
+        "--color=auto",
+        "--color=always",
+        "--color=never",
+    ]
+    assert _get_words(cli, [], "--color=al") == ["--color=always"]
+    assert _get_words(cli, ["--color"], "al") == ["always"]
+
+
 @pytest.fixture()
 def _restore_available_shells(tmpdir):
     prev_available_shells = click.shell_completion._available_shells.copy()
