@@ -3,6 +3,7 @@ from __future__ import annotations
 import collections.abc as cabc
 import os
 import re
+import stat
 import sys
 import typing as t
 from functools import update_wrapper
@@ -109,6 +110,21 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
     return " ".join(words[:i]) + "..."
 
 
+def _is_fifo(filename: str | os.PathLike[str]) -> bool:
+    """Return whether ``filename`` is a FIFO (named pipe).
+
+    Used to skip the eager open/close error check in :class:`LazyFile`:
+    that check would otherwise consume or desync a FIFO's contents before
+    the real, lazy open happens later. Returns ``False`` (rather than
+    raising) if the path can't be stat'd, since the subsequent real open
+    will surface any such error anyway.
+    """
+    try:
+        return stat.S_ISFIFO(os.stat(filename).st_mode)
+    except OSError:
+        return False
+
+
 class LazyFile:
     """A lazy file works like a regular file but it does not fully open
     the file but it does perform some basic checks early to see if the
@@ -141,10 +157,12 @@ class LazyFile:
         if self.name == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
         else:
-            if "r" in mode:
+            if "r" in mode and not _is_fifo(filename):
                 # Open and close the file in case we're opening it for
                 # reading so that we can catch at least some errors in
-                # some cases early.
+                # some cases early. Skip this for FIFOs (named pipes):
+                # opening and closing one for reading can consume or
+                # desync its contents before the real, lazy open happens.
                 open(filename, mode).close()
             self._f = None
             self.should_close = True

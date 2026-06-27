@@ -23,6 +23,10 @@ Unreleased
 - `echo_via_pager` flushes after each write, so passing a generator streams
   output to the pager incrementally instead of staying hidden until the pipe
   buffer fills. {issue}`3242` {issue}`2542` {pr}`3534`
+- `LazyFile` no longer eagerly opens and closes a FIFO (named pipe) to check
+  for errors. Doing so could consume or desync the FIFO's contents before the
+  real, lazy open happened later, causing reads to hang or fail
+  inconsistently. {issue}`2645`
 - `echo_via_pager` and `get_pager_file` no longer close a borrowed stdout
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`

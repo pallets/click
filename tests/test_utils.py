@@ -785,6 +785,36 @@ def test_iter_lazyfile(tmpdir):
                 assert e_line == a_line.strip()
 
 
+@pytest.mark.skipif(WIN, reason="fifos are not supported on Windows")
+def test_lazyfile_skips_eager_check_for_fifo(tmpdir):
+    # Regression test for #2645: LazyFile's eager open/close error check
+    # must not be performed on a FIFO, since doing so can consume or
+    # desync its contents before the real, lazy open happens.
+    fifo_path = str(tmpdir.join("test.fifo"))
+    os.mkfifo(fifo_path)
+
+    # If LazyFile eagerly opened the fifo for reading here, this call
+    # would block forever (nothing has written to the fifo yet), since
+    # there would be no writer to pair with that eager open.
+    lf = click.utils.LazyFile(fifo_path, mode="r")
+    assert lf._f is None
+
+    with open(fifo_path, "w") as writer:
+        writer.write("hello\n")
+        writer.flush()
+        assert lf.read() == "hello\n"
+
+
+def test_is_fifo_helper(tmpdir):
+    regular_file = tmpdir.join("regular.txt")
+    regular_file.write("content")
+    assert click.utils._is_fifo(str(regular_file)) is False
+
+    # A path that doesn't exist must not raise - the later real open
+    # will surface the appropriate error instead.
+    assert click.utils._is_fifo(str(tmpdir.join("does-not-exist"))) is False
+
+
 class MockMain:
     __slots__ = "__package__"
 
