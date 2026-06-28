@@ -97,6 +97,9 @@ _SOURCE_BASH = """\
 %(complete_func)s() {
     local IFS=$'\\n'
     local response
+    # Remove '=' from COMP_WORDBREAKS so that '--option=value' is treated
+    # as a single word and not split into ['--option', '=', 'value'].
+    local COMP_WORDBREAKS="${COMP_WORDBREAKS//=/}"
 
     response=$(env COMP_WORDS="${COMP_WORDS[*]}" COMP_CWORD=$COMP_CWORD \
 %(complete_var)s=bash_complete $1)
@@ -140,6 +143,8 @@ _SOURCE_ZSH = """\
     local -a response
     (( ! $+commands[%(prog_name)s] )) && return 1
 
+    # Remove '=' from wordchars so that '--option=value' is treated as a single word.
+    local wordchars="${wordchars//=/}"
     response=("${(@f)$(env COMP_WORDS="${words[*]}" COMP_CWORD=$((CURRENT-1)) \
 %(complete_var)s=zsh_complete %(prog_name)s)}")
 
