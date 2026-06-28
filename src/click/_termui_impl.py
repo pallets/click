@@ -137,6 +137,7 @@ class ProgressBar(t.Generic[V]):
         exc_value: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
+        self.finish()
         self.render_finish()
 
     def __iter__(self) -> cabc.Iterator[V]:
@@ -351,6 +352,11 @@ class ProgressBar(t.Generic[V]):
         self.eta_known = False
         self.current_item = None
         self.finished = True
+
+        if self._completed_intervals > 0:
+            self.make_step(self._completed_intervals)
+            self.render_progress()
+            self._completed_intervals = 0
 
     def generator(self) -> cabc.Iterator[V]:
         """Return a generator which yields the items added to the bar
