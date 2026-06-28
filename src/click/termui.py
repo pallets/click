@@ -11,7 +11,10 @@ from contextlib import AbstractContextManager
 from contextlib import redirect_stdout
 from gettext import gettext as _
 
+from ._compat import _default_text_stderr
+from ._compat import _default_text_stdout
 from ._compat import isatty
+from ._compat import should_strip_ansi
 from ._compat import strip_ansi
 from .exceptions import Abort
 from .exceptions import UsageError
@@ -83,7 +86,14 @@ def hidden_prompt_func(prompt: str) -> str:
 def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
     """Call a prompt function, passing the full prompt on non-Windows so
     readline can handle line editing and cursor positioning correctly.
+
+    The prompt is written by the prompt function rather than :func:`echo`,
+    so strip ANSI style codes here when the target stream is not a
+    terminal, matching :func:`echo`'s behavior.
     """
+    stream = _default_text_stderr() if err else _default_text_stdout()
+    if should_strip_ansi(stream, resolve_color_default()):
+        text = strip_ansi(text)
     if err:
         with redirect_stdout(sys.stderr):
             return func(text)
@@ -155,6 +165,10 @@ def prompt(
                          For example if type is a Choice of either day or week,
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
+
+    .. versionchanged:: 8.4.2
+        ANSI style codes are stripped from the prompt when the output
+        stream is not a terminal, matching ``echo``.
 
     .. versionchanged:: 8.3.3
         ``show_default`` can be a string to show a custom value instead
@@ -250,6 +264,10 @@ def confirm(
     :param show_default: shows or hides the default value in the prompt.
     :param err: if set to true the file defaults to ``stderr`` instead of
                 ``stdout``, the same as with echo.
+
+    .. versionchanged:: 8.4.2
+        ANSI style codes are stripped from the prompt when the output
+        stream is not a terminal, matching ``echo``.
 
     .. versionchanged:: 8.3.1
         A space is no longer appended to the prompt.

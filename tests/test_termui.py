@@ -1560,3 +1560,30 @@ def test_hide_input_value_never_leaks_when_err_true(runner):
     result = runner.invoke(cli, input="leaky\n", mix_stderr=False)
     assert "leaky" not in result.stdout
     assert "leaky" not in result.stderr
+
+
+def test_confirm_strips_ansi_when_color_disabled(runner):
+    """``click.confirm`` writes its prompt through a non-tty stream under
+    ``CliRunner``. ANSI style codes must be stripped from that prompt, the
+    same way :func:`click.echo` strips them, so output matches what users
+    saw before the readline change in 8.4.0 (see issue #3572).
+    """
+
+    @click.command()
+    def cli():
+        click.confirm(click.style("Continue", fg="green"), default=True)
+
+    result = runner.invoke(cli, input="y\n", color=False)
+    assert result.output == "Continue [Y/n]: y\n"
+
+
+def test_prompt_strips_ansi_when_color_disabled(runner):
+    """``click.prompt`` must also strip ANSI codes from its prompt text
+    when the output stream is not a terminal (issue #3572)."""
+
+    @click.command()
+    def cli():
+        click.prompt(click.style("Name", fg="green"))
+
+    result = runner.invoke(cli, input="click\n", color=False)
+    assert result.output == "Name: click\n"
