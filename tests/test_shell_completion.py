@@ -2,6 +2,7 @@ import io
 import textwrap
 import warnings
 from collections.abc import Mapping
+from types import SimpleNamespace
 
 import pytest
 
@@ -343,6 +344,34 @@ def _patch_for_completion(monkeypatch):
     monkeypatch.setattr(
         "click.shell_completion.BashComplete._check_version", lambda self: True
     )
+
+
+@pytest.mark.parametrize(
+    ("version", "expect_stderr"),
+    [
+        ("4.3.0(1)-release", "Shell completion is not supported for Bash"),
+        ("4.4.0(1)-release", ""),
+        ("4.10.0(1)-release", ""),
+        ("10.0.0(1)-release", ""),
+    ],
+)
+def test_bash_check_version_uses_numeric_version(
+    monkeypatch, capsys, version, expect_stderr
+) -> None:
+    def run(args, stdout):
+        return SimpleNamespace(stdout=f"{version}\n".encode())
+
+    monkeypatch.setattr("shutil.which", lambda name: "/bin/bash")
+    monkeypatch.setattr("subprocess.run", run)
+
+    click.shell_completion.BashComplete._check_version()
+
+    output = capsys.readouterr()
+
+    if expect_stderr:
+        assert expect_stderr in output.err
+    else:
+        assert output.err == ""
 
 
 @pytest.mark.parametrize("shell", ["bash", "zsh", "fish"])

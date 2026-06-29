@@ -330,9 +330,9 @@ class BashComplete(ShellComplete):
             match = re.search(r"^(\d+)\.(\d+)\.\d+", output.stdout.decode())
 
         if match is not None:
-            major, minor = match.groups()
+            major, minor = (int(x) for x in match.groups())
 
-            if major < "4" or major == "4" and minor < "4":
+            if major < 4 or major == 4 and minor < 4:
                 echo(
                     _(
                         "Shell completion is not supported for Bash"
