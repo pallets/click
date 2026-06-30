@@ -156,6 +156,10 @@ class ProgressBar(t.Generic[V]):
     def render_finish(self) -> None:
         if self.hidden or not self._is_atty:
             return
+        if self._completed_intervals:
+            self.make_step(self._completed_intervals)
+            self._completed_intervals = 0
+            self.render_progress()
         self.file.write(AFTER_BAR)
         self.file.flush()
 

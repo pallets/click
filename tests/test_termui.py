@@ -350,6 +350,20 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progressbar_update_min_steps_shows_full_completion(runner, monkeypatch):
+    """render_finish must flush remaining steps so final position is shown."""
+
+    @click.command()
+    def cli():
+        with click.progressbar(length=20, show_pos=True, update_min_steps=7) as bar:
+            for _ in range(20):
+                bar.update(1)
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    output = runner.invoke(cli, []).output
+    assert "20/20" in output
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
