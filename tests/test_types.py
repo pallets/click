@@ -235,6 +235,26 @@ def test_path_surrogates(tmp_path, monkeypatch):
     path.unlink()
 
 
+def test_path_resolve_executable(tmp_path, monkeypatch):
+    path = tmp_path / "test_file"
+    path.touch()
+
+    resolved_path = os.path.realpath(path)
+
+    def check_access(p, mode):
+        assert p == resolved_path
+        return False
+
+    type = click.Path(executable=True, resolve_path=True, readable=False)
+
+    with pytest.raises(click.BadParameter, match="is not executable"):
+        with monkeypatch.context() as m:
+            m.setattr(os, "access", check_access)
+            type.convert(path, None, None)
+
+    path.unlink()
+
+
 @pytest.mark.parametrize(
     "type",
     [

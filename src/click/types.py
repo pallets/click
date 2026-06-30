@@ -1158,7 +1158,7 @@ class Path(ParamType[str | bytes | os.PathLike[str]]):
                     ctx,
                 )
 
-            if self.executable and not os.access(value, os.X_OK):
+            if self.executable and not os.access(rv, os.X_OK):
                 self.fail(
                     _("{name} {filename!r} is not executable.").format(
                         name=self.name.title(), filename=format_filename(value)
