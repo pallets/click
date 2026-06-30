@@ -1022,6 +1022,56 @@ def test_confirmation_prompt(runner, prompt, input, default, expect):
         assert "Confirm Password: " in result.output
 
 
+@pytest.mark.parametrize(
+    ("call", "user_input", "color", "expect"),
+    [
+        pytest.param(
+            lambda: click.confirm(click.style("Hello World!", fg="green")),
+            "y",
+            False,
+            "Hello World! [y/N]: y\n",
+            id="confirm-no-color",
+        ),
+        pytest.param(
+            lambda: click.confirm(click.style("Hello World!", fg="green")),
+            "y",
+            True,
+            "\x1b[32mHello World!\x1b[0m [y/N]: y\n",
+            id="confirm-color",
+        ),
+        pytest.param(
+            lambda: click.prompt(click.style("Name", fg="green")),
+            "Bob",
+            False,
+            "Name: Bob\n",
+            id="prompt-no-color",
+        ),
+        pytest.param(
+            lambda: click.prompt(click.style("Name", fg="green")),
+            "Bob",
+            True,
+            "\x1b[32mName\x1b[0m: Bob\n",
+            id="prompt-color",
+        ),
+    ],
+)
+def test_prompt_and_confirm_ansi_respects_color(
+    runner, call, user_input, color, expect
+):
+    """``confirm`` and ``prompt`` strip ANSI color and style codes from the
+    prompt when color is disabled and keep them when it is enabled, like
+    ``echo``. The prompt is written by ``input`` rather than ``echo``, so it
+    used to keep the codes regardless (issue 3572).
+    """
+
+    @click.command()
+    def cli():
+        call()
+
+    result = runner.invoke(cli, input=user_input, color=color)
+    assert result.output == expect
+
+
 def test_false_show_default_cause_no_default_display_in_prompt(runner):
     @click.command()
     @click.option("--arg1", show_default=False, prompt=True, default="my-default-value")

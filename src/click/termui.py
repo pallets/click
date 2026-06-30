@@ -11,6 +11,7 @@ from contextlib import AbstractContextManager
 from contextlib import redirect_stdout
 from gettext import gettext as _
 
+from . import _compat
 from ._compat import isatty
 from ._compat import strip_ansi
 from .exceptions import Abort
@@ -83,7 +84,20 @@ def hidden_prompt_func(prompt: str) -> str:
 def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
     """Call a prompt function, passing the full prompt on non-Windows so
     readline can handle line editing and cursor positioning correctly.
+
+    The prompt is handed to *func* (such as :func:`input`) rather than
+    written through :func:`echo`, so it has to strip ANSI color and style
+    codes itself when the destination stream does not support them. Without
+    this the prompt would keep codes that :func:`echo` removes from the
+    rest of the output.
     """
+    stream = sys.stderr if err else sys.stdout
+
+    # Look up ``should_strip_ansi`` on the module so that ``CliRunner``,
+    # which patches it there during test isolation, is honored.
+    if _compat.should_strip_ansi(stream, resolve_color_default()):
+        text = strip_ansi(text)
+
     if err:
         with redirect_stdout(sys.stderr):
             return func(text)
