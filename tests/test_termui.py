@@ -349,6 +349,22 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progress_bar_show_pos_update_min_steps(runner, monkeypatch):
+    """show_pos=True must display the true final position even when
+    update_min_steps doesn't evenly divide the total length."""
+
+    @click.command()
+    def cli():
+        with click.progressbar(range(20), show_pos=True, update_min_steps=7) as bar:
+            for _ in bar:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    output = runner.invoke(cli, []).output
+    lines = [line for line in output.split("\n") if "[" in line]
+    assert "20/20" in lines[-1]
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")

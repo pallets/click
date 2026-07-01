@@ -347,6 +347,9 @@ class ProgressBar(t.Generic[V]):
             self._completed_intervals = 0
 
     def finish(self) -> None:
+        if self._completed_intervals:
+            self.make_step(self._completed_intervals)
+            self._completed_intervals = 0
         self.eta_known = False
         self.current_item = None
         self.finished = True
