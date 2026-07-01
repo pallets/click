@@ -569,6 +569,46 @@ def test_choice_argument_none(runner):
     assert result.output.startswith("Usage: cli [OPTIONS] {not-none|none}\n")
 
 
+def test_choice_argument_optional_metavar(runner):
+    """Optional Choice arguments reuse the type's brackets instead of doubling.
+
+    Without this the usage line for a ``Choice`` argument with ``nargs=-1`` or
+    ``required=False`` rendered as ``[[a|b|c]]``: one pair from ``Choice`` to
+    enumerate values, a second pair from ``Argument`` to mark it optional.
+    """
+
+    @click.command()
+    @click.argument("method", type=click.Choice(["foo", "bar", "baz"]), nargs=-1)
+    def cli_variadic(method):
+        pass
+
+    @click.command()
+    @click.argument("method", type=click.Choice(["foo", "bar", "baz"]), required=False)
+    def cli_optional(method):
+        pass
+
+    variadic = runner.invoke(cli_variadic, ["--help"]).output
+    assert "Usage: cli-variadic [OPTIONS] [foo|bar|baz]...\n" in variadic
+    assert "[[foo|bar|baz]]" not in variadic
+
+    optional = runner.invoke(cli_optional, ["--help"]).output
+    assert "Usage: cli-optional [OPTIONS] [foo|bar|baz]\n" in optional
+    assert "[[foo|bar|baz]]" not in optional
+
+
+def test_datetime_argument_optional_metavar(runner):
+    """``DateTime`` arguments behave the same way as ``Choice``."""
+
+    @click.command()
+    @click.argument("when", type=click.DateTime(formats=["%Y-%m-%d"]), required=False)
+    def cli(when):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert "Usage: cli [OPTIONS] [%Y-%m-%d]\n" in result.output
+    assert "[[%Y-%m-%d]]" not in result.output
+
+
 def test_datetime_option_default(runner):
     @click.command()
     @click.option("--start_date", type=click.DateTime())
@@ -739,3 +779,82 @@ def test_help_invalid_default(runner):
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
     assert "default: not found" in result.output
+
+
+def test_version_option_resolves_import_name_to_distribution(runner, monkeypatch):
+    """When ``package_name`` (detected or passed) is an import name that
+    differs from its installed distribution name (``PIL`` vs ``Pillow``),
+    ``version_option`` resolves it via ``packages_distributions()`` instead
+    of raising ``RuntimeError``.
+    """
+    import importlib.metadata
+
+    def fake_version(name):
+        if name == "pillow":
+            return "10.4.0"
+        raise importlib.metadata.PackageNotFoundError(name)
+
+    monkeypatch.setattr(importlib.metadata, "version", fake_version)
+    monkeypatch.setattr(
+        importlib.metadata,
+        "packages_distributions",
+        lambda: {"PIL": ["pillow"]},
+    )
+
+    @click.command()
+    @click.version_option(package_name="PIL")
+    def cli():
+        pass
+
+    result = runner.invoke(cli, ["--version"], prog_name="imageapp")
+    assert result.exit_code == 0
+    assert "10.4.0" in result.output
+
+
+def test_version_option_ambiguous_import_name_errors(runner, monkeypatch):
+    """When an import name maps to multiple installed distributions, the
+    user must disambiguate. The error names the candidates.
+    """
+    import importlib.metadata
+
+    def fake_version(name):
+        raise importlib.metadata.PackageNotFoundError(name)
+
+    monkeypatch.setattr(importlib.metadata, "version", fake_version)
+    monkeypatch.setattr(
+        importlib.metadata,
+        "packages_distributions",
+        lambda: {"plug": ["foo-plug", "bar-plug"]},
+    )
+
+    @click.command()
+    @click.version_option(package_name="plug")
+    def cli():
+        pass
+
+    result = runner.invoke(cli, ["--version"])
+    assert result.exit_code != 0
+    msg = str(result.exception)
+    assert "multiple installed distributions" in msg
+    assert "foo-plug" in msg
+    assert "bar-plug" in msg
+
+
+def test_version_option_unknown_package_errors(runner, monkeypatch):
+    """When the name resolves to no distribution, keep the existing error."""
+    import importlib.metadata
+
+    def fake_version(name):
+        raise importlib.metadata.PackageNotFoundError(name)
+
+    monkeypatch.setattr(importlib.metadata, "version", fake_version)
+    monkeypatch.setattr(importlib.metadata, "packages_distributions", lambda: {})
+
+    @click.command()
+    @click.version_option(package_name="nonexistent")
+    def cli():
+        pass
+
+    result = runner.invoke(cli, ["--version"])
+    assert result.exit_code != 0
+    assert "not installed" in str(result.exception)
