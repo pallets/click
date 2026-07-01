@@ -13,7 +13,7 @@ Unreleased
 
 ## Version 8.4.2
 
-Unreleased
+Released 2026-06-24
 
 - Fix Fish shell completion broken in `8.4.0` by {pr}`3126`. Newlines and
   tabs in option help text are now escaped, keeping the original completion
@@ -31,6 +31,14 @@ Unreleased
   stream when no external pager runs, completing the partial
   `I/O operation on closed file` fix from {pr}`3482`. {issue}`3449`
   {pr}`3533`
+- Fix CLI usage symopsis for optional arguments producing double square brackets
+  `[[a|b|c]]...` whose type already brackets their metavar. {pr}`3578`
+- {func}`version_option` resolves a `package_name` that does not match an
+  installed distribution as an import (top-level module) name via
+  {func}`importlib.metadata.packages_distributions`. Packages whose
+  top-level module name differs from their distribution name (`PIL` vs
+  `Pillow`, `jwt` vs `PyJWT`) no longer raise `RuntimeError` out of the
+  box. {issue}`2331` {issue}`1884` {issue}`3125` {pr}`3582`
 
 ## Version 8.4.1
 

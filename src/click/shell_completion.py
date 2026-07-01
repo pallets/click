@@ -22,7 +22,7 @@ def shell_complete(
     prog_name: str,
     complete_var: str,
     instruction: str,
-) -> int:
+) -> t.Literal[0, 1]:
     """Perform shell completion for the given CLI program.
 
     :param cli: Command being called.
@@ -55,7 +55,16 @@ def shell_complete(
     return 1
 
 
-class CompletionItem:
+if t.TYPE_CHECKING:
+    from typing_extensions import TypeVar
+
+    # `Any` is used as default for backwards compatibility (instead of e.g. `str`)
+    _ValueT_co = TypeVar("_ValueT_co", covariant=True, default=t.Any)
+else:
+    _ValueT_co = t.TypeVar("_ValueT_co", covariant=True)
+
+
+class CompletionItem(t.Generic[_ValueT_co]):
     """Represents a completion value and metadata about the value. The
     default metadata is ``type`` to indicate special shell handling,
     and ``help`` if a shell supports showing a help string next to the
@@ -78,12 +87,12 @@ class CompletionItem:
 
     def __init__(
         self,
-        value: t.Any,
+        value: _ValueT_co,
         type: str = "plain",
         help: str | None = None,
         **kwargs: t.Any,
     ) -> None:
-        self.value: t.Any = value
+        self.value: _ValueT_co = value
         self.type: str = type
         self.help: str | None = help
         self._info = kwargs
@@ -260,6 +269,12 @@ Register-ArgumentCompleter -Native -CommandName %(prog_name)s -ScriptBlock {
 """
 
 
+class _SourceVarsDict(t.TypedDict):
+    complete_func: str
+    complete_var: str
+    prog_name: str
+
+
 class ShellComplete:
     """Base class for providing shell completion support. A subclass for
     a given shell will override attributes and methods to implement the
@@ -309,7 +324,7 @@ class ShellComplete:
         safe_name = re.sub(r"\W*", "", self.prog_name.replace("-", "_"), flags=re.ASCII)
         return f"_{safe_name}_completion"
 
-    def source_vars(self) -> dict[str, t.Any]:
+    def source_vars(self) -> _SourceVarsDict:
         """Vars for formatting :attr:`source_template`.
 
         By default this provides ``complete_func``, ``complete_var``,
@@ -336,7 +351,9 @@ class ShellComplete:
         """
         raise NotImplementedError
 
-    def get_completions(self, args: list[str], incomplete: str) -> list[CompletionItem]:
+    def get_completions(
+        self, args: list[str], incomplete: str
+    ) -> list[CompletionItem[str]]:
         """Determine the context and last complete command or parameter
         from the complete args. Call that object's ``shell_complete``
         method to get the completions for the incomplete value.
@@ -348,7 +365,7 @@ class ShellComplete:
         obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
         return obj.shell_complete(ctx, incomplete)
 
-    def format_completion(self, item: CompletionItem) -> str:
+    def format_completion(self, item: CompletionItem[str]) -> str:
         """Format a completion item into the form recognized by the
         shell script. This must be implemented by subclasses.
 
@@ -424,7 +441,7 @@ class BashComplete(ShellComplete):
 
         return args, incomplete
 
-    def format_completion(self, item: CompletionItem) -> str:
+    def format_completion(self, item: CompletionItem[t.Any]) -> str:
         return f"{item.type},{item.value}"
 
 
@@ -446,7 +463,7 @@ class ZshComplete(ShellComplete):
 
         return args, incomplete
 
-    def format_completion(self, item: CompletionItem) -> str:
+    def format_completion(self, item: CompletionItem[str]) -> str:
         help_ = item.help or "_"
         # The zsh completion script uses `_describe` on items with help
         # texts (which splits the item help from the item value at the
@@ -484,7 +501,7 @@ class FishComplete(ShellComplete):
 
         return args, incomplete
 
-    def format_completion(self, item: CompletionItem) -> str:
+    def format_completion(self, item: CompletionItem[str]) -> str:
         """
         .. versionchanged:: 8.4.2
             Escape newlines and replace tabs with spaces in the help text to
@@ -522,7 +539,7 @@ class PowerShellComplete(ShellComplete):
 
         return args, incomplete
 
-    def format_completion(self, item: CompletionItem) -> str:
+    def format_completion(self, item: CompletionItem[str]) -> str:
         # PowerShell parses the response by splitting on newlines and
         # consuming three lines per completion (type, value, help).
         # Multi-line help text would break that framing, so collapse
@@ -535,20 +552,19 @@ class PowerShellComplete(ShellComplete):
         return f"{item.type}\n{item.value}\n{help_}"
 
 
-ShellCompleteType = t.TypeVar("ShellCompleteType", bound="type[ShellComplete]")
-
-
-_available_shells: dict[str, type[ShellComplete]] = {
+_available_shells: t.Final[dict[str, type[ShellComplete]]] = {
     "bash": BashComplete,
     "fish": FishComplete,
     "powershell": PowerShellComplete,
     "zsh": ZshComplete,
 }
 
+_ShellCompleteT = t.TypeVar("_ShellCompleteT", bound="ShellComplete")
+
 
 def add_completion_class(
-    cls: ShellCompleteType, name: str | None = None
-) -> ShellCompleteType:
+    cls: type[_ShellCompleteT], name: str | None = None
+) -> type[_ShellCompleteT]:
     """Register a :class:`ShellComplete` subclass under the given name.
     The name will be provided by the completion instruction environment
     variable during completion.
@@ -566,6 +582,14 @@ def add_completion_class(
     return cls
 
 
+@t.overload
+def get_completion_class(shell: t.Literal["bash"]) -> type[BashComplete]: ...
+@t.overload
+def get_completion_class(shell: t.Literal["fish"]) -> type[FishComplete]: ...
+@t.overload
+def get_completion_class(shell: t.Literal["zsh"]) -> type[ZshComplete]: ...
+@t.overload
+def get_completion_class(shell: str) -> type[ShellComplete] | None: ...
 def get_completion_class(shell: str) -> type[ShellComplete] | None:
     """Look up a registered :class:`ShellComplete` subclass by the name
     provided by the completion instruction environment variable. If the
