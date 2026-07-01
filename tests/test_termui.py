@@ -1560,3 +1560,27 @@ def test_hide_input_value_never_leaks_when_err_true(runner):
     result = runner.invoke(cli, input="leaky\n", mix_stderr=False)
     assert "leaky" not in result.stdout
     assert "leaky" not in result.stderr
+
+
+
+
+
+def test_progressbar_update_min_steps_shows_final_pos(runner, monkeypatch):
+    """progressbar with update_min_steps that doesn't divide length evenly
+    should still show the full final position (GH #3571)."""
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+
+    @click.command()
+    def cli():
+        with click.progressbar(range(20), show_pos=True, update_min_steps=7) as bar:
+            for _ in bar:
+                pass
+
+    result = runner.invoke(cli, catch_exceptions=False).output
+    # The last rendered frame must show 20/20, not a stale partial count.
+    # Output uses carriage returns to overwrite the bar; split on them.
+    frames = [f for f in result.split(chr(13)) if f.strip()]
+    assert frames, "Expected at least one rendered frame"
+    assert "20/20" in frames[-1], (
+        "Expected '20/20' in final frame, got: {!r}".format(frames[-1])
+    )

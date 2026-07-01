@@ -382,6 +382,12 @@ class ProgressBar(t.Generic[V]):
                 yield rv
                 self.update(1)
 
+            # Flush any accumulated steps that did not meet the
+            # update_min_steps threshold so the final position is correct.
+            if self._completed_intervals > 0:
+                self.make_step(self._completed_intervals)
+                self._completed_intervals = 0
+
             self.finish()
             self.render_progress()
 
