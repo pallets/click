@@ -173,11 +173,8 @@ wheels = [
 
 [[package]]
 name = "click"
-version = "8.4.2"
+version = "8.5.0.dev0"
 source = { editable = "." }
-dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
-]
 
 [package.dev-dependencies]
 dev = [
@@ -221,7 +218,6 @@ typing = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "colorama", marker = "sys_platform == 'win32'" }]
 
 [package.metadata.requires-dev]
 dev = [
