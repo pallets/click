@@ -10,6 +10,7 @@ Unreleased
   prompt when the output stream does not support them, matching `echo()`.
   This stripping was lost in `8.4.0` when {pr}`2969` began writing the
   prompt with `input()` directly. {issue}`3572` {pr}`3653`
+- Fix test failures when using pytest >= 9.1. {pr}`3656`
 
 ## Version 8.4.2
 
