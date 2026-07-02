@@ -117,6 +117,36 @@ def test_sync():
   assert 'Syncing' in result.output
 ```
 
+## Shell Completion
+
+Shell completion can be tested by instantiating {class}`~click.shell_completion.ShellComplete`
+directly. Pass the completed command line words as `args` and the word being
+completed as `incomplete`.
+
+```{code-block} python
+:caption: test_completion.py
+
+import click
+from click.shell_completion import ShellComplete
+
+
+@click.command()
+@click.option("--name")
+@click.option("--verbose", is_flag=True)
+def hello(name, verbose):
+    pass
+
+
+def complete(cli, args, incomplete):
+    shell_complete = ShellComplete(cli, {}, cli.name, "_HELLO_COMPLETE")
+    return [item.value for item in shell_complete.get_completions(args, incomplete)]
+
+
+def test_shell_completion():
+    assert complete(hello, [], "--") == ["--name", "--verbose", "--help"]
+    assert complete(hello, [], "--ver") == ["--verbose"]
+```
+
 ## File System Isolation
 
 The {meth}`CliRunner.isolated_filesystem` context manager sets the current
