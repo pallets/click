@@ -12,6 +12,11 @@ FORCED_WIDTH: int | None = None
 
 
 def measure_table(rows: cabc.Iterable[tuple[str, str]]) -> tuple[int, ...]:
+    """Measure the maximum visible width of each column across all rows.
+
+    :param rows: an iterable of rows, where each row is a tuple of strings.
+    :return: a tuple of column widths, one entry per column.
+    """
     widths: dict[int, int] = {}
 
     for row in rows:
@@ -24,6 +29,11 @@ def measure_table(rows: cabc.Iterable[tuple[str, str]]) -> tuple[int, ...]:
 def iter_rows(
     rows: cabc.Iterable[tuple[str, str]], col_count: int
 ) -> cabc.Iterator[tuple[str, ...]]:
+    """Yield rows padded with empty strings to ensure each has ``col_count`` columns.
+
+    :param rows: an iterable of rows to pad.
+    :param col_count: the minimum number of columns each row should have.
+    """
     for row in rows:
         yield row + ("",) * (col_count - len(row))
 
