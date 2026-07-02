@@ -473,6 +473,8 @@ class CliRunner:
 
         @_pause_echo(echo_input)  # type: ignore
         def visible_input(prompt: str | None = None) -> str:
+            if prompt and should_strip_ansi():
+                prompt = strip_ansi(prompt)
             sys.stdout.write(prompt or "")
             try:
                 val = next(text_input).rstrip("\r\n")
@@ -484,6 +486,8 @@ class CliRunner:
 
         @_pause_echo(echo_input)  # type: ignore
         def hidden_input(prompt: str | None = None) -> str:
+            if prompt and should_strip_ansi():
+                prompt = strip_ansi(prompt)
             sys.stdout.write(f"{prompt or ''}\n")
             sys.stdout.flush()
             try:
