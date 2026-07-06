@@ -94,11 +94,15 @@ def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
         echo(text[:-1], nl=False, err=err)
         # Echo the last character to stdout to work around an issue
         # where readline causes backspace to clear the whole line.
-        
         if err:
             with redirect_stdout(sys.stderr):
-                return func(text)
-        return func(text)
+                return func(text[-1:])
+
+        return func(text[-1:])
+    if err:
+        with redirect_stdout(sys.stderr):
+            return func(text)
+    return func(text)
 
 
 def _build_prompt(
