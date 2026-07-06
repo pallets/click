@@ -1,5 +1,5 @@
 from __future__ import annotations
-from ._compat import WIN
+
 import collections.abc as cabc
 import inspect
 import io
@@ -14,6 +14,7 @@ from gettext import gettext as _
 from . import _compat
 from ._compat import isatty
 from ._compat import strip_ansi
+from ._compat import WIN
 from .exceptions import Abort
 from .exceptions import UsageError
 from .globals import resolve_color_default
@@ -104,6 +105,8 @@ def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
             return func(text)
 
     return func(text)
+
+
 def _build_prompt(
     text: str,
     suffix: str,
