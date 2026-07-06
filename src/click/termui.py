@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from ._compat import WIN
 import collections.abc as cabc
 import inspect
 import io
@@ -82,15 +82,14 @@ def hidden_prompt_func(prompt: str) -> str:
 
 
 def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
-    """Call a prompt function, passing the full prompt on non-Windows so
-    readline can handle line editing and cursor positioning correctly.
+    """Call a prompt function, passing full prompt or WIN workaround."""
 
-    The prompt is handed to *func* (such as :func:`input`) rather than
-    written through :func:`echo`, so it has to strip ANSI color and style
-    codes itself when the destination stream does not support them. Without
-    this the prompt would keep codes that :func:`echo` removes from the
-    rest of the output.
-    """
+    stream = sys.stderr if err else sys.stdout
+
+    # IMPORTANT: always strip ANSI consistently first
+    if _compat.should_strip_ansi(stream, resolve_color_default()):
+        text = strip_ansi(text)
+
     if WIN:
         echo(text[:-1], nl=False, err=err)
 
@@ -105,7 +104,6 @@ def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
             return func(text)
 
     return func(text)
-
 def _build_prompt(
     text: str,
     suffix: str,
