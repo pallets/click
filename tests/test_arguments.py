@@ -295,6 +295,50 @@ def test_implicit_non_required(runner):
     assert result.output == "test\n"
 
 
+def test_argument_help(runner):
+    @click.command()
+    @click.argument("name", help="The name to print")
+    @click.option("--count", default=1, help="number of greetings")
+    def cli(name, count):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert "Positional arguments:" in result.output
+    assert "NAME" in result.output
+    assert "The name to print" in result.output
+    assert "Options:" in result.output
+    assert "number of greetings" in result.output
+    assert result.output.index("Positional arguments:") < result.output.index(
+        "Options:"
+    )
+
+
+def test_argument_help_options_only_no_arguments_section(runner):
+    @click.command()
+    @click.option("--count", default=1, help="number of greetings")
+    def cli(count):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert "Positional arguments:" not in result.output
+    assert "Options:" in result.output
+    assert "number of greetings" in result.output
+
+
+def test_argument_help_optional_metavar(runner):
+    @click.command()
+    @click.argument("name", required=False, default="", help="The name to print")
+    def cli(name):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert "[NAME]" in result.output
+    assert "The name to print" in result.output
+
+
 def test_deprecated_usage(runner):
     @click.command()
     @click.argument("f", required=False, deprecated=True)
@@ -330,6 +374,50 @@ def test_argument_metavar_marks_optional(runner, kwargs, expected):
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
     assert result.output.splitlines()[0] == f"Usage: cli [OPTIONS] {expected}"
+
+
+@pytest.mark.parametrize(
+    ("deprecated", "expected_label"),
+    [(True, "(DEPRECATED)"), ("use g instead", "(DEPRECATED: use g instead)")],
+)
+def test_deprecated_usage_help_record(runner, deprecated, expected_label):
+    @click.command()
+    @click.argument("f", required=False, deprecated=deprecated, help="path to the file")
+    def cli(f):
+        click.echo(f)
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert "Positional arguments:" in result.output
+    assert "[F!]" in result.output
+    assert f"path to the file {expected_label}" in result.output
+
+
+def test_deprecated_usage_help_record_without_help(runner):
+    @click.command()
+    @click.argument("f", required=False, deprecated=True)
+    def cli(f):
+        click.echo(f)
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    # Deprecation alone produces a help row with just the deprecation label.
+    assert "Positional arguments:" in result.output
+    assert "(DEPRECATED)" in result.output
+
+
+@pytest.mark.parametrize(
+    ("deprecated", "expected"),
+    [(True, "(DEPRECATED)"), ("USE B INSTEAD", "(DEPRECATED: USE B INSTEAD)")],
+)
+@pytest.mark.parametrize("help_text", ["", None])
+def test_deprecated_empty_help_no_leading_space(help_text, deprecated, expected):
+    """An argument with empty or missing help text must not gain a stray leading
+    space before the deprecation label.
+    """
+    arg = click.Argument(["foo"], required=False, help=help_text, deprecated=deprecated)
+    ctx = click.Context(click.Command("cli"))
+    assert arg.get_help_record(ctx)[1] == expected
 
 
 @pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])

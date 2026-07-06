@@ -11,9 +11,9 @@ from contextlib import AbstractContextManager
 from contextlib import redirect_stdout
 from gettext import gettext as _
 
+from . import _compat
 from ._compat import isatty
 from ._compat import strip_ansi
-from ._compat import WIN
 from .exceptions import Abort
 from .exceptions import UsageError
 from .globals import resolve_color_default
@@ -85,25 +85,26 @@ def _readline_prompt(func: t.Callable[[str], str], text: str, err: bool) -> str:
     """Call a prompt function, passing the full prompt on non-Windows so
     readline can handle line editing and cursor positioning correctly.
 
-    On Windows the prompt is written separately via :func:`echo` for
-    colorama support, with only the last character passed to *func*.
+    The prompt is handed to *func* (such as :func:`input`) rather than
+    written through :func:`echo`, so it has to strip ANSI color and style
+    codes itself when the destination stream does not support them. Without
+    this the prompt would keep codes that :func:`echo` removes from the
+    rest of the output.
     """
     if WIN:
-        # Write the prompt separately so that we get nice coloring
-        # through colorama on Windows.
         echo(text[:-1], nl=False, err=err)
-        # Echo the last character to stdout to work around an issue
-        # where readline causes backspace to clear the whole line.
+
         if err:
             with redirect_stdout(sys.stderr):
                 return func(text[-1:])
 
         return func(text[-1:])
+
     if err:
         with redirect_stdout(sys.stderr):
             return func(text)
-    return func(text)
 
+    return func(text)
 
 def _build_prompt(
     text: str,
