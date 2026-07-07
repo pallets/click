@@ -12,7 +12,7 @@ Unreleased
   prompt with `input()` directly. {issue}`3572` {pr}`3653`
 - Fix test failures when using pytest >= 9.1. {pr}`3656`
 - The usage line no longer breaks a long option at one of its internal
-  hyphens when wrapping; options are only wrapped at spaces. {issue}`3362`
+  hyphens when wrapping; options are only wrapped at spaces. {issue}`3362` {pr}`3664`
 
 ## Version 8.4.2
 
