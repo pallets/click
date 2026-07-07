@@ -11,6 +11,9 @@ Unreleased
   This stripping was lost in `8.4.0` when {pr}`2969` began writing the
   prompt with `input()` directly. {issue}`3572` {pr}`3653`
 - Fix test failures when using pytest >= 9.1. {pr}`3656`
+- `style()` and `secho()` no longer silently drop the 256-color index `0`
+  (black) passed as `fg` or `bg`. A truthiness check treated the valid index
+  `0` as unset. {pr}`3666`
 
 ## Version 8.4.2
 

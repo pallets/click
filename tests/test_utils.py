@@ -132,6 +132,10 @@ def test_echo_no_streams(monkeypatch, runner):
         ({"bg": "white"}, "\x1b[47mx y\x1b[0m"),
         ({"bg": 91}, "\x1b[48;5;91mx y\x1b[0m"),
         ({"bg": (135, 0, 175)}, "\x1b[48;2;135;0;175mx y\x1b[0m"),
+        # 256-color index 0 (black) is valid and must not be dropped by a
+        # truthiness check on fg/bg.
+        ({"fg": 0}, "\x1b[38;5;0mx y\x1b[0m"),
+        ({"bg": 0}, "\x1b[48;5;0mx y\x1b[0m"),
         ({"bold": True}, "\x1b[1mx y\x1b[0m"),
         ({"dim": True}, "\x1b[2mx y\x1b[0m"),
         ({"underline": True}, "\x1b[4mx y\x1b[0m"),
