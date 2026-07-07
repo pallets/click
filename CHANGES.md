@@ -6,6 +6,8 @@ Unreleased
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
   a `Positional arguments` section when argument help is available. {issue}`2983` {pr}`3473`
+- Shell completion for long options with values written as `--option=value`
+  keeps the `--option=` prefix when completing the value. {issue}`2847`
 - `confirm()` and `prompt()` strip ANSI color and style codes from the
   prompt when the output stream does not support them, matching `echo()`.
   This stripping was lost in `8.4.0` when {pr}`2969` began writing the
