@@ -128,6 +128,13 @@ that instead:
                 print(idx, file=pager)
 ```
 
+```{hint} Why print instead of echo?
+The pager object deals with ANSI color and style codes itself: they are kept or
+stripped depending on what the pager supports, exactly as {func}`echo` would do.
+Any code that writes to a file, including plain {func}`print`, can therefore be
+used with it.
+```
+
 ## Screen Clearing
 
 ```{versionadded} 2.0
@@ -383,7 +390,7 @@ import time
 
 with click.progressbar([1, 2, 3]) as bar:
     for x in bar:
-        print(f"sleep({x})...")
+        click.echo(f"sleep({x})...")
         time.sleep(x)
 ```
 
