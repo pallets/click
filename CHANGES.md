@@ -11,6 +11,8 @@ Unreleased
   This stripping was lost in `8.4.0` when {pr}`2969` began writing the
   prompt with `input()` directly. {issue}`3572` {pr}`3653`
 - Fix test failures when using pytest >= 9.1. {pr}`3656`
+- The usage line no longer breaks a long option at one of its internal
+  hyphens when wrapping; options are only wrapped at spaces. {issue}`3362`
 
 ## Version 8.4.2
 

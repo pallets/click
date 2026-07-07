@@ -501,6 +501,30 @@ def test_write_usage_styled_prefix_keeps_options_on_one_line():
     assert visible == "Usage: cli [OPTIONS]\n"
 
 
+def test_write_usage_does_not_break_options_at_hyphens():
+    """Issue #3362: a long option wrapped onto a new line must not be split
+    at one of its internal hyphens.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+    ]
+
+    formatter = click.HelpFormatter(width=65)
+    formatter.write_usage("program", " ".join(options))
+    rendered = formatter.getvalue()
+
+    # Wrapping only ever happens between options (at spaces), so no line ends
+    # in a hyphen from a broken option name.
+    assert not any(line.rstrip().endswith("-") for line in rendered.splitlines())
+    # Every option still appears intact.
+    for option in options:
+        assert option in rendered.replace("\n", " ")
+
+
 @pytest.mark.parametrize(
     ("formatter_kwargs", "current_indent", "prog", "args", "prefix", "expected"),
     [
