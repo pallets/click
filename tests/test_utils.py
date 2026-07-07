@@ -114,6 +114,7 @@ def test_echo_no_streams(monkeypatch, runner):
 @pytest.mark.parametrize(
     ("styles", "ref"),
     [
+        ({}, "x y\x1b[0m"),
         ({"fg": "black"}, "\x1b[30mx y\x1b[0m"),
         ({"fg": "red"}, "\x1b[31mx y\x1b[0m"),
         ({"fg": "green"}, "\x1b[32mx y\x1b[0m"),
@@ -122,6 +123,15 @@ def test_echo_no_streams(monkeypatch, runner):
         ({"fg": "magenta"}, "\x1b[35mx y\x1b[0m"),
         ({"fg": "cyan"}, "\x1b[36mx y\x1b[0m"),
         ({"fg": "white"}, "\x1b[37mx y\x1b[0m"),
+        ({"fg": "bright_black"}, "\x1b[90mx y\x1b[0m"),
+        ({"fg": "bright_red"}, "\x1b[91mx y\x1b[0m"),
+        ({"fg": "bright_green"}, "\x1b[92mx y\x1b[0m"),
+        ({"fg": "bright_yellow"}, "\x1b[93mx y\x1b[0m"),
+        ({"fg": "bright_blue"}, "\x1b[94mx y\x1b[0m"),
+        ({"fg": "bright_magenta"}, "\x1b[95mx y\x1b[0m"),
+        ({"fg": "bright_cyan"}, "\x1b[96mx y\x1b[0m"),
+        ({"fg": "bright_white"}, "\x1b[97mx y\x1b[0m"),
+        ({"fg": "reset"}, "\x1b[39mx y\x1b[0m"),
         ({"bg": "black"}, "\x1b[40mx y\x1b[0m"),
         ({"bg": "red"}, "\x1b[41mx y\x1b[0m"),
         ({"bg": "green"}, "\x1b[42mx y\x1b[0m"),
@@ -130,8 +140,24 @@ def test_echo_no_streams(monkeypatch, runner):
         ({"bg": "magenta"}, "\x1b[45mx y\x1b[0m"),
         ({"bg": "cyan"}, "\x1b[46mx y\x1b[0m"),
         ({"bg": "white"}, "\x1b[47mx y\x1b[0m"),
+        ({"bg": "bright_black"}, "\x1b[100mx y\x1b[0m"),
+        ({"bg": "bright_red"}, "\x1b[101mx y\x1b[0m"),
+        ({"bg": "bright_green"}, "\x1b[102mx y\x1b[0m"),
+        ({"bg": "bright_yellow"}, "\x1b[103mx y\x1b[0m"),
+        ({"bg": "bright_blue"}, "\x1b[104mx y\x1b[0m"),
+        ({"bg": "bright_magenta"}, "\x1b[105mx y\x1b[0m"),
+        ({"bg": "bright_cyan"}, "\x1b[106mx y\x1b[0m"),
+        ({"bg": "bright_white"}, "\x1b[107mx y\x1b[0m"),
+        ({"bg": "reset"}, "\x1b[49mx y\x1b[0m"),
+        ({"fg": 91}, "\x1b[38;5;91mx y\x1b[0m"),
         ({"bg": 91}, "\x1b[48;5;91mx y\x1b[0m"),
+        ({"fg": 255}, "\x1b[38;5;255mx y\x1b[0m"),
+        ({"bg": 255}, "\x1b[48;5;255mx y\x1b[0m"),
+        ({"fg": (135, 0, 175)}, "\x1b[38;2;135;0;175mx y\x1b[0m"),
         ({"bg": (135, 0, 175)}, "\x1b[48;2;135;0;175mx y\x1b[0m"),
+        ({"bg": [135, 0, 175]}, "\x1b[48;2;135;0;175mx y\x1b[0m"),
+        ({"fg": (0, 0, 0)}, "\x1b[38;2;0;0;0mx y\x1b[0m"),
+        ({"fg": (255, 255, 255)}, "\x1b[38;2;255;255;255mx y\x1b[0m"),
         # 256-color index 0 (black) is valid and must not be dropped by a
         # truthiness check on fg/bg.
         ({"fg": 0}, "\x1b[38;5;0mx y\x1b[0m"),
@@ -158,6 +184,35 @@ def test_echo_no_streams(monkeypatch, runner):
 def test_styling(styles, ref):
     assert click.style("x y", **styles) == ref
     assert click.unstyle(ref) == "x y"
+
+
+@pytest.mark.parametrize("param", ["fg", "bg"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        "",
+        "banana",
+        "BLACK",
+        b"red",
+        True,
+        False,
+        -1,
+        256,
+        0.0,
+        (),
+        [],
+        (0, 0),
+        (0, 0, 0, 0),
+        ("0", "0", "0"),
+        (True, False, True),
+        (-1, 0, 0),
+        (0, 256, 0),
+        (0.0, 0.0, 0.0),
+    ],
+)
+def test_styling_invalid_color(param, value):
+    with pytest.raises(TypeError, match="Unknown color"):
+        click.style("x y", **{param: value})
 
 
 @pytest.mark.parametrize(("text", "expect"), [("\x1b[?25lx y\x1b[?25h", "x y")])

@@ -570,14 +570,22 @@ def clear() -> None:
 
 
 def _interpret_color(color: int | tuple[int, int, int] | str, offset: int = 0) -> str:
-    if isinstance(color, int):
-        return f"{38 + offset};5;{color:d}"
+    # bool is an int subclass: without the exclusion, True and False would
+    # silently render as the palette indices 1 and 0.
+    if isinstance(color, int) and not isinstance(color, bool):
+        if 0 <= color <= 255:
+            return f"{38 + offset};5;{color:d}"
+    elif isinstance(color, (tuple, list)):
+        if len(color) == 3 and all(
+            isinstance(c, int) and not isinstance(c, bool) and 0 <= c <= 255
+            for c in color
+        ):
+            r, g, b = color
+            return f"{38 + offset};2;{r:d};{g:d};{b:d}"
+    elif isinstance(color, str) and color in _ansi_colors:
+        return str(_ansi_colors[color] + offset)
 
-    if isinstance(color, (tuple, list)):
-        r, g, b = color
-        return f"{38 + offset};2;{r:d};{g:d};{b:d}"
-
-    return str(_ansi_colors[color] + offset)
+    raise TypeError(_("Unknown color {colour!r}").format(colour=color))
 
 
 def style(
@@ -655,6 +663,12 @@ def style(
                   string which means that styles do not carry over.  This
                   can be disabled to compose styles.
 
+    .. versionchanged:: 8.5
+        The 256-color index ``0`` is no longer ignored. All other invalid
+        ``fg`` and ``bg`` values now raise :exc:`TypeError`: previously,
+        falsy values were silently ignored and malformed truthy values
+        raised inconsistent errors or emitted invalid escape codes.
+
     .. versionchanged:: 8.0
         A non-string ``message`` is converted to a string.
 
@@ -676,16 +690,10 @@ def style(
     bits = []
 
     if fg is not None:
-        try:
-            bits.append(f"\033[{_interpret_color(fg)}m")
-        except KeyError:
-            raise TypeError(_("Unknown color {colour!r}").format(colour=fg)) from None
+        bits.append(f"\033[{_interpret_color(fg)}m")
 
     if bg is not None:
-        try:
-            bits.append(f"\033[{_interpret_color(bg, 10)}m")
-        except KeyError:
-            raise TypeError(_("Unknown color {colour!r}").format(colour=bg)) from None
+        bits.append(f"\033[{_interpret_color(bg, 10)}m")
 
     if bold is not None:
         bits.append(f"\033[{1 if bold else 22}m")
