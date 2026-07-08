@@ -11,6 +11,9 @@ Unreleased
   This stripping was lost in `8.4.0` when {pr}`2969` began writing the
   prompt with `input()` directly. {issue}`3572` {pr}`3653`
 - Fix test failures when using pytest >= 9.1. {pr}`3656`
+- `progressbar` with `show_pos=True` reports the full final position (e.g.
+  `20/20`) when `update_min_steps` does not divide `length`, instead of a
+  stale intermediate value. {issue}`3571` {pr}`3675`
 - Add {func}`custom_version_option`, a `--version` option whose output is
   produced by a callback, covering cases {func}`version_option` intentionally
   does not. The feature set of {func}`version_option` is now frozen; see

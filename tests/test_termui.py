@@ -350,6 +350,29 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progressbar_update_min_steps_finish_flushes_position(runner):
+    """finish() flushes sub-threshold steps so the final position is complete.
+
+    Regression test for a bug where ``update_min_steps`` not dividing
+    ``length`` left ``pos`` at an intermediate value, so ``show_pos`` reported
+    e.g. ``14/20`` at the end while the percentage correctly showed ``100%``.
+    """
+    length = 20
+    bar = _create_progress(length=length, update_min_steps=7, show_pos=True)
+    bar.entered = True
+    for _ in bar.iter:
+        bar.update(1)
+    # Before finish(), the last partial interval has not been flushed.
+    assert bar.pos == 14
+    assert bar._completed_intervals == 6
+
+    bar.finish()
+
+    assert bar.pos == length
+    assert bar._completed_intervals == 0
+    assert bar.format_pos() == "20/20"
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
