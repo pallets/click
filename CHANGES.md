@@ -11,6 +11,10 @@ Unreleased
   This stripping was lost in `8.4.0` when {pr}`2969` began writing the
   prompt with `input()` directly. {issue}`3572` {pr}`3653`
 - Fix test failures when using pytest >= 9.1. {pr}`3656`
+- Add {func}`custom_version_option`, a `--version` option whose output is
+  produced by a callback, covering cases {func}`version_option` intentionally
+  does not. The feature set of {func}`version_option` is now frozen; see
+  [discussion #3527](https://github.com/pallets/click/discussions/3527). {pr}`3581`
 
 ## Version 8.4.2
 

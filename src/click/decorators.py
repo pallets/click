@@ -440,6 +440,16 @@ def version_option(
     :func:`importlib.metadata.packages_distributions`, so e.g. ``PIL``
     resolves to the ``Pillow`` distribution.
 
+    .. note::
+        The parameters and message variables accepted by this option are
+        frozen: no new slots will be added, to keep the common case simple
+        and predictable. If you need values it does not expose, such as a
+        file path, the Python version, or git metadata, use
+        :func:`custom_version_option` to render the output yourself.
+
+        Rationale: `discussion #3527
+        <https://github.com/pallets/click/discussions/3527>`_.
+
     :param version: The version number to show. If not provided, Click
         will try to detect it.
     :param param_decls: One or more option names. Defaults to the single
@@ -545,6 +555,48 @@ def version_option(
     kwargs.setdefault("is_eager", True)
     kwargs.setdefault("help", _("Show the version and exit."))
     kwargs["callback"] = callback
+    return option(*param_decls, **kwargs)
+
+
+def custom_version_option(
+    callback: t.Callable[[Context], str],
+    *param_decls: str,
+    **kwargs: t.Any,
+) -> t.Callable[[FC], FC]:
+    """Add a ``--version`` option whose output is produced by ``callback``.
+
+    This is the customizable companion to :func:`version_option`. Where
+    :func:`version_option` is intentionally limited to a fixed message and
+    a small set of values, this option calls ``callback`` to build the
+    whole string to print. Use it when you need values that
+    :func:`version_option` does not expose, such as a file path, the
+    Python version, or git metadata.
+
+    :param callback: Called with the current :class:`Context` when the
+        option is invoked. Its return value is printed, then the program
+        exits.
+    :param param_decls: One or more option names. Defaults to the single
+        value ``--version``.
+    :param kwargs: Extra arguments are passed to :func:`option`.
+
+    .. versionadded:: 8.5.0
+    """
+
+    def show_version(ctx: Context, param: Parameter, value: bool) -> None:
+        if not value or ctx.resilient_parsing:
+            return
+
+        echo(callback(ctx), color=ctx.color)
+        ctx.exit()
+
+    if not param_decls:
+        param_decls = ("--version",)
+
+    kwargs.setdefault("is_flag", True)
+    kwargs.setdefault("expose_value", False)
+    kwargs.setdefault("is_eager", True)
+    kwargs.setdefault("help", _("Show the version and exit."))
+    kwargs["callback"] = show_version
     return option(*param_decls, **kwargs)
 
 
