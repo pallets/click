@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import enum
 import os
-from itertools import chain
 
 import pytest
 
@@ -258,10 +257,10 @@ def test_boolean_flag(runner, default, args, expect):
 
 @pytest.mark.parametrize(
     ("value", "expect"),
-    chain(
-        ((x, "True") for x in ("1", "true", "t", "yes", "y", "on")),
-        ((x, "False") for x in ("0", "false", "f", "no", "n", "off")),
-    ),
+    [
+        *((x, "True") for x in ("1", "true", "t", "yes", "y", "on")),
+        *((x, "False") for x in ("0", "false", "f", "no", "n", "off")),
+    ],
 )
 def test_boolean_conversion(runner, value, expect):
     @click.command()
@@ -858,3 +857,26 @@ def test_version_option_unknown_package_errors(runner, monkeypatch):
     result = runner.invoke(cli, ["--version"])
     assert result.exit_code != 0
     assert "not installed" in str(result.exception)
+
+
+@pytest.mark.parametrize("args", [["--version"], ["-V"]])
+def test_custom_version_option(runner, args):
+    @click.command()
+    @click.custom_version_option(lambda ctx: "custom 9.9.9", "-V", "--version")
+    def cli():
+        pass
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 0
+    assert result.output == "custom 9.9.9\n"
+
+
+def test_custom_version_option_receives_context(runner):
+    @click.command()
+    @click.custom_version_option(lambda ctx: f"{ctx.info_name} 1.0")
+    def cli():
+        pass
+
+    result = runner.invoke(cli, ["--version"], prog_name="mytool")
+    assert result.exit_code == 0
+    assert result.output == "mytool 1.0\n"

@@ -3,8 +3,6 @@ $ colors_
   colors is a simple example that shows how you can
   colorize text.
 
-  Uses colorama on Windows.
-
 Usage:
 
   $ pip install --editable .

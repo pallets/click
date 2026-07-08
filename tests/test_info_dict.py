@@ -40,6 +40,7 @@ NAME_ARGUMENT = (
         "multiple": False,
         "default": None,
         "envvar": None,
+        "help": None,
     },
 )
 NUMBER_OPTION = (
@@ -273,3 +274,42 @@ def test_paramtype_no_name():
         pass
 
     assert TestType().to_info_dict()["name"] == "TestType"
+
+
+@pytest.mark.parametrize(
+    ("help_in", "help_out"),
+    [
+        pytest.param(None, None, id="None"),
+        pytest.param("", "", id="empty"),
+        pytest.param("single line", "single line", id="single-line"),
+        pytest.param(
+            "\n    first line\n    second line\n    ",
+            "first line\nsecond line",
+            id="multi-line",
+        ),
+    ],
+)
+def test_argument_to_info_dict_help(help_in, help_out):
+    arg = click.Argument(["name"], help=help_in)
+    assert arg.to_info_dict()["help"] == help_out
+
+
+def test_argument_to_info_dict_nargs():
+    arg = click.Argument(["files"], nargs=-1, help="files to process")
+    info = arg.to_info_dict()
+    assert info["nargs"] == -1
+    assert info["help"] == "files to process"
+
+
+def test_command_to_info_dict_multiple_arguments():
+    @click.command()
+    @click.argument("src", help="source path")
+    @click.argument("dst", help="destination path")
+    def cli(src, dst):
+        pass
+
+    ctx = click.Context(cli)
+    params = cli.to_info_dict(ctx)["params"]
+    args = [p for p in params if p["param_type_name"] == "argument"]
+    assert [p["name"] for p in args] == ["src", "dst"]
+    assert [p["help"] for p in args] == ["source path", "destination path"]

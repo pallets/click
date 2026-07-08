@@ -18,6 +18,7 @@ from .core import ParameterSource as ParameterSource
 from .decorators import argument as argument
 from .decorators import command as command
 from .decorators import confirmation_option as confirmation_option
+from .decorators import custom_version_option as custom_version_option
 from .decorators import group as group
 from .decorators import help_option as help_option
 from .decorators import make_pass_decorator as make_pass_decorator
