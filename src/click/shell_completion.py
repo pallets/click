@@ -304,8 +304,10 @@ class ShellComplete:
         obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
         completions = obj.shell_complete(ctx, incomplete)
 
-        if isinstance(obj, Option) and "=" in original_incomplete and _start_of_option(
-            ctx, original_incomplete
+        if (
+            isinstance(obj, Option)
+            and "=" in original_incomplete
+            and _start_of_option(ctx, original_incomplete)
         ):
             prefix, _, value = original_incomplete.partition("=")
             completions = [
