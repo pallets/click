@@ -25,6 +25,8 @@ Unreleased
   parameter, or any parameter claiming the reserved name. Options may still
   share a name to compete for the same value (feature switches).
   {issue}`2819` {pr}`3678`
+- `unstyle` and the ANSI handling behind help-text wrapping now strip the full
+  CSI escape-sequence grammar.
 
 ## Version 8.4.2
 
