@@ -9,7 +9,7 @@ BOOL_PARAM_TYPE = (click.BOOL, {"param_type": "Bool", "name": "boolean"})
 HELP_OPTION = (
     None,
     {
-        "name": "help",
+        "name": "_click_default_help",
         "param_type_name": "option",
         "opts": ["--help"],
         "secondary_opts": [],
