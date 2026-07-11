@@ -27,6 +27,9 @@ Unreleased
   {issue}`2819` {pr}`3678`
 - `unstyle` and the ANSI handling behind help-text wrapping now strip the full
   CSI escape-sequence grammar.
+- `progressbar` advances to its final position when the last steps are
+  smaller than `update_min_steps`, so a bar with `show_pos=True` no longer
+  finishes showing a stale count. {issue}`3571`
 
 ## Version 8.4.2
 

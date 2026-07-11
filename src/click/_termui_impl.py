@@ -336,13 +336,26 @@ class ProgressBar(t.Generic[V]):
         .. versionchanged:: 8.0
             Only render when the number of steps meets the
             ``update_min_steps`` threshold.
+
+        .. versionchanged:: 8.5
+            The bar advances to its final position when the remaining
+            steps are smaller than ``update_min_steps``, instead of
+            finishing on a stale position.
         """
         if current_item is not None:
             self.current_item = current_item
 
         self._completed_intervals += n_steps
 
-        if self._completed_intervals >= self.update_min_steps:
+        # Also flush when the bar reaches its end, otherwise a trailing
+        # interval smaller than ``update_min_steps`` is never applied and
+        # the bar finishes showing a stale position (e.g. "18/20" at 100%).
+        reached_end = (
+            self.length is not None
+            and self.pos + self._completed_intervals >= self.length
+        )
+
+        if self._completed_intervals >= self.update_min_steps or reached_end:
             self.make_step(self._completed_intervals)
             self.render_progress()
             self._completed_intervals = 0

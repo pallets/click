@@ -142,6 +142,18 @@ def test_progressbar_format_pos(runner, pos, length):
         assert result == f"{pos}/{length}"
 
 
+def test_progressbar_update_min_steps_reaches_end(runner):
+    # A trailing interval smaller than update_min_steps must still advance
+    # the bar to its end, otherwise it finishes on a stale position.
+    with click.progressbar(length=20, update_min_steps=6) as progress:
+        for _ in range(20):
+            progress.update(1)
+
+    assert progress.pos == 20
+    assert progress.finished
+    assert progress.format_pos() == "20/20"
+
+
 @pytest.mark.parametrize(
     "length, finished, pos, avg, expected",
     [
