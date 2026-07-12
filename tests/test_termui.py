@@ -7,6 +7,7 @@ import shutil
 import sys
 import tempfile
 import time
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -412,6 +413,20 @@ def test_edit(runner):
             # end of last line.  Hence the input data (see above) should be
             # terminated by newline too.
             assert reopened_file.read() == "aTest\nbTest\n"
+
+
+def test_edit_pathlike(monkeypatch):
+    captured_filenames = None
+
+    def edit_files(self, filenames):
+        nonlocal captured_filenames
+        captured_filenames = tuple(filenames)
+
+    monkeypatch.setattr(Editor, "edit_files", edit_files)
+
+    filename = Path("example.txt")
+    assert click.edit(filename=filename) is None
+    assert captured_filenames == (filename,)
 
 
 @pytest.mark.parametrize(

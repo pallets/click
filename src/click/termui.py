@@ -4,6 +4,7 @@ import collections.abc as cabc
 import inspect
 import io
 import itertools
+import os
 import re
 import sys
 import typing as t
@@ -794,7 +795,9 @@ def edit(
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-    filename: str | cabc.Iterable[str] | None = None,
+    filename: (
+        str | os.PathLike[str] | cabc.Iterable[str | os.PathLike[str]] | None
+    ) = None,
 ) -> None: ...
 
 
@@ -804,7 +807,9 @@ def edit(
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-    filename: str | cabc.Iterable[str] | None = None,
+    filename: (
+        str | os.PathLike[str] | cabc.Iterable[str | os.PathLike[str]] | None
+    ) = None,
 ) -> str | bytes | bytearray | None:
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
@@ -837,6 +842,9 @@ def edit(
                      if multiple files cannot be managed at once or editing the
                      files serially is desired.
 
+    .. versionchanged:: 8.5.0
+        ``filename`` accepts :class:`os.PathLike` objects.
+
     .. versionchanged:: 8.2.0
         ``filename`` now accepts any ``Iterable[str]`` in addition to a ``str``
         if the ``editor`` supports editing multiple files at once.
@@ -849,7 +857,7 @@ def edit(
     if filename is None:
         return ed.edit(text)
 
-    if isinstance(filename, str):
+    if isinstance(filename, (str, os.PathLike)):
         filename = (filename,)
 
     ed.edit_files(filenames=filename)
