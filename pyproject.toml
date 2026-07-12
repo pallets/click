@@ -70,7 +70,7 @@ name = "click"
 include = [
     "docs/",
     "tests/",
-    "CHANGES.rst",
+    "CHANGES.md",
     "uv.lock"
 ]
 exclude = [
