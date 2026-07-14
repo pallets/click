@@ -263,3 +263,36 @@ original `fd` through `fileno()`, reverting the change introduced in `8.3.3`
 that broke Pytest's `fd`-level capture teardown. Use `capture="fd"` to restore
 that behavior with proper isolation.
 ```
+
+## Shell Completion
+
+To test shell completion behavior, you can use the {class}`~click.shell_completion.ShellComplete` class directly. The `CliRunner` does not test shell completion logic.
+
+To generate completions, instantiate `ShellComplete` with your CLI, an empty dictionary for context arguments, the program name, and the shell variable name. Then call {meth}`~click.shell_completion.ShellComplete.get_completions` with the list of complete arguments and the incomplete value to complete.
+
+```python
+:caption: sync.py
+
+import click
+
+@click.group()
+def cli():
+    pass
+
+@cli.command()
+@click.option("--env-file", type=click.Path())
+def sync(env_file):
+    pass
+```
+
+```python
+:caption: test_sync.py
+
+from click.shell_completion import ShellComplete
+from sync import cli
+
+def test_completion():
+    comp = ShellComplete(cli, {}, cli.name, "_SYNC_COMPLETE")
+    completions = comp.get_completions([""], "--env")
+    assert [c.value for c in completions] == ["--env-file"]
+```
