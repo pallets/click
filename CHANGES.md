@@ -27,6 +27,9 @@ Unreleased
   {issue}`2819` {pr}`3678`
 - `unstyle` and the ANSI handling behind help-text wrapping now strip the full
   CSI escape-sequence grammar.
+- `progressbar` with `show_pos=True` reports the full `length/length` position
+  on completion even when `update_min_steps` does not evenly divide the total
+  number of steps, matching the full bar and percentage. {issue}`3571`
 
 ## Version 8.4.2
 

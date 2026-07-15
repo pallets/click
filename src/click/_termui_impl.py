@@ -351,6 +351,13 @@ class ProgressBar(t.Generic[V]):
         self.eta_known = False
         self.current_item = None
         self.finished = True
+        # A finished determinate bar is by definition at 100%. ``pct`` already
+        # reports 1.0 once finished (so the bar and percentage render full), but
+        # ``pos`` can lag behind when ``update_min_steps`` does not evenly divide
+        # the total number of steps, leaving the final interval unflushed. Sync
+        # ``pos`` so ``show_pos`` output agrees with the bar and percentage.
+        if self.length is not None:
+            self.pos = self.length
 
     def generator(self) -> cabc.Iterator[V]:
         """Return a generator which yields the items added to the bar

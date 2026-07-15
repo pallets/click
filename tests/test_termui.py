@@ -304,6 +304,36 @@ def test_progressbar_update(runner, monkeypatch):
     assert "100%          " in lines[4]
 
 
+def test_progressbar_update_min_steps_shows_full_completion(runner, monkeypatch):
+    """When ``update_min_steps`` does not evenly divide the total number of
+    steps, the final partial interval is not flushed during iteration. On
+    completion the bar must still report ``length/length`` with ``show_pos``,
+    consistent with the full bar and 100% that a finished bar already shows.
+
+    https://github.com/pallets/click/issues/3571
+    """
+    fake_clock = FakeClock()
+
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(20), show_pos=True, update_min_steps=7
+        ) as progress:
+            for _ in progress:
+                fake_clock.advance_time()
+                print("")
+
+    monkeypatch.setattr(time, "time", fake_clock.time)
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    output = runner.invoke(cli, []).output
+
+    lines = [line for line in output.split("\n") if "[" in line]
+
+    # The final rendered line reflects the finished bar: full position, not
+    # the stale "14/20" left over from the last flushed interval.
+    assert "20/20" in lines[-1]
+
+
 def test_progressbar_item_show_func(runner, monkeypatch):
     """item_show_func should show the current item being yielded."""
 
