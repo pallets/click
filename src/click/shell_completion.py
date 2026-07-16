@@ -206,6 +206,68 @@ complete --no-files --command %(prog_name)s --arguments \
 "(%(complete_func)s)";
 """
 
+# Compatible with Windows PowerShell 5.1+ and PowerShell (pwsh) 7+.
+# Uses Register-ArgumentCompleter -Native, which receives the command AST
+# as parsed by PowerShell. The command text is forwarded verbatim through
+# COMP_WORDS so the Python side can reuse the same shlex-based splitting
+# used by the bash/zsh completers.
+_SOURCE_POWERSHELL = """\
+Register-ArgumentCompleter -Native -CommandName %(prog_name)s -ScriptBlock {
+    param($wordToComplete, $commandAst, $cursorPosition)
+
+    $prev_complete = $env:%(complete_var)s
+    $prev_words = $env:COMP_WORDS
+    $prev_cword = $env:COMP_CWORD
+
+    $env:%(complete_var)s = 'powershell_complete'
+    $env:COMP_WORDS = $commandAst.ToString()
+    if ($wordToComplete) {
+        $env:COMP_CWORD = $commandAst.CommandElements.Count - 1
+    } else {
+        $env:COMP_CWORD = $commandAst.CommandElements.Count
+    }
+
+    try {
+        $response = & %(prog_name)s 2>$null
+    } finally {
+        $env:%(complete_var)s = $prev_complete
+        $env:COMP_WORDS = $prev_words
+        $env:COMP_CWORD = $prev_cword
+    }
+
+    if (-not $response) { return }
+
+    $prefix = "$wordToComplete*"
+    $lines = $response -split "`n"
+    for ($i = 0; $i + 2 -lt $lines.Count; $i += 3) {
+        $type = $lines[$i]
+        $value = $lines[$i + 1]
+        $descr = $lines[$i + 2]
+        if (-not $type) { continue }
+
+        if ($type -eq 'plain') {
+            $tip = if ($descr -and $descr -ne '_') { $descr } else { $value }
+            [System.Management.Automation.CompletionResult]::new(
+                $value, $value, 'ParameterValue', $tip)
+        } elseif ($type -eq 'dir') {
+            Get-ChildItem -Directory -Path $prefix -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    [System.Management.Automation.CompletionResult]::new(
+                        $_.FullName, $_.Name, 'ProviderContainer', $_.FullName)
+                }
+        } elseif ($type -eq 'file') {
+            Get-ChildItem -Path $prefix -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    $kind = 'ProviderItem'
+                    if ($_.PSIsContainer) { $kind = 'ProviderContainer' }
+                    [System.Management.Automation.CompletionResult]::new(
+                        $_.FullName, $_.Name, $kind, $_.FullName)
+                }
+        }
+    }
+}
+"""
+
 
 class _SourceVarsDict(t.TypedDict):
     complete_func: str
@@ -456,9 +518,44 @@ class FishComplete(ShellComplete):
         return f"{item.type},{item.value}"
 
 
+class PowerShellComplete(ShellComplete):
+    """Shell completion for PowerShell (Windows PowerShell 5.1+ and pwsh 7+).
+
+    .. versionadded:: 8.5
+    """
+
+    name: t.ClassVar[str] = "powershell"
+    source_template: t.ClassVar[str] = _SOURCE_POWERSHELL
+
+    def get_completion_args(self) -> tuple[list[str], str]:
+        cwords = split_arg_string(os.environ["COMP_WORDS"])
+        cword = int(os.environ["COMP_CWORD"])
+        args = cwords[1:cword]
+
+        try:
+            incomplete = cwords[cword]
+        except IndexError:
+            incomplete = ""
+
+        return args, incomplete
+
+    def format_completion(self, item: CompletionItem[str]) -> str:
+        # PowerShell parses the response by splitting on newlines and
+        # consuming three lines per completion (type, value, help).
+        # Multi-line help text would break that framing, so collapse
+        # newlines and carriage returns to spaces. The literal "_"
+        # sentinel matches what ZshComplete uses for "no help text".
+        if item.help:
+            help_ = item.help.replace("\r", " ").replace("\n", " ")
+        else:
+            help_ = "_"
+        return f"{item.type}\n{item.value}\n{help_}"
+
+
 _available_shells: t.Final[dict[str, type[ShellComplete]]] = {
     "bash": BashComplete,
     "fish": FishComplete,
+    "powershell": PowerShellComplete,
     "zsh": ZshComplete,
 }
 

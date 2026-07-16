@@ -13,6 +13,7 @@ from click.core import Option
 from click.shell_completion import add_completion_class
 from click.shell_completion import CompletionItem
 from click.shell_completion import FishComplete
+from click.shell_completion import PowerShellComplete
 from click.shell_completion import shell_complete
 from click.shell_completion import ShellComplete
 from click.types import Choice
@@ -353,6 +354,17 @@ def test_full_source(runner, shell):
     assert f"_CLI_COMPLETE={shell}_complete" in result.output
 
 
+def test_full_source_powershell(runner):
+    # The PowerShell source script sets the completion env var via
+    # `$env:_CLI_COMPLETE = 'powershell_complete'`, so the substring
+    # `_CLI_COMPLETE=powershell_complete` used by test_full_source above
+    # is not present. Assert on the PowerShell-specific markers instead.
+    cli = Group("cli", commands=[Command("a"), Command("b")])
+    result = runner.invoke(cli, env={"_CLI_COMPLETE": "powershell_source"})
+    assert "Register-ArgumentCompleter" in result.output
+    assert "powershell_complete" in result.output
+
+
 @pytest.mark.parametrize(
     ("shell", "env", "expect"),
     [
@@ -363,6 +375,12 @@ def test_full_source(runner, shell):
         ("fish", {"COMP_WORDS": "", "COMP_CWORD": ""}, "plain,a\nplain,b\tbee\n"),
         ("fish", {"COMP_WORDS": "a b", "COMP_CWORD": "b"}, "plain,b\tbee\n"),
         ("fish", {"COMP_WORDS": 'a "b', "COMP_CWORD": '"b'}, "plain,b\tbee\n"),
+        (
+            "powershell",
+            {"COMP_WORDS": "", "COMP_CWORD": "0"},
+            "plain\na\n_\nplain\nb\nbee\n",
+        ),
+        ("powershell", {"COMP_WORDS": "a b", "COMP_CWORD": "1"}, "plain\nb\nbee\n"),
     ],
 )
 @pytest.mark.usefixtures("_patch_for_completion")
@@ -585,3 +603,16 @@ def test_fish_format_completion_escapes_help():
     # The newline is escaped to the literal characters backslash-n and the tab
     # becomes a space, so each completion stays on one line for fish.
     assert fc.format_completion(item) == "plain,--at\tfirst\\nsecond third"
+
+
+def test_powershell_format_completion_escapes_help():
+    pc = PowerShellComplete(Command("x"), {}, "x", "_X_COMPLETE")
+    # Newlines (LF and CRLF) collapse to spaces so the help text stays
+    # on a single line and doesn't break the 3-lines-per-item framing
+    # consumed by the PowerShell completion script.
+    item = CompletionItem("--at", help="first\nsecond\r\nthird")
+    assert pc.format_completion(item) == "plain\n--at\nfirst second  third"
+    # Items without help text use the "_" sentinel, matching the format
+    # produced by ZshComplete.
+    item = CompletionItem("--at")
+    assert pc.format_completion(item) == "plain\n--at\n_"

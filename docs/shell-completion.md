@@ -29,7 +29,7 @@ depending on the shell you are using. Click will output it when called with `_{F
 `{shell}_source`. `{FOO_BAR}` is the executable name in uppercase with dashes replaced by underscores. It is
 conventional but not strictly required for environment variable names to be in upper case. This convention helps
 distinguish environment variables from regular shell variables and commands, making scripts and configuration files more
-readable and easier to maintain. The built-in shells are `bash`, `zsh`, and `fish`.
+readable and easier to maintain. The built-in shells are `bash`, `zsh`, `fish`, and `powershell`.
 
 Provide your users with the following instructions customized to your program name. This uses `foo-bar` as an example.
 
@@ -62,6 +62,16 @@ Provide your users with the following instructions customized to your program na
 
         This is the same file used for the activation script method
         below. For Fish it's probably always easier to use that method.
+
+    .. group-tab:: PowerShell
+
+        Add this to your PowerShell profile (the path of ``$PROFILE``):
+
+        .. code-block:: powershell
+
+            $env:_FOO_BAR_COMPLETE = 'powershell_source'
+            foo-bar | Out-String | Invoke-Expression
+            Remove-Item Env:_FOO_BAR_COMPLETE
 ```
 
 Using `eval` means that the command is invoked and evaluated every time a shell is started, which can delay shell
@@ -106,6 +116,22 @@ of time and distribute them with your program to save your users a step.
         .. code-block:: fish
 
             _FOO_BAR_COMPLETE=fish_source foo-bar > ~/.config/fish/completions/foo-bar.fish
+
+    .. group-tab:: PowerShell
+
+        Save the script somewhere.
+
+        .. code-block:: powershell
+
+            $env:_FOO_BAR_COMPLETE = 'powershell_source'
+            foo-bar | Out-File -Encoding utf8 ~/.foo-bar-complete.ps1
+            Remove-Item Env:_FOO_BAR_COMPLETE
+
+        Source the file in your PowerShell profile (the path of ``$PROFILE``):
+
+        .. code-block:: powershell
+
+            . ~/.foo-bar-complete.ps1
 ```
 
 After modifying the shell config, you need to start a new shell in order for the changes to be loaded.
