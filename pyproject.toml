@@ -29,6 +29,7 @@ dev = [
     "tox-uv",
 ]
 docs = [
+    "pillow",
     "myst-parser",
     "pallets-sphinx-themes",
     "sphinx",

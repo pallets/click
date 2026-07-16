@@ -36,6 +36,21 @@ Some standalone examples of Click applications are packaged with Click. They are
 - [termui](https://github.com/pallets/click/tree/main/examples/termui) : A simple example that showcases terminal UI
   helpers provided by click.
 
+## Understanding the Help Output
+
+Click automatically generates help pages for all commands.  Each help page
+contains several sections that describe the command's interface:
+
+```{image} _static/cli-help-annotated.png
+:alt: Annotated Click help output showing Usage, Description, Options, and Commands sections
+:width: 720px
+:align: center
+```
+
+The **Usage** line shows how to invoke the command.  The **Options** section
+lists all available flags and their descriptions.  The **Commands** section
+lists the subcommands available in a group.
+
 ## Basic Concepts - Creating a Command
 
 Click is based on declaring commands through decorators. Internally, there is a non-decorator interface for advanced use
