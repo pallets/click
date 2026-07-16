@@ -28,6 +28,7 @@ click.echo(json.dumps(rv))
 ALLOWED_IMPORTS = {
     "__future__",
     "abc",
+    "builtins",
     "codecs",
     "collections",
     "collections.abc",
@@ -50,6 +51,7 @@ ALLOWED_IMPORTS = {
     "threading",
     "types",
     "typing",
+    "typing_extensions",
     "uuid",
     "weakref",
 }

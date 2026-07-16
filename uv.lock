@@ -175,6 +175,9 @@ wheels = [
 name = "click"
 version = "8.5.0.dev0"
 source = { editable = "." }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -218,6 +221,7 @@ typing = [
 ]
 
 [package.metadata]
+requires-dist = [{ name = "typing-extensions", marker = "python_full_version < '3.13'" }]
 
 [package.metadata.requires-dev]
 dev = [

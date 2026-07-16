@@ -19,6 +19,12 @@ from .utils import _LazyFile
 from .utils import _safecall
 from .utils import format_filename
 
+# TypeVar(default=...) support.
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:
+    from typing_extensions import TypeVar
+
 if t.TYPE_CHECKING:
     import typing_extensions as te
 
@@ -29,6 +35,7 @@ if t.TYPE_CHECKING:
 _ValueT = t.TypeVar("_ValueT")
 _ValueT_contra = t.TypeVar("_ValueT_contra", contravariant=True)
 _ValueT_co = t.TypeVar("_ValueT_co", covariant=True)
+_InputT_contra = TypeVar("_InputT_contra", contravariant=True, default=t.Any)
 
 _FloatValueT = t.TypeVar("_FloatValueT", bound=float)
 _FloatValueT_co = t.TypeVar("_FloatValueT_co", bound=float, covariant=True)
@@ -39,7 +46,7 @@ class ParamTypeInfoDict(t.TypedDict):
     name: str
 
 
-class ParamType(t.Generic[_ValueT_co], abc.ABC):
+class ParamType(t.Generic[_ValueT_co, _InputT_contra], abc.ABC):
     """Represents the type of a parameter. Validates and converts values
     from the command line or Python into the correct type.
 
@@ -61,6 +68,11 @@ class ParamType(t.Generic[_ValueT_co], abc.ABC):
         converted value type (``ParamType[int]`` for an integer-returning
         type) so that :meth:`convert` and downstream consumers carry the
         narrowed return type.
+
+    .. versionchanged:: 8.5.0
+        Accepts a second optional type parameter for the input value type
+        that :meth:`convert` accepts (``ParamType[int, str]`` for a type
+        converting strings to integers), defaulting to ``Any``.
     """
 
     is_composite: t.ClassVar[bool] = False
@@ -98,9 +110,25 @@ class ParamType(t.Generic[_ValueT_co], abc.ABC):
 
         return {"param_type": param_type, "name": name}
 
+    @t.overload
     def __call__(
         self,
-        value: t.Any,
+        value: None,
+        param: Parameter | None = None,
+        ctx: Context | None = None,
+    ) -> None: ...
+
+    @t.overload
+    def __call__(
+        self,
+        value: _InputT_contra,
+        param: Parameter | None = None,
+        ctx: Context | None = None,
+    ) -> _ValueT_co: ...
+
+    def __call__(
+        self,
+        value: _InputT_contra | None,
         param: Parameter | None = None,
         ctx: Context | None = None,
     ) -> _ValueT_co | None:
@@ -119,7 +147,7 @@ class ParamType(t.Generic[_ValueT_co], abc.ABC):
         """
 
     def convert(
-        self, value: t.Any, param: Parameter | None, ctx: Context | None
+        self, value: _InputT_contra, param: Parameter | None, ctx: Context | None
     ) -> _ValueT_co:
         """Convert the value to the correct type. This is not called if
         the value is ``None`` (the missing value).
