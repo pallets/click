@@ -2,6 +2,8 @@
 
 Unreleased
 
+- `progressbar` applies any steps held by `update_min_steps` when finishing,
+  so `show_pos` reaches the full `length/length` display. {issue}`3571`
 - Supported versions of Windows enable ANSI terminal styles by default.
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes

@@ -350,6 +350,45 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progressbar_finish_applies_pending_update_min_steps(runner):
+    """Pending steps under update_min_steps must apply on finish.
+
+    Otherwise show_pos can end below length while the bar is finished.
+    """
+    bar = _create_progress(length=20, update_min_steps=7, show_pos=True)
+    bar.update(7)
+    bar.update(7)
+    bar.update(6)
+    assert bar.pos == 14
+    assert bar._completed_intervals == 6
+    bar.finish()
+    assert bar._completed_intervals == 0
+    assert bar.pos == 20
+    assert bar.finished
+    assert bar.format_pos() == "20/20"
+
+
+def test_progressbar_show_pos_with_update_min_steps(runner, monkeypatch):
+    """Regression: final render must show length/length with show_pos."""
+
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(20),
+            show_pos=True,
+            update_min_steps=7,
+            show_eta=False,
+        ) as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    output = runner.invoke(cli, []).output
+    lines = [line for line in output.split("\n") if "[" in line]
+    assert lines
+    assert "20/20" in lines[-1]
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
