@@ -373,6 +373,30 @@ def test_full_complete(runner, shell, env, expect):
     assert result.output == expect
 
 
+@pytest.mark.parametrize(
+    ("shell", "expect"),
+    [
+        ("bash", "plain,--color=always\n"),
+        ("zsh", "plain\n--color=always\n_\n"),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_option_value_complete_with_equals(runner, shell, expect):
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["auto", "always", "never"]))],
+    )
+    result = runner.invoke(
+        cli,
+        env={
+            "COMP_WORDS": "cli --color=al",
+            "COMP_CWORD": "1",
+            "_CLI_COMPLETE": f"{shell}_complete",
+        },
+    )
+    assert result.output == expect
+
+
 def test_source_uses_lf_line_endings(monkeypatch):
     stdout = io.BytesIO()
     stream = io.TextIOWrapper(stdout, encoding="utf-8", newline="\r\n")

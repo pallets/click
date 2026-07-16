@@ -299,9 +299,18 @@ class ShellComplete:
         :param args: List of complete args before the incomplete value.
         :param incomplete: Value being completed. May be empty.
         """
+        original_incomplete = incomplete
         ctx = _resolve_context(self.cli, self.ctx_args, self.prog_name, args)
         obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
-        return obj.shell_complete(ctx, incomplete)
+        completions = obj.shell_complete(ctx, incomplete)
+
+        if isinstance(obj, Option) and "=" in original_incomplete:
+            option, _, _ = original_incomplete.partition("=")
+
+            for item in completions:
+                item.value = f"{option}={item.value}"
+
+        return completions
 
     def format_completion(self, item: CompletionItem[str]) -> str:
         """Format a completion item into the form recognized by the
