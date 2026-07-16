@@ -564,7 +564,7 @@ def test_boolean_envvar_bad_values(runner, value):
     result = runner.invoke(cli, [], env={"SHOUT": value})
     assert result.exit_code == 2
     assert (
-        f"Invalid value for '--shout': {value!r} is not a valid boolean."
+        f"Invalid value for '--shout' (from env var 'SHOUT'): {value!r} is not a valid boolean."
         in result.output
     )
 

@@ -138,10 +138,13 @@ class BadParameter(UsageError):
         ctx: Context | None = None,
         param: Parameter | None = None,
         param_hint: cabc.Sequence[str] | str | None = None,
+        *,
+        env_var_source: str | None = None,
     ) -> None:
         super().__init__(message, ctx)
         self.param = param
         self.param_hint = param_hint
+        self.env_var_source = env_var_source
 
     def format_message(self) -> str:
         if self.param_hint is not None:
@@ -150,6 +153,15 @@ class BadParameter(UsageError):
             param_hint = self.param.get_error_hint(self.ctx)
         else:
             return _("Invalid value: {message}").format(message=self.message)
+
+        if self.env_var_source is not None:
+            return _(
+                "Invalid value for {param_hint} (from env var {env_var!r}): {message}"
+            ).format(
+                param_hint=_join_param_hints(param_hint),
+                env_var=self.env_var_source,
+                message=self.message,
+            )
 
         return _("Invalid value for {param_hint}: {message}").format(
             param_hint=_join_param_hints(param_hint), message=self.message

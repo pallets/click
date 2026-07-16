@@ -962,3 +962,48 @@ def test_custom_version_option_receives_context(runner):
     result = runner.invoke(cli, ["--version"], prog_name="mytool")
     assert result.exit_code == 0
     assert result.output == "mytool 1.0\n"
+
+
+def test_env_var_bad_value_shows_var_name(runner):
+    @click.command()
+    @click.option("--count", type=int, envvar="MY_COUNT")
+    def cmd(count):
+        click.echo(count)
+
+    result = runner.invoke(cmd, env={"MY_COUNT": "abc"})
+    assert result.exit_code != 0
+    assert "from env var 'MY_COUNT'" in result.output
+
+
+def test_cli_bad_value_no_env_var_mention(runner):
+    @click.command()
+    @click.option("--count", type=int, envvar="MY_COUNT")
+    def cmd(count):
+        click.echo(count)
+
+    result = runner.invoke(cmd, args=["--count", "abc"])
+    assert result.exit_code != 0
+    assert "from env var" not in result.output
+
+
+def test_auto_envvar_prefix_bad_value_shows_computed_name(runner):
+    @click.command()
+    @click.option("--count", type=int)
+    def cmd(count):
+        click.echo(count)
+
+    result = runner.invoke(cmd, env={"MYAPP_COUNT": "abc"}, auto_envvar_prefix="MYAPP")
+    assert result.exit_code != 0
+    assert "from env var 'MYAPP_COUNT'" in result.output
+
+
+def test_multiple_env_vars_first_nonempty_shown_in_error(runner):
+    @click.command()
+    @click.option("--count", type=int, envvar=["ALIAS_COUNT", "MY_COUNT"])
+    def cmd(count):
+        click.echo(count)
+
+    result = runner.invoke(cmd, env={"ALIAS_COUNT": "abc"})
+    assert result.exit_code != 0
+    assert "from env var 'ALIAS_COUNT'" in result.output
+    assert "MY_COUNT" not in result.output

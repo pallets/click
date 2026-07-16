@@ -2704,6 +2704,25 @@ class Parameter(ABC):
 
         return None
 
+    def resolve_envvar_name(self, ctx: Context) -> str | None:
+        """Return the name of the environment variable that provided this parameter's
+        value, or ``None`` if no non-empty env var was found.
+
+        :meta private:
+        """
+        if not self.envvar:
+            return None
+
+        if isinstance(self.envvar, str):
+            if os.environ.get(self.envvar):
+                return self.envvar
+        else:
+            for envvar in self.envvar:
+                if os.environ.get(envvar):
+                    return envvar
+
+        return None
+
     def value_from_envvar(self, ctx: Context) -> str | cabc.Sequence[str] | None:
         """Process the raw environment variable string for this parameter.
 
@@ -2769,6 +2788,15 @@ class Parameter(ABC):
             # Process the value through the parameter's type.
             try:
                 value = self.process_value(ctx, value)
+            except BadParameter as e:
+                if not ctx.resilient_parsing:
+                    if (
+                        source == ParameterSource.ENVIRONMENT
+                        and e.env_var_source is None
+                    ):
+                        e.env_var_source = self.resolve_envvar_name(ctx)
+                    raise
+                value = UNSET
             except Exception:
                 if not ctx.resilient_parsing:
                     raise
@@ -3528,6 +3556,24 @@ class Option(Parameter):
 
             if rv:
                 return rv
+
+        return None
+
+    def resolve_envvar_name(self, ctx: Context) -> str | None:
+        """:class:`Option` extends :meth:`Parameter.resolve_envvar_name` to also
+        check :attr:`Context.auto_envvar_prefix`.
+
+        :meta private:
+        """
+        rv = super().resolve_envvar_name(ctx)
+
+        if rv is not None:
+            return rv
+
+        if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None and self.name:
+            envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
+            if os.environ.get(envvar):
+                return envvar
 
         return None
 
