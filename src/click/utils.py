@@ -33,8 +33,12 @@ def _posixify(name: str) -> str:
     return "-".join(name.split()).lower()
 
 
-def safecall(func: t.Callable[P, R]) -> t.Callable[P, R | None]:
-    """Wraps a function so that it swallows exceptions."""
+def _safecall(func: t.Callable[P, R]) -> t.Callable[P, R | None]:
+    """
+    Wraps a function so that it swallows exceptions.
+
+    :meta private:
+    """
 
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R | None:
         try:
@@ -56,7 +60,7 @@ def make_str(value: t.Any) -> str:
     return str(value)
 
 
-def make_default_short_help(help: str, max_length: int = 45) -> str:
+def _make_default_short_help(help: str, max_length: int = 45) -> str:
     """Returns a condensed version of help string.
 
     :meta private:
@@ -109,11 +113,15 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
     return " ".join(words[:i]) + "..."
 
 
-class LazyFile:
-    """A lazy file works like a regular file but it does not fully open
+class _LazyFile:
+    """
+    A lazy file works like a regular file but it does not fully open
     the file but it does perform some basic checks early to see if the
     filename parameter does make sense.  This is useful for safely opening
     files for writing.
+
+    :meta private:
+
     """
 
     name: str
@@ -187,7 +195,7 @@ class LazyFile:
         if self.should_close:
             self.close()
 
-    def __enter__(self) -> LazyFile:
+    def __enter__(self) -> _LazyFile:
         return self
 
     def __exit__(
@@ -203,7 +211,7 @@ class LazyFile:
         return iter(self._f)  # type: ignore
 
 
-class KeepOpenFile:
+class _KeepOpenFile:
     """Proxy a file object but keep it open across a ``with`` block.
 
     Wraps a borrowed file (such as ``sys.stdin`` or ``sys.stdout``) so that
@@ -214,6 +222,8 @@ class KeepOpenFile:
     Dunder methods are proxied explicitly: implicit special-method lookups
     bypass :meth:`__getattr__`, because Python resolves them on the type rather
     than the instance.
+
+    :meta private:
     """
 
     _file: t.IO[t.Any]
@@ -224,7 +234,7 @@ class KeepOpenFile:
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
 
-    def __enter__(self) -> KeepOpenFile:
+    def __enter__(self) -> _KeepOpenFile:
         return self
 
     def __exit__(
@@ -342,8 +352,13 @@ def echo(
 def get_binary_stream(name: t.Literal["stdin", "stdout", "stderr"]) -> t.BinaryIO:
     """Returns a system stream for byte processing.
 
+    .. deprecated:: 8.5
+        Will be removed in Click 9.0.
+
     :param name: the name of the stream to open.  Valid names are ``'stdin'``,
                  ``'stdout'`` and ``'stderr'``
+
+    :meta private:
     """
     opener = binary_streams.get(name)
     if opener is None:
@@ -356,11 +371,16 @@ def get_text_stream(
     encoding: str | None = None,
     errors: str | None = "strict",
 ) -> t.TextIO:
-    """Returns a system stream for text processing.  This usually returns
-    a wrapped stream around a binary stream returned from
+    """Returns a system stream for text processing.
+
+    .. deprecated:: 8.5
+        Will be removed in Click 9.0.
+
+    This usually returns a wrapped stream around a binary stream returned from
     :func:`get_binary_stream` but it also can take shortcuts for already
     correctly configured streams.
 
+    :meta private:
     :param name: the name of the stream to open.  Valid names are ``'stdin'``,
                  ``'stdout'`` and ``'stderr'``
     :param encoding: overrides the detected default encoding.
@@ -410,13 +430,13 @@ def open_file(
     """
     if lazy:
         return t.cast(
-            "t.IO[t.Any]", LazyFile(filename, mode, encoding, errors, atomic=atomic)
+            "t.IO[t.Any]", _LazyFile(filename, mode, encoding, errors, atomic=atomic)
         )
 
     f, should_close = open_stream(filename, mode, encoding, errors, atomic=atomic)
 
     if not should_close:
-        f = t.cast("t.IO[t.Any]", KeepOpenFile(f))
+        f = t.cast("t.IO[t.Any]", _KeepOpenFile(f))
 
     return f
 
@@ -512,13 +532,15 @@ def get_app_dir(app_name: str, roaming: bool = True, force_posix: bool = False) 
     )
 
 
-class PacifyFlushWrapper:
+class _PacifyFlushWrapper:
     """This wrapper is used to catch and suppress BrokenPipeErrors resulting
     from ``.flush()`` being called on broken pipe during the shutdown/final-GC
     of the Python interpreter. Notably ``.flush()`` is always called on
     ``sys.stdout`` and ``sys.stderr``. So as to have minimal impact on any
     other cleanup code, and the case where the underlying file is not a broken
     pipe, all calls and attributes are proxied.
+
+    :meta private:
     """
 
     wrapped: t.IO[t.Any]
@@ -644,3 +666,24 @@ def _expand_args(
             out.extend(matches)
 
     return out
+
+
+def __getattr__(name: str) -> object:
+    import warnings
+
+    if name in {
+        "LazyFile",
+        "KeepOpenFile",
+        "make_default_short_help",
+        "PacifyFlushWrapper",
+        "safecall",
+    }:
+        warnings.warn(
+            f"'click.utils.{name}' was never intentionally public and will be"
+            " renamed in Click 9.0.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return globals()[f"_{name}"]
+
+    raise AttributeError(name)

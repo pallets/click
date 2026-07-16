@@ -32,6 +32,13 @@ Unreleased
   `flag_value` and `default` keep their unset sentinel at construction
   (resolved lazily on read) so `is UNSET` reliably tells a user-supplied value
   from an auto-derived one. Behavior is unchanged. {pr}`3641`
+- {func}`get_binary_stream` and {func}`get_text_stream` are deprecated and
+  will be removed in Click 9.0. {issue}`3481` {pr}`3695`
+- The following `click.utils` names were never intentionally public and are
+  now private (`_`-prefixed). The old names remain available with a
+  `DeprecationWarning` until Click 9.0: `LazyFile`, `KeepOpenFile`,
+  `make_default_short_help`, `PacifyFlushWrapper`, and `safecall`.
+  {issue}`3099` {pr}`3695`
 
 ## Version 8.4.2
 

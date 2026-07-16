@@ -35,5 +35,5 @@ def test_make_default_short_help(value, max_length, alter, expect):
     if alter:
         value = alter(value)
 
-    out = click.utils.make_default_short_help(value, max_length)
+    out = click.utils._make_default_short_help(value, max_length)
     assert out == expect

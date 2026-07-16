@@ -15,9 +15,9 @@ from gettext import ngettext
 from ._compat import _get_argv_encoding
 from ._compat import open_stream
 from .exceptions import BadParameter
+from .utils import _LazyFile
+from .utils import _safecall
 from .utils import format_filename
-from .utils import LazyFile
-from .utils import safecall
 
 if t.TYPE_CHECKING:
     import typing_extensions as te
@@ -936,7 +936,7 @@ class File(ParamType[t.IO[t.Any]]):
             lazy = self.resolve_lazy_flag(value)
 
             if lazy:
-                lf = LazyFile(
+                lf = _LazyFile(
                     value, self.mode, self.encoding, self.errors, atomic=self.atomic
                 )
 
@@ -956,9 +956,9 @@ class File(ParamType[t.IO[t.Any]]):
             # type is used with prompts.
             if ctx is not None:
                 if should_close:
-                    ctx.call_on_close(safecall(f.close))
+                    ctx.call_on_close(_safecall(f.close))
                 else:
-                    ctx.call_on_close(safecall(f.flush))
+                    ctx.call_on_close(_safecall(f.flush))
 
             return f
         except OSError as e:

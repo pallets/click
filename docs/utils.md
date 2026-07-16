@@ -259,33 +259,6 @@ Example:
 click.echo(f"Path: {click.format_filename(b'foo.txt')}")
 ```
 
-## Standard Streams
-
-For command line utilities, it's very important to get access to input and output streams reliably. Python generally
-provides access to these streams through `sys.stdout` and friends, but unfortunately, there are API differences between
-2.x and 3.x, especially with regards to how these streams respond to Unicode and binary data.
-
-Because of this, click provides the {func}`get_binary_stream` and {func}`get_text_stream` functions, which produce
-consistent results with different Python versions and for a wide variety of terminal configurations.
-
-The end result is that these functions will always return a functional stream object (except in very odd cases; see
-{doc}`/unicode-support`).
-
-Example:
-
-```python
-import click
-
-stdin_text = click.get_text_stream('stdin')
-stdout_binary = click.get_binary_stream('stdout')
-```
-
-```{versionadded} 6.0
-```
-
-Click now emulates output streams on Windows to support unicode to the Windows console through separate APIs. For more
-information see {doc}`wincmd`.
-
 ## Intelligent File Opening
 
 ```{versionadded} 3.0

@@ -20,8 +20,8 @@ from .globals import resolve_color_default
 from .types import Choice
 from .types import convert_type
 from .types import ParamType
+from .utils import _LazyFile
 from .utils import echo
-from .utils import LazyFile
 
 if t.TYPE_CHECKING:
     from ._termui_impl import ProgressBar
@@ -123,7 +123,7 @@ def _build_prompt(
 
 
 def _format_default(default: t.Any) -> t.Any:
-    if isinstance(default, (io.IOBase, LazyFile)) and hasattr(default, "name"):
+    if isinstance(default, (io.IOBase, _LazyFile)) and hasattr(default, "name"):
         return default.name
 
     return default

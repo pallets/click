@@ -10,13 +10,14 @@ import pytest
 import click
 from click.exceptions import ClickException
 from click.testing import CliRunner
+from click.utils import get_binary_stream
 
 
 def test_runner():
     @click.command()
     def test():
-        i = click.get_binary_stream("stdin")
-        o = click.get_binary_stream("stdout")
+        i = get_binary_stream("stdin")
+        o = get_binary_stream("stdout")
         while True:
             chunk = i.read(4096)
             if not chunk:
@@ -33,8 +34,8 @@ def test_runner():
 def test_echo_stdin_stream():
     @click.command()
     def test():
-        i = click.get_binary_stream("stdin")
-        o = click.get_binary_stream("stdout")
+        i = get_binary_stream("stdin")
+        o = get_binary_stream("stdout")
         while True:
             chunk = i.read(4096)
             if not chunk:
@@ -91,8 +92,8 @@ def test_echo_stdin_prompts():
 def test_runner_with_stream():
     @click.command()
     def test():
-        i = click.get_binary_stream("stdin")
-        o = click.get_binary_stream("stdout")
+        i = get_binary_stream("stdin")
+        o = get_binary_stream("stdout")
         while True:
             chunk = i.read(4096)
             if not chunk:

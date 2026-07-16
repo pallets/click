@@ -6,6 +6,6 @@ def test_iter_lazyfile(tmpdir):
     p = tmpdir.mkdir("testdir").join("testfile")
     p.write("\n".join(expected))
     with p.open() as f:
-        with click.utils.LazyFile(f.name) as lf:
+        with click.utils._LazyFile(f.name) as lf:
             for e_line, a_line in zip(expected, lf, strict=False):
                 assert e_line == a_line.strip()

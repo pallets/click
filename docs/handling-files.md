@@ -89,7 +89,7 @@ File open behavior can be controlled by the boolean kwarg `lazy`. If a file is o
 
 - A failure at first IO operation will happen by raising an {exc}`FileError`.
 - It can help minimize resource handling confusion. If a file is opened in lazy mode, it will call
-  {meth}`LazyFile.close_intelligently` to help figure out if the file needs closing or not. This is not needed for
+  {meth}`_LazyFile.close_intelligently` to help figure out if the file needs closing or not. This is not needed for
   parameters, but is necessary for manually prompting. For manual prompts with the {func}`prompt` function you do not
   know if a stream like stdout was opened (which was already open before) or a real file was opened (that needs
   closing).

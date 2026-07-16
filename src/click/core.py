@@ -42,10 +42,10 @@ from .termui import prompt
 from .termui import style
 from .utils import _detect_program_name
 from .utils import _expand_args
+from .utils import _make_default_short_help
+from .utils import _PacifyFlushWrapper
 from .utils import echo
-from .utils import make_default_short_help
 from .utils import make_str
-from .utils import PacifyFlushWrapper
 
 if t.TYPE_CHECKING:
     from typing_extensions import Self
@@ -1239,7 +1239,7 @@ class Command:
         if self.short_help:
             text = inspect.cleandoc(self.short_help)
         elif self.help:
-            text = make_default_short_help(self.help, limit)
+            text = _make_default_short_help(self.help, limit)
         else:
             text = ""
 
@@ -1563,8 +1563,8 @@ class Command:
                 sys.exit(e.exit_code)
             except OSError as e:
                 if e.errno == errno.EPIPE:
-                    sys.stdout = t.cast(t.TextIO, PacifyFlushWrapper(sys.stdout))
-                    sys.stderr = t.cast(t.TextIO, PacifyFlushWrapper(sys.stderr))
+                    sys.stdout = t.cast(t.TextIO, _PacifyFlushWrapper(sys.stdout))
+                    sys.stderr = t.cast(t.TextIO, _PacifyFlushWrapper(sys.stderr))
                     sys.exit(1)
                 else:
                     raise

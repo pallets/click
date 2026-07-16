@@ -28,8 +28,8 @@ from ._compat import strip_ansi
 from ._compat import term_len
 from ._compat import WIN
 from .exceptions import ClickException
+from .utils import _KeepOpenFile
 from .utils import echo
-from .utils import KeepOpenFile
 
 V = t.TypeVar("V")
 
@@ -641,7 +641,7 @@ def _nullpager(
     output stream in this case, since it's coming from elsewhere rather than our
     internal helpers.
 
-    The stream is wrapped in :class:`~click.utils.KeepOpenFile` so that, as a
+    The stream is wrapped in :class:`~click.utils._KeepOpenFile` so that, as a
     borrowed stream, it is not closed by a ``with`` block. The wrapper that
     :func:`get_pager_file` builds around it is detached rather than closed.
     """
@@ -650,7 +650,7 @@ def _nullpager(
     if color is None:
         color = False
 
-    yield KeepOpenFile(stream), encoding, color  # type: ignore[misc]
+    yield _KeepOpenFile(stream), encoding, color  # type: ignore[misc]
 
 
 class Editor:
