@@ -19,12 +19,6 @@ from .utils import _LazyFile
 from .utils import _safecall
 from .utils import format_filename
 
-# TypeVar(default=...) support.
-if sys.version_info >= (3, 13):
-    from typing import TypeVar
-else:
-    from typing_extensions import TypeVar
-
 if t.TYPE_CHECKING:
     import typing_extensions as te
 
@@ -35,7 +29,18 @@ if t.TYPE_CHECKING:
 _ValueT = t.TypeVar("_ValueT")
 _ValueT_contra = t.TypeVar("_ValueT_contra", contravariant=True)
 _ValueT_co = t.TypeVar("_ValueT_co", covariant=True)
-_InputT_contra = TypeVar("_InputT_contra", contravariant=True, default=t.Any)
+
+# The input type parameter of ParamType defaults to Any. TypeVar defaults
+# (PEP 696) landed in typing on Python 3.13, so type checkers get the
+# default from typing_extensions, which is never imported at runtime. On
+# older Pythons the runtime TypeVar carries no default;
+# ParamType.__class_getitem__ fills in the omitted parameter instead.
+if t.TYPE_CHECKING:
+    _InputT_contra = te.TypeVar("_InputT_contra", contravariant=True, default=t.Any)
+elif sys.version_info >= (3, 13):
+    _InputT_contra = t.TypeVar("_InputT_contra", contravariant=True, default=t.Any)
+else:
+    _InputT_contra = t.TypeVar("_InputT_contra", contravariant=True)
 
 _FloatValueT = t.TypeVar("_FloatValueT", bound=float)
 _FloatValueT_co = t.TypeVar("_FloatValueT_co", bound=float, covariant=True)
@@ -88,6 +93,20 @@ class ParamType(t.Generic[_ValueT_co, _InputT_contra], abc.ABC):
     #: are split by ``os.path.pathsep`` by default (":" on Unix and ";" on
     #: Windows).
     envvar_list_splitter: t.ClassVar[str | None] = None
+
+    if sys.version_info < (3, 13):
+        # ``_InputT_contra`` carries its ``Any`` default only for type
+        # checkers: ``TypeVar(default=...)`` (PEP 696) is unavailable at
+        # runtime before Python 3.13. Fill in the omitted input type
+        # parameter by hand so ``ParamType[int]`` keeps working.
+        def __class_getitem__(cls, params: t.Any) -> t.Any:
+            if cls is ParamType:
+                if not isinstance(params, tuple):
+                    params = (params,)
+                if len(params) == 1:
+                    params = (*params, t.Any)
+            # Checkers cannot see Generic.__class_getitem__ through super().
+            return super().__class_getitem__(params)  # type: ignore[misc]
 
     def to_info_dict(self) -> ParamTypeInfoDict:
         """Gather information that could be useful for a tool generating

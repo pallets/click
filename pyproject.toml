@@ -14,9 +14,6 @@ classifiers = [
     "Typing :: Typed",
 ]
 requires-python = ">=3.10"
-dependencies = [
-    "typing_extensions; python_version < '3.13'",
-]
 
 [project.urls]
 Donate = "https://palletsprojects.com/donate"

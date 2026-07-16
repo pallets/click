@@ -51,13 +51,11 @@ Unreleased
   parallel, use process-based isolation (such as `pytest-xdist`) rather
   than threads, since {meth}`CliRunner.invoke` also redirects the
   process-global standard streams. {issue}`3501` {issue}`3700` {pr}`3704`
-- `prompt()` is now generically typed and returns the type produced by `type`
-  or `value_proc` instead of `Any`. {class}`ParamType` takes a second optional
-  type parameter describing the input value it accepts (`ParamType[int, str]`
-  for a type converting strings to integers), defaulting to `Any`.
-  Additionally, a `prompt()` default that is already of the expected type is
-  returned as-is instead of doing a round trip through `value_proc` or the
-  type conversion. {pr}`3407`
+- `prompt()` is now generically typed and returns the type produced by
+  `type`, `value_proc`, or a matching `default` instead of `Any`.
+  {class}`ParamType` takes a second optional type parameter describing the
+  input value it accepts (`ParamType[int, str]` for a type converting
+  strings to integers), defaulting to `Any`. {pr}`3407`
 
 ## Version 8.4.2
 

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import builtins
 import collections.abc as cabc
 import inspect
 import io
@@ -27,13 +26,7 @@ from .utils import echo
 if t.TYPE_CHECKING:
     from ._termui_impl import ProgressBar
 
-    if sys.version_info >= (3, 13):
-        from typing import TypeIs
-    else:
-        from typing_extensions import TypeIs
-
 V = t.TypeVar("V")
-C = t.TypeVar("C")
 
 # The prompt functions to use.  The doc tools currently override these
 # functions to customize how they work.
@@ -141,20 +134,43 @@ def _format_default(default: V) -> V | str:
     return default
 
 
-def _is_expected_type(
-    default: object,
-    type: ParamType[V, t.Any] | V | None,
-) -> TypeIs[V]:
-    return builtins.type(default) is builtins.type(type)
+@t.overload
+def prompt(
+    text: str,
+    default: str | None = None,
+    hide_input: bool = False,
+    confirmation_prompt: bool | str = False,
+    type: None = None,
+    value_proc: None = None,
+    prompt_suffix: str = ": ",
+    show_default: bool | str = True,
+    err: bool = False,
+    show_choices: bool = True,
+) -> str: ...
+
+
+@t.overload
+def prompt(
+    text: str,
+    default: V | str | None = None,
+    hide_input: bool = False,
+    confirmation_prompt: bool | str = False,
+    type: ParamType[V, str] | type[V] | None = None,
+    value_proc: t.Callable[[str], V] | None = None,
+    prompt_suffix: str = ": ",
+    show_default: bool | str = True,
+    err: bool = False,
+    show_choices: bool = True,
+) -> V: ...
 
 
 def prompt(
     text: str,
-    default: V | C | str | None = None,
+    default: V | str | None = None,
     hide_input: bool = False,
     confirmation_prompt: bool | str = False,
-    type: ParamType[V, C | str] | V | None = None,
-    value_proc: t.Callable[[C | str], V] | None = None,
+    type: ParamType[V, str] | type[V] | None = None,
+    value_proc: t.Callable[[str], V] | None = None,
     prompt_suffix: str = ": ",
     show_default: bool | str = True,
     err: bool = False,
@@ -190,9 +206,9 @@ def prompt(
                          prompt will be "Group by (day, week): ".
 
     .. versionchanged:: 8.5.0
-        ``default`` no longer passes through the ``value_proc`` callback,
-        nor the constructor of the types of ``type`` or ``default`` field,
-        when it is the same type as ``type``.
+        Generically typed: the return type is narrowed by ``type``,
+        ``value_proc``, or ``default`` instead of being ``Any``. Runtime
+        behavior is unchanged.
 
     .. versionchanged:: 8.3.3
         ``show_default`` can be a string to show a custom value instead
@@ -241,31 +257,22 @@ def prompt(
         confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
 
     while True:
-        result: V | None = None
         while True:
-            value: C | str = prompt_func(prompt)
+            value = prompt_func(prompt)
             if value:
                 break
             elif default is not None:
-                if _is_expected_type(default=default, type=type):
-                    # It's the expected type, don't reparse it.
-                    result = default
-                else:
-                    # It's not the expected type. Pass it through value_proc before
-                    # returning.
-                    value = t.cast("C | str", default)
+                # Defaults of any type are accepted and round trip through
+                # value_proc like typed input, so the annotation is only
+                # accurate for typed input.
+                value = t.cast("str", default)
                 break
-        if result is None:
-            try:
-                result = t.cast("V", value_proc(value))
-            except UsageError as e:
-                message = (
-                    _mask_hidden_input(e.message, t.cast("str", value))
-                    if hide_input
-                    else e.message
-                )
-                echo(_("Error: {message}").format(message=message), err=err)
-                continue
+        try:
+            result = value_proc(value)
+        except UsageError as e:
+            message = _mask_hidden_input(e.message, value) if hide_input else e.message
+            echo(_("Error: {message}").format(message=message), err=err)
+            continue
         if not confirmation_prompt:
             return result
         while True:
