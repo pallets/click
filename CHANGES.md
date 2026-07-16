@@ -27,6 +27,11 @@ Unreleased
   {issue}`2819` {pr}`3678`
 - `unstyle` and the ANSI handling behind help-text wrapping now strip the full
   CSI escape-sequence grammar.
+- Streamline `Option` flag handling: the flag-kind, type, lazy-default and
+  validation steps in `Option.__init__` move into focused helpers, and
+  `flag_value` and `default` keep their unset sentinel at construction
+  (resolved lazily on read) so `is UNSET` reliably tells a user-supplied value
+  from an auto-derived one. Behavior is unchanged. {pr}`3641`
 
 ## Version 8.4.2
 
