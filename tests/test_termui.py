@@ -350,6 +350,27 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progress_bar_update_min_steps_finish_flushes_pos(runner):
+    """Regression test: when ``length`` isn't evenly divisible by
+    ``update_min_steps``, leftover buffered steps must still be
+    reflected in ``pos`` once the bar finishes, so that ``format_pos()``
+    (used when ``show_pos=True``) reports full completion instead of
+    lagging behind, even though ``pct`` already reports 100% once
+    ``finished`` is set.
+    """
+    bar = _create_progress(length=20, update_min_steps=7)
+    bar.entered = True
+    bar._is_atty = True
+
+    for _ in bar.generator():
+        pass
+
+    assert bar.finished
+    assert bar.pos == bar.length
+    assert bar.format_pos() == "20/20"
+    assert bar._completed_intervals == 0
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")

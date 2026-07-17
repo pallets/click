@@ -352,6 +352,15 @@ class ProgressBar(t.Generic[V]):
         self.current_item = None
         self.finished = True
 
+        # Flush any steps that were buffered but not yet applied to
+        # ``pos`` because they hadn't reached the ``update_min_steps``
+        # threshold. Without this, ``pos`` (and anything that reports
+        # it, such as ``format_pos``) can under-report completion when
+        # ``length`` isn't evenly divisible by ``update_min_steps``,
+        # even though the bar is actually finished.
+        self.pos += self._completed_intervals
+        self._completed_intervals = 0
+
     def generator(self) -> cabc.Iterator[V]:
         """Return a generator which yields the items added to the bar
         during construction, and updates the progress bar *after* the

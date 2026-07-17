@@ -2,6 +2,11 @@
 
 Unreleased
 
+- `ProgressBar` now shows full completion in `format_pos()` (used when
+  `show_pos=True`) when `length` is not evenly divisible by
+  `update_min_steps`. Previously, buffered steps below the threshold
+  were never applied to `pos`, so the position could appear to stop
+  short of `length` even though the bar had actually finished. {issue}`3571`
 - Supported versions of Windows enable ANSI terminal styles by default.
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
