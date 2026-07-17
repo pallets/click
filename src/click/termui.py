@@ -712,9 +712,9 @@ def style(
                   string which means that styles do not carry over.  This
                   can be disabled to compose styles.
 
-    .. versionchanged:: 8.5
+    .. versionchanged:: 8.5.0
         All invalid color values raise :exc:`ValueError`. 256-color index
-        ``0`` is not ignored
+        ``0`` is no longer ignored.
 
     .. versionchanged:: 8.0
         A non-string ``message`` is converted to a string.

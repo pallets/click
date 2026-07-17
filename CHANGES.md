@@ -5,7 +5,7 @@ Unreleased
 - Add built-in shell completion support for PowerShell (Windows PowerShell
   5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
   completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate
-  the completion script.
+  the completion script. {issue}`2672` {pr}`3637`
 - Supported versions of Windows enable ANSI terminal styles by default.
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
@@ -15,12 +15,16 @@ Unreleased
   This stripping was lost in `8.4.0` when {pr}`2969` began writing the
   prompt with `input()` directly. {issue}`3572` {pr}`3653`
 - Fix test failures when using pytest >= 9.1. {pr}`3656`
+- {class}`Path` with `allow_dash=True` no longer triggers a `BytesWarning`,
+  an error under `python -bb`, when checking a value against the `-`
+  convention. {issue}`2877` {pr}`3642`
 - Add {func}`custom_version_option`, a `--version` option whose output is
   produced by a callback, covering cases {func}`version_option` intentionally
   does not. The feature set of {func}`version_option` is now frozen; see
   [discussion #3527](https://github.com/pallets/click/discussions/3527). {pr}`3581`
 - `style()` and `secho()` no longer silently drop the 256-color index `0`
-  (black) passed as `fg` or `bg`, and now validate color arguments. {pr}`3677`
+  (black) passed as `fg` or `bg`, and now validate color arguments. Invalid
+  colors raise a `ValueError` instead of a `TypeError`. {pr}`3677`
 - The automatic help option stores its value under the reserved name
   `_click_default_help` instead of `help`, so a parameter named `help` no
   longer breaks parsing. The new name is visible in
@@ -30,12 +34,15 @@ Unreleased
   share a name to compete for the same value (feature switches).
   {issue}`2819` {pr}`3678`
 - `unstyle` and the ANSI handling behind help-text wrapping now strip the full
-  CSI escape-sequence grammar.
+  CSI escape-sequence grammar. {pr}`3681`
 - Streamline `Option` flag handling: the flag-kind, type, lazy-default and
   validation steps in `Option.__init__` move into focused helpers, and
   `flag_value` and `default` keep their unset sentinel at construction
   (resolved lazily on read) so `is UNSET` reliably tells a user-supplied value
-  from an auto-derived one. Behavior is unchanged. {pr}`3641`
+  from an auto-derived one. Runtime behavior is unchanged, but
+  {meth}`Parameter.to_info_dict` now resolves `default=True` on a feature
+  switch to its `flag_value`, matching what the function receives at call
+  time. {pr}`3641`
 - {func}`get_binary_stream` and {func}`get_text_stream` are deprecated and
   will be removed in Click 9.0. {issue}`3481` {pr}`3695`
 - The following `click.utils` names were never intentionally public and are

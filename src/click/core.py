@@ -3662,7 +3662,7 @@ class Argument(Parameter):
 
     :param help: the help string.
 
-    .. versionchanged:: 8.5
+    .. versionchanged:: 8.5.0
         Added the ``help`` parameter.
     """
 

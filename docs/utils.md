@@ -56,13 +56,14 @@ The {func}`echo` function supports ANSI colors and styles. It will
 automatically strip ANSI color codes if the stream is not connected to a
 terminal.
 
-:::{admonition} Older Windows Support
+```{admonition} Older Windows Support
 :class: note
 
-Recent Windows 11 supports ANSI styling by default, in both Terminal and cmd.exe.
-If you need to support color output on older versions of Windows, install
+Recent versions of Windows 11 support ANSI styling by default, in both
+Windows Terminal and cmd.exe. If you need to support color output on older
+versions of Windows, install
 [colorama](https://pypi.org/project/colorama/) and call `colorama.init()`.
-:::
+```
 
 For styling a string, the {func}`style` function can be used:
 
@@ -124,7 +125,9 @@ that instead:
                 print(idx, file=pager)
 ```
 
-```{hint} Why print instead of echo?
+```{admonition} Why print() instead of echo()?
+:class: hint
+
 The pager object deals with ANSI color and style codes itself: they are kept or
 stripped depending on what the pager supports, exactly as {func}`echo` would do.
 Any code that writes to a file, including plain {func}`print`, can therefore be

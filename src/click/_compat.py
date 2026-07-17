@@ -513,7 +513,7 @@ def should_strip_ansi(
     return not color
 
 
-# double check is needed so mypy does not analyze this on Linux
+# Double check is needed so mypy does not analyze this on Linux.
 if sys.platform.startswith("win") and WIN:
     from ._winconsole import _get_windows_console_stream
 
