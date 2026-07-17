@@ -86,6 +86,51 @@ def test_group_command_same_option():
     assert _get_words(cli, ["-a", "a", "x", "-a", "a"], "-") == ["--help"]
 
 
+def test_aliased_group_resolve_command_no_match():
+    """Regression test for issue #2402.
+
+    A ``Group`` subclass that overrides ``resolve_command`` to always
+    return the full command name (as shown in the "Command Aliases"
+    documentation) must not crash when no command matches during shell
+    completion. ``super().resolve_command()`` returns ``cmd=None``
+    (rather than raising) when ``ctx.resilient_parsing`` is set, which
+    is the case while resolving context for completions, so overrides
+    must guard against ``cmd`` being ``None`` before accessing
+    ``cmd.name``.
+    """
+
+    class AliasedGroup(Group):
+        def get_command(self, ctx, cmd_name):
+            rv = super().get_command(ctx, cmd_name)
+
+            if rv is not None:
+                return rv
+
+            matches = [x for x in self.list_commands(ctx) if x.startswith(cmd_name)]
+
+            if not matches:
+                return None
+
+            if len(matches) == 1:
+                return Group.get_command(self, ctx, matches[0])
+
+            ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
+
+        def resolve_command(self, ctx, args):
+            # always return the full command name
+            _, cmd, args = super().resolve_command(ctx, args)
+            return cmd.name if cmd else None, cmd, args
+
+    cli = AliasedGroup(
+        "cli", commands=[Group("workspace", commands=[Command("add")])]
+    )
+
+    # A typo'd subcommand name that doesn't match any prefix must not
+    # raise AttributeError: 'NoneType' object has no attribute 'name'.
+    # Completion falls back to the root context's visible commands.
+    assert _get_words(cli, ["workspaceTYPO"], "") == ["workspace"]
+
+
 def test_chained():
     cli = Group(
         "cli",

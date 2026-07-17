@@ -2,6 +2,12 @@
 
 Unreleased
 
+- The "Command Aliases" documentation example for a custom
+  `resolve_command` now guards against `cmd` being `None`, matching the
+  behavior of `Group.resolve_command` itself. Following the example
+  as originally written could raise `AttributeError: 'NoneType' object
+  has no attribute 'name'` during shell completion of an unmatched
+  command name. {issue}`2402`
 - Add built-in shell completion support for PowerShell (Windows PowerShell
   5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
   completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate
