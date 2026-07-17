@@ -747,39 +747,13 @@ class CliRunner:
         that affect the contents of the CWD to prevent them from
         interfering with each other.
 
-        .. warning::
-            This helper predates Python 3 and modern pytest, and is not
-            thread-safe: it relies on :func:`os.chdir`, which mutates
-            process-global state, and :meth:`invoke` swaps the
-            process-global standard streams too. Parallelize tests with
-            processes (``pytest-xdist``), not threads. Locking the
-            runner (:pr:`3511`, :pr:`3520`, :pr:`3530`) and a
-            ``set_filesystem()`` API (:issue:`3123`) were declined:
-            neither removes the global-state mutation. See :issue:`3700`
-            and :issue:`3501`.
-
         :param temp_dir: Create the temporary directory under this
             directory. If given, the created directory is not removed
             when exiting.
 
-        .. deprecated:: 8.5.0
-            Will be removed in Click 9.0. Use
-            :class:`tempfile.TemporaryDirectory` or pytest's
-            ``tmp_path`` fixture with absolute paths instead.
-
         .. versionchanged:: 8.0
             Added the ``temp_dir`` parameter.
         """
-        import warnings
-
-        warnings.warn(
-            "'isolated_filesystem' is deprecated and will be removed in Click"
-            " 9.0. Use 'tempfile.TemporaryDirectory' or pytest's 'tmp_path'"
-            " fixture with absolute paths instead.",
-            DeprecationWarning,
-            stacklevel=3,
-        )
-
         cwd = os.getcwd()
         dt = tempfile.mkdtemp(dir=temp_dir)
         os.chdir(dt)

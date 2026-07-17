@@ -102,7 +102,7 @@ def test_bytes_args(runner, monkeypatch):
     )
 
 
-def test_file_args(runner, tmp_path):
+def test_file_args(runner):
     @click.command()
     @click.argument("input", type=click.File("rb"))
     @click.argument("output", type=click.File("wb"))
@@ -113,15 +113,16 @@ def test_file_args(runner, tmp_path):
                 break
             output.write(chunk)
 
-    hello = tmp_path / "hello.txt"
-    result = runner.invoke(inout, ["-", str(hello)], input="Hey!")
-    assert result.output == ""
-    assert result.exit_code == 0
-    assert hello.read_bytes() == b"Hey!"
+    with runner.isolated_filesystem():
+        result = runner.invoke(inout, ["-", "hello.txt"], input="Hey!")
+        assert result.output == ""
+        assert result.exit_code == 0
+        with open("hello.txt", "rb") as f:
+            assert f.read() == b"Hey!"
 
-    result = runner.invoke(inout, [str(hello), "-"])
-    assert result.output == "Hey!"
-    assert result.exit_code == 0
+        result = runner.invoke(inout, ["hello.txt", "-"])
+        assert result.output == "Hey!"
+        assert result.exit_code == 0
 
 
 def test_path_allow_dash(runner):
@@ -135,7 +136,7 @@ def test_path_allow_dash(runner):
     assert result.exit_code == 0
 
 
-def test_file_atomics(runner, tmp_path):
+def test_file_atomics(runner):
     @click.command()
     @click.argument("output", type=click.File("wb", atomic=True))
     def inout(output):
@@ -145,12 +146,14 @@ def test_file_atomics(runner, tmp_path):
             old_content = f.read()
             assert old_content == b"OLD\n"
 
-    foo = tmp_path / "foo.txt"
-    foo.write_bytes(b"OLD\n")
-    result = runner.invoke(inout, [str(foo)], input="Hey!", catch_exceptions=False)
-    assert result.output == ""
-    assert result.exit_code == 0
-    assert foo.read_bytes() == b"Foo bar baz\n"
+    with runner.isolated_filesystem():
+        with open("foo.txt", "wb") as f:
+            f.write(b"OLD\n")
+        result = runner.invoke(inout, ["foo.txt"], input="Hey!", catch_exceptions=False)
+        assert result.output == ""
+        assert result.exit_code == 0
+        with open("foo.txt", "rb") as f:
+            assert f.read() == b"Foo bar baz\n"
 
 
 def test_stdout_default(runner):

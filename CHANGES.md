@@ -43,14 +43,6 @@ Unreleased
   `DeprecationWarning` until Click 9.0: `LazyFile`, `KeepOpenFile`,
   `make_default_short_help`, `PacifyFlushWrapper`, and `safecall`.
   {issue}`3099` {pr}`3695`
-- Deprecate {meth}`CliRunner.isolated_filesystem`. It relies on
-  {func}`os.chdir`, which mutates process-global state and is not
-  thread-safe. The helper predates Python 3 and modern pytest: use a
-  temporary directory ({class}`tempfile.TemporaryDirectory` or pytest's
-  `tmp_path` fixture) with absolute paths instead. For running tests in
-  parallel, use process-based isolation (such as `pytest-xdist`) rather
-  than threads, since {meth}`CliRunner.invoke` also redirects the
-  process-global standard streams. {issue}`3501` {issue}`3700`
 
 ## Version 8.4.2
 

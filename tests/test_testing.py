@@ -440,7 +440,6 @@ def test_file_stdin_attrs(runner):
     assert result.output == "<stdin>\nr"
 
 
-@pytest.mark.filterwarnings("ignore:'isolated_filesystem':DeprecationWarning")
 def test_isolated_runner(runner):
     with runner.isolated_filesystem() as d:
         assert os.path.exists(d)
@@ -448,97 +447,12 @@ def test_isolated_runner(runner):
     assert not os.path.exists(d)
 
 
-@pytest.mark.filterwarnings("ignore:'isolated_filesystem':DeprecationWarning")
 def test_isolated_runner_custom_tempdir(runner, tmp_path):
     with runner.isolated_filesystem(temp_dir=tmp_path) as d:
         assert os.path.exists(d)
 
     assert os.path.exists(d)
     os.rmdir(d)
-
-
-def test_isolated_filesystem_deprecated(runner):
-    """``isolated_filesystem()`` warns: it relies on non-thread-safe ``os.chdir``."""
-    with pytest.warns(DeprecationWarning, match="isolated_filesystem"):
-        with runner.isolated_filesystem():
-            pass
-
-
-def test_tempdir_replacement_pattern(runner, tmp_path):
-    """The replacement for ``isolated_filesystem()``: a temp dir and absolute paths.
-
-    Rather than changing the working directory, create a directory (here with
-    pytest's ``tmp_path``; ``tempfile.TemporaryDirectory`` works the same) and
-    pass absolute paths to the command.
-    """
-
-    @click.command()
-    @click.argument("path", type=click.Path())
-    def write_marker(path):
-        with open(path, "w") as f:
-            f.write("written")
-
-    target = tmp_path / "marker.txt"
-    result = runner.invoke(write_marker, [str(target)])
-
-    assert result.exit_code == 0
-    assert target.read_text() == "written"
-
-
-def test_tempdir_isolation_is_thread_safe():
-    """The recommended replacement is thread-safe, unlike ``isolated_filesystem()``.
-
-    Each thread owns a ``tempfile.TemporaryDirectory`` and works through
-    absolute paths, so there is no ``os.chdir`` and no process-global CWD race
-    (the reason ``isolated_filesystem()`` is not thread-safe, issue #3501).
-
-    ``invoke()`` is deliberately not called concurrently here: it redirects the
-    process-global standard streams, so parallel invocations in one process
-    corrupt each other regardless of the filesystem. To run commands in
-    parallel, use separate processes (like pytest-xdist), not threads.
-    """
-    import tempfile
-    import threading
-
-    workers = 8
-    cwd_before = os.path.realpath(os.getcwd())
-    results: list[tuple[str, str, str]] = []
-    barrier = threading.Barrier(workers)
-    lock = threading.Lock()
-
-    def worker(index):
-        with tempfile.TemporaryDirectory() as d:
-            target = os.path.join(d, "data.txt")
-            # Release every thread at once to maximize contention.
-            barrier.wait(timeout=10)
-            with open(target, "w") as f:
-                f.write(f"payload-{index}")
-            with open(target) as f:
-                content = f.read()
-            with lock:
-                results.append(
-                    (
-                        os.path.realpath(d),
-                        os.path.realpath(os.getcwd()),
-                        content,
-                    )
-                )
-
-    threads = [threading.Thread(target=worker, args=(i,)) for i in range(workers)]
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join(timeout=10)
-
-    assert len(results) == workers
-    # Every thread had its own distinct directory.
-    assert len({d for d, _, _ in results}) == workers
-    # No thread mutated the process-global working directory.
-    assert {cwd for _, cwd, _ in results} == {cwd_before}
-    # Each thread read back exactly the payload it wrote, with no cross-talk.
-    assert sorted(content for _, _, content in results) == sorted(
-        f"payload-{i}" for i in range(workers)
-    )
 
 
 def test_isolation_stderr_errors():
