@@ -122,23 +122,23 @@ def __getattr__(name: str) -> object:
         return importlib.metadata.version("click")
 
     if name == "get_binary_stream":
-        from .utils import get_binary_stream
+        from .utils import _get_binary_stream
 
         warnings.warn(
             "'get_binary_stream' is deprecated and will be removed in Click 9.0.",
             DeprecationWarning,
             stacklevel=2,
         )
-        return get_binary_stream
+        return _get_binary_stream
 
     if name == "get_text_stream":
-        from .utils import get_text_stream
+        from .utils import _get_text_stream
 
         warnings.warn(
             "'get_text_stream' is deprecated and will be removed in Click 9.0.",
             DeprecationWarning,
             stacklevel=2,
         )
-        return get_text_stream
+        return _get_text_stream
 
     raise AttributeError(name)

@@ -34,8 +34,7 @@ def _posixify(name: str) -> str:
 
 
 def _safecall(func: t.Callable[P, R]) -> t.Callable[P, R | None]:
-    """
-    Wraps a function so that it swallows exceptions.
+    """Wraps a function so that it swallows exceptions.
 
     :meta private:
     """
@@ -114,14 +113,12 @@ def _make_default_short_help(help: str, max_length: int = 45) -> str:
 
 
 class _LazyFile:
-    """
-    A lazy file works like a regular file but it does not fully open
+    """A lazy file works like a regular file but it does not fully open
     the file but it does perform some basic checks early to see if the
     filename parameter does make sense.  This is useful for safely opening
     files for writing.
 
     :meta private:
-
     """
 
     name: str
@@ -349,10 +346,10 @@ def echo(
     file.flush()
 
 
-def get_binary_stream(name: t.Literal["stdin", "stdout", "stderr"]) -> t.BinaryIO:
+def _get_binary_stream(name: t.Literal["stdin", "stdout", "stderr"]) -> t.BinaryIO:
     """Returns a system stream for byte processing.
 
-    .. deprecated:: 8.5
+    .. deprecated:: 8.5.0
         Will be removed in Click 9.0.
 
     :param name: the name of the stream to open.  Valid names are ``'stdin'``,
@@ -366,25 +363,26 @@ def get_binary_stream(name: t.Literal["stdin", "stdout", "stderr"]) -> t.BinaryI
     return opener()
 
 
-def get_text_stream(
+def _get_text_stream(
     name: t.Literal["stdin", "stdout", "stderr"],
     encoding: str | None = None,
     errors: str | None = "strict",
 ) -> t.TextIO:
     """Returns a system stream for text processing.
 
-    .. deprecated:: 8.5
+    .. deprecated:: 8.5.0
         Will be removed in Click 9.0.
 
     This usually returns a wrapped stream around a binary stream returned from
     :func:`get_binary_stream` but it also can take shortcuts for already
     correctly configured streams.
 
-    :meta private:
+
     :param name: the name of the stream to open.  Valid names are ``'stdin'``,
                  ``'stdout'`` and ``'stderr'``
     :param encoding: overrides the detected default encoding.
     :param errors: overrides the default error mode.
+    :meta private:
     """
     opener = text_streams.get(name)
     if opener is None:
@@ -677,10 +675,11 @@ def __getattr__(name: str) -> object:
         "make_default_short_help",
         "PacifyFlushWrapper",
         "safecall",
+        "get_text_stream",
+        "get_binary_stream",
     }:
         warnings.warn(
-            f"'click.utils.{name}' was never intentionally public and will be"
-            " renamed in Click 9.0.",
+            f"'click.utils.{name}' is deprecated and will be removed in Click 9.0.",
             DeprecationWarning,
             stacklevel=2,
         )
