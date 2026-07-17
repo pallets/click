@@ -31,6 +31,11 @@ Unreleased
   {issue}`2819` {pr}`3678`
 - `unstyle` and the ANSI handling behind help-text wrapping now strip the full
   CSI escape-sequence grammar.
+- `prompt()` accepts a non-empty `default` when `confirmation_prompt` is
+  enabled and the user presses enter at both prompts, matching the existing
+  behavior for an empty-string default. Previously the confirmation prompt
+  repeated forever because the accepted default was never treated as an empty
+  confirmation. {issue}`3702` {pr}`3703`
 - Streamline `Option` flag handling: the flag-kind, type, lazy-default and
   validation steps in `Option.__init__` move into focused helpers, and
   `flag_value` and `default` keep their unset sentinel at construction

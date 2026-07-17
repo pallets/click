@@ -217,12 +217,14 @@ def prompt(
         confirmation_prompt = _build_prompt(confirmation_prompt, prompt_suffix)
 
     while True:
+        used_default = False
         while True:
             value = prompt_func(prompt)
             if value:
                 break
             elif default is not None:
                 value = default
+                used_default = True
                 break
         try:
             result = value_proc(value)
@@ -234,8 +236,14 @@ def prompt(
             return result
         while True:
             value2 = prompt_func(confirmation_prompt)
-            is_empty = not value and not value2
-            if value2 or is_empty:
+            # An empty confirmation re-confirms a default that was itself
+            # selected by pressing enter at the first prompt. Match it against
+            # ``value`` so the equality check below passes; otherwise a
+            # non-empty default could never be confirmed and the confirmation
+            # prompt would repeat forever.
+            if not value2 and used_default:
+                value2 = value
+            if value2 or used_default:
                 break
         if value == value2:
             return result

@@ -999,6 +999,9 @@ def test_prompt_required_false(runner, args, expect):
         (True, "password\npassword", None, "password"),
         ("Confirm Password", "password\npassword\n", None, "password"),
         (True, "\n\n", "", ""),
+        # A non-empty default is accepted by pressing enter at both the
+        # value and the confirmation prompt, just like an empty default.
+        (True, "\n\n", "the-default", "the-default"),
         (False, None, None, None),
     ],
 )
