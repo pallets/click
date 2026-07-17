@@ -6,5 +6,5 @@ def test_iter_keepopenfile(tmpdir):
     p = tmpdir.mkdir("testdir").join("testfile")
     p.write("\n".join(expected))
     with p.open() as f:
-        for e_line, a_line in zip(expected, click.utils.KeepOpenFile(f), strict=False):
+        for e_line, a_line in zip(expected, click.utils._KeepOpenFile(f), strict=False):
             assert e_line == a_line.strip()
