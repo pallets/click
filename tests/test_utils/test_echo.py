@@ -43,6 +43,24 @@ def test_echo_custom_file():
     assert b.getvalue() == b"\n"
 
 
+def test_echo_replaces_unencodable_default_stdout(monkeypatch):
+    """Narrow default stdout (e.g. Windows cp1252) should not raise.
+
+    https://github.com/pallets/click/issues/2121
+    """
+    from io import TextIOWrapper
+
+    stream = BytesIO()
+    stdout = TextIOWrapper(stream, encoding="cp1252", errors="surrogateescape")
+    monkeypatch.setattr(sys, "stdout", stdout)
+
+    click.echo("\u2023")
+
+    stdout.flush()
+    # Windows TextIOWrapper may translate \n -> \r\n
+    assert stream.getvalue().replace(b"\r\n", b"\n") == b"?\n"
+
+
 def test_echo_no_streams(monkeypatch, runner):
     """echo should not fail when stdout and stderr are None with pythonw on Windows."""
     with runner.isolation():

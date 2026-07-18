@@ -218,6 +218,27 @@ def _stream_is_misconfigured(stream: t.TextIO) -> bool:
     return is_ascii_encoding(getattr(stream, "encoding", None) or "ascii")
 
 
+def _stream_needs_replace_errors(stream: t.TextIO) -> bool:
+    """True if writing Unicode may raise on this text stream.
+
+    Narrow encodings with ``strict`` or ``surrogateescape`` raise
+    ``UnicodeEncodeError`` for characters outside the encoding (common for
+    Windows ``cp1252`` stdout). UTF encodings can represent all Unicode, so
+    they do not need rewrapping.
+    """
+    errors = getattr(stream, "errors", None)
+    if errors not in ("strict", "surrogateescape"):
+        return False
+
+    encoding = getattr(stream, "encoding", None) or "ascii"
+    try:
+        name = codecs.lookup(encoding).name
+    except LookupError:
+        return True
+
+    return not name.startswith("utf-")
+
+
 def _is_compat_stream_attr(stream: t.TextIO, attr: str, value: str | None) -> bool:
     """A stream attribute is compatible if it is equal to the
     desired value or the desired value is unset and the attribute
@@ -247,16 +268,26 @@ def _force_correct_text_stream(
     force_readable: bool = False,
     force_writable: bool = False,
 ) -> t.TextIO:
+    stream_encoding: str | None = None
+
     if is_binary(text_stream, False):
         binary_reader = t.cast(t.BinaryIO, text_stream)
     else:
         text_stream = t.cast(t.TextIO, text_stream)
         # If the stream looks compatible, and won't default to a
-        # misconfigured ascii encoding, return it as-is.
-        if _is_compatible_text_stream(text_stream, encoding, errors) and not (
-            encoding is None and _stream_is_misconfigured(text_stream)
+        # misconfigured ascii encoding, return it as-is. Also rewrap
+        # narrow encodings whose error handler would raise on Unicode
+        # output (#2121).
+        if (
+            _is_compatible_text_stream(text_stream, encoding, errors)
+            and not (encoding is None and _stream_is_misconfigured(text_stream))
+            and not (errors is None and _stream_needs_replace_errors(text_stream))
         ):
             return text_stream
+
+        # Keep the text stream's encoding when rewrapping so a Windows
+        # cp1252 console does not suddenly receive UTF-8 bytes.
+        stream_encoding = getattr(text_stream, "encoding", None)
 
         # Otherwise, get the underlying binary reader.
         possible_binary_reader = find_binary(text_stream)
@@ -272,6 +303,9 @@ def _force_correct_text_stream(
     # something that works.
     if errors is None:
         errors = "replace"
+
+    if encoding is None and stream_encoding and not is_ascii_encoding(stream_encoding):
+        encoding = stream_encoding
 
     # Wrap the binary stream in a text stream with the correct
     # encoding parameters.
