@@ -70,7 +70,7 @@ class AliasedGroup(click.Group):
     def resolve_command(self, ctx, args):
         # always return the command's name, not the alias
         _, cmd, args = super().resolve_command(ctx, args)
-        return cmd.name, cmd, args
+        return cmd.name if cmd else None, cmd, args
 
 
 def read_config(ctx, param, value):

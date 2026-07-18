@@ -109,7 +109,7 @@ command called `push`, it would accept `pus` as an alias (so long as it was uniq
         def resolve_command(self, ctx, args):
             # always return the full command name
             _, cmd, args = super().resolve_command(ctx, args)
-            return cmd.name, cmd, args
+            return cmd.name if cmd else None, cmd, args
 ```
 
 It can be used like this:

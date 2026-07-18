@@ -333,7 +333,7 @@ def test_aliased_command_canonical_name(runner):
 
         def resolve_command(self, ctx, args):
             _, command, args = super().resolve_command(ctx, args)
-            return command.name, command, args
+            return command.name if command else None, command, args
 
     cli = AliasedGroup()
 
