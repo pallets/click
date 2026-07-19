@@ -43,6 +43,8 @@ Unreleased
   `DeprecationWarning` until Click 9.0: `LazyFile`, `KeepOpenFile`,
   `make_default_short_help`, `PacifyFlushWrapper`, and `safecall`.
   {issue}`3099` {pr}`3695`
+- Bash and Zsh completion for long option values written as `--option=value`
+  keeps the `--option=` prefix when replacing the current word. {issue}`2847`
 
 ## Version 8.4.2
 

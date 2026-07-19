@@ -362,8 +362,24 @@ class ShellComplete:
         :param incomplete: Value being completed. May be empty.
         """
         ctx = _resolve_context(self.cli, self.ctx_args, self.prog_name, args)
+        completion_prefix = _option_value_completion_prefix(ctx, incomplete)
         obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
-        return obj.shell_complete(ctx, incomplete)
+        completions = obj.shell_complete(ctx, incomplete)
+
+        if completion_prefix:
+            completions = [
+                CompletionItem(
+                    f"{completion_prefix}{item.value}",
+                    type=item.type,
+                    help=item.help,
+                    **item._info,
+                )
+                if item.type == "plain"
+                else item
+                for item in completions
+            ]
+
+        return completions
 
     def format_completion(self, item: CompletionItem[str]) -> str:
         """Format a completion item into the form recognized by the
@@ -799,3 +815,22 @@ def _resolve_incomplete(
     # There were no unparsed arguments, the command may be a group that
     # will provide command name completions.
     return ctx.command, incomplete
+
+
+def _option_value_completion_prefix(ctx: Context, incomplete: str) -> str:
+    """Return the long option prefix needed to replace ``--opt=value``."""
+    if "=" not in incomplete:
+        return ""
+
+    name, _, _ = incomplete.partition("=")
+
+    if not name:
+        return ""
+
+    params = ctx.command.get_params(ctx)
+
+    for param in params:
+        if isinstance(param, Option) and name in param.opts:
+            return f"{name}="
+
+    return ""
