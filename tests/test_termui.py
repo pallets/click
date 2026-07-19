@@ -350,6 +350,22 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progress_bar_finish_flushes_update_min_steps(runner):
+    """Remainder under update_min_steps must apply so show_pos reaches length (#3571)."""
+    bar = _create_progress(length=20, update_min_steps=7, show_pos=True)
+    # Simulate generator: 20 single-step updates leave 6 held back (20 % 7).
+    for _ in range(20):
+        bar.update(1)
+    assert bar.pos == 14
+    assert bar._completed_intervals == 6
+    bar.finish()
+    bar.render_progress()
+    assert bar.pos == 20
+    assert bar._completed_intervals == 0
+    assert bar.format_pos() == "20/20"
+    assert bar.pct == 1.0
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
