@@ -23,3 +23,9 @@ def test_stream_helper_deprecated(module, name):
 def test_utilities_deprecated(name):
     with pytest.warns(DeprecationWarning, match=name):
         getattr(click.utils, name)
+
+
+def test_isolated_filesystem_deprecated(runner):
+    with pytest.warns(DeprecationWarning, match="isolated_filesystem"):
+        with runner.isolated_filesystem():
+            pass
