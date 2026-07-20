@@ -350,6 +350,27 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progress_bar_finish_flushes_min_steps(runner):
+    # Trailing steps below update_min_steps must still count once the bar
+    # finishes, so a completed bar shows length/length instead of stalling
+    # short while the bar and percentage already read complete. See #3571.
+    bar = _create_progress(length=20, update_min_steps=7)
+
+    for _ in range(20):
+        bar.update(1)
+
+    # 20 == 7 + 7 + 6; the trailing 6 steps never reached the threshold.
+    assert bar.pos == 14
+    assert bar._completed_intervals == 6
+
+    bar.finish()
+
+    assert bar.finished
+    assert bar._completed_intervals == 0
+    assert bar.pos == 20
+    assert bar.format_pos() == "20/20"
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")

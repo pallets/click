@@ -2,6 +2,11 @@
 
 Unreleased
 
+- `progressbar` with `show_pos=True` reports the final position as
+  `length/length` when `update_min_steps` is not a divisor of the length,
+  instead of stalling short while the bar and percentage already show
+  complete. {issue}`3571`
+
 - Add built-in shell completion support for PowerShell (Windows PowerShell
   5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
   completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate

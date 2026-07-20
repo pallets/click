@@ -350,6 +350,12 @@ class ProgressBar(t.Generic[V]):
     def finish(self) -> None:
         self.eta_known = False
         self.current_item = None
+        # Flush any steps recorded below the ``update_min_steps`` threshold
+        # so the final position reflects all completed work. Otherwise a
+        # finished bar can show e.g. ``14/20`` while the bar and percentage
+        # already read complete. See #3571.
+        self.pos += self._completed_intervals
+        self._completed_intervals = 0
         self.finished = True
 
     def generator(self) -> cabc.Iterator[V]:
