@@ -1610,3 +1610,22 @@ def test_hide_input_value_never_leaks_when_err_true(runner):
     result = runner.invoke(cli, input="leaky\n", mix_stderr=False)
     assert "leaky" not in result.stdout
     assert "leaky" not in result.stderr
+
+
+def test_progressbar_show_pos_with_update_min_steps(runner, monkeypatch):
+    """Remaining steps under update_min_steps must still reach full show_pos."""
+
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(20),
+            show_pos=True,
+            update_min_steps=7,
+        ) as bar:
+            for _ in bar:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    output = runner.invoke(cli, []).output
+    assert "20/20" in output
+
