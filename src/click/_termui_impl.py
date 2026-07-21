@@ -683,9 +683,43 @@ class Editor:
                 return editor
         return "vi"
 
+    def _normalize_editor_args(
+        self, editor: str, filenames: cabc.Iterable[str]
+    ) -> list[str]:
+        """Normalize editor arguments, adding ``--wait`` when needed.
+
+        On Windows, VS Code's ``code`` CLI exits immediately after
+        handing the file path to the editor process. Without ``--wait``
+        the temp file is deleted before the user can edit it. This
+        automatically inserts ``--wait`` for ``code`` and
+        ``code-insiders`` when it is not already present.
+        """
+        import shlex
+        from pathlib import Path
+
+        editor_parts = shlex.split(editor)
+        files = list(filenames)
+
+        if not editor_parts:
+            return files
+
+        exe = Path(editor_parts[0]).name.lower()
+        for ext in (".exe", ".cmd", ".bat"):
+            if exe.endswith(ext):
+                exe = exe[: -len(ext)]
+                break
+
+        if exe not in {"code", "code-insiders"}:
+            return editor_parts + files
+
+        flags = set(editor_parts[1:])
+        if "--wait" in flags or "-w" in flags:
+            return editor_parts + files
+
+        return editor_parts + ["--wait"] + files
+
     def edit_files(self, filenames: cabc.Iterable[str]) -> None:
         """Open files in the user's editor."""
-        import shlex
         import subprocess
 
         editor = self.get_editor()
@@ -696,11 +730,8 @@ class Editor:
             environ.update(self.env)
 
         try:
-            # Split in POSIX mode (the default) for the same reasons as
-            # in pager(): strips quotes from tokens and preserves quoted
-            # Windows paths.
             c = subprocess.Popen(
-                args=shlex.split(editor) + list(filenames),
+                args=self._normalize_editor_args(editor, filenames),
                 env=environ,
             )
             exit_code = c.wait()

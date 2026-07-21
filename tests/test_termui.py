@@ -571,6 +571,72 @@ def test_editor_nonexistent_exception():
 
 
 @pytest.mark.parametrize(
+    ("editor_cmd", "expected_args"),
+    [
+        pytest.param(
+            "code",
+            ["code", "--wait", "f.txt"],
+            id="code-adds-wait",
+        ),
+        pytest.param(
+            "code --new-window",
+            ["code", "--new-window", "--wait", "f.txt"],
+            id="code-with-flags-adds-wait",
+        ),
+        pytest.param(
+            "code --wait",
+            ["code", "--wait", "f.txt"],
+            id="code-already-has-wait",
+        ),
+        pytest.param(
+            "code -w",
+            ["code", "-w", "f.txt"],
+            id="code-already-has-short-wait",
+        ),
+        pytest.param(
+            "code.cmd",
+            ["code.cmd", "--wait", "f.txt"],
+            id="code-cmd-adds-wait",
+        ),
+        pytest.param(
+            "code.exe",
+            ["code.exe", "--wait", "f.txt"],
+            id="code-exe-adds-wait",
+        ),
+        pytest.param(
+            "notepad",
+            ["notepad", "f.txt"],
+            id="non-code-unchanged",
+        ),
+        pytest.param(
+            "vim",
+            ["vim", "f.txt"],
+            id="vim-unchanged",
+        ),
+        pytest.param(
+            "code-insiders",
+            ["code-insiders", "--wait", "f.txt"],
+            id="code-insiders-adds-wait",
+        ),
+        pytest.param(
+            "/usr/bin/code",
+            ["/usr/bin/code", "--wait", "f.txt"],
+            id="code-abs-path-adds-wait",
+        ),
+    ],
+)
+def test_editor_vscode_wait_flag(editor_cmd, expected_args):
+    with patch("subprocess.Popen") as mock_popen:
+        mock_popen.return_value.wait.return_value = 0
+        Editor(editor=editor_cmd).edit_files(["f.txt"])
+
+        mock_popen.assert_called_once()
+        args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
+        assert args == expected_args
+        assert mock_popen.call_args[1].get("shell") is None
+
+
+@pytest.mark.parametrize(
     ("pager_env", "expected_parts"),
     [
         # Simple commands.
