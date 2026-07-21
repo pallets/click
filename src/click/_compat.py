@@ -12,11 +12,30 @@ from weakref import WeakKeyDictionary
 
 CYGWIN = sys.platform.startswith("cygwin")
 WIN = sys.platform.startswith("win")
-# One CSI escape sequence per the ECMA-48 grammar: parameter bytes (0x30-0x3F),
-# intermediate bytes (0x20-0x2F), then a final byte (0x40-0x7E). Broader than the
-# SGR codes Click emits, so foreign sequences (colon-delimited true-color, mouse
-# reporting) are stripped too.
-_ansi_re = re.compile(r"\033\[[0-?]*[ -/]*[@-~]")
+# One ANSI escape sequence per the ECMA-48 grammar, in three forms. The
+# introducers of the control-string form are excluded from the final byte of the
+# last branch, so an unterminated sequence stays untouched instead of being
+# stripped down to its payload.
+_ansi_re = re.compile(
+    r"""
+    \033 (?:
+        \[ [0-?]* [ -/]* [@-~]                  # CSI: parameter bytes
+                                                # (0x30-0x3F), intermediate bytes
+                                                # (0x20-0x2F), final byte
+                                                # (0x40-0x7E). Broader than the
+                                                # SGR codes Click emits, so
+                                                # foreign sequences
+                                                # (colon-delimited true-color,
+                                                # mouse reporting) go too.
+      | [PX\]^_] [^\007\033]* (?: \007 | \033\\ )   # DCS, SOS, OSC, PM, APC: a
+                                                # payload closed by BEL or ST.
+      | [ -/]* [0-OQ-WYZ\\`-~]                  # Everything else, such as the
+                                                # two-character ESC c (reset) and
+                                                # the ESC ( B charset selection.
+    )
+    """,
+    re.VERBOSE,
+)
 
 
 def _make_text_stream(

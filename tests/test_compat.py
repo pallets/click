@@ -69,6 +69,33 @@ CSI_FOREIGN = [
     f"{ESC}[m",
 ]
 
+# Non-CSI sequences Click never emits but may receive from other tooling. A
+# terminal acts on these, so they must not survive into stripped output.
+NON_CSI_FOREIGN = [
+    # OSC 0: window title, closed by BEL and by ST.
+    f"{ESC}]0;title\007",
+    f"{ESC}]0;title{ESC}\\",
+    # OSC 8: hyperlink, whose payload holds a URL and a semicolon.
+    f"{ESC}]8;;https://example.com{ESC}\\",
+    f"{ESC}]8;;\007",
+    # OSC 52: clipboard write.
+    f"{ESC}]52;c;Y2xpY2s={ESC}\\",
+    # DCS, APC, PM and SOS payloads.
+    f"{ESC}P1;2|17/ab{ESC}\\",
+    f"{ESC}_Ga=T,f=100{ESC}\\",
+    f"{ESC}^private{ESC}\\",
+    f"{ESC}Xstring{ESC}\\",
+    # Two-character escapes: RIS full reset, save/restore cursor, keypad mode.
+    f"{ESC}c",
+    f"{ESC}7",
+    f"{ESC}8",
+    f"{ESC}=",
+    # Charset selection: an intermediate byte before the final byte.
+    f"{ESC}(0",
+    f"{ESC}(B",
+    f"{ESC}%G",
+]
+
 # The previous pattern, kept here to prove the new one is a superset.
 _LEGACY_ANSI_RE = re.compile(r"\033\[[;?0-9]*[a-zA-Z]")
 
@@ -121,9 +148,9 @@ def test_should_strip_ansi(
     assert click._compat.should_strip_ansi(stream=stream, color=color) == expected
 
 
-@pytest.mark.parametrize("seq", CLICK_EMITTED + CSI_FOREIGN)
+@pytest.mark.parametrize("seq", CLICK_EMITTED + CSI_FOREIGN + NON_CSI_FOREIGN)
 def test_strip_ansi_removes_full_sequence(seq):
-    """Every complete CSI sequence is stripped, alone or wrapped in text."""
+    """Every complete sequence is stripped, alone or wrapped in text."""
     assert strip_ansi(seq) == ""
     assert strip_ansi(f"a{seq}b") == "ab"
     assert term_len(f"a{seq}b") == 2
@@ -165,6 +192,15 @@ def test_strip_ansi_is_superset_of_legacy(params, final):
         ),
         # Kaomoji with a bolded run.
         (f"(╯°□°)╯︵ {ESC}[1m┻━┻{ESC}[0m", "(╯°□°)╯︵ ┻━┻"),
+        # A hyperlink wrapping styled text, as emitted by many CLIs.
+        (
+            f"{ESC}]8;;https://example.com{ESC}\\{ESC}[4msite{ESC}[0m{ESC}]8;;{ESC}\\",
+            "site",
+        ),
+        # A filename carrying a title rewrite and a clipboard write.
+        (f"report{ESC}]0;owned\007.txt{ESC}]52;c;Y2xpY2s=\007", "report.txt"),
+        # A charset switch that would otherwise garble every later line.
+        (f"{ESC}(0lqqqk{ESC}(B done", "lqqqk done"),
     ],
 )
 def test_strip_ansi_mixed_content(text, expected):
@@ -207,6 +243,9 @@ def test_strip_ansi_leaves_plain_text(text):
         f"{ESC}[31",  # parameters but no final byte
         f"{ESC}[38:2:1",  # colon parameters, truncated
         f"{ESC}[0 ",  # intermediate byte but no final byte
+        f"{ESC}]0;title",  # OSC with no string terminator
+        f"{ESC}P1;2|17/ab",  # DCS with no string terminator
+        f"{ESC}(",  # charset selection with no final byte
     ],
 )
 def test_strip_ansi_leaves_incomplete_sequences(text):

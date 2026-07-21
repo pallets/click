@@ -30,7 +30,9 @@ Unreleased
   share a name to compete for the same value (feature switches).
   {issue}`2819` {pr}`3678`
 - `unstyle` and the ANSI handling behind help-text wrapping now strip the full
-  CSI escape-sequence grammar.
+  CSI escape-sequence grammar, the OSC, DCS, SOS, PM and APC control strings,
+  and the two-character escapes. `echo()` writing to a file no longer leaves
+  behind sequences that a terminal acts on when the file is later displayed.
 - Streamline `Option` flag handling: the flag-kind, type, lazy-default and
   validation steps in `Option.__init__` move into focused helpers, and
   `flag_value` and `default` keep their unset sentinel at construction
