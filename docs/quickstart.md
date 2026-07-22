@@ -28,7 +28,7 @@ Some standalone examples of Click applications are packaged with Click. They are
 - [aliases](https://github.com/pallets/click/tree/main/examples/aliases) : An advanced example that implements
   {ref}`aliases`.
 - [imagepipe](https://github.com/pallets/click/tree/main/examples/imagepipe) : A complex example that implements some
-  {ref}`command-pipelines` . It chains together image processing instructions. Requires pillow.
+  {ref}`command-pipelines`. It chains together image processing instructions. Requires pillow.
 - [repo](https://github.com/pallets/click/tree/main/examples/repo) : An advanced example that implements a
   Git-/Mercurial-like command line interface.
 - [complex](https://github.com/pallets/click/tree/main/examples/complex) : A very advanced example that implements
