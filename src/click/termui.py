@@ -108,39 +108,74 @@ def _build_prompt(
     text: str,
     suffix: str,
     show_default: bool | str = False,
-    default: t.Any | None = None,
+    default: object | None = None,
     show_choices: bool = True,
-    type: ParamType[t.Any] | None = None,
+    type: object | None = None,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += f" ({', '.join(map(str, type.choices))})"
-    if isinstance(show_default, str):
-        default = f"({show_default})"
-    if default is not None and show_default:
-        prompt = f"{prompt} [{_format_default(default)}]"
-    return f"{prompt}{suffix}"
+    default_preview = ""
+    if show_default:
+        if isinstance(show_default, str):
+            default_preview = f" [({show_default})]"
+        elif default is not None:
+            default_preview = f" [{_format_default(default)}]"
+    return f"{prompt}{default_preview}{suffix}"
 
 
-def _format_default(default: t.Any) -> t.Any:
-    if isinstance(default, (io.IOBase, _LazyFile)) and hasattr(default, "name"):
-        return default.name
+def _format_default(default: V) -> V | str:
+    if isinstance(default, (io.IOBase, _LazyFile)):
+        name = getattr(default, "name", None)
+
+        if name is not None:
+            return str(name)
 
     return default
 
 
+@t.overload
 def prompt(
     text: str,
-    default: t.Any | None = None,
+    default: str | None = None,
     hide_input: bool = False,
     confirmation_prompt: bool | str = False,
-    type: ParamType[t.Any] | t.Any | None = None,
-    value_proc: t.Callable[[str], t.Any] | None = None,
+    type: None = None,
+    value_proc: None = None,
     prompt_suffix: str = ": ",
     show_default: bool | str = True,
     err: bool = False,
     show_choices: bool = True,
-) -> t.Any:
+) -> str: ...
+
+
+@t.overload
+def prompt(
+    text: str,
+    default: V | str | None = None,
+    hide_input: bool = False,
+    confirmation_prompt: bool | str = False,
+    type: ParamType[V, str] | type[V] | None = None,
+    value_proc: t.Callable[[str], V] | None = None,
+    prompt_suffix: str = ": ",
+    show_default: bool | str = True,
+    err: bool = False,
+    show_choices: bool = True,
+) -> V: ...
+
+
+def prompt(
+    text: str,
+    default: V | str | None = None,
+    hide_input: bool = False,
+    confirmation_prompt: bool | str = False,
+    type: ParamType[V, str] | type[V] | None = None,
+    value_proc: t.Callable[[str], V] | None = None,
+    prompt_suffix: str = ": ",
+    show_default: bool | str = True,
+    err: bool = False,
+    show_choices: bool = True,
+) -> V:
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
@@ -169,6 +204,11 @@ def prompt(
                          For example if type is a Choice of either day or week,
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
+
+    .. versionchanged:: 8.5.0
+        Generically typed: the return type is narrowed by ``type``,
+        ``value_proc``, or ``default`` instead of being ``Any``. Runtime
+        behavior is unchanged.
 
     .. versionchanged:: 8.3.3
         ``show_default`` can be a string to show a custom value instead
@@ -222,7 +262,10 @@ def prompt(
             if value:
                 break
             elif default is not None:
-                value = default
+                # Defaults of any type are accepted and round trip through
+                # value_proc like typed input, so the annotation is only
+                # accurate for typed input.
+                value = t.cast("str", default)
                 break
         try:
             result = value_proc(value)
