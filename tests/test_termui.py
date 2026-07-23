@@ -341,7 +341,7 @@ def test_progressbar_update_with_item_show_func(runner, monkeypatch):
 
 
 def test_progressbar_update_min_steps_show_pos(runner, monkeypatch):
-    """progressbar with update_min_steps and show_pos should show full completion pos when finished."""
+    """progressbar update_min_steps shows full pos when finished."""
 
     @click.command()
     def cli():
