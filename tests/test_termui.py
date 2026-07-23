@@ -340,6 +340,22 @@ def test_progressbar_update_with_item_show_func(runner, monkeypatch):
     assert "Custom 4" in lines[2]
 
 
+def test_progressbar_update_min_steps_show_pos(runner, monkeypatch):
+    """progressbar with update_min_steps and show_pos should show full completion pos when finished."""
+
+    @click.command()
+    def cli():
+        with click.progressbar(
+            range(20), show_pos=True, update_min_steps=7
+        ) as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    output = runner.invoke(cli, []).output
+    assert "20/20" in output
+
+
 def test_progress_bar_update_min_steps(runner):
     bar = _create_progress(update_min_steps=5)
     bar.update(3)
