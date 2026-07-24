@@ -2420,7 +2420,10 @@ class Parameter(ABC):
         if metavar is None:
             metavar = self.type.name.upper()
 
-        if self.nargs != 1:
+        # An ellipsis signals that more than one value is collected: either
+        # ``nargs`` takes several values per occurrence, or ``multiple`` allows
+        # the option to be repeated.
+        if self.nargs != 1 or self.multiple:
             metavar += "..."
 
         return metavar

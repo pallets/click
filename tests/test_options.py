@@ -125,6 +125,20 @@ def test_nargs_tup_composite_mult(runner):
     assert result.output.splitlines() == ["name=peter id=1", "name=max id=2"]
 
 
+def test_multiple_option_metavar_ellipsis(runner):
+    """``multiple=True`` should append ``...`` to the option metavar so the
+    help output signals the option can be repeated (issue #3652)."""
+
+    @click.command()
+    @click.option("--foo", multiple=True, help="A list of foo strings.")
+    def cli(foo):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert not result.exception
+    assert "--foo TEXT..." in result.output
+
+
 def test_counting(runner):
     @click.command()
     @click.option("-v", count=True, help="Verbosity", type=click.IntRange(0, 3))

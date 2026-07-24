@@ -56,6 +56,9 @@ Unreleased
   {class}`ParamType` takes a second optional type parameter describing the
   input value it accepts (`ParamType[int, str]` for a type converting
   strings to integers), defaulting to `Any`. {pr}`3407`
+- An option with `multiple=True` now appends `...` to its metavar in help
+  output (e.g. `--foo TEXT...`), signalling that it can be repeated, matching
+  the existing behavior for `nargs != 1`. {issue}`3652`
 
 ## Version 8.4.2
 
