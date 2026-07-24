@@ -37,7 +37,7 @@ A simple command decorator takes no arguments.
 ### Renaming Commands
 
 By default the command is the function name with underscores replaced by dashes.
-To change this pass the  desired name into the first positional argument.
+To change this, pass the  desired name into the first positional argument.
 
 ```{eval-rst}
 .. click:example::
