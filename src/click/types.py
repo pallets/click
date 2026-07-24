@@ -468,6 +468,7 @@ class Choice(ParamType[_ValueT_co], t.Generic[_ValueT_co]):
         """Get the error message when the given choice is invalid.
 
         :param value: The invalid value.
+        :param ctx: The current context, used to normalize the choices.
 
         .. versionadded:: 8.2
         """
