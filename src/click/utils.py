@@ -279,7 +279,7 @@ def echo(
         default Click will remove color if the output does not look like
         an interactive terminal.
 
-    .. versionchanged:: 8.5
+    .. versionchanged:: 8.5.0
         Colorama is no longer used for color on Windows.
 
     .. versionchanged:: 6.0

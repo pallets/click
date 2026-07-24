@@ -10,7 +10,7 @@ Arguments are:
 * Are positional in nature.
 * Similar to a limited version of {ref}`options <options>` that
   can take an arbitrary number of inputs
-* Can take an optional `help` string shown in the ``Positional arguments``
+* Can take an optional `help` string shown in the `Positional arguments`
   section of the help page, or be {ref}`documented in the command docstring
   <documenting-arguments>`.
 
