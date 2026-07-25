@@ -350,6 +350,32 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progress_bar_update_min_steps_finish_flushes(runner):
+    """Regression test for #3571: finish() must flush remaining steps
+    so that pos reflects the actual number of items processed."""
+    bar = _create_progress(length=20, update_min_steps=7, show_pos=True)
+    bar.entered = True
+    for _rv in bar.iter:
+        bar.update(1)
+    # Before fix: pos would be 14 (only 2 full batches of 7 rendered)
+    # After fix: finish() flushes the remaining 6 steps
+    bar.finish()
+    assert bar.pos == 20
+    assert bar.finished
+    assert bar._completed_intervals == 0
+
+
+def test_progress_bar_update_min_steps_finish_no_remainder(runner):
+    """finish() should be a no-op when _completed_intervals is already 0."""
+    bar = _create_progress(length=14, update_min_steps=7, show_pos=True)
+    bar.entered = True
+    for _rv in bar.iter:
+        bar.update(1)
+    bar.finish()
+    assert bar.pos == 14
+    assert bar._completed_intervals == 0
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")

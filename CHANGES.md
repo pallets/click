@@ -2,6 +2,10 @@
 
 Unreleased
 
+- Fix `progressbar` not showing full completion when `update_min_steps`
+  is not a divisor of the iterable length. `finish()` now flushes
+  remaining accumulated steps so that `show_pos` displays the correct
+  final count. {issue}`3571`
 - Add built-in shell completion support for PowerShell (Windows PowerShell
   5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
   completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate
