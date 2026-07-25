@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import collections.abc as cabc
+import sys
 from contextlib import contextmanager
 from gettext import gettext as _
 
@@ -139,6 +140,8 @@ class HelpFormatter:
             width = FORCED_WIDTH
             if width is None:
                 width = max(min(shutil.get_terminal_size().columns, max_width) - 2, 50)
+        elif width <= 0:
+            width = sys.maxsize
         self.width = width
         self.current_indent = 0
         self.buffer = []

@@ -52,6 +52,25 @@ def test_basic_functionality(runner):
     ]
 
 
+@pytest.mark.parametrize("terminal_width", [0, -1])
+def test_non_positive_terminal_width_matches_large_width_help(runner, terminal_width):
+    @click.command(
+        help=(
+            "This is a very long help message that should stay on one line in"
+            " CliRunner output unless a test explicitly sets terminal_width."
+        )
+    )
+    def cli():
+        pass
+
+    expected = runner.invoke(cli, ["--help"], terminal_width=1000)
+    result = runner.invoke(cli, ["--help"], terminal_width=terminal_width)
+
+    assert not expected.exception
+    assert not result.exception
+    assert result.output == expected.output
+
+
 def test_wrapping_long_options_strings(runner):
     @click.group()
     def cli():
