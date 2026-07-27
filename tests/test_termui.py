@@ -106,6 +106,16 @@ def test_progressbar_hidden_manual(runner, monkeypatch):
     assert runner.invoke(cli, []).output == ""
 
 
+def test_progressbar_finish_reports_full_position(runner, monkeypatch):
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+
+    with _create_progress(20, show_pos=True, update_min_steps=3) as progress:
+        for _ in progress:
+            pass
+
+    assert progress.pos == progress.length
+
+
 @pytest.mark.parametrize("avg, expected", [([], 0.0), ([1, 4], 2.5)])
 def test_progressbar_time_per_iteration(runner, avg, expected):
     with _create_progress(2, avg=avg) as progress:

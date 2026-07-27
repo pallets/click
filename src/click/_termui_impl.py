@@ -348,6 +348,13 @@ class ProgressBar(t.Generic[V]):
             self._completed_intervals = 0
 
     def finish(self) -> None:
+        # Flush steps buffered below the ``update_min_steps`` threshold so a
+        # fully consumed iterator reports its final position (e.g. with
+        # ``show_pos``) instead of the last position that met the threshold.
+        if self._completed_intervals:
+            self.pos += self._completed_intervals
+            self._completed_intervals = 0
+
         self.eta_known = False
         self.current_item = None
         self.finished = True
