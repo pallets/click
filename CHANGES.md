@@ -15,6 +15,9 @@ Unreleased
   This stripping was lost in `8.4.0` when {pr}`2969` began writing the
   prompt with `input()` directly. {issue}`3572` {pr}`3653`
 - Fix test failures when using pytest >= 9.1. {pr}`3656`
+- `progressbar()` with `show_pos=True` shows the final position when
+  `update_min_steps` does not divide the length, instead of a stale count
+  below the total. {issue}`3571` {pr}`3730`
 - {class}`Path` with `allow_dash=True` no longer triggers a `BytesWarning`,
   an error under `python -bb`, when checking a value against the `-`
   convention. {issue}`2877` {pr}`3642`
