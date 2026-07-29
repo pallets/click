@@ -31,7 +31,9 @@ Example:
 ```{eval-rst}
 .. click:example::
 
-    import click\n    \n    @click.command()
+    import click
+    
+    @click.command()
     @click.option('--name', prompt=True)
     def hello(name):
         click.echo(f"Hello {name}!")
@@ -50,7 +52,9 @@ a different one:
 ```{eval-rst}
 .. click:example::
 
-    import click\n    \n    @click.command()
+    import click
+    
+    @click.command()
     @click.option('--name', prompt='Your name please')
     def hello(name):
         click.echo(f"Hello {name}!")
@@ -92,7 +96,9 @@ option's flag is given, instead of if the option is not provided at all.
 ```{eval-rst}
 .. click:example::
 
-    import click\n    \n    @click.command()
+    import click
+    
+    @click.command()
     @click.option('--name', prompt=True, prompt_required=False, default="Default")
     def hello(name):
         click.echo(f"Hello {name}!")
@@ -136,6 +142,7 @@ environment:
 
 ```python
 import os
+import click
 
 @click.command()
 @click.option(
@@ -153,7 +160,9 @@ To describe what the default value will be, set it in ``show_default``.
 
     import os
 
-    import click\n    \n    @click.command()
+    import click
+    
+    @click.command()
     @click.option(
         "--username", prompt=True,
         default=lambda: os.environ.get("USER", ""),
