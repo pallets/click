@@ -351,6 +351,11 @@ class ProgressBar(t.Generic[V]):
         self.eta_known = False
         self.current_item = None
         self.finished = True
+        # When update_min_steps > 1, the tail of accumulated steps may
+        # not reach the threshold, leaving pos below length. Clamp it so
+        # that format_pos() shows the correct final count (e.g. "20/20").
+        if self.length is not None and self.pos < self.length:
+            self.pos = self.length
 
     def generator(self) -> cabc.Iterator[V]:
         """Return a generator which yields the items added to the bar
