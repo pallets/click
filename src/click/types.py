@@ -564,6 +564,12 @@ class DateTime(ParamType[datetime]):
             if converted is not None:
                 return converted
 
+        if isinstance(value, str):
+            try:
+                return datetime.fromisoformat(value)
+            except ValueError:
+                pass
+
         formats_str = ", ".join(map(repr, self.formats))
         self.fail(
             ngettext(

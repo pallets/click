@@ -330,3 +330,13 @@ def test_param_type_subclass_omitting_input_parameter():
     doubling = DoublingType()
     assert doubling("21") == 42
     assert doubling(None) is None
+
+
+def test_datetime_iso8601():
+    dt_type = click.DateTime()
+    dt = dt_type.convert("2026-07-30T14:45:00+00:00", None, None)
+    assert dt.year == 2026
+    assert dt.month == 7
+    assert dt.day == 30
+    assert dt.hour == 14
+    assert dt.minute == 45
