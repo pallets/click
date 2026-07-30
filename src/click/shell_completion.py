@@ -528,11 +528,11 @@ class PowerShellComplete(ShellComplete):
     source_template: t.ClassVar[str] = _SOURCE_POWERSHELL
 
     def get_completion_args(self) -> tuple[list[str], str]:
-        # PowerShell does not use a backslash as an escape character, so
-        # splitting must leave it alone. Otherwise an unquoted Windows path
-        # such as C:\\Users\\me loses its separators and neither the
-        # incomplete value nor the preceding args match what was typed.
-        cwords = split_arg_string(os.environ["COMP_WORDS"], escape=False)
+        # PowerShell escapes with a backtick, not a backslash. Splitting with
+        # the default would eat the separators of an unquoted Windows path such
+        # as C:\\Users\\me, so neither the incomplete value nor the preceding
+        # args would match what was typed.
+        cwords = split_arg_string(os.environ["COMP_WORDS"], escape="`")
         cword = int(os.environ["COMP_CWORD"])
         args = cwords[1:cword]
 
@@ -604,7 +604,7 @@ def get_completion_class(shell: str) -> type[ShellComplete] | None:
     return _available_shells.get(shell)
 
 
-def split_arg_string(string: str, *, escape: bool = True) -> list[str]:
+def split_arg_string(string: str, *, escape: str = "\\") -> list[str]:
     """Split an argument string as with :func:`shlex.split`, but don't
     fail if the string is incomplete. Ignores a missing closing quote or
     incomplete escape sequence and uses the partial token as-is.
@@ -618,9 +618,9 @@ def split_arg_string(string: str, *, escape: bool = True) -> list[str]:
         ["example", "my"]
 
     :param string: String to split.
-    :param escape: Treat a backslash as an escape character. Pass ``False``
-        for shells such as PowerShell, where a backslash is an ordinary
-        character and only appears in values such as Windows paths.
+    :param escape: The character the shell uses to escape the next character.
+        Pass ``"`"`` for PowerShell, where a backslash is an ordinary
+        character. Pass ``""`` to disable escaping entirely.
 
     .. versionchanged:: 8.5.0
         Added the ``escape`` parameter.
@@ -634,8 +634,7 @@ def split_arg_string(string: str, *, escape: bool = True) -> list[str]:
     lex.whitespace_split = True
     lex.commenters = ""
 
-    if not escape:
-        lex.escape = ""
+    lex.escape = escape
     out: list[str] = []
 
     try:

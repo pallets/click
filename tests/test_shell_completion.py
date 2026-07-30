@@ -625,12 +625,15 @@ def test_powershell_format_completion_escapes_help():
         (r"cli C:\Users\me", ["cli", r"C:\Users\me"]),
         (r'cli "C:\Users\me"', ["cli", r"C:\Users\me"]),
         (r"cli C:\temp\a b", ["cli", r"C:\temp\a", "b"]),
+        ("cli C:\\my` file", ["cli", r"C:\my file"]),
+        ('cli a`"b', ["cli", 'a"b']),
+        ("cli 'a`b'", ["cli", "a`b"]),
     ],
 )
-def test_split_arg_string_no_escape(string, expect):
-    # PowerShell escapes with a backtick, so a backslash is an ordinary
-    # character and has to survive splitting.
-    assert split_arg_string(string, escape=False) == expect
+def test_split_arg_string_backtick_escape(string, expect):
+    # Checked against PowerShell's own parser: each of these is a single
+    # command element, and a backslash is an ordinary character there.
+    assert split_arg_string(string, escape="`") == expect
 
 
 def test_split_arg_string_escape_is_default():
