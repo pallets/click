@@ -16,6 +16,7 @@ from click.shell_completion import FishComplete
 from click.shell_completion import PowerShellComplete
 from click.shell_completion import shell_complete
 from click.shell_completion import ShellComplete
+from click.shell_completion import split_arg_string
 from click.types import Choice
 from click.types import File
 from click.types import Path
@@ -615,3 +616,51 @@ def test_powershell_format_completion_escapes_help():
     # produced by ZshComplete.
     item = CompletionItem("--at")
     assert pc.format_completion(item) == "plain\n--at\n_"
+
+
+@pytest.mark.parametrize(
+    ("string", "expect"),
+    [
+        ("cli a b", ["cli", "a", "b"]),
+        (r"cli C:\Users\me", ["cli", r"C:\Users\me"]),
+        (r'cli "C:\Users\me"', ["cli", r"C:\Users\me"]),
+        (r"cli C:\temp\a b", ["cli", r"C:\temp\a", "b"]),
+    ],
+)
+def test_split_arg_string_no_escape(string, expect):
+    # PowerShell escapes with a backtick, so a backslash is an ordinary
+    # character and has to survive splitting.
+    assert split_arg_string(string, escape=False) == expect
+
+
+def test_split_arg_string_escape_is_default():
+    # The default stays POSIX, as bash and zsh require.
+    assert split_arg_string(r"cli C:\Users\me") == ["cli", "C:Usersme"]
+
+
+def test_powershell_keeps_backslashes_in_args(monkeypatch):
+    # PowerShell sends the command text verbatim, so an unquoted Windows
+    # path reaches Python with its separators intact and must stay that way.
+    monkeypatch.setenv("COMP_WORDS", r"cli --config C:\Users\me\app.cfg --name al")
+    monkeypatch.setenv("COMP_CWORD", "4")
+    pc = PowerShellComplete(Command("cli"), {}, "cli", "_CLI_COMPLETE")
+    args, incomplete = pc.get_completion_args()
+    assert args == ["--config", r"C:\Users\me\app.cfg", "--name"]
+    assert incomplete == "al"
+
+
+def test_powershell_completes_windows_path_value(runner):
+    def complete_config(ctx, param, incomplete):
+        candidates = [r"C:\Users\me\app.cfg", r"C:\Users\you\app.cfg"]
+        return [c for c in candidates if c.startswith(incomplete)]
+
+    cli = Command("cli", params=[Option(["--config"], shell_complete=complete_config)])
+    result = runner.invoke(
+        cli,
+        env={
+            "_CLI_COMPLETE": "powershell_complete",
+            "COMP_WORDS": r"cli --config C:\Users\me",
+            "COMP_CWORD": "2",
+        },
+    )
+    assert result.output == "plain\n" + r"C:\Users\me\app.cfg" + "\n_\n"

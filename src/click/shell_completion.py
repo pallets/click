@@ -209,8 +209,8 @@ complete --no-files --command %(prog_name)s --arguments \
 # Compatible with Windows PowerShell 5.1+ and PowerShell (pwsh) 7+.
 # Uses Register-ArgumentCompleter -Native, which receives the command AST
 # as parsed by PowerShell. The command text is forwarded verbatim through
-# COMP_WORDS so the Python side can reuse the same shlex-based splitting
-# used by the bash/zsh completers.
+# COMP_WORDS and split on the Python side, without backslash escaping,
+# since PowerShell uses a backtick for that.
 _SOURCE_POWERSHELL = """\
 Register-ArgumentCompleter -Native -CommandName %(prog_name)s -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
@@ -528,7 +528,11 @@ class PowerShellComplete(ShellComplete):
     source_template: t.ClassVar[str] = _SOURCE_POWERSHELL
 
     def get_completion_args(self) -> tuple[list[str], str]:
-        cwords = split_arg_string(os.environ["COMP_WORDS"])
+        # PowerShell does not use a backslash as an escape character, so
+        # splitting must leave it alone. Otherwise an unquoted Windows path
+        # such as C:\\Users\\me loses its separators and neither the
+        # incomplete value nor the preceding args match what was typed.
+        cwords = split_arg_string(os.environ["COMP_WORDS"], escape=False)
         cword = int(os.environ["COMP_CWORD"])
         args = cwords[1:cword]
 
@@ -600,7 +604,7 @@ def get_completion_class(shell: str) -> type[ShellComplete] | None:
     return _available_shells.get(shell)
 
 
-def split_arg_string(string: str) -> list[str]:
+def split_arg_string(string: str, *, escape: bool = True) -> list[str]:
     """Split an argument string as with :func:`shlex.split`, but don't
     fail if the string is incomplete. Ignores a missing closing quote or
     incomplete escape sequence and uses the partial token as-is.
@@ -614,6 +618,12 @@ def split_arg_string(string: str) -> list[str]:
         ["example", "my"]
 
     :param string: String to split.
+    :param escape: Treat a backslash as an escape character. Pass ``False``
+        for shells such as PowerShell, where a backslash is an ordinary
+        character and only appears in values such as Windows paths.
+
+    .. versionchanged:: 8.5.0
+        Added the ``escape`` parameter.
 
     .. versionchanged:: 8.2
         Moved to ``shell_completion`` from ``parser``.
@@ -623,6 +633,9 @@ def split_arg_string(string: str) -> list[str]:
     lex = shlex.shlex(string, posix=True)
     lex.whitespace_split = True
     lex.commenters = ""
+
+    if not escape:
+        lex.escape = ""
     out: list[str] = []
 
     try:
