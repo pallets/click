@@ -350,6 +350,19 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progress_bar_update_min_steps_flushes_at_completion(runner, monkeypatch):
+    @click.command()
+    def cli():
+        with click.progressbar(range(20), show_pos=True, update_min_steps=7) as progress:
+            for _ in progress:
+                pass
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    result = runner.invoke(cli, [], catch_exceptions=False)
+
+    assert "20/20" in result.output
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
