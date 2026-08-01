@@ -348,6 +348,12 @@ class ProgressBar(t.Generic[V]):
             self._completed_intervals = 0
 
     def finish(self) -> None:
+        # Apply steps held back by update_min_steps so show_pos (and
+        # other pos-based formatting) matches a completed bar.
+        if self._completed_intervals:
+            self.make_step(self._completed_intervals)
+            self._completed_intervals = 0
+
         self.eta_known = False
         self.current_item = None
         self.finished = True
