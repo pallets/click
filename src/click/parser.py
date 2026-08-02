@@ -158,13 +158,10 @@ class _Option:
 
         self.dest = dest
         self.action = action
+        self.takes_value = action in ("store", "append")
         self.nargs = nargs
         self.const = const
         self.obj = obj
-
-    @property
-    def takes_value(self) -> bool:
-        return self.action in ("store", "append")
 
     def process(self, value: t.Any, state: _ParsingState) -> None:
         if self.action == "store":
