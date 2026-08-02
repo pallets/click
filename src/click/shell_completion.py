@@ -362,8 +362,26 @@ class ShellComplete:
         :param incomplete: Value being completed. May be empty.
         """
         ctx = _resolve_context(self.cli, self.ctx_args, self.prog_name, args)
+
+        # Detect if the incomplete value uses "=" to separate option
+        # and value (e.g. "--color=al"). If so, track the option prefix
+        # so completions can be prepended with it. Shells replace the
+        # entire current word with the completion, so without the prefix
+        # the option name would be lost.
+        option_prefix = ""
+        if "=" in incomplete and _start_of_option(ctx, incomplete):
+            option_prefix = incomplete.partition("=")[0] + "="
+
         obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
-        return obj.shell_complete(ctx, incomplete)
+        completions = obj.shell_complete(ctx, incomplete)
+
+        if option_prefix:
+            completions = [
+                CompletionItem(option_prefix + c.value, type=c.type, help=c.help)
+                for c in completions
+            ]
+
+        return completions
 
     def format_completion(self, item: CompletionItem[str]) -> str:
         """Format a completion item into the form recognized by the
