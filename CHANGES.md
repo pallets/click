@@ -63,6 +63,9 @@ Unreleased
   {class}`ParamType` takes a second optional type parameter describing the
   input value it accepts (`ParamType[int, str]` for a type converting
   strings to integers), defaulting to `Any`. {pr}`3407`
+- The command-alias examples now preserve `None` from
+  {meth}`Group.resolve_command`, avoiding tracebacks during shell completion
+  for unknown subcommands. {issue}`2402`
 
 ## Version 8.4.2
 

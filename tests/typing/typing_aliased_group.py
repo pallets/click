@@ -21,11 +21,10 @@ class AliasedGroup(click.Group):
 
     def resolve_command(
         self, ctx: click.Context, args: list[str]
-    ) -> tuple[str | None, click.Command, list[str]]:
+    ) -> tuple[str | None, click.Command | None, list[str]]:
         # always return the full command name
         _, cmd, args = super().resolve_command(ctx, args)
-        assert cmd is not None
-        return cmd.name, cmd, args
+        return cmd.name if cmd else None, cmd, args
 
 
 @click.command(cls=AliasedGroup)
