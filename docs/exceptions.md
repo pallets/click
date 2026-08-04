@@ -46,7 +46,9 @@ with ctx:
 ```
 
 In this case exceptions will not be handled at all and bubbled up as you
-would expect.
+would expect. Note that invoking a command this way will skip all bash
+autocompletion support. If you need completion to work, use
+{meth}`Command.main` instead.
 
 Starting with Click 3.0 you can also use the {meth}`Command.main` method
 but disable the standalone mode which will do two things: disable
