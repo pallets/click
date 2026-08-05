@@ -63,6 +63,8 @@ Unreleased
   {class}`ParamType` takes a second optional type parameter describing the
   input value it accepts (`ParamType[int, str]` for a type converting
   strings to integers), defaulting to `Any`. {pr}`3407`
+- `HelpFormatter.write_usage` no longer breaks long options at hyphens.
+  {issue}`3362`
 
 ## Version 8.4.2
 

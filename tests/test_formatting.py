@@ -603,6 +603,34 @@ def test_help_formatter_write_usage_without_args_styled_prefix():
     assert "\x1b[" in rendered
 
 
+def test_write_usage_does_not_break_options_on_hyphens():
+    formatter = click.HelpFormatter(width=65)
+    args = " ".join(
+        [
+            "--enable-verbose-logging",
+            "--output-file-path",
+            "--max-retry-count",
+            "--disable-cache-mode",
+            "--config-file-location",
+            "--user-auth-token",
+            "--auto-update-interval",
+            "--force-overwrite-existing",
+            "--network-timeout-seconds",
+            "--debug-trace-enabled",
+        ]
+    )
+
+    formatter.write_usage("program", args)
+
+    assert formatter.getvalue() == (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+        "               --config-file-location --user-auth-token\n"
+        "               --auto-update-interval --force-overwrite-existing\n"
+        "               --network-timeout-seconds --debug-trace-enabled\n"
+    )
+
+
 @pytest.mark.parametrize(
     ("command_kwargs", "expected_usage_line"),
     [
