@@ -3215,7 +3215,15 @@ class Option(Parameter):
         # result is the programmer-supplied ``flag_value`` (often a class or enum),
         # which must NOT be instantiated here. See
         # https://github.com/pallets/click/issues/3121.
+        #
+        # During resilient parsing (e.g. shell completion) the default callback must
+        # not be invoked. Resolving it can be expensive or have side effects, and the
+        # value is never used. The API docs state that ``resilient_parsing`` ignores
+        # default values.
         if value is raw and call and callable(value):
+            if ctx.resilient_parsing:
+                return value
+
             value = value()
         return value
 
