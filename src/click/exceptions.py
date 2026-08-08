@@ -63,6 +63,9 @@ class ClickException(Exception):
             file=file,
             color=self.show_color,
         )
+        if hasattr(self, "__notes__"):
+            for note in self.__notes__:
+                echo(note, file=file, color=self.show_color)
 
 
 class UsageError(ClickException):
@@ -109,6 +112,9 @@ class UsageError(ClickException):
             file=file,
             color=color,
         )
+        if hasattr(self, "__notes__"):
+            for note in self.__notes__:
+                echo(note, file=file, color=color)
 
 
 class BadParameter(UsageError):
@@ -337,6 +343,9 @@ class NoArgsIsHelpError(UsageError):
 
     def show(self, file: t.IO[t.Any] | None = None) -> None:
         echo(self.format_message(), file=file, err=True, color=self.ctx.color)
+        if hasattr(self, "__notes__"):
+            for note in self.__notes__:
+                echo(note, file=file, err=True, color=self.ctx.color)
 
 
 class FileError(ClickException):
