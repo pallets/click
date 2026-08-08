@@ -43,6 +43,11 @@ Unreleased
   `DeprecationWarning` until Click 9.0: `LazyFile`, `KeepOpenFile`,
   `make_default_short_help`, `PacifyFlushWrapper`, and `safecall`.
   {issue}`3099` {pr}`3695`
+- {meth}`HelpFormatter.write_usage` no longer splits an option name at a
+  hyphen when it reaches the wrap column, so `--max-retry-count` is not
+  broken into `--max-` and `retry-count`. {func}`wrap_text` accepts a
+  `break_on_hyphens` parameter to control this; it defaults to `True`, so
+  help text wrapping is unchanged. {issue}`3362`
 
 ## Version 8.4.2
 

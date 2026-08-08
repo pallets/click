@@ -603,6 +603,61 @@ def test_help_formatter_write_usage_without_args_styled_prefix():
     assert "\x1b[" in rendered
 
 
+def test_write_usage_does_not_break_options_at_hyphens():
+    """An option name reaching the wrap column stays whole. Regression for
+    #3362, where ``--max-retry-count`` was split into ``--max-`` and
+    ``retry-count``, reading as two separate options.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+    f = click.HelpFormatter(width=65)
+    f.write_usage("program", " ".join(options))
+
+    assert f.getvalue() == (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+        "               --config-file-location --user-auth-token\n"
+        "               --auto-update-interval --force-overwrite-existing\n"
+        "               --network-timeout-seconds --debug-trace-enabled\n"
+    )
+
+
+def test_write_usage_long_prefix_does_not_break_options_at_hyphens():
+    """The same holds on the branch that moves args to their own line."""
+    f = click.HelpFormatter(width=40)
+    f.write_usage("a-long-program-name", "--output-file-path --max-retry-count")
+
+    for line in f.getvalue().splitlines():
+        assert not line.endswith("-")
+
+
+def test_wrap_text_breaks_on_hyphens_by_default():
+    """Prose is unaffected: ``wrap_text`` still breaks at hyphens unless
+    asked not to.
+    """
+    text = "a well-known and much-discussed topic"
+
+    assert click.formatting.wrap_text(text, width=20) == (
+        "a well-known and\nmuch-discussed topic"
+    )
+    assert click.formatting.wrap_text(text, width=14, break_on_hyphens=True) == (
+        "a well-known\nand much-\ndiscussed\ntopic"
+    )
+    assert click.formatting.wrap_text(text, width=14, break_on_hyphens=False) == (
+        "a well-known\nand\nmuch-discussed\ntopic"
+    )
+
+
 @pytest.mark.parametrize(
     ("command_kwargs", "expected_usage_line"),
     [
