@@ -63,6 +63,8 @@ Unreleased
   {class}`ParamType` takes a second optional type parameter describing the
   input value it accepts (`ParamType[int, str]` for a type converting
   strings to integers), defaulting to `Any`. {pr}`3407`
+- Fix a ``TypeError`` in the Windows pager fallback 
+  that caused a ``[WinError 32]`` crash.
 
 ## Version 8.4.2
 
