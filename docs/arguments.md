@@ -58,6 +58,16 @@ default value is provided, the type is assumed to be {data}`STRING`.
    and they should not error out if the wildcard is empty.
 ```
 
+`required` is enforced while Click parses command-line input. Calling another
+command directly with {meth}`Context.invoke` does not parse a command line.
+Parameters that are not passed to `invoke` use their defaults, and a required
+argument without a default receives `None`. Pass the argument explicitly when
+invoking the command from Python:
+
+```python
+click.get_current_context().invoke(touch, filename="foo.txt")
+```
+
 ## Multiple Arguments
 
 To set the number of argument use the `nargs` kwarg. It can be set to
