@@ -63,6 +63,8 @@ Unreleased
   {class}`ParamType` takes a second optional type parameter describing the
   input value it accepts (`ParamType[int, str]` for a type converting
   strings to integers), defaulting to `Any`. {pr}`3407`
+- {meth}`Command.get_help_option_names` returns the help option names in the
+  order they were declared. {pr}`3728`
 
 ## Version 8.4.2
 
