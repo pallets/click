@@ -87,6 +87,42 @@ def test_sync():
   assert 'Syncing' in result.output
 ```
 
+## Shell Completion
+
+Test completion suggestions directly with
+{class}`click.shell_completion.ShellComplete`. This exercises Click's command
+and parameter completion without starting a shell or installing a completion
+script.
+
+```{code-block} python
+:caption: hello.py
+
+import click
+
+@click.command()
+@click.option('--name', type=click.Choice(['Click', 'World']))
+def hello(name):
+   click.echo(f'Hello {name}!')
+```
+
+```{code-block} python
+:caption: test_hello.py
+
+from click.shell_completion import ShellComplete
+from hello import hello
+
+def test_name_completion():
+   completion = ShellComplete(hello, {}, hello.name, '_HELLO_COMPLETE')
+   results = completion.get_completions(['--name'], 'W')
+   assert [item.value for item in results] == ['World']
+```
+
+The first argument to {meth}`~click.shell_completion.ShellComplete.get_completions`
+contains the complete command-line tokens before the word being completed. The
+second argument is the incomplete word. The returned
+{class}`~click.shell_completion.CompletionItem` objects also expose metadata such
+as `type` and `help` when a test needs to verify it.
+
 ## Context Settings
 
 Additional keyword arguments passed to {meth}`CliRunner.invoke` will be used to
