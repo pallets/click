@@ -65,6 +65,11 @@ Unreleased
   strings to integers), defaulting to `Any`. {pr}`3407`
 - {meth}`Command.get_help_option_names` returns the help option names in the
   order they were declared. {pr}`3728`
+- {meth}`HelpFormatter.write_usage` no longer splits an option name at one of
+  its own hyphens when it reaches the wrap column, so `--max-retry-count` is
+  moved to the next line intact instead of rendering as `--max-` /
+  `retry-count`. {func}`wrap_text` accepts a `break_on_hyphens` parameter to
+  control this. {issue}`3362` {pr}`3757`
 
 ## Version 8.4.2
 

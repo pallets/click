@@ -603,6 +603,79 @@ def test_help_formatter_write_usage_without_args_styled_prefix():
     assert "\x1b[" in rendered
 
 
+def test_write_usage_does_not_break_option_names_at_hyphens():
+    """Issue #3362: an option name reaching the wrap column was split at one
+    of its own hyphens, rendering ``--max-`` / ``retry-count``. A usage line
+    holds option and metavar tokens rather than prose, so it is wrapped with
+    hyphen breaking disabled.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+    ]
+    f = click.HelpFormatter(width=65)
+    f.write_usage("program", " ".join(options))
+
+    assert f.getvalue() == (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+        "               --config-file-location\n"
+    )
+
+
+def test_write_usage_long_prefix_does_not_break_option_names_at_hyphens():
+    """The branch that moves the arguments onto their own line keeps option
+    names intact as well.
+    """
+    f = click.HelpFormatter(width=38)
+    f.write_usage("very-long-program-name", "--max-retry-count --output-file-path")
+
+    assert f.getvalue().splitlines()[1:] == [
+        "           --max-retry-count",
+        "           --output-file-path",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("text", "width", "break_on_hyphens", "expected"),
+    [
+        # A hyphenated token that does not fit in the remaining space is
+        # split at a hyphen by default, ...
+        pytest.param(
+            "ab --max-retry-count",
+            18,
+            True,
+            "ab --max-retry-\ncount",
+            id="split-at-hyphen",
+        ),
+        # ... and moved to the next line intact when disabled.
+        pytest.param(
+            "ab --max-retry-count",
+            18,
+            False,
+            "ab\n--max-retry-count",
+            id="keep-token-intact",
+        ),
+        # Prose keeps breaking at hyphens: the default is unchanged.
+        pytest.param(
+            "a well-documented feature",
+            12,
+            True,
+            "a well-\ndocumented\nfeature",
+            id="prose-default-unchanged",
+        ),
+    ],
+)
+def test_wrap_text_break_on_hyphens(text, width, break_on_hyphens, expected):
+    """``wrap_text`` exposes ``break_on_hyphens`` so callers can keep
+    hyphenated tokens such as option names on a single line.
+    """
+    assert click.wrap_text(text, width, break_on_hyphens=break_on_hyphens) == expected
+
+
 @pytest.mark.parametrize(
     ("command_kwargs", "expected_usage_line"),
     [
