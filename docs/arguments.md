@@ -138,6 +138,59 @@ And from the command line:
     invoke(touch, ['-foo.txt', 'bar.txt'])
 ```
 
+## Negative Number Arguments
+
+Negative numbers hit the same rule: the parser decides what is an
+option before a parameter's type is consulted, so a value like `-6`
+is rejected as an unknown option even on a `FLOAT` argument:
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.argument('volume', type=float)
+    def gain(volume):
+        """Set the output gain in dB."""
+        click.echo(f"gain set to {volume}")
+
+And from the command line:
+
+.. click:run::
+
+    invoke(gain, ['-6'])
+```
+
+The `--` separator from the previous section works here too
+(`gain -- -6`). For a command whose arguments are routinely negative
+numbers, requiring `--` on every call is impractical, and
+`ignore_unknown_options` lets the values through instead:
+
+```{eval-rst}
+.. click:example::
+
+    @click.command(context_settings={"ignore_unknown_options": True})
+    @click.argument('volume', type=float)
+    def gain(volume):
+        """Set the output gain in dB."""
+        click.echo(f"gain set to {volume}")
+
+And from the command line:
+
+.. click:run::
+
+    invoke(gain, ['-6'])
+```
+
+This trades away some error checking: unknown options are now
+arguments, so a mistyped or misplaced flag arrives as a value. A
+`FLOAT` argument still rejects `--verbose` with a usage error during
+type conversion, but a `STRING` argument accepts it silently, and a
+command that accepts both numbers and free-form strings cannot tell a
+flag-like value from a typo. When a command combines
+`ignore_unknown_options` with loosely typed arguments, validate the
+values yourself: decide what a legitimate value looks like for that
+command and reject dash-prefixed tokens that do not match.
+
 (environment-variables)=
 
 ## Environment Variables
