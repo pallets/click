@@ -350,6 +350,16 @@ def test_progress_bar_update_min_steps(runner):
     assert bar.pos == 5
 
 
+def test_progress_bar_finish_with_pending_intervals(runner):
+    bar = _create_progress(length=20, update_min_steps=7)
+    bar.update(14)
+    assert bar.pos == 14
+    bar.update(6)
+    assert bar.pos == 14
+    bar.finish()
+    assert bar.pos == 20
+
+
 @pytest.mark.parametrize("key_char", ("h", "H", "é", "À", " ", "字", "àH", "àR"))
 @pytest.mark.parametrize("echo", [True, False])
 @pytest.mark.skipif(not WIN, reason="Tests user-input using the msvcrt module.")
