@@ -1,6 +1,7 @@
 import contextlib
 import gc
 import io
+import os
 import platform
 import shlex
 import shutil
@@ -972,12 +973,17 @@ def _force_tempfile_pager(monkeypatch, pager_cmd="cat"):
 
     That backend is only reachable on Windows, so the platform flag and the tty
     probes are faked to exercise it from any runner.
+
+    ``PAGER`` is set to the bare command name, not to the path
+    :func:`shutil.which` resolves it to. ``pager()`` splits ``PAGER`` with
+    :func:`shlex.split` in POSIX mode, where a Windows path loses its
+    backslashes and splits on the space in ``C:\\Program Files``, leaving a
+    command that resolves to nothing. Click resolves the bare name itself.
     """
-    cmd_path = shutil.which(pager_cmd)
-    assert cmd_path is not None, f"{pager_cmd} not available"
+    assert shutil.which(pager_cmd) is not None, f"{pager_cmd} not available"
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     monkeypatch.setattr(click._termui_impl, "WIN", True)
-    monkeypatch.setitem(click._termui_impl.os.environ, "PAGER", cmd_path)
+    monkeypatch.setitem(click._termui_impl.os.environ, "PAGER", pager_cmd)
 
 
 def _page_with_get_pager_file():
@@ -1036,6 +1042,56 @@ def test_tempfile_pager_handles_ansi(monkeypatch, capfd, color, expected):
     out, err = capfd.readouterr()
     assert err == ""
     assert out.replace("\r\n", "\n") == expected
+
+
+@pytest.mark.skipif(shutil.which("cat") is None, reason="cat not available")
+def test_tempfile_pager_closes_file_before_unlink(monkeypatch):
+    """An error while paging must not leave the temp file open at unlink time.
+
+    The ``f.close()`` on the success path sits after the ``yield``, so an
+    exception raised while the pager is open used to skip it and reach
+    ``finally: os.unlink(f.name)`` with the handle still open. Windows refuses
+    to unlink an open file, so ``PermissionError: [WinError 32]`` replaced the
+    original error and hid it (issue #3731).
+    """
+    _force_tempfile_pager(monkeypatch)
+
+    temp_files = []
+    real_named_temporary_file = tempfile.NamedTemporaryFile
+
+    def record(*args, **kwargs):
+        f = real_named_temporary_file(*args, **kwargs)
+        temp_files.append(f)
+        return f
+
+    monkeypatch.setattr(tempfile, "NamedTemporaryFile", record)
+
+    closed_at_unlink = []
+    real_unlink = os.unlink
+
+    def spy_unlink(path, **kwargs):
+        closed_at_unlink.append([f.closed for f in temp_files])
+        return real_unlink(path, **kwargs)
+
+    monkeypatch.setattr(os, "unlink", spy_unlink)
+
+    try:
+        with pytest.raises(RuntimeError, match="boom"):
+            with click.get_pager_file():
+                raise RuntimeError("boom")
+    finally:
+        # Should this invariant regress, the assertion below reports it. Close
+        # the handle anyway so the leak does not also resurface as a
+        # ResourceWarning charged to an unrelated test.
+        for f in temp_files:
+            if not f.closed:
+                f.close()
+
+    assert temp_files, "the temp file pager backend was not used"
+    assert closed_at_unlink == [[True]], (
+        "temp file still open when unlink ran; on Windows this raises "
+        "PermissionError [WinError 32] and masks the real error"
+    )
 
 
 def test_editor_unclosed_quote():

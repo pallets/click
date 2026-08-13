@@ -638,6 +638,11 @@ def _tempfilepager(
         f.close()
         subprocess.call([str(cmd_path), f.name])
     finally:
+        # An error raised while paging skips the close() above, and Windows
+        # refuses to unlink a file the process still holds open. Closing here
+        # keeps that PermissionError from replacing the original exception.
+        # close() is idempotent, so this is a no-op on the success path.
+        f.close()
         os.unlink(f.name)
 
 
