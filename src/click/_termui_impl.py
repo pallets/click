@@ -623,7 +623,7 @@ def _tempfilepager(
     # On Windows, NamedTemporaryFile cannot be opened by another process
     # while Python still has it open, so we use delete=False and clean up manually
     # rather than using a contextmanager here.
-    f = tempfile.NamedTemporaryFile(mode="wb", delete=False)
+    f = tempfile.NamedTemporaryFile(mode="w", delete=False)
     try:
         yield t.cast(t.BinaryIO, f), encoding, color
         f.flush()

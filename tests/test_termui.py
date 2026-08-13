@@ -936,6 +936,77 @@ def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
     assert stream.flush_calls == 1
 
 
+def _force_tempfile_pager(monkeypatch, pager_cmd="cat"):
+    """Route ``get_pager_file`` through the ``_tempfilepager`` backend.
+
+    That backend is only reachable on Windows, so the platform flag and the tty
+    probes are faked to exercise it from any runner.
+    """
+    cmd_path = shutil.which(pager_cmd)
+    assert cmd_path is not None, f"{pager_cmd} not available"
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setattr(click._termui_impl, "WIN", True)
+    monkeypatch.setitem(click._termui_impl.os.environ, "PAGER", cmd_path)
+
+
+def _page_with_get_pager_file():
+    with click.get_pager_file() as pager:
+        pager.write("hello\n")
+
+
+def _page_with_echo_via_pager():
+    click.echo_via_pager("hello")
+
+
+@pytest.mark.skipif(shutil.which("cat") is None, reason="cat not available")
+@pytest.mark.parametrize(
+    "page",
+    [
+        pytest.param(_page_with_get_pager_file, id="get_pager_file"),
+        pytest.param(_page_with_echo_via_pager, id="echo_via_pager"),
+    ],
+)
+def test_tempfile_pager_accepts_text(monkeypatch, capfd, page):
+    """The temp file backend must yield a text stream (issues #3731, #3740).
+
+    ``_tempfilepager`` opens its temp file in binary mode and yields the
+    ``_TemporaryFileWrapper`` straight to ``get_pager_file``. That wrapper
+    exposes no ``.buffer``, so the ``_has_binary_buffer`` probe is False and no
+    ``MaybeStripAnsi`` wrapper is installed. The caller then writes ``str`` to a
+    binary handle and gets ``TypeError: a bytes-like object is required``.
+    """
+    _force_tempfile_pager(monkeypatch)
+
+    page()
+
+    out, err = capfd.readouterr()
+    assert err == ""
+    assert out.replace("\r\n", "\n") == "hello\n"
+
+
+@pytest.mark.skipif(shutil.which("cat") is None, reason="cat not available")
+@pytest.mark.parametrize(
+    ("color", "expected"),
+    [
+        pytest.param(False, "hello\n", id="strip ansi"),
+        pytest.param(True, click.style("hello", fg="red") + "\n", id="preserve ansi"),
+    ],
+)
+def test_tempfile_pager_handles_ansi(monkeypatch, capfd, color, expected):
+    """The temp file backend honors ``color`` like the pipe backend does.
+
+    ANSI stripping lives in ``MaybeStripAnsi``, which the binary temp file
+    never gets wrapped in, so ``color`` is silently ignored on this path.
+    """
+    _force_tempfile_pager(monkeypatch)
+
+    click.echo_via_pager(click.style("hello", fg="red"), color=color)
+
+    out, err = capfd.readouterr()
+    assert err == ""
+    assert out.replace("\r\n", "\n") == expected
+
+
 def test_editor_unclosed_quote():
     """An unclosed quote in the editor command raises ValueError."""
     with pytest.raises(ValueError, match="No closing quotation"):
