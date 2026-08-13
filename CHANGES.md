@@ -2,6 +2,11 @@
 
 Unreleased
 
+- `HelpFormatter.write_usage` no longer splits an argument after a hyphen
+  when the usage line wraps, so `--enable-verbose-logging` stays whole
+  instead of becoming `--enable-verbose-` / `logging`. `wrap_text()` takes a
+  new `break_on_hyphens` parameter, defaulting to `True`, for callers that
+  need the same control. {issue}`3362`
 - Add built-in shell completion support for PowerShell (Windows PowerShell
   5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
   completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate

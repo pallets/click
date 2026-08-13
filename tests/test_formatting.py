@@ -630,3 +630,62 @@ def test_command_write_usage_no_args(runner, command_kwargs, expected_usage_line
     cli = click.Command("cli", **command_kwargs)
     result = runner.invoke(cli, ["--help"])
     assert result.output.splitlines()[0] == expected_usage_line
+
+
+def test_write_usage_does_not_break_options_at_hyphens():
+    """A wrapped usage line must not split an option name after a hyphen.
+
+    ``--max-retry-count`` broken as ``--max-`` / ``retry-count`` is not a
+    thing the reader can copy, and on a narrow terminal it reads as two
+    separate options.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+    ]
+    formatter = click.HelpFormatter(width=65)
+
+    formatter.write_usage("program", " ".join(options))
+
+    lines = formatter.getvalue().splitlines()
+    assert lines == [
+        "Usage: program --enable-verbose-logging --output-file-path",
+        "               --max-retry-count --disable-cache-mode",
+        "               --config-file-location",
+    ]
+
+
+def test_write_usage_does_not_break_hyphens_on_the_wrapped_prefix_path():
+    """The long-prefix branch puts args on their own line; same rule there.
+
+    ``write_usage`` has two ``wrap_text`` calls and only one is reached when
+    the prefix fits, so a fix applied to one of them looks correct until the
+    program name is long.
+    """
+    formatter = click.HelpFormatter(width=40)
+
+    # Long enough that the args must wrap *within* that branch; a single short
+    # option would fit on one line and never reach the wrapping code at all.
+    formatter.write_usage(
+        "a-very-long-program-name-indeed",
+        "--max-retry-count --disable-cache-mode --user-auth-token",
+    )
+
+    value = formatter.getvalue()
+    assert "--max-\n" not in value
+    assert "--disable-cache-\n" not in value
+    for option in ("--max-retry-count", "--disable-cache-mode", "--user-auth-token"):
+        assert option in value
+
+
+def test_wrap_text_still_breaks_hyphens_by_default():
+    """Prose keeps the old behaviour; only usage lines opt out."""
+    text = "a well-considered and thoroughly-documented approach"
+
+    assert "well-\n" in click.formatting.wrap_text(text, width=12)
+    assert "well-\n" not in click.formatting.wrap_text(
+        text, width=12, break_on_hyphens=False
+    )
