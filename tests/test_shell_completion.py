@@ -253,6 +253,26 @@ def test_option_custom():
     assert _get_words(cli, ["a", "b"], "c") == ["C"]
 
 
+def test_option_custom_sees_parsed_arguments():
+    seen = {}
+
+    def custom(ctx, param, incomplete):
+        seen.update(ctx.params)
+        return []
+
+    cli = Command(
+        "cli",
+        params=[
+            Argument(["type"]),
+            Option(["--test"], shell_complete=custom),
+        ],
+    )
+
+    _get_completions(cli, ["foo", "--test"], "")
+
+    assert seen["type"] == "foo"
+
+
 def test_option_multiple():
     cli = Command(
         "type",
