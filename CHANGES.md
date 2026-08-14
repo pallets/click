@@ -65,6 +65,11 @@ Unreleased
   strings to integers), defaulting to `Any`. {pr}`3407`
 - {meth}`Command.get_help_option_names` returns the help option names in the
   order they were declared. {pr}`3728`
+- {func}`get_pager_file` yields a text stream on Windows again. The temporary
+  file backend opened its file in binary mode, so writing a `str` to the pager
+  raised `TypeError: a bytes-like object is required, not 'str'`, and the
+  `color` argument was ignored on that path. Regression introduced in `8.4.0`
+  by {pr}`1572`. {issue}`3731` {issue}`3732` {issue}`3740` {pr}`3739`
 
 ## Version 8.4.2
 
