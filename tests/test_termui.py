@@ -106,6 +106,37 @@ def test_progressbar_hidden_manual(runner, monkeypatch):
     assert runner.invoke(cli, []).output == ""
 
 
+@pytest.mark.parametrize("update_min_steps", [1, 2, 3, 7, 20, 25])
+@pytest.mark.parametrize("drive", ["iterate", "update"])
+def test_progressbar_lands_on_final_position(monkeypatch, update_min_steps, drive):
+    """The bar reaches its total whatever the ``update_min_steps`` threshold.
+
+    Regression for issue #3571: a threshold that does not divide the length
+    left a remainder pending, so `show_pos` froze below completion, reporting
+    `14/20` for a length of 20 and a threshold of 7. Thresholds of 1 and 2 do
+    divide 20, and 25 exceeds it, so nothing is ever rendered until the end.
+    """
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    stream = io.StringIO()
+
+    if drive == "iterate":
+        with click.progressbar(
+            range(20), show_pos=True, update_min_steps=update_min_steps, file=stream
+        ) as bar:
+            for _ in bar:
+                pass
+    else:
+        with click.progressbar(
+            length=20, show_pos=True, update_min_steps=update_min_steps, file=stream
+        ) as bar:
+            for _ in range(20):
+                bar.update(1)
+
+    assert bar.pos == 20
+    assert bar.finished
+    assert "20/20" in stream.getvalue()
+
+
 @pytest.mark.parametrize("avg, expected", [([], 0.0), ([1, 4], 2.5)])
 def test_progressbar_time_per_iteration(runner, avg, expected):
     with _create_progress(2, avg=avg) as progress:
