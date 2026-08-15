@@ -70,6 +70,10 @@ Unreleased
   raised `TypeError: a bytes-like object is required, not 'str'`, and the
   `color` argument was ignored on that path. Regression introduced in `8.4.0`
   by {pr}`1572`. {issue}`3731` {issue}`3732` {issue}`3740` {pr}`3739`
+- {func}`progressbar` settles on its final position when `update_min_steps`
+  does not divide the total. Steps below that threshold are applied when the
+  bar finishes, so `show_pos` renders `20/20` rather than the last multiple
+  it reached. {issue}`3571` {pr}`3769`
 
 ## Version 8.4.2
 

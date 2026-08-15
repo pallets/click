@@ -154,6 +154,14 @@ class ProgressBar(t.Generic[V]):
         return next(iter(self))
 
     def render_finish(self) -> None:
+        # Steps stay pending until they add up to update_min_steps, so a length
+        # that is not a multiple of it keeps a sub-threshold remainder that
+        # never reaches pos. Apply it so the bar settles on its true position.
+        if self._completed_intervals:
+            self.make_step(self._completed_intervals)
+            self._completed_intervals = 0
+            self.render_progress()
+
         if self.hidden or not self._is_atty:
             return
         self.file.write(AFTER_BAR)
