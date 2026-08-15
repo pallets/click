@@ -1,4 +1,8 @@
 import io
+import os
+import shutil
+import subprocess
+import sys
 import textwrap
 import warnings
 from collections.abc import Mapping
@@ -389,6 +393,47 @@ def test_full_complete(runner, shell, env, expect):
     env["_CLI_COMPLETE"] = f"{shell}_complete"
     result = runner.invoke(cli, env=env)
     assert result.output == expect
+
+
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_bash_source_completes_through_shell(tmp_path, runner):
+    if shutil.which("bash") is None:
+        pytest.skip("bash is required for the end-to-end completion test")
+
+    cli = Group("cli", commands=[Command("status"), Command("serve")])
+    result = runner.invoke(cli, env={"_CLI_COMPLETE": "bash_source"})
+    assert result.exit_code == 0
+
+    executable = tmp_path / "cli"
+    executable.write_text(
+        f"#!{sys.executable}\n"
+        "import click\n"
+        'cli = click.Group("cli", commands=[\n'
+        '    click.Command("status"),\n'
+        '    click.Command("serve"),\n'
+        "])\n"
+        "cli()\n"
+    )
+    executable.chmod(0o755)
+
+    script = "\n".join(
+        [
+            result.output,
+            'COMP_WORDS=(cli "")',
+            "COMP_CWORD=1",
+            "_cli_completion cli",
+            'printf "%s\\n" "${COMPREPLY[@]}"',
+        ]
+    )
+    completed = subprocess.run(
+        ["bash", "-c", script],
+        capture_output=True,
+        check=True,
+        env={"PATH": f"{tmp_path}{os.pathsep}{os.environ['PATH']}"},
+        text=True,
+    )
+
+    assert sorted(completed.stdout.splitlines()) == ["serve", "status"]
 
 
 def test_source_uses_lf_line_endings(monkeypatch):
