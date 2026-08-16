@@ -74,6 +74,11 @@ Unreleased
   does not divide the total. Steps below that threshold are applied when the
   bar finishes, so `show_pos` renders `20/20` rather than the last multiple
   it reached. {issue}`3571` {pr}`3769`
+- An error raised while writing to the pager no longer gets replaced by
+  `PermissionError: [WinError 32]` on Windows. The temporary file backend
+  unlinked its file without closing it first, and Windows refuses to remove a
+  file the process still holds open, so the cleanup failure masked the real
+  exception. {issue}`3731` {pr}`3764`
 
 ## Version 8.4.2
 
