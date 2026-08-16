@@ -74,6 +74,9 @@ Unreleased
   does not divide the total. Steps below that threshold are applied when the
   bar finishes, so `show_pos` renders `20/20` rather than the last multiple
   it reached. {issue}`3571` {pr}`3769`
+- {meth}`HelpFormatter.write_usage` keeps hyphenated usage tokens such as
+  option names on one line instead of wrapping at the hyphen.
+  {issue}`3362`
 
 ## Version 8.4.2
 

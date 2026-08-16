@@ -503,6 +503,37 @@ def test_wrap_text_visible_width(body, width, initial_indent):
     assert styled_visible == plain.splitlines()
 
 
+def test_write_usage_does_not_wrap_hyphenated_option_tokens():
+    """Usage tokens such as ``--max-retry-count`` must wrap on spaces, not
+    on internal hyphens. Regression for issue 3362.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+    formatter = click.HelpFormatter(width=65)
+    formatter.write_usage("program", " ".join(options))
+    actual = formatter.getvalue()
+    expected = (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+        "               --config-file-location --user-auth-token\n"
+        "               --auto-update-interval --force-overwrite-existing\n"
+        "               --network-timeout-seconds --debug-trace-enabled\n"
+    )
+    assert actual == expected
+    for token in options:
+        assert token in actual
+
+
 def test_write_usage_styled_prefix_keeps_options_on_one_line():
     """End-to-end: a downstream-styled ``Usage:`` prefix should not split
     ``[OPTIONS]`` across two lines.
