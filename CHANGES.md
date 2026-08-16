@@ -74,6 +74,9 @@ Unreleased
   does not divide the total. Steps below that threshold are applied when the
   bar finishes, so `show_pos` renders `20/20` rather than the last multiple
   it reached. {issue}`3571` {pr}`3769`
+- `HelpFormatter.write_usage()` no longer splits option names containing
+  hyphens across lines; e.g. `--max-retry-count` stays intact. `wrap_text()`
+  gained a `break_on_hyphens` parameter. {issue}`3362` {pr}`3772`
 
 ## Version 8.4.2
 
