@@ -25,8 +25,9 @@ Click includes some extra test environments:
     $ tox r -e random
     ```
 
--   A CI workflow (`.github/workflows/test-flask.yaml`)
-    runs Flask's test suite to catch downstream
+-   The nightly workflow
+    (`.github/workflows/nightly.yaml`) runs Flask's test
+    suite against `main` and `stable` to catch downstream
     regressions.
 
 ## Code Style

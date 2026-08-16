@@ -1,4 +1,4 @@
-name: Nightly race tests
+name: Nightly tests
 on:
   schedule:
     - cron: '0 6 * * *'
@@ -41,3 +41,29 @@ jobs:
       - run: uv run --locked --no-default-groups --group dev tox run
         env:
           TOX_ENV: ${{ matrix.config.tox }}
+  flask-tests:
+    name: Flask (${{ matrix.branch }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: [main, stable]
+    steps:
+      # Check out Flask, not Click: the Click branch under test is installed
+      # from git below, so Flask's own suite runs against it.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          repository: pallets/flask
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.14'
+      - run: uv sync --all-extras
+      # --with overlays the Click branch on top of the version Flask's lock
+      # pins, so a downstream regression shows up as a Flask test failure.
+      - run: uv run --with "git+https://github.com/pallets/click.git@${CLICK_REF}" -- pytest
+        env:
+          CLICK_REF: ${{ matrix.branch }}
