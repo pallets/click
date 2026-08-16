@@ -45,6 +45,8 @@ class TextWrapper(textwrap.TextWrapper):
     than its visible length warrants and tokens would split mid-word.
     """
 
+    break_on_hyphens = False
+
     def _handle_long_word(
         self,
         reversed_chunks: list[str],
