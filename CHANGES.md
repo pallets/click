@@ -2,6 +2,10 @@
 
 Unreleased
 
+- {func}`edit` accepts :class:`os.PathLike` values, including
+  :class:`pathlib.Path`, for ``filename``. Passing a path object used to
+  raise ``TypeError`` because ``Path`` is neither a ``str`` nor an
+  iterable of strings. {issue}`2869`
 - Add built-in shell completion support for PowerShell (Windows PowerShell
   5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
   completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate

@@ -2,6 +2,7 @@ import contextlib
 import gc
 import io
 import os
+import pathlib
 import platform
 import shlex
 import shutil
@@ -549,6 +550,35 @@ def test_editor_path_normalization(editor_cmd, filenames, expected_args):
         args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
         assert args == expected_args
         assert mock_popen.call_args[1].get("shell") is None
+
+
+def test_edit_accepts_pathlib_path():
+    """filename=pathlib.Path used to raise TypeError (issue 2869)."""
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as named_tempfile:
+        named_tempfile.write("hello\n")
+        path = pathlib.Path(named_tempfile.name)
+
+    try:
+        with patch("subprocess.Popen") as mock_popen:
+            mock_popen.return_value.wait.return_value = 0
+            result = click.edit(filename=path, editor="true")
+
+        assert result is None
+        args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
+        assert args[-1] == os.fspath(path)
+    finally:
+        os.unlink(named_tempfile.name)
+
+
+def test_edit_accepts_iterable_of_paths():
+    paths = [pathlib.Path("a.txt"), pathlib.Path("b.txt")]
+    with patch("subprocess.Popen") as mock_popen:
+        mock_popen.return_value.wait.return_value = 0
+        result = click.edit(filename=paths, editor="true")
+
+    assert result is None
+    args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
+    assert args[-2:] == [os.fspath(p) for p in paths]
 
 
 @pytest.mark.skipif(not WIN, reason="Windows-specific editor paths")

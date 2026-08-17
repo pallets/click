@@ -4,6 +4,7 @@ import collections.abc as cabc
 import inspect
 import io
 import itertools
+import os
 import re
 import sys
 import typing as t
@@ -837,7 +838,7 @@ def edit(
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-    filename: str | cabc.Iterable[str] | None = None,
+    filename: str | os.PathLike[str] | cabc.Iterable[str | os.PathLike[str]] | None = None,
 ) -> None: ...
 
 
@@ -847,7 +848,7 @@ def edit(
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-    filename: str | cabc.Iterable[str] | None = None,
+    filename: str | os.PathLike[str] | cabc.Iterable[str | os.PathLike[str]] | None = None,
 ) -> str | bytes | bytearray | None:
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
@@ -884,6 +885,10 @@ def edit(
         ``filename`` now accepts any ``Iterable[str]`` in addition to a ``str``
         if the ``editor`` supports editing multiple files at once.
 
+    .. versionchanged:: 8.5.0
+        ``filename`` now accepts :class:`os.PathLike` values, including
+        :class:`pathlib.Path`, matching :func:`open_file`.
+
     """
     from ._termui_impl import Editor
 
@@ -892,10 +897,12 @@ def edit(
     if filename is None:
         return ed.edit(text)
 
-    if isinstance(filename, str):
-        filename = (filename,)
+    if isinstance(filename, (str, os.PathLike)):
+        filenames: tuple[str, ...] = (os.fspath(filename),)
+    else:
+        filenames = tuple(os.fspath(name) for name in filename)
 
-    ed.edit_files(filenames=filename)
+    ed.edit_files(filenames=filenames)
     return None
 
 
