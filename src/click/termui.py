@@ -838,7 +838,10 @@ def edit(
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-    filename: str | os.PathLike[str] | cabc.Iterable[str | os.PathLike[str]] | None = None,
+    filename: str
+    | os.PathLike[str]
+    | cabc.Iterable[str | os.PathLike[str]]
+    | None = None,
 ) -> None: ...
 
 
@@ -848,7 +851,10 @@ def edit(
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-    filename: str | os.PathLike[str] | cabc.Iterable[str | os.PathLike[str]] | None = None,
+    filename: str
+    | os.PathLike[str]
+    | cabc.Iterable[str | os.PathLike[str]]
+    | None = None,
 ) -> str | bytes | bytearray | None:
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
