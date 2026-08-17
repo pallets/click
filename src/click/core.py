@@ -3350,7 +3350,10 @@ class Option(Parameter):
                 any_prefix_is_slash = True
 
             if not self.is_flag and not self.count:
-                rv += f" {self.make_metavar(ctx=ctx)}"
+                metavar = self.make_metavar(ctx=ctx)
+                if self.multiple:
+                    metavar += "..."
+                rv += f" {metavar}"
 
             return rv
 

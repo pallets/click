@@ -72,6 +72,68 @@ def test_deprecated_empty_help_no_leading_space(help_text, deprecated, expected)
     assert opt.get_help_record(ctx)[1] == expected
 
 
+# See #3652
+@pytest.mark.parametrize("metavar", [None, "FOO"])
+def test_multiple_option_metavar_renders_ellipsis(metavar):
+    """`--foo TEXT` with multiple=True should render as `--foo TEXT...` so the
+    help text visually signals that the option accepts repeated values, matching
+    the convention used by argparse and other CLI tools.
+    """
+    kwargs: dict = {"multiple": True, "type": click.STRING, "help": "A list of foo strings."}
+    if metavar is not None:
+        kwargs["metavar"] = metavar
+    opt = click.Option(["--foo"], **kwargs)
+    ctx = click.Context(click.Command("cli"))
+
+    record = opt.get_help_record(ctx)
+    assert record is not None
+    expected_metavar = metavar if metavar is not None else "TEXT"
+    assert record[0] == f"--foo {expected_metavar}..."
+
+
+def test_multiple_option_help_shows_ellipsis(runner):
+    """End-to-end: a command with a multiple=True option should show
+    `--foo TEXT...` in its --help output. See #3652.
+    """
+    runner = runner
+
+    @click.command()
+    @click.option("--foo", multiple=True, help="A list of foo strings.")
+    def cli(foo):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    assert "--foo TEXT..." in result.output
+
+
+def test_non_multiple_option_metavar_no_ellipsis():
+    """Negative coverage: a single-value option should still render without the
+    trailing `...` so the fix doesn't overreach.
+    """
+    opt = click.Option(["--foo"], type=click.STRING, help="A foo string.")
+    ctx = click.Context(click.Command("cli"))
+    record = opt.get_help_record(ctx)
+    assert record is not None
+    assert record[0] == "--foo TEXT"
+
+
+def test_nargs_option_metavar_includes_ellipsis():
+    """Negative coverage for nargs>1: the same UX benefit applies when an option
+    takes multiple values via nargs>1 (with or without multiple=True), so the
+    trailing `...` is also expected there. This documents click's current
+    behavior and ensures we don't regress if the rendering logic changes.
+    """
+    opt = click.Option(["--file"], nargs=2, type=click.STRING)
+    ctx = click.Context(click.Command("cli"))
+    record = opt.get_help_record(ctx)
+    assert record is not None
+    # The metavar is derived from the type (STRING -> "TEXT"). The trailing
+    # `...` is added because nargs>1 also signals a multi-value option, just
+    # like multiple=True does.
+    assert record[0] == "--file TEXT..."
+
+
 @pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])
 def test_deprecated_warning(runner, deprecated):
     @click.command()
