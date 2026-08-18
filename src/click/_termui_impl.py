@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import collections.abc as cabc
 import contextlib
-import io
 import math
 import os
 import shlex
@@ -28,22 +27,9 @@ from ._compat import strip_ansi
 from ._compat import term_len
 from ._compat import WIN
 from .exceptions import ClickException
-from .utils import _KeepOpenFile
 from .utils import echo
 
 V = t.TypeVar("V")
-
-
-class _BufferedTextPagerStream(t.Protocol):
-    buffer: t.BinaryIO
-
-
-def _has_binary_buffer(
-    stream: t.BinaryIO | t.TextIO,
-) -> t.TypeGuard[_BufferedTextPagerStream]:
-    # TextIO is wider than TextIOWrapper; text-only streams such as StringIO
-    # are valid TextIO values but do not expose a binary buffer to wrap.
-    return getattr(stream, "buffer", None) is not None
 
 
 if os.name == "nt":
@@ -394,20 +380,49 @@ class ProgressBar(t.Generic[V]):
             self.render_progress()
 
 
-class MaybeStripAnsi(io.TextIOWrapper):
-    def __init__(self, stream: t.IO[bytes], *, color: bool, **kwargs: t.Any):
-        super().__init__(stream, **kwargs)
+class _PagerWriter:
+    """Wrap a pager's output stream to strip ANSI styling when colors are
+    disabled.
+
+    The wrapped stream is owned by the pager strategy that produced it, so this
+    wrapper never closes it: ``_pipepager`` closes its pipe to signal EOF to the
+    pager process, ``_tempfilepager`` closes and removes its temporary file, and
+    ``_nullpager`` leaves an external stream such as ``sys.stdout`` untouched.
+
+    The ``color`` attribute lets :func:`click.echo` detect that ANSI stripping
+    is handled here, so it doesn't strip a second time (see
+    :func:`._compat.should_strip_ansi`).
+    """
+
+    def __init__(self, stream: t.TextIO, color: bool) -> None:
+        self._stream = stream
         self.color = color
 
     def write(self, text: str) -> int:
         if not self.color:
             text = strip_ansi(text)
-        return super().write(text)
+
+        return self._stream.write(text)
+
+    def writelines(self, lines: cabc.Iterable[str]) -> None:
+        for line in lines:
+            self.write(line)
+
+    def flush(self) -> None:
+        self._stream.flush()
+
+    def close(self) -> None:
+        # The pager strategy owns the stream's lifecycle. Flush pending output,
+        # but never close the underlying stream from here.
+        self._stream.flush()
+
+    def __getattr__(self, name: str) -> t.Any:
+        return getattr(self._stream, name)
 
 
 def _pager_contextmanager(
     color: bool | None = None,
-) -> t.ContextManager[tuple[t.BinaryIO | t.TextIO, str, bool]]:
+) -> t.ContextManager[tuple[t.TextIO, bool]]:
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
 
@@ -447,37 +462,21 @@ def get_pager_file(color: bool | None = None) -> t.Generator[t.TextIO, None, Non
     :param color: controls if the pager supports ANSI colors or not.  The
                   default is autodetection.
     """
-    with _pager_contextmanager(color=color) as (stream, encoding, color):
-        # Split streams by capabilities rather than the abstract TextIO /
-        # BinaryIO annotations: buffered text streams can be unwrapped to bytes,
-        # while other streams are yielded as-is.
-        wrapper: MaybeStripAnsi | None = None
-        if _has_binary_buffer(stream):
-            # Text stream backed by a binary buffer.
-            wrapper = MaybeStripAnsi(stream.buffer, color=color, encoding=encoding)
-            stream = wrapper
+    with _pager_contextmanager(color=color) as (stream, color):
+        # Every pager strategy yields a text stream, so the only thing left to
+        # do is strip ANSI styling when colors are disabled. The wrapper does
+        # not close the stream: each strategy owns its stream's lifecycle.
+        writer = _PagerWriter(stream, color=color)
         try:
-            # Narrow the BinaryIO | TextIO union that _pager_contextmanager
-            # yields; the caller writes text to the pager.
-            yield t.cast(t.TextIO, stream)
+            yield t.cast(t.TextIO, writer)
         finally:
-            try:
-                stream.flush()
-            finally:
-                # Hand the binary buffer back to the pager that produced it
-                # rather than letting this TextIOWrapper close it on garbage
-                # collection. The pager owns the buffer's lifecycle: subprocess
-                # pipes and temp files are closed by their own helpers, while a
-                # borrowed stdout must stay open for the caller. detach() runs
-                # even if flush() raised, so the buffer is never closed here.
-                if wrapper is not None:
-                    wrapper.detach()
+            writer.flush()
 
 
 @contextlib.contextmanager
 def _pipepager(
     cmd_parts: list[str], color: bool | None = None
-) -> t.Iterator[tuple[t.BinaryIO | t.TextIO, str, bool]]:
+) -> t.Iterator[tuple[t.TextIO, bool]]:
     """Page through text by feeding it to another program.
 
     Invokes the pager via :class:`subprocess.Popen` with an ``argv`` list
@@ -544,10 +543,11 @@ def _pipepager(
         errors="replace",
         text=True,
     )
-    stdin = t.cast(t.BinaryIO, c.stdin)
-    encoding = get_best_encoding(stdin)
+    # With ``text=True``, ``c.stdin`` is already a text stream that encodes
+    # writes for the pager process (honoring ``errors="replace"``).
+    stdin = t.cast(t.TextIO, c.stdin)
     try:
-        yield stdin, encoding, color
+        yield stdin, color
     except BrokenPipeError:
         # In case the pager exited unexpectedly, ignore the broken pipe error.
         pass
@@ -587,7 +587,7 @@ def _pipepager(
 @contextlib.contextmanager
 def _tempfilepager(
     cmd_parts: list[str], color: bool | None = None
-) -> t.Iterator[tuple[t.BinaryIO | t.TextIO, str, bool]]:
+) -> t.Iterator[tuple[t.TextIO, bool]]:
     """Page through text by invoking a program on a temporary file.
 
     Used as the primary pager strategy on Windows (where piping to
@@ -631,9 +631,11 @@ def _tempfilepager(
     # On Windows, NamedTemporaryFile cannot be opened by another process
     # while Python still has it open, so we use delete=False and clean up manually
     # rather than using a contextmanager here.
-    f = tempfile.NamedTemporaryFile(mode="w", delete=False)
+    f = tempfile.NamedTemporaryFile(
+        mode="w", encoding=encoding, errors="replace", delete=False
+    )
     try:
-        yield t.cast(t.BinaryIO, f), encoding, color
+        yield t.cast(t.TextIO, f), color
         f.flush()
         f.close()
         subprocess.call([str(cmd_path), f.name])
@@ -649,21 +651,17 @@ def _tempfilepager(
 @contextlib.contextmanager
 def _nullpager(
     stream: t.TextIO, color: bool | None = None
-) -> t.Iterator[tuple[t.TextIO, str, bool]]:
-    """Simply print unformatted text. This is the ultimate fallback. Don't close the
-    output stream in this case, since it's coming from elsewhere rather than our
-    internal helpers.
+) -> t.Iterator[tuple[t.TextIO, bool]]:
+    """Simply print unformatted text. This is the ultimate fallback.
 
-    The stream is wrapped in :class:`~click.utils._KeepOpenFile` so that, as a
-    borrowed stream, it is not closed by a ``with`` block. The wrapper that
-    :func:`get_pager_file` builds around it is detached rather than closed.
+    The stream comes from elsewhere (typically ``sys.stdout``), so its lifecycle
+    is left untouched: :class:`_PagerWriter` never closes what it wraps, and it
+    is the only thing :func:`get_pager_file` hands to the caller.
     """
-    encoding = get_best_encoding(stream)
-
     if color is None:
         color = False
 
-    yield _KeepOpenFile(stream), encoding, color  # type: ignore[misc]
+    yield stream, color
 
 
 class Editor:

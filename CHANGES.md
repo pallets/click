@@ -79,6 +79,10 @@ Unreleased
   unlinked its file without closing it first, and Windows refuses to remove a
   file the process still holds open, so the cleanup failure masked the real
   exception. {issue}`3731` {pr}`3764`
+- The temporary file the pager writes to on Windows is opened with the encoding
+  {func}`get_pager_file` picked for the output stream, and with
+  `errors="replace"` to match the pipe backend. Any text stdout can encode
+  reaches the pager.
 
 ## Version 8.4.2
 
