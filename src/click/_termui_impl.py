@@ -488,7 +488,7 @@ def _pager_contextmanager(
     cmd_path, cmd_params = resolved
 
     if use_tempfile:
-        return _tempfilepager(cmd_path, color)
+        return _tempfilepager(cmd_path, cmd_params, color)
 
     return _pipepager(cmd_path, cmd_params, color)
 
@@ -517,6 +517,34 @@ def get_pager_file(color: bool | None = None) -> t.Generator[t.TextIO, None, Non
             writer.flush()
 
 
+def _less_uses_raw_mode(less_env: str, cmd_params: list[str]) -> bool:
+    """Detect a raw-control-characters request in a ``less`` invocation.
+
+    Parses the tokens of the ``LESS`` environment variable and the command
+    line: only short-option clusters (``-R``, ``-rX``, ``-XrY``) and the
+    ``--raw-control-chars`` long option request raw mode. Filenames and
+    long-option values may carry the letter ``r`` without being such a
+    request.
+    """
+    try:
+        env_tokens = shlex.split(less_env)
+    except ValueError:
+        # Unbalanced quotes make ``LESS`` unparsable: fall back to whitespace
+        # splitting rather than failing the pager over it.
+        env_tokens = less_env.split()
+    tokens = env_tokens + cmd_params
+
+    for token in tokens:
+        if token.startswith("--"):
+            if token.casefold() == "--raw-control-chars":
+                return True
+        elif token.startswith("-") and len(token) > 1:
+            if "r" in token[1:].casefold():
+                return True
+
+    return False
+
+
 @contextlib.contextmanager
 def _pipepager(
     cmd_path: Path, cmd_params: list[str], color: bool | None = None
@@ -535,13 +563,24 @@ def _pipepager(
     env = dict(os.environ)
 
     # If we're piping to less and the user hasn't decided on colors, we enable
-    # them by default we find the -R flag in the command line arguments.
-    if color is None and cmd_path.name == "less":
-        less_flags = f"{os.environ.get('LESS', '')}{' '.join(cmd_params)}"
-        if not less_flags:
-            env["LESS"] = "-R"
+    # them: either the invocation already requests raw control characters, or
+    # ``LESS=-R`` is injected. Match on the stem so a resolved ``less.exe`` is
+    # recognized like bare ``less``, case-insensitively on Windows since its
+    # filesystems are. POSIX keeps an exact match.
+    cmd_name = cmd_path.stem
+    if WIN:
+        # ``_pager_contextmanager`` currently routes every Windows invocation
+        # to ``_tempfilepager``, so this branch is not reachable on Windows
+        # today: it keeps the detection correct should that routing ever
+        # change.
+        cmd_name = cmd_name.casefold()
+
+    if color is None and cmd_name == "less":
+        less_env = os.environ.get("LESS", "")
+        if _less_uses_raw_mode(less_env, cmd_params):
             color = True
-        elif "r" in less_flags or "R" in less_flags:
+        elif not less_env and not cmd_params:
+            env["LESS"] = "-R"
             color = True
 
     c = subprocess.Popen(
@@ -595,14 +634,14 @@ def _pipepager(
 
 @contextlib.contextmanager
 def _tempfilepager(
-    cmd_path: Path, color: bool | None = None
+    cmd_path: Path, cmd_params: list[str], color: bool | None = None
 ) -> t.Iterator[tuple[t.TextIO, bool | None]]:
     """Page through text by invoking a program on a temporary file.
 
     Used as the primary pager strategy on Windows (where piping to
     ``more`` adds spurious ``\\r\\n``), and as a fallback on other
-    platforms. The command is invoked with the temporary file as its only
-    argument: any parameters the user set in ``PAGER`` are not passed on.
+    platforms. The command is invoked with any parameters from ``PAGER``
+    followed by the temporary file name.
     """
     import subprocess
     import tempfile
@@ -618,7 +657,7 @@ def _tempfilepager(
         yield t.cast(t.TextIO, f), color
         f.flush()
         f.close()
-        subprocess.call([str(cmd_path), f.name])
+        subprocess.call([str(cmd_path), *cmd_params, f.name])
     finally:
         # An error raised while paging skips the close() above, and Windows
         # refuses to unlink a file the process still holds open. Closing here
