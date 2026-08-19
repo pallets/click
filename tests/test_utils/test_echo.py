@@ -38,6 +38,14 @@ def test_echo_custom_file():
     click.echo("hello", file=f)
     assert f.getvalue() == "hello\n"
 
+    f = StringIO()
+    click.echo("hello", file=f, nl=False)
+    assert f.getvalue() == "hello"
+
+    f = StringIO()
+    click.echo(None, file=f)
+    assert f.getvalue() == "\n"
+
     b = BytesIO()
     click.echo(b"", b)
     assert b.getvalue() == b"\n"
