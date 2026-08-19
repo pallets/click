@@ -710,7 +710,7 @@ class Editor:
                 return editor
         return "vi"
 
-    def edit_files(self, filenames: cabc.Iterable[str]) -> None:
+    def edit_files(self, filenames: cabc.Iterable[str | os.PathLike[str]]) -> None:
         """Open files in the user's editor."""
         import shlex
         import subprocess

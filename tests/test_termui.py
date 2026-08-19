@@ -421,13 +421,13 @@ def test_getchar_windows_exceptions(runner, monkeypatch, key_char, exc):
         click.getchar()
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="No sed on Windows.")
+@pytest.mark.skipif(WIN, reason="No sed on Windows.")
 def test_fast_edit(runner):
     result = click.edit("a\nb", editor="sed -i~ 's/$/Test/'")
     assert result == "aTest\nbTest\n"
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="No sed on Windows.")
+@pytest.mark.skipif(WIN, reason="No sed on Windows.")
 def test_edit(runner):
     with tempfile.NamedTemporaryFile(mode="w") as named_tempfile:
         named_tempfile.write("a\nb\n")
@@ -446,6 +446,19 @@ def test_edit(runner):
             # end of last line.  Hence the input data (see above) should be
             # terminated by newline too.
             assert reopened_file.read() == "aTest\nbTest\n"
+
+
+@pytest.mark.skipif(WIN, reason="No sed on Windows.")
+@pytest.mark.parametrize("use_iterable", [False, True], ids=["single", "iterable"])
+def test_edit_pathlib(runner, tmp_path, use_iterable):
+    """Issue #2869: ``filename`` accepts ``os.PathLike`` values."""
+    file_path = tmp_path / "file.txt"
+    file_path.write_text("a\nb\n", encoding="UTF-8")
+    filename = [file_path] if use_iterable else file_path
+
+    result = click.edit(filename=filename, editor="sed -i~ 's/$/Test/'")
+    assert result is None
+    assert file_path.read_text(encoding="UTF-8") == "aTest\nbTest\n"
 
 
 @pytest.mark.parametrize(

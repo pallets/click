@@ -89,6 +89,8 @@ Unreleased
   bare `less`. {pr}`3777`
 - Improve raw mode detection by parsing the option tokens. {issue}`3416`
   {pr}`3777`
+- {func}`edit` accepts `os.PathLike` values for `filename`, in addition to
+  strings. {issue}`2869` {pr}`3781`
 
 ## Version 8.4.2
 
