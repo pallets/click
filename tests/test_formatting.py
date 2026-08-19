@@ -630,3 +630,56 @@ def test_command_write_usage_no_args(runner, command_kwargs, expected_usage_line
     cli = click.Command("cli", **command_kwargs)
     result = runner.invoke(cli, ["--help"])
     assert result.output.splitlines()[0] == expected_usage_line
+
+
+def test_wrap_text_break_on_hyphens():
+    """``wrap_text`` breaks a hyphenated word by default, and keeps it whole
+    when ``break_on_hyphens`` is disabled.
+    """
+    text = "alpha --max-retry-count"
+    assert click.formatting.wrap_text(text, width=20) == "alpha --max-retry-\ncount"
+    assert (
+        click.formatting.wrap_text(text, width=20, break_on_hyphens=False)
+        == "alpha\n--max-retry-count"
+    )
+
+
+def test_write_usage_keeps_hyphenated_args_whole():
+    """Issue #3362: an argument reaching the wrap width used to be split at
+    an internal hyphen, so an option name ended up spread over two lines.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+    f = click.HelpFormatter(width=65)
+    f.write_usage("program", " ".join(options))
+    lines = f.getvalue().splitlines()
+
+    for option in options:
+        assert any(option in line for line in lines)
+
+    for line in lines:
+        assert not line.endswith("-")
+
+
+def test_write_usage_keeps_hyphenated_args_whole_below_prefix():
+    """Issue #3362: the branch that puts the arguments on their own line,
+    used when the prefix is too long to share one, wraps the same way.
+    """
+    f = click.HelpFormatter(width=31)
+    f.write_usage("a-program-with-a-very-long-name", "[OPTIONS] --max-retry-count")
+    lines = f.getvalue().splitlines()
+
+    assert any("--max-retry-count" in line for line in lines)
+
+    for line in lines:
+        assert not line.endswith("-")
