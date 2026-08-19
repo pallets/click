@@ -2,9 +2,11 @@ import contextlib
 import gc
 import io
 import os
+import pathlib
 import platform
 import shlex
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -759,6 +761,157 @@ def test_echo_via_pager_real_pager_handles_ansi(monkeypatch, capfd, color, expec
     assert out == expected
 
 
+@pytest.mark.skipif(WIN, reason="The fake pager is a shell script.")
+@pytest.mark.parametrize(
+    ("pager_name", "expected_color"),
+    [
+        pytest.param("less", True, id="less"),
+        pytest.param("less.exe", True, id="less.exe"),
+        pytest.param("LESS.EXE", False, id="upper case stays unmatched on POSIX"),
+        pytest.param("cat", False, id="not less"),
+    ],
+)
+def test_pipepager_less_detection_matches_stem(
+    monkeypatch, tmp_path, pager_name, expected_color
+):
+    """The ``less`` detection behind the ``LESS=-R`` auto-enable matches the
+    command stem, so a ``less.exe`` resolved on Windows is recognized the same
+    as a bare ``less``. POSIX keeps an exact, case-sensitive match.
+    """
+    fake_pager = tmp_path / pager_name
+    fake_pager.write_text("#!/bin/sh\ncat\n", encoding="UTF-8")
+    fake_pager.chmod(0o755)
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setitem(click._termui_impl.os.environ, "PAGER", str(fake_pager))
+    monkeypatch.delitem(click._termui_impl.os.environ, "LESS", raising=False)
+
+    with click.get_pager_file() as pager:
+        assert pager.color is expected_color
+
+
+@pytest.mark.skipif(WIN, reason="The fake pager is a shell script.")
+def test_pipepager_less_detection_case_insensitive_on_windows(monkeypatch, tmp_path):
+    """Windows filesystems are case-insensitive, so ``which`` resolves
+    whatever case the file carries: the ``less`` match casefolds there.
+
+    Runs ``_pipepager`` directly: faking ``WIN`` makes
+    ``_pager_contextmanager`` route to the temp file strategy instead.
+    """
+    fake_pager = tmp_path / "LESS.EXE"
+    fake_pager.write_text("#!/bin/sh\ncat\n", encoding="UTF-8")
+    fake_pager.chmod(0o755)
+
+    monkeypatch.setattr(click._termui_impl, "WIN", True)
+    monkeypatch.delitem(click._termui_impl.os.environ, "LESS", raising=False)
+
+    with click._termui_impl._pipepager(fake_pager, []) as (_, color):
+        assert color is True
+
+
+class _FakePagerProcess:
+    """Stand-in for :class:`subprocess.Popen` recording argv and env without
+    launching a process."""
+
+    def __init__(self, argv, *, env=None, **kwargs):
+        self.argv = argv
+        self.env = env
+        self.returncode = 0
+        self.stdin = io.StringIO()
+
+    def terminate(self):
+        pass
+
+    def wait(self):
+        return 0
+
+
+@pytest.mark.parametrize(
+    ("cmd_parts", "less_env", "expected_color", "expected_less"),
+    [
+        pytest.param(["less"], None, True, "-R", id="no flags: inject LESS=-R"),
+        pytest.param(["less", "-R"], None, True, None, id="explicit -R"),
+        pytest.param(["less", "-rX"], None, True, None, id="bundled short flags"),
+        pytest.param(["less"], "-R", True, "-R", id="LESS env var"),
+        pytest.param(
+            ["less", "--RAW-CONTROL-CHARS"], None, True, None, id="long option"
+        ),
+        pytest.param(["less", "-X"], None, None, None, id="unrelated flag"),
+        pytest.param(
+            ["less"],
+            "--prompt=resume",
+            None,
+            "--prompt=resume",
+            id="long option with r substring",
+        ),
+        pytest.param(["less", "README.md"], None, None, None, id="filename with R"),
+        pytest.param(
+            ["less", "requirements.txt"], None, None, None, id="filename with r"
+        ),
+        pytest.param(
+            ["less", "--", "README.md"],
+            None,
+            None,
+            None,
+            id="option terminator shields filenames",
+        ),
+        pytest.param(
+            # The detection matches the bare long option: an ``r`` inside an
+            # option value does not request raw mode.
+            ["less", "--raw-control-chars=x"],
+            None,
+            None,
+            None,
+            id="long option with value",
+        ),
+        pytest.param(
+            # Unbalanced quotes make shlex.split raise: the detection falls
+            # back to whitespace splitting, which still finds the -R.
+            ["less"],
+            '-R "',
+            True,
+            '-R "',
+            id="unparsable LESS",
+        ),
+    ],
+)
+def test_pipepager_less_raw_mode_detection(
+    monkeypatch, cmd_parts, less_env, expected_color, expected_less
+):
+    """Raw-mode detection parses the option tokens from ``LESS`` and the
+    command line. Filenames and unrelated options carrying the letter ``r``
+    or ``R`` do not request raw mode, and ``_pipepager`` then reports no
+    opinion (``None``) that :func:`get_pager_file` settles to off.
+    {issue}`3416`
+    """
+    if less_env is None:
+        monkeypatch.delitem(click._termui_impl.os.environ, "LESS", raising=False)
+    else:
+        monkeypatch.setitem(click._termui_impl.os.environ, "LESS", less_env)
+
+    processes: list[_FakePagerProcess] = []
+
+    def fake_popen(*args, **kwargs):
+        process = _FakePagerProcess(*args, **kwargs)
+        processes.append(process)
+        return process
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    # Popen is faked, so no real binary needs to exist behind the resolved
+    # path: the stem is all the less detection reads from it.
+    cmd_path = pathlib.Path("/tests/less")
+
+    with click._termui_impl._pipepager(cmd_path, cmd_parts[1:]) as (_, color):
+        pass
+
+    assert color is expected_color
+    (process,) = processes
+    if expected_less is None:
+        assert "LESS" not in process.env
+    else:
+        assert process.env["LESS"] == expected_less
+
+
 def test_echo_via_pager_streams_each_write(monkeypatch):
     """Each write is flushed so a slow generator streams to the pager
     incrementally instead of buffering until the end (issues #3242, #2542).
@@ -1013,7 +1166,8 @@ def _force_tempfile_pager(monkeypatch, pager_cmd="cat"):
     backslashes and splits on the space in ``C:\\Program Files``, leaving a
     command that resolves to nothing. Click resolves the bare name itself.
     """
-    assert shutil.which(pager_cmd) is not None, f"{pager_cmd} not available"
+    cmd = shlex.split(pager_cmd)[0]
+    assert shutil.which(cmd) is not None, f"{cmd} not available"
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     monkeypatch.setattr(click._termui_impl, "WIN", True)
     monkeypatch.setitem(click._termui_impl.os.environ, "PAGER", pager_cmd)
@@ -1073,6 +1227,22 @@ def test_tempfile_pager_handles_ansi(monkeypatch, capfd, color, expected):
     out, err = capfd.readouterr()
     assert err == ""
     assert out.replace("\r\n", "\n") == expected
+
+
+@pytest.mark.skipif(shutil.which("head") is None, reason="head not available")
+def test_tempfile_pager_passes_pager_params(monkeypatch, capfd):
+    """The temp file backend forwards ``PAGER`` parameters to the command.
+
+    ``head -n 1`` renders one line out of two when the ``-n 1`` reaches the
+    command.
+    """
+    _force_tempfile_pager(monkeypatch, pager_cmd="head -n 1")
+
+    click.echo_via_pager("line one\nline two\n")
+
+    out, err = capfd.readouterr()
+    assert err == ""
+    assert out.replace("\r\n", "\n") == "line one\n"
 
 
 @pytest.mark.skipif(shutil.which("cat") is None, reason="cat not available")
