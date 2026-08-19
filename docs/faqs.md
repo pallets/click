@@ -82,3 +82,25 @@ Note that the check we recommend here is against `sys.stdout.encoding`, not `sys
 | `sys.stdout.reconfigure(encoding=…)`    |          `0`          |        `utf-8`        |
 
 Do not rely on `sys.getfilesystemencoding()` on Windows either: [PEP 529](https://peps.python.org/pep-0529/) makes it `utf-8` regardless of the actual stream encoding.
+
+(edit-wait)=
+### The `edit` utility fails to open Visual Studio Code
+
+Let's say our default editor is Visual Studio Code. A Click CLI calling `edit()` is supposed to open a new VSCode window on a temporary file then wait for us to edit that file before returning back the CLI execution.
+
+But VSCode (and some other editors) returns immediately: the file is deleted before you had a chance to edit it. With `require_save=True` (the default), the function also returns `None` instead of the edited content.
+
+This is not a bug in Click. In that particular case, the `code` command (VSCode's executable) is a launcher: it starts the real editor in the background, then exits. Click waits on that process and reads its exit as the end of the editing session. The same happens on any platform with any editor whose command returns before its window closes.
+
+#### Answer
+
+Setup your editor to make its launcher block until the window is closed, so Click keeps waiting on it.
+
+You can set the `EDITOR` in your environment with its appropriate flags:
+
+| Editor | Flags |
+|---|---|
+| Visual Studio Code | `EDITOR="code --wait"` |
+| Sublime Text | `EDITOR="subl -w"` |
+
+For an editor with no such flag, a workaround is to point `EDITOR` at a small wrapper script that opens the editor and blocks until it exits.
