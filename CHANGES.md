@@ -83,6 +83,10 @@ Unreleased
   {func}`get_pager_file` picked for the output stream, and with
   `errors="replace"` to match the pipe backend. Any text stdout can encode
   reaches the pager.
+- {meth}`HelpFormatter.write_usage` no longer breaks an argument at a hyphen it
+  contains, so a long option name or metavar reaching the wrap width moves to
+  the next line whole instead of being split across two. {func}`wrap_text`
+  takes a `break_on_hyphens` argument to control this. {issue}`3362`
 
 ## Version 8.4.2
 
