@@ -870,6 +870,16 @@ def edit(
     automatically converted from POSIX to Windows and vice versa.  As such,
     the message here will have ``\n`` as newline markers.
 
+    .. warning::
+
+        The contract of this utility is that the editor command blocks until
+        the editing session is over: Click waits for it to exit before
+        reading the file back and cleaning it up. Editors whose command
+        launches the real editor in the background and exits immediately
+        break that contract. Click then returns before editing begins and
+        removes the temporary file while the editor still has it open. See
+        :ref:`edit-wait` to make such editors wait.
+
     :param text: the text to edit.
     :param editor: optionally the editor to use.  Defaults to automatic
                    detection.
