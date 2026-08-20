@@ -503,6 +503,59 @@ def test_wrap_text_visible_width(body, width, initial_indent):
     assert styled_visible == plain.splitlines()
 
 
+def test_write_usage_does_not_break_options_at_hyphens():
+    """An option name is a single token. Wrapping must not split it at a
+    hyphen, which would leave a fragment the user cannot copy or type.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+
+    formatter = click.HelpFormatter(width=65)
+    formatter.write_usage("program", " ".join(options))
+    rendered = formatter.getvalue()
+
+    assert rendered == (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+        "               --config-file-location --user-auth-token\n"
+        "               --auto-update-interval --force-overwrite-existing\n"
+        "               --network-timeout-seconds --debug-trace-enabled\n"
+    )
+
+    # Every option survives intact rather than being split across lines.
+    for option in options:
+        assert option in rendered
+
+
+def test_write_usage_long_prefix_does_not_break_options_at_hyphens():
+    """The same holds on the branch where the prefix is too long and the
+    arguments move to their own line.
+
+    The width is chosen so the options still fit once wrapped; a word wider
+    than the line is broken by ``break_long_words``, which is a separate
+    mechanism and not what this test is about.
+    """
+    formatter = click.HelpFormatter(width=40)
+    formatter.write_usage(
+        "program-with-a-long-name",
+        "--a-very-long-option-name --second-long-option",
+    )
+    rendered = formatter.getvalue()
+
+    assert "--a-very-long-option-name" in rendered
+    assert "--second-long-option" in rendered
+
+
 def test_write_usage_styled_prefix_keeps_options_on_one_line():
     """End-to-end: a downstream-styled ``Usage:`` prefix should not split
     ``[OPTIONS]`` across two lines.
