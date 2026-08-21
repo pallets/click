@@ -147,7 +147,15 @@ class _LazyFile:
         if self.name == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
         else:
-            if "r" in mode and not stat.S_ISFIFO(os.stat(filename).st_mode):
+            is_fifo = False
+
+            if "r" in mode:
+                try:
+                    is_fifo = stat.S_ISFIFO(os.stat(filename).st_mode)
+                except OSError:
+                    pass
+
+            if "r" in mode and not is_fifo:
                 # Open and close the file in case we're opening it for
                 # reading so that we can catch at least some errors in
                 # some cases early. Do not do this for FIFOs because an
