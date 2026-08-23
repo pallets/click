@@ -1536,11 +1536,11 @@ class Command:
         if prog_name is None:
             prog_name = _detect_program_name()
 
-        # Process shell completion requests and exit early.
-        self._main_shell_completion(extra, prog_name, complete_var)
-
         try:
             try:
+                # Process shell completion requests and exit early.
+                self._main_shell_completion(extra, prog_name, complete_var)
+
                 with self.make_context(prog_name, args, **extra) as ctx:
                     rv = self.invoke(ctx)
                     if not standalone_mode:

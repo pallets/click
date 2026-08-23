@@ -492,6 +492,37 @@ def test_context_settings(runner):
     assert result.output == "plain,a\nplain,b\n"
 
 
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_completion_usage_error(runner):
+    class AmbiguousGroup(Group):
+        def get_command(self, ctx, cmd_name):
+            matches = [
+                name for name in self.list_commands(ctx) if name.startswith(cmd_name)
+            ]
+
+            if len(matches) > 1:
+                ctx.fail(f"Too many matches: {', '.join(matches)}")
+
+            return super().get_command(ctx, cmd_name)
+
+    cli = AmbiguousGroup("cli", commands=[Command("interfaces"), Command("ip")])
+    result = runner.invoke(
+        cli,
+        env={
+            "COMP_WORDS": "cli i ",
+            "COMP_CWORD": "2",
+            "_CLI_COMPLETE": "bash_complete",
+        },
+    )
+
+    assert result.exit_code == 2
+    assert result.output == (
+        "Usage: cli [OPTIONS] COMMAND [ARGS]...\n"
+        "Try 'cli --help' for help.\n\n"
+        "Error: Too many matches: interfaces, ip\n"
+    )
+
+
 # case_sensitive=False normalizes values to lowercase, matching remains case insensitive
 @pytest.mark.parametrize(("value", "expect"), [(False, ["au", "al"]), (True, ["al"])])
 def test_choice_case_sensitive(value, expect):
