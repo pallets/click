@@ -3,6 +3,7 @@ from __future__ import annotations
 import collections.abc as cabc
 import os
 import re
+import stat
 import sys
 import typing as t
 from functools import update_wrapper
@@ -146,13 +147,22 @@ class _LazyFile:
         if self.name == "-":
             self._f, self.should_close = open_stream(filename, mode, encoding, errors)
         else:
-            if "r" in mode:
+            if "r" in mode and not self._is_fifo(filename):
                 # Open and close the file in case we're opening it for
                 # reading so that we can catch at least some errors in
-                # some cases early.
+                # some cases early. Skip this for FIFOs: opening one for
+                # reading blocks until a writer connects, which would
+                # defeat "lazy" and can hang argument parsing entirely.
                 open(filename, mode).close()
             self._f = None
             self.should_close = True
+
+    @staticmethod
+    def _is_fifo(filename: str | os.PathLike[str]) -> bool:
+        try:
+            return stat.S_ISFIFO(os.stat(filename).st_mode)
+        except OSError:
+            return False
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self.open(), name)

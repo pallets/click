@@ -294,6 +294,31 @@ def test_file_error_surrogates():
     assert message == "Could not open file '�': unknown error"
 
 
+@pytest.mark.skipif(platform.system() == "Windows", reason="No FIFOs on Windows.")
+def test_lazy_file_on_fifo_does_not_block(tmp_path):
+    """A lazy file opened for reading must not eagerly open a FIFO.
+
+    Opening a FIFO for reading blocks until a writer connects, which would
+    defeat "lazy" and can hang argument parsing entirely before the command
+    callback even runs. See: https://github.com/pallets/click/issues/2645
+    """
+    fifo_path = tmp_path / "fifo"
+    os.mkfifo(fifo_path)
+
+    # Must not block even though there is no writer connected yet.
+    lazy_file = click.utils._LazyFile(str(fifo_path), "r")
+    assert lazy_file._f is None
+
+    writer = subprocess.Popen(
+        [sys.executable, "-c", f"open({str(fifo_path)!r}, 'w').write('hello')"]
+    )
+    try:
+        assert lazy_file.read() == "hello"
+    finally:
+        writer.wait(timeout=5)
+        lazy_file.close()
+
+
 @pytest.mark.skipif(
     platform.system() == "Windows", reason="Filepath syntax differences."
 )
