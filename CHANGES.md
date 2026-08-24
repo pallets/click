@@ -4,7 +4,7 @@ Unreleased
 
 - `File(lazy=True)` no longer eagerly opens a FIFO for reading, which
   could block indefinitely (hanging argument parsing) if no writer was
-  connected yet. {issue}`2645`
+  connected yet. {issue}`2645` {pr}`3792`
 - Add built-in shell completion support for PowerShell (Windows PowerShell
   5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
   completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate
