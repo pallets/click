@@ -867,6 +867,11 @@ class Context:
             (options and click arguments) must be keyword arguments and Click
             will fill in defaults.
 
+        .. versionchanged:: 8.5
+            Parameter sources are recorded on the child context, so
+            :meth:`get_parameter_source` no longer returns ``None`` after
+            :meth:`invoke` or :meth:`forward`.
+
         .. versionchanged:: 8.0
             All ``kwargs`` are tracked in :attr:`params` so they will be
             passed if :meth:`forward` is called at multiple levels.
@@ -899,6 +904,14 @@ class Context:
                     if default_value is UNSET:
                         default_value = None
                     kwargs[param.name] = param.type_cast_value(ctx, default_value)
+                    ctx.set_parameter_source(param.name, ParameterSource.DEFAULT)
+                elif param.expose_value:
+                    # Forwarded values keep the parent's source. Explicit
+                    # invoke kwargs without one are treated as DEFAULT.
+                    source = self.get_parameter_source(param.name)
+                    if source is None:
+                        source = ParameterSource.DEFAULT
+                    ctx.set_parameter_source(param.name, source)
 
             # Track all kwargs as params, so that forward() will pass
             # them on in subsequent calls.

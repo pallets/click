@@ -91,6 +91,9 @@ Unreleased
   {pr}`3777`
 - {func}`edit` accepts `os.PathLike` values for `filename`, in addition to
   strings. {issue}`2869` {pr}`3781`
+- {meth}`Context.invoke` and {meth}`Context.forward` record parameter
+  sources on the child context so {meth}`Context.get_parameter_source`
+  no longer returns `None`. {issue}`2753`
 
 ## Version 8.4.2
 

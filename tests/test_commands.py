@@ -3,6 +3,7 @@ import re
 import pytest
 
 import click
+from click.core import ParameterSource
 
 
 def test_other_command_invoke(runner):
@@ -39,6 +40,45 @@ def test_other_command_forward(runner):
     result = runner.invoke(cli, ["dist"])
     assert not result.exception
     assert result.output == "Count: 1\nCount: 42\n"
+
+
+def test_invoke_forward_parameter_source(runner):
+    # Repro from https://github.com/pallets/click/issues/2753
+    cli = click.Group()
+    sources = []
+
+    @cli.command()
+    @click.option("--count", default=1)
+    @click.pass_context
+    def test(ctx, count):
+        sources.append((count, ctx.get_parameter_source("count")))
+
+    @cli.command()
+    @click.option("--count", default=1)
+    @click.pass_context
+    def dist(ctx, count):
+        ctx.forward(test)
+        ctx.invoke(test, count=42)
+
+    result = runner.invoke(cli, ["test"])
+    assert not result.exception
+    assert sources == [(1, ParameterSource.DEFAULT)]
+
+    sources.clear()
+    result = runner.invoke(cli, ["dist"])
+    assert not result.exception
+    assert sources == [
+        (1, ParameterSource.DEFAULT),
+        (42, ParameterSource.DEFAULT),
+    ]
+
+    sources.clear()
+    result = runner.invoke(cli, ["dist", "--count", "5"])
+    assert not result.exception
+    assert sources == [
+        (5, ParameterSource.COMMANDLINE),
+        (42, ParameterSource.COMMANDLINE),
+    ]
 
 
 def test_forwarded_params_consistency(runner):
