@@ -517,6 +517,56 @@ def test_write_usage_styled_prefix_keeps_options_on_one_line():
     assert visible == "Usage: cli [OPTIONS]\n"
 
 
+def test_write_usage_does_not_break_hyphenated_option_names():
+    """Issue #3362: wrapping the usage line must never split a single
+    hyphenated option name (like ``--max-retry-count``) at one of its
+    internal hyphens -- only at whitespace between tokens.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+
+    formatter = click.HelpFormatter(width=65)
+    formatter.write_usage("program", " ".join(options))
+
+    assert formatter.getvalue().splitlines() == [
+        "Usage: program --enable-verbose-logging --output-file-path",
+        "               --max-retry-count --disable-cache-mode",
+        "               --config-file-location --user-auth-token",
+        "               --auto-update-interval --force-overwrite-existing",
+        "               --network-timeout-seconds --debug-trace-enabled",
+    ]
+
+
+def test_wrap_text_break_on_hyphens_default_still_breaks_prose():
+    """``break_on_hyphens`` defaults to the pre-existing behaviour (``True``)
+    so callers other than ``write_usage`` -- prose help text, option
+    descriptions -- keep wrapping hyphenated compound words the way
+    ``textwrap`` always has.
+    """
+    text = "a state-of-the-art description"
+
+    assert (
+        click.formatting.wrap_text(text, width=16) == "a state-of-the-\nart description"
+    )
+    # With break_on_hyphens=False, "state-of-the-art" doesn't fit after "a "
+    # at this width, so the whole word moves to its own line instead of
+    # being split at one of its internal hyphens.
+    assert (
+        click.formatting.wrap_text(text, width=16, break_on_hyphens=False)
+        == "a\nstate-of-the-art\ndescription"
+    )
+
+
 @pytest.mark.parametrize(
     ("formatter_kwargs", "current_indent", "prog", "args", "prefix", "expected"),
     [

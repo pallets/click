@@ -1,3 +1,11 @@
+## Unreleased
+
+- `HelpFormatter.write_usage` no longer breaks a hyphenated option or
+  argument name (e.g. `--max-retry-count`) across two lines when wrapping
+  the usage line. `wrap_text` gained a `break_on_hyphens` parameter
+  (default `True`, matching prior behavior for other callers) to control
+  this. {issue}`3362`
+
 ## Version 8.5.0
 
 Released 2026-08-24
