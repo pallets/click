@@ -1,3 +1,13 @@
+## Version 8.6.0
+
+Unreleased
+
+- The usage line no longer breaks hyphenated tokens such as
+  `--option-name` at a hyphen when they reach the wrap boundary.
+  `wrap_text()` gained a `break_on_hyphens` parameter to control this.
+  {issue}`3362`
+
+
 ## Version 8.5.0
 
 Released 2026-08-24
