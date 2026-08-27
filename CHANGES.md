@@ -6,6 +6,8 @@ Released 2026-08-24
   5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
   completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate
   the completion script. {issue}`2672` {pr}`3637`
+- `HelpFormatter.write_usage` no longer wraps usage text at hyphens within
+  option names, so long options stay intact when usage lines wrap. {issue}`3362`
 - Supported versions of Windows enable ANSI terminal styles by default.
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
