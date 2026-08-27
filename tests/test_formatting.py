@@ -630,3 +630,61 @@ def test_command_write_usage_no_args(runner, command_kwargs, expected_usage_line
     cli = click.Command("cli", **command_kwargs)
     result = runner.invoke(cli, ["--help"])
     assert result.output.splitlines()[0] == expected_usage_line
+
+
+def test_wrap_text_break_on_hyphens():
+    """``wrap_text`` may break after a hyphen by default. That is disabled
+    when ``break_on_hyphens`` is false so a hyphenated token stays whole.
+    """
+    text = "alpha --max-retry-count"
+    assert click.wrap_text(text, width=20) == "alpha --max-retry-\ncount"
+    assert (
+        click.wrap_text(text, width=20, break_on_hyphens=False)
+        == "alpha\n--max-retry-count"
+    )
+
+
+def test_write_usage_keeps_hyphenated_options_whole():
+    """Issue #3362: an option reaching the wrap width used to be split at
+    an internal hyphen, so ``--max-retry-count`` became ``--max-`` /
+    ``retry-count``.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+    formatter = click.HelpFormatter(width=65)
+    formatter.write_usage("program", " ".join(options))
+    text = formatter.getvalue()
+
+    for option in options:
+        assert option in text
+
+    assert text == (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+        "               --config-file-location --user-auth-token\n"
+        "               --auto-update-interval --force-overwrite-existing\n"
+        "               --network-timeout-seconds --debug-trace-enabled\n"
+    )
+
+
+def test_write_usage_keeps_hyphenated_options_whole_when_prefix_wraps():
+    """The write_usage branch that puts arguments on their own line wraps
+    hyphenated tokens the same way.
+    """
+    formatter = click.HelpFormatter(width=31)
+    formatter.write_usage(
+        "a-program-with-a-very-long-name", "[OPTIONS] --max-retry-count"
+    )
+    text = formatter.getvalue()
+    assert "--max-retry-count" in text
+    assert "--max-\n" not in text

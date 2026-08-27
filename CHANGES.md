@@ -1,3 +1,11 @@
+## Version 8.5.1
+
+Unreleased
+
+- {meth}`HelpFormatter.write_usage` no longer splits a hyphenated argument
+  across lines. {func}`wrap_text` accepts a `break_on_hyphens` argument to
+  control this. {issue}`3362`
+
 ## Version 8.5.0
 
 Released 2026-08-24
