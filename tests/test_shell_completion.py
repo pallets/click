@@ -492,6 +492,54 @@ def test_context_settings(runner):
     assert result.output == "plain,a\nplain,b\n"
 
 
+class _AmbiguousPrefixGroup(Group):
+    """Matches the documented alias-group pattern that calls ``ctx.fail``
+    when a prefix is not unique.
+    """
+
+    def get_command(self, ctx, cmd_name):
+        matches = [
+            name for name in self.list_commands(ctx) if name.startswith(cmd_name)
+        ]
+        if len(matches) > 1:
+            ctx.fail(f"Too many matches: {', '.join(sorted(matches))}")
+        if len(matches) == 1:
+            return super().get_command(ctx, matches[0])
+        return super().get_command(ctx, cmd_name)
+
+
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_completion_usage_error_is_not_a_traceback(runner):
+    """Issue #2853: ``get_command`` may raise ``UsageError`` while
+    resolving completion input. That used to escape ``Command.main``
+    and print a traceback.
+    """
+    cli = _AmbiguousPrefixGroup("cli", commands=[Command("interfaces"), Command("ip")])
+    result = runner.invoke(
+        cli,
+        env={
+            "COMP_WORDS": "cli i ",
+            "COMP_CWORD": "2",
+            "_CLI_COMPLETE": "bash_complete",
+        },
+    )
+    assert result.exit_code == 2
+    assert "Traceback" not in result.output
+    assert result.output == (
+        "Usage: cli [OPTIONS] COMMAND [ARGS]...\n"
+        "Try 'cli --help' for help.\n\n"
+        "Error: Too many matches: interfaces, ip\n"
+    )
+
+
+def test_ambiguous_prefix_still_fails_on_invoke(runner):
+    cli = _AmbiguousPrefixGroup("cli", commands=[Command("interfaces"), Command("ip")])
+    result = runner.invoke(cli, ["i"])
+    assert result.exit_code == 2
+    assert "Too many matches: interfaces, ip" in result.output
+    assert "Traceback" not in result.output
+
+
 # case_sensitive=False normalizes values to lowercase, matching remains case insensitive
 @pytest.mark.parametrize(("value", "expect"), [(False, ["au", "al"]), (True, ["al"])])
 def test_choice_case_sensitive(value, expect):

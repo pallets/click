@@ -1623,7 +1623,15 @@ class Command:
 
         from .shell_completion import shell_complete
 
-        rv = shell_complete(self, ctx_args, prog_name, complete_var, instruction)
+        try:
+            rv = shell_complete(self, ctx_args, prog_name, complete_var, instruction)
+        except ClickException as e:
+            # Completion is dispatched before Command.main's exception
+            # handler. A custom Group.get_command that calls ctx.fail()
+            # would otherwise dump a traceback into the shell.
+            e.show()
+            sys.exit(e.exit_code)
+
         sys.exit(rv)
 
     def __call__(self, *args: t.Any, **kwargs: t.Any) -> t.Any:

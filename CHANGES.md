@@ -1,3 +1,12 @@
+## Version 8.5.1
+
+Unreleased
+
+- Shell completion no longer dumps a traceback when a custom
+  {meth}`Group.get_command` raises {exc}`UsageError` (for example via
+  {meth}`Context.fail`). The error is shown the same way as during a
+  normal invocation. {issue}`2853`
+
 ## Version 8.5.0
 
 Released 2026-08-24
