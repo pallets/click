@@ -84,3 +84,5 @@ replaced with the :func:`confirmation_option` decorator:
 ## Version Option
 
 {func}`version_option` adds a `--version` option which immediately prints the version number and exits the program.
+
+The message and values it can show are intentionally limited, and its feature set is frozen. If you need values it does not expose, such as the Python version or git metadata, use {func}`custom_version_option` and produce the output yourself in a callback.

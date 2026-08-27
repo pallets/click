@@ -15,7 +15,7 @@ Simple example:
 .. click:example::
 
     @click.command()
-    @click.argument('name', help='The name to print')
+    @click.argument('name', help='The name to print.')
     @click.option('--count', default=1, help='number of greetings')
     def hello(name: str, count: int):
         """This script prints hello and a name one or more times."""
@@ -114,7 +114,7 @@ The help epilog is printed at the end of the help and is useful for showing exam
 ## Documenting Arguments
 
 {class}`click.argument` accepts an optional `help` parameter that is shown in
-the ``Positional arguments`` section of the help page. You can still document
+the `Positional arguments` section of the help page. You can still document
 arguments in the command docstring, especially when you want to describe them
 in the main help text by name.
 

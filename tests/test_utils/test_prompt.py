@@ -14,6 +14,32 @@ def test_prompt_cast_default(capfd, monkeypatch):
     assert isinstance(value, int)
 
 
+def test_prompt_default_round_trips_through_type(capfd, monkeypatch):
+    """A default that already has the converted value type still passes
+    through ``ParamType.convert``, so conversion side effects keep
+    applying to defaults."""
+
+    class DoublingType(click.ParamType[int]):
+        name = "doubling"
+
+        def convert(self, value, param, ctx):
+            return int(value) * 2
+
+    monkeypatch.setattr(sys, "stdin", StringIO("\n"))
+    value = click.prompt("value", default=5, type=DoublingType())
+    capfd.readouterr()
+    assert value == 10
+
+
+def test_prompt_default_validated_by_type(capfd, monkeypatch):
+    """An out-of-range default is rejected by the type's validation and
+    prompts again instead of being returned as-is."""
+    monkeypatch.setattr(sys, "stdin", StringIO("\n7\n"))
+    value = click.prompt("value", default=100, type=click.IntRange(0, 10))
+    capfd.readouterr()
+    assert value == 7
+
+
 @pytest.mark.skipif(WIN, reason="Different behavior on windows.")
 def test_prompts_abort(monkeypatch, capsys):
     def f(_):

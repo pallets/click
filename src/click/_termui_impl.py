@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import collections.abc as cabc
 import contextlib
-import io
 import math
 import os
 import shlex
@@ -28,22 +27,9 @@ from ._compat import strip_ansi
 from ._compat import term_len
 from ._compat import WIN
 from .exceptions import ClickException
-from .utils import _KeepOpenFile
 from .utils import echo
 
 V = t.TypeVar("V")
-
-
-class _BufferedTextPagerStream(t.Protocol):
-    buffer: t.BinaryIO
-
-
-def _has_binary_buffer(
-    stream: t.BinaryIO | t.TextIO,
-) -> t.TypeGuard[_BufferedTextPagerStream]:
-    # TextIO is wider than TextIOWrapper; text-only streams such as StringIO
-    # are valid TextIO values but do not expose a binary buffer to wrap.
-    return getattr(stream, "buffer", None) is not None
 
 
 if os.name == "nt":
@@ -154,6 +140,14 @@ class ProgressBar(t.Generic[V]):
         return next(iter(self))
 
     def render_finish(self) -> None:
+        # Steps stay pending until they add up to update_min_steps, so a length
+        # that is not a multiple of it keeps a sub-threshold remainder that
+        # never reaches pos. Apply it so the bar settles on its true position.
+        if self._completed_intervals:
+            self.make_step(self._completed_intervals)
+            self._completed_intervals = 0
+            self.render_progress()
+
         if self.hidden or not self._is_atty:
             return
         self.file.write(AFTER_BAR)
@@ -386,20 +380,77 @@ class ProgressBar(t.Generic[V]):
             self.render_progress()
 
 
-class MaybeStripAnsi(io.TextIOWrapper):
-    def __init__(self, stream: t.IO[bytes], *, color: bool, **kwargs: t.Any):
-        super().__init__(stream, **kwargs)
+class _PagerWriter:
+    """Wrap a pager's output stream to strip ANSI styling when colors are
+    disabled.
+
+    The wrapped stream is owned by the pager strategy that produced it, so this
+    wrapper never closes it: ``_pipepager`` closes its pipe to signal EOF to the
+    pager process, ``_tempfilepager`` closes and removes its temporary file, and
+    ``_nullpager`` leaves an external stream such as ``sys.stdout`` untouched.
+
+    The ``color`` attribute lets :func:`click.echo` detect that ANSI stripping
+    is handled here, so it doesn't strip a second time (see
+    :func:`._compat.should_strip_ansi`).
+    """
+
+    def __init__(self, stream: t.TextIO, color: bool) -> None:
+        self._stream = stream
         self.color = color
 
     def write(self, text: str) -> int:
         if not self.color:
             text = strip_ansi(text)
-        return super().write(text)
+
+        return self._stream.write(text)
+
+    def writelines(self, lines: cabc.Iterable[str]) -> None:
+        for line in lines:
+            self.write(line)
+
+    def flush(self) -> None:
+        self._stream.flush()
+
+    def close(self) -> None:
+        # The pager strategy owns the stream's lifecycle. Flush pending output,
+        # but never close the underlying stream from here.
+        self._stream.flush()
+
+    def __getattr__(self, name: str) -> t.Any:
+        return getattr(self._stream, name)
+
+
+def _resolve_pager_command(cmd_parts: list[str]) -> tuple[Path, list[str]] | None:
+    """Resolve a pager ``argv`` to an absolute command path and its parameters.
+
+    The command is looked up with :func:`shutil.which`, which the
+    :mod:`subprocess` docs recommend on every platform for an unqualified name:
+    https://docs.python.org/3/library/subprocess.html#popen-constructor
+
+    Returns ``None`` when there is no command to run or it is not on the path,
+    leaving the caller to pick a fallback.
+    """
+    if not cmd_parts:
+        return None
+
+    import shutil
+
+    cmd_filepath = shutil.which(cmd_parts[0])
+
+    if not cmd_filepath:
+        return None
+
+    # Normalize to an absolute path without resolving symlinks: multi-call
+    # binaries such as busybox derive their identity from the link they are
+    # invoked through, so resolving less -> busybox makes them misbehave.
+    # See https://github.com/pallets/click/issues/2943 and
+    # https://github.com/pallets/click/pull/2944
+    return Path(cmd_filepath).absolute(), cmd_parts[1:]
 
 
 def _pager_contextmanager(
     color: bool | None = None,
-) -> t.ContextManager[tuple[t.BinaryIO | t.TextIO, str, bool]]:
+) -> t.ContextManager[tuple[t.TextIO, bool | None]]:
     """Decide what method to use for paging through text."""
     stdout = _default_text_stdout()
 
@@ -416,16 +467,30 @@ def _pager_contextmanager(
     # Non-POSIX mode retains quotes in tokens, and wrapping tokens
     # with shlex.quote re-introduces quoting issues on Windows.
     pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""))
-    if pager_cmd_parts:
-        if WIN:
-            return _tempfilepager(pager_cmd_parts, color)
-        return _pipepager(pager_cmd_parts, color)
 
-    if os.environ.get("TERM") in ("dumb", "emacs"):
+    if pager_cmd_parts:
+        # Piping to `more` on Windows adds spurious \r\n, so it gets the temp
+        # file strategy whatever the user asked for.
+        use_tempfile = WIN
+    else:
+        if os.environ.get("TERM") in ("dumb", "emacs"):
+            return _nullpager(stdout, color)
+
+        use_tempfile = WIN or sys.platform.startswith("os2")
+        pager_cmd_parts = ["more"] if use_tempfile else ["less"]
+
+    resolved = _resolve_pager_command(pager_cmd_parts)
+
+    if resolved is None:
+        # Page through stdout, which _nullpager leaves open for its owner.
         return _nullpager(stdout, color)
-    if WIN or sys.platform.startswith("os2"):
-        return _tempfilepager(["more"], color)
-    return _pipepager(["less"], color)
+
+    cmd_path, cmd_params = resolved
+
+    if use_tempfile:
+        return _tempfilepager(cmd_path, cmd_params, color)
+
+    return _pipepager(cmd_path, cmd_params, color)
 
 
 @contextlib.contextmanager
@@ -439,94 +504,84 @@ def get_pager_file(color: bool | None = None) -> t.Generator[t.TextIO, None, Non
     :param color: controls if the pager supports ANSI colors or not.  The
                   default is autodetection.
     """
-    with _pager_contextmanager(color=color) as (stream, encoding, color):
-        # Split streams by capabilities rather than the abstract TextIO /
-        # BinaryIO annotations: buffered text streams can be unwrapped to bytes,
-        # while other streams are yielded as-is.
-        wrapper: MaybeStripAnsi | None = None
-        if _has_binary_buffer(stream):
-            # Text stream backed by a binary buffer.
-            wrapper = MaybeStripAnsi(stream.buffer, color=color, encoding=encoding)
-            stream = wrapper
+    with _pager_contextmanager(color=color) as (stream, color):
+        # Every pager strategy yields a text stream, so the only thing left to
+        # do is strip ANSI styling when colors are disabled. A strategy yields
+        # None when it has no opinion on colors, which settles as off here. The
+        # wrapper does not close the stream: each strategy owns its stream's
+        # lifecycle.
+        writer = _PagerWriter(stream, color=bool(color))
         try:
-            # Narrow the BinaryIO | TextIO union that _pager_contextmanager
-            # yields; the caller writes text to the pager.
-            yield t.cast(t.TextIO, stream)
+            yield t.cast(t.TextIO, writer)
         finally:
-            try:
-                stream.flush()
-            finally:
-                # Hand the binary buffer back to the pager that produced it
-                # rather than letting this TextIOWrapper close it on garbage
-                # collection. The pager owns the buffer's lifecycle: subprocess
-                # pipes and temp files are closed by their own helpers, while a
-                # borrowed stdout must stay open for the caller. detach() runs
-                # even if flush() raised, so the buffer is never closed here.
-                if wrapper is not None:
-                    wrapper.detach()
+            writer.flush()
+
+
+def _less_uses_raw_mode(less_env: str, cmd_params: list[str]) -> bool:
+    """Detect a raw-control-characters request in a ``less`` invocation.
+
+    Parses the tokens of the ``LESS`` environment variable and the command
+    line: only short-option clusters (``-R``, ``-rX``, ``-XrY``) and the
+    ``--raw-control-chars`` long option request raw mode. Filenames and
+    long-option values may carry the letter ``r`` without being such a
+    request.
+    """
+    try:
+        env_tokens = shlex.split(less_env)
+    except ValueError:
+        # Unbalanced quotes make ``LESS`` unparsable: fall back to whitespace
+        # splitting rather than failing the pager over it.
+        env_tokens = less_env.split()
+    tokens = env_tokens + cmd_params
+
+    for token in tokens:
+        if token.startswith("--"):
+            if token.casefold() == "--raw-control-chars":
+                return True
+        elif token.startswith("-") and len(token) > 1:
+            if "r" in token[1:].casefold():
+                return True
+
+    return False
 
 
 @contextlib.contextmanager
 def _pipepager(
-    cmd_parts: list[str], color: bool | None = None
-) -> t.Iterator[tuple[t.BinaryIO | t.TextIO, str, bool]]:
+    cmd_path: Path, cmd_params: list[str], color: bool | None = None
+) -> t.Iterator[tuple[t.TextIO, bool | None]]:
     """Page through text by feeding it to another program.
 
-    Invokes the pager via :class:`subprocess.Popen` with an ``argv`` list
-    produced by :func:`shlex.split`. The command is resolved to an absolute
-    path with :func:`shutil.which` as recommended by the
-    :mod:`subprocess` docs for Windows compatibility.
+    Invokes the pager via :class:`subprocess.Popen` with an ``argv`` list.
 
     Invoking a pager through this might support colors: if piping to
     ``less`` and the user hasn't decided on colors, ``LESS=-R`` is set
     automatically.
     """
-    # Split the command into the invoked CLI and its parameters.
-    if not cmd_parts:
-        # No usable pager: fall back to stdout through _nullpager so it gets the
-        # same borrowed-stream handling and the caller's stream is not closed.
-        stdout = _default_text_stdout() or StringIO()
-        with _nullpager(stdout, color) as rv:
-            yield rv
-        return
-
-    import shutil
-
-    cmd = cmd_parts[0]
-    cmd_params = cmd_parts[1:]
-
-    cmd_filepath = shutil.which(cmd)
-    if not cmd_filepath:
-        # No usable pager: fall back to stdout through _nullpager so it gets the
-        # same borrowed-stream handling and the caller's stream is not closed.
-        stdout = _default_text_stdout() or StringIO()
-        with _nullpager(stdout, color) as rv:
-            yield rv
-        return
-
-    # Produces a normalized absolute path string.
-    # multi-call binaries such as busybox derive their identity from the symlink
-    # less -> busybox. resolve() causes them to misbehave. (eg. less becomes busybox)
-    cmd_path = Path(cmd_filepath).absolute()
-    cmd_name = cmd_path.name
-
     import subprocess
 
     # Make a local copy of the environment to not affect the global one.
     env = dict(os.environ)
 
     # If we're piping to less and the user hasn't decided on colors, we enable
-    # them by default we find the -R flag in the command line arguments.
+    # them: either the invocation already requests raw control characters, or
+    # ``LESS=-R`` is injected. Match on the stem so a resolved ``less.exe`` is
+    # recognized like bare ``less``, case-insensitively on Windows since its
+    # filesystems are. POSIX keeps an exact match.
+    cmd_name = cmd_path.stem
+    if WIN:
+        # ``_pager_contextmanager`` currently routes every Windows invocation
+        # to ``_tempfilepager``, so this branch is not reachable on Windows
+        # today: it keeps the detection correct should that routing ever
+        # change.
+        cmd_name = cmd_name.casefold()
+
     if color is None and cmd_name == "less":
-        less_flags = f"{os.environ.get('LESS', '')}{' '.join(cmd_params)}"
-        if not less_flags:
+        less_env = os.environ.get("LESS", "")
+        if _less_uses_raw_mode(less_env, cmd_params):
+            color = True
+        elif not less_env and not cmd_params:
             env["LESS"] = "-R"
             color = True
-        elif "r" in less_flags or "R" in less_flags:
-            color = True
-
-    if color is None:
-        color = False
 
     c = subprocess.Popen(
         [str(cmd_path)] + cmd_params,
@@ -536,10 +591,11 @@ def _pipepager(
         errors="replace",
         text=True,
     )
-    stdin = t.cast(t.BinaryIO, c.stdin)
-    encoding = get_best_encoding(stdin)
+    # With ``text=True``, ``c.stdin`` is already a text stream that encodes
+    # writes for the pager process (honoring ``errors="replace"``).
+    stdin = t.cast(t.TextIO, c.stdin)
     try:
-        yield stdin, encoding, color
+        yield stdin, color
     except BrokenPipeError:
         # In case the pager exited unexpectedly, ignore the broken pipe error.
         pass
@@ -578,79 +634,50 @@ def _pipepager(
 
 @contextlib.contextmanager
 def _tempfilepager(
-    cmd_parts: list[str], color: bool | None = None
-) -> t.Iterator[tuple[t.BinaryIO | t.TextIO, str, bool]]:
+    cmd_path: Path, cmd_params: list[str], color: bool | None = None
+) -> t.Iterator[tuple[t.TextIO, bool | None]]:
     """Page through text by invoking a program on a temporary file.
 
     Used as the primary pager strategy on Windows (where piping to
     ``more`` adds spurious ``\\r\\n``), and as a fallback on other
-    platforms. The command is resolved to an absolute path with
-    :func:`shutil.which`.
+    platforms. The command is invoked with any parameters from ``PAGER``
+    followed by the temporary file name.
     """
-    # Split the command into the invoked CLI and its parameters.
-    if not cmd_parts:
-        # No usable pager: fall back to stdout through _nullpager so it gets the
-        # same borrowed-stream handling and the caller's stream is not closed.
-        stdout = _default_text_stdout() or StringIO()
-        with _nullpager(stdout, color) as rv:
-            yield rv
-        return
-
-    import shutil
     import subprocess
-
-    cmd = cmd_parts[0]
-
-    cmd_filepath = shutil.which(cmd)
-    if not cmd_filepath:
-        # No usable pager: fall back to stdout through _nullpager so it gets the
-        # same borrowed-stream handling and the caller's stream is not closed.
-        stdout = _default_text_stdout() or StringIO()
-        with _nullpager(stdout, color) as rv:
-            yield rv
-        return
-
-    # Produces a normalized absolute path string.
-    # multi-call binaries such as busybox derive their identity from the symlink
-    # less -> busybox. resolve() causes them to misbehave. (eg. less becomes busybox)
-    cmd_path = Path(cmd_filepath).absolute()
-
     import tempfile
 
     encoding = get_best_encoding(sys.stdout)
-    if color is None:
-        color = False
     # On Windows, NamedTemporaryFile cannot be opened by another process
     # while Python still has it open, so we use delete=False and clean up manually
     # rather than using a contextmanager here.
-    f = tempfile.NamedTemporaryFile(mode="wb", delete=False)
+    f = tempfile.NamedTemporaryFile(
+        mode="w", encoding=encoding, errors="replace", delete=False
+    )
     try:
-        yield t.cast(t.BinaryIO, f), encoding, color
+        yield t.cast(t.TextIO, f), color
         f.flush()
         f.close()
-        subprocess.call([str(cmd_path), f.name])
+        subprocess.call([str(cmd_path), *cmd_params, f.name])
     finally:
+        # An error raised while paging skips the close() above, and Windows
+        # refuses to unlink a file the process still holds open. Closing here
+        # keeps that PermissionError from replacing the original exception.
+        # close() is idempotent, so this is a no-op on the success path.
+        f.close()
         os.unlink(f.name)
 
 
 @contextlib.contextmanager
 def _nullpager(
     stream: t.TextIO, color: bool | None = None
-) -> t.Iterator[tuple[t.TextIO, str, bool]]:
-    """Simply print unformatted text. This is the ultimate fallback. Don't close the
-    output stream in this case, since it's coming from elsewhere rather than our
-    internal helpers.
+) -> t.Iterator[tuple[t.TextIO, bool | None]]:
+    """Simply print unformatted text. This is the ultimate fallback.
 
-    The stream is wrapped in :class:`~click.utils._KeepOpenFile` so that, as a
-    borrowed stream, it is not closed by a ``with`` block. The wrapper that
-    :func:`get_pager_file` builds around it is detached rather than closed.
+    The stream comes from elsewhere (typically ``sys.stdout``), so its lifecycle
+    is left untouched: :class:`_PagerWriter` never closes what it wraps, and it
+    is the only thing :func:`get_pager_file` hands to the caller.
     """
-    encoding = get_best_encoding(stream)
-
-    if color is None:
-        color = False
-
-    yield _KeepOpenFile(stream), encoding, color  # type: ignore[misc]
+    yield stream, color
 
 
 class Editor:
@@ -683,7 +710,7 @@ class Editor:
                 return editor
         return "vi"
 
-    def edit_files(self, filenames: cabc.Iterable[str]) -> None:
+    def edit_files(self, filenames: cabc.Iterable[str | os.PathLike[str]]) -> None:
         """Open files in the user's editor."""
         import shlex
         import subprocess

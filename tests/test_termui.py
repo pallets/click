@@ -1,9 +1,12 @@
 import contextlib
 import gc
 import io
+import os
+import pathlib
 import platform
 import shlex
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -104,6 +107,37 @@ def test_progressbar_hidden_manual(runner, monkeypatch):
 
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     assert runner.invoke(cli, []).output == ""
+
+
+@pytest.mark.parametrize("update_min_steps", [1, 2, 3, 7, 20, 25])
+@pytest.mark.parametrize("drive", ["iterate", "update"])
+def test_progressbar_lands_on_final_position(monkeypatch, update_min_steps, drive):
+    """The bar reaches its total whatever the ``update_min_steps`` threshold.
+
+    Regression for issue #3571: a threshold that does not divide the length
+    left a remainder pending, so `show_pos` froze below completion, reporting
+    `14/20` for a length of 20 and a threshold of 7. Thresholds of 1 and 2 do
+    divide 20, and 25 exceeds it, so nothing is ever rendered until the end.
+    """
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    stream = io.StringIO()
+
+    if drive == "iterate":
+        with click.progressbar(
+            range(20), show_pos=True, update_min_steps=update_min_steps, file=stream
+        ) as bar:
+            for _ in bar:
+                pass
+    else:
+        with click.progressbar(
+            length=20, show_pos=True, update_min_steps=update_min_steps, file=stream
+        ) as bar:
+            for _ in range(20):
+                bar.update(1)
+
+    assert bar.pos == 20
+    assert bar.finished
+    assert "20/20" in stream.getvalue()
 
 
 @pytest.mark.parametrize("avg, expected", [([], 0.0), ([1, 4], 2.5)])
@@ -387,13 +421,13 @@ def test_getchar_windows_exceptions(runner, monkeypatch, key_char, exc):
         click.getchar()
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="No sed on Windows.")
+@pytest.mark.skipif(WIN, reason="No sed on Windows.")
 def test_fast_edit(runner):
     result = click.edit("a\nb", editor="sed -i~ 's/$/Test/'")
     assert result == "aTest\nbTest\n"
 
 
-@pytest.mark.skipif(platform.system() == "Windows", reason="No sed on Windows.")
+@pytest.mark.skipif(WIN, reason="No sed on Windows.")
 def test_edit(runner):
     with tempfile.NamedTemporaryFile(mode="w") as named_tempfile:
         named_tempfile.write("a\nb\n")
@@ -412,6 +446,19 @@ def test_edit(runner):
             # end of last line.  Hence the input data (see above) should be
             # terminated by newline too.
             assert reopened_file.read() == "aTest\nbTest\n"
+
+
+@pytest.mark.skipif(WIN, reason="No sed on Windows.")
+@pytest.mark.parametrize("use_iterable", [False, True], ids=["single", "iterable"])
+def test_edit_pathlib(runner, tmp_path, use_iterable):
+    """Issue #2869: ``filename`` accepts ``os.PathLike`` values."""
+    file_path = tmp_path / "file.txt"
+    file_path.write_text("a\nb\n", encoding="UTF-8")
+    filename = [file_path] if use_iterable else file_path
+
+    result = click.edit(filename=filename, editor="sed -i~ 's/$/Test/'")
+    assert result is None
+    assert file_path.read_text(encoding="UTF-8") == "aTest\nbTest\n"
 
 
 @pytest.mark.parametrize(
@@ -727,6 +774,157 @@ def test_echo_via_pager_real_pager_handles_ansi(monkeypatch, capfd, color, expec
     assert out == expected
 
 
+@pytest.mark.skipif(WIN, reason="The fake pager is a shell script.")
+@pytest.mark.parametrize(
+    ("pager_name", "expected_color"),
+    [
+        pytest.param("less", True, id="less"),
+        pytest.param("less.exe", True, id="less.exe"),
+        pytest.param("LESS.EXE", False, id="upper case stays unmatched on POSIX"),
+        pytest.param("cat", False, id="not less"),
+    ],
+)
+def test_pipepager_less_detection_matches_stem(
+    monkeypatch, tmp_path, pager_name, expected_color
+):
+    """The ``less`` detection behind the ``LESS=-R`` auto-enable matches the
+    command stem, so a ``less.exe`` resolved on Windows is recognized the same
+    as a bare ``less``. POSIX keeps an exact, case-sensitive match.
+    """
+    fake_pager = tmp_path / pager_name
+    fake_pager.write_text("#!/bin/sh\ncat\n", encoding="UTF-8")
+    fake_pager.chmod(0o755)
+
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setitem(click._termui_impl.os.environ, "PAGER", str(fake_pager))
+    monkeypatch.delitem(click._termui_impl.os.environ, "LESS", raising=False)
+
+    with click.get_pager_file() as pager:
+        assert pager.color is expected_color
+
+
+@pytest.mark.skipif(WIN, reason="The fake pager is a shell script.")
+def test_pipepager_less_detection_case_insensitive_on_windows(monkeypatch, tmp_path):
+    """Windows filesystems are case-insensitive, so ``which`` resolves
+    whatever case the file carries: the ``less`` match casefolds there.
+
+    Runs ``_pipepager`` directly: faking ``WIN`` makes
+    ``_pager_contextmanager`` route to the temp file strategy instead.
+    """
+    fake_pager = tmp_path / "LESS.EXE"
+    fake_pager.write_text("#!/bin/sh\ncat\n", encoding="UTF-8")
+    fake_pager.chmod(0o755)
+
+    monkeypatch.setattr(click._termui_impl, "WIN", True)
+    monkeypatch.delitem(click._termui_impl.os.environ, "LESS", raising=False)
+
+    with click._termui_impl._pipepager(fake_pager, []) as (_, color):
+        assert color is True
+
+
+class _FakePagerProcess:
+    """Stand-in for :class:`subprocess.Popen` recording argv and env without
+    launching a process."""
+
+    def __init__(self, argv, *, env=None, **kwargs):
+        self.argv = argv
+        self.env = env
+        self.returncode = 0
+        self.stdin = io.StringIO()
+
+    def terminate(self):
+        pass
+
+    def wait(self):
+        return 0
+
+
+@pytest.mark.parametrize(
+    ("cmd_parts", "less_env", "expected_color", "expected_less"),
+    [
+        pytest.param(["less"], None, True, "-R", id="no flags: inject LESS=-R"),
+        pytest.param(["less", "-R"], None, True, None, id="explicit -R"),
+        pytest.param(["less", "-rX"], None, True, None, id="bundled short flags"),
+        pytest.param(["less"], "-R", True, "-R", id="LESS env var"),
+        pytest.param(
+            ["less", "--RAW-CONTROL-CHARS"], None, True, None, id="long option"
+        ),
+        pytest.param(["less", "-X"], None, None, None, id="unrelated flag"),
+        pytest.param(
+            ["less"],
+            "--prompt=resume",
+            None,
+            "--prompt=resume",
+            id="long option with r substring",
+        ),
+        pytest.param(["less", "README.md"], None, None, None, id="filename with R"),
+        pytest.param(
+            ["less", "requirements.txt"], None, None, None, id="filename with r"
+        ),
+        pytest.param(
+            ["less", "--", "README.md"],
+            None,
+            None,
+            None,
+            id="option terminator shields filenames",
+        ),
+        pytest.param(
+            # The detection matches the bare long option: an ``r`` inside an
+            # option value does not request raw mode.
+            ["less", "--raw-control-chars=x"],
+            None,
+            None,
+            None,
+            id="long option with value",
+        ),
+        pytest.param(
+            # Unbalanced quotes make shlex.split raise: the detection falls
+            # back to whitespace splitting, which still finds the -R.
+            ["less"],
+            '-R "',
+            True,
+            '-R "',
+            id="unparsable LESS",
+        ),
+    ],
+)
+def test_pipepager_less_raw_mode_detection(
+    monkeypatch, cmd_parts, less_env, expected_color, expected_less
+):
+    """Raw-mode detection parses the option tokens from ``LESS`` and the
+    command line. Filenames and unrelated options carrying the letter ``r``
+    or ``R`` do not request raw mode, and ``_pipepager`` then reports no
+    opinion (``None``) that :func:`get_pager_file` settles to off.
+    {issue}`3416`
+    """
+    if less_env is None:
+        monkeypatch.delitem(click._termui_impl.os.environ, "LESS", raising=False)
+    else:
+        monkeypatch.setitem(click._termui_impl.os.environ, "LESS", less_env)
+
+    processes: list[_FakePagerProcess] = []
+
+    def fake_popen(*args, **kwargs):
+        process = _FakePagerProcess(*args, **kwargs)
+        processes.append(process)
+        return process
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+    # Popen is faked, so no real binary needs to exist behind the resolved
+    # path: the stem is all the less detection reads from it.
+    cmd_path = pathlib.Path("/tests/less")
+
+    with click._termui_impl._pipepager(cmd_path, cmd_parts[1:]) as (_, color):
+        pass
+
+    assert color is expected_color
+    (process,) = processes
+    if expected_less is None:
+        assert "LESS" not in process.env
+    else:
+        assert process.env["LESS"] == expected_less
+
+
 def test_echo_via_pager_streams_each_write(monkeypatch):
     """Each write is flushed so a slow generator streams to the pager
     incrementally instead of buffering until the end (issues #3242, #2542).
@@ -872,7 +1070,8 @@ def test_echo_via_pager_tty_pager_missing(runner, monkeypatch):
 def test_get_pager_file_nullpager_wraps_textio_stream(
     monkeypatch, tmp_path, color, expected
 ):
-    """When paging falls back to a real TextIO stream, ``.buffer`` is wrapped."""
+    """When paging falls back to a real text stream, ANSI styling is stripped or
+    preserved according to ``color``."""
     pager_out = tmp_path / "pager_out.txt"
 
     with pager_out.open("w", encoding="utf-8") as text_stream:
@@ -890,20 +1089,20 @@ def test_get_pager_file_nullpager_wraps_textio_stream(
 
 
 def test_get_pager_file_nullpager_keeps_stringio_stream(monkeypatch):
-    """The no-stdout fallback should keep a text-only stream and set ``.color``."""
+    """The no-stdout fallback keeps the text stream open and strips ANSI."""
 
     stream = io.StringIO()
     monkeypatch.setattr(sys, "stdout", None)
     monkeypatch.setattr(click._termui_impl, "StringIO", lambda: stream)
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: False)
 
-    styled_text = click.style("hello", fg="red")
-
     with click.get_pager_file(color=False) as pager:
-        pager.write(styled_text)
+        pager.write(click.style("hello", fg="red"))
 
+    # The wrapper must not close a stream it does not own.
     assert not stream.closed
-    assert stream.getvalue() == styled_text
+    # With colors disabled, ANSI styling is stripped.
+    assert stream.getvalue() == "hello"
 
 
 def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
@@ -912,7 +1111,6 @@ def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
     class FlushableTextStream(io.StringIO):
         def __init__(self):
             super().__init__()
-            self.color = None
             self.flush_calls = 0
 
         def flush(self):
@@ -922,7 +1120,7 @@ def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
 
     @contextlib.contextmanager
     def pager_contextmanager(color=None):
-        yield stream, "utf-8", color
+        yield stream, False
 
     monkeypatch.setattr(
         click._termui_impl, "_pager_contextmanager", pager_contextmanager
@@ -930,10 +1128,184 @@ def test_get_pager_file_flushes_stream_on_exception(monkeypatch):
 
     with pytest.raises(RuntimeError, match="boom"):
         with click.get_pager_file() as pager:
-            assert pager is stream
+            pager.write("partial")
             raise RuntimeError("boom")
 
     assert stream.flush_calls == 1
+    assert stream.getvalue() == "partial"
+
+
+def test_get_pager_file_close_does_not_close_borrowed_stream(monkeypatch):
+    """Closing the yielded pager must not close a stream the caller owns.
+
+    ``_PagerWriter.close()`` flushes but deliberately stops there: each pager
+    strategy owns its stream's lifecycle. This is the caller-driven half of
+    ``test_get_pager_file_missing_pager_keeps_borrowed_stream_open``, which
+    covers the same fallback but never calls ``close`` itself.
+
+    Wrapping the borrowed stream in :class:`~click.utils._KeepOpenFile` does not
+    satisfy this: that proxy only covers a ``with`` block and passes an explicit
+    ``close`` straight through. Only the writer's own ``close`` stops it.
+    """
+    stream = io.StringIO()
+    monkeypatch.setattr(click._termui_impl, "_default_text_stdout", lambda: stream)
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    # A tty plus a ``PAGER`` that doesn't resolve sends us through the
+    # ``_pipepager`` (or ``_tempfilepager``) missing-binary fallback branch.
+    monkeypatch.setitem(
+        click._termui_impl.os.environ,
+        "PAGER",
+        "click-tests-nonexistent-pager-9b3f2",
+    )
+
+    with click.get_pager_file() as pager:
+        pager.write("hello\n")
+        pager.close()
+        assert not stream.closed
+
+    assert not stream.closed
+    assert stream.getvalue() == "hello\n"
+
+
+def _force_tempfile_pager(monkeypatch, pager_cmd="cat"):
+    """Route ``get_pager_file`` through the ``_tempfilepager`` backend.
+
+    That backend is only reachable on Windows, so the platform flag and the tty
+    probes are faked to exercise it from any runner.
+
+    ``PAGER`` is set to the bare command name, not to the path
+    :func:`shutil.which` resolves it to. ``pager()`` splits ``PAGER`` with
+    :func:`shlex.split` in POSIX mode, where a Windows path loses its
+    backslashes and splits on the space in ``C:\\Program Files``, leaving a
+    command that resolves to nothing. Click resolves the bare name itself.
+    """
+    cmd = shlex.split(pager_cmd)[0]
+    assert shutil.which(cmd) is not None, f"{cmd} not available"
+    monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
+    monkeypatch.setattr(click._termui_impl, "WIN", True)
+    monkeypatch.setitem(click._termui_impl.os.environ, "PAGER", pager_cmd)
+
+
+def _page_with_get_pager_file():
+    with click.get_pager_file() as pager:
+        pager.write("hello\n")
+
+
+def _page_with_echo_via_pager():
+    click.echo_via_pager("hello")
+
+
+@pytest.mark.skipif(shutil.which("cat") is None, reason="cat not available")
+@pytest.mark.parametrize(
+    "page",
+    [
+        pytest.param(_page_with_get_pager_file, id="get_pager_file"),
+        pytest.param(_page_with_echo_via_pager, id="echo_via_pager"),
+    ],
+)
+def test_tempfile_pager_accepts_text(monkeypatch, capfd, page):
+    """The temp file backend must yield a text stream (issues #3731, #3740).
+
+    Regression: a binary-mode temp file handed straight to ``get_pager_file``
+    left the caller writing ``str`` to a binary handle, which raises
+    ``TypeError: a bytes-like object is required``.
+    """
+    _force_tempfile_pager(monkeypatch)
+
+    page()
+
+    out, err = capfd.readouterr()
+    assert err == ""
+    assert out.replace("\r\n", "\n") == "hello\n"
+
+
+@pytest.mark.skipif(shutil.which("cat") is None, reason="cat not available")
+@pytest.mark.parametrize(
+    ("color", "expected"),
+    [
+        pytest.param(False, "hello\n", id="strip ansi"),
+        pytest.param(True, click.style("hello", fg="red") + "\n", id="preserve ansi"),
+    ],
+)
+def test_tempfile_pager_handles_ansi(monkeypatch, capfd, color, expected):
+    """The temp file backend honors ``color`` like the pipe backend does.
+
+    Regression: a binary temp file got no ANSI-stripping wrapper, so ``color``
+    was silently ignored on this path.
+    """
+    _force_tempfile_pager(monkeypatch)
+
+    click.echo_via_pager(click.style("hello", fg="red"), color=color)
+
+    out, err = capfd.readouterr()
+    assert err == ""
+    assert out.replace("\r\n", "\n") == expected
+
+
+@pytest.mark.skipif(shutil.which("head") is None, reason="head not available")
+def test_tempfile_pager_passes_pager_params(monkeypatch, capfd):
+    """The temp file backend forwards ``PAGER`` parameters to the command.
+
+    ``head -n 1`` renders one line out of two when the ``-n 1`` reaches the
+    command.
+    """
+    _force_tempfile_pager(monkeypatch, pager_cmd="head -n 1")
+
+    click.echo_via_pager("line one\nline two\n")
+
+    out, err = capfd.readouterr()
+    assert err == ""
+    assert out.replace("\r\n", "\n") == "line one\n"
+
+
+@pytest.mark.skipif(shutil.which("cat") is None, reason="cat not available")
+def test_tempfile_pager_closes_file_before_unlink(monkeypatch):
+    """An error while paging must not leave the temp file open at unlink time.
+
+    The ``f.close()`` on the success path sits after the ``yield``, so an
+    exception raised while the pager is open used to skip it and reach
+    ``finally: os.unlink(f.name)`` with the handle still open. Windows refuses
+    to unlink an open file, so ``PermissionError: [WinError 32]`` replaced the
+    original error and hid it (issue #3731).
+    """
+    _force_tempfile_pager(monkeypatch)
+
+    temp_files = []
+    real_named_temporary_file = tempfile.NamedTemporaryFile
+
+    def record(*args, **kwargs):
+        f = real_named_temporary_file(*args, **kwargs)
+        temp_files.append(f)
+        return f
+
+    monkeypatch.setattr(tempfile, "NamedTemporaryFile", record)
+
+    closed_at_unlink = []
+    real_unlink = os.unlink
+
+    def spy_unlink(path, **kwargs):
+        closed_at_unlink.append([f.closed for f in temp_files])
+        return real_unlink(path, **kwargs)
+
+    monkeypatch.setattr(os, "unlink", spy_unlink)
+
+    try:
+        with pytest.raises(RuntimeError, match="boom"):
+            with click.get_pager_file():
+                raise RuntimeError("boom")
+    finally:
+        # Should this invariant regress, the assertion below reports it. Close
+        # the handle anyway so the leak does not also resurface as a
+        # ResourceWarning charged to an unrelated test.
+        for f in temp_files:
+            if not f.closed:
+                f.close()
+
+    assert temp_files, "the temp file pager backend was not used"
+    assert closed_at_unlink == [[True]], (
+        "temp file still open when unlink ran; on Windows this raises "
+        "PermissionError [WinError 32] and masks the real error"
+    )
 
 
 def test_editor_unclosed_quote():

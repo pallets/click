@@ -5,8 +5,8 @@
 ```{currentmodule} click.shell_completion
 ```
 
-Click provides tab completion support for Bash (version 4.4 and up), Zsh, and Fish. It is possible to add support for
-other shells too, and suggestions can be customized at multiple levels.
+Click provides tab completion support for Bash (version 4.4 and up), Zsh, Fish, and PowerShell. It is possible to add
+support for other shells too, and suggestions can be customized at multiple levels.
 
 Shell completion suggests command names, option names, and values for choice, file, and path parameter types. Options
 are only listed if at least a dash has been entered. Hidden commands and options are not shown.

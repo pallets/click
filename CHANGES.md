@@ -1,11 +1,11 @@
 ## Version 8.5.0
 
-Unreleased
+Released 2026-08-24
 
 - Add built-in shell completion support for PowerShell (Windows PowerShell
   5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
   completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate
-  the completion script.
+  the completion script. {issue}`2672` {pr}`3637`
 - Supported versions of Windows enable ANSI terminal styles by default.
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
@@ -15,12 +15,16 @@ Unreleased
   This stripping was lost in `8.4.0` when {pr}`2969` began writing the
   prompt with `input()` directly. {issue}`3572` {pr}`3653`
 - Fix test failures when using pytest >= 9.1. {pr}`3656`
+- {class}`Path` with `allow_dash=True` no longer triggers a `BytesWarning`,
+  an error under `python -bb`, when checking a value against the `-`
+  convention. {issue}`2877` {pr}`3642`
 - Add {func}`custom_version_option`, a `--version` option whose output is
   produced by a callback, covering cases {func}`version_option` intentionally
   does not. The feature set of {func}`version_option` is now frozen; see
   [discussion #3527](https://github.com/pallets/click/discussions/3527). {pr}`3581`
 - `style()` and `secho()` no longer silently drop the 256-color index `0`
-  (black) passed as `fg` or `bg`, and now validate color arguments. {pr}`3677`
+  (black) passed as `fg` or `bg`, and now validate color arguments. Invalid
+  colors raise a `ValueError` instead of a `TypeError`. {pr}`3677`
 - The automatic help option stores its value under the reserved name
   `_click_default_help` instead of `help`, so a parameter named `help` no
   longer breaks parsing. The new name is visible in
@@ -30,12 +34,15 @@ Unreleased
   share a name to compete for the same value (feature switches).
   {issue}`2819` {pr}`3678`
 - `unstyle` and the ANSI handling behind help-text wrapping now strip the full
-  CSI escape-sequence grammar.
+  CSI escape-sequence grammar. {pr}`3681`
 - Streamline `Option` flag handling: the flag-kind, type, lazy-default and
   validation steps in `Option.__init__` move into focused helpers, and
   `flag_value` and `default` keep their unset sentinel at construction
   (resolved lazily on read) so `is UNSET` reliably tells a user-supplied value
-  from an auto-derived one. Behavior is unchanged. {pr}`3641`
+  from an auto-derived one. Runtime behavior is unchanged, but
+  {meth}`Parameter.to_info_dict` now resolves `default=True` on a feature
+  switch to its `flag_value`, matching what the function receives at call
+  time. {pr}`3641`
 - {func}`get_binary_stream` and {func}`get_text_stream` are deprecated and
   will be removed in Click 9.0. {issue}`3481` {pr}`3695`
 - The following `click.utils` names were never intentionally public and are
@@ -43,6 +50,47 @@ Unreleased
   `DeprecationWarning` until Click 9.0: `LazyFile`, `KeepOpenFile`,
   `make_default_short_help`, `PacifyFlushWrapper`, and `safecall`.
   {issue}`3099` {pr}`3695`
+- Deprecate {meth}`CliRunner.isolated_filesystem`. It relies on
+  {func}`os.chdir`, which mutates process-global state and is not
+  thread-safe. The helper predates Python 3 and modern pytest: use a
+  temporary directory ({class}`tempfile.TemporaryDirectory` or pytest's
+  `tmp_path` fixture) with absolute paths instead. For running tests in
+  parallel, use process-based isolation (such as `pytest-xdist`) rather
+  than threads, since {meth}`CliRunner.invoke` also redirects the
+  process-global standard streams. {issue}`3501` {issue}`3700` {pr}`3704`
+- `prompt()` is now generically typed and returns the type produced by
+  `type`, `value_proc`, or a matching `default` instead of `Any`.
+  {class}`ParamType` takes a second optional type parameter describing the
+  input value it accepts (`ParamType[int, str]` for a type converting
+  strings to integers), defaulting to `Any`. {pr}`3407`
+- {meth}`Command.get_help_option_names` returns the help option names in the
+  order they were declared. {pr}`3728`
+- {func}`get_pager_file` yields a text stream on Windows again. The temporary
+  file backend opened its file in binary mode, so writing a `str` to the pager
+  raised `TypeError: a bytes-like object is required, not 'str'`, and the
+  `color` argument was ignored on that path. Regression introduced in `8.4.0`
+  by {pr}`1572`. {issue}`3731` {issue}`3732` {issue}`3740` {pr}`3739`
+- {func}`progressbar` settles on its final position when `update_min_steps`
+  does not divide the total. Steps below that threshold are applied when the
+  bar finishes, so `show_pos` renders `20/20` rather than the last multiple
+  it reached. {issue}`3571` {pr}`3769`
+- An error raised while writing to the pager no longer gets replaced by
+  `PermissionError: [WinError 32]` on Windows. The temporary file backend
+  unlinked its file without closing it first, and Windows refuses to remove a
+  file the process still holds open, so the cleanup failure masked the real
+  exception. {issue}`3731` {pr}`3764`
+- The temporary file the pager writes to on Windows is opened with the encoding
+  {func}`get_pager_file` picked for the output stream, and with
+  `errors="replace"` to match the pipe backend. Any text stdout can encode
+  reaches the pager.
+- The temporary file pager backend forwards any parameters the user set in
+  `PAGER` to the pager command instead of silently dropping them. On Windows,
+  `PAGER="less -R"` now invokes `less -R` on the temporary file rather than
+  bare `less`. {pr}`3777`
+- Improve raw mode detection by parsing the option tokens. {issue}`3416`
+  {pr}`3777`
+- {func}`edit` accepts `os.PathLike` values for `filename`, in addition to
+  strings. {issue}`2869` {pr}`3781`
 
 ## Version 8.4.2
 

@@ -4,6 +4,7 @@ import collections.abc as cabc
 import inspect
 import io
 import itertools
+import os
 import re
 import sys
 import typing as t
@@ -108,39 +109,74 @@ def _build_prompt(
     text: str,
     suffix: str,
     show_default: bool | str = False,
-    default: t.Any | None = None,
+    default: object | None = None,
     show_choices: bool = True,
-    type: ParamType[t.Any] | None = None,
+    type: object | None = None,
 ) -> str:
     prompt = text
     if type is not None and show_choices and isinstance(type, Choice):
         prompt += f" ({', '.join(map(str, type.choices))})"
-    if isinstance(show_default, str):
-        default = f"({show_default})"
-    if default is not None and show_default:
-        prompt = f"{prompt} [{_format_default(default)}]"
-    return f"{prompt}{suffix}"
+    default_preview = ""
+    if show_default:
+        if isinstance(show_default, str):
+            default_preview = f" [({show_default})]"
+        elif default is not None:
+            default_preview = f" [{_format_default(default)}]"
+    return f"{prompt}{default_preview}{suffix}"
 
 
-def _format_default(default: t.Any) -> t.Any:
-    if isinstance(default, (io.IOBase, _LazyFile)) and hasattr(default, "name"):
-        return default.name
+def _format_default(default: V) -> V | str:
+    if isinstance(default, (io.IOBase, _LazyFile)):
+        name = getattr(default, "name", None)
+
+        if name is not None:
+            return str(name)
 
     return default
 
 
+@t.overload
 def prompt(
     text: str,
-    default: t.Any | None = None,
+    default: str | None = None,
     hide_input: bool = False,
     confirmation_prompt: bool | str = False,
-    type: ParamType[t.Any] | t.Any | None = None,
-    value_proc: t.Callable[[str], t.Any] | None = None,
+    type: None = None,
+    value_proc: None = None,
     prompt_suffix: str = ": ",
     show_default: bool | str = True,
     err: bool = False,
     show_choices: bool = True,
-) -> t.Any:
+) -> str: ...
+
+
+@t.overload
+def prompt(
+    text: str,
+    default: V | str | None = None,
+    hide_input: bool = False,
+    confirmation_prompt: bool | str = False,
+    type: ParamType[V, str] | type[V] | None = None,
+    value_proc: t.Callable[[str], V] | None = None,
+    prompt_suffix: str = ": ",
+    show_default: bool | str = True,
+    err: bool = False,
+    show_choices: bool = True,
+) -> V: ...
+
+
+def prompt(
+    text: str,
+    default: V | str | None = None,
+    hide_input: bool = False,
+    confirmation_prompt: bool | str = False,
+    type: ParamType[V, str] | type[V] | None = None,
+    value_proc: t.Callable[[str], V] | None = None,
+    prompt_suffix: str = ": ",
+    show_default: bool | str = True,
+    err: bool = False,
+    show_choices: bool = True,
+) -> V:
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
@@ -169,6 +205,11 @@ def prompt(
                          For example if type is a Choice of either day or week,
                          show_choices is true and text is "Group by" then the
                          prompt will be "Group by (day, week): ".
+
+    .. versionchanged:: 8.5.0
+        Generically typed: the return type is narrowed by ``type``,
+        ``value_proc``, or ``default`` instead of being ``Any``. Runtime
+        behavior is unchanged.
 
     .. versionchanged:: 8.3.3
         ``show_default`` can be a string to show a custom value instead
@@ -222,7 +263,10 @@ def prompt(
             if value:
                 break
             elif default is not None:
-                value = default
+                # Defaults of any type are accepted and round trip through
+                # value_proc like typed input, so the annotation is only
+                # accurate for typed input.
+                value = t.cast("str", default)
                 break
         try:
             result = value_proc(value)
@@ -669,9 +713,9 @@ def style(
                   string which means that styles do not carry over.  This
                   can be disabled to compose styles.
 
-    .. versionchanged:: 8.5
+    .. versionchanged:: 8.5.0
         All invalid color values raise :exc:`ValueError`. 256-color index
-        ``0`` is not ignored
+        ``0`` is no longer ignored.
 
     .. versionchanged:: 8.0
         A non-string ``message`` is converted to a string.
@@ -794,7 +838,10 @@ def edit(
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-    filename: str | cabc.Iterable[str] | None = None,
+    filename: str
+    | os.PathLike[str]
+    | cabc.Iterable[str | os.PathLike[str]]
+    | None = None,
 ) -> None: ...
 
 
@@ -804,7 +851,10 @@ def edit(
     env: cabc.Mapping[str, str] | None = None,
     require_save: bool = True,
     extension: str = ".txt",
-    filename: str | cabc.Iterable[str] | None = None,
+    filename: str
+    | os.PathLike[str]
+    | cabc.Iterable[str | os.PathLike[str]]
+    | None = None,
 ) -> str | bytes | bytearray | None:
     r"""Edits the given text in the defined editor.  If an editor is given
     (should be the full path to the executable but the regular operating
@@ -831,15 +881,19 @@ def edit(
                       highlighting.
     :param filename: if provided it will edit this file instead of the
                      provided text contents.  It will not use a temporary
-                     file as an indirection in that case. If the editor supports
-                     editing multiple files at once, a sequence of files may be
-                     passed as well. Invoke `click.file` once per file instead
-                     if multiple files cannot be managed at once or editing the
-                     files serially is desired.
+                     file as an indirection in that case. It accepts a path
+                     or any iterable of paths. If the editor supports
+                     editing multiple files at once, a sequence of files may
+                     be passed as well. Invoke `click.file` once per file
+                     instead if multiple files cannot be managed at once or
+                     editing the files serially is desired.
 
     .. versionchanged:: 8.2.0
         ``filename`` now accepts any ``Iterable[str]`` in addition to a ``str``
         if the ``editor`` supports editing multiple files at once.
+
+    .. versionchanged:: 8.5.0
+        ``filename`` accepts ``os.PathLike`` values in addition to strings.
 
     """
     from ._termui_impl import Editor
@@ -849,7 +903,7 @@ def edit(
     if filename is None:
         return ed.edit(text)
 
-    if isinstance(filename, str):
+    if isinstance(filename, (str, os.PathLike)):
         filename = (filename,)
 
     ed.edit_files(filenames=filename)

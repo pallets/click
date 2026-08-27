@@ -419,6 +419,56 @@ def test_iter_params_for_processing(
     )
 
 
+@pytest.mark.parametrize(
+    ("help_option_names", "params", "expected"),
+    [
+        # A single default name is returned unchanged.
+        (["--help"], [], ["--help"]),
+        # Declaration order is preserved verbatim, whatever it is.
+        (["-h", "--help"], [], ["-h", "--help"]),
+        (["--help", "-h"], [], ["--help", "-h"]),
+        (["--help", "-h", "-?"], [], ["--help", "-h", "-?"]),
+        (["-?", "--help", "-h"], [], ["-?", "--help", "-h"]),
+        # Duplicate names collapse to their first occurrence, keeping order.
+        (["--help", "--help"], [], ["--help"]),
+        (["-h", "--help", "-h"], [], ["-h", "--help"]),
+        # A name already claimed by another parameter's option is dropped.
+        (["-h", "--help"], [["--help"]], ["-h"]),
+        (["-h", "--help"], [["-h", "--verbose"]], ["--help"]),
+        # Both options of a feature-switch flag are removed too.
+        (["--shout", "--help"], [["--shout/--no-shout"]], ["--help"]),
+        (["--no-shout", "--help"], [["--shout/--no-shout"]], ["--help"]),
+        # Filtering every name out yields an empty list.
+        (["-h", "--help"], [["-h"], ["--help"]], []),
+        # Deduplication and conflict removal combine, order still preserved.
+        (["-h", "--help", "-h", "--assist"], [["--assist"]], ["-h", "--help"]),
+    ],
+    ids=[
+        "default",
+        "order-short-long",
+        "order-long-short",
+        "order-three",
+        "order-three-shuffled",
+        "dedupe-adjacent",
+        "dedupe-spread",
+        "conflict-long",
+        "conflict-short",
+        "conflict-flag-on",
+        "conflict-flag-off",
+        "all-removed",
+        "dedupe-and-conflict",
+    ],
+)
+def test_get_help_option_names(help_option_names, params, expected):
+    """Check help option names are deduplicated but keep stable order.
+
+    https://github.com/pallets/click/pull/3728
+    """
+    cli = click.Command("cli", params=[click.Option(decls) for decls in params])
+    ctx = click.Context(cli, help_option_names=help_option_names)
+    assert cli.get_help_option_names(ctx) == expected
+
+
 def test_help_param_priority(runner):
     """Cover the edge-case in which the eagerness of help option was not
     respected, because it was internally generated multiple times.

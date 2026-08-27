@@ -7,8 +7,12 @@
 Click provides the {ref}`click.testing <testing>` module to help you invoke
 command line applications and check their behavior.
 
-These tools should only be used for testing since they change
-the entire interpreter state for simplicity. They are not thread-safe!
+```{warning}
+These tools should only be used for testing since they change the entire
+interpreter state for simplicity. They are not thread-safe: see
+[Running tests in parallel](#running-tests-in-parallel) for the supported
+way to run CLI tests concurrently.
+```
 
 The examples use [pytest](https://docs.pytest.org/en/stable/) style tests.
 
@@ -119,8 +123,11 @@ def test_sync():
 
 ## File System Isolation
 
-The {meth}`CliRunner.isolated_filesystem` context manager sets the current
-working directory to a new, empty folder.
+To test a command that reads or writes files, give each test its own
+directory and pass absolute paths to the command. Pytest's
+[`tmp_path`](https://docs.pytest.org/en/stable/how-to/tmp_path.html) fixture
+provides a fresh directory per test; {class}`tempfile.TemporaryDirectory`
+works without pytest.
 
 ```{code-block} python
 :caption: cat.py
@@ -139,36 +146,47 @@ def cat(f):
 from click.testing import CliRunner
 from cat import cat
 
-def test_cat():
-   runner = CliRunner()
-   with runner.isolated_filesystem():
-      with open('hello.txt', 'w') as f:
-          f.write('Hello World!')
+def test_cat(tmp_path):
+   hello = tmp_path / 'hello.txt'
+   hello.write_text('Hello World!')
 
-      result = runner.invoke(cat, ['hello.txt'])
-      assert result.exit_code == 0
-      assert result.output == 'Hello World!\n'
+   runner = CliRunner()
+   result = runner.invoke(cat, [str(hello)])
+   assert result.exit_code == 0
+   assert result.output == 'Hello World!\n'
 ```
 
-Pass in a path to control where the temporary directory is created.
-In this case, the directory will not be removed by Click. Its useful
-to integrate with a framework like Pytest that manages temporary files.
+Because the directory is unique to the test and the command receives an
+absolute path, nothing leaks between tests and the working directory is never
+changed.
 
-```{code-block} python
-:caption: test_cat.py
+### Running tests in parallel
 
-from click.testing import CliRunner
-from cat import cat
+Isolating the file system with pytest is thread-safe: each test, or each thread,
+works in its own directory through absolute paths, with no shared state.
 
-def test_cat_with_path_specified():
-   runner = CliRunner()
-   with runner.isolated_filesystem('~/test_folder'):
-      with open('hello.txt', 'w') as f:
-          f.write('Hello World!')
+{meth}`CliRunner.invoke` is different. While a command runs it swaps several
+pieces of process-global state into place (like `sys.stdout`, `sys.stderr`,
+`sys.stdin`, etc). Two invocations active at the same time in one interpreter
+overwrite each other's state, so the runner cannot be driven from several
+threads at once.
 
-      result = runner.invoke(cat, ['hello.txt'])
-      assert result.exit_code == 0
-      assert result.output == 'Hello World!\n'
+```{warning}
+Do not parallelize CLI tests with threads. Use process-based isolation
+instead, where each worker has its own interpreter and its own copy of those
+globals. [pytest-xdist](https://pytest-xdist.readthedocs.io/) does this with
+`pytest --numprocesses=auto`.
+```
+
+Click's own test suite uses exactly this setup: the `tests-random` dependency
+group and the `random` tox environment in
+[`pyproject.toml`](https://github.com/pallets/click/blob/main/pyproject.toml)
+run the suite under `pytest-randomly` and `pytest-xdist` to surface ordering
+bugs and races.
+
+```{deprecated} 8.5.0
+{meth}`CliRunner.isolated_filesystem` is deprecated and will be removed in
+Click 9.0. Use a temporary directory with absolute paths, as shown above.
 ```
 
 ## Input Streams

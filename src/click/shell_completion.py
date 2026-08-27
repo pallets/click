@@ -521,7 +521,7 @@ class FishComplete(ShellComplete):
 class PowerShellComplete(ShellComplete):
     """Shell completion for PowerShell (Windows PowerShell 5.1+ and pwsh 7+).
 
-    .. versionadded:: 8.5
+    .. versionadded:: 8.5.0
     """
 
     name: t.ClassVar[str] = "powershell"
@@ -623,7 +623,7 @@ def split_arg_string(string: str) -> list[str]:
     lex = shlex.shlex(string, posix=True)
     lex.whitespace_split = True
     lex.commenters = ""
-    out = []  # type: list[str]
+    out: list[str] = []
 
     try:
         out.extend(lex)

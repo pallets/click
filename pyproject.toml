@@ -1,6 +1,6 @@
 [project]
 name = "click"
-version = "8.5.0.dev"
+version = "8.5.0"
 description = "Composable command line interface toolkit"
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -70,7 +70,7 @@ name = "click"
 include = [
     "docs/",
     "tests/",
-    "CHANGES.rst",
+    "CHANGES.md",
     "uv.lock"
 ]
 exclude = [

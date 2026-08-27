@@ -197,20 +197,20 @@ def test_echo_via_pager_yields_before_exception(monkeypatch, tmp_path):
 
     The pager file content is intentionally NOT asserted: pipe-drain timing
     between click and the pager subprocess is outside click's control
-    (#2899, #3470). Spying on ``MaybeStripAnsi.write`` records what click sent
+    (#2899, #3470). Spying on ``_PagerWriter.write`` records what click sent
     to the pager, which is deterministic regardless of scheduling.
     """
     monkeypatch.setitem(os.environ, "PAGER", "cat")
     monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
 
     writes: list[str] = []
-    real_write = click._termui_impl.MaybeStripAnsi.write
+    real_write = click._termui_impl._PagerWriter.write
 
     def spy(self, text):
         writes.append(text)
         return real_write(self, text)
 
-    monkeypatch.setattr(click._termui_impl.MaybeStripAnsi, "write", spy)
+    monkeypatch.setattr(click._termui_impl._PagerWriter, "write", spy)
 
     pager_out_tmp = tmp_path / "pager_out.txt"
     with (
