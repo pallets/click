@@ -150,6 +150,37 @@ def test_type_choice():
     assert _get_words(cli, ["-c"], "a2") == ["a2"]
 
 
+@pytest.mark.parametrize(
+    ("shell", "env", "expect"),
+    [
+        (
+            "bash",
+            {"COMP_WORDS": "cli --color=a", "COMP_CWORD": "1"},
+            "plain,--color=auto\nplain,--color=always\n",
+        ),
+        (
+            "zsh",
+            {"COMP_WORDS": "cli --color=a", "COMP_CWORD": "1"},
+            "plain\n--color=auto\n_\nplain\n--color=always\n_\n",
+        ),
+        (
+            "powershell",
+            {"COMP_WORDS": "cli --color=a", "COMP_CWORD": "1"},
+            "plain\n--color=auto\n_\nplain\n--color=always\n_\n",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_long_option_equals_value_completion(runner, shell, env, expect):
+    cli = Command(
+        "cli",
+        params=[Option(["--color"], type=Choice(["auto", "always", "never"]))],
+    )
+    env["_CLI_COMPLETE"] = f"{shell}_complete"
+    result = runner.invoke(cli, env=env)
+    assert result.output == expect
+
+
 def test_choice_special_characters():
     cli = Command("cli", params=[Option(["-c"], type=Choice(["!1", "!2", "+3"]))])
     assert _get_words(cli, ["-c"], "") == ["!1", "!2", "+3"]

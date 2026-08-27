@@ -6,6 +6,9 @@ Released 2026-08-24
   5.1+ and pwsh 7+) alongside the existing `bash`, `zsh`, and `fish`
   completers. Use `_FOO_BAR_COMPLETE=powershell_source foo-bar` to generate
   the completion script. {issue}`2672` {pr}`3637`
+- Shell completion for long options written with `=` now preserves the option
+  name when completing the value, such as `--color=al` completing to
+  `--color=always` instead of `always`. {issue}`2847`
 - Supported versions of Windows enable ANSI terminal styles by default.
   Colorama is no longer a dependency and is not used. {issue}`2986` {pr}`3505`
 - {class}`Argument` accepts a `help` parameter, and help output includes
