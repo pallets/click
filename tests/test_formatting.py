@@ -603,9 +603,9 @@ def test_write_usage_does_not_break_options_at_hyphens():
     rendered = f.getvalue()
     assert "--max-retry-count" in rendered
     assert "--disable-cache-mode" in rendered
-    assert not any(
-        line.rstrip().endswith("-") for line in rendered.splitlines()
-    ), "options must not be split at hyphens"
+    assert not any(line.rstrip().endswith("-") for line in rendered.splitlines()), (
+        "options must not be split at hyphens"
+    )
 
 
 def test_help_formatter_write_usage_without_args_styled_prefix():
