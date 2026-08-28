@@ -590,6 +590,24 @@ def test_help_formatter_write_usage(
     assert f.getvalue() == expected
 
 
+def test_write_usage_does_not_break_options_at_hyphens():
+    """Usage lines wrap on spaces, not mid-option at hyphens (#3362)."""
+    f = click.HelpFormatter(width=65)
+    f.write_usage(
+        "program",
+        "--output-file-path --max-retry-count --disable-cache-mode "
+        "--config-file-location --verbose-logging-mode --input-source-format "
+        "--parallel-worker-count --request-timeout-secs --retry-backoff-factor "
+        "--stream-chunk-size",
+    )
+    rendered = f.getvalue()
+    assert "--max-retry-count" in rendered
+    assert "--disable-cache-mode" in rendered
+    assert not any(
+        line.rstrip().endswith("-") for line in rendered.splitlines()
+    ), "options must not be split at hyphens"
+
+
 def test_help_formatter_write_usage_without_args_styled_prefix():
     """A downstream-styled prefix is preserved when ``args`` is empty:
     the ANSI escape sequences survive, only the trailing separator is
