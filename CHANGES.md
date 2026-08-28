@@ -2,6 +2,10 @@
 
 Unreleased
 
+- Fix a crash when a second `KeyboardInterrupt` (Ctrl-C) arrives while click is
+  printing its "Aborted!" message during exception handling. `isatty()` now also
+  swallows `KeyboardInterrupt` (a `BaseException`), so it can no longer escape
+  `main()` and crash the process. {issue}`3802`
 ## Version 8.5.0
 
 Released 2026-08-24

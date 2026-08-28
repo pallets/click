@@ -7,6 +7,7 @@ import pytest
 
 import click
 from click._compat import _ansi_re
+from click._compat import isatty
 from click._compat import strip_ansi
 from click._compat import term_len
 from click._textwrap import _truncate_visible
@@ -268,3 +269,50 @@ def test_truncate_visible(text, n, expected):
     out = _truncate_visible(text, n)
     assert out == expected
     assert term_len(out) <= max(n, 0)
+
+
+def test_isatty_swallows_keyboard_interrupt():
+    """``isatty`` must not propagate ``KeyboardInterrupt`` (a ``BaseException``).
+
+    ``echo()`` calls ``should_strip_ansi()`` which probes ``isatty()`` while
+    click is printing its "Aborted!" message inside the ``except Abort`` block
+    of ``main()``. If a second Ctrl-C arrives there and ``isatty`` re-raises
+    ``KeyboardInterrupt``, it escapes ``main()`` entirely and crashes the
+    process instead of exiting cleanly. See issue #3802.
+    """
+
+    class _RaiseKI:
+        def isatty(self):
+            raise KeyboardInterrupt()
+
+    assert isatty(_RaiseKI()) is False
+
+
+def test_abort_echo_absorbs_keyboard_interrupt_in_isatty():
+    """``echo("Aborted!")`` must not propagate a ``KeyboardInterrupt`` raised
+    inside the stream's ``isatty``.
+
+    This is the exact crash path from issue #3802: during ``main()``'s
+    ``except Abort`` handler, ``echo("Aborted!")`` calls
+    ``should_strip_ansi`` -> ``isatty``, and a second Ctrl-C landing there
+    raised ``KeyboardInterrupt`` (a ``BaseException`` not caught by the old
+    ``except Exception`` guard), escaping ``main()``. With the fix, ``isatty``
+    swallows the ``KeyboardInterrupt`` and ``echo`` completes normally.
+    """
+
+    class _Stream:
+        def isatty(self):
+            raise KeyboardInterrupt()
+
+        def write(self, text):
+            return len(text)
+
+        def flush(self):
+            pass
+
+    # The fixed ``isatty`` must absorb the KeyboardInterrupt raised by the
+    # stream's ``isatty`` so it never escapes ``echo``.
+    try:
+        click.echo("Aborted!", file=_Stream())
+    except KeyboardInterrupt:
+        pytest.fail("echo() leaked KeyboardInterrupt raised inside isatty")

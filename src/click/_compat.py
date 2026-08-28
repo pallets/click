@@ -540,7 +540,13 @@ def term_len(x: str) -> int:
 def isatty(stream: t.IO[t.Any]) -> bool:
     try:
         return stream.isatty()
-    except Exception:
+    except (Exception, KeyboardInterrupt):
+        # ``isatty`` is a best-effort probe. ``KeyboardInterrupt`` is a
+        # ``BaseException`` (not an ``Exception``), so it is not caught by the
+        # normal guard. If a second Ctrl-C lands while click is printing its
+        # "Aborted!" message during exception handling, the raised
+        # ``KeyboardInterrupt`` would otherwise escape ``main()`` entirely and
+        # crash the process instead of exiting cleanly. See issue #3802.
         return False
 
 
