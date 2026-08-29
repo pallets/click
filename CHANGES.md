@@ -2,6 +2,9 @@
 
 Unreleased
 
+- Document that ``launch(wait=True)`` avoids leaving a zombie ``xdg-open``
+  process when running under WSL. {issue}`2154`
+
 ## Version 8.5.0
 
 Released 2026-08-24
