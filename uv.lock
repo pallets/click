@@ -173,7 +173,7 @@ wheels = [
 
 [[package]]
 name = "click"
-version = "8.5.0"
+version = "8.5.1.dev0"
 source = { editable = "." }
 
 [package.dev-dependencies]
