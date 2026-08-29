@@ -248,6 +248,9 @@ click.launch("https://click.palletsprojects.com/")
 click.launch("/my/downloaded/file.txt", locate=True)
 ```
 
+When running under WSL, pass ``wait=True`` to wait for ``xdg-open`` to exit
+and avoid leaving a zombie process.
+
 ## Printing Filenames
 
 Because filenames might not be Unicode, formatting them can be a bit tricky.
