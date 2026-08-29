@@ -18,6 +18,15 @@ class Sentinel(enum.Enum):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}.{self.name}"
 
+    def __copy__(self) -> Sentinel:
+        return self
+
+    def __deepcopy__(self, memo: dict[int, t.Any]) -> Sentinel:
+        return self
+
+    def __reduce_ex__(self, protocol: object) -> tuple[t.Any, ...]:
+        return getattr, (self.__class__, self.name)
+
 
 UNSET: t.Literal[Sentinel.UNSET] = Sentinel.UNSET
 """Sentinel used to indicate that a value is not set."""

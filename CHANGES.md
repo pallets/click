@@ -1,3 +1,9 @@
+## Version 8.5.1
+
+Unreleased
+
+- Fix `copy.deepcopy()` and `pickle` on a `Parameter`, `Option` or `Command`. {pr}`3805`
+
 ## Version 8.5.0
 
 Released 2026-08-24
