@@ -1079,6 +1079,7 @@ class Command:
     def to_info_dict(self, ctx: Context) -> dict[str, t.Any]:
         return {
             "name": self.name,
+            "usage": self.get_usage(ctx),
             "params": [param.to_info_dict() for param in self.get_params(ctx)],
             "help": self.help,
             "epilog": self.epilog,

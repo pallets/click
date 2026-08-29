@@ -253,12 +253,21 @@ def test_parameter(obj, expect):
 def test_command(obj, expect):
     ctx = click.Context(obj)
     out = obj.to_info_dict(ctx)
+
+    def remove_usage(info):
+        usage = info.pop("usage")
+        assert usage.startswith("Usage: ")
+        for command in info.get("commands", {}).values():
+            remove_usage(command)
+
+    remove_usage(out)
     assert out == expect
 
 
 def test_context():
     ctx = click.Context(HELLO_COMMAND[0])
     out = ctx.to_info_dict()
+    usage = out["command"].pop("usage")
     assert out == {
         "command": HELLO_COMMAND[1],
         "info_name": None,
@@ -267,6 +276,8 @@ def test_context():
         "ignore_unknown_options": False,
         "auto_envvar_prefix": None,
     }
+
+    assert usage == "Usage:  [OPTIONS]"
 
 
 def test_paramtype_no_name():
