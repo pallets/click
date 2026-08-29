@@ -2,6 +2,11 @@
 
 Unreleased
 
+- Fix a crash when a second `KeyboardInterrupt` arrives while click prints
+  its "Aborted!" message after a prompt is cancelled. `isatty()` now treats
+  `KeyboardInterrupt` like other probe failures and returns `False` instead
+  of letting it escape exception handling. {issue}`3802`
+
 ## Version 8.5.0
 
 Released 2026-08-24

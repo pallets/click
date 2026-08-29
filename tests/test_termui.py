@@ -1963,6 +1963,32 @@ def test_hide_input_confirmation_prompt_mismatch_unaffected(runner):
     assert result.exit_code == 0
 
 
+def test_prompt_abort_handles_keyboard_interrupt_during_abort_echo(runner, monkeypatch):
+    """Regression test for issue #3802.
+
+    ``prompt()`` converts ``KeyboardInterrupt`` to ``Abort``. While ``main()``
+    prints "Aborted!", a second ``KeyboardInterrupt`` during ``isatty()`` must
+    not escape and crash the process.
+    """
+    monkeypatch.setattr(
+        "click.termui.visible_prompt_func",
+        lambda _: (_ for _ in ()).throw(KeyboardInterrupt()),
+    )
+
+    def isatty_raises_on_abort_echo(stream):
+        raise KeyboardInterrupt()
+
+    monkeypatch.setattr("click._compat.isatty", isatty_raises_on_abort_echo)
+
+    @click.command()
+    def cli():
+        click.prompt("value")
+
+    result = runner.invoke(cli)
+    assert result.exit_code == 1
+    assert "Aborted!" in result.output
+
+
 def test_hide_input_value_never_leaks_when_err_true(runner):
     """``click.prompt(..., err=True)`` routes its error message to
     stderr. The masking logic must apply on that path too: the raw

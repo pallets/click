@@ -540,7 +540,11 @@ def term_len(x: str) -> int:
 def isatty(stream: t.IO[t.Any]) -> bool:
     try:
         return stream.isatty()
-    except Exception:
+    except (Exception, KeyboardInterrupt):
+        # ``isatty`` is a best-effort probe. ``KeyboardInterrupt`` is a
+        # ``BaseException``, so it is not caught by the ``Exception`` guard.
+        # A second Ctrl-C during ``echo("Aborted!")`` after ``prompt()`` aborts
+        # would otherwise escape ``main()`` and crash the process. See #3802.
         return False
 
 
