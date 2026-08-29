@@ -517,6 +517,42 @@ def test_write_usage_styled_prefix_keeps_options_on_one_line():
     assert visible == "Usage: cli [OPTIONS]\n"
 
 
+def test_write_usage_does_not_break_options_at_hyphens():
+    """Issue #3362: wrapping a usage line must not split a hyphenated
+    option name at a hyphen, only at whitespace between tokens.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+    ]
+
+    formatter = click.HelpFormatter(width=65)
+    formatter.write_usage("program", " ".join(options))
+
+    assert formatter.getvalue().splitlines() == [
+        "Usage: program --enable-verbose-logging --output-file-path",
+        "               --max-retry-count --disable-cache-mode",
+        "               --config-file-location",
+    ]
+
+
+def test_write_text_does_not_break_words_at_hyphens():
+    """Issue #3362: hyphenated tokens in help text, such as option names
+    mentioned in prose, stay intact when the text is rewrapped.
+    """
+    formatter = click.HelpFormatter(width=30)
+    formatter.write_text("Deprecated, use --enable-verbose-logging instead.")
+
+    assert formatter.getvalue().splitlines() == [
+        "Deprecated, use",
+        "--enable-verbose-logging",
+        "instead.",
+    ]
+
+
 @pytest.mark.parametrize(
     ("formatter_kwargs", "current_indent", "prog", "args", "prefix", "expected"),
     [

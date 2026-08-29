@@ -2,6 +2,10 @@
 
 Unreleased
 
+- Help text is only wrapped at whitespace. Hyphenated names such as
+  `--option-name` are no longer split at a hyphen when a usage line or
+  help paragraph is wrapped. {issue}`3362`
+
 ## Version 8.5.0
 
 Released 2026-08-24
