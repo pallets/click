@@ -517,6 +517,42 @@ def test_write_usage_styled_prefix_keeps_options_on_one_line():
     assert visible == "Usage: cli [OPTIONS]\n"
 
 
+def test_write_usage_does_not_break_options_at_hyphen():
+    """Issue #3362: hyphenated tokens on the usage line (e.g. long option
+    names or metavars) must not be split at a hyphen when wrapping. They may
+    only wrap at the spaces between tokens.
+    """
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+
+    formatter = click.HelpFormatter(width=65)
+    formatter.write_usage("program", " ".join(options))
+    rendered = formatter.getvalue()
+
+    # The break must never fall inside a token: every option name survives
+    # intact on one of the wrapped lines.
+    for option in options:
+        assert any(option in line for line in rendered.splitlines())
+
+    assert rendered == (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+        "               --config-file-location --user-auth-token\n"
+        "               --auto-update-interval --force-overwrite-existing\n"
+        "               --network-timeout-seconds --debug-trace-enabled\n"
+    )
+
+
 @pytest.mark.parametrize(
     ("formatter_kwargs", "current_indent", "prog", "args", "prefix", "expected"),
     [

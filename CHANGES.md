@@ -2,6 +2,10 @@
 
 Unreleased
 
+- The usage line no longer breaks long option names or metavars at a hyphen
+  when wrapping. Hyphenated tokens such as `--max-retry-count` stay intact and
+  wrapping happens only at the spaces between them. {issue}`3362`
+
 ## Version 8.5.0
 
 Released 2026-08-24
