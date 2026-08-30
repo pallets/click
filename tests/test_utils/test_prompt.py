@@ -87,6 +87,38 @@ def test_full_prompt_passed_to_readline(monkeypatch, call, expected_prompt):
     assert received == [expected_prompt]
 
 
+def test_prompt_abort_echo_survives_keyboard_interrupt(monkeypatch):
+    """Ctrl-C at a prompt becomes Abort. A second KeyboardInterrupt
+    during the Aborted! echo (echo -> isatty) must still exit 1.
+
+    https://github.com/pallets/click/issues/3802
+    """
+
+    @click.command()
+    def cli():
+        click.prompt("name")
+
+    def interrupt(_text):
+        raise KeyboardInterrupt()
+
+    monkeypatch.setattr("click.termui.visible_prompt_func", interrupt)
+
+    stderr = StringIO()
+
+    def interrupt_isatty():
+        raise KeyboardInterrupt()
+
+    stderr.isatty = interrupt_isatty  # type: ignore[method-assign]
+    monkeypatch.setattr(sys, "stderr", stderr)
+
+    try:
+        cli.main([])
+    except SystemExit as e:
+        assert e.code == 1
+    except KeyboardInterrupt:
+        pytest.fail("KeyboardInterrupt escaped Command.main during abort")
+
+
 def test_prompts_eof(runner):
     """If too few lines of input are given, prompt should exit, not hang."""
 

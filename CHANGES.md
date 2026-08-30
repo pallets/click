@@ -2,6 +2,10 @@
 
 Unreleased
 
+- Handle a second `KeyboardInterrupt` while printing `Aborted!` after
+  `prompt()` is cancelled with Ctrl-C. Previously that interrupt could
+  escape `Command.main` as an unhandled exception. {issue}`3802`
+
 ## Version 8.5.0
 
 Released 2026-08-24

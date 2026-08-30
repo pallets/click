@@ -1561,7 +1561,10 @@ class Command:
                     # by its truthiness/falsiness
                     ctx.exit()
             except (EOFError, KeyboardInterrupt) as e:
-                echo(file=sys.stderr)
+                try:
+                    echo(file=sys.stderr)
+                except KeyboardInterrupt:
+                    pass
                 raise Abort() from e
             except ClickException as e:
                 if not standalone_mode:
@@ -1591,7 +1594,10 @@ class Command:
         except Abort:
             if not standalone_mode:
                 raise
-            echo(_("Aborted!"), file=sys.stderr)
+            try:
+                echo(_("Aborted!"), file=sys.stderr)
+            except KeyboardInterrupt:
+                pass
             sys.exit(1)
 
     def _main_shell_completion(
