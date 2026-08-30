@@ -630,3 +630,26 @@ def test_command_write_usage_no_args(runner, command_kwargs, expected_usage_line
     cli = click.Command("cli", **command_kwargs)
     result = runner.invoke(cli, ["--help"])
     assert result.output.splitlines()[0] == expected_usage_line
+
+
+def test_write_usage_does_not_break_hyphenated_options():
+    """Issue #3362: usage wrapping must not split option names at hyphens."""
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+    f = click.HelpFormatter(width=65)
+    f.write_usage("program", " ".join(options))
+    rendered = f.getvalue()
+    for opt in options:
+        assert opt in rendered, f"{opt!r} was split across lines:\n{rendered}"
+    for line in rendered.splitlines():
+        assert not line.endswith("-"), f"line wrapped on a hyphen:\n{rendered}"

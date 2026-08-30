@@ -2,6 +2,9 @@
 
 Unreleased
 
+- {meth}`HelpFormatter.write_usage` no longer wraps hyphenated option
+  names in the middle. {issue}`3362`
+
 ## Version 8.5.0
 
 Released 2026-08-24
