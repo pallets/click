@@ -3,6 +3,8 @@
 Unreleased
 
 - Fix `copy.deepcopy()` and `pickle` on a `Parameter`, `Option` or `Command`. {pr}`3805`
+- Shell completion for option values attached with `=` preserves the option
+  prefix, allowing Bash and Zsh to replace the complete word. {issue}`2847`
 
 ## Version 8.5.0
 
