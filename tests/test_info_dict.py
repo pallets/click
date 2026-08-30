@@ -88,9 +88,7 @@ HELLO_GROUP = (
         "short_help": None,
         "hidden": False,
         "deprecated": False,
-        "commands": {
-            "hello": {**HELLO_COMMAND[1], "usage": "Usage: hello [OPTIONS]"}
-        },
+        "commands": {"hello": {**HELLO_COMMAND[1], "usage": "Usage: hello [OPTIONS]"}},
         "chain": False,
     },
 )
