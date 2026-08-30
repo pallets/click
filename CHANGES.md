@@ -2,6 +2,9 @@
 
 Unreleased
 
+- `Command.to_info_dict` includes the output of `get_usage` under the
+  `usage` key for every command and group. {issue}`2992`
+
 ## Version 8.5.0
 
 Released 2026-08-24

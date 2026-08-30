@@ -68,6 +68,7 @@ HELLO_COMMAND = (
     click.Command("hello", params=[NUMBER_OPTION[0]]),
     {
         "name": "hello",
+        "usage": "Usage:  [OPTIONS]",
         "params": [NUMBER_OPTION[1], HELP_OPTION[1]],
         "help": None,
         "epilog": None,
@@ -80,13 +81,16 @@ HELLO_GROUP = (
     click.Group("cli", [HELLO_COMMAND[0]]),
     {
         "name": "cli",
+        "usage": "Usage:  [OPTIONS] COMMAND [ARGS]...",
         "params": [HELP_OPTION[1]],
         "help": None,
         "epilog": None,
         "short_help": None,
         "hidden": False,
         "deprecated": False,
-        "commands": {"hello": HELLO_COMMAND[1]},
+        "commands": {
+            "hello": {**HELLO_COMMAND[1], "usage": "Usage: hello [OPTIONS]"}
+        },
         "chain": False,
     },
 )
@@ -226,6 +230,7 @@ def test_parameter(obj, expect):
             ),
             {
                 "name": "base",
+                "usage": "Usage:  [OPTIONS] COMMAND [ARGS]...",
                 "params": [HELP_OPTION[1]],
                 "help": None,
                 "epilog": None,
@@ -233,9 +238,19 @@ def test_parameter(obj, expect):
                 "hidden": False,
                 "deprecated": False,
                 "commands": {
-                    "cli": HELLO_GROUP[1],
+                    "cli": {
+                        **HELLO_GROUP[1],
+                        "usage": "Usage: cli [OPTIONS] COMMAND [ARGS]...",
+                        "commands": {
+                            "hello": {
+                                **HELLO_COMMAND[1],
+                                "usage": "Usage: cli hello [OPTIONS]",
+                            }
+                        },
+                    },
                     "test": {
                         "name": "test",
+                        "usage": "Usage: test [OPTIONS] NAME",
                         "params": [NAME_ARGUMENT[1], HELP_OPTION[1]],
                         "help": None,
                         "epilog": None,
@@ -267,6 +282,20 @@ def test_context():
         "ignore_unknown_options": False,
         "auto_envvar_prefix": None,
     }
+
+
+def test_command_usage():
+    """Every command in the info dict has a ``usage`` key with the full
+    command path, recursively.
+    """
+    hello = click.Command("hello", params=[NAME_ARGUMENT[0]])
+    cli = click.Group("cli", [click.Group("sub", [hello])])
+    ctx = click.Context(cli, info_name="cli")
+    out = ctx.to_info_dict()
+    assert out["command"]["usage"] == "Usage: cli [OPTIONS] COMMAND [ARGS]..."
+    sub = out["command"]["commands"]["sub"]
+    assert sub["usage"] == "Usage: cli sub [OPTIONS] COMMAND [ARGS]..."
+    assert sub["commands"]["hello"]["usage"] == "Usage: cli sub hello [OPTIONS] NAME"
 
 
 def test_paramtype_no_name():
