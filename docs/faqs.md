@@ -104,3 +104,51 @@ You can set the `EDITOR` in your environment with its appropriate flags:
 | Sublime Text | `EDITOR="subl -w"` |
 
 For an editor with no such flag, a workaround is to point `EDITOR` at a small wrapper script that opens the editor and blocks until it exits.
+
+(custom-completions-show-the-full-value)=
+### Custom completions show the full value
+
+`Path` and `File` parameters complete differently from a parameter with a custom completer. Take a command with one of each:
+
+```python
+def complete_dirs(ctx, param, incomplete):
+    return [
+        CompletionItem(incomplete + name)
+        for name in ("Documents", "Downloads", "Pictures")
+    ]
+
+
+@click.command()
+@click.option("--src", type=click.Path())
+@click.option("--dest", shell_complete=complete_dirs)
+def copy(src, dest):
+    click.echo(f"Copy from {src} to {dest}")
+```
+
+Completing `--src` shows only the last component of each candidate, and omits the leading path:
+
+```console
+$ copy --src /home/user/<TAB><TAB>
+Documents  Downloads  Pictures
+```
+
+Completing `--dest` shows each value in full, exactly as the completer returned it:
+
+```console
+$ copy --dest /home/user/<TAB><TAB>
+/home/user/Documents  /home/user/Downloads  /home/user/Pictures
+```
+
+This is not a bug in Click. The two parameters are completed by different sides.
+
+`Path.shell_complete` and `File.shell_complete` never enumerate the directory: each returns a single item that is the incomplete value itself, tagged `file` (or `dir` for a `Path` restricted to directories). Then the shell takes over to propose completions, and each shell does so in its own way.
+
+A custom completer sends no such marker. Its `CompletionItem` carries the value, a `type` marker, and an optional `help` string. The value a completer returns is both what the shell displays and what it inserts into the command line.
+
+#### Answer
+
+To change how suggestions are displayed, work on the shell side:
+
+- Check whether your shell's completion system has an option that changes how candidates are displayed.
+- Write a `ShellComplete` subclass and register it with `add_completion_class`, as described in [Adding Support for a Shell](shell-completion.md#adding-support-for-a-shell).
+- Or return the shortened form directly from your completer, but make the parameter accept and interpret that shortened form into the full value.
