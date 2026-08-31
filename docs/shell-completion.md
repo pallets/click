@@ -161,6 +161,8 @@ def cli(ev):
     click.echo(os.environ[ev])
 ```
 
+See {ref}`custom-completions-show-the-full-value` in the FAQ for why these values are displayed in full, while `Path` completions show only the last component of the path.
+
 ## Overriding Value Completion
 
 Value completions for a parameter can be customized without a custom type by providing a `shell_complete` function. The
