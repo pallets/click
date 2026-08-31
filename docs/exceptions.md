@@ -19,19 +19,27 @@ like incorrect usage.
 
 Click's main error handling is happening in {meth}`Command.main`. In
 there it handles all subclasses of {exc}`ClickException` as well as the
-standard {exc}`EOFError` and {exc}`KeyboardInterrupt` exceptions. The
-latter are internally translated into an {exc}`Abort`.
+standard {exc}`EOFError` and {exc}`KeyboardInterrupt` exceptions.
 
-The logic applied is the following:
+The table below lists every way a command can end, and what Click does
+for each. The middle column is the default. The last column applies when
+{meth}`Command.main` runs with ``standalone_mode=False``, which the next
+section describes.
 
-1. If an {exc}`EOFError` or {exc}`KeyboardInterrupt` happens, reraise it
-   as {exc}`Abort`.
-2. If a {exc}`ClickException` is raised, invoke the
-   {meth}`ClickException.show` method on it to display it and then exit
-   the program with {attr}`ClickException.exit_code`.
-3. If an {exc}`Abort` exception is raised print the string ``Aborted!``
-   to standard error and exit the program with exit code ``1``.
-4. If it goes through well, exit the program with exit code ``0``.
+| How the command ends | Standalone mode | ``standalone_mode=False`` |
+| --- | --- | --- |
+| It returns | Exit with code ``0`` | Return the value of {meth}`Command.invoke` |
+| It called {meth}`Context.exit` | Exit with the given code | Return the given code |
+| It raised a {exc}`ClickException` | Call {meth}`ClickException.show`, then exit with {attr}`ClickException.exit_code` | Propagate it |
+| The user pressed ``Ctrl-C``, which raises a {exc}`KeyboardInterrupt` | Print a blank line, then ``Aborted!`` to standard error, and exit with code ``1`` | Print a blank line, then raise {exc}`Abort` with the original exception as its ``__cause__`` |
+| The user pressed ``Ctrl-D``, which raises an {exc}`EOFError` | The same as ``Ctrl-C`` | The same as ``Ctrl-C`` |
+| It raised an {exc}`Abort` | Print ``Aborted!`` to standard error, and exit with code ``1`` | Propagate it |
+| The output pipe closed early, which raises an {exc}`OSError` with ``EPIPE`` | Silence the flush errors, and exit with code ``1`` | The same |
+| It raised any other exception | Propagate it | Propagate it |
+
+Click writes the message and exits once that handling is done. An
+interrupt arriving during this last step cannot change the exit code the
+table gave. It can only cost the message.
 
 ## What if I Don't Want That?
 
@@ -59,6 +67,24 @@ command.main(
     ["command-name", "args", "go", "here"],
     standalone_mode=False,
 )
+```
+
+This is also how you replace the ``Aborted!`` message. Standalone mode
+turns off every row of the table above, so catch the cases you want to
+keep and write your own message for the rest:
+
+```python
+try:
+    command.main(
+        ["command-name", "args", "go", "here"],
+        standalone_mode=False,
+    )
+except click.Abort:
+    click.echo("Bye!", err=True)
+    raise SystemExit(1)
+except click.ClickException as e:
+    e.show()
+    raise SystemExit(e.exit_code)
 ```
 
 ## Which Exceptions Exist?
