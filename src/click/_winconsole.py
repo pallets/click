@@ -45,7 +45,6 @@ ReadConsoleW = kernel32.ReadConsoleW
 WriteConsoleW = kernel32.WriteConsoleW
 GetConsoleMode = kernel32.GetConsoleMode
 GetLastError = kernel32.GetLastError
-GetCommandLineW = WINFUNCTYPE(LPWSTR)(("GetCommandLineW", windll.kernel32))
 CommandLineToArgvW = WINFUNCTYPE(POINTER(LPWSTR), LPCWSTR, POINTER(c_int))(
     ("CommandLineToArgvW", windll.shell32)
 )
@@ -61,10 +60,6 @@ PyBUF_WRITABLE = 1
 ERROR_SUCCESS = 0
 ERROR_NOT_ENOUGH_MEMORY = 8
 ERROR_OPERATION_ABORTED = 995
-
-STDIN_FILENO = 0
-STDOUT_FILENO = 1
-STDERR_FILENO = 2
 
 EOF = b"\x1a"
 MAX_BYTES_WRITTEN = 32767
