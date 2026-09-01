@@ -1,10 +1,17 @@
+import itertools
 import sys
+import unicodedata
 from unittest import mock
 
 import pytest
 
 import click
 from click._utils import UNSET
+
+# See the note beside the same constant in `test_options.py`: `os.environ`
+# upper-cases its keys on Windows, so a variable answers to every spelling of
+# its name there and to exactly one everywhere else.
+ENV_NAMES_ARE_CASE_INSENSITIVE = sys.platform == "win32"
 
 
 def test_nargs_star(runner):
@@ -77,6 +84,379 @@ def test_nargs_err(runner):
     result = runner.invoke(copy, ["foo", "bar"])
     assert result.exit_code == 2
     assert "Got unexpected extra argument (bar)" in result.output
+
+
+@pytest.mark.parametrize(
+    ("decl", "expect"),
+    [
+        ("src", "src"),
+        ("foo-bar", "foo_bar"),
+        ("FOO-BAR", "foo_bar"),
+        ("Foo_Bar", "foo_bar"),
+        ("foo__bar", "foo__bar"),
+        ("_foo", "_foo"),
+        ("__foo", "__foo"),
+    ],
+)
+def test_argument_names(runner, decl, expect):
+    @click.command()
+    @click.argument(decl)
+    def cmd(**kwargs):
+        click.echo(kwargs[expect])
+
+    assert cmd.params[0].name == expect
+
+    result = runner.invoke(cmd, ["value"])
+    assert not result.exception
+    assert result.output == "value\n"
+
+
+def test_argument_normalizes_an_identifier_decl():
+    """An argument declaration is normalized even when already an identifier.
+
+    This is the one way the two kinds still differ. An option takes several
+    declarations, so one of them that is already an identifier is read as an
+    explicit name and kept verbatim. An argument takes exactly one, which has
+    to serve as both the metavar source and the name, so it is always
+    transformed.
+    """
+    assert click.Argument(["Foo_Bar"]).name == "foo_bar"
+    assert click.Option(["--x", "Foo_Bar"]).name == "Foo_Bar"
+
+
+# Each kind, paired with the shape its declaration takes. An option carries the
+# ``--`` prefix that its transform strips; an argument takes its declaration
+# whole. A test parametrized over this asserts one rule for both kinds.
+PARAM_KINDS = [
+    pytest.param(click.Argument, "{decl}", id="argument"),
+    pytest.param(click.Option, "--{decl}", id="option"),
+]
+
+# Declarations that between them cover every shape the naming transform has to
+# settle: empty, bare prefixes, a leading digit, a dot, a space, and the two
+# forms that do name something.
+NAME_SWEEP_DECLS = [
+    "",
+    "-",
+    "--",
+    "---",
+    "0",
+    "--0",
+    "0-file",
+    "--0-file",
+    "foo.bar",
+    "--foo.bar",
+    "foo bar",
+    "x",
+    "--x",
+    "X_Y",
+    "--X-Y",
+]
+
+
+@pytest.mark.parametrize("count", [1, 2])
+@pytest.mark.parametrize("expose_value", [True, False])
+def test_parameter_name_is_always_an_identifier(count, expose_value):
+    """No declaration builds a parameter whose name is not a Python identifier.
+
+    ``_resolve_name`` is the one place a name is settled, and it refuses
+    everything else, so every reader downstream may treat ``Parameter.name`` as
+    a usable identifier.
+    """
+    built = 0
+
+    for decls in itertools.product(NAME_SWEEP_DECLS, repeat=count):
+        for cls in (click.Option, click.Argument):
+            try:
+                param = cls(list(decls), expose_value=expose_value)
+            except (TypeError, ValueError):
+                continue
+
+            built += 1
+            assert param.name.isidentifier(), (
+                f"{cls.__name__}({list(decls)!r}, expose_value={expose_value})"
+                f" named its parameter {param.name!r}"
+            )
+
+    assert built, "the sweep built no parameter, so it proves nothing"
+
+
+def test_argument_requires_its_one_declaration():
+    """An argument with no declaration is refused, whatever ``expose_value`` says.
+
+    It used to build a required positional named ``""``: nothing rendered for it
+    in the usage line, a missing value was reported as ``Missing argument ''``,
+    and a second one tripped the duplicate-name warning in
+    :meth:`Command.get_params`.
+    """
+    with pytest.raises(TypeError, match="exactly one parameter declaration"):
+        click.Argument([])
+
+    with pytest.raises(TypeError, match="exactly one parameter declaration"):
+        click.Argument([], expose_value=False)
+
+
+def test_argument_name_check_applies_when_not_exposed():
+    """An unexposed argument is held to the check too.
+
+    The name is also the key the parser stores the value under, so an argument
+    that gave it up would share that key with the next one. The option half is
+    ``test_option_name_check_applies_when_not_exposed``.
+    """
+    with pytest.raises(TypeError, match="Could not determine name"):
+        click.Argument(["0foo"], expose_value=False)
+
+
+def test_argument_metavar_renders_what_a_declaration_may_not(runner):
+    """``metavar`` carries a display the declaration is no longer allowed to.
+
+    An argument takes exactly one declaration and has no explicit-name channel,
+    so a display such as ``0FOO`` is reached by naming the parameter separately
+    and passing the display as ``metavar``.
+    """
+    seen = []
+
+    def record(ctx, param, value):
+        seen.append(value)
+
+    @click.command()
+    @click.argument("zero_foo", expose_value=False, callback=record, metavar="0FOO")
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    assert cmd.params[0].name == "zero_foo"
+
+    result = runner.invoke(cmd, ["value"])
+    assert not result.exception
+    assert result.output == "{}\n"
+    assert seen == ["value"]
+
+    result = runner.invoke(cmd, ["--help"])
+    assert "0FOO" in result.output
+
+
+@pytest.mark.parametrize(("cls", "form"), PARAM_KINDS)
+@pytest.mark.parametrize(
+    ("decl", "expect"),
+    [
+        # Greek capital omega transforms to its lowercase form.
+        pytest.param("Ω", "ω", id="omega"),
+        # Latin capital I with dot above transforms to two code points: the
+        # transform grows the name.
+        pytest.param("İ", "i\N{COMBINING DOT ABOVE}", id="dotted-capital-i"),
+        # A trailing sigma transforms to its context-sensitive final form.
+        pytest.param("ΟΔΟΣ", "οδος", id="final-sigma"),
+        # Capital sharp s transforms to the letter whose upper case is "SS".
+        pytest.param("ẞ", "ß", id="capital-sharp-s"),
+        # The Kelvin sign transforms to a plain ASCII k.
+        pytest.param("\N{KELVIN SIGN}", "k", id="kelvin-sign"),
+        # A digit outside ASCII is kept wherever it sits but the leading one.
+        pytest.param("foo-٣", "foo_٣", id="arabic-indic-digit"),
+    ],
+)
+def test_parameter_name_unicode_case_transform(cls, form, decl, expect):
+    """``str.lower()`` is neither one-to-one nor length-preserving.
+
+    Both kinds run the same transform, so every row holds for either.
+    """
+    assert cls([form.format(decl=decl)]).name == expect
+
+
+@pytest.mark.parametrize(("cls", "form"), PARAM_KINDS)
+@pytest.mark.parametrize(
+    "decl",
+    [
+        pytest.param("0foo", id="leading-digit"),
+        pytest.param("0", id="digit-only"),
+        pytest.param("foo.bar", id="dot"),
+        pytest.param("foo bar", id="space"),
+        pytest.param("\u0663foo", id="leading-arabic-indic-digit"),
+        # Separators that read as a hyphen but are not the one replaced.
+        pytest.param("foo\N{NON-BREAKING HYPHEN}bar", id="non-breaking-hyphen"),
+        pytest.param("foo\u2013bar", id="en-dash"),
+        pytest.param("foo\u2212bar", id="minus-sign"),
+        # Characters that occupy no width at all.
+        pytest.param("a\N{ZERO WIDTH SPACE}b", id="zero-width-space"),
+        pytest.param("a\N{SOFT HYPHEN}b", id="soft-hyphen"),
+        pytest.param("a\N{RIGHT-TO-LEFT OVERRIDE}b", id="right-to-left-override"),
+        # Even nothing at all, which reaches an option as a bare ``--``.
+        pytest.param("", id="empty"),
+    ],
+)
+def test_parameter_name_must_be_an_identifier(cls, form, decl):
+    """Neither kind accepts a declaration that names no Python identifier.
+
+    Both derive a name the same way and hold it to the same check, so a
+    declaration is refused whichever one it is written as. The one refused
+    shape an argument has no equivalent of is in
+    ``test_option_name_must_be_an_identifier``.
+    """
+    with pytest.raises(TypeError, match="Could not determine name"):
+        cls([form.format(decl=decl)])
+
+
+@pytest.mark.parametrize(("cls", "form"), PARAM_KINDS)
+@pytest.mark.parametrize(
+    "char",
+    [
+        pytest.param("\N{ZERO WIDTH JOINER}", id="zero-width-joiner"),
+        pytest.param("\N{ZERO WIDTH NON-JOINER}", id="zero-width-non-joiner"),
+    ],
+)
+def test_parameter_name_identifier_check_follows_the_unicode_table(cls, form, char):
+    """Two zero-width characters answer this check differently per Python.
+
+    Unicode 15.1 added the joiner and the non-joiner to the characters an
+    identifier may continue with, and Python 3.13 is the first release to carry
+    that table. So one declaration is refused up to Python 3.12 and names a
+    parameter from 3.13 on, with nothing on screen to separate it from ``ab``.
+    """
+    name = f"a{char}b"
+    assert name.isidentifier() == (sys.version_info >= (3, 13))
+    decl = form.format(decl=name)
+
+    if not name.isidentifier():
+        with pytest.raises(TypeError, match="Could not determine name"):
+            cls([decl])
+        return
+
+    assert cls([decl]).name == name
+
+
+@pytest.mark.parametrize(
+    ("decorator", "decl", "argv"),
+    [
+        pytest.param(click.argument, "ﬁ", ["value"], id="argument"),
+        pytest.param(click.option, "--ﬁ", ["--ﬁ", "value"], id="option"),
+    ],
+)
+def test_parameter_name_is_not_nfkc_normalized(runner, decorator, decl, argv):
+    """``str.isidentifier()`` is not the test for "can be a parameter name".
+
+    Python normalizes an identifier written in source to NFKC, so the ligature
+    "fi" compiles to the two letters. ``_parse_decls`` runs no normalization,
+    so the name keeps the ligature and only ``**kwargs`` can carry it.
+    """
+
+    @click.command()
+    @decorator(decl)
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    name = cmd.params[0].name
+    assert name == "ﬁ"
+    assert name.isidentifier()
+    assert unicodedata.normalize("NFKC", name) == "fi"
+
+    result = runner.invoke(cmd, argv)
+    assert not result.exception
+    assert result.output == "{'ﬁ': 'value'}\n"
+
+
+def test_argument_name_keeps_its_normalization_form(runner):
+    """A composed and a decomposed declaration are two distinct arguments.
+
+    Both render as ``café`` and both are valid identifiers, so the pair
+    coexists on one command with nothing on screen to tell them apart.
+    """
+    decomposed = "cafe\N{COMBINING ACUTE ACCENT}"
+    composed = unicodedata.normalize("NFC", decomposed)
+
+    @click.command()
+    @click.argument(composed)
+    @click.argument(decomposed)
+    def cmd(**kwargs):
+        click.echo(repr(sorted(kwargs)))
+
+    assert [p.name for p in cmd.params] == [composed, decomposed]
+
+    result = runner.invoke(cmd, ["one", "two"])
+    assert not result.exception
+    assert result.output == f"['{decomposed}', '{composed}']\n"
+
+
+def test_argument_name_case_transform_can_collide(runner):
+    """Two declarations that differ can transform to one name, and that warns.
+
+    An option pair transforming to one name stays silent, since options may share a
+    name on purpose to form a feature switch group. An argument sharing a name
+    only ever overwrites, so the check in ``Command.get_params`` fires.
+    """
+
+    @click.command()
+    @click.argument("Foo-Bar")
+    @click.argument("foo_bar")
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    with pytest.warns(UserWarning, match="is used by an argument"):
+        result = runner.invoke(cmd, ["one", "two"], catch_exceptions=False)
+
+    assert result.output == "{'foo_bar': 'two'}\n"
+
+
+def test_argument_name_can_collide_with_an_option(runner):
+    """An argument transforming onto an option's name overwrites it, and warns.
+
+    The argument is what the warning names, and the argument is what wins:
+    the option's value never reaches the callback.
+    """
+
+    @click.command()
+    @click.option("--foo-bar")
+    @click.argument("Foo-Bar", required=False)
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    assert [p.name for p in cmd.params] == ["foo_bar", "foo_bar"]
+
+    with pytest.warns(UserWarning, match="is used by an argument"):
+        result = runner.invoke(
+            cmd, ["--foo-bar", "from-option", "from-argument"], catch_exceptions=False
+        )
+
+    assert result.output == "{'foo_bar': 'from-argument'}\n"
+
+
+def test_argument_has_no_auto_envvar(runner):
+    """An argument reads only the envvars it names, never a derived one."""
+
+    @click.command()
+    @click.argument("Foo-Bar", required=False)
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    result = runner.invoke(
+        cmd, [], auto_envvar_prefix="TEST", env={"TEST_FOO_BAR": "foo"}
+    )
+    assert not result.exception
+    assert result.output == "{'foo_bar': None}\n"
+
+
+@pytest.mark.parametrize(
+    ("env", "expect"),
+    [
+        pytest.param({"ArG": "foo"}, "'foo'", id="exact"),
+        pytest.param({"ARG": "foo"}, "None", id="upper"),
+        pytest.param({"arg": "foo"}, "None", id="lower"),
+    ],
+)
+def test_argument_explicit_envvar_case_sensitivity(runner, env, expect):
+    """An argument matches its named envvar exactly, like an option does.
+
+    And loses the distinction on Windows, like an option does.
+    """
+
+    @click.command()
+    @click.argument("arg", envvar="ArG", required=False)
+    def cmd(arg):
+        click.echo(repr(arg))
+
+    result = runner.invoke(cmd, [], env=env)
+    assert not result.exception
+    if ENV_NAMES_ARE_CASE_INSENSITIVE:
+        expect = "'foo'"
+    assert result.output == f"{expect}\n"
 
 
 def test_bytes_args(runner, monkeypatch):

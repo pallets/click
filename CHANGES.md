@@ -2,6 +2,14 @@
 
 Unreleased
 
+- {class}`Argument` derives its name the same way {class}`Option` does, and must be
+  a valid Python identifier, else raises `TypeError`. {pr}`3827`
+- `expose_value=False` no longer excuses that check on either kind. Pass an
+  explicit name to {class}`Option`, or rename an {class}`Argument` and pass
+  `metavar` to keep its display. {pr}`3827`
+- Neither kind builds a parameter without a declaration. `click.argument()` and
+  `click.option()` with none and `expose_value=False` used to name a parameter
+  `""`, which showed nothing on the usage line. {pr}`3827`
 - Fix `copy.deepcopy()` and `pickle` on a `Parameter`, `Option` or `Command`. {pr}`3805`
 - A `KeyboardInterrupt` arriving while `Command.main()` reports an abort or an error,
   or while it exits, no longer escapes as an unhandled traceback. The command still
