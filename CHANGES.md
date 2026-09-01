@@ -2,6 +2,10 @@
 
 Unreleased
 
+- {class}`Path` is generic in `path_type`, so `convert`, {func}`prompt`,
+  and parameters using the type infer the converted path class when
+  `path_type` is set (for example `pathlib.Path`). {issue}`3822`
+
 ## Version 8.5.0
 
 Released 2026-08-24

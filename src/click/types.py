@@ -45,6 +45,16 @@ else:
 _FloatValueT = t.TypeVar("_FloatValueT", bound=float)
 _FloatValueT_co = t.TypeVar("_FloatValueT_co", bound=float, covariant=True)
 
+# ``Path`` is generic in ``path_type``. TypeVar defaults (PEP 696) are
+# visible to type checkers via typing_extensions. At runtime they exist
+# only on Python 3.13+.
+if t.TYPE_CHECKING:
+    _PathT = te.TypeVar("_PathT", bound=str | bytes | os.PathLike[str], default=str)
+elif sys.version_info >= (3, 13):
+    _PathT = t.TypeVar("_PathT", bound=str | bytes | os.PathLike[str], default=str)
+else:
+    _PathT = t.TypeVar("_PathT", bound=str | bytes | os.PathLike[str])
+
 
 class ParamTypeInfoDict(t.TypedDict):
     param_type: str
@@ -1045,7 +1055,7 @@ class PathInfoDict(ParamTypeInfoDict):
     allow_dash: bool
 
 
-class Path(ParamType[str | bytes | os.PathLike[str]]):
+class Path(ParamType[_PathT], t.Generic[_PathT]):
     """The ``Path`` type is similar to the :class:`File` type, but
     returns the filename instead of an open file. Various checks can be
     enabled to validate the type of file and permissions.
@@ -1067,6 +1077,11 @@ class Path(ParamType[str | bytes | os.PathLike[str]]):
     :param path_type: Convert the incoming path value to this type. If
         ``None``, keep Python's default, which is ``str``. Useful to
         convert to :class:`pathlib.Path`.
+
+    .. versionchanged:: 8.5.1
+        Now generic in ``path_type``. ``convert``, :func:`~click.prompt`,
+        and parameters using this type infer the converted path type
+        (``Path[pathlib.Path]`` when ``path_type=pathlib.Path``).
 
     .. versionchanged:: 8.1
         Added the ``executable`` parameter.
@@ -1099,7 +1114,7 @@ class Path(ParamType[str | bytes | os.PathLike[str]]):
         readable: bool = True,
         resolve_path: bool = False,
         allow_dash: bool = False,
-        path_type: type | None = None,
+        path_type: type[_PathT] | None = None,
         executable: bool = False,
     ) -> None:
         self.exists = exists
@@ -1110,7 +1125,7 @@ class Path(ParamType[str | bytes | os.PathLike[str]]):
         self.executable = executable
         self.resolve_path = resolve_path
         self.allow_dash = allow_dash
-        self.type: type | None = path_type
+        self.type: type[_PathT] | None = path_type
 
         if self.file_okay and not self.dir_okay:
             self.name = _("file")
@@ -1130,25 +1145,26 @@ class Path(ParamType[str | bytes | os.PathLike[str]]):
             **super().to_info_dict(),
         }
 
-    def coerce_path_result(
-        self, value: str | os.PathLike[str]
-    ) -> str | bytes | os.PathLike[str]:
+    def coerce_path_result(self, value: str | os.PathLike[str]) -> _PathT:
         if self.type is not None and not isinstance(value, self.type):
             if self.type is str:
-                return os.fsdecode(value)
+                return t.cast("_PathT", os.fsdecode(value))
             elif self.type is bytes:
-                return os.fsencode(value)
+                return t.cast("_PathT", os.fsencode(value))
             else:
-                return t.cast("os.PathLike[str]", self.type(value))
+                # ``type[_PathT]`` is too narrow to call with a raw
+                # string (``bytes(...)`` is not ``str``-compatible).
+                path_cls = t.cast("type[t.Any]", self.type)
+                return t.cast("_PathT", path_cls(value))
 
-        return value
+        return t.cast("_PathT", value)
 
     def convert(
         self,
         value: str | os.PathLike[str],
         param: Parameter | None,
         ctx: Context | None,
-    ) -> str | bytes | os.PathLike[str]:
+    ) -> _PathT:
         rv = value
 
         dash = b"-" if isinstance(rv, bytes) else "-"
