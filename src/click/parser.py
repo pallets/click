@@ -129,7 +129,7 @@ class _Option:
         self,
         obj: CoreOption,
         opts: cabc.Sequence[str],
-        dest: str | None,
+        dest: str,
         action: str | None = None,
         nargs: int = 1,
         const: t.Any | None = None,
@@ -168,22 +168,22 @@ class _Option:
 
     def process(self, value: t.Any, state: _ParsingState) -> None:
         if self.action == "store":
-            state.opts[self.dest] = value  # type: ignore
+            state.opts[self.dest] = value
         elif self.action == "store_const":
-            state.opts[self.dest] = self.const  # type: ignore
+            state.opts[self.dest] = self.const
         elif self.action == "append":
-            state.opts.setdefault(self.dest, []).append(value)  # type: ignore
+            state.opts.setdefault(self.dest, []).append(value)
         elif self.action == "append_const":
-            state.opts.setdefault(self.dest, []).append(self.const)  # type: ignore
+            state.opts.setdefault(self.dest, []).append(self.const)
         elif self.action == "count":
-            state.opts[self.dest] = state.opts.get(self.dest, 0) + 1  # type: ignore
+            state.opts[self.dest] = state.opts.get(self.dest, 0) + 1
         else:
             raise ValueError(f"unknown action '{self.action}'")
         state.order.append(self.obj)
 
 
 class _Argument:
-    def __init__(self, obj: CoreArgument, dest: str | None, nargs: int = 1):
+    def __init__(self, obj: CoreArgument, dest: str, nargs: int = 1):
         self.dest = dest
         self.nargs = nargs
         self.obj = obj
@@ -209,7 +209,7 @@ class _Argument:
         if value == ():
             value = UNSET
 
-        state.opts[self.dest] = value  # type: ignore
+        state.opts[self.dest] = value
         state.order.append(self.obj)
 
 
@@ -266,7 +266,7 @@ class _OptionParser:
         self,
         obj: CoreOption,
         opts: cabc.Sequence[str],
-        dest: str | None,
+        dest: str,
         action: str | None = None,
         nargs: int = 1,
         const: t.Any | None = None,
@@ -287,7 +287,7 @@ class _OptionParser:
         for opt in option._long_opts:
             self._long_opt[opt] = option
 
-    def add_argument(self, obj: CoreArgument, dest: str | None, nargs: int = 1) -> None:
+    def add_argument(self, obj: CoreArgument, dest: str, nargs: int = 1) -> None:
         """Adds a positional argument named `dest` to the parser.
 
         The `obj` can be used to identify the option in the order list

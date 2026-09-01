@@ -50,6 +50,32 @@ recognized, otherwise {data}`STRING` is used. If no default value is
 provided, the type is assumed to be {data}`STRING`. See
 {ref}`type-inference` for the types that are recognized.
 
+(argument-names)=
+
+## Argument Names
+
+The single declaration is not used as the name verbatim. Every `-` is replaced
+with `_` and the result is lower cased, so `click.argument("input-file")` names
+its parameter `input_file`. That is the same transform options apply, and it is
+likewise not reversible.
+
+The name must satisfy {meth}`str.isidentifier`, so that the callback can
+receive it as a keyword argument. {ref}`Options <option-names>` derive their
+name the same way and apply the same check. The
+{ref}`caution about reserved keywords <keyword-names>` applies here too.
+
+An argument takes exactly one declaration, and passing more raises
+{exc}`TypeError`. That declaration becomes the name through the
+{ref}`transform every parameter shares <name-transform>`, where the examples
+live.
+
+`expose_value=False` is no exception, because the name is also the key the
+parser stores the value under.
+
+An argument takes exactly one declaration, where an option takes several and
+{ref}`picks one of them <option-names>`. Past that choice both kinds derive the
+name the same way.
+
 ```{admonition} Note on Required Arguments
 :class: note
 
