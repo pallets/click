@@ -18,7 +18,6 @@ from functools import update_wrapper
 from gettext import gettext as _
 from gettext import ngettext
 from itertools import repeat
-from types import FrameType
 from types import TracebackType
 
 from . import types
@@ -103,26 +102,6 @@ def _check_nested_chain(
 def _echo_aborted() -> None:
     """Write the final abort message to standard error."""
     echo(_("Aborted!"), file=sys.stderr)
-
-
-def _outside_click_stacklevel() -> int:
-    """Depth of the first stack frame outside Click.
-
-    .. versionadded:: 8.6.0
-    """
-    frame: FrameType | None = sys._getframe(1)
-    level = 1
-
-    while frame is not None:
-        module = frame.f_globals.get("__name__", "")
-
-        if module != "click" and not module.startswith("click."):
-            return level
-
-        frame = frame.f_back
-        level += 1
-
-    return level
 
 
 def _format_deprecated_label(deprecated: bool | str) -> str:
@@ -784,16 +763,14 @@ class Context:
             self.obj = rv = object_type()
         return rv
 
-    def _default_map_has(self, name: str | None) -> bool:
+    def _default_map_has(self, name: str) -> bool:
         """Check if :attr:`default_map` contains a real value for ``name``.
 
-        Returns ``False`` when the key is absent, the map is ``None``,
-        ``name`` is ``None``, or the stored value is the internal
-        :data:`UNSET` sentinel.
+        Returns ``False`` when the key is absent, the map is ``None``, or the
+        stored value is the internal :data:`UNSET` sentinel.
         """
         return (
-            name is not None
-            and self.default_map is not None
+            self.default_map is not None
             and name in self.default_map
             and self.default_map[name] is not UNSET
         )
@@ -2383,9 +2360,7 @@ class Parameter(ABC):
         deprecated: bool | str = False,
         help: str | None = None,
     ) -> None:
-        self.name, self.opts, self.secondary_opts = self._parse_decls(
-            param_decls or (), expose_value
-        )
+        self.name, self.opts, self.secondary_opts = self._parse_decls(param_decls or ())
         self.type: types.ParamType[t.Any] = types.convert_type(type, default)
 
         # Default nargs to what the type tells us if we have that
@@ -2476,44 +2451,71 @@ class Parameter(ABC):
 
     @abstractmethod
     def _parse_decls(
-        self, decls: cabc.Sequence[str], expose_value: bool
+        self, decls: cabc.Sequence[str]
     ) -> tuple[str, list[str], list[str]]: ...
 
-    def _check_name_is_usable(self, name: str, decls: cabc.Sequence[str]) -> None:
-        """Warn about a name Click 9.0 will refuse.
+    @staticmethod
+    def _name_from_spec(spec: str) -> str:
+        """Derive a parameter name from a single declaration.
 
-        A name is refused for one of two reasons, and never for both: it is not
-        an identifier (``0-file``), or it is a keyword (``from``).
-        ``str.isidentifier`` accepts a keyword, so ``--from`` names a parameter
-        ``from`` today. No callback can declare that, which leaves the value
-        reachable through ``**kwargs`` alone.
+        The declaration is lower-cased and every ``-`` becomes a ``_``, so
+        ``--input-file``, ``--Input-File`` and ``INPUT_FILE`` all name
+        ``input_file``. An option passes the declaration with its prefix
+        already stripped; an argument passes its sole declaration whole.
 
-        Soft keywords such as ``match`` and ``type`` are contextual and name a
-        parameter fine, so :func:`keyword.iskeyword` passes them.
+        The transform is many-to-one, and so cannot be reversed: the name does
+        not tell you which declaration produced it.
+        """
+        return spec.replace("-", "_").lower()
 
-        Both imports are local because neither :mod:`keyword` nor
-        :mod:`warnings` is on the allow-list ``tests/test_imports.py`` holds
-        Click's import footprint to.
+    def _resolve_name(self, name: str | None, decls: cabc.Sequence[str]) -> str:
+        """Settle the name derived from ``decls``, or refuse it.
 
-        .. versionadded:: 8.6.0
+        A parameter's value reaches the command callback as a keyword
+        argument, so the name has to be one a callback can declare.
+
+        A name is refused for one of two reasons: it is not an identifier
+        (``0-file``), or it is a keyword (``from``). Soft keywords such as
+        ``match`` and ``type`` are allowed by :func:`keyword.iskeyword`.
+
+        ``expose_value=False`` is no exception. The name is also the key the
+        parser stores the value under, so two parameters that gave it up would
+        share that key and each read the other's value.
+
+        The :mod:`keyword` import is local because it is not on the allow-list
+        defined by ``tests/test_imports.py``.
+
+        :raises TypeError: when no name was derived, or the one derived is not
+            a name a callback can declare.
         """
         import keyword
 
-        if keyword.iskeyword(name):
-            reason = "which is a Python keyword"
+        if name is None:
+            message = _(
+                "{param_type} {decls!r} gave no name for the parameter. Add a"
+                " valid name to the parameter declaration."
+            )
         elif not name.isidentifier():
-            reason = "which is not a valid Python identifier"
+            message = _(
+                "{param_type} {decls!r} tried to use {name!r} as its name, but"
+                " it is not a valid Python identifier. Add a valid name to the"
+                " parameter declaration."
+            )
+        elif keyword.iskeyword(name):
+            message = _(
+                "{param_type} {decls!r} tried to use {name!r} as its name, but"
+                " it is a Python keyword. Add a valid name to the parameter"
+                " declaration."
+            )
         else:
-            return
+            return name
 
-        import warnings
-
-        warnings.warn(
-            f"{self.param_type_name.capitalize()} {list(decls)!r} uses {name!r}"
-            f" as its name, {reason}. This is deprecated and will raise a"
-            " TypeError in Click 9.0.",
-            DeprecationWarning,
-            stacklevel=_outside_click_stacklevel(),
+        raise TypeError(
+            message.format(
+                param_type=self.param_type_name.capitalize(),
+                decls=list(decls),
+                name=name,
+            )
         )
 
     @property
@@ -3006,6 +3008,9 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
 
+    .. versionchanged:: 9.0.0
+        An automatic name must be a Python identifier.
+
     .. versionchanged:: 8.4.0
         Non-basic ``flag_value`` types (not ``str``, ``int``, ``float``, or
         ``bool``) are passed through unchanged instead of being stringified.
@@ -3085,9 +3090,6 @@ class Option(Parameter):
         # Phase 1: prompt-related attributes. ``_infer_flag_kind`` reads ``self.prompt``
         # and ``self.prompt_required`` so this must run first.
         if prompt is True:
-            if not self.name:
-                raise TypeError("'name' is required with 'prompt=True'.")
-
             prompt_text = self.name.replace("_", " ").capitalize()
         elif prompt is False:
             prompt_text = None
@@ -3332,40 +3334,19 @@ class Option(Parameter):
             result += f" (env var: '{self.envvar}')"
         return result
 
-    def _check_name_is_normalized(self, name: str, decls: cabc.Sequence[str]) -> None:
-        """Warn about an explicit name Click 9.0 will spell differently.
-
-        .. versionadded:: 8.6.0
-        """
-        normalized = name.lower()
-
-        if normalized == name:
-            return
-
-        import warnings
-
-        warnings.warn(
-            f"Option {list(decls)!r} uses {name!r} as its name. Click 9.0"
-            f" lower cases an explicit name like any other declaration, naming"
-            f" {normalized!r} instead.",
-            DeprecationWarning,
-            stacklevel=_outside_click_stacklevel(),
-        )
-
     def _parse_decls(
-        self, decls: cabc.Sequence[str], expose_value: bool
+        self, decls: cabc.Sequence[str]
     ) -> tuple[str, list[str], list[str]]:
         opts = []
         secondary_opts = []
         name = None
-        explicit_name = None
         possible_names = []
 
         for decl in decls:
             if decl.isidentifier():
                 if name is not None:
                     raise TypeError(_("Name '{name}' defined twice").format(name=name))
-                name = explicit_name = decl
+                name = decl
             else:
                 split_char = ";" if decl[:1] == "/" else "/"
                 if split_char in decl:
@@ -3390,18 +3371,14 @@ class Option(Parameter):
 
         if name is None and possible_names:
             possible_names.sort(key=lambda x: -len(x[0]))  # group long options first
-            name = possible_names[0][1].replace("-", "_").lower()
+            name = possible_names[0][1]
 
-        if name is None or not name.isidentifier():
-            if not expose_value:
-                self._check_name_is_usable(name or "", decls)
-                return "", opts, secondary_opts
+        # Whichever declaration won, it goes through the one transform. A
+        # declaration written as an identifier is not exempt from it.
+        if name is not None:
+            name = self._name_from_spec(name)
 
-            raise TypeError(
-                _(
-                    "Could not determine name for option with declarations {decls!r}"
-                ).format(decls=decls)
-            )
+        name = self._resolve_name(name, decls)
 
         if not opts and not secondary_opts:
             raise TypeError(
@@ -3411,11 +3388,6 @@ class Option(Parameter):
                     " you mean to pass '--{name}'?"
                 ).format(name=name)
             )
-
-        if explicit_name is not None:
-            self._check_name_is_normalized(explicit_name, decls)
-
-        self._check_name_is_usable(name, decls)
 
         return name, opts, secondary_opts
 
@@ -3524,11 +3496,7 @@ class Option(Parameter):
             envvar = self.envvar
 
             if envvar is None:
-                if (
-                    self.allow_from_autoenv
-                    and ctx.auto_envvar_prefix is not None
-                    and self.name
-                ):
+                if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
                     envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
 
             if envvar is not None:
@@ -3666,7 +3634,7 @@ class Option(Parameter):
         if rv is not None:
             return rv
 
-        if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None and self.name:
+        if self.allow_from_autoenv and ctx.auto_envvar_prefix is not None:
             envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
             rv = os.environ.get(envvar)
 
@@ -3806,6 +3774,11 @@ class Argument(Parameter):
 
     :param help: the help string.
 
+    .. versionchanged:: 9.0.0
+        Exactly one declaration is required, and it must name a Python
+        identifier once it is lower-cased and every ``-`` is replaced with
+        ``_``. ``expose_value=False`` is no exception.
+
     .. versionchanged:: 8.5.0
         Added the ``help`` parameter.
     """
@@ -3860,24 +3833,18 @@ class Argument(Parameter):
         return var
 
     def _parse_decls(
-        self, decls: cabc.Sequence[str], expose_value: bool
+        self, decls: cabc.Sequence[str]
     ) -> tuple[str, list[str], list[str]]:
-        if not decls:
-            if not expose_value:
-                self._check_name_is_usable("", decls)
-                return "", [], []
-            raise TypeError("Argument is marked as exposed, but does not have a name.")
-        if len(decls) == 1:
-            name = arg = decls[0]
-            name = name.replace("-", "_").lower()
-        else:
+        if len(decls) != 1:
             raise TypeError(
                 _(
                     "Arguments take exactly one parameter declaration, got"
                     " {length}: {decls}."
-                ).format(length=len(decls), decls=decls)
+                ).format(length=len(decls), decls=list(decls))
             )
-        self._check_name_is_usable(name, decls)
+
+        arg = decls[0]
+        name = self._resolve_name(self._name_from_spec(arg), decls)
         return name, [arg], []
 
     def get_usage_pieces(self, ctx: Context) -> list[str]:

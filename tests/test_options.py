@@ -873,22 +873,21 @@ def test_auto_envvar_prefix_is_upper_cased(runner):
 
 
 def test_auto_envvar_flattens_name_case(runner):
-    """Two names differing only by case share one auto envvar."""
-    with pytest.warns(DeprecationWarning, match="lower cases an explicit name"):
+    """Declarations differing only by case name one parameter, and one envvar."""
 
-        @click.command()
-        @click.option("--foo-bar")
-        @click.option("--other", "Foo_Bar")
-        def cmd(**kwargs):
-            click.echo(repr(sorted(kwargs.items())))
+    @click.command()
+    @click.option("--foo-bar")
+    @click.option("--other", "Foo_Bar")
+    def cmd(**kwargs):
+        click.echo(repr(sorted(kwargs.items())))
 
-    assert [p.name for p in cmd.params if p.name] == ["foo_bar", "Foo_Bar"]
+    assert [p.name for p in cmd.params if p.name] == ["foo_bar", "foo_bar"]
 
     result = runner.invoke(
         cmd, [], auto_envvar_prefix="TEST", env={"TEST_FOO_BAR": "foo"}
     )
     assert not result.exception
-    assert result.output == "[('Foo_Bar', 'foo'), ('foo_bar', 'foo')]\n"
+    assert result.output == "[('foo_bar', 'foo')]\n"
 
 
 def test_auto_envvar_upper_can_change_length(runner):
@@ -1406,6 +1405,7 @@ def test_aliases_for_flags(runner):
         (["--FOO-BAR", "-F"], "foo_bar"),
         # An identifier declaration goes through the same transform.
         (["--foo-bar", "-f", "explicit_name"], "explicit_name"),
+        (["--foo-bar", "-f", "Explicit_Name"], "explicit_name"),
         # Underscores survive, and every dash past the prefix becomes one.
         (["--foo__bar"], "foo__bar"),
         (["--foo--bar"], "foo__bar"),
@@ -1497,21 +1497,19 @@ def test_option_name_keeps_its_normalization_form(runner):
 
 def test_option_name_must_be_an_identifier():
     """A short option is the one refused shape an argument cannot be written as."""
-    with pytest.raises(TypeError, match="Could not determine name"):
+    with pytest.raises(TypeError, match="valid Python identifier"):
         click.Option(["-0"])
 
 
-def test_option_prompt_still_guards_against_a_nameless_option():
-    """An unexposed option can still be named ``""``, which ``prompt=True`` refuses."""
-    with pytest.warns(DeprecationWarning, match="not a valid Python identifier"):
-        with pytest.raises(TypeError, match="'name' is required with 'prompt=True'"):
-            click.Option(["--0-file"], expose_value=False, prompt=True)
+def test_option_prompt_needs_no_name_guard():
+    """``prompt=True`` is refused by naming first, so it needs no guard of its own."""
+    with pytest.raises(TypeError, match="valid Python identifier"):
+        click.Option(["--0-file"], expose_value=False, prompt=True)
 
 
 def test_option_name_check_applies_when_not_exposed():
-    """An unexposed option is named ``""``, and says Click 9.0 will refuse it."""
-    with pytest.warns(DeprecationWarning, match="not a valid Python identifier"):
-        assert click.Option(["--0foo"], expose_value=False).name == ""
+    with pytest.raises(TypeError, match="valid Python identifier"):
+        click.Option(["--0foo"], expose_value=False)
 
 
 def test_option_explicit_name_carries_a_refused_declaration(runner):
@@ -1534,20 +1532,59 @@ def test_option_explicit_name_carries_a_refused_declaration(runner):
     assert seen == ["value"]
 
 
-def test_option_name_may_be_a_python_keyword(runner):
-    """``str.isidentifier()`` accepts a keyword, so the check lets one through."""
-    with pytest.warns(DeprecationWarning, match="is a Python keyword"):
+def test_option_needs_at_least_one_option_declaration():
+    """A lone identifier names the parameter, but declares no option to parse."""
+    with pytest.raises(TypeError, match="No options defined"):
+        click.Option(["Foo_Bar"])
 
-        @click.command()
-        @click.option("--from")
-        def cmd(**kwargs):
-            click.echo(repr(kwargs))
 
-    assert cmd.params[0].name == "from"
+@pytest.mark.parametrize(
+    ("cls", "decl"),
+    [
+        pytest.param(click.Option, "--from", id="option-from"),
+        pytest.param(click.Option, "--import", id="option-import"),
+        pytest.param(click.Argument, "class", id="argument-class"),
+        # A declaration lower cases into the keyword set on its way to a name.
+        pytest.param(click.Option, "--From", id="option-mixed-case"),
+        pytest.param(click.Argument, "Class", id="argument-mixed-case"),
+    ],
+)
+def test_parameter_name_may_not_be_a_python_keyword(cls, decl):
+    """``str.isidentifier()`` accepts a keyword, so a rule of its own refuses it."""
+    with pytest.raises(TypeError, match="is a Python keyword"):
+        cls([decl])
+
+
+@pytest.mark.parametrize(
+    ("cls", "decl", "expect"),
+    [
+        # Soft keywords are contextual and name a parameter fine.
+        pytest.param(click.Option, "--match", "match", id="soft-keyword-match"),
+        pytest.param(click.Argument, "type", "type", id="soft-keyword-type"),
+        # These lower case out of the keyword set.
+        pytest.param(click.Option, "--True", "true", id="true"),
+        pytest.param(click.Option, "--None", "none", id="none"),
+        # A keyword with anything attached to it is not one.
+        pytest.param(click.Argument, "_from", "_from", id="leading-underscore"),
+    ],
+)
+def test_parameter_name_near_a_python_keyword_is_accepted(cls, decl, expect):
+    assert cls([decl]).name == expect
+
+
+def test_option_keyword_name_is_reached_through_an_explicit_name(runner):
+    """An explicit name carries a declaration whose own name would be refused."""
+
+    @click.command()
+    @click.option("--from", "source")
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    assert cmd.params[0].name == "source"
 
     result = runner.invoke(cmd, ["--from", "here"])
     assert not result.exception
-    assert result.output == "{'from': 'here'}\n"
+    assert result.output == "{'source': 'here'}\n"
 
 
 def test_flag_duplicate_names(runner):
