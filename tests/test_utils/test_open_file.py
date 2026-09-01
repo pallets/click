@@ -1,6 +1,5 @@
 import os
 import pathlib
-import resource
 import stat
 
 import pytest
@@ -18,6 +17,8 @@ def _fd_is_open(fd):
 
 
 def _count_open_fds():
+    import resource
+
     soft, _ = resource.getrlimit(resource.RLIMIT_NOFILE)
     return sum(1 for fd in range(soft) if _fd_is_open(fd))
 
