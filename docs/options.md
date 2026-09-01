@@ -60,40 +60,65 @@ and converting underscores to dashes.
     invoke(echo, args=['--string-to-echo', 'Hi!'])
 ```
 
-More formally, Click will try to infer the decorated function argument name as
-follows:
+(option-names)=
+
+## Option Names
+
+An option carries several declarations, so Click picks one of them to name the
+parameter:
 
 1. If a positional argument is a valid [Python identifier](https://docs.python.org/3/reference/lexical_analysis.html#identifiers) (and thus does not have dashes), it is chosen.
 2. If multiple positional arguments are prefixed with `--`, the first one
   declared is chosen.
 3. Otherwise, the first positional argument prefixed with `-` is chosen.
 
-To get the argument name, the chosen positional argument is converted to lower
-case, a leading `-` or `--` is removed if found, and any remaining `-`
-characters are replaced with `_`.
+Click then derives the name from the declaration that it chose, with the
+{ref}`name transform <name-transform>`. Rule 1 is no exception. An identifier
+declaration says which declaration names the parameter. It does not say how
+Click spells the name.
+
+The name must be one that a callback can declare, because the callback receives
+the value as a keyword argument. {ref}`Arguments <argument-names>` follow the
+same rules, including the {ref}`reserved keywords <keyword-names>` rule.
 
 ```{eval-rst}
 .. list-table:: Examples
-    :widths: 15 15
+    :widths: 25 15 15
     :header-rows: 1
 
     * - Decorator Arguments
-      - Inferred Argument Name
+      - Declaration Chosen
+      - Inferred Name
     * - ``"-f", "--foo-bar"``
+      - ``--foo-bar``
       - foo_bar
-    * - ``"-x"``
-      - x
-    * - ``"-f", "--filename", "dest"``
-      - dest
-    * - ``"--CamelCase"``
-      - camelcase
-    * - ``"-f", "-fb"``
-      - f
     * - ``"--f", "--foo-bar"``
+      - ``--f``
       - f
+    * - ``"-f", "-fb"``
+      - ``-f``
+      - f
+    * - ``"-f", "--filename", "dest"``
+      - ``dest``
+      - dest
+    * - ``"-f", "--filename", "Dest"``
+      - ``Dest``
+      - dest
     * - ``"---f"``
+      - ``---f``
       - _f
+    * - ``"---a----b--"``
+      - ``---a----b--``
+      - _a____b__
 ```
+
+The transform is many-to-one. That is useful here: several options can share
+one name to form a [feature switch group](#feature-switch-group).
+
+The name check also applies when `expose_value=False`. The name is also the key
+that the parser uses to store the value, so Click still needs it. Pass an
+explicit name instead:
+`click.option("--0-file", "zero_file", expose_value=False)`.
 
 ## Basic Example
 
@@ -508,6 +533,8 @@ literally.
 ```{hint}
 ¹: `default=True` is substituted with `flag_value`.
 ```
+
+(feature-switch-group)=
 
 #### Feature switch groups (multiple flags sharing one variable)
 
