@@ -45,6 +45,24 @@ else:
 _FloatValueT = t.TypeVar("_FloatValueT", bound=float)
 _FloatValueT_co = t.TypeVar("_FloatValueT_co", bound=float, covariant=True)
 
+if t.TYPE_CHECKING:
+    _PathType_co = te.TypeVar(
+        "_PathType_co",
+        default=str | bytes | os.PathLike[str],
+        covariant=True,
+    )
+elif sys.version_info >= (3, 13):
+    _PathType_co = t.TypeVar(
+        "_PathType_co",
+        default=str | bytes | os.PathLike[str],
+        covariant=True,
+    )
+else:
+    _PathType_co = t.TypeVar(
+        "_PathType_co",
+        covariant=True,
+    )
+
 
 class ParamTypeInfoDict(t.TypedDict):
     param_type: str
@@ -1045,7 +1063,7 @@ class PathInfoDict(ParamTypeInfoDict):
     allow_dash: bool
 
 
-class Path(ParamType[str | bytes | os.PathLike[str]]):
+class Path(ParamType[_PathType_co], t.Generic[_PathType_co]):
     """The ``Path`` type is similar to the :class:`File` type, but
     returns the filename instead of an open file. Various checks can be
     enabled to validate the type of file and permissions.
@@ -1067,6 +1085,9 @@ class Path(ParamType[str | bytes | os.PathLike[str]]):
     :param path_type: Convert the incoming path value to this type. If
         ``None``, keep Python's default, which is ``str``. Useful to
         convert to :class:`pathlib.Path`.
+
+    .. versionchanged:: 8.5.1
+        Now generic on ``path_type``.
 
     .. versionchanged:: 8.1
         Added the ``executable`` parameter.
@@ -1090,6 +1111,34 @@ class Path(ParamType[str | bytes | os.PathLike[str]]):
     allow_dash: bool
     name: str
 
+    @t.overload
+    def __init__(
+        self: Path[str | bytes | os.PathLike[str]],
+        exists: bool = False,
+        file_okay: bool = True,
+        dir_okay: bool = True,
+        writable: bool = False,
+        readable: bool = True,
+        resolve_path: bool = False,
+        allow_dash: bool = False,
+        path_type: None = None,
+        executable: bool = False,
+    ) -> None: ...
+
+    @t.overload
+    def __init__(
+        self: Path[_PathType_co],
+        exists: bool = False,
+        file_okay: bool = True,
+        dir_okay: bool = True,
+        writable: bool = False,
+        readable: bool = True,
+        resolve_path: bool = False,
+        allow_dash: bool = False,
+        path_type: type[_PathType_co] | cabc.Callable[[t.Any], _PathType_co] = ...,
+        executable: bool = False,
+    ) -> None: ...
+
     def __init__(
         self,
         exists: bool = False,
@@ -1099,7 +1148,9 @@ class Path(ParamType[str | bytes | os.PathLike[str]]):
         readable: bool = True,
         resolve_path: bool = False,
         allow_dash: bool = False,
-        path_type: type | None = None,
+        path_type: (
+            type[_PathType_co] | cabc.Callable[[t.Any], _PathType_co] | None
+        ) = None,
         executable: bool = False,
     ) -> None:
         self.exists = exists
@@ -1110,7 +1161,9 @@ class Path(ParamType[str | bytes | os.PathLike[str]]):
         self.executable = executable
         self.resolve_path = resolve_path
         self.allow_dash = allow_dash
-        self.type: type | None = path_type
+        self.type: type[_PathType_co] | cabc.Callable[[t.Any], _PathType_co] | None = (
+            path_type
+        )
 
         if self.file_okay and not self.dir_okay:
             self.name = _("file")
@@ -1131,24 +1184,25 @@ class Path(ParamType[str | bytes | os.PathLike[str]]):
         }
 
     def coerce_path_result(
-        self, value: str | os.PathLike[str]
-    ) -> str | bytes | os.PathLike[str]:
-        if self.type is not None and not isinstance(value, self.type):
+        self, value: str | bytes | os.PathLike[str]
+    ) -> _PathType_co:
+        if self.type is not None and not isinstance(value, self.type):  # type: ignore[arg-type]
             if self.type is str:
-                return os.fsdecode(value)
+                return t.cast("_PathType_co", os.fsdecode(value))
             elif self.type is bytes:
-                return os.fsencode(value)
+                return t.cast("_PathType_co", os.fsencode(value))
             else:
-                return t.cast("os.PathLike[str]", self.type(value))
+                func = t.cast("cabc.Callable[[t.Any], _PathType_co]", self.type)
+                return func(value)
 
-        return value
+        return t.cast("_PathType_co", value)
 
     def convert(
         self,
-        value: str | os.PathLike[str],
+        value: str | bytes | os.PathLike[str],
         param: Parameter | None,
         ctx: Context | None,
-    ) -> str | bytes | os.PathLike[str]:
+    ) -> _PathType_co:
         rv = value
 
         dash = b"-" if isinstance(rv, bytes) else "-"

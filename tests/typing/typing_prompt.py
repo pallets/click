@@ -48,3 +48,12 @@ class SimpleType(click.ParamType[int]):
 
 
 assert_type(SimpleType()("21"), int)
+
+import os
+import pathlib
+
+assert_type(
+    click.prompt("Path", type=click.Path(path_type=pathlib.Path)), pathlib.Path
+)
+assert_type(click.prompt("Path", type=click.Path()), str | bytes | os.PathLike[str])
+
