@@ -430,6 +430,23 @@ def test_multiple_envvar(runner):
     assert not result.exception
     assert result.output == "foo|bar|baz\n"
 
+
+def test_envvar_container_type(runner):
+    """Env vars are plain strings, so a container type splits them character-wise.
+
+    Refs: https://github.com/pallets/click/issues/3036
+    """
+
+    @click.command()
+    @click.option("--x", envvar="X", type=frozenset)
+    def cli(x):
+        assert isinstance(x, frozenset)
+        click.echo("".join(sorted(x)))
+
+    result = runner.invoke(cli, [], env={"X": "git"})
+    assert not result.exception
+    assert result.output == "git\n"
+
     @click.command()
     @click.option("--arg", multiple=True, envvar="X")
     def cmd(arg):
@@ -594,6 +611,25 @@ def test_show_default_default_map(runner):
     assert "[default: b]" in result.output
 
 
+def test_show_default_container_defaults(runner):
+    """Container defaults are rendered through ``str()`` in the help output.
+
+    Refs: https://github.com/pallets/click/issues/3036
+    """
+
+    @click.command()
+    @click.option("--a", default=frozenset(["git"]), type=frozenset, show_default=True)
+    @click.option("--b", default={"a": 1}, type=dict, show_default=True)
+    @click.option("--c", default={"git"}, type=set, show_default=True)
+    def cli(a, b, c):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert "[default: frozenset({'git'})]" in result.output
+    assert "[default: {'a': 1}]" in result.output
+    assert "[default: {'git'}]" in result.output
+
+
 def test_multiple_default_type():
     opt = click.Option(["-a"], multiple=True, default=(1, 2))
     assert opt.nargs == 1
@@ -611,6 +647,29 @@ def test_multiple_default_composite_type():
     assert opt.type.types == [click.INT, click.STRING]
     ctx = click.Context(click.Command("test"))
     assert opt.type_cast_value(ctx, opt.get_default(ctx)) == ((1, "a"),)
+
+
+@pytest.mark.parametrize(
+    "default",
+    [
+        set(),
+        {1, 2},
+        frozenset(),
+        frozenset(["git"]),
+        {},
+        {"a": 1},
+    ],
+)
+def test_type_from_default_container(default):
+    """Container defaults have no native Click type and fall back to STRING.
+
+    The documented "if no type is provided, the type of the default value is
+    used" rule does not apply to ``set``, ``frozenset`` or ``dict`` defaults.
+
+    Refs: https://github.com/pallets/click/issues/3036
+    """
+    opt = click.Option(["-a"], default=default)
+    assert opt.type is click.STRING
 
 
 def test_parse_multiple_default_composite_type(runner):
@@ -1424,6 +1483,10 @@ def test_type_from_flag_value():
     param = click.Option(["-c", "x"], flag_value=EngineType.OSS)
     assert param.type is click.UNPROCESSED
     param = click.Option(["-d", "x"], flag_value=frozenset())
+    assert param.type is click.UNPROCESSED
+    param = click.Option(["-e", "x"], flag_value=set())
+    assert param.type is click.UNPROCESSED
+    param = click.Option(["-f", "x"], flag_value={})
     assert param.type is click.UNPROCESSED
 
 
@@ -2536,8 +2599,25 @@ def test_flag_value_not_stringified_for_custom_types(runner):
     assert result.output == repr(EngineType.PRO)
 
 
-def test_custom_type_frozenset_flag_value(runner):
-    """Check that frozenset is correctly handled as a type, a flag value and a default.
+@pytest.mark.parametrize(
+    ("container_type", "flag_value", "default", "default_output", "flag_output"),
+    [
+        (set, set(), {"git"}, "{'git'}", "set()"),
+        (
+            frozenset,
+            frozenset(),
+            frozenset(["git"]),
+            "frozenset({'git'})",
+            "frozenset()",
+        ),
+        (dict, dict(), {"git": True}, "{'git': True}", "{}"),
+    ],
+)
+def test_custom_type_container_flag_value(
+    runner, container_type, flag_value, default, default_output, flag_output
+):
+    """Check that container types are correctly handled as a type, a flag value
+    and a default.
 
     Reproduces https://github.com/pallets/click/issues/2610
     """
@@ -2547,19 +2627,19 @@ def test_custom_type_frozenset_flag_value(runner):
         "--without-scm-ignore-files",
         "scm_ignore_files",
         is_flag=True,
-        type=frozenset,
-        flag_value=frozenset(),
-        default=frozenset(["git"]),
+        type=container_type,
+        flag_value=flag_value,
+        default=default,
     )
     def rcli(scm_ignore_files):
         click.echo(repr(scm_ignore_files), nl=False)
 
     result = runner.invoke(rcli)
-    assert result.stdout == "frozenset({'git'})"
+    assert result.stdout == default_output
     assert result.exit_code == 0
 
     result = runner.invoke(rcli, ["--without-scm-ignore-files"])
-    assert result.stdout == "frozenset()"
+    assert result.stdout == flag_output
     assert result.exit_code == 0
 
 

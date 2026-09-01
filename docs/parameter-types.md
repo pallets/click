@@ -153,6 +153,58 @@ The supported parameter {ref}`click-api-types` are
        :noindex:
 ```
 
+(type-inference)=
+
+## How Click Infers a Type
+
+When `type` is not given, Click infers it from `default`. Only the defaults listed below
+are recognized. Every other default gives {data}`STRING`.
+
+| `default`                                        | Inferred type                                   |
+| ------------------------------------------------ | ----------------------------------------------- |
+| not given, or `None`                             | {data}`STRING`                                  |
+| `"git"`                                          | {data}`STRING`                                  |
+| `5`                                              | {data}`INT`                                     |
+| `1.5`                                            | {data}`FLOAT`                                   |
+| `True`                                           | {data}`BOOL`                                    |
+| `[]` or `()`                                     | {data}`STRING`                                  |
+| `[1, 2]` or `(1, 2)`                             | {data}`INT`                                     |
+| `[1.5, 2.5]`                                     | {data}`FLOAT`                                   |
+| `[1, "git"]`                                     | {data}`INT`                                     |
+| `[(1, "git")]`                                   | {class}`Tuple` of ({data}`INT`, {data}`STRING`) |
+| `{1, 2}` or `frozenset({1, 2})`                  | {data}`STRING`                                  |
+| `{"a": 1}`                                       | {data}`STRING`                                  |
+| {class}`uuid.UUID` or {class}`datetime.datetime` | {data}`STRING`                                  |
+| `b"git"`, or any other object                    | {data}`STRING`                                  |
+
+A `list` or `tuple` gives the type of its **first item only**, so `[1, "git"]` gives
+{data}`INT` and the second item is converted with it. A first item that is itself a
+`list` or `tuple` gives a {class}`Tuple`, which also sets `nargs`.
+
+A `set`, a `frozenset`, a `dict`, and a type Click ships but does not guess, such as
+{class}`uuid.UUID`, all land in the last group. Their default is converted with
+{data}`STRING`, so the command receives the `str()` form of the value.
+
+```{eval-rst}
+.. click:example::
+
+    @click.command()
+    @click.option('--count', default=5)
+    @click.option('--tag', default={'git'})
+    def show(count, tag):
+        click.echo(f"count is {type(count).__name__}, tag is {type(tag).__name__}")
+
+.. click:run::
+
+    invoke(show, args=[])
+```
+
+When `type` is given a callable Click does not recognize, that callable is called on the
+string coming from the command line, and a `ValueError` it raises is reported as a bad
+parameter. A container is rarely useful there, because calling it on a string splits the
+string: `set` turns `"git"` into `{"g", "i", "t"}`. Pass a {class}`ParamType` instead,
+as described in [](#how-to-implement-custom-types).
+
 ## How to Implement Custom Types
 
 To implement a custom type, you need to subclass the {class}`ParamType` class. For simple cases, passing a Python

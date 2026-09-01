@@ -182,6 +182,10 @@ def test_shared_param_prefers_first_default(runner):
         ({"key": 0}, "key", 0),
         ({"key": ""}, "key", ""),
         ({"key": False}, "key", False),
+        # Falsy containers are returned as-is too.
+        ({"key": set()}, "key", set()),
+        ({"key": frozenset()}, "key", frozenset()),
+        ({"key": {}}, "key", {}),
     ],
 )
 def test_lookup_default_returns_hides_sentinel(default_map, key, expected):
