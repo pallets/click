@@ -105,6 +105,60 @@ You can set the `EDITOR` in your environment with its appropriate flags:
 
 For an editor with no such flag, a workaround is to point `EDITOR` at a small wrapper script that opens the editor and blocks until it exits.
 
+### Tab completion during interactive prompts
+
+A command asks for a file path while it runs:
+
+```python
+import click
+
+
+@click.command()
+def convert():
+    source = click.prompt("File to convert", type=click.Path(exists=True))
+    click.echo(f"Converting {source}")
+```
+
+Pressing {kbd}`Tab` while typing the answer inserts a tab character instead of completing the path:
+
+```console
+$ convert
+File to convert: Doc<TAB>
+Error: Path 'Doc\t' does not exist.
+```
+
+This is not a bug in Click. Tab completion of the command line belongs to the shell: the shell asks the program for candidates through Click's completion mode, before any command code runs. A prompt works the other way around. The program already runs and reads the line itself, so Click never sees the {kbd}`Tab` key.
+
+{func}`~click.prompt` reads that line with the built-in {func}`input`, and Click passes the whole prompt text to it as-is. This is where Python's {mod}`readline` module takes over, but nothing binds {kbd}`Tab` to completion by default.
+
+#### Answer
+
+Bind {kbd}`Tab` in `readline` and the prompt completes paths with no other change:
+
+```python
+import readline
+
+if "libedit" in (readline.__doc__ or ""):
+    readline.parse_and_bind("bind ^I rl_complete")
+else:
+    readline.parse_and_bind("tab: complete")
+```
+
+See the {mod}`readline` documentation for the binding syntax, for the two libraries it can be built on, and for writing a completer of your own. The module is Unix-only, so the import fails on Windows.
+
+Readline completes file names. It knows nothing about the parameter, so it cannot complete other values, such as the choices of a {class}`~click.Choice` parameter. Click embeds no line editor of its own: for completion of such values at a prompt, use one of the [interactive input libraries](contrib.md#interactive-input-libraries).
+
+When the value does not have to be asked while the command runs, another option is to take it out of the prompt and put it on the command line, as an argument or an option:
+
+```python
+@click.command()
+@click.argument("source", type=click.Path(exists=True))
+def convert(source):
+    click.echo(f"Converting {source}")
+```
+
+The shell completes paths there natively and Click's completion mode takes part in it (as described in [Shell Completion](shell-completion.md)).
+
 (custom-completions-show-the-full-value)=
 ### Custom completions show the full value
 
