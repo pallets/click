@@ -445,7 +445,27 @@ def open_stream(
             raise
 
     if perm is not None:
-        os.chmod(tmp_filename, perm)  # in case perm includes bits in umask
+        # Set the mode on the open fd rather than via the path: os.chmod()
+        # follows symlinks, so a concurrent writer who replaces the temp
+        # name between open() and chmod() could redirect the mode change
+        # to an unrelated file. fchmod() operates on the inode that was
+        # just created (it is unavailable on Windows, where chmod only
+        # toggles the read-only bit and we fall back to the path-based
+        # call). If setting the mode fails, close the fd and remove the
+        # temp file so no descriptor leaks.
+        fchmod = getattr(os, "fchmod", None)
+        try:
+            if fchmod is not None:
+                fchmod(fd, perm)  # in case perm includes bits in umask
+            else:
+                os.chmod(tmp_filename, perm)
+        except OSError:
+            os.close(fd)
+            try:
+                os.unlink(tmp_filename)
+            except OSError:
+                pass
+            raise
 
     f = _wrap_io_open(fd, mode, encoding, errors)
     af = _AtomicFile(f, tmp_filename, os.path.realpath(filename))
