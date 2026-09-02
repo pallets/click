@@ -630,3 +630,73 @@ def test_command_write_usage_no_args(runner, command_kwargs, expected_usage_line
     cli = click.Command("cli", **command_kwargs)
     result = runner.invoke(cli, ["--help"])
     assert result.output.splitlines()[0] == expected_usage_line
+
+def test_epilog_not_indented(runner):
+    """Epilog should not be indented under the commands list."""
+    
+    @click.group(epilog="Example Usage:\n  $ my-command go")
+    def cli():
+        """A tool with commands."""
+        pass
+    
+    @cli.command()
+    def go():
+        """Run the thing."""
+        pass
+    
+    result = runner.invoke(cli, ["--help"])
+    lines = result.output.splitlines()
+    
+    # Find where "Example Usage:" appears
+    epilog_line_idx = None
+    for i, line in enumerate(lines):
+        if "Example Usage:" in line:
+            epilog_line_idx = i
+            break
+    
+    assert epilog_line_idx is not None, "Epilog not found in help text"
+    
+    # The epilog line should NOT be indented (should start at column 0)
+    epilog_line = lines[epilog_line_idx]
+    leading_spaces = len(epilog_line) - len(epilog_line.lstrip())
+    
+    assert leading_spaces == 0, f"Epilog is indented with {leading_spaces} spaces, should be 0"
+
+
+def test_group_epilog_not_indented_with_commands(runner):
+    """Test epilog is not indented even when group has commands."""
+    
+    @click.group(
+        epilog="\bExample Usage:\n  $ cli cmd1\n  $ cli cmd2"
+    )
+    def cli():
+        """Main command."""
+        pass
+    
+    @cli.command()
+    def cmd1():
+        """First command."""
+        pass
+    
+    @cli.command()
+    def cmd2():
+        """Second command."""
+        pass
+    
+    result = runner.invoke(cli, ["--help"])
+    lines = result.output.splitlines()
+    
+    # Find the epilog section
+    epilog_start_idx = None
+    for i, line in enumerate(lines):
+        if "Example Usage:" in line:
+            epilog_start_idx = i
+            break
+    
+    assert epilog_start_idx is not None, "Epilog not found"
+    
+    # The "Example Usage:" line should have no indentation
+    example_line = lines[epilog_start_idx]
+    leading_spaces = len(example_line) - len(example_line.lstrip())
+    
+    assert leading_spaces == 0, f"Epilog indented with {leading_spaces} spaces"

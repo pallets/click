@@ -2,6 +2,9 @@
 
 Unreleased
 
+- The epilog text in help output is no longer indented. This allows for
+  better control over epilog formatting. {issue}`2881`
+
 ## Version 8.5.0
 
 Released 2026-08-24

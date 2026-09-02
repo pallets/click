@@ -1321,9 +1321,7 @@ class Command:
         if self.epilog:
             epilog = inspect.cleandoc(self.epilog)
             formatter.write_paragraph()
-
-            with formatter.indentation():
-                formatter.write_text(epilog)
+            formatter.write_text(epilog)
 
     def make_context(
         self,
