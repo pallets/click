@@ -68,10 +68,6 @@ follows:
   declared is chosen.
 3. Otherwise, the first positional argument prefixed with `-` is chosen.
 
-To get the argument name, the chosen positional argument is converted to lower
-case, a leading `-` or `--` is removed if found, and any remaining `-`
-characters are replaced with `_`.
-
 ```{eval-rst}
 .. list-table:: Examples
     :widths: 15 15
@@ -87,12 +83,60 @@ characters are replaced with `_`.
       - dest
     * - ``"--CamelCase"``
       - camelcase
+    * - ``"-f", "--filename", "Dest"``
+      - Dest
     * - ``"-f", "-fb"``
       - f
     * - ``"--f", "--foo-bar"``
       - f
     * - ``"---f"``
       - _f
+    * - ``"--0-file"``
+      - :exc:`TypeError`
+    * - ``"--foo.bar"``
+      - :exc:`TypeError`
+```
+
+The name must satisfy {meth}`str.isidentifier`. {ref}`Arguments
+<argument-names>` derive their name the same way and apply the same check,
+including the {ref}`caution about Unicode declarations <unicode-names>`.
+
+(keyword-names)=
+
+```{caution}
+A [reserved keyword](https://docs.python.org/3/reference/lexical_analysis.html#keywords)
+satisfies that check, so Click accepts one: `click.option("--from")` names its
+parameter `from`. Three things follow, and Click reports none of them.
+
+- The callback cannot declare it. `def cmd(from)` is a {exc}`SyntaxError`, so
+  the command has to take `**kwargs` instead.
+- That `**kwargs` then covers every other parameter too, and Python stops
+  checking the callback signature. An option you rename or drop used to raise
+  `TypeError: got an unexpected keyword argument`, and is now absorbed in
+  silence.
+- {meth}`Context.invoke` cannot name it either. Write
+  `ctx.invoke(other, **{"from": value})`, because `ctx.invoke(other, from=value)`
+  is a {exc}`SyntaxError`. {meth}`Context.forward` is unaffected, since it
+  unpacks {attr}`Context.params`.
+
+Pass an explicit name instead: `click.option("--from", "source")`. An argument
+takes one declaration and has no explicit-name channel, so rename the
+declaration there. Soft keywords (`match`, `case`, `type`, `_`) are contextual
+and name a parameter fine, and `--True`, `--False` and `--None` lower case out
+of the keyword set.
+```
+
+`expose_value=False` is no exception. The name is also the parser dest the value
+is stored under, so two options that gave it up would share that dest and each
+read the other's value. Pass an explicit name instead:
+`click.option("--0-file", "zero_file", expose_value=False)`.
+
+```{caution}
+Transformation from option name to argument name is not reversible. And is many-to-one: several option names can map to the same argument name.
+
+For example, `--foo-bar`, `--Foo-Bar` and `--FOO-BAR` all map to `foo_bar`.
+
+This is allowed so that options can deliberately form a [feature switch group](#feature-switch-group).
 ```
 
 ## Basic Example
@@ -508,6 +552,8 @@ literally.
 ```{hint}
 ¹: `default=True` is substituted with `flag_value`.
 ```
+
+(feature-switch-group)=
 
 #### Feature switch groups (multiple flags sharing one variable)
 

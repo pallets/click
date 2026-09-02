@@ -2353,9 +2353,7 @@ class Parameter(ABC):
         | None = None,
         deprecated: bool | str = False,
     ) -> None:
-        self.name, self.opts, self.secondary_opts = self._parse_decls(
-            param_decls or (), expose_value
-        )
+        self.name, self.opts, self.secondary_opts = self._parse_decls(param_decls or ())
         self.type: types.ParamType[t.Any] = types.convert_type(type, default)
 
         # Default nargs to what the type tells us if we have that
@@ -2436,8 +2434,46 @@ class Parameter(ABC):
 
     @abstractmethod
     def _parse_decls(
-        self, decls: cabc.Sequence[str], expose_value: bool
+        self, decls: cabc.Sequence[str]
     ) -> tuple[str, list[str], list[str]]: ...
+
+    @staticmethod
+    def _name_from_spec(spec: str) -> str:
+        """Derive a parameter name from a single declaration.
+
+        The declaration is lower-cased and every ``-`` becomes a ``_``, so
+        ``--input-file``, ``--Input-File`` and ``INPUT_FILE`` all name
+        ``input_file``. An option passes the declaration with its prefix
+        already stripped; an argument passes its sole declaration whole.
+
+        The transform is many-to-one, and so cannot be reversed: the name does
+        not tell you which declaration produced it.
+        """
+        return spec.replace("-", "_").lower()
+
+    def _resolve_name(self, name: str | None, decls: cabc.Sequence[str]) -> str:
+        """Settle the name derived from ``decls``, or refuse it.
+
+        A parameter's value reaches the command callback as a keyword
+        argument. The name must satisfy :meth:`str.isidentifier`. A keyword
+        such as ``from`` passes, and can then only be received by a
+        ``**kwargs`` callback. Every kind of parameter is held to this.
+
+        ``expose_value=False`` is no exception. The name is also the key the
+        parser stores the value under, so two parameters that gave it up would
+        share that key and each read the other's value.
+
+        :raises TypeError: when no name was derived, or the one derived is not
+            an identifier.
+        """
+        if name is not None and name.isidentifier():
+            return name
+
+        raise TypeError(
+            _(
+                "Could not determine name for {param_type} with declarations {decls!r}"
+            ).format(param_type=self.param_type_name, decls=decls)
+        )
 
     @property
     def human_readable_name(self) -> str:
@@ -2929,6 +2965,11 @@ class Option(Parameter):
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
 
+    .. versionchanged:: 8.5.1
+        ``expose_value=False`` no longer excuses a declaration that names no
+        Python identifier. Pass an explicit name, such as
+        ``click.option("--0-file", "zero_file", expose_value=False)``.
+
     .. versionchanged:: 8.4.0
         Non-basic ``flag_value`` types (not ``str``, ``int``, ``float``, or
         ``bool``) are passed through unchanged instead of being stringified.
@@ -3007,9 +3048,6 @@ class Option(Parameter):
         # Phase 1: prompt-related attributes. ``_infer_flag_kind`` reads ``self.prompt``
         # and ``self.prompt_required`` so this must run first.
         if prompt is True:
-            if not self.name:
-                raise TypeError("'name' is required with 'prompt=True'.")
-
             prompt_text = self.name.replace("_", " ").capitalize()
         elif prompt is False:
             prompt_text = None
@@ -3261,7 +3299,7 @@ class Option(Parameter):
         return result
 
     def _parse_decls(
-        self, decls: cabc.Sequence[str], expose_value: bool
+        self, decls: cabc.Sequence[str]
     ) -> tuple[str, list[str], list[str]]:
         opts = []
         secondary_opts = []
@@ -3297,18 +3335,9 @@ class Option(Parameter):
 
         if name is None and possible_names:
             possible_names.sort(key=lambda x: -len(x[0]))  # group long options first
-            name = possible_names[0][1].replace("-", "_").lower()
-            if not name.isidentifier():
-                name = None
+            name = self._name_from_spec(possible_names[0][1])
 
-        if name is None:
-            if not expose_value:
-                return "", opts, secondary_opts
-            raise TypeError(
-                _(
-                    "Could not determine name for option with declarations {decls!r}"
-                ).format(decls=decls)
-            )
+        name = self._resolve_name(name, decls)
 
         if not opts and not secondary_opts:
             raise TypeError(
@@ -3708,6 +3737,13 @@ class Argument(Parameter):
 
     :param help: the help string.
 
+    .. versionchanged:: 8.5.1
+        Exactly one declaration is required, and it must name a Python
+        identifier once it is lower-cased and every ``-`` is replaced with
+        ``_``. ``expose_value=False`` is no exception. This aligns with
+        option's behavior. Pass ``metavar`` to render a display the
+        declaration can no longer carry.
+
     .. versionchanged:: 8.5.0
         Added the ``help`` parameter.
     """
@@ -3778,22 +3814,18 @@ class Argument(Parameter):
         return var
 
     def _parse_decls(
-        self, decls: cabc.Sequence[str], expose_value: bool
+        self, decls: cabc.Sequence[str]
     ) -> tuple[str, list[str], list[str]]:
-        if not decls:
-            if not expose_value:
-                return "", [], []
-            raise TypeError("Argument is marked as exposed, but does not have a name.")
-        if len(decls) == 1:
-            name = arg = decls[0]
-            name = name.replace("-", "_").lower()
-        else:
+        if len(decls) != 1:
             raise TypeError(
                 _(
                     "Arguments take exactly one parameter declaration, got"
                     " {length}: {decls}."
                 ).format(length=len(decls), decls=decls)
             )
+
+        arg = decls[0]
+        name = self._resolve_name(self._name_from_spec(arg), decls)
         return name, [arg], []
 
     def get_usage_pieces(self, ctx: Context) -> list[str]:

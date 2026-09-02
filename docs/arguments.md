@@ -50,6 +50,80 @@ recognized, otherwise {data}`STRING` is used. If no default value is
 provided, the type is assumed to be {data}`STRING`. See
 {ref}`type-inference` for the types that are recognized.
 
+(argument-names)=
+
+## Argument Names
+
+The single declaration is not used as the name verbatim. Every `-` is replaced
+with `_` and the result is lower cased, so `click.argument("input-file")` names
+its parameter `input_file`. That is the same transform options apply, and it is
+likewise not reversible.
+
+```{eval-rst}
+.. list-table:: Examples
+    :widths: 15 15
+    :header-rows: 1
+
+    * - Decorator Arguments
+      - Inferred Argument Name
+    * - ``"foo-bar"``
+      - foo_bar
+    * - ``"x"``
+      - x
+    * - ``"CamelCase"``
+      - camelcase
+    * - ``"Foo_Bar"``
+      - foo_bar
+    * - ``"café"``
+      - café
+    * - ``"ΟΔΟΣ"``
+      - οδος
+    * - ``"\N{KELVIN SIGN}"``
+      - k
+    * - ``"foo-٣"``
+      - foo_٣
+    * - ``"0-file"``
+      - :exc:`TypeError`
+    * - ``"٣foo"``
+      - :exc:`TypeError`
+    * - ``"foo.bar"``
+      - :exc:`TypeError`
+    * - ``"foo\N{NON-BREAKING HYPHEN}bar"``
+      - :exc:`TypeError`
+    * - ``"a\N{ZERO WIDTH SPACE}b"``
+      - :exc:`TypeError`
+    * - ``""``
+      - :exc:`TypeError`
+    * - ``"foo", "bar"``
+      - :exc:`TypeError`
+```
+
+The name must satisfy {meth}`str.isidentifier`. Options apply the same check,
+and the {ref}`caution about reserved keywords <keyword-names>` applies here
+too.
+
+`expose_value=False` is no exception. The name is also the key the parser stores
+the value under, so an argument that gave it up would share that key with the
+next one. Rename the declaration and pass `metavar` to keep the old display:
+`click.argument("zero_file", expose_value=False, metavar="0-FILE")`.
+
+(unicode-names)=
+
+```{caution}
+Only the ASCII hyphen is replaced, so a separator that merely looks like one is
+refused, as is any character that renders nothing.
+
+The identifier set itself moves with the Unicode table Python ships: the
+zero-width joiner (`U+200D`) entered it in Python 3.13, so a declaration holding
+one is refused up to Python 3.12 and names a parameter from 3.13 on. Prefer a
+declaration that is already a lower-case identifier with `-` for `_`.
+```
+
+One difference from {ref}`option names <options>` remains. An option takes
+several declarations, so one that is already an identifier is read as an
+explicit name and kept as written. An argument takes exactly one, which serves
+as both the name and the metavar, so it is always transformed.
+
 ```{admonition} Note on Required Arguments
 :class: note
 
