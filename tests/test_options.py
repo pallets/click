@@ -72,6 +72,30 @@ def test_deprecated_empty_help_no_leading_space(help_text, deprecated, expected)
     assert opt.get_help_record(ctx)[1] == expected
 
 
+@pytest.mark.parametrize(
+    ("param_decls", "kwargs", "expected"),
+    [
+        (["-v", "--verbose"], {"is_flag": True}, "-v, --verbose"),
+        (["--config"], {}, "--config TEXT"),
+        (["--color/--no-color"], {}, "--color / --no-color"),
+        (["/debug;/no-debug"], {}, "/debug; /no-debug"),
+    ],
+)
+@pytest.mark.parametrize("hidden", [False, True])
+def test_help_spec(param_decls, kwargs, hidden, expected):
+    """A hidden option still produces its spec via ``get_help_spec()``, unlike
+    ``get_help_record()``.
+    """
+    opt = click.Option(param_decls, hidden=hidden, **kwargs)
+    ctx = click.Context(click.Command("cli"))
+    assert opt.get_help_spec(ctx) == expected
+
+    if hidden:
+        assert opt.get_help_record(ctx) is None
+    else:
+        assert opt.get_help_record(ctx)[0] == expected
+
+
 @pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])
 def test_deprecated_warning(runner, deprecated):
     @click.command()

@@ -3363,10 +3363,15 @@ class Option(Parameter):
                 nargs=self.nargs,
             )
 
-    def get_help_record(self, ctx: Context) -> tuple[str, str] | None:
-        if self.hidden:
-            return None
+    def get_help_spec(self, ctx: Context) -> str:
+        """Returns the left column of the option's help record: its spellings
+        and metavar, like ``-v, --verbose`` or ``-c, --config TEXT``.
 
+        Unlike :meth:`get_help_record`, the spec is produced even when the
+        option is :attr:`hidden`.
+
+        .. versionadded:: 8.5.1
+        """
         any_prefix_is_slash = False
 
         def _write_opts(opts: cabc.Sequence[str]) -> str:
@@ -3387,6 +3392,12 @@ class Option(Parameter):
         if self.secondary_opts:
             rv.append(_write_opts(self.secondary_opts))
 
+        return ("; " if any_prefix_is_slash else " / ").join(rv)
+
+    def get_help_record(self, ctx: Context) -> tuple[str, str] | None:
+        if self.hidden:
+            return None
+
         help = self.help or ""
 
         extra = self.get_help_extra(ctx)
@@ -3406,7 +3417,7 @@ class Option(Parameter):
             extra_str = "; ".join(extra_items)
             help = f"{help}  [{extra_str}]" if help else f"[{extra_str}]"
 
-        return ("; " if any_prefix_is_slash else " / ").join(rv), help
+        return self.get_help_spec(ctx), help
 
     def get_help_extra(self, ctx: Context) -> types.OptionHelpExtra:
         extra: types.OptionHelpExtra = {}
