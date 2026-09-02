@@ -178,9 +178,9 @@ else:
 ```
 
 Note that this reads raw input, which means that things like arrow keys will show up in the platform's native escape
-format. The only characters translated are `^C` and `^D` which are converted into keyboard interrupts and end of file
-exceptions respectively. This is done because otherwise, it's too easy to forget about that and to create scripts that
-cannot be properly exited.
+format. The only characters translated are the ones produced by {kbd}`Ctrl+C` and {kbd}`Ctrl+D`, or {kbd}`Ctrl+Z` on
+Windows, which are converted into keyboard interrupts and end of file exceptions respectively. This is done because
+otherwise, it's too easy to forget about that and to create scripts that cannot be properly exited.
 
 ## Waiting for Key Press
 
