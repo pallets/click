@@ -863,6 +863,36 @@ def test_deprecated_usage_help_record_without_help(runner):
 
 
 @pytest.mark.parametrize(
+    ("kwargs", "expected_spec", "expected_help_spec"),
+    [
+        ({}, "FILENAME", "FILENAME"),
+        ({"required": False}, "FILENAME", "[FILENAME]"),
+        ({"nargs": -1}, "FILENAME", "[FILENAME]..."),
+        ({"metavar": "<file>"}, "<file>", "<file>"),
+    ],
+)
+def test_spec_and_help_spec(kwargs, expected_spec, expected_help_spec):
+    """The spec names the argument, while the help spec decorates it with the
+    optionality and repetition markers shown on the help page.
+    """
+    arg = click.Argument(["filename"], **kwargs)
+    ctx = click.Context(click.Command("cli"))
+    assert arg.spec == expected_spec
+    assert arg.get_help_spec(ctx) == expected_help_spec
+
+
+@pytest.mark.parametrize("help_text", [None, "path to the file"])
+def test_help_spec_matches_help_record(help_text):
+    """The help spec is the left column of the argument's help record, whether
+    or not the argument documents itself.
+    """
+    arg = click.Argument(["filename"], help=help_text)
+    ctx = click.Context(click.Command("cli"))
+    assert arg.get_help_spec(ctx) == "FILENAME"
+    assert arg.get_help_record(ctx)[0] == arg.get_help_spec(ctx)
+
+
+@pytest.mark.parametrize(
     ("deprecated", "expected"),
     [(True, "(DEPRECATED)"), ("USE B INSTEAD", "(DEPRECATED: USE B INSTEAD)")],
 )
