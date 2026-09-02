@@ -7,6 +7,49 @@
 
 ## General
 
+### Calling a command as a regular function
+
+I decorated a function with `@click.command()` to make it a CLI. When I import that name and call it from Python, it does not run my function. It parses arguments, prints a usage error and exits the process:
+
+```pytb
+>>> nasa_date_to_iso("2017-090")
+Usage: cli [OPTIONS] DATESTR
+Try 'cli --help' for help.
+
+Error: Got unexpected extra arguments (0 1 7 - 0 9 0)
+SystemExit: 2
+```
+
+#### Answer
+
+This is not a bug in Click. The decorator replaced the function with a {class}`Command` object. Calling that object runs the Click pipeline, and its argument is the list of command line arguments to parse, not the function's parameters.
+
+The recommended pattern is to keep a plain function and wrap it with a thin command:
+
+```python
+def nasa_date_to_iso(datestr): ...
+
+
+@click.command("nasa_date_to_iso")
+@click.argument("datestr")
+def nasa_date_to_iso_command(datestr):
+    click.echo(nasa_date_to_iso(datestr))
+```
+
+The function stays available as a Python API, and the command adds the CLI on top. Extracting behavior into a shared function used by several entry points is a common refactor.
+
+If you still want to run the command itself from Python, call it with a list of arguments and `standalone_mode=False` so it returns the result instead of exiting. This runs the Click pipeline, including parsing, validation and callbacks:
+
+```python
+nasa_date_to_iso_command(["2017-090"], standalone_mode=False)
+```
+
+An alternative form is:
+
+```python
+nasa_date_to_iso_command.main(["2017-090"], standalone_mode=False)
+```
+
 ### Shell Variable Expansion On Windows
 
 I have a simple Click app :
