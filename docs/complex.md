@@ -350,9 +350,9 @@ name is `cli`.
 2. Helptext rendering. In order to get the short help description of subcommands,
    `cli --help` will load `foo` and `bar`. Note that it will still not load
    `baz`.
-3. Shell completion. In order to get the subcommands of a lazy command, `cli <TAB>`
-   will need to resolve the subcommands of `cli`. This process will trigger the lazy
-   loads.
+3. Shell completion. In order to get the subcommands of a lazy command, completing
+   `cli` with {kbd}`Tab` will need to resolve the subcommands of `cli`. This process
+   will trigger the lazy loads.
 
 ### Further Deferring Imports
 
