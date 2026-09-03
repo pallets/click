@@ -1010,7 +1010,7 @@ class File(ParamType[t.IO[t.Any]]):
             return f
         except OSError as e:
             self.fail(
-                f"'{format_filename(value)!r}': {e.strerror}",
+                f"{format_filename(value)!r}: {e.strerror}",
                 param,
                 ctx,
             )
