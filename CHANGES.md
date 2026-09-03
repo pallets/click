@@ -2,6 +2,11 @@
 
 Unreleased
 
+- {class}`Path` is now generically typed on its `path_type` value
+  (`Path[pathlib.Path]`), so {meth}`~ParamType.convert` and consumers such as
+  {func}`prompt` carry the narrowed return type. Runtime behavior is unchanged.
+  {issue}`3822`
+
 ## Version 8.5.0
 
 Released 2026-08-24
