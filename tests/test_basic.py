@@ -473,7 +473,7 @@ def test_file_lazy_mode(runner, tmp_path):
     non_lazy.mkdir()
     result_in = runner.invoke(input_non_lazy, [f"--file={non_lazy}"])
     assert result_in.exit_code == 2
-    assert f"Invalid value for '--file': '{non_lazy}'" in result_in.output
+    assert f"Invalid value for '--file': {str(non_lazy)!r}" in result_in.output
 
 
 def test_path_option(runner, tmp_path):
