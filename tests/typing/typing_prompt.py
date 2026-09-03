@@ -1,3 +1,5 @@
+import pathlib
+
 from typing_extensions import assert_type
 
 import click
@@ -13,6 +15,13 @@ assert_type(click.prompt("Age", type=click.INT), int)
 assert_type(click.prompt("Age", type=click.IntRange(0, 130), default=18), int)
 assert_type(click.prompt("Age", type=int), int)
 assert_type(click.prompt("Age", type=int, default="100"), int)
+assert_type(click.prompt("Path", type=click.Path()), str)
+assert_type(click.prompt("Path", type=click.Path(path_type=pathlib.Path)), pathlib.Path)
+assert_type(click.prompt("Path", type=click.Path(path_type=bytes)), bytes)
+assert_type(click.Path(), click.Path[str])
+assert_type(click.Path(path_type=pathlib.Path), click.Path[pathlib.Path])
+assert_type(click.Path(path_type=bytes), click.Path[bytes])
+
 
 # The return type is narrowed by the ``value_proc`` argument.
 
