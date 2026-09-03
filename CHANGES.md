@@ -2,6 +2,9 @@
 
 Unreleased
 
+- {class}`Path` is generic on `path_type`, preserving the converted return type in static type checkers. {issue}`3822`
+
+
 ## Version 8.5.0
 
 Released 2026-08-24
