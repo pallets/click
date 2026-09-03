@@ -76,7 +76,7 @@ def test_nargs_err(runner):
 
     result = runner.invoke(copy, ["foo", "bar"])
     assert result.exit_code == 2
-    assert "Got unexpected extra argument (bar)" in result.output
+    assert "Got unexpected extra argument ('bar')" in result.output
 
 
 def test_bytes_args(runner, monkeypatch):

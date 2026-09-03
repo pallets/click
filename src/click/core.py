@@ -1391,7 +1391,7 @@ class Command:
                     "Got unexpected extra argument ({args})",
                     "Got unexpected extra arguments ({args})",
                     len(args),
-                ).format(args=" ".join(map(str, args)))
+                ).format(args=" ".join(map(repr, args)))
             )
 
         ctx.args = args
