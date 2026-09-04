@@ -2,6 +2,9 @@
 
 Unreleased
 
+- Prevent {func}`HelpFormatter.write_usage` from breaking options at hyphens.
+  {issue}`3362` {pr}`3837`
+
 ## Version 8.5.0
 
 Released 2026-08-24

@@ -630,3 +630,40 @@ def test_command_write_usage_no_args(runner, command_kwargs, expected_usage_line
     cli = click.Command("cli", **command_kwargs)
     result = runner.invoke(cli, ["--help"])
     assert result.output.splitlines()[0] == expected_usage_line
+
+
+def test_write_usage_does_not_break_options_at_hyphen():
+    """Issue #3362: options containing hyphens should not be split across lines."""
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+    f = click.HelpFormatter(width=65)
+    f.write_usage("program", " ".join(options))
+    expected = (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+        "               --config-file-location --user-auth-token\n"
+        "               --auto-update-interval --force-overwrite-existing\n"
+        "               --network-timeout-seconds --debug-trace-enabled\n"
+    )
+    assert f.getvalue() == expected
+
+
+def test_wrap_text_break_on_hyphens():
+    """wrap_text with break_on_hyphens=False should not break hyphenated words."""
+    text = "word1 word2 long-hyphenated-identifier word3"
+    # width=35 forces wrap after word2 when break_on_hyphens=False
+    wrapped_no_break = click.wrap_text(text, width=35, break_on_hyphens=False)
+    assert wrapped_no_break == "word1 word2\nlong-hyphenated-identifier word3"
+
+    wrapped_default = click.wrap_text(text, width=35)
+    assert wrapped_default == "word1 word2 long-hyphenated-\nidentifier word3"
