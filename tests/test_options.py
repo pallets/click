@@ -582,6 +582,18 @@ def test_multiple_default_help(runner):
     assert "1, 2" in result.output
 
 
+def test_multiple_option_help_shows_repeated_metavar(runner):
+    @click.command()
+    @click.option("--foo", multiple=True, help="A list of foo strings.")
+    def cmd(foo):
+        pass
+
+    result = runner.invoke(cmd, ["--help"])
+
+    assert not result.exception
+    assert "--foo TEXT...  A list of foo strings." in result.output
+
+
 def test_show_default_default_map(runner):
     @click.command()
     @click.option("--arg", default="a", show_default=True)
