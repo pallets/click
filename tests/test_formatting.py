@@ -517,6 +517,32 @@ def test_write_usage_styled_prefix_keeps_options_on_one_line():
     assert visible == "Usage: cli [OPTIONS]\n"
 
 
+def test_write_usage_does_not_break_options_at_hyphens():
+    options = [
+        "--enable-verbose-logging",
+        "--output-file-path",
+        "--max-retry-count",
+        "--disable-cache-mode",
+        "--config-file-location",
+        "--user-auth-token",
+        "--auto-update-interval",
+        "--force-overwrite-existing",
+        "--network-timeout-seconds",
+        "--debug-trace-enabled",
+    ]
+    formatter = click.HelpFormatter(width=65)
+
+    formatter.write_usage("program", " ".join(options))
+
+    assert formatter.getvalue() == (
+        "Usage: program --enable-verbose-logging --output-file-path\n"
+        "               --max-retry-count --disable-cache-mode\n"
+        "               --config-file-location --user-auth-token\n"
+        "               --auto-update-interval --force-overwrite-existing\n"
+        "               --network-timeout-seconds --debug-trace-enabled\n"
+    )
+
+
 @pytest.mark.parametrize(
     ("formatter_kwargs", "current_indent", "prog", "args", "prefix", "expected"),
     [

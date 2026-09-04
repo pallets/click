@@ -2,6 +2,8 @@
 
 Unreleased
 
+- Usage lines no longer break option names at hyphens. {issue}`3362`
+
 ## Version 8.5.0
 
 Released 2026-08-24
