@@ -3580,6 +3580,19 @@ class Option(Parameter):
         if value_depth > 0:
             multi_rv = self.type.split_envvar_value(rv)
             if self.multiple and self.nargs != 1:
+                # batch() uses zip(strict=False) and would silently drop a
+                # trailing incomplete group. Reject incomplete envvar values
+                # the same way type_cast_value rejects wrong-arity groups.
+                if len(multi_rv) % self.nargs != 0:
+                    raise BadParameter(
+                        ngettext(
+                            "Takes {nargs} values but 1 was given.",
+                            "Takes {nargs} values but {len} were given.",
+                            len(multi_rv),
+                        ).format(nargs=self.nargs, len=len(multi_rv)),
+                        ctx=ctx,
+                        param=self,
+                    )
                 multi_rv = batch(multi_rv, self.nargs)  # type: ignore[assignment]
 
             return multi_rv

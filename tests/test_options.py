@@ -755,6 +755,32 @@ def test_nargs_envvar(runner):
     assert result.output == "x|1\ny|2\n"
 
 
+@pytest.mark.parametrize(
+    ("env_value", "token_count"),
+    [
+        ("a b c", 3),
+        ("a b c d e", 5),
+    ],
+)
+def test_multiple_nargs_envvar_rejects_incomplete_batch(
+    runner, env_value, token_count
+):
+    """Envvar values for multiple+nargs options must not silently drop tokens.
+
+    ``batch()`` uses ``zip(..., strict=False)``, so without an explicit check
+    a trailing incomplete group would be discarded and the command would exit 0.
+    """
+
+    @click.command()
+    @click.option("--arg", nargs=2, multiple=True, envvar="ARG")
+    def cmd(arg):
+        return arg
+
+    result = runner.invoke(cmd, [], env={"ARG": env_value}, standalone_mode=False)
+    assert isinstance(result.exception, click.BadParameter)
+    assert f"Takes 2 values but {token_count} were given." in str(result.exception)
+
+
 def test_show_envvar(runner):
     @click.command()
     @click.option("--arg1", envvar="ARG1", show_envvar=True)

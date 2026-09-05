@@ -2,6 +2,12 @@
 
 Unreleased
 
+-   Options with `multiple=True` and `nargs > 1` no longer silently drop
+    trailing tokens when an environment variable value's token count is
+    not a multiple of `nargs`. Incomplete envvar values now raise
+    `BadParameter`, matching arity checks for non-multiple `nargs`
+    options. {issue}`3843`
+
 ## Version 8.5.0
 
 Released 2026-08-24
