@@ -147,6 +147,48 @@ def test_counting(runner):
     assert re.search(r"-v\s+Verbosity", result.output) is not None
 
 
+@pytest.mark.parametrize(
+    ("default", "args", "expected"),
+    [
+        (3, [], "3"),
+        (3, ["-v"], "4"),
+        (3, ["-vv"], "5"),
+        (3, ["-vvv"], "6"),
+        (1, [], "1"),
+        (1, ["-v"], "2"),
+        (0, [], "0"),
+        (0, ["-v"], "1"),
+        (0, ["-vv"], "2"),
+    ],
+)
+def test_counting_respects_nonzero_default(runner, default, args, expected):
+    """Count increments relative to default (argparse-compatible). See #3841."""
+
+    @click.command()
+    @click.option("-v", count=True, default=default)
+    def cli(v):
+        click.echo(v)
+
+    result = runner.invoke(cli, args)
+    assert not result.exception
+    assert result.output == f"{expected}\n"
+
+
+def test_counting_respects_default_map_baseline(runner):
+    @click.command()
+    @click.option("-v", count=True, default=0)
+    def cli(v):
+        click.echo(v)
+
+    result = runner.invoke(cli, ["-v"], default_map={"v": 3})
+    assert not result.exception
+    assert result.output == "4\n"
+
+    result = runner.invoke(cli, [], default_map={"v": 3})
+    assert not result.exception
+    assert result.output == "3\n"
+
+
 @pytest.mark.parametrize("unknown_flag", ["--foo", "-f"])
 def test_unknown_options(runner, unknown_flag):
     @click.command()

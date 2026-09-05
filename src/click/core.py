@@ -2893,6 +2893,9 @@ class Option(Parameter):
                      in how it works but supports arbitrary number of
                      arguments.
     :param count: this flag makes an option increment an integer.
+                  Occurrences on the command line are counted relative to
+                  the option's default (including :attr:`Context.default_map`),
+                  matching :mod:`argparse`'s ``action="count"`` behavior.
     :param allow_from_autoenv: if this is enabled then the value of this
                                parameter will be pulled from an environment
                                variable in case a prefix is defined on the
@@ -2900,6 +2903,12 @@ class Option(Parameter):
     :param help: the help string.
     :param hidden: hide this option from help outputs.
     :param attrs: Other command arguments described in :class:`Parameter`.
+
+    .. versionchanged:: 8.5.1
+        ``count=True`` increments relative to the option default (and
+        ``default_map``) instead of always counting from ``0``. This matches
+        :mod:`argparse` and means a non-zero default is no longer replaced by a
+        smaller command-line count.
 
     .. versionchanged:: 8.4.0
         Non-basic ``flag_value`` types (not ``str``, ``int``, ``float``, or
@@ -3599,6 +3608,24 @@ class Option(Parameter):
         :meta private:
         """
         value, source = super().consume_value(ctx, opts)
+
+        # Count options increment relative to their default baseline (argparse-
+        # compatible). The parser always counts from 0, so when the value came
+        # from the command line add the default / default_map baseline.
+        # Refs: https://github.com/pallets/click/issues/3841
+        if (
+            self.count
+            and source is ParameterSource.COMMANDLINE
+            and value is not UNSET
+            and value is not FLAG_NEEDS_VALUE
+        ):
+            baseline: t.Any = 0
+            if self.name is not None and ctx._default_map_has(self.name):
+                mapped = ctx.lookup_default(self.name)
+                baseline = 0 if mapped is None else mapped
+            elif self.default is not UNSET and self.default is not None:
+                baseline = self.default
+            value = baseline + value
 
         # The parser emits a sentinel when a flag is allowed to be used without a value.
         # Resolve it to a prompt or to the activation value depending on the option's

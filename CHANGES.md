@@ -2,6 +2,13 @@
 
 Unreleased
 
+-   `count=True` options with a non-zero `default` (or a `default_map`
+    baseline) now increment relative to that baseline when the flag is
+    passed on the command line, matching `argparse` `action="count"`.
+    Previously the parser always counted from `0`, so fewer flag
+    occurrences than the default could produce a value lower than the
+    default. {issue}`3841`
+
 ## Version 8.5.0
 
 Released 2026-08-24
