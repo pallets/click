@@ -88,6 +88,104 @@ def test_echo_color_flag(monkeypatch, capfd):
     assert out == f"{styled_text}\n"
 
 
+def test_echo_force_color(monkeypatch, capfd):
+    monkeypatch.setattr(click._compat, "isatty", lambda x: False)
+
+    text = "foo"
+    styled_text = click.style(text, fg="red")
+
+    # Default without FORCE_COLOR on non-tty strips color
+    monkeypatch.delenv("FORCE_COLOR", raising=False)
+    monkeypatch.delenv("PYTHON_COLORS", raising=False)
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    click.echo(styled_text)
+    out, _ = capfd.readouterr()
+    assert out == f"{text}\n"
+
+    # FORCE_COLOR=1 forces color
+    monkeypatch.setenv("FORCE_COLOR", "1")
+    click.echo(styled_text)
+    out, _ = capfd.readouterr()
+    assert out == f"{styled_text}\n"
+
+    # FORCE_COLOR=true forces color
+    monkeypatch.setenv("FORCE_COLOR", "true")
+    click.echo(styled_text)
+    out, _ = capfd.readouterr()
+    assert out == f"{styled_text}\n"
+
+    # FORCE_COLOR=0 disables color
+    monkeypatch.setenv("FORCE_COLOR", "0")
+    click.echo(styled_text)
+    out, _ = capfd.readouterr()
+    assert out == f"{text}\n"
+
+    # PYTHON_COLORS=1 forces color
+    monkeypatch.delenv("FORCE_COLOR", raising=False)
+    monkeypatch.setenv("PYTHON_COLORS", "1")
+    click.echo(styled_text)
+    out, _ = capfd.readouterr()
+    assert out == f"{styled_text}\n"
+
+    # PYTHON_COLORS=0 disables color
+    monkeypatch.setenv("PYTHON_COLORS", "0")
+    click.echo(styled_text)
+    out, _ = capfd.readouterr()
+    assert out == f"{text}\n"
+
+    # Explicit color=False overrides FORCE_COLOR=1
+    monkeypatch.setenv("FORCE_COLOR", "1")
+    click.echo(styled_text, color=False)
+    out, _ = capfd.readouterr()
+    assert out == f"{text}\n"
+
+
+def test_echo_no_color(monkeypatch, capfd):
+    monkeypatch.setattr(click._compat, "isatty", lambda x: True)
+
+    text = "foo"
+    styled_text = click.style(text, fg="red")
+
+    monkeypatch.delenv("FORCE_COLOR", raising=False)
+    monkeypatch.delenv("PYTHON_COLORS", raising=False)
+
+    # NO_COLOR=1 strips color even on TTY
+    monkeypatch.setenv("NO_COLOR", "1")
+    click.echo(styled_text)
+    out, _ = capfd.readouterr()
+    assert out == f"{text}\n"
+
+    # NO_COLOR="" (empty) does not disable color
+    monkeypatch.setenv("NO_COLOR", "")
+    click.echo(styled_text)
+    out, _ = capfd.readouterr()
+    assert out == f"{styled_text}\n"
+
+    # Explicit color=True overrides NO_COLOR
+    monkeypatch.setenv("NO_COLOR", "1")
+    click.echo(styled_text, color=True)
+    out, _ = capfd.readouterr()
+    assert out == f"{styled_text}\n"
+
+
+def test_echo_runner_env_color(runner):
+    @click.command()
+    def cli():
+        click.echo(click.style("hello", fg="green"))
+
+    # Default runner has no color
+    result = runner.invoke(cli)
+    assert result.output == "hello\n"
+
+    # FORCE_COLOR=1 enables color in runner
+    result = runner.invoke(cli, env={"FORCE_COLOR": "1"})
+    assert result.output == f"{click.style('hello', fg='green')}\n"
+
+    # NO_COLOR=1 disables color in runner even if runner color=True
+    result = runner.invoke(cli, color=True, env={"NO_COLOR": "1"})
+    assert result.output == "hello\n"
+
+
 @pytest.mark.skipif(WIN, reason="Test too complex to make work windows.")
 def test_echo_writing_to_standard_error(capfd, monkeypatch):
     def emulate_input(text):

@@ -507,6 +507,17 @@ class CliRunner:
             stream: t.IO[t.Any] | None = None, color: bool | None = None
         ) -> bool:
             if color is None:
+                if "NO_COLOR" in os.environ and os.environ["NO_COLOR"] != "":
+                    return True
+                if os.environ.get("PYTHON_COLORS") == "0":
+                    return True
+                if "FORCE_COLOR" in os.environ:
+                    val = os.environ["FORCE_COLOR"]
+                    if val != "0" and val.lower() != "false":
+                        return False
+                    return True
+                if os.environ.get("PYTHON_COLORS") == "1":
+                    return False
                 return not default_color
             return not color
 

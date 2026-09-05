@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import typing as t
 from threading import local
 
@@ -7,6 +8,25 @@ if t.TYPE_CHECKING:
     from .core import Context
 
 _local = local()
+
+
+def _is_forced_color() -> bool:
+    if "FORCE_COLOR" in os.environ:
+        val = os.environ["FORCE_COLOR"]
+        return val != "0" and val.lower() != "false"
+    if os.environ.get("PYTHON_COLORS") == "1":
+        return True
+    return False
+
+
+def _is_no_color() -> bool:
+    if "NO_COLOR" in os.environ and os.environ["NO_COLOR"] != "":
+        return True
+    if os.environ.get("PYTHON_COLORS") == "0":
+        return True
+    if os.environ.get("FORCE_COLOR") in ("0", "false", "FALSE"):
+        return True
+    return False
 
 
 @t.overload
@@ -54,14 +74,20 @@ def pop_context() -> None:
 def resolve_color_default(color: bool | None = None) -> bool | None:
     """Internal helper to get the default value of the color flag.  If a
     value is passed it's returned unchanged, otherwise it's looked up from
-    the current context.
+    the current context, or environment variables (``NO_COLOR``,
+    ``FORCE_COLOR``, ``PYTHON_COLORS``).
     """
     if color is not None:
         return color
 
     ctx = get_current_context(silent=True)
 
-    if ctx is not None:
+    if ctx is not None and ctx.color is not None:
         return ctx.color
+
+    if _is_no_color():
+        return False
+    if _is_forced_color():
+        return True
 
     return None
