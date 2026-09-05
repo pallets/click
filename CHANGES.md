@@ -2,6 +2,10 @@
 
 Unreleased
 
+- `BOOL` converts `0` and `1` to `False` and `True` again instead of raising
+  `AttributeError`. Regression introduced in `8.2.2` by {pr}`2956`.
+  {issue}`3846`
+
 ## Version 8.5.0
 
 Released 2026-08-24

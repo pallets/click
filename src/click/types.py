@@ -852,9 +852,9 @@ class BoolParamType(ParamType[bool]):
 
         Returns `None` if the value does not match any known boolean state.
         """
-        if isinstance(value, bool):
-            return value
-        return BoolParamType.bool_states.get(value.strip().lower())
+        if value in {False, True}:
+            return bool(value)
+        return BoolParamType.bool_states.get(str(value).strip().lower())
 
     def convert(
         self, value: t.Any, param: Parameter | None, ctx: Context | None

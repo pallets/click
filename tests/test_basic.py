@@ -321,6 +321,8 @@ def test_boolean_switch(runner, args, default, expect):
         (True, [], True),
         (False, ["--f"], True),
         (False, [], False),
+        (1, [], True),
+        (0, [], False),
         # Boolean flags have a 3-states logic.
         # See: https://github.com/pallets/click/issues/3024#issue-3285556668
         (None, ["--f"], True),
