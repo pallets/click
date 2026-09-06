@@ -2356,7 +2356,7 @@ class Parameter(ABC):
         self.name, self.opts, self.secondary_opts = self._parse_decls(
             param_decls or (), expose_value
         )
-        self.type: types.ParamType[t.Any] = types.convert_type(type, default)
+        self.type: types.ParamType[t.Any] = types._convert_type(type, default)
 
         # Default nargs to what the type tells us if we have that
         # information available.
@@ -3139,7 +3139,7 @@ class Option(Parameter):
         if flag_value is UNSET or isinstance(flag_value, bool):
             return types.BoolParamType()
 
-        guessed: types.ParamType[t.Any] = types.convert_type(None, flag_value)
+        guessed: types.ParamType[t.Any] = types._convert_type(None, flag_value)
         if (
             isinstance(guessed, types.StringParamType)
             and not isinstance(flag_value, str)

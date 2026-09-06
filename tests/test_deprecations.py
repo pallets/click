@@ -38,6 +38,9 @@ import click.utils
         (click.utils, "make_default_short_help", click.utils._make_default_short_help),
         (click.utils, "PacifyFlushWrapper", click.utils._PacifyFlushWrapper),
         (click.utils, "safecall", click.utils._safecall),
+        # Type helpers that were never exported from the top-level namespace.
+        (click.types, "FuncParamType", click.types._FuncParamType),
+        (click.types, "convert_type", click.types._convert_type),
         # Version metadata attribute.
         (click, "__version__", importlib.metadata.version("click")),
     ],
@@ -52,7 +55,7 @@ def test_attr_deprecated(module, name, target):
 
 @pytest.mark.parametrize(
     "module",
-    [click, click.core, click.parser, click.utils],
+    [click, click.core, click.parser, click.types, click.utils],
     ids=lambda m: m.__name__,
 )
 def test_unknown_attribute_raises(module):

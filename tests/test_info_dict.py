@@ -96,7 +96,7 @@ HELLO_GROUP = (
     ("obj", "expect"),
     [
         pytest.param(
-            click.types.FuncParamType(range),
+            click.types._FuncParamType(range),
             {"param_type": "Func", "name": "range", "func": range},
             id="Func ParamType",
         ),
