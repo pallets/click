@@ -222,6 +222,52 @@ Prompts will be emulated so they write the input data to
 the output stream as well. If hidden input is expected then this
 does not happen.
 
+## Shell Completion
+
+Use {meth}`click.shell_completion.ShellComplete.get_completions` to test
+{doc}`shell-completion` suggestions directly in Python. Pass the complete
+arguments in `args`, excluding the program name, and the word being completed
+in `incomplete`. Use an empty string for `incomplete` to start a new word.
+The returned {class}`~click.shell_completion.CompletionItem` objects contain
+the suggested `value` and optional `type` and `help` metadata.
+
+For example, test a custom completion callback for an option:
+
+```{code-block} python
+:caption: test_completion.py
+
+import click
+from click.shell_completion import ShellComplete
+
+
+def complete_name(ctx, param, incomplete):
+    return [
+        name for name in ["Alice", "Alex", "Bob"]
+        if name.startswith(incomplete)
+    ]
+
+
+@click.command()
+@click.option("--name", shell_complete=complete_name)
+def hello(name):
+    click.echo(f"Hello {name}!")
+
+
+def test_completion():
+    completion = ShellComplete(hello, {}, "hello", "_HELLO_COMPLETE")
+
+    results = completion.get_completions([], "--na")
+    assert [item.value for item in results] == ["--name"]
+
+    results = completion.get_completions(["--name"], "Al")
+    assert [item.value for item in results] == ["Alice", "Alex"]
+
+    assert completion.get_completions(["--name"], "Z") == []
+```
+
+This tests Click's suggestions without installing a completion script or
+starting a shell. It does not test how a shell displays or inserts them.
+
 ## Capture modes
 
 {class}`CliRunner` captures output by replacing `sys.stdout` and `sys.stderr`
