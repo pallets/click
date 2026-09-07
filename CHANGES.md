@@ -2,6 +2,8 @@
 
 Unreleased
 
+- Mark `convert_type` and `FuncParamType` as private API in `click.types`.
+  {issue}`3847`
 - Fix `copy.deepcopy()` and `pickle` on a `Parameter`, `Option` or `Command`. {pr}`3805`
 - A `KeyboardInterrupt` arriving while `Command.main()` reports an abort or an error,
   or while it exits, no longer escapes as an unhandled traceback. The command still
