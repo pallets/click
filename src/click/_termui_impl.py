@@ -739,6 +739,7 @@ class Editor:
             # splitting — POSIX mode treats backslashes as escapes and
             # CreateProcess can fail with WinError 87/14001.
             editor_lower = editor.lower()
+            file_args = [os.fspath(name) for name in filenames]
             if WIN and (
                 editor_lower in {"notepad", "notepad.exe"}
                 or editor_lower.endswith(("\\notepad.exe", "/notepad.exe"))
@@ -748,9 +749,9 @@ class Editor:
                     and editor[:1] not in "'\""
                 )
             ):
-                args = shlex.split(editor, posix=False) + list(filenames)
+                args = shlex.split(editor, posix=False) + file_args
             else:
-                args = shlex.split(editor) + list(filenames)
+                args = shlex.split(editor) + file_args
             c = subprocess.Popen(
                 args=args,
                 env=environ,
