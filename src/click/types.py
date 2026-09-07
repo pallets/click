@@ -730,6 +730,7 @@ class IntParamType(_NumberParamTypeBase[t.SupportsInt | t.SupportsIndex, int]):
         return "INT"
 
 
+# pyrefly: ignore [invalid-inheritance]  # https://github.com/facebook/pyrefly/issues/4842
 class IntRange(_NumberRangeBase[int, int], IntParamType):
     """Restrict an :data:`click.INT` value to a range of accepted
     values. See :ref:`ranges`.
@@ -762,6 +763,7 @@ class FloatParamType(_NumberParamTypeBase[t.SupportsFloat | t.SupportsIndex, flo
         return "FLOAT"
 
 
+# pyrefly: ignore [invalid-inheritance]  # https://github.com/facebook/pyrefly/issues/4842
 class FloatRange(_NumberRangeBase[float, float], FloatParamType):
     """Restrict a :data:`click.FLOAT` value to a range of accepted
     values. See :ref:`ranges`.
