@@ -722,12 +722,30 @@ class Editor:
             environ = os.environ.copy()
             environ.update(self.env)
 
-        try:
+        filenames = list(filenames)
+
+        if WIN:
+            # The editor string is a command line in Windows syntax:
+            # backslashes are path separators, not escape characters, and
+            # double quotes group paths with spaces. Splitting it with
+            # POSIX shlex rules eats backslashes and splits unquoted
+            # paths, producing a program name CreateProcess cannot
+            # resolve. Pass the editor string verbatim as the command
+            # line and quote only the appended filenames.
+            args: str | list[str] = editor
+
+            if filenames:
+                quoted = subprocess.list2cmdline([os.fspath(f) for f in filenames])
+                args = f"{editor} {quoted}"
+        else:
             # Split in POSIX mode (the default) for the same reasons as
             # in pager(): strips quotes from tokens and preserves quoted
             # Windows paths.
+            args = shlex.split(editor) + filenames
+
+        try:
             c = subprocess.Popen(
-                args=shlex.split(editor) + list(filenames),
+                args=args,
                 env=environ,
             )
             exit_code = c.wait()

@@ -11,6 +11,14 @@ Unreleased
   returns `None` for hidden options, so help screens are unchanged. {pr}`3821`
 - Document which types are inferred from `default`, and what an unrecognized
   `type` callable does to a command-line value. {issue}`3036` {pr}`3808`
+- `edit()` no longer splits the editor command with POSIX `shlex` rules on
+  Windows. That treated backslashes as escape characters, mangling Windows
+  paths (`C:\Windows\System32\notepad.exe` became
+  `C:WindowsSystem32notepad.exe`) into program names `CreateProcess` could
+  not resolve, with errors like `WinError 87` or `14001`. The editor string
+  is passed to `subprocess` verbatim as the command line, and only the
+  appended filenames are quoted. Behavior on other platforms is unchanged.
+  {issue}`3840`
 
 ## Version 8.5.0
 

@@ -555,6 +555,7 @@ def test_edit_pathlib(runner, tmp_path, use_iterable):
         ),
     ],
 )
+@pytest.mark.skipif(WIN, reason="Windows passes the editor string through verbatim.")
 def test_editor_path_normalization(editor_cmd, filenames, expected_args):
     with patch("subprocess.Popen") as mock_popen:
         mock_popen.return_value.wait.return_value = 0
@@ -568,30 +569,72 @@ def test_editor_path_normalization(editor_cmd, filenames, expected_args):
 
 @pytest.mark.skipif(not WIN, reason="Windows-specific editor paths")
 @pytest.mark.parametrize(
-    ("editor_cmd", "expected_cmd"),
+    ("editor_cmd", "filenames", "expected_cmd"),
     [
         pytest.param(
             "notepad",
-            ["notepad"],
+            ["f.txt"],
+            "notepad f.txt",
             id="plain notepad",
         ),
         pytest.param(
             '"C:\\Program Files\\Sublime Text 3\\sublime_text.exe" --wait',
-            ["C:\\Program Files\\Sublime Text 3\\sublime_text.exe", "--wait"],
+            ["f.txt"],
+            '"C:\\Program Files\\Sublime Text 3\\sublime_text.exe" --wait f.txt',
             id="quoted path with flag",
+        ),
+        pytest.param(
+            "C:\\Windows\\System32\\notepad.exe",
+            ["f.txt"],
+            "C:\\Windows\\System32\\notepad.exe f.txt",
+            id="unquoted absolute path keeps backslashes",
+        ),
+        pytest.param(
+            "C:\\Program Files\\My Editor\\edit.exe --wait",
+            ["f.txt"],
+            "C:\\Program Files\\My Editor\\edit.exe --wait f.txt",
+            id="unquoted path with spaces stays a single command line",
+        ),
+        pytest.param(
+            "notepad",
+            ["file 1.txt", "file 2.txt"],
+            'notepad "file 1.txt" "file 2.txt"',
+            id="filenames with spaces are quoted",
         ),
     ],
 )
-def test_editor_windows_path_normalization(editor_cmd, expected_cmd):
-    """Windows-specific tests: verify ``Popen`` receives unquoted paths that
-    ``subprocess.list2cmdline`` can re-quote for ``CreateProcess``."""
+def test_editor_windows_path_normalization(editor_cmd, filenames, expected_cmd):
+    """Windows-specific tests: the editor string is a command line in
+    Windows syntax, so it is passed to ``Popen`` verbatim; only the
+    appended filenames are quoted with ``subprocess.list2cmdline``.
+
+    Splitting it with POSIX shlex rules eats backslashes and splits
+    unquoted paths (``C:\\Windows\\System32\\notepad.exe`` became
+    ``C:WindowsSystem32notepad.exe``), producing a program name
+    ``CreateProcess`` cannot resolve (issue #3840).
+    """
     with patch("subprocess.Popen") as mock_popen:
         mock_popen.return_value.wait.return_value = 0
-        Editor(editor=editor_cmd).edit_files(["f.txt"])
+        Editor(editor=editor_cmd).edit_files(filenames)
 
         args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
-        assert args == expected_cmd + ["f.txt"]
+        assert args == expected_cmd
         assert mock_popen.call_args[1].get("shell") is None
+
+
+@pytest.mark.skipif(not WIN, reason="Uses cmd.exe as a stand-in editor.")
+def test_editor_launches_on_windows(tmp_path):
+    """A fully-qualified editor path must reach ``CreateProcess`` intact.
+
+    ``cmd.exe /d /c exit 0`` stands in for a real editor: it never blocks
+    and exits successfully, while its backslash path is exactly what the
+    former POSIX splitting mangled (issue #3840).
+    """
+    f = tmp_path / "f.txt"
+    f.write_text("hello", encoding="utf-8")
+    editor = f"{os.environ['SystemRoot']}\\System32\\cmd.exe /d /c exit 0"
+
+    Editor(editor=editor).edit_files([f])
 
 
 def test_editor_env_passed_through():
@@ -1308,6 +1351,7 @@ def test_tempfile_pager_closes_file_before_unlink(monkeypatch):
     )
 
 
+@pytest.mark.skipif(WIN, reason="Windows passes the editor string through verbatim.")
 def test_editor_unclosed_quote():
     """An unclosed quote in the editor command raises ValueError."""
     with pytest.raises(ValueError, match="No closing quotation"):
