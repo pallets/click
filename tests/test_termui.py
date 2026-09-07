@@ -594,6 +594,55 @@ def test_editor_windows_path_normalization(editor_cmd, expected_cmd):
         assert mock_popen.call_args[1].get("shell") is None
 
 
+def test_get_editor_windows_resolves_notepad(monkeypatch):
+    """Issue #3840: default Windows editor must be a real notepad.exe path."""
+    monkeypatch.setattr(click._termui_impl, "WIN", True)
+    monkeypatch.delenv("VISUAL", raising=False)
+    monkeypatch.delenv("EDITOR", raising=False)
+    monkeypatch.setenv("SystemRoot", "C:\\Windows")
+
+    with patch("shutil.which", return_value=None):
+        editor = Editor().get_editor()
+
+    expected = str(pathlib.Path("C:\\Windows") / "System32" / "notepad.exe")
+    assert editor.lower().endswith("notepad.exe")
+    assert editor == expected
+
+
+def test_edit_files_windows_notepad_full_path_argv(monkeypatch):
+    """Issue #3840: unquoted System32 notepad path must not be POSIX-mangled."""
+    monkeypatch.setattr(click._termui_impl, "WIN", True)
+    notepad = "C:\\Windows\\System32\\notepad.exe"
+
+    with patch("subprocess.Popen") as mock_popen:
+        mock_popen.return_value.wait.return_value = 0
+        Editor(editor=notepad).edit_files(["f.txt"])
+
+        args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
+        assert args == [notepad, "f.txt"]
+        assert mock_popen.call_args[1].get("shell") is None
+
+
+def test_edit_files_windows_default_notepad_argv(monkeypatch):
+    """Issue #3840: default editor launch uses argv[0] ending in notepad.exe."""
+    monkeypatch.setattr(click._termui_impl, "WIN", True)
+    monkeypatch.delenv("VISUAL", raising=False)
+    monkeypatch.delenv("EDITOR", raising=False)
+    monkeypatch.setenv("SystemRoot", "C:\\Windows")
+
+    with patch("shutil.which", return_value=None):
+        with patch("subprocess.Popen") as mock_popen:
+            mock_popen.return_value.wait.return_value = 0
+            Editor().edit_files(["f.txt"])
+
+            args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
+            expected = str(pathlib.Path("C:\\Windows") / "System32" / "notepad.exe")
+            assert args[0].lower().endswith("notepad.exe")
+            assert args[0] == expected
+            assert args[1:] == ["f.txt"]
+            assert mock_popen.call_args[1].get("shell") is None
+
+
 def test_editor_env_passed_through():
     with patch("subprocess.Popen") as mock_popen:
         mock_popen.return_value.wait.return_value = 0

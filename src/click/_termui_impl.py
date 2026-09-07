@@ -701,7 +701,17 @@ class Editor:
             if rv:
                 return rv
         if WIN:
-            return "notepad"
+            from shutil import which
+
+            notepad = which("notepad.exe") or which("notepad")
+            if notepad is not None:
+                return notepad
+            windir = (
+                os.environ.get("SystemRoot")
+                or os.environ.get("WINDIR")
+                or "C:\\Windows"
+            )
+            return str(Path(windir) / "System32" / "notepad.exe")
 
         from shutil import which
 
@@ -712,7 +722,6 @@ class Editor:
 
     def edit_files(self, filenames: cabc.Iterable[str | os.PathLike[str]]) -> None:
         """Open files in the user's editor."""
-        import shlex
         import subprocess
 
         editor = self.get_editor()
@@ -725,9 +734,25 @@ class Editor:
         try:
             # Split in POSIX mode (the default) for the same reasons as
             # in pager(): strips quotes from tokens and preserves quoted
-            # Windows paths.
+            # Windows paths. On Windows, unquoted paths such as the
+            # default notepad.exe under System32 must use non-POSIX
+            # splitting — POSIX mode treats backslashes as escapes and
+            # CreateProcess can fail with WinError 87/14001.
+            editor_lower = editor.lower()
+            if WIN and (
+                editor_lower in {"notepad", "notepad.exe"}
+                or editor_lower.endswith(("\\notepad.exe", "/notepad.exe"))
+                or (
+                    len(editor) >= 3
+                    and editor[1:3] == ":\\"
+                    and editor[:1] not in "'\""
+                )
+            ):
+                args = shlex.split(editor, posix=False) + list(filenames)
+            else:
+                args = shlex.split(editor) + list(filenames)
             c = subprocess.Popen(
-                args=shlex.split(editor) + list(filenames),
+                args=args,
                 env=environ,
             )
             exit_code = c.wait()
