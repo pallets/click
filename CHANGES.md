@@ -11,6 +11,8 @@ Unreleased
   returns `None` for hidden options, so help screens are unchanged. {pr}`3821`
 - Document which types are inferred from `default`, and what an unrecognized
   `type` callable does to a command-line value. {issue}`3036` {pr}`3808`
+- `path_type` narrows the converted value's type for `convert` and `prompt`.
+  {issue}`3822` {pr}`3858`
 
 ## Version 8.5.0
 
