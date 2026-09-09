@@ -324,6 +324,84 @@ def test_argument_help_options_only_no_arguments_section(runner):
     assert "number of greetings" in result.output
 
 
+def test_argument_help_lists_undocumented_arguments(runner):
+    """One documented argument makes the section list all of them."""
+
+    @click.command()
+    @click.argument("src", help="Source path")
+    @click.argument("dst")
+    @click.argument("extra", nargs=-1)
+    def cli(src, dst, extra):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    lines = result.output.splitlines()
+    start = lines.index("Positional arguments:")
+    assert lines[start : start + 4] == [
+        "Positional arguments:",
+        "  SRC         Source path",
+        "  DST",
+        "  [EXTRA]...",
+    ]
+
+
+def test_argument_help_undocumented_arguments_only_no_section(runner):
+    """Arguments alone produce no section: at least one needs a help."""
+
+    @click.command()
+    @click.argument("src")
+    @click.argument("dst")
+    def cli(src, dst):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    assert "Positional arguments:" not in result.output
+
+
+def test_argument_help_deprecated_without_help_lists_all(runner):
+    """A deprecation label counts as help and brings every argument into view."""
+
+    @click.command()
+    @click.argument("src", required=False, deprecated=True)
+    @click.argument("dst")
+    def cli(src, dst):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    lines = result.output.splitlines()
+    start = lines.index("Positional arguments:")
+    assert lines[start : start + 3] == [
+        "Positional arguments:",
+        "  [SRC!]  (DEPRECATED)",
+        "  DST",
+    ]
+
+
+def test_argument_help_empty_string_lists_all(runner):
+    """An explicit empty help opens the section, the same way an empty option help
+    keeps its option listed.
+    """
+
+    @click.command()
+    @click.argument("src", help="")
+    @click.argument("dst")
+    def cli(src, dst):
+        pass
+
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0, result.output
+    lines = result.output.splitlines()
+    start = lines.index("Positional arguments:")
+    assert lines[start : start + 3] == [
+        "Positional arguments:",
+        "  SRC",
+        "  DST",
+    ]
+
+
 def test_argument_help_optional_metavar(runner):
     @click.command()
     @click.argument("name", required=False, default="", help="The name to print")

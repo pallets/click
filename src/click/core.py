@@ -1310,16 +1310,20 @@ class Command:
                 formatter.write_dl(opts)
 
     def format_arguments(self, ctx: Context, formatter: HelpFormatter) -> None:
-        """Writes the arguments that have a help record into the formatter."""
-        args = []
-        for param in self.get_params(ctx):
-            rv = param.get_help_record(ctx)
-            if rv is not None and isinstance(param, Argument):
-                args.append(rv)
+        """Writes all arguments into the formatter, if at least one is documented.
 
-        if args:
+        An argument with no help gets an empty description, the same way an option
+        with no help does. That keeps the section an exhaustive list of the
+        positional arguments, matching the usage line.
+        """
+        args = [param for param in self.get_params(ctx) if isinstance(param, Argument)]
+
+        if any(arg.help is not None for arg in args):
+            records = [
+                arg.get_help_record(ctx) or (arg.make_metavar(ctx), "") for arg in args
+            ]
             with formatter.section(_("Positional arguments")):
-                formatter.write_dl(args)
+                formatter.write_dl(records)
 
     def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Writes the epilog into the formatter if it exists."""
