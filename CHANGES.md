@@ -2,6 +2,7 @@
 
 Unreleased
 
+- Add `usage` to the output of {meth}`Command.to_info_dict`. {issue}`2992`
 - Fix `copy.deepcopy()` and `pickle` on a `Parameter`, `Option` or `Command`. {pr}`3805`
 - A `KeyboardInterrupt` arriving while `Command.main()` reports an abort or an error,
   or while it exits, no longer escapes as an unhandled traceback. The command still
