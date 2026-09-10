@@ -11,6 +11,9 @@ Unreleased
   returns `None` for hidden options, so help screens are unchanged. {pr}`3821`
 - Document which types are inferred from `default`, and what an unrecognized
   `type` callable does to a command-line value. {issue}`3036` {pr}`3808`
+- `convert_type` in `click.types` was never intentionally public and is now
+  private (`_convert_type`). The old name remains available with a
+  `DeprecationWarning` until Click 9.0. {issue}`3847`
 
 ## Version 8.5.0
 

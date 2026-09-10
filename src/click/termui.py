@@ -18,8 +18,8 @@ from ._compat import strip_ansi
 from .exceptions import Abort
 from .exceptions import UsageError
 from .globals import resolve_color_default
+from .types import _convert_type
 from .types import Choice
-from .types import convert_type
 from .types import ParamType
 from .utils import _LazyFile
 from .utils import echo
@@ -245,7 +245,7 @@ def prompt(
             raise Abort() from None
 
     if value_proc is None:
-        value_proc = convert_type(type, default)
+        value_proc = _convert_type(type, default)
 
     prompt = _build_prompt(
         text, prompt_suffix, show_default, default, show_choices, type
