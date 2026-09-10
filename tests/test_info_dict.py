@@ -276,6 +276,14 @@ def test_paramtype_no_name():
     assert TestType().to_info_dict()["name"] == "TestType"
 
 
+PARAM_KINDS = [
+    pytest.param(lambda **kwargs: click.Option(["--name"], **kwargs), id="option"),
+    pytest.param(lambda **kwargs: click.Argument(["name"], **kwargs), id="argument"),
+]
+"""Both concrete kinds of parameter, built from the same keyword arguments."""
+
+
+@pytest.mark.parametrize("make_param", PARAM_KINDS)
 @pytest.mark.parametrize(
     ("help_in", "help_out"),
     [
@@ -289,9 +297,31 @@ def test_paramtype_no_name():
         ),
     ],
 )
-def test_argument_to_info_dict_help(help_in, help_out):
-    arg = click.Argument(["name"], help=help_in)
-    assert arg.to_info_dict()["help"] == help_out
+def test_param_to_info_dict_help(make_param, help_in, help_out):
+    """`Parameter` owns the help string, so every kind dedents it the same way."""
+    assert make_param(help=help_in).to_info_dict()["help"] == help_out
+
+
+@pytest.mark.parametrize("make_param", PARAM_KINDS)
+@pytest.mark.parametrize(
+    ("help_in", "deprecated", "help_out"),
+    [
+        pytest.param(None, True, "(DEPRECATED)", id="no-help"),
+        pytest.param(
+            "Pack the basket.", True, "Pack the basket. (DEPRECATED)", id="help"
+        ),
+        pytest.param(
+            "Pack the basket.",
+            "USE THE CRATE",
+            "Pack the basket. (DEPRECATED: USE THE CRATE)",
+            id="custom-label",
+        ),
+    ],
+)
+def test_param_to_info_dict_deprecated_help(make_param, help_in, deprecated, help_out):
+    """A deprecated parameter of any kind gets the same label appended."""
+    param = make_param(help=help_in, required=False, deprecated=deprecated)
+    assert param.to_info_dict()["help"] == help_out
 
 
 def test_argument_to_info_dict_nargs():
