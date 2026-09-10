@@ -362,8 +362,19 @@ class ShellComplete:
         :param incomplete: Value being completed. May be empty.
         """
         ctx = _resolve_context(self.cli, self.ctx_args, self.prog_name, args)
+        completion_prefix = ""
+
+        if "=" in incomplete and _start_of_option(ctx, incomplete):
+            completion_prefix = incomplete.partition("=")[0] + "="
+
         obj, incomplete = _resolve_incomplete(ctx, args, incomplete)
-        return obj.shell_complete(ctx, incomplete)
+        completions = obj.shell_complete(ctx, incomplete)
+
+        if completion_prefix:
+            for item in completions:
+                item.value = f"{completion_prefix}{item.value}"
+
+        return completions
 
     def format_completion(self, item: CompletionItem[str]) -> str:
         """Format a completion item into the form recognized by the

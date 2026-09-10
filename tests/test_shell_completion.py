@@ -492,6 +492,29 @@ def test_context_settings(runner):
     assert result.output == "plain,a\nplain,b\n"
 
 
+@pytest.mark.parametrize(
+    ("shell", "expect"),
+    [
+        ("bash", "plain,--color=auto\nplain,--color=always\n"),
+        ("zsh", "plain\n--color=auto\n_\nplain\n--color=always\n_\n"),
+    ],
+)
+@pytest.mark.usefixtures("_patch_for_completion")
+def test_option_value_completion_with_equals(runner, shell, expect):
+    cli = Command(
+        "cli", params=[Option(["--color"], type=Choice(["auto", "always"]))]
+    )
+    result = runner.invoke(
+        cli,
+        env={
+            "COMP_WORDS": "cli --color=",
+            "COMP_CWORD": "1",
+            "_CLI_COMPLETE": f"{shell}_complete",
+        },
+    )
+    assert result.output == expect
+
+
 # case_sensitive=False normalizes values to lowercase, matching remains case insensitive
 @pytest.mark.parametrize(("value", "expect"), [(False, ["au", "al"]), (True, ["al"])])
 def test_choice_case_sensitive(value, expect):
