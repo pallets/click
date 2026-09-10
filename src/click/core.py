@@ -1319,11 +1319,8 @@ class Command:
         args = [param for param in self.get_params(ctx) if isinstance(param, Argument)]
 
         if any(arg.help is not None for arg in args):
-            records = [
-                arg.get_help_record(ctx) or (arg.make_metavar(ctx), "") for arg in args
-            ]
             with formatter.section(_("Positional arguments")):
-                formatter.write_dl(records)
+                formatter.write_dl([arg.get_help_record(ctx) for arg in args])
 
     def format_epilog(self, ctx: Context, formatter: HelpFormatter) -> None:
         """Writes the epilog into the formatter if it exists."""
@@ -3803,11 +3800,18 @@ class Argument(Parameter):
     def get_usage_pieces(self, ctx: Context) -> list[str]:
         return [self.make_metavar(ctx)]
 
-    def get_help_record(self, ctx: Context) -> tuple[str, str] | None:
-        if self.help is None:
-            return None
+    def get_help_record(self, ctx: Context) -> tuple[str, str]:
+        """Returns the argument's help row: its metavar and its help text.
 
-        return self.make_metavar(ctx), self.help
+        Unlike :meth:`Option.get_help_record`, this never returns ``None``. An
+        argument cannot be hidden, so an undocumented one still gets a row, with
+        an empty description.
+
+        .. versionchanged:: 8.5.1
+            Always returns a tuple. It used to return ``None`` when ``help`` was
+            not set.
+        """
+        return self.make_metavar(ctx), self.help or ""
 
     def get_error_hint(self, ctx: Context | None) -> str:
         if ctx is not None:

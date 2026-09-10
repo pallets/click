@@ -402,6 +402,21 @@ def test_argument_help_empty_string_lists_all(runner):
     ]
 
 
+@pytest.mark.parametrize(
+    ("help_text", "expected"),
+    [
+        pytest.param(None, ("SRC", ""), id="None"),
+        pytest.param("", ("SRC", ""), id="empty"),
+        pytest.param("Source path", ("SRC", "Source path"), id="documented"),
+    ],
+)
+def test_argument_get_help_record_never_none(help_text, expected):
+    """Every argument gets a row, even an undocumented one."""
+    arg = click.Argument(["src"], help=help_text)
+    ctx = click.Context(click.Command("cli"))
+    assert arg.get_help_record(ctx) == expected
+
+
 def test_argument_help_optional_metavar(runner):
     @click.command()
     @click.argument("name", required=False, default="", help="The name to print")
