@@ -13,6 +13,9 @@ Unreleased
   `type` callable does to a command-line value. {issue}`3036` {pr}`3808`
 - `path_type` narrows the converted value's type for `convert` and `prompt`.
   {issue}`3822` {pr}`3858`
+- {class}`Parameter` accepts a new `help` argument and {class}`Option` and {class}`Argument`
+  inherits it. {meth}`Parameter.to_info_dict` now reports `help` for every kind of parameter.
+  {pr}`3861`
 
 ## Version 8.5.0
 
