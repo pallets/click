@@ -1,3 +1,18 @@
+## Version 9.0.0
+
+Unreleased
+
+- Breaking: an automatically derived parameter name must be a valid Python
+  identifier, or `TypeError` is raised. {class}`Argument` and {class}`Option`
+  derive their name the same way and apply the same check. {pr}`3827`
+- Breaking: `expose_value=False` no longer bypass the name check for a parameter.
+  {pr}`3827`
+- Breaking: an {class}`Option` now normalizes its declaration written as a Python
+  identifier to determine the parameter name. {pr}`3827`
+- Breaking: neither kind builds a parameter without a declaration.
+  `click.argument(expose_value=False)` and `click.option(expose_value=False)`
+  used to name a parameter `""`. {pr}`3827`
+
 ## Version 8.5.1
 
 Unreleased

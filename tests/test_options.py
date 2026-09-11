@@ -3,6 +3,8 @@ import os
 import re
 import sys
 import tempfile
+import unicodedata
+import warnings
 from contextlib import nullcontext
 from typing import Literal
 
@@ -813,6 +815,131 @@ def test_toupper_envvar_prefix(runner):
     assert result.output == "foo\n"
 
 
+# CPython upper-cases every key of ``os.environ`` when ``os.name == "nt"``,
+# see ``os._createenviron``. ``CliRunner`` writes the ``env`` mapping through
+# ``os.environ`` and ``Parameter.resolve_envvar_value`` reads it back the same
+# way, so on Windows a variable answers to every spelling of its name and
+# elsewhere to exactly one. Both halves are asserted rather than skipped: the
+# difference is the behaviour being pinned. See pallets/click#2483.
+ENV_NAMES_ARE_CASE_INSENSITIVE = sys.platform == "win32"
+
+
+def test_auto_envvar_uses_the_transformed_name(runner):
+    """The auto envvar is built from the name, which the transform lower-cased."""
+
+    @click.command()
+    @click.option("--Foo-Bar")
+    def cmd(foo_bar):
+        click.echo(foo_bar)
+
+    result = runner.invoke(
+        cmd, [], auto_envvar_prefix="TEST", env={"TEST_FOO_BAR": "foo"}
+    )
+    assert not result.exception
+    assert result.output == "foo\n"
+
+
+def test_auto_envvar_ignores_decl_case(runner):
+    """The case written in the declaration never reaches the auto envvar."""
+
+    @click.command()
+    @click.option("--Foo-Bar")
+    def cmd(foo_bar):
+        click.echo(repr(foo_bar))
+
+    result = runner.invoke(
+        cmd, [], auto_envvar_prefix="TEST", env={"TEST_Foo_Bar": "foo"}
+    )
+    assert not result.exception
+    expect = "'foo'" if ENV_NAMES_ARE_CASE_INSENSITIVE else "None"
+    assert result.output == f"{expect}\n"
+
+
+def test_auto_envvar_prefix_is_upper_cased(runner):
+    """A lower-case prefix reaches an upper-case variable, and only that one."""
+
+    @click.command()
+    @click.option("--flag/--no-flag")
+    def cmd(flag):
+        click.echo(repr(flag))
+
+    result = runner.invoke(cmd, [], auto_envvar_prefix="yo", env={"YO_FLAG": "1"})
+    assert not result.exception
+    assert result.output == "True\n"
+
+    result = runner.invoke(cmd, [], auto_envvar_prefix="yo", env={"yo_FLAG": "1"})
+    assert not result.exception
+    assert result.output == f"{ENV_NAMES_ARE_CASE_INSENSITIVE}\n"
+
+
+def test_auto_envvar_flattens_name_case(runner):
+    """Declarations differing only by case name one parameter, and one envvar."""
+
+    @click.command()
+    @click.option("--foo-bar")
+    @click.option("--other", "Foo_Bar")
+    def cmd(**kwargs):
+        click.echo(repr(sorted(kwargs.items())))
+
+    assert [p.name for p in cmd.params if p.name] == ["foo_bar", "foo_bar"]
+
+    result = runner.invoke(
+        cmd, [], auto_envvar_prefix="TEST", env={"TEST_FOO_BAR": "foo"}
+    )
+    assert not result.exception
+    assert result.output == "[('foo_bar', 'foo')]\n"
+
+
+def test_auto_envvar_upper_can_change_length(runner):
+    """Deriving the envvar is not the inverse of deriving the name."""
+
+    @click.command()
+    @click.option("--ẞ")
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    result = runner.invoke(cmd, [], auto_envvar_prefix="TEST", env={"TEST_SS": "foo"})
+    assert not result.exception
+    assert result.output == "{'ß': 'foo'}\n"
+
+
+@pytest.mark.parametrize(
+    ("env", "expect"),
+    [
+        pytest.param({"ArG": "foo"}, "'foo'", id="exact"),
+        pytest.param({"ARG": "foo"}, "None", id="upper"),
+        pytest.param({"arg": "foo"}, "None", id="lower"),
+    ],
+)
+def test_explicit_envvar_case_sensitivity(runner, env, expect):
+    """An explicitly named envvar keeps the case it was registered with."""
+
+    @click.command()
+    @click.option("--arg", envvar="ArG")
+    def cmd(arg):
+        click.echo(repr(arg))
+
+    result = runner.invoke(cmd, [], env=env)
+    assert not result.exception
+    if ENV_NAMES_ARE_CASE_INSENSITIVE:
+        expect = "'foo'"
+    assert result.output == f"{expect}\n"
+
+
+@pytest.mark.parametrize("name", ("FlAg", "sUper"))
+def test_explicit_envvar_list_keeps_each_spelling(runner, name):
+    """Every name of an envvar list is matched with its own case."""
+
+    @click.command()
+    @click.option("--flag/--no-flag", envvar=["FlAg", "sUper"])
+    def cmd(flag):
+        click.echo(repr(flag))
+
+    result = runner.invoke(cmd, [], env={name: "1"})
+    assert not result.exception
+    assert result.output == "True\n"
+
+
 def test_nargs_envvar(runner):
     @click.command()
     @click.option("--arg", nargs=2)
@@ -1273,6 +1400,21 @@ def test_aliases_for_flags(runner):
         (["-c", "-a", "--cantaloupe", "-b", "--banana", "--apple"], "cantaloupe"),
         (["--from", "-f", "_from"], "_from"),
         (["--return", "-r", "_ret"], "_ret"),
+        # A name derived from an option string is lower-cased.
+        (["--Foo-Bar"], "foo_bar"),
+        (["--FOO-BAR", "-F"], "foo_bar"),
+        # An identifier declaration goes through the same transform.
+        (["--foo-bar", "-f", "explicit_name"], "explicit_name"),
+        (["--foo-bar", "-f", "Explicit_Name"], "explicit_name"),
+        # Underscores survive, and every dash past the prefix becomes one.
+        (["--foo__bar"], "foo__bar"),
+        (["--foo--bar"], "foo__bar"),
+        (["--_foo"], "_foo"),
+        (["--__foo"], "__foo"),
+        (["---foo"], "_foo"),
+        (["-_"], "_"),
+        # A digit is only refused in the leading position.
+        (["--foo-0"], "foo_0"),
     ],
 )
 def test_option_names(runner, option_args, expected):
@@ -1287,6 +1429,122 @@ def test_option_names(runner, option_args, expected):
         if form.startswith("-"):
             result = runner.invoke(cmd, [form])
             assert result.output == "True\n"
+
+
+def test_option_name_case_transform_can_collide(runner):
+    """Two declarations that differ can transform to one name, with no warning."""
+
+    @click.command()
+    @click.option("--\N{KELVIN SIGN}")
+    @click.option("--k")
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    assert [p.name for p in cmd.params] == ["k", "k"]
+
+    result = runner.invoke(cmd, ["--\N{KELVIN SIGN}", "kelvin", "--k", "ascii"])
+    assert not result.exception
+    assert result.output == "{'k': 'ascii'}\n"
+
+
+def test_option_name_case_variants_share_one_parameter(runner):
+    """Case variants of one option collapse onto a single parameter."""
+
+    @click.command()
+    @click.option("--foo-bar")
+    @click.option("--Foo-Bar")
+    @click.option("--FOO-BAR")
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    assert [p.name for p in cmd.params] == ["foo_bar"] * 3
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        result = runner.invoke(cmd, ["--help"], catch_exceptions=False)
+
+    assert not [w for w in caught if issubclass(w.category, UserWarning)]
+    for spelling in ("--foo-bar", "--Foo-Bar", "--FOO-BAR"):
+        assert spelling in result.output
+
+    for spelling, value in (("--foo-bar", "a"), ("--Foo-Bar", "b"), ("--FOO-BAR", "c")):
+        result = runner.invoke(cmd, [spelling, value])
+        assert not result.exception
+        assert result.output == f"{{'foo_bar': {value!r}}}\n"
+
+    # Sharing one slot, the last spelling on the command line wins.
+    result = runner.invoke(cmd, ["--foo-bar", "a", "--FOO-BAR", "c"])
+    assert result.output == "{'foo_bar': 'c'}\n"
+
+
+def test_option_name_keeps_its_normalization_form(runner):
+    """A composed and a decomposed declaration are two distinct parameters."""
+    decomposed = "cafe\N{COMBINING ACUTE ACCENT}"
+    composed = unicodedata.normalize("NFC", decomposed)
+
+    @click.command()
+    @click.option(f"--{composed}")
+    @click.option(f"--{decomposed}")
+    def cmd(**kwargs):
+        click.echo(repr(sorted(kwargs)))
+
+    assert [p.name for p in cmd.params] == [composed, decomposed]
+
+    result = runner.invoke(cmd, [])
+    assert not result.exception
+    assert result.output == f"['{decomposed}', '{composed}']\n"
+
+
+def test_option_name_must_be_an_identifier():
+    """A short option is the one refused shape an argument cannot be written as."""
+    with pytest.raises(TypeError, match="valid Python identifier"):
+        click.Option(["-0"])
+
+
+def test_option_prompt_needs_no_name_guard():
+    """``prompt=True`` is refused by naming first, so it needs no guard of its own."""
+    with pytest.raises(TypeError, match="valid Python identifier"):
+        click.Option(["--0-file"], expose_value=False, prompt=True)
+
+
+def test_option_name_check_applies_when_not_exposed():
+    with pytest.raises(TypeError, match="valid Python identifier"):
+        click.Option(["--0foo"], expose_value=False)
+
+
+def test_option_explicit_name_carries_a_refused_declaration(runner):
+    """An explicit name reaches a declaration the transform cannot name."""
+    seen = []
+
+    def record(ctx, param, value):
+        seen.append(value)
+
+    @click.command()
+    @click.option("--0foo", "zero_foo", expose_value=False, callback=record)
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    assert cmd.params[0].name == "zero_foo"
+
+    result = runner.invoke(cmd, ["--0foo", "value"])
+    assert not result.exception
+    assert result.output == "{}\n"
+    assert seen == ["value"]
+
+
+def test_option_name_may_be_a_python_keyword(runner):
+    """``str.isidentifier()`` accepts a keyword, so the check lets one through."""
+
+    @click.command()
+    @click.option("--from")
+    def cmd(**kwargs):
+        click.echo(repr(kwargs))
+
+    assert cmd.params[0].name == "from"
+
+    result = runner.invoke(cmd, ["--from", "here"])
+    assert not result.exception
+    assert result.output == "{'from': 'here'}\n"
 
 
 def test_flag_duplicate_names(runner):
