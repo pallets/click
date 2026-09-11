@@ -2,6 +2,10 @@
 
 Unreleased
 
+- A parameter name that is not a valid Python identifier is deprecated and
+  raises `TypeError` in Click 9.0. {pr}`3866`
+- An {class}`Option` name written as a Python identifier is deprecated when it
+  is not already lower-cased. {pr}`3866`
 - Fix `copy.deepcopy()` and `pickle` on a `Parameter`, `Option` or `Command`. {pr}`3805`
 - A `KeyboardInterrupt` arriving while `Command.main()` reports an abort or an error,
   or while it exits, no longer escapes as an unhandled traceback. The command still
