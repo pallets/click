@@ -680,6 +680,31 @@ def _nullpager(
     yield stream, color
 
 
+def _split_editor_command(editor: str) -> list[str]:
+    """Split an editor command string into an argv list."""
+    import shlex
+
+    if WIN and os.path.isfile(editor):
+        return [editor]
+
+    if WIN and "\\" in editor and "\\ " not in editor:
+        tokens = shlex.split(editor, posix=False)
+        clean = [
+            t[1:-1] if len(t) >= 2 and t[0] == t[-1] and t[0] in ('"', "'") else t
+            for t in tokens
+        ]
+        if not editor.startswith(('"', "'")):
+            for i in range(len(clean), 0, -1):
+                candidate = " ".join(clean[:i])
+                if os.path.isfile(candidate):
+                    clean = [candidate] + clean[i:]
+                    break
+        if clean and "\\" in clean[0]:
+            return clean
+
+    return shlex.split(editor)
+
+
 class Editor:
     def __init__(
         self,
@@ -712,7 +737,7 @@ class Editor:
 
     def edit_files(self, filenames: cabc.Iterable[str | os.PathLike[str]]) -> None:
         """Open files in the user's editor."""
-        import shlex
+        import shutil
         import subprocess
 
         editor = self.get_editor()
@@ -722,13 +747,20 @@ class Editor:
             environ = os.environ.copy()
             environ.update(self.env)
 
+        cmd_args = _split_editor_command(editor)
+        file_args = [os.fspath(f) for f in filenames]
+        extra_kwargs: dict[str, t.Any] = {}
+
+        if WIN and cmd_args:
+            executable = shutil.which(cmd_args[0])
+            if executable:
+                extra_kwargs["executable"] = executable
+
         try:
-            # Split in POSIX mode (the default) for the same reasons as
-            # in pager(): strips quotes from tokens and preserves quoted
-            # Windows paths.
             c = subprocess.Popen(
-                args=shlex.split(editor) + list(filenames),
+                args=cmd_args + file_args,
                 env=environ,
+                **extra_kwargs,
             )
             exit_code = c.wait()
             if exit_code != 0:

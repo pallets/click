@@ -580,6 +580,21 @@ def test_editor_path_normalization(editor_cmd, filenames, expected_args):
             ["C:\\Program Files\\Sublime Text 3\\sublime_text.exe", "--wait"],
             id="quoted path with flag",
         ),
+        pytest.param(
+            r"C:\Windows\System32\notepad.exe",
+            [r"C:\Windows\System32\notepad.exe"],
+            id="unquoted path with backslashes",
+        ),
+        pytest.param(
+            r"C:\tools\vim.exe -u NONE",
+            [r"C:\tools\vim.exe", "-u", "NONE"],
+            id="unquoted path with backslashes and args",
+        ),
+        pytest.param(
+            r"'C:\Program Files\Sublime Text 3\sublime_text.exe' --wait",
+            [r"C:\Program Files\Sublime Text 3\sublime_text.exe", "--wait"],
+            id="single-quoted path with flag",
+        ),
     ],
 )
 def test_editor_windows_path_normalization(editor_cmd, expected_cmd):
@@ -592,6 +607,39 @@ def test_editor_windows_path_normalization(editor_cmd, expected_cmd):
         args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
         assert args == expected_cmd + ["f.txt"]
         assert mock_popen.call_args[1].get("shell") is None
+
+
+@pytest.mark.skipif(not WIN, reason="Windows-specific editor executable resolution")
+def test_editor_windows_executable_resolution():
+    """Verify that on Windows, unqualified editor commands resolve executable."""
+    with patch("subprocess.Popen") as mock_popen:
+        mock_popen.return_value.wait.return_value = 0
+        Editor(editor="notepad").edit_files(["f.txt"])
+
+        mock_popen.assert_called_once()
+        executable = mock_popen.call_args[1].get("executable")
+        assert executable is not None
+        assert executable.lower().endswith("notepad.exe")
+
+
+@pytest.mark.skipif(not WIN, reason="Windows-specific real editor execution")
+def test_editor_windows_real_launch(tmp_path):
+    """Issue #3840: verify real editor launch on Windows with unquoted
+    backslash path."""
+    test_file = tmp_path / "test.txt"
+    test_file.write_text("initial\n", encoding="utf-8")
+
+    script_file = tmp_path / "editor.py"
+    script_file.write_text(
+        "import sys\n"
+        "with open(sys.argv[1], 'a', encoding='utf-8') as f:\n"
+        "    f.write('edited\\n')\n",
+        encoding="utf-8",
+    )
+
+    editor_cmd = f"{sys.executable} {script_file}"
+    click.edit(filename=test_file, editor=editor_cmd)
+    assert test_file.read_text(encoding="utf-8") == "initial\nedited\n"
 
 
 def test_editor_env_passed_through():
