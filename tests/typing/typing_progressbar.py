@@ -13,6 +13,13 @@ def test_length_is_int() -> None:
             assert_type(i, int)
 
 
+def test_length_with_item_show_func() -> None:
+    with progressbar(length=5, item_show_func=lambda x: str(x)) as bar:
+        assert_type(bar, ProgressBar[int])
+        for i in bar:
+            assert_type(i, int)
+
+
 def it() -> tuple[str, ...]:
     return ("hello", "world")
 

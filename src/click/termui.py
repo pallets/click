@@ -180,6 +180,12 @@ def prompt(
     """Prompts a user for input.  This is a convenience function that can
     be used to prompt a user for input later.
 
+    Note: Click's built-in prompt utilities are feature-complete and intended
+    for linear CLI input flows and basic type conversion. For complex terminal
+    input requirements—such as auto-completion, multi-line prompts, history
+    search, fuzzy selection, or full interactive forms—consider specialized
+    libraries like `Prompt Toolkit <https://python-prompt-toolkit.readthedocs.io/>`_.
+
     If the user aborts the input by sending an interrupt signal, this
     function will catch it and raise a :exc:`Abort` exception.
 
@@ -296,6 +302,9 @@ def confirm(
 ) -> bool:
     """Prompts for confirmation (yes/no question).
 
+    Note: Click's confirmation prompt is feature-complete for standard yes/no
+    confirmation flows during CLI execution.
+
     If the user aborts the input by sending a interrupt signal this
     function will catch it and raise a :exc:`Abort` exception.
 
@@ -371,6 +380,12 @@ def echo_via_pager(
     """This function takes a text and shows it via an environment specific
     pager on stdout.
 
+    Note: This utility is feature-complete for basic paging needs via standard
+    system pagers (such as ``less`` or ``more``). For advanced interactive
+    scrolling, custom syntax highlighting, or in-terminal pagination widgets,
+    consider libraries like `Rich <https://rich.readthedocs.io/>`_ or
+    `Prompt Toolkit <https://python-prompt-toolkit.readthedocs.io/>`_.
+
     .. versionchanged:: 3.0
        Added the `color` flag.
 
@@ -408,6 +423,7 @@ def progressbar(
     show_eta: bool = True,
     show_percent: bool | None = None,
     show_pos: bool = False,
+    item_show_func: t.Callable[[int | None], str | None] | None = None,
     fill_char: str = "#",
     empty_char: str = "-",
     bar_template: str = "%(label)s  [%(bar)s]  %(info)s",
@@ -421,7 +437,7 @@ def progressbar(
 
 @t.overload
 def progressbar(
-    iterable: cabc.Iterable[V] | None = None,
+    iterable: cabc.Iterable[V],
     length: int | None = None,
     label: str | None = None,
     hidden: bool = False,
@@ -465,6 +481,13 @@ def progressbar(
     progress bar to the given `file` (defaults to stdout) and will attempt
     to calculate remaining time and more.  By default, this progress bar
     will not be rendered if the file is not a terminal.
+
+    Note: Click's progress bar is feature-complete and intended for simple
+    command-line progress reporting without extra dependencies. For more
+    advanced requirements—such as multi-bar or nested progress bars,
+    asynchronous or concurrent task tracking, custom spinners, or rich
+    styling—consider specialized libraries such as `tqdm <https://tqdm.github.io/>`_
+    or `Rich <https://rich.readthedocs.io/>`_.
 
     The context manager creates the progress bar.  When the context
     manager is entered the progress bar is already created.  With every
@@ -657,6 +680,11 @@ def style(
     of the string a reset code is issued.  This can be prevented by
     passing ``reset=False``.
 
+    Note: Click's ANSI styling utilities are feature-complete and provide
+    basic terminal coloring without external dependencies. For advanced
+    terminal styling, formatted tables, markdown rendering, or full UI
+    layouts, consider `Rich <https://rich.readthedocs.io/>`_.
+
     Examples::
 
         click.echo(click.style('Hello World!', fg='green'))
@@ -779,7 +807,7 @@ def unstyle(text: str) -> str:
 
 def secho(
     message: t.Any | None = None,
-    file: t.IO[t.AnyStr] | None = None,
+    file: t.IO[t.Any] | None = None,
     nl: bool = True,
     err: bool = False,
     color: bool | None = None,
@@ -790,6 +818,10 @@ def secho(
 
         click.secho('Hello World!', fg='green')
         click.echo(click.style('Hello World!', fg='green'))
+
+    Like :func:`echo` and :func:`style`, this utility is feature-complete.
+    For advanced terminal output formatting and components, consider using
+    `Rich <https://rich.readthedocs.io/>`_.
 
     All keyword arguments are forwarded to the underlying functions
     depending on which one they go with.

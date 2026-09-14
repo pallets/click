@@ -6,10 +6,28 @@
 Besides the functionality that Click provides to interface with argument parsing and handling, it also provides a bunch
 of addon functionality that is useful for writing command line utilities.
 
+```{admonition} Scope & Ecosystem Alternatives
+:class: note
+
+Click's built-in utilities (such as {func}`echo`, {func}`style`, {func}`progressbar`, {func}`prompt`, and {func}`echo_via_pager`) are stable and **feature-complete**. They are intentionally designed to be lightweight, cross-platform helpers with zero external dependencies, covering standard command-line tasks out of the box.
+
+If your application has advanced requirements that go beyond these built-in helpers, the Python ecosystem provides dedicated libraries that integrate seamlessly with Click:
+
+- **Rich formatting, tables, syntax highlighting, and terminal UI:** [Rich](https://rich.readthedocs.io/) and [Textual](https://textual.textualize.io/)
+- **Advanced progress bars (multi-bar, nested, async/concurrent, custom spinners):** [tqdm](https://tqdm.github.io/) and [Rich Progress](https://rich.readthedocs.io/en/latest/progress.html)
+- **Interactive prompts, autocompletion, multi-line editing, and REPLs:** [Prompt Toolkit](https://python-prompt-toolkit.readthedocs.io/), [Questionary](https://questionary.readthedocs.io/), and [InquirerPy](https://inquirerpy.readthedocs.io/)
+```
+
 ## Printing to Stdout
 
 The most obvious helper is the {func}`echo` function, which in many ways works like the Python `print` statement or
 function. The main difference is that it works the same in many different terminal environments.
+
+```{admonition} Advanced Console Output
+:class: tip
+
+{func}`echo` is feature-complete for robust command-line output with safe encoding across platforms. If you require advanced terminal components—such as tables, markdown rendering, syntax-highlighted code blocks, or complex terminal layouts—consider [Rich](https://rich.readthedocs.io/).
+```
 
 Example:
 
@@ -56,6 +74,12 @@ The {func}`echo` function supports ANSI colors and styles. It will
 automatically strip ANSI color codes if the stream is not connected to a
 terminal.
 
+```{admonition} Advanced Styling
+:class: tip
+
+Click's ANSI styling utilities ({func}`style` and {func}`secho`) are feature-complete and provide lightweight styling without external dependencies. If you require advanced styling—such as true-color themes, formatted tables, markdown, or styled logging—consider using [Rich](https://rich.readthedocs.io/).
+```
+
 ```{admonition} Older Windows Support
 :class: note
 
@@ -88,6 +112,12 @@ click.secho('ATTENTION', blink=True, bold=True)
 In some situations, you might want to show long texts on the terminal and let a user scroll through it. This can be
 achieved by using the {func}`echo_via_pager` function which works similarly to the {func}`echo` function, but always
 writes to stdout and, if possible, through a pager.
+
+```{admonition} Advanced Paging
+:class: tip
+
+{func}`echo_via_pager` provides lightweight integration with the system pager (such as `less` or `more`) and is feature-complete for standard text paging. If your application requires an interactive in-terminal pager with syntax highlighting, search, or status bars, consider [Rich](https://rich.readthedocs.io/) or [Prompt Toolkit](https://python-prompt-toolkit.readthedocs.io/).
+```
 
 Example:
 
@@ -322,7 +352,12 @@ Sometimes, you have command line scripts that need to process a lot of data, but
 progress about how long that will take. Click supports simple progress bar rendering for that through the
 {func}`progressbar` function.
 
-```{note} If you find that you have requirements beyond what Click's progress bar supports, try using [tqdm](https://tqdm.github.io/).
+```{admonition} Scope & Advanced Progress Bars
+:class: note
+
+Click's progress bar is stable and **feature-complete**, tailored for straightforward, linear command-line progress indication without adding external dependencies.
+
+If your use case requires more advanced capabilities—such as multiple concurrent or nested progress bars, asynchronous iteration (`asyncio`), custom refresh rates, dynamic spinners, or rich terminal styling—consider specialized libraries such as [tqdm](https://tqdm.github.io/) or [Rich Progress](https://rich.readthedocs.io/en/latest/progress.html).
 ```
 
 The basic usage is very simple: the idea is that you have an iterable that you want to operate on. For each item in the

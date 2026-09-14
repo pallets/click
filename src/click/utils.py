@@ -270,6 +270,11 @@ def echo(
         like an interactive terminal.
     -   Always flushes the output.
 
+    Note: Click's :func:`echo` is feature-complete and intended as a reliable,
+    dependency-free terminal printing helper. For advanced console formatting,
+    such as tables, syntax-highlighted code, markdown rendering, or full UI
+    layouts, consider using `Rich <https://rich.readthedocs.io/>`_.
+
     :param message: The string or bytes to output. Other objects are
         converted to strings.
     :param file: The file to write to. Defaults to ``stdout``.

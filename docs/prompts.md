@@ -9,6 +9,14 @@ the second is to ask for prompts at a later point independently.
 This can be accomplished with the {func}`prompt` function, which asks for valid input according to a type, or the
 {func}`confirm` function, which asks for confirmation (yes/no).
 
+```{admonition} Scope & Ecosystem Alternatives
+:class: note
+
+Click's prompting utilities ({func}`prompt` and {func}`confirm`) are stable and **feature-complete**. They are designed for linear command-line question-and-answer prompts with basic validation and type conversion, without requiring any external dependencies.
+
+For advanced interactive user interfaces—such as autocomplete menus, multi-line editing, history searching, checkbox lists, or full terminal forms—consider dedicated libraries like [Prompt Toolkit](https://python-prompt-toolkit.readthedocs.io/), [Questionary](https://questionary.readthedocs.io/), or [InquirerPy](https://inquirerpy.readthedocs.io/).
+```
+
 ```{contents}
 ---
 depth: 2
