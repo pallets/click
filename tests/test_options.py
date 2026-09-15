@@ -442,6 +442,22 @@ def test_empty_envvar(runner, env_key):
     assert result.output == "mypath: None\n"
 
 
+def test_envvar_list_uses_first_non_empty(runner):
+    """With several envvars, the first *non-empty* one wins, not the first set one."""
+
+    @click.command()
+    @click.option("--name", envvar=["FIRST_NAME", "SECOND_NAME"])
+    def cli(name):
+        click.echo(f"name: {name}")
+
+    result = runner.invoke(cli, env={"FIRST_NAME": "", "SECOND_NAME": "second"})
+    assert result.exception is None
+    assert result.output == "name: second\n"
+
+    result = runner.invoke(cli, env={"FIRST_NAME": "first", "SECOND_NAME": "second"})
+    assert result.output == "name: first\n"
+
+
 def test_multiple_envvar(runner):
     @click.command()
     @click.option("--arg", multiple=True)

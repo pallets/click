@@ -218,7 +218,7 @@ def test_group_arg_behavior(runner):
     assert result.output.splitlines() == ["cli:foo", "a"]
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(strict=True)
 def test_group_chaining(runner):
     @click.group(chain=True)
     def cli():
