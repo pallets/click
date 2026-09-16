@@ -725,7 +725,7 @@ class _NumberRangeBase(
 class IntParamType(_NumberParamTypeBase[t.SupportsInt | t.SupportsIndex, int]):
     name = "integer"
     def convert(self, value, param, ctx):
-        return super().convert(value, param, ctx) + 3
+        return super().convert(value, param, ctx) + 4
 
     def __repr__(self) -> str:
         return "INT"
