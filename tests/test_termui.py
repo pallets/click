@@ -556,7 +556,11 @@ def test_edit_pathlib(runner, tmp_path, use_iterable):
     ],
 )
 def test_editor_path_normalization(editor_cmd, filenames, expected_args):
-    with patch("subprocess.Popen") as mock_popen:
+    # Patch shutil.which so path resolution is a no-op; this test focuses on
+    # argument splitting, not the which() behaviour tested separately below.
+    with patch("subprocess.Popen") as mock_popen, patch(
+        "shutil.which", return_value=None
+    ):
         mock_popen.return_value.wait.return_value = 0
         Editor(editor=editor_cmd).edit_files(filenames)
 
@@ -564,6 +568,39 @@ def test_editor_path_normalization(editor_cmd, filenames, expected_args):
         args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
         assert args == expected_args
         assert mock_popen.call_args[1].get("shell") is None
+
+
+def test_editor_resolves_command_via_which():
+    """edit_files() resolves the editor name to its absolute path via shutil.which.
+
+    On Windows 11 some commands (e.g. the Store-app notepad stub) only launch
+    correctly when invoked via their absolute path.
+
+    Regression test for https://github.com/pallets/click/issues/3840.
+    """
+    with patch("subprocess.Popen") as mock_popen, patch(
+        "shutil.which", return_value="/usr/bin/myeditor"
+    ) as mock_which:
+        mock_popen.return_value.wait.return_value = 0
+        Editor(editor="myeditor --wait").edit_files(["f.txt"])
+
+        mock_which.assert_called_once_with("myeditor")
+        args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
+        # First token must be the resolved absolute path.
+        assert args[0] == "/usr/bin/myeditor"
+        assert args[1:] == ["--wait", "f.txt"]
+
+
+def test_editor_keeps_command_when_which_returns_none():
+    """When shutil.which() cannot resolve the editor, the original token is used."""
+    with patch("subprocess.Popen") as mock_popen, patch(
+        "shutil.which", return_value=None
+    ):
+        mock_popen.return_value.wait.return_value = 0
+        Editor(editor="myeditor").edit_files(["f.txt"])
+
+        args = mock_popen.call_args[1].get("args") or mock_popen.call_args[0][0]
+        assert args == ["myeditor", "f.txt"]
 
 
 @pytest.mark.skipif(not WIN, reason="Windows-specific editor paths")

@@ -723,11 +723,23 @@ class Editor:
             environ.update(self.env)
 
         try:
+            import shutil
+
             # Split in POSIX mode (the default) for the same reasons as
             # in pager(): strips quotes from tokens and preserves quoted
             # Windows paths.
+            editor_parts = shlex.split(editor)
+
+            # Resolve the editor command to its full path.  subprocess docs
+            # recommend this on every platform; on Windows 11 some commands
+            # (e.g. the Store-app notepad stub) only work when launched via
+            # their absolute path rather than the bare name.
+            resolved = shutil.which(editor_parts[0])
+            if resolved is not None:
+                editor_parts[0] = resolved
+
             c = subprocess.Popen(
-                args=shlex.split(editor) + list(filenames),
+                args=editor_parts + list(filenames),
                 env=environ,
             )
             exit_code = c.wait()
