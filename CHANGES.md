@@ -9,8 +9,21 @@ Unreleased
 - Add {meth}`Option.get_help_spec`, which returns the option's left help
   column even when the option is hidden. {meth}`Option.get_help_record` still
   returns `None` for hidden options, so help screens are unchanged. {pr}`3821`
+- The `Positional arguments` help section lists every argument of the command,
+  not only the documented ones. An argument with no `help` gets an empty
+  description, the same way an option with no `help` does. {pr}`3860`
+- {meth}`Argument.get_help_record` always returns a tuple. It used to return
+  `None` for an argument with no `help`. {pr}`3860`
 - Document which types are inferred from `default`, and what an unrecognized
   `type` callable does to a command-line value. {issue}`3036` {pr}`3808`
+- `path_type` narrows the converted value's type for `convert` and `prompt`.
+  {issue}`3822` {pr}`3858`
+- {class}`Parameter` accepts a new `help` argument and {class}`Option` and {class}`Argument`
+  inherits it. {meth}`Parameter.to_info_dict` now reports `help` for every kind of parameter.
+  {pr}`3861`
+- A command's short help no longer stops at an abbreviation such as `vs.` or `e.g.`
+  inside the first sentence. A period ends the sentence only when it closes the text
+  or the next word does not start in lowercase. {pr}`3865`
 
 ## Version 8.5.0
 

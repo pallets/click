@@ -64,52 +64,40 @@ def _make_default_short_help(help: str, max_length: int = 45) -> str:
 
     :meta private:
     """
-    # Consider only the first paragraph.
-    paragraph_end = help.find("\n\n")
+    # Consider only the first paragraph and collapse newlines, tabs and spaces.
+    words = help.partition("\n\n")[0].split()
 
-    if paragraph_end != -1:
-        help = help[:paragraph_end]
-
-    # Collapse newlines, tabs, and spaces.
-    words = help.split()
+    # The first paragraph started with a "no rewrap" marker, ignore it.
+    if words and words[0] == "\b":
+        words = words[1:]
 
     if not words:
         return ""
 
-    # The first paragraph started with a "no rewrap" marker, ignore it.
-    if words[0] == "\b":
-        words = words[1:]
-
-    total_length = 0
     last_index = len(words) - 1
 
+    # A period ends a sentence when it closes the text, or when the next word
+    # does not start in lowercase. A lowercase word continues the sentence, so
+    # the period belongs to an abbreviation such as "vs.".
     for i, word in enumerate(words):
-        total_length += len(word) + (i > 0)
-
-        if total_length > max_length:  # too long, truncate
+        if word.endswith(".") and (i == last_index or not words[i + 1][0].islower()):
+            words = words[: i + 1]
             break
 
-        if word[-1] == ".":  # sentence end, truncate without "..."
-            return " ".join(words[: i + 1])
+    text = " ".join(words)
 
-        if total_length == max_length and i != last_index:
-            break  # not at sentence end, truncate with "..."
-    else:
-        return " ".join(words)  # no truncation needed
+    if len(text) <= max_length:
+        return text
 
-    # Account for the length of the suffix.
-    total_length += len("...")
+    # The suffix alone does not fit, and shorten() rejects such a width.
+    if max_length < len("..."):
+        return "..."
 
-    # remove words until the length is short enough
-    while i > 0:
-        total_length -= len(words[i]) + (i > 0)
+    # Imported late to keep the import footprint small.
+    import textwrap
 
-        if total_length <= max_length:
-            break
-
-        i -= 1
-
-    return " ".join(words[:i]) + "..."
+    # Do not split hyphenated words.
+    return textwrap.shorten(text, max_length, placeholder="...", break_on_hyphens=False)
 
 
 class _LazyFile:

@@ -118,6 +118,10 @@ the `Positional arguments` section of the help page. You can still document
 arguments in the command docstring, especially when you want to describe them
 in the main help text by name.
 
+The section shows up as soon as one argument of the command has a `help`. It
+then lists every argument, so it always matches the usage line. Arguments with
+no `help` are listed with an empty description.
+
 A brief example:
 
 ```{eval-rst}

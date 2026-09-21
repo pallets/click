@@ -4,6 +4,7 @@ import platform
 import subprocess
 import sys
 import tempfile
+import typing as t
 
 import pytest
 
@@ -183,3 +184,7 @@ def test_path_type(runner, cls, expect):
     result = runner.invoke(cli, ["a/b/c.txt"], standalone_mode=False)
     assert result.exception is None
     assert result.return_value == expect
+
+
+def test_path_converted_type_parameter_at_runtime():
+    assert t.get_args(click.Path[pathlib.Path]) == (pathlib.Path,)
