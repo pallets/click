@@ -12,7 +12,8 @@ Arguments are:
   can take an arbitrary number of inputs
 * Can take an optional `help` string shown in the `Positional arguments`
   section of the help page, or be {ref}`documented in the command docstring
-  <documenting-arguments>`.
+  <documenting-arguments>`. One argument with a `help` makes the section list
+  all the arguments of the command.
 
 Useful and often used kwargs are:
 
