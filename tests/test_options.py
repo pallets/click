@@ -17,6 +17,7 @@ import click
 from click import Option
 from click import UNPROCESSED
 from click._utils import UNSET
+from click.parser import _split_opt
 from click.testing import CliRunner
 
 
@@ -98,6 +99,34 @@ def test_help_spec(param_decls, kwargs, hidden, expected):
         assert opt.get_help_record(ctx)[0] == expected
 
 
+@pytest.mark.parametrize(
+    ("param_decls", "expected_spec", "expected_name"),
+    [
+        (["-t", "--times"], "--times", "times"),
+        (["--times", "-t"], "--times", "times"),
+        (["-t"], "-t", "t"),
+        (["-t", "--times", "--repeat"], "--times", "times"),
+        (["--color/--no-color"], "--color", "color"),
+        (["/debug;/no-debug"], "/debug", "debug"),
+    ],
+)
+def test_spec(param_decls, expected_spec, expected_name):
+    """The spec is the declaration the name was derived from, so the longest
+    prefix wins over declaration order.
+    """
+    opt = click.Option(param_decls)
+    assert opt.spec == expected_spec
+    assert opt.name == expected_name
+    assert _split_opt(opt.spec)[1].replace("-", "_").lower() == opt.name
+
+
+def test_spec_with_explicit_name():
+    """An explicit name declaration leaves the spec to the remaining flags."""
+    opt = click.Option(["--times", "repeat_count"])
+    assert opt.spec == "--times"
+    assert opt.name == "repeat_count"
+
+
 @pytest.mark.parametrize("deprecated", [True, "USE B INSTEAD"])
 def test_deprecated_warning(runner, deprecated):
     @click.command()
@@ -114,7 +143,7 @@ def test_deprecated_warning(runner, deprecated):
 
     result = runner.invoke(cli, ["--my-option", "hello"])
     assert result.exit_code == 0, result.output
-    assert "option 'my_option' is deprecated" in result.output
+    assert "option '--my-option' is deprecated" in result.output
 
     if isinstance(deprecated, str):
         assert deprecated in result.output
