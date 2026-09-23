@@ -18,6 +18,7 @@ from functools import update_wrapper
 from gettext import gettext as _
 from gettext import ngettext
 from itertools import repeat
+from types import FrameType
 from types import TracebackType
 
 from . import types
@@ -102,6 +103,26 @@ def _check_nested_chain(
 def _echo_aborted() -> None:
     """Write the final abort message to standard error."""
     echo(_("Aborted!"), file=sys.stderr)
+
+
+def _outside_click_stacklevel() -> int:
+    """Depth of the first stack frame outside Click.
+
+    .. versionadded:: 8.6.0
+    """
+    frame: FrameType | None = sys._getframe(1)
+    level = 1
+
+    while frame is not None:
+        module = frame.f_globals.get("__name__", "")
+
+        if module != "click" and not module.startswith("click."):
+            return level
+
+        frame = frame.f_back
+        level += 1
+
+    return level
 
 
 def _format_deprecated_label(deprecated: bool | str) -> str:
@@ -2458,6 +2479,43 @@ class Parameter(ABC):
         self, decls: cabc.Sequence[str], expose_value: bool
     ) -> tuple[str, list[str], list[str]]: ...
 
+    def _check_name_is_usable(self, name: str, decls: cabc.Sequence[str]) -> None:
+        """Warn about a name Click 9.0 will refuse.
+
+        A name is refused for one of two reasons, and never for both: it is not
+        an identifier (``0-file``), or it is a keyword (``from``).
+        ``str.isidentifier`` accepts a keyword, so ``--from`` names a parameter
+        ``from`` today. No callback can declare that, which leaves the value
+        reachable through ``**kwargs`` alone.
+
+        Soft keywords such as ``match`` and ``type`` are contextual and name a
+        parameter fine, so :func:`keyword.iskeyword` passes them.
+
+        Both imports are local because neither :mod:`keyword` nor
+        :mod:`warnings` is on the allow-list ``tests/test_imports.py`` holds
+        Click's import footprint to.
+
+        .. versionadded:: 8.6.0
+        """
+        import keyword
+
+        if keyword.iskeyword(name):
+            reason = "which is a Python keyword"
+        elif not name.isidentifier():
+            reason = "which is not a valid Python identifier"
+        else:
+            return
+
+        import warnings
+
+        warnings.warn(
+            f"{self.param_type_name.capitalize()} {list(decls)!r} uses {name!r}"
+            f" as its name, {reason}. This is deprecated and will raise a"
+            " TypeError in Click 9.0.",
+            DeprecationWarning,
+            stacklevel=_outside_click_stacklevel(),
+        )
+
     @property
     def human_readable_name(self) -> str:
         """Returns the human readable name of this parameter.  This is the
@@ -3274,19 +3332,40 @@ class Option(Parameter):
             result += f" (env var: '{self.envvar}')"
         return result
 
+    def _check_name_is_normalized(self, name: str, decls: cabc.Sequence[str]) -> None:
+        """Warn about an explicit name Click 9.0 will spell differently.
+
+        .. versionadded:: 8.6.0
+        """
+        normalized = name.lower()
+
+        if normalized == name:
+            return
+
+        import warnings
+
+        warnings.warn(
+            f"Option {list(decls)!r} uses {name!r} as its name. Click 9.0"
+            f" lower cases an explicit name like any other declaration, naming"
+            f" {normalized!r} instead.",
+            DeprecationWarning,
+            stacklevel=_outside_click_stacklevel(),
+        )
+
     def _parse_decls(
         self, decls: cabc.Sequence[str], expose_value: bool
     ) -> tuple[str, list[str], list[str]]:
         opts = []
         secondary_opts = []
         name = None
+        explicit_name = None
         possible_names = []
 
         for decl in decls:
             if decl.isidentifier():
                 if name is not None:
                     raise TypeError(_("Name '{name}' defined twice").format(name=name))
-                name = decl
+                name = explicit_name = decl
             else:
                 split_char = ";" if decl[:1] == "/" else "/"
                 if split_char in decl:
@@ -3312,12 +3391,12 @@ class Option(Parameter):
         if name is None and possible_names:
             possible_names.sort(key=lambda x: -len(x[0]))  # group long options first
             name = possible_names[0][1].replace("-", "_").lower()
-            if not name.isidentifier():
-                name = None
 
-        if name is None:
+        if name is None or not name.isidentifier():
             if not expose_value:
+                self._check_name_is_usable(name or "", decls)
                 return "", opts, secondary_opts
+
             raise TypeError(
                 _(
                     "Could not determine name for option with declarations {decls!r}"
@@ -3332,6 +3411,11 @@ class Option(Parameter):
                     " you mean to pass '--{name}'?"
                 ).format(name=name)
             )
+
+        if explicit_name is not None:
+            self._check_name_is_normalized(explicit_name, decls)
+
+        self._check_name_is_usable(name, decls)
 
         return name, opts, secondary_opts
 
@@ -3780,6 +3864,7 @@ class Argument(Parameter):
     ) -> tuple[str, list[str], list[str]]:
         if not decls:
             if not expose_value:
+                self._check_name_is_usable("", decls)
                 return "", [], []
             raise TypeError("Argument is marked as exposed, but does not have a name.")
         if len(decls) == 1:
@@ -3792,6 +3877,7 @@ class Argument(Parameter):
                     " {length}: {decls}."
                 ).format(length=len(decls), decls=decls)
             )
+        self._check_name_is_usable(name, decls)
         return name, [arg], []
 
     def get_usage_pieces(self, ctx: Context) -> list[str]:
