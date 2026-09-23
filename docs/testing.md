@@ -222,6 +222,10 @@ Prompts will be emulated so they write the input data to
 the output stream as well. If hidden input is expected then this
 does not happen.
 
+Set `echo_stdin=True` on the runner to echo every read from stdin to the
+output stream. {attr}`CliRunner.echo_stdin_class` names the class that wraps
+stdin for this, so a subclass can set it to change what the echo writes.
+
 ## Capture modes
 
 {class}`CliRunner` captures output by replacing `sys.stdout` and `sys.stderr`
