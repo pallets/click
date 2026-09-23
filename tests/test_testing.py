@@ -89,6 +89,50 @@ def test_echo_stdin_prompts():
     assert result.output == "Foo: one\nBar: two\nfoo=one, bar=two\n"
 
 
+@pytest.mark.parametrize(
+    ("data", "echo", "read"),
+    [
+        pytest.param("bar\n\x04", "bar\n^D\n", b"bar\n", id="eot-ends-input"),
+        pytest.param("bar\n\x1a", "bar\n^Z\n", b"bar\n", id="sub-ends-input"),
+        pytest.param("\x04", "^D\n", b"", id="eot-alone"),
+        pytest.param("bar\x04baz\n", "bar^D\nbaz\n", b"barbaz\n", id="eot-mid-chunk"),
+        pytest.param("bar\n", "bar\n", b"bar\n", id="no-control-byte"),
+    ],
+)
+def test_echo_stdin_control_bytes(data, echo, read):
+    """A control byte of `<stdin>` is echoed to `<stdout>` in caret notation and
+    removed from the command.
+    """
+
+    @click.command()
+    def test():
+        click.echo(repr(_get_binary_stream("stdin").read()))
+
+    result = CliRunner(echo_stdin=True).invoke(test, input=data)
+    assert not result.exception
+    assert result.output == f"{echo}{read!r}\n"
+
+
+@pytest.mark.parametrize(
+    "read_lines",
+    [
+        pytest.param(lambda: list(sys.stdin), id="text"),
+        pytest.param(lambda: list(_get_binary_stream("stdin")), id="binary"),
+        pytest.param(lambda: _get_binary_stream("stdin").readlines(), id="readlines"),
+    ],
+)
+def test_echo_stdin_control_byte_is_not_a_line(read_lines):
+    """A control byte that ends `<stdin>` is not handed over as a last line."""
+
+    @click.command()
+    def test():
+        click.echo(len(read_lines()))
+
+    result = CliRunner(echo_stdin=True).invoke(test, input="bar\nbaz\n\x04")
+    assert not result.exception
+    assert result.output == "bar\nbaz\n^D\n2\n"
+
+
 def test_runner_with_stream():
     @click.command()
     def test():
