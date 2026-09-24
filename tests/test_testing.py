@@ -10,6 +10,7 @@ import pytest
 import click
 from click.exceptions import ClickException
 from click.testing import CliRunner
+from click.testing import EchoingStdin
 from click.utils import _get_binary_stream
 
 
@@ -87,6 +88,41 @@ def test_echo_stdin_prompts():
     result = runner.invoke(test_multiple_prompts, input="one\ntwo\n")
     assert not result.exception
     assert result.output == "Foo: one\nBar: two\nfoo=one, bar=two\n"
+
+
+def test_echo_stdin_class():
+    """A subclass renders the echoed input its own way.
+
+    ``pallets-sphinx-themes`` needs this for the Click docs: it consumes the
+    EOT character that ends the input and writes a visible ``^D`` instead.
+    """
+
+    class EofEchoingStdin(EchoingStdin):
+        def _echo(self, rv: bytes) -> bytes:
+            eof = rv.endswith(b"\x04")
+
+            if eof:
+                rv = rv[:-1]
+
+            super()._echo(rv)
+
+            if eof and not self._paused:
+                self._output.write(b"^D\n")
+
+            return rv
+
+    class EofRunner(CliRunner):
+        echo_stdin_class = EofEchoingStdin
+
+    @click.command()
+    def test():
+        _get_binary_stream("stdin").read()
+
+    runner = EofRunner(echo_stdin=True)
+    result = runner.invoke(test, input="bar\n\x04")
+    assert not result.exception
+    # The command writes nothing: the whole output comes from the echo.
+    assert result.output == "bar\n^D\n"
 
 
 def test_runner_with_stream():

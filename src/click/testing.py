@@ -357,6 +357,16 @@ class CliRunner:
     catch_exceptions: bool
     capture: CaptureMode
 
+    echo_stdin_class: type[EchoingStdin] = EchoingStdin
+    """The class wrapping `<stdin>` when ``echo_stdin`` is enabled.
+
+    :meth:`isolation` calls it as ``echo_stdin_class(input, output)``, where
+    both arguments are binary streams. Set it on a subclass to change how the
+    input is echoed, instead of patching the object :meth:`isolation` built.
+
+    .. versionadded:: 8.5.1
+    """
+
     def __init__(
         self,
         charset: str = "utf-8",
@@ -444,7 +454,7 @@ class CliRunner:
 
         if self.echo_stdin:
             bytes_input = echo_input = t.cast(
-                t.BinaryIO, EchoingStdin(bytes_input, stream_mixer.stdout)
+                t.BinaryIO, self.echo_stdin_class(bytes_input, stream_mixer.stdout)
             )
 
         sys.stdin = text_input = _NamedTextIOWrapper(

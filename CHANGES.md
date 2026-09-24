@@ -24,6 +24,9 @@ Unreleased
 - A command's short help no longer stops at an abbreviation such as `vs.` or `e.g.`
   inside the first sentence. A period ends the sentence only when it closes the text
   or the next word does not start in lowercase. {pr}`3865`
+- Add {attr}`CliRunner.echo_stdin_class`, the class {meth}`CliRunner.isolation`
+  instantiates to echo `<stdin>`. Set it on a subclass to change the echoing.
+  {pr}`3878`
 
 ## Version 8.5.0
 
