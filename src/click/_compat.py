@@ -533,6 +533,34 @@ else:
         return None
 
 
+def _split_command_line(cmd: str) -> list[str]:
+    """Split a command line string into an ``argv`` list.
+
+    Each platform has its own rules, and the rules disagree about a backslash.
+    POSIX uses :func:`shlex.split`, where a backslash escapes the character
+    after it. Windows uses ``CommandLineToArgvW``, where a backslash is a
+    normal character. The Windows rule keeps the path ``C:\\Users\\click`` as
+    one token. The POSIX rule removes the backslashes and gives
+    ``C:Usersclick``.
+
+    Click uses this function for the command lines that a user sets in the
+    environment, such as ``PAGER`` and ``EDITOR``.
+
+    :param cmd: The command line to split.
+    :raises ValueError: On POSIX only, if a quote has no matching close quote.
+        Windows does not report this error. It reads the rest of the string as
+        one token.
+    """
+    if sys.platform == "win32":
+        from ._winconsole import _split_windows_command_line
+
+        return _split_windows_command_line(cmd)
+
+    import shlex
+
+    return shlex.split(cmd)
+
+
 def term_len(x: str) -> int:
     return len(strip_ansi(x))
 

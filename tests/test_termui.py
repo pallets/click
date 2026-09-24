@@ -4,7 +4,6 @@ import io
 import os
 import pathlib
 import platform
-import shlex
 import shutil
 import subprocess
 import sys
@@ -16,6 +15,7 @@ import pytest
 
 import click
 import click._termui_impl
+from click._compat import _split_command_line
 from click._compat import WIN
 from click._termui_impl import Editor
 from click._utils import UNSET
@@ -461,6 +461,7 @@ def test_edit_pathlib(runner, tmp_path, use_iterable):
     assert file_path.read_text(encoding="UTF-8") == "aTest\nbTest\n"
 
 
+@pytest.mark.skipif(WIN, reason="Uses the POSIX splitting rules.")
 @pytest.mark.parametrize(
     ("editor_cmd", "filenames", "expected_args"),
     [
@@ -553,9 +554,23 @@ def test_edit_pathlib(runner, tmp_path, use_iterable):
             ["editor", "file'name.txt"],
             id="filename with single quote",
         ),
+        # Issue #1760: a filename holding paired quotes and spaces stays one
+        # argument. Only the editor command is split; filenames are appended.
+        pytest.param(
+            "editor",
+            ['foo "bar baz"'],
+            ["editor", 'foo "bar baz"'],
+            id="filename with paired quotes and spaces",
+        ),
     ],
 )
 def test_editor_path_normalization(editor_cmd, filenames, expected_args):
+    """Verify the argv that Click builds from a POSIX ``EDITOR`` value.
+
+    Click splits ``EDITOR`` with the rules of the platform that set it. On
+    Windows a backslash is a normal character and not an escape, so the
+    Windows cases are in the next table.
+    """
     with patch("subprocess.Popen") as mock_popen:
         mock_popen.return_value.wait.return_value = 0
         Editor(editor=editor_cmd).edit_files(filenames)
@@ -579,6 +594,26 @@ def test_editor_path_normalization(editor_cmd, filenames, expected_args):
             '"C:\\Program Files\\Sublime Text 3\\sublime_text.exe" --wait',
             ["C:\\Program Files\\Sublime Text 3\\sublime_text.exe", "--wait"],
             id="quoted path with flag",
+        ),
+        # A Windows path needs no quotes when it has no space, and its
+        # backslashes stay. POSIX splitting removed them and gave
+        # ``C:Windowsnotepad.exe``.
+        pytest.param(
+            "C:\\Windows\\notepad.exe",
+            ["C:\\Windows\\notepad.exe"],
+            id="unquoted path with backslashes",
+        ),
+        pytest.param(
+            "C:\\tools\\vim\\vim.exe -u NONE",
+            ["C:\\tools\\vim\\vim.exe", "-u", "NONE"],
+            id="unquoted path with flags",
+        ),
+        # Windows does not report an unclosed quote. The quote runs to the end
+        # of the string. On POSIX the same value raises ValueError.
+        pytest.param(
+            '"C:\\Program Files\\Vim\\vim.exe',
+            ["C:\\Program Files\\Vim\\vim.exe"],
+            id="unclosed quote runs to end of string",
         ),
     ],
 )
@@ -617,6 +652,7 @@ def test_editor_nonexistent_exception():
             Editor(editor="nonexistent").edit_files(["f.txt"])
 
 
+@pytest.mark.skipif(WIN, reason="Uses the POSIX splitting rules.")
 @pytest.mark.parametrize(
     ("pager_env", "expected_parts"),
     [
@@ -654,8 +690,9 @@ def test_editor_nonexistent_exception():
             ["/usr/bin/my pager"],
             id="escaped space in unix path",
         ),
-        # PR #1477: POSIX mode (the default) eats unquoted backslashes.
-        # On Windows, users must quote paths that contain backslashes.
+        # PR #1477: POSIX splitting removes a backslash that is not inside
+        # quotes, so a Windows path needs quotes to keep them. Windows uses its
+        # own rules, which keep the backslashes. See the next test.
         pytest.param(
             "C:\\path\\to\\exe /test other\\path",
             ["C:pathtoexe", "/test", "otherpath"],
@@ -663,14 +700,65 @@ def test_editor_nonexistent_exception():
         ),
     ],
 )
-def test_pager_shlex_split(pager_env, expected_parts):
-    """Verify shlex.split produces the expected argv for PAGER values.
+def test_pager_command_line_split(pager_env, expected_parts):
+    """Verify the argv that Click builds from a POSIX ``PAGER`` value.
 
     Tests the splitting logic used by :func:`click._termui_impl.pager` to
     turn the ``PAGER`` environment variable into an ``argv`` list. See
     issue #1026, PR #1477, PR #1543, PR #2775.
     """
-    assert shlex.split(pager_env) == expected_parts
+    assert _split_command_line(pager_env) == expected_parts
+
+
+@pytest.mark.skipif(not WIN, reason="Uses the Windows splitting rules.")
+@pytest.mark.parametrize(
+    ("pager_env", "expected_parts"),
+    [
+        # This list is empty because Click adds the program name ``sentinel``
+        # first. Without it, CommandLineToArgvW returns the path of the running
+        # executable for an empty command line.
+        pytest.param("", [], id="empty string"),
+        pytest.param("more", ["more"], id="simple command"),
+        pytest.param("less -FRSX", ["less", "-FRSX"], id="command with flags"),
+        # The fix: an unquoted Windows path keeps its backslashes. POSIX
+        # splitting gave ``C:Toolsless.exe`` instead.
+        pytest.param(
+            "C:\\Tools\\less.exe -R",
+            ["C:\\Tools\\less.exe", "-R"],
+            id="unquoted path with backslashes",
+        ),
+        # A path with a space still needs quotes. The split removes them.
+        pytest.param(
+            '"C:\\Program Files\\Git\\usr\\bin\\less.exe" -R',
+            ["C:\\Program Files\\Git\\usr\\bin\\less.exe", "-R"],
+            id="quoted path with spaces",
+        ),
+        # An unclosed quote runs to the end of the string. It does not raise.
+        pytest.param(
+            '"C:\\Program Files\\Git\\usr\\bin\\less.exe',
+            ["C:\\Program Files\\Git\\usr\\bin\\less.exe"],
+            id="unclosed quote runs to end of string",
+        ),
+        # Issue #2486: a backslash before a quote escapes it, so a quoted
+        # path ending in one turns its closing quote into a literal and the
+        # run swallows what follows. A Windows rule, not a Click bug.
+        pytest.param(
+            '"C:\\Tools\\Git\\" -R',
+            ['C:\\Tools\\Git" -R'],
+            id="quoted path with trailing backslash swallows the rest",
+        ),
+        # The control: with no quote to escape, the same trailing backslash
+        # is just a backslash.
+        pytest.param(
+            "C:\\Tools\\Git\\",
+            ["C:\\Tools\\Git\\"],
+            id="unquoted trailing backslash",
+        ),
+    ],
+)
+def test_pager_command_line_split_windows(pager_env, expected_parts):
+    """Verify the argv that Click builds from a Windows ``PAGER`` value."""
+    assert _split_command_line(pager_env) == expected_parts
 
 
 def _get_real_pager_command() -> str:
@@ -1173,13 +1261,12 @@ def _force_tempfile_pager(monkeypatch, pager_cmd="cat"):
     That backend is only reachable on Windows, so the platform flag and the tty
     probes are faked to exercise it from any runner.
 
-    ``PAGER`` is set to the bare command name, not to the path
-    :func:`shutil.which` resolves it to. ``pager()`` splits ``PAGER`` with
-    :func:`shlex.split` in POSIX mode, where a Windows path loses its
-    backslashes and splits on the space in ``C:\\Program Files``, leaving a
-    command that resolves to nothing. Click resolves the bare name itself.
+    ``PAGER`` gets the command name alone, not the path that
+    :func:`shutil.which` finds. An unquoted pager path splits at the space in
+    ``C:\\Program Files``, and the first token then finds no command. Click
+    resolves the command name itself.
     """
-    cmd = shlex.split(pager_cmd)[0]
+    cmd = _split_command_line(pager_cmd)[0]
     assert shutil.which(cmd) is not None, f"{cmd} not available"
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     monkeypatch.setattr(click._termui_impl, "WIN", True)
@@ -1308,8 +1395,13 @@ def test_tempfile_pager_closes_file_before_unlink(monkeypatch):
     )
 
 
+@pytest.mark.skipif(WIN, reason="Windows does not report an unclosed quote.")
 def test_editor_unclosed_quote():
-    """An unclosed quote in the editor command raises ValueError."""
+    """An unclosed quote in the editor command raises ValueError.
+
+    This is POSIX only. The Windows split runs the quote to the end of the
+    string. ``test_editor_windows_path_normalization`` covers that case.
+    """
     with pytest.raises(ValueError, match="No closing quotation"):
         Editor(editor='"unclosed').edit_files(["f.txt"])
 

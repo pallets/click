@@ -528,6 +528,23 @@ class PowerShellComplete(ShellComplete):
     source_template: t.ClassVar[str] = _SOURCE_POWERSHELL
 
     def get_completion_args(self) -> tuple[list[str], str]:
+        """Split ``COMP_WORDS``, the command line that PowerShell parsed.
+
+        .. caution::
+
+            POSIX splitting removes the backslashes of a path, so
+            ``C:\\Users\\click`` arrives here as ``C:Usersclick``.
+
+            ``click._compat._split_command_line`` does not fix this. Click uses
+            that function for ``PAGER`` and ``EDITOR``. ``COMP_CWORD`` is the
+            number of elements that PowerShell counted, so this split must
+            return the same number of tokens. PowerShell uses a single quote to
+            delimit a string, but ``CommandLineToArgvW`` reads it as a normal
+            character. So ``'C:\\My Files\\a.toml'`` becomes two tokens, and
+            every index after it points at the wrong word.
+
+            A fix needs a tokenizer that uses the PowerShell rules.
+        """
         cwords = split_arg_string(os.environ["COMP_WORDS"])
         cword = int(os.environ["COMP_CWORD"])
         args = cwords[1:cword]

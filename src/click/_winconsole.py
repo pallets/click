@@ -35,6 +35,7 @@ from ._compat import _NonClosingTextIOWrapper
 assert sys.platform == "win32"
 import msvcrt  # noqa: E402
 from ctypes import windll  # noqa: E402
+from ctypes import WinError  # noqa: E402
 from ctypes import WINFUNCTYPE  # noqa: E402
 
 c_ssize_p = POINTER(c_ssize_t)
@@ -290,3 +291,35 @@ def _get_windows_console_stream(
         return None
 
     return func(b)
+
+
+def _split_windows_command_line(cmd: str) -> list[str]:
+    """Split a command line into arguments with the Windows rules.
+
+    ``CommandLineToArgvW`` is the ``shell32`` function that gives a Windows
+    program its ``argv``. It applies the rules that Windows applies to every
+    command line. A backslash is a normal character, so the path
+    ``C:\\Users\\click`` stays one token. A quoted string keeps its spaces.
+
+    Windows parses the first token with different rules. That token ends at the
+    first space, and a backslash in it is not an escape. An empty command line
+    makes the function return the path of the running executable, not an empty
+    list. This function puts the program name ``sentinel`` in front of ``cmd``
+    to avoid all three cases, and then removes that token. Every token of
+    ``cmd`` then gets the same rules.
+
+    :param cmd: The command line to split.
+    :raises OSError: If ``CommandLineToArgvW`` fails.
+    """
+    argc = c_int(0)
+    argv = CommandLineToArgvW(f"sentinel {cmd}", byref(argc))
+
+    if not argv:
+        raise WinError()
+
+    try:
+        # Do not return the sentinel program name at index 0.
+        return [argv[index] for index in range(1, argc.value)]
+    finally:
+        # The caller owns the buffer, so the caller frees it.
+        LocalFree(argv)
