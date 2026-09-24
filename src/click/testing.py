@@ -22,6 +22,11 @@ if t.TYPE_CHECKING:
 
     from .core import Command
 
+    if sys.version_info >= (3, 13):
+        from typing import TypeIs
+    else:
+        from typing_extensions import TypeIs
+
 if sys.platform == "win32":
     CaptureMode: t.TypeAlias = t.Literal["sys"]  # pyright: ignore[reportRedeclaration]
 else:
@@ -208,12 +213,16 @@ class _NamedTextIOWrapper(io.TextIOWrapper):
         return self._mode
 
 
+def _has_read(x: object) -> TypeIs[t.IO[t.Any]]:
+    return hasattr(x, "read")
+
+
 def make_input_stream(
     input: str | bytes | t.IO[t.Any] | None, charset: str
 ) -> t.BinaryIO:
     # Is already an input stream.
-    if hasattr(input, "read"):
-        rv = _find_binary_reader(t.cast("t.IO[t.Any]", input))
+    if _has_read(input):
+        rv = _find_binary_reader(input)
 
         if rv is not None:
             return rv
