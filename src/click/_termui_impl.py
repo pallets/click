@@ -20,6 +20,7 @@ from pathlib import Path
 from types import TracebackType
 
 from ._compat import _default_text_stdout
+from ._compat import _split_command_line
 from ._compat import CYGWIN
 from ._compat import get_best_encoding
 from ._compat import isatty
@@ -462,11 +463,11 @@ def _pager_contextmanager(
     if not isatty(sys.stdin) or not isatty(stdout):
         return _nullpager(stdout, color)
 
-    # Split using POSIX mode (the default) so that quote characters are
-    # stripped from tokens and quoted Windows paths are preserved.
-    # Non-POSIX mode retains quotes in tokens, and wrapping tokens
-    # with shlex.quote re-introduces quoting issues on Windows.
-    pager_cmd_parts = shlex.split(os.environ.get("PAGER", ""))
+    # Split PAGER with the rules of the current platform. A quoted token
+    # keeps its spaces, and a Windows path keeps its backslashes. Both
+    # platforms remove the quote characters, and subprocess adds the quotes
+    # again when it starts the child process.
+    pager_cmd_parts = _split_command_line(os.environ.get("PAGER", ""))
 
     if pager_cmd_parts:
         # Piping to `more` on Windows adds spurious \r\n, so it gets the temp
@@ -525,6 +526,10 @@ def _less_uses_raw_mode(less_env: str, cmd_params: list[str]) -> bool:
     ``--raw-control-chars`` long option request raw mode. Filenames and
     long-option values may carry the letter ``r`` without being such a
     request.
+
+    ``LESS`` uses POSIX splitting on every platform, and ``PAGER`` does not.
+    ``less`` reads this variable and parses it with its own rules. The
+    ``less`` on Windows comes from Git for Windows or MSYS.
     """
     try:
         env_tokens = shlex.split(less_env)
@@ -712,7 +717,6 @@ class Editor:
 
     def edit_files(self, filenames: cabc.Iterable[str | os.PathLike[str]]) -> None:
         """Open files in the user's editor."""
-        import shlex
         import subprocess
 
         editor = self.get_editor()
@@ -723,11 +727,10 @@ class Editor:
             environ.update(self.env)
 
         try:
-            # Split in POSIX mode (the default) for the same reasons as
-            # in pager(): strips quotes from tokens and preserves quoted
-            # Windows paths.
+            # Split EDITOR with the rules of the current platform. See the
+            # related explanation in the pager code above.
             c = subprocess.Popen(
-                args=shlex.split(editor) + list(filenames),
+                args=_split_command_line(editor) + list(filenames),
                 env=environ,
             )
             exit_code = c.wait()

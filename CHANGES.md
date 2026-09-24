@@ -24,6 +24,10 @@ Unreleased
 - A command's short help no longer stops at an abbreviation such as `vs.` or `e.g.`
   inside the first sentence. A period ends the sentence only when it closes the text
   or the next word does not start in lowercase. {pr}`3865`
+- On Windows, Click splits `PAGER` and `EDITOR` into an `argv` list with the
+  Windows rules instead of the POSIX rules. An unquoted path such as
+  `EDITOR=C:\Windows\notepad.exe` keeps its backslashes. POSIX platforms do not
+  change. {pr}`3880`
 
 ## Version 8.5.0
 
