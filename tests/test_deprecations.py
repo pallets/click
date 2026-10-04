@@ -68,6 +68,42 @@ def test_context_protected_args_deprecated():
         assert ctx.protected_args == []
 
 
+@pytest.mark.parametrize(
+    ("param", "expected"),
+    [
+        (click.Option(["-t", "--times"]), "--times"),
+        (click.Argument(["filename"]), "FILENAME"),
+    ],
+    ids=["option", "argument"],
+)
+def test_parameter_human_readable_name_deprecated(param, expected):
+    with pytest.warns(DeprecationWarning, match="human_readable_name"):
+        assert param.human_readable_name == expected
+
+    assert param.spec == expected
+
+
+@pytest.mark.parametrize("base", [click.Parameter, click.Option, click.Argument])
+def test_parameter_human_readable_name_override_deprecated(base):
+    """Click reads ``spec``, so an override of the old property has no effect."""
+    with pytest.warns(DeprecationWarning, match="Override 'spec' instead"):
+
+        class Custom(base):  # type: ignore[misc, valid-type]
+            @property
+            def human_readable_name(self) -> str:
+                return "custom"
+
+
+@pytest.mark.parametrize("base", [click.Parameter, click.Option, click.Argument])
+def test_parameter_subclass_without_override_is_silent(base):
+    """The warning names a subclass that overrides the property, and no other."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+
+        class Custom(base):  # type: ignore[misc, valid-type]
+            pass
+
+
 def test_isolated_filesystem_deprecated(runner):
     with pytest.warns(DeprecationWarning, match="isolated_filesystem"):
         with runner.isolated_filesystem():
