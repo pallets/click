@@ -19,6 +19,9 @@ Unreleased
   for options, so its value changes from `my_option` to `--my-option`. Click no
   longer reads it, and a subclass that overrides it gets a warning when the class
   is defined. {pr}`3877`
+- With `echo_stdin=True`, {class}`CliRunner` echoes the `\x04` and `\x1a`
+  `<stdin>` bytes to `<stdout>` as `^D` and `^Z`, and no longer passes them to
+  the command. {pr}`3878`
 
 ## Version 8.5.1
 
