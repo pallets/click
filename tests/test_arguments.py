@@ -1,7 +1,6 @@
 import itertools
 import sys
 import unicodedata
-import warnings
 from unittest import mock
 
 import pytest
@@ -109,11 +108,8 @@ def test_argument_names(runner, decl, expect):
 
 
 def test_argument_normalizes_an_identifier_decl():
-    """An argument transforms its declaration; an option keeps an explicit name."""
     assert click.Argument(["Foo_Bar"]).name == "foo_bar"
-
-    with pytest.warns(DeprecationWarning, match="lower cases an explicit name"):
-        assert click.Option(["--x", "Foo_Bar"]).name == "Foo_Bar"
+    assert click.Option(["--x", "Foo_Bar"]).name == "foo_bar"
 
 
 PARAM_KINDS = [
@@ -129,16 +125,6 @@ UNICODE_CASE_DECLS = [
     pytest.param("ẞ", "ß", id="capital-sharp-s"),
     pytest.param("\N{KELVIN SIGN}", "k", id="kelvin-sign"),
     pytest.param("foo-٣", "foo_٣", id="arabic-indic-digit"),
-]
-
-NAME_TRANSFORM_DECLS = UNICODE_CASE_DECLS + [
-    pytest.param("a-b-c", "a_b_c", id="interior-singles"),
-    pytest.param("a-----b", "a_____b", id="interior-run"),
-    pytest.param("a--", "a__", id="trailing"),
-    pytest.param("-a-", "_a_", id="leading-survives-the-prefix"),
-    pytest.param("-a----b--", "_a____b__", id="everywhere"),
-    pytest.param("--", "__", id="dashes-only"),
-    pytest.param("_-_", "___", id="around-an-underscore"),
 ]
 
 # Declarations covering every shape the naming transform accepts.
@@ -163,45 +149,37 @@ NAME_SWEEP_DECLS = [
 
 @pytest.mark.parametrize("count", [1, 2])
 @pytest.mark.parametrize("expose_value", [True, False])
-def test_parameter_name_is_an_identifier_or_deprecated(count, expose_value):
+def test_parameter_name_is_always_an_identifier(count, expose_value):
     built = 0
 
     for decls in itertools.product(NAME_SWEEP_DECLS, repeat=count):
         for cls in (click.Option, click.Argument):
-            with warnings.catch_warnings(record=True) as caught:
-                warnings.simplefilter("always")
-
-                try:
-                    param = cls(list(decls), expose_value=expose_value)
-                except (TypeError, ValueError):
-                    continue
-
-            built += 1
-
-            if param.name.isidentifier():
+            try:
+                param = cls(list(decls), expose_value=expose_value)
+            except (TypeError, ValueError):
                 continue
 
-            assert any(issubclass(w.category, DeprecationWarning) for w in caught), (
+            built += 1
+            assert param.name.isidentifier(), (
                 f"{cls.__name__}({list(decls)!r}, expose_value={expose_value})"
-                f" named its parameter {param.name!r} without a warning"
+                f" named its parameter {param.name!r}"
             )
 
     assert built, "the sweep built no parameter, so it proves nothing"
 
 
 def test_argument_requires_its_one_declaration():
-    """An exposed argument with no declaration is refused, an unexposed one warns."""
-    with pytest.raises(TypeError, match="does not have a name"):
+    """An argument with no declaration is refused, whatever ``expose_value`` says."""
+    with pytest.raises(TypeError, match="exactly one parameter declaration"):
         click.Argument([])
 
-    with pytest.warns(DeprecationWarning, match="not a valid Python identifier"):
-        assert click.Argument([], expose_value=False).name == ""
+    with pytest.raises(TypeError, match="exactly one parameter declaration"):
+        click.Argument([], expose_value=False)
 
 
 def test_argument_name_check_applies_when_not_exposed():
-    """An unexposed argument keeps the name, and says Click 9.0 will refuse it."""
-    with pytest.warns(DeprecationWarning, match="not a valid Python identifier"):
-        assert click.Argument(["0foo"], expose_value=False).name == "0foo"
+    with pytest.raises(TypeError, match="valid Python identifier"):
+        click.Argument(["0foo"], expose_value=False)
 
 
 def test_argument_metavar_renders_what_a_declaration_may_not(runner):
@@ -233,25 +211,38 @@ def test_argument_metavar_renders_what_a_declaration_may_not(runner):
 
 
 @pytest.mark.parametrize(("cls", "form"), PARAM_KINDS)
-@pytest.mark.parametrize(("decl", "expect"), NAME_TRANSFORM_DECLS)
-def test_parameter_name_transform(cls, form, decl, expect):
-    """``str.lower()`` is neither one-to-one nor length-preserving, and a
-    dash becomes an underscore everywhere except an option's prefix.
-    """
+@pytest.mark.parametrize(("decl", "expect"), UNICODE_CASE_DECLS)
+def test_parameter_name_unicode_case_transform(cls, form, decl, expect):
+    """``str.lower()`` is neither one-to-one nor length-preserving."""
     assert cls([form.format(decl=decl)]).name == expect
 
 
 @pytest.mark.parametrize(("decl", "expect"), UNICODE_CASE_DECLS)
-def test_option_explicit_name_keeps_its_case(decl, expect):
-    """An explicit name is kept as spelled, where Click 9.0 transforms it."""
+def test_option_explicit_name_runs_the_same_case_transform(decl, expect):
+    """An explicit name is transformed exactly as a derived one is."""
     if not decl.isidentifier():
         assert click.Option(["--x", decl]).name == "x"
         return
 
-    with pytest.warns(DeprecationWarning, match="lower cases an explicit name"):
-        assert click.Option(["--x", decl]).name == decl
+    assert click.Option(["--x", decl]).name == expect
 
-    assert decl.lower() == expect
+
+@pytest.mark.parametrize(
+    ("arg_decl", "opt_decl", "expect"),
+    [
+        pytest.param("a-b-c", "--a-b-c", "a_b_c", id="interior-singles"),
+        pytest.param("a-----b", "--a-----b", "a_____b", id="interior-run"),
+        pytest.param("a--", "--a--", "a__", id="trailing"),
+        pytest.param("-a-", "---a-", "_a_", id="leading-survives-the-prefix"),
+        pytest.param("-a----b--", "---a----b--", "_a____b__", id="everywhere"),
+        pytest.param("--", "----", "__", id="dashes-only"),
+        pytest.param("_-_", "--_-_", "___", id="around-an-underscore"),
+    ],
+)
+def test_parameter_name_keeps_every_dash_past_the_prefix(arg_decl, opt_decl, expect):
+    """Only an option's leading dashes are considered a prefix."""
+    assert click.Argument([arg_decl]).name == expect
+    assert click.Option([opt_decl], is_flag=True).name == expect
 
 
 @pytest.mark.parametrize(("cls", "form"), PARAM_KINDS)
@@ -275,22 +266,9 @@ def test_option_explicit_name_keeps_its_case(decl, expect):
         pytest.param("", id="empty"),
     ],
 )
-def test_parameter_name_not_an_identifier_is_deprecated(cls, form, decl):
-    """Click 9.0 refuses every one of these; 8.6 keeps them and says so.
-
-    An exposed option is the exception, since it already refuses them.
-    """
-    spec = form.format(decl=decl)
-
-    if cls is click.Option:
-        with pytest.raises(TypeError, match="Could not determine name"):
-            cls([spec])
-        return
-
-    with pytest.warns(DeprecationWarning, match="not a valid Python identifier"):
-        param = cls([spec])
-
-    assert not param.name.isidentifier()
+def test_parameter_name_must_be_an_identifier(cls, form, decl):
+    with pytest.raises(TypeError, match="valid Python identifier"):
+        cls([form.format(decl=decl)])
 
 
 @pytest.mark.parametrize(("cls", "form"), PARAM_KINDS)
@@ -307,17 +285,12 @@ def test_parameter_name_identifier_check_follows_the_unicode_table(cls, form, ch
     assert name.isidentifier() == (sys.version_info >= (3, 13))
     decl = form.format(decl=name)
 
-    if name.isidentifier():
-        assert cls([decl]).name == name
-        return
-
-    if cls is click.Option:
-        with pytest.raises(TypeError, match="Could not determine name"):
+    if not name.isidentifier():
+        with pytest.raises(TypeError, match="valid Python identifier"):
             cls([decl])
         return
 
-    with pytest.warns(DeprecationWarning, match="not a valid Python identifier"):
-        assert cls([decl]).name == name
+    assert cls([decl]).name == name
 
 
 @pytest.mark.parametrize(
