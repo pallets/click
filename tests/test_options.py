@@ -875,6 +875,23 @@ def test_show_envvar_auto_prefix_dash_in_command(runner):
     assert "TEST_FOO_BAR_BAZ" in result.output
 
 
+@pytest.mark.parametrize("envvar", [None, [], ""])
+@pytest.mark.parametrize(
+    ("auto_envvar_prefix", "expected"),
+    [
+        (None, "  --units TEXT\n"),
+        ("WEATHER", "  --units TEXT  [env var: WEATHER_UNITS]\n"),
+    ],
+)
+def test_show_envvar_empty(runner, envvar, auto_envvar_prefix, expected):
+    """An empty ``envvar`` shows the same help as no ``envvar``."""
+    option = click.Option(["--units"], envvar=envvar, show_envvar=True)
+    cli = click.Command("cli", params=[option])
+    result = runner.invoke(cli, ["--help"], auto_envvar_prefix=auto_envvar_prefix)
+    assert not result.exception
+    assert expected in result.output
+
+
 def test_custom_validation(runner):
     def validate_pos_int(ctx, param, value):
         if value < 0:
@@ -1016,6 +1033,25 @@ def test_missing_envvar(runner):
     result = runner.invoke(cli)
     assert result.exit_code == 2
     assert "Error: Missing option '--foo'." in result.output
+
+
+@pytest.mark.parametrize(
+    ("envvar", "expected"),
+    [
+        ("UNITS", "'--units' (env var: 'UNITS')"),
+        (["UNITS"], "'--units' (env var: 'UNITS')"),
+        (["WEATHER_UNITS", "UNITS"], "'--units' (env var: 'WEATHER_UNITS', 'UNITS')"),
+        (("WEATHER_UNITS", "UNITS"), "'--units' (env var: 'WEATHER_UNITS', 'UNITS')"),
+        ([], "'--units'"),
+        ("", "'--units'"),
+    ],
+)
+def test_missing_envvar_sequence(runner, envvar, expected):
+    """The error hint names each variable of a sequence ``envvar``."""
+    option = click.Option(["--units"], envvar=envvar, show_envvar=True, required=True)
+    result = runner.invoke(click.Command("cli", params=[option]))
+    assert result.exit_code == 2
+    assert f"Error: Missing option {expected}." in result.output
 
 
 def test_case_insensitive_choice(runner):

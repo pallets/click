@@ -24,6 +24,11 @@ Unreleased
 - A command's short help no longer stops at an abbreviation such as `vs.` or `e.g.`
   inside the first sentence. A period ends the sentence only when it closes the text
   or the next word does not start in lowercase. {pr}`3865`
+- With `show_envvar=True`, an option's error message now prints all variables of an
+  `envvar` sequence instead of the `repr` of the sequence. {pr}`3884`
+- An empty `envvar`, such as `[]` or `""`, shows the same help and error message as
+  no `envvar` when `show_envvar=True`. The help screen used to show `[env var: ]`.
+  {pr}`3884`
 
 ## Version 8.5.0
 
