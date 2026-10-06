@@ -3270,8 +3270,12 @@ class Option(Parameter):
 
     def get_error_hint(self, ctx: Context | None) -> str:
         result = super().get_error_hint(ctx)
-        if self.show_envvar and self.envvar is not None:
-            result += f" (env var: '{self.envvar}')"
+        if self.show_envvar and self.envvar:
+            envvars = [self.envvar] if isinstance(self.envvar, str) else self.envvar
+            # An environment variable is allowed to feature a space or a comma on all
+            # platforms, hence the quotes around each.
+            var_str = ", ".join(f"'{var}'" for var in envvars)
+            result += f" (env var: {var_str})"
         return result
 
     def _parse_decls(
@@ -3439,15 +3443,14 @@ class Option(Parameter):
         if self.show_envvar:
             envvar = self.envvar
 
-            if envvar is None:
-                if (
-                    self.allow_from_autoenv
-                    and ctx.auto_envvar_prefix is not None
-                    and self.name
-                ):
-                    envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
+            if not envvar and (
+                self.allow_from_autoenv
+                and ctx.auto_envvar_prefix is not None
+                and self.name
+            ):
+                envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
 
-            if envvar is not None:
+            if envvar:
                 if isinstance(envvar, str):
                     extra["envvars"] = (envvar,)
                 else:
