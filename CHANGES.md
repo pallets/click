@@ -22,6 +22,9 @@ Unreleased
 - With `echo_stdin=True`, {class}`CliRunner` echoes the `\x04` and `\x1a`
   `<stdin>` bytes to `<stdout>` as `^D` and `^Z`, and no longer passes them to
   the command. {pr}`3878`
+- {meth}`CliRunner.invoke` accepts a new `context_settings` argument, to allow
+  passing settings to the {class}`Context` of the command which cannot be given as extra
+  keyword arguments like `color`. {issue}`2110` {pr}`3896`
 
 ## Version 8.5.1
 

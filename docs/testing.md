@@ -117,9 +117,40 @@ def test_sync():
   runner = CliRunner()
   result = runner.invoke(cli, ['sync'], terminal_width=60)
   assert result.exit_code == 0
-  assert 'Debug mode is on' in result.output
   assert 'Syncing' in result.output
 ```
+
+A setting that shares its name with a parameter of {meth}`CliRunner.invoke` cannot be
+passed this way. This is the case of `color`: `invoke(color=True)` tells that the
+terminal supports colors, and leaves the `color` of the context unset. Pass such a
+setting in `context_settings` instead:
+
+```{code-block} python
+:caption: greet.py
+
+import click
+
+@click.command()
+def greet():
+   click.secho('Hello World!', fg='green')
+```
+
+```{code-block} python
+:caption: test_greet.py
+
+import click
+from click.testing import CliRunner
+from greet import greet
+
+def test_greet_color():
+  runner = CliRunner()
+  result = runner.invoke(greet, context_settings={'color': True})
+  assert result.exit_code == 0
+  assert result.output == click.style('Hello World!', fg='green') + '\n'
+```
+
+The settings in `context_settings` take precedence over the ones the command declares,
+for that invocation only.
 
 ## File System Isolation
 
