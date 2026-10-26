@@ -1221,13 +1221,24 @@ def test_tempfile_pager_accepts_text(monkeypatch, capfd, page):
 
 @pytest.mark.skipif(shutil.which("cat") is None, reason="cat not available")
 @pytest.mark.parametrize(
-    ("color", "expected"),
+    ("color", "context_settings", "expected"),
     [
-        pytest.param(False, "hello\n", id="strip ansi"),
-        pytest.param(True, click.style("hello", fg="red") + "\n", id="preserve ansi"),
+        pytest.param(False, None, "hello\n", id="strip ansi"),
+        pytest.param(
+            True, None, click.style("hello", fg="red") + "\n", id="preserve ansi"
+        ),
+        # Without a ``color`` argument, the pager follows the context.
+        pytest.param(
+            None,
+            {"color": True},
+            click.style("hello", fg="red") + "\n",
+            id="context preserves ansi",
+        ),
     ],
 )
-def test_tempfile_pager_handles_ansi(monkeypatch, capfd, color, expected):
+def test_tempfile_pager_handles_ansi(
+    monkeypatch, capfd, runner, color, context_settings, expected
+):
     """The temp file backend honors ``color`` like the pipe backend does.
 
     Regression: a binary temp file got no ANSI-stripping wrapper, so ``color``
@@ -1235,7 +1246,12 @@ def test_tempfile_pager_handles_ansi(monkeypatch, capfd, color, expected):
     """
     _force_tempfile_pager(monkeypatch)
 
-    click.echo_via_pager(click.style("hello", fg="red"), color=color)
+    @click.command()
+    def cli():
+        click.echo_via_pager(click.style("hello", fg="red"), color=color)
+
+    result = runner.invoke(cli, context_settings=context_settings)
+    assert not result.exception
 
     out, err = capfd.readouterr()
     assert err == ""
@@ -1395,40 +1411,25 @@ def test_confirmation_prompt(runner, prompt, input, default, expect):
 
 
 @pytest.mark.parametrize(
-    ("call", "user_input", "color", "expect"),
+    ("call", "user_input", "label", "end"),
     [
-        pytest.param(
-            lambda: click.confirm(click.style("Hello World!", fg="green")),
-            "y",
-            False,
-            "Hello World! [y/N]: y\n",
-            id="confirm-no-color",
-        ),
-        pytest.param(
-            lambda: click.confirm(click.style("Hello World!", fg="green")),
-            "y",
-            True,
-            "\x1b[32mHello World!\x1b[0m [y/N]: y\n",
-            id="confirm-color",
-        ),
-        pytest.param(
-            lambda: click.prompt(click.style("Name", fg="green")),
-            "Bob",
-            False,
-            "Name: Bob\n",
-            id="prompt-no-color",
-        ),
-        pytest.param(
-            lambda: click.prompt(click.style("Name", fg="green")),
-            "Bob",
-            True,
-            "\x1b[32mName\x1b[0m: Bob\n",
-            id="prompt-color",
-        ),
+        pytest.param(click.confirm, "y", "Hello World!", " [y/N]: y\n", id="confirm"),
+        pytest.param(click.prompt, "Bob", "Name", ": Bob\n", id="prompt"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("color", "context_settings", "styled"),
+    [
+        # Without a context color, the color of the runner decides.
+        pytest.param(False, None, False, id="no-color"),
+        pytest.param(True, None, True, id="color"),
+        # A context color overrides the color of the runner, as for ``echo``.
+        pytest.param(False, {"color": True}, True, id="context-color"),
+        pytest.param(True, {"color": False}, False, id="context-no-color"),
     ],
 )
 def test_prompt_and_confirm_ansi_respects_color(
-    runner, call, user_input, color, expect
+    runner, call, user_input, label, end, color, context_settings, styled
 ):
     """``confirm`` and ``prompt`` strip ANSI color and style codes from the
     prompt when color is disabled and keep them when it is enabled, like
@@ -1438,10 +1439,13 @@ def test_prompt_and_confirm_ansi_respects_color(
 
     @click.command()
     def cli():
-        call()
+        call(click.style(label, fg="green"))
 
-    result = runner.invoke(cli, input=user_input, color=color)
-    assert result.output == expect
+    result = runner.invoke(
+        cli, input=user_input, color=color, context_settings=context_settings
+    )
+    prompt = click.style(label, fg="green") if styled else label
+    assert result.output == f"{prompt}{end}"
 
 
 def test_false_show_default_cause_no_default_display_in_prompt(runner):

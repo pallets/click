@@ -429,6 +429,92 @@ def test_command_standalone_mode_returns_value():
     assert result.exit_code == 0
 
 
+@pytest.mark.parametrize(
+    ("runner_color", "context_settings", "context_color", "styled"),
+    [
+        # Without a ``color`` setting, the context has no color of its own, and
+        # the ``color`` of the runner decides.
+        (False, None, None, False),
+        (True, None, None, True),
+        (False, {}, None, False),
+        (True, {}, None, True),
+        (False, {"color": None}, None, False),
+        (True, {"color": None}, None, True),
+        # A ``color`` setting reaches the context, where it overrides the
+        # ``color`` of the runner.
+        (False, {"color": True}, True, True),
+        (True, {"color": True}, True, True),
+        (False, {"color": False}, False, False),
+        (True, {"color": False}, False, False),
+    ],
+)
+def test_context_settings_color(runner_color, context_settings, context_color, styled):
+    """``color`` names a parameter of ``invoke()`` and a context setting.
+    ``context_settings`` carries the second one, which ``extra`` cannot.
+    """
+
+    @click.command()
+    @click.pass_context
+    def cli(ctx):
+        click.secho("hello world", fg="blue")
+        return ctx.color
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        color=runner_color,
+        context_settings=context_settings,
+        standalone_mode=False,
+    )
+    assert not result.exception
+    assert result.return_value is context_color
+    expected = click.style("hello world", fg="blue") if styled else "hello world"
+    assert result.output == f"{expected}\n"
+
+
+@pytest.mark.parametrize("terminal_width", [100, None])
+def test_context_settings_override_command(terminal_width):
+    """Settings given to ``invoke()`` take precedence over the ones the command
+    declares, for that invocation only.
+    """
+
+    @click.command(context_settings={"terminal_width": 60, "max_content_width": 70})
+    @click.pass_context
+    def cli(ctx):
+        return ctx.terminal_width, ctx.max_content_width
+
+    runner = CliRunner()
+
+    result = runner.invoke(
+        cli, context_settings={"terminal_width": terminal_width}, standalone_mode=False
+    )
+    assert result.return_value == (terminal_width, 70)
+
+    result = runner.invoke(cli, standalone_mode=False)
+    assert result.return_value == (60, 70)
+    assert cli.context_settings == {"terminal_width": 60, "max_content_width": 70}
+
+
+def test_context_settings_duplicates_extra():
+    """A setting given in both ``extra`` and ``context_settings`` fails like a
+    keyword argument given twice.
+    """
+
+    @click.command()
+    def cli():
+        pass
+
+    runner = CliRunner()
+
+    with pytest.raises(TypeError, match="multiple values for keyword argument 'obj'"):
+        runner.invoke(
+            cli,
+            obj="extra",
+            context_settings={"obj": "settings"},
+            catch_exceptions=False,
+        )
+
+
 def test_file_stdin_attrs(runner):
     @click.command()
     @click.argument("f", type=click.File())

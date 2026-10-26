@@ -601,6 +601,7 @@ class CliRunner:
         env: cabc.Mapping[str, str | None] | None = None,
         catch_exceptions: bool | None = None,
         color: bool = False,
+        context_settings: cabc.Mapping[str, t.Any] | None = None,
         **extra: t.Any,
     ) -> Result:
         """Invokes a command in an isolated environment.  The arguments are
@@ -623,6 +624,14 @@ class CliRunner:
         :param extra: the keyword arguments to pass to :meth:`main`.
         :param color: whether the output should contain color codes. The
                       application can still override this explicitly.
+        :param context_settings: settings to pass to the
+            :class:`~click.Context` of the command. They take precedence
+            over the ``context_settings`` of the command. Unlike ``extra``,
+            they can hold a setting named like a parameter of this method,
+            such as ``color``.
+
+        .. versionchanged:: 8.5.1
+            Added the ``context_settings`` parameter.
 
         .. versionadded:: 8.2
             The result object has the ``output_bytes`` attribute with
@@ -684,7 +693,12 @@ class CliRunner:
                 prog_name = self.get_default_prog_name(cli)
 
             try:
-                return_value = cli.main(args=args or (), prog_name=prog_name, **extra)
+                return_value = cli.main(
+                    args=args or (),
+                    prog_name=prog_name,
+                    **extra,
+                    **(context_settings or {}),
+                )
             except SystemExit as e:
                 exc_info = sys.exc_info()
                 e_code = t.cast("int | t.Any | None", e.code)

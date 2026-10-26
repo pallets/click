@@ -29,6 +29,9 @@ Unreleased
 - An empty `envvar`, such as `[]` or `""`, shows the same help and error message as
   no `envvar` when `show_envvar=True`. The help screen used to show `[env var: ]`.
   {pr}`3884`
+- {meth}`CliRunner.invoke` accepts a new `context_settings` argument, to allow
+  passing settings to the {class}`Context` of the command which cannot be given as extra
+  keyword arguments like `color`. {issue}`2110` {pr}`3896`
 
 ## Version 8.5.0
 
