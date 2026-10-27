@@ -29,6 +29,7 @@ Unreleased
 - An empty `envvar`, such as `[]` or `""`, shows the same help and error message as
   no `envvar` when `show_envvar=True`. The help screen used to show `[env var: ]`.
   {pr}`3884`
+- Document how to build a standalone application with Nuitka. {issue}`2757` {pr}`3897`
 
 ## Version 8.5.0
 

@@ -87,7 +87,8 @@ virtualenv
 
 entry-points
 setuptools
-standalone-apps
+standalone-apps-briefcase
+standalone-apps-nuitka
 upgrade-guides
 support-multiple-versions
 ```
