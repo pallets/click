@@ -7,6 +7,20 @@
 
 ## General
 
+(not-a-ui-library)=
+### Colors, themes and other terminal UI features
+
+Why are feature requests such as colors, themes, and UI customization consistently
+declined?
+
+#### Answer
+
+Click tries to be a very simple yet powerful package for creating command line
+utilities. To stay simple, it just contains the basics with a few utilities that are
+retained for historical and compatibility reasons. Those simple utilities have been
+superseded by more specialized packages that you can find in our list of
+[third-party projects](contrib.md#third-party-projects).
+
 ### Calling a command as a regular function
 
 I decorated a function with `@click.command()` to make it a CLI. When I import that name and call it from Python, it does not run my function. It parses arguments, prints a usage error and exits the process:
