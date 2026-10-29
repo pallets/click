@@ -7,6 +7,35 @@
 
 ## General
 
+(not-a-ui-library)=
+### Colors, themes and other terminal UI features
+
+Click comes with terminal utilities like {func}`~click.style`, {func}`~click.progressbar` and {func}`~click.prompt`. So it can look natural to ask Click for more: colored help pages and error messages, themes, tables, spinners or selection menus.
+
+Click is a framework for command line applications, not a UI library. The maintainers keep terminal utilities working, mostly for compatibility and historical reasons, but we are not going to add more complexity to them. Fancier output is the job of the application or of [third-party projects](contrib.md#third-party-projects).
+
+The exception is the Python standard library. When Python opens a new domain or adopts a convention, Click follows it.
+
+#### Answer
+
+To style your own output with the utilities Click provides, you can rely on utilities like {func}`~click.secho`. To change how Click shows its own messages, subclass the class that renders them. For example, this error class colors its message:
+
+```python
+import click
+
+
+class BasketError(click.ClickException):
+    def format_message(self):
+        return click.style(self.message, fg="red")
+
+
+@click.command()
+def harvest():
+    raise BasketError("The basket is empty.")
+```
+
+Click removes the colors when the output is not a terminal. The errors that Click raises itself, like a missing parameter, do not use your class. To change those too, catch them with `standalone_mode=False`, as shown in [What if I Don't Want That?](exceptions.md#what-if-i-dont-want-that).
+
 ### Calling a command as a regular function
 
 I decorated a function with `@click.command()` to make it a CLI. When I import that name and call it from Python, it does not run my function. It parses arguments, prints a usage error and exits the process:
