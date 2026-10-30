@@ -4,78 +4,109 @@ import click
 
 
 @pytest.mark.parametrize(
-    ("styles", "ref"),
+    "text",
     [
-        ({}, "x y\x1b[0m"),
-        ({"fg": "black"}, "\x1b[30mx y\x1b[0m"),
-        ({"fg": "red"}, "\x1b[31mx y\x1b[0m"),
-        ({"fg": "green"}, "\x1b[32mx y\x1b[0m"),
-        ({"fg": "yellow"}, "\x1b[33mx y\x1b[0m"),
-        ({"fg": "blue"}, "\x1b[34mx y\x1b[0m"),
-        ({"fg": "magenta"}, "\x1b[35mx y\x1b[0m"),
-        ({"fg": "cyan"}, "\x1b[36mx y\x1b[0m"),
-        ({"fg": "white"}, "\x1b[37mx y\x1b[0m"),
-        ({"fg": "bright_black"}, "\x1b[90mx y\x1b[0m"),
-        ({"fg": "bright_red"}, "\x1b[91mx y\x1b[0m"),
-        ({"fg": "bright_green"}, "\x1b[92mx y\x1b[0m"),
-        ({"fg": "bright_yellow"}, "\x1b[93mx y\x1b[0m"),
-        ({"fg": "bright_blue"}, "\x1b[94mx y\x1b[0m"),
-        ({"fg": "bright_magenta"}, "\x1b[95mx y\x1b[0m"),
-        ({"fg": "bright_cyan"}, "\x1b[96mx y\x1b[0m"),
-        ({"fg": "bright_white"}, "\x1b[97mx y\x1b[0m"),
-        ({"fg": "reset"}, "\x1b[39mx y\x1b[0m"),
-        ({"bg": "black"}, "\x1b[40mx y\x1b[0m"),
-        ({"bg": "red"}, "\x1b[41mx y\x1b[0m"),
-        ({"bg": "green"}, "\x1b[42mx y\x1b[0m"),
-        ({"bg": "yellow"}, "\x1b[43mx y\x1b[0m"),
-        ({"bg": "blue"}, "\x1b[44mx y\x1b[0m"),
-        ({"bg": "magenta"}, "\x1b[45mx y\x1b[0m"),
-        ({"bg": "cyan"}, "\x1b[46mx y\x1b[0m"),
-        ({"bg": "white"}, "\x1b[47mx y\x1b[0m"),
-        ({"bg": "bright_black"}, "\x1b[100mx y\x1b[0m"),
-        ({"bg": "bright_red"}, "\x1b[101mx y\x1b[0m"),
-        ({"bg": "bright_green"}, "\x1b[102mx y\x1b[0m"),
-        ({"bg": "bright_yellow"}, "\x1b[103mx y\x1b[0m"),
-        ({"bg": "bright_blue"}, "\x1b[104mx y\x1b[0m"),
-        ({"bg": "bright_magenta"}, "\x1b[105mx y\x1b[0m"),
-        ({"bg": "bright_cyan"}, "\x1b[106mx y\x1b[0m"),
-        ({"bg": "bright_white"}, "\x1b[107mx y\x1b[0m"),
-        ({"bg": "reset"}, "\x1b[49mx y\x1b[0m"),
-        ({"fg": 91}, "\x1b[38;5;91mx y\x1b[0m"),
-        ({"bg": 91}, "\x1b[48;5;91mx y\x1b[0m"),
-        ({"fg": 255}, "\x1b[38;5;255mx y\x1b[0m"),
-        ({"bg": 255}, "\x1b[48;5;255mx y\x1b[0m"),
-        ({"fg": (135, 0, 175)}, "\x1b[38;2;135;0;175mx y\x1b[0m"),
-        ({"bg": (135, 0, 175)}, "\x1b[48;2;135;0;175mx y\x1b[0m"),
-        ({"bg": [135, 0, 175]}, "\x1b[48;2;135;0;175mx y\x1b[0m"),
-        ({"fg": (0, 0, 0)}, "\x1b[38;2;0;0;0mx y\x1b[0m"),
-        ({"fg": (255, 255, 255)}, "\x1b[38;2;255;255;255mx y\x1b[0m"),
-        # 256-color index 0 (black) is valid and must not be dropped by a
-        # truthiness check on fg/bg.
-        ({"fg": 0}, "\x1b[38;5;0mx y\x1b[0m"),
-        ({"bg": 0}, "\x1b[48;5;0mx y\x1b[0m"),
-        ({"bold": True}, "\x1b[1mx y\x1b[0m"),
-        ({"dim": True}, "\x1b[2mx y\x1b[0m"),
-        ({"underline": True}, "\x1b[4mx y\x1b[0m"),
-        ({"overline": True}, "\x1b[53mx y\x1b[0m"),
-        ({"italic": True}, "\x1b[3mx y\x1b[0m"),
-        ({"blink": True}, "\x1b[5mx y\x1b[0m"),
-        ({"reverse": True}, "\x1b[7mx y\x1b[0m"),
-        ({"strikethrough": True}, "\x1b[9mx y\x1b[0m"),
-        ({"bold": False}, "\x1b[22mx y\x1b[0m"),
-        ({"dim": False}, "\x1b[22mx y\x1b[0m"),
-        ({"underline": False}, "\x1b[24mx y\x1b[0m"),
-        ({"overline": False}, "\x1b[55mx y\x1b[0m"),
-        ({"italic": False}, "\x1b[23mx y\x1b[0m"),
-        ({"blink": False}, "\x1b[25mx y\x1b[0m"),
-        ({"reverse": False}, "\x1b[27mx y\x1b[0m"),
-        ({"strikethrough": False}, "\x1b[29mx y\x1b[0m"),
-        ({"fg": "black", "reset": False}, "\x1b[30mx y"),
+        "x y",
+        "",
+        # Text that looks like the tail of a style code.
+        "38;5;91m",
+        "[1mx y",
+        "pêche 🍑",
+        "x\ny",
     ],
 )
-def test_styling(styles, ref):
-    assert click.style("x y", **styles) == ref
-    assert click.unstyle(ref) == "x y"
+@pytest.mark.parametrize(
+    ("styles", "codes"),
+    [
+        ({}, ""),
+        ({"fg": "black"}, "\x1b[30m"),
+        ({"fg": "red"}, "\x1b[31m"),
+        ({"fg": "green"}, "\x1b[32m"),
+        ({"fg": "yellow"}, "\x1b[33m"),
+        ({"fg": "blue"}, "\x1b[34m"),
+        ({"fg": "magenta"}, "\x1b[35m"),
+        ({"fg": "cyan"}, "\x1b[36m"),
+        ({"fg": "white"}, "\x1b[37m"),
+        ({"fg": "bright_black"}, "\x1b[90m"),
+        ({"fg": "bright_red"}, "\x1b[91m"),
+        ({"fg": "bright_green"}, "\x1b[92m"),
+        ({"fg": "bright_yellow"}, "\x1b[93m"),
+        ({"fg": "bright_blue"}, "\x1b[94m"),
+        ({"fg": "bright_magenta"}, "\x1b[95m"),
+        ({"fg": "bright_cyan"}, "\x1b[96m"),
+        ({"fg": "bright_white"}, "\x1b[97m"),
+        ({"fg": "reset"}, "\x1b[39m"),
+        ({"bg": "black"}, "\x1b[40m"),
+        ({"bg": "red"}, "\x1b[41m"),
+        ({"bg": "green"}, "\x1b[42m"),
+        ({"bg": "yellow"}, "\x1b[43m"),
+        ({"bg": "blue"}, "\x1b[44m"),
+        ({"bg": "magenta"}, "\x1b[45m"),
+        ({"bg": "cyan"}, "\x1b[46m"),
+        ({"bg": "white"}, "\x1b[47m"),
+        ({"bg": "bright_black"}, "\x1b[100m"),
+        ({"bg": "bright_red"}, "\x1b[101m"),
+        ({"bg": "bright_green"}, "\x1b[102m"),
+        ({"bg": "bright_yellow"}, "\x1b[103m"),
+        ({"bg": "bright_blue"}, "\x1b[104m"),
+        ({"bg": "bright_magenta"}, "\x1b[105m"),
+        ({"bg": "bright_cyan"}, "\x1b[106m"),
+        ({"bg": "bright_white"}, "\x1b[107m"),
+        ({"bg": "reset"}, "\x1b[49m"),
+        ({"fg": 91}, "\x1b[38;5;91m"),
+        ({"bg": 91}, "\x1b[48;5;91m"),
+        ({"fg": 255}, "\x1b[38;5;255m"),
+        ({"bg": 255}, "\x1b[48;5;255m"),
+        ({"fg": (135, 0, 175)}, "\x1b[38;2;135;0;175m"),
+        ({"bg": (135, 0, 175)}, "\x1b[48;2;135;0;175m"),
+        ({"bg": [135, 0, 175]}, "\x1b[48;2;135;0;175m"),
+        ({"fg": (0, 0, 0)}, "\x1b[38;2;0;0;0m"),
+        ({"fg": (255, 255, 255)}, "\x1b[38;2;255;255;255m"),
+        # 256-color index 0 (black) is valid and must not be dropped by a
+        # truthiness check on fg/bg.
+        ({"fg": 0}, "\x1b[38;5;0m"),
+        ({"bg": 0}, "\x1b[48;5;0m"),
+        ({"bold": True}, "\x1b[1m"),
+        ({"dim": True}, "\x1b[2m"),
+        ({"underline": True}, "\x1b[4m"),
+        ({"overline": True}, "\x1b[53m"),
+        ({"italic": True}, "\x1b[3m"),
+        ({"blink": True}, "\x1b[5m"),
+        ({"reverse": True}, "\x1b[7m"),
+        ({"strikethrough": True}, "\x1b[9m"),
+        ({"bold": False}, "\x1b[22m"),
+        ({"dim": False}, "\x1b[22m"),
+        ({"underline": False}, "\x1b[24m"),
+        ({"overline": False}, "\x1b[55m"),
+        ({"italic": False}, "\x1b[23m"),
+        ({"blink": False}, "\x1b[25m"),
+        ({"reverse": False}, "\x1b[27m"),
+        ({"strikethrough": False}, "\x1b[29m"),
+        ({"fg": "black", "reset": False}, "\x1b[30m"),
+        # Every option at once.
+        (
+            {
+                "fg": (135, 0, 175),
+                "bg": 91,
+                "bold": True,
+                "dim": True,
+                "underline": True,
+                "overline": True,
+                "italic": True,
+                "blink": True,
+                "reverse": True,
+                "strikethrough": True,
+            },
+            "\x1b[38;2;135;0;175m\x1b[48;5;91m\x1b[1m\x1b[2m\x1b[4m"
+            "\x1b[53m\x1b[3m\x1b[5m\x1b[7m\x1b[9m",
+        ),
+    ],
+)
+def test_styling(styles, codes, text):
+    reset = "" if styles.get("reset") is False else "\x1b[0m"
+    styled = click.style(text, **styles)
+    assert styled == f"{codes}{text}{reset}"
+    assert click.unstyle(styled) == text
 
 
 @pytest.mark.parametrize("param", ["fg", "bg"])
@@ -105,6 +136,15 @@ def test_styling(styles, ref):
 def test_styling_invalid_color(param, value):
     with pytest.raises(ValueError, match="Unknown color"):
         click.style("x y", **{param: value})
+
+
+def test_unstyle_exception_message():
+    """A styled exception message reads back as plain text.
+
+    https://github.com/pallets/click/issues/2419
+    """
+    exception = click.ClickException(click.style("red", fg="red") + " text")
+    assert click.unstyle(str(exception)) == "red text"
 
 
 @pytest.mark.parametrize(
