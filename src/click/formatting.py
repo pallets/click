@@ -45,13 +45,18 @@ def wrap_text(
     no rewrapping should happen in that block.
 
     :param text: the text that should be rewrapped.
-    :param width: the maximum width for the text.
+    :param width: the maximum width for the text. A word wider than that is not cut, and
+                  goes on a line of its own.
     :param initial_indent: the initial indent that should be placed on the
                            first line as a string.
     :param subsequent_indent: the indent string that should be placed on
                               each consecutive line.
     :param preserve_paragraphs: if this flag is set then the wrapping will
                                 intelligently handle paragraphs.
+
+    .. versionchanged:: 8.6.0
+        Lines no longer break within a hyphenated word or a long word. A word
+        wider than ``width`` goes on a line of its own.
 
     .. versionchanged:: 8.4.0
         Width is measured in visible characters. ANSI escape sequences in
@@ -62,11 +67,15 @@ def wrap_text(
     from ._textwrap import TextWrapper
 
     text = text.expandtabs()
+    # Lines break between words only. A break after a hyphen or inside a long
+    # word would show one term, like an option name, as two.
     wrapper = TextWrapper(
         width,
         initial_indent=initial_indent,
         subsequent_indent=subsequent_indent,
         replace_whitespace=False,
+        break_on_hyphens=False,
+        break_long_words=False,
     )
     if not preserve_paragraphs:
         return wrapper.fill(text)
