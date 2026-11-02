@@ -31,6 +31,8 @@ Unreleased
   {pr}`3884`
 - Align command's deprecated help text to options and arguments: do not translate the
   command's own help text, only the `(DEPRECATED)` label. {pr}`3901`
+- Help pages no longer break a line within a hyphenated word, like an option
+  name, or within a long word. {issue}`3362` {pr}`3902`
 
 ## Version 8.5.0
 

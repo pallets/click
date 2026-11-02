@@ -233,6 +233,14 @@ Click's default wrapping ignores single new lines and rewraps the text based on 
     invoke(cli, args=['--help'])
 ```
 
+To change the rendering maximum width, pass `max_content_width` when calling the command.
+
+```bash
+cli(max_content_width=120)
+```
+
+To avoid ambiguity, line breaks are not added within hyphenated words (such as parameter names) or long words. This might cause a line to be longer than the max width, in which case it may be wrapped by the terminal.
+
 ## Escaping Click's Wrapping
 
 Sometimes Click's wrapping can be a problem, such as when showing code examples where new lines are significant. This behavior can be escaped on a per-paragraph basis by adding a line with only `\b` . The `\b` is removed from the rendered help text.
@@ -259,12 +267,6 @@ Example:
 
 .. click:run::
     invoke(cli, args=['--help'])
-```
-
-To change the rendering maximum width, pass `max_content_width` when calling the command.
-
-```bash
-cli(max_content_width=120)
 ```
 
 ## Truncating Help Texts
