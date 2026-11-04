@@ -584,6 +584,26 @@ def test_deprecated_empty_help_no_leading_space(runner, doc, deprecated):
     assert "\n   (DEPRECATED" not in out
 
 
+def test_deprecated_help_text_is_not_translated(runner, monkeypatch):
+    """Only the label goes through ``gettext``. A command's help text is
+    application data, and a command that is not deprecated never translates it.
+    """
+    monkeypatch.setattr(click.core, "_", lambda message: message.upper())
+
+    @click.group()
+    def cli():
+        pass
+
+    @cli.command(deprecated="REASON", help="sub help")
+    def sub():
+        pass
+
+    # Long help, from ``format_help_text``.
+    assert "sub help (DEPRECATED: REASON)" in runner.invoke(sub, ["--help"]).output
+    # Short help in the command listing, from ``get_short_help_str``.
+    assert "sub help (DEPRECATED: REASON)" in runner.invoke(cli, ["--help"]).output
+
+
 @pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])
 def test_deprecated_in_invocation(runner, deprecated):
     @click.command(deprecated=deprecated)

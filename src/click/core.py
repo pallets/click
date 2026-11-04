@@ -1256,7 +1256,7 @@ class Command:
             text = ""
 
         if self.deprecated:
-            text = f"{_(text)} {_format_deprecated_label(self.deprecated)}"
+            text = f"{text} {_format_deprecated_label(self.deprecated)}"
 
         return text.strip()
 
@@ -1289,7 +1289,7 @@ class Command:
 
         if self.deprecated:
             label = _format_deprecated_label(self.deprecated)
-            text = f"{_(text)} {label}" if text else label
+            text = f"{text} {label}" if text else label
 
         if text:
             formatter.write_paragraph()
