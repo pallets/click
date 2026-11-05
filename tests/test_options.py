@@ -233,9 +233,8 @@ def test_multiple_required(runner):
         (True, 1, [1.1, 2.2], (1.1, 2.2)),
         (True, 1, ["1", "2"], ("1", "2")),
         (True, 1, [None, None], (None, None)),
-        # Contrary to list or tuples, native Python types not supported by Click are
-        # not recognized and are converted to the default format: tuple of strings.
-        # Refs: https://github.com/pallets/click/issues/3036
+        # Contrary to list or tuples, native Python types not supported by Click are not
+        # recognized and are converted to the default format: tuple of strings.
         (True, 1, {1, 2}, ("1", "2")),
         (True, 1, frozenset([1, 2]), ("1", "2")),
         (True, 1, {1: "a", 2: "b"}, ("1", "2")),
@@ -456,10 +455,7 @@ def test_multiple_envvar(runner):
 
 
 def test_envvar_container_type(runner):
-    """Env vars are plain strings, so a container type splits them character-wise.
-
-    Refs: https://github.com/pallets/click/issues/3036
-    """
+    """Env vars are plain strings, so a container type splits them character-wise."""
 
     @click.command()
     @click.option("--x", envvar="X", type=frozenset)
@@ -636,10 +632,7 @@ def test_show_default_default_map(runner):
 
 
 def test_show_default_container_defaults(runner):
-    """Container defaults are rendered through ``str()`` in the help output.
-
-    Refs: https://github.com/pallets/click/issues/3036
-    """
+    """Container defaults are rendered through ``str()`` in the help output."""
 
     @click.command()
     @click.option("--a", default=frozenset(["git"]), type=frozenset, show_default=True)
@@ -687,10 +680,8 @@ def test_multiple_default_composite_type():
 def test_type_from_default_container(default):
     """Container defaults have no native Click type and fall back to STRING.
 
-    The documented "if no type is provided, the type of the default value is
-    used" rule does not apply to ``set``, ``frozenset`` or ``dict`` defaults.
-
-    Refs: https://github.com/pallets/click/issues/3036
+    This matches the documented rule: the type of the default value is used only if
+    Click recognizes it, and it does not recognize ``set``, ``frozenset`` or ``dict``.
     """
     opt = click.Option(["-a"], default=default)
     assert opt.type is click.STRING
@@ -1194,7 +1185,7 @@ def test_option_custom_class_can_override_type_cast_value_and_never_sees_unset(
 
 
 def test_option_custom_class_reusable(runner):
-    """Ensure we can reuse a custom class option. See Issue #926"""
+    """Ensure we can reuse a custom class option."""
 
     class CustomOption(click.Option):
         def get_help_record(self, ctx):
@@ -1426,10 +1417,8 @@ class _StrictEq:
     ids=["empty-string", "non-string-comparable-object"],
 )
 def test_show_default_with_empty_string(runner, default, expected):
-    """The empty-string check in help rendering must not break on objects
-    whose ``__eq__`` raises for string operands.
-
-    Regression test for https://github.com/pallets/click/issues/3298.
+    """The empty-string check in help rendering must not break on objects whose
+    ``__eq__`` raises for string operands.
     """
     opt = click.Option(["--limit"], default=default, show_default=True)
     ctx = click.Context(click.Command("cli"))
@@ -1614,8 +1603,7 @@ def test_type_from_flag_value():
         # Not passing --foo returns the default value as-is, in its Python type, then
         # converted by the option type. For boolean flags, default=True is a literal
         # value, not a sentinel meaning "activate flag". So it is NOT substituted with
-        # flag_value. See: https://github.com/pallets/click/issues/3111
-        # https://github.com/pallets/click/pull/3239
+        # flag_value.
         ({"type": bool, "default": True, "flag_value": True}, [], True),
         ({"type": bool, "default": True, "flag_value": False}, [], True),
         ({"type": bool, "default": False, "flag_value": True}, [], False),
@@ -1723,9 +1711,6 @@ def test_invalid_flag_definition(runner, args, opts):
 def test_default_dual_option_callback(runner, default, args, expected):
     """Check how default is processed by the callback when options compete for the same
     variable name.
-
-    Reproduction of the issue reported in
-    https://github.com/pallets/click/pull/3030#discussion_r2271571819
 
     .. hint::
         Similar to ``test_basic.py::test_flag_value_dual_options``.
@@ -2010,8 +1995,9 @@ def test_choice_usage_rendering(runner, choices, metavar):
         ([True, False], False, "False"),
         (["foo", 1], "foo", "foo"),
         (["foo", 1], 1, "1"),
-        # Enum choices are rendered as their names, not values.
-        # See: https://github.com/pallets/click/issues/2911
+        # Enum choices are rendered as their names, not values, ``StrEnum`` included: a
+        # name is always a string, and using values for some enum kinds only would be
+        # inconsistent.
         (HashType, HashType.SHA1, "SHA1"),
         # Enum choices allow defaults strings that are their names.
         (HashType, HashType.SHA256, "SHA256"),
@@ -2083,10 +2069,6 @@ class EnumSentinel(enum.Enum):
     def __bool__(self) -> Literal[False]:
         """Force the sentinel to be falsy to make sure it is not caught by Click
         internal implementation.
-
-        Falsy sentinels have been discussed in:
-        https://github.com/pallets/click/pull/3030#pullrequestreview-3106604795
-        https://github.com/pallets/click/pull/3030#pullrequestreview-3108471552
         """
         return False
 
@@ -2158,12 +2140,8 @@ class EnumSentinel(enum.Enum):
     ),
 )
 def test_dual_options_custom_type_sentinel_flag_value(runner, sentinel, args, expected):
-    """Check that an object-based sentinel, used as a flag value, is returned as-is
-    to a custom type that is shared by two options, competing for the same variable
-    name.
-
-    A reproduction of
-    https://github.com/pallets/click/issues/3024#issuecomment-3146511356
+    """Check that an object-based sentinel, used as a flag value, is returned as-is to a
+    custom type that is shared by two options, competing for the same variable name.
     """
 
     class ConfigParamType(click.ParamType):
@@ -2298,12 +2276,7 @@ class Class2:
     ],
 )
 def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expected):
-    """Test how the type and flag_value influence the returned value.
-
-    Cover cases reported in:
-    https://github.com/pallets/click/issues/3024#issuecomment-3146480714
-    https://github.com/pallets/click/issues/2012#issuecomment-892437060
-    """
+    """Test how the type and flag_value influence the returned value."""
 
     @click.command()
     @click.option("--pro", **opt_params)
@@ -2341,10 +2314,8 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
             ["--opt2"],
             EngineType.PRO,
         ),
-        # Exotic flag values like classes are passed through unchanged when no
-        # explicit type is given (UNPROCESSED is auto-detected).
-        # https://github.com/pallets/click/issues/2012
-        # https://github.com/pallets/click/issues/3121
+        # Exotic flag values like classes are passed through unchanged when no explicit
+        # type is given (UNPROCESSED is auto-detected).
         (
             {"flag_value": Class1, "default": True},
             {"flag_value": Class2},
@@ -2366,8 +2337,7 @@ def test_custom_type_flag_value_standalone_option(runner, opt_params, args, expe
         # String and None defaults pass through unchanged.
         ({"flag_value": Class1, "default": "True"}, {"flag_value": Class2}, [], "True"),
         ({"flag_value": Class1, "default": None}, {"flag_value": Class2}, [], None),
-        # To get the classes as-is, we need to specify the type as UNPROCESSED.
-        # https://github.com/pallets/click/issues/3121
+        # An explicit ``type=UNPROCESSED`` gives the same result.
         (
             {"flag_value": Class1, "type": UNPROCESSED, "default": True},
             {"flag_value": Class2, "type": UNPROCESSED},
@@ -2433,11 +2403,6 @@ def test_custom_type_flag_value_dual_options(
 ):
     """Test how flag values are processed with dual options competing for the same
     variable name.
-
-    Reproduce issues reported in:
-    https://github.com/pallets/click/issues/3024#issuecomment-3146508536
-    https://github.com/pallets/click/issues/2012#issue-946471049
-    https://github.com/pallets/click/issues/2012#issuecomment-892437060
     """
 
     @click.command()
@@ -2457,8 +2422,7 @@ def test_custom_type_flag_value_dual_options(
     ("opt_params", "args", "expected"),
     [
         # Class flag_value with default=True and UNPROCESSED: the class itself is
-        # returned, NOT an instance. Regression test for
-        # https://github.com/pallets/click/issues/3121
+        # returned, NOT an instance.
         ({"flag_value": Class1, "type": UNPROCESSED, "default": True}, [], Class1),
         (
             {"flag_value": Class1, "type": UNPROCESSED, "default": True},
@@ -2486,15 +2450,14 @@ def test_custom_type_flag_value_dual_options(
             [],
             re.compile(r"<test_options.Class2 object at 0x[0-9A-Fa-f]+>"),
         ),
-        # Non-callable flag_value with default=True: unaffected by the fix.
+        # Non-callable flag_value with default=True: resolves to flag_value as usual.
         ({"flag_value": "upper", "default": True}, [], "upper"),
         ({"flag_value": "upper", "default": True}, ["--opt"], "upper"),
     ],
 )
 def test_callable_flag_value_not_instantiated(runner, opt_params, args, expected):
     """A callable ``flag_value`` like a class, with ``default=True`` should not be
-    invoked when resolving the default. This is the single-option variant of
-    the regression reported in https://github.com/pallets/click/issues/3121.
+    invoked when resolving the default.
     """
 
     @click.command()
@@ -2528,7 +2491,7 @@ def test_callable_flag_value_default_map(runner):
     result = runner.invoke(cli, [], default_map={"value": "from-map"})
     assert result.output == repr("from-map")
 
-    # Callable in default_map is still invoked (not suppressed by the fix).
+    # Callable in default_map is still invoked, unlike the auto-aligned flag_value.
     result = runner.invoke(cli, [], default_map={"value": lambda: "lazy-map"})
     assert result.output == repr("lazy-map")
 
@@ -2618,10 +2581,8 @@ def test_callable_flag_value_get_default_override(
 
 
 def test_flag_value_not_stringified_for_custom_types(runner):
-    """Non-basic flag_value types are passed through unchanged without
-    requiring ``type=click.UNPROCESSED``.
-
-    Regression test for https://github.com/pallets/click/issues/2012
+    """Non-basic flag_value types are passed through unchanged without requiring
+    ``type=click.UNPROCESSED``.
     """
 
     @click.command()
@@ -2676,10 +2637,8 @@ def test_flag_value_not_stringified_for_custom_types(runner):
 def test_custom_type_container_flag_value(
     runner, container_type, flag_value, default, default_output, flag_output
 ):
-    """Check that container types are correctly handled as a type, a flag value
-    and a default.
-
-    Reproduces https://github.com/pallets/click/issues/2610
+    """Check that container types are correctly handled as a type, a flag value and a
+    default.
     """
 
     @click.command()
@@ -2707,12 +2666,10 @@ def test_custom_type_container_flag_value(
     ("default", "args", "expected"),
     [
         # default=None: 3-state pattern (e.g. Flask --reload/--no-reload).
-        # https://github.com/pallets/click/issues/3024
         (None, [], None),
         (None, ["--flag"], True),
         (None, ["--no-flag"], False),
         # default=True: literal value, not substituted with flag_value.
-        # https://github.com/pallets/click/issues/3111
         (True, [], True),
         (True, ["--flag"], True),
         (True, ["--no-flag"], False),
@@ -2738,9 +2695,8 @@ def test_bool_flag_pair_default(runner, default, args, expected):
 @pytest.mark.parametrize(
     ("opts", "args", "expected"),
     [
-        # #3403 reproducer: enable/disable pair with explicit ``default=True``
-        # on the positive flag, declared after (inner decorator) the negative.
-        # https://github.com/pallets/click/issues/3403
+        # The documented enable/disable pair: explicit ``default=True`` on the positive
+        # flag, declared after (inner decorator) the negative.
         pytest.param(
             [
                 ("--without-xyz", {"flag_value": False}),
@@ -2748,7 +2704,7 @@ def test_bool_flag_pair_default(runner, default, args, expected):
             ],
             [],
             True,
-            id="3403-reproducer-no-args",
+            id="explicit-default-inner-no-args",
         ),
         pytest.param(
             [
@@ -2757,7 +2713,7 @@ def test_bool_flag_pair_default(runner, default, args, expected):
             ],
             ["--with-xyz"],
             True,
-            id="3403-reproducer-with-only",
+            id="explicit-default-inner-with-only",
         ),
         pytest.param(
             [
@@ -2766,7 +2722,7 @@ def test_bool_flag_pair_default(runner, default, args, expected):
             ],
             ["--without-xyz"],
             False,
-            id="3403-reproducer-without-only",
+            id="explicit-default-inner-without-only",
         ),
         # When both flags are passed, the parser keeps the last value seen.
         pytest.param(
@@ -2776,7 +2732,7 @@ def test_bool_flag_pair_default(runner, default, args, expected):
             ],
             ["--with-xyz", "--without-xyz"],
             False,
-            id="3403-reproducer-with-then-without",
+            id="explicit-default-inner-with-then-without",
         ),
         pytest.param(
             [
@@ -2785,7 +2741,7 @@ def test_bool_flag_pair_default(runner, default, args, expected):
             ],
             ["--without-xyz", "--with-xyz"],
             True,
-            id="3403-reproducer-without-then-with",
+            id="explicit-default-inner-without-then-with",
         ),
         # Order-independence: explicit ``default=True`` on the OUTER
         # decorator (declared first) must produce the same behavior.
@@ -2819,8 +2775,9 @@ def test_bool_flag_pair_default(runner, default, args, expected):
             False,
             id="explicit-default-false-on-negative",
         ),
-        # Explicit ``default=True`` on the negative flag is unusual but
-        # legal: post-#3239, it is a literal Python value, not a sentinel.
+        # Explicit ``default=True`` on the negative flag is unusual but legal: for a
+        # boolean flag, ``default=True`` is a literal value, not substituted with
+        # ``flag_value``.
         pytest.param(
             [
                 ("--with-xyz", {"flag_value": True}),
@@ -2972,10 +2929,8 @@ def test_bool_flag_pair_default(runner, default, args, expected):
 def test_bool_flag_group_competition(runner, opts, args, expected):
     """Competing boolean flags sharing a single parameter name.
 
-    Verifies the arbitration rules between options that target the same
-    variable name in a feature-switch group.
-
-    Regression test for https://github.com/pallets/click/issues/3403
+    Verifies the arbitration rules between options that target the same variable name in
+    a feature-switch group.
     """
 
     @click.command()
@@ -3052,7 +3007,6 @@ def test_bool_flag_group_competition_with_default_map(
 @pytest.mark.parametrize(
     ("opts", "args", "invoke_kwargs", "expected_value", "expected_source"),
     [
-        # https://github.com/pallets/click/issues/3458
         pytest.param(
             [
                 ("--without-xyz", {"flag_value": False}),
@@ -3091,10 +3045,7 @@ def test_bool_flag_group_competition_with_default_map(
 def test_bool_flag_group_parameter_source(
     runner, opts, args, invoke_kwargs, expected_value, expected_source
 ):
-    """``get_parameter_source()`` stays correct for feature-switch groups.
-
-    Regression test for https://github.com/pallets/click/issues/3458.
-    """
+    """``get_parameter_source()`` stays correct for feature-switch groups."""
 
     @click.command()
     @click.pass_context
@@ -3114,9 +3065,9 @@ def test_bool_flag_group_parameter_source(
 @pytest.mark.parametrize(
     ("opts", "args", "expected"),
     [
-        # Non-boolean feature switch group: classic --upper/--lower
-        # pattern. The option with ``default=True`` acts as the default
-        # via the substitution rule (#3239) for non-boolean ``flag_value``.
+        # Non-boolean feature switch group: classic --upper/--lower pattern. The option
+        # with ``default=True`` acts as the default via the substitution rule for
+        # non-boolean ``flag_value``.
         pytest.param(
             [
                 ("--upper", {"flag_value": "upper", "default": True}),
@@ -3327,10 +3278,10 @@ def test_bool_flag_group_parameter_source(
             "second",
             id="both-explicit-defaults-string-last-wins",
         ),
-        # Mixed boolean and non-boolean ``flag_value`` in the same group
-        # is allowed. Both options here carry an explicit default, so last-wins
-        # picks the option declared last regardless of value type. The boolean
-        # ``default=False`` is a literal value (post-#3239), not a sentinel.
+        # Mixed boolean and non-boolean ``flag_value`` in the same group is allowed.
+        # Both options here carry an explicit default, so last-wins picks the option
+        # declared last regardless of value type. The boolean ``default=False`` passes
+        # through literally, like the string default.
         pytest.param(
             [
                 ("--bool-flag", {"flag_value": True, "default": False}),
@@ -3607,10 +3558,10 @@ def test_flag_group_competition_four_flags(runner, opts, args, expected):
             False,
             id="auto-envvar-prefix-loses-to-cmdline",
         ),
-        # ``Sentinel.UNSET`` in ``default_map`` must be skipped (#3224
-        # carve-out): the lookup falls through to the parameter default.
-        # Inside a feature switch group, the explicit ``default=True`` on
-        # ``--with-xyz`` then wins over the sibling's auto-``False``.
+        # ``Sentinel.UNSET`` in ``default_map`` must be skipped: the lookup falls
+        # through to the parameter default. Inside a feature switch group, the explicit
+        # ``default=True`` on ``--with-xyz`` then wins over the sibling's
+        # auto-``False``.
         pytest.param(
             {},
             {"enable_xyz": UNSET},
@@ -3660,10 +3611,8 @@ def test_flag_group_competition_envvar_prefix_and_unset_default_map(
     ],
 )
 def test_flag_value_on_option_with_zero_or_one_args(flag_type, args, expect_output):
-    """An option with flag_value and is_flag=False can be
-    omitted or used with 0 or 1 args.
-
-    Regression test for https://github.com/pallets/click/issues/3084
+    """An option with flag_value and is_flag=False can be omitted or used with 0 or 1
+    args.
     """
     if flag_type is str:
         flagopt = click.option(

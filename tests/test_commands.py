@@ -460,20 +460,15 @@ def test_iter_params_for_processing(
     ],
 )
 def test_get_help_option_names(help_option_names, params, expected):
-    """Check help option names are deduplicated but keep stable order.
-
-    https://github.com/pallets/click/pull/3728
-    """
+    """Check help option names are deduplicated but keep stable order."""
     cli = click.Command("cli", params=[click.Option(decls) for decls in params])
     ctx = click.Context(cli, help_option_names=help_option_names)
     assert cli.get_help_option_names(ctx) == expected
 
 
 def test_help_param_priority(runner):
-    """Cover the edge-case in which the eagerness of help option was not
-    respected, because it was internally generated multiple times.
-
-    See: https://github.com/pallets/click/pull/2811
+    """Cover the edge-case in which the eagerness of help option was not respected,
+    because it was internally generated multiple times.
     """
 
     def print_and_exit(ctx, param, value):

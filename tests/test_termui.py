@@ -114,10 +114,10 @@ def test_progressbar_hidden_manual(runner, monkeypatch):
 def test_progressbar_lands_on_final_position(monkeypatch, update_min_steps, drive):
     """The bar reaches its total whatever the ``update_min_steps`` threshold.
 
-    Regression for issue #3571: a threshold that does not divide the length
-    left a remainder pending, so `show_pos` froze below completion, reporting
-    `14/20` for a length of 20 and a threshold of 7. Thresholds of 1 and 2 do
-    divide 20, and 25 exceeds it, so nothing is ever rendered until the end.
+    Regression: a threshold that does not divide the length left a remainder pending, so
+    `show_pos` froze below completion, reporting `14/20` for a length of 20 and a
+    threshold of 7. Thresholds of 1 and 2 do divide 20, and 25 exceeds it, so nothing is
+    ever rendered until the end.
     """
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     stream = io.StringIO()
@@ -451,7 +451,7 @@ def test_edit(runner):
 @pytest.mark.skipif(WIN, reason="No sed on Windows.")
 @pytest.mark.parametrize("use_iterable", [False, True], ids=["single", "iterable"])
 def test_edit_pathlib(runner, tmp_path, use_iterable):
-    """Issue #2869: ``filename`` accepts ``os.PathLike`` values."""
+    """``filename`` accepts ``os.PathLike`` values."""
     file_path = tmp_path / "file.txt"
     file_path.write_text("a\nb\n", encoding="UTF-8")
     filename = [file_path] if use_iterable else file_path
@@ -476,35 +476,35 @@ def test_edit_pathlib(runner, tmp_path, use_iterable):
             ["vi", 'file"; rm -rf / ; echo "'],
             id="shell metacharacters in filename",
         ),
-        # Issue #1026: editor path with spaces must be quoted.
+        # Editor path with spaces must be quoted.
         pytest.param(
             '"C:\\Program Files\\Sublime Text 3\\sublime_text.exe"',
             ["f.txt"],
             ["C:\\Program Files\\Sublime Text 3\\sublime_text.exe", "f.txt"],
             id="quoted windows path with spaces",
         ),
-        # PR #1477: pager/editor command with flags, like ``less -FRSX``.
+        # Pager/editor command with flags, like ``less -FRSX``.
         pytest.param(
             "less -FRSX",
             ["f.txt"],
             ["less", "-FRSX", "f.txt"],
             id="command with flags",
         ),
-        # Issue #1026: quoted command with ``--wait`` flag.
+        # A command name with spaces must be quoted, as on a shell command line.
         pytest.param(
             '"my command" --option value arg',
             ["f.txt"],
             ["my command", "--option", "value", "arg", "f.txt"],
             id="quoted command with args",
         ),
-        # PR #1477: unquoted unix path.
+        # Unquoted unix path.
         pytest.param(
             "/usr/bin/vim",
             ["f.txt"],
             ["/usr/bin/vim", "f.txt"],
             id="unix absolute path",
         ),
-        # Issue #1026: macOS path with escaped space.
+        # macOS path with escaped space.
         pytest.param(
             "/Applications/Sublime\\ Text.app/Contents/SharedSupport/bin/subl",
             ["f.txt"],
@@ -629,8 +629,8 @@ def test_editor_nonexistent_exception():
         pytest.param("   ", [], id="whitespace only"),
         pytest.param("  less  ", ["less"], id="leading and trailing spaces"),
         pytest.param("less\t-R", ["less", "-R"], id="tab as separator"),
-        # Quoted Windows paths: quotes are stripped in POSIX mode (the
-        # default), preserving backslashes inside quoted tokens (issue #1026).
+        # Quoted Windows paths: quotes are stripped in POSIX mode (the default),
+        # preserving backslashes inside quoted tokens.
         pytest.param(
             '"C:\\Program Files\\Git\\usr\\bin\\less.exe"',
             ["C:\\Program Files\\Git\\usr\\bin\\less.exe"],
@@ -654,8 +654,8 @@ def test_editor_nonexistent_exception():
             ["/usr/bin/my pager"],
             id="escaped space in unix path",
         ),
-        # PR #1477: POSIX mode (the default) eats unquoted backslashes.
-        # On Windows, users must quote paths that contain backslashes.
+        # POSIX mode (the default) eats unquoted backslashes. On Windows, users must
+        # quote paths that contain backslashes.
         pytest.param(
             "C:\\path\\to\\exe /test other\\path",
             ["C:pathtoexe", "/test", "otherpath"],
@@ -666,9 +666,8 @@ def test_editor_nonexistent_exception():
 def test_pager_shlex_split(pager_env, expected_parts):
     """Verify shlex.split produces the expected argv for PAGER values.
 
-    Tests the splitting logic used by :func:`click._termui_impl.pager` to
-    turn the ``PAGER`` environment variable into an ``argv`` list. See
-    issue #1026, PR #1477, PR #1543, PR #2775.
+    Tests the splitting logic used by :func:`click._termui_impl._pager_contextmanager`
+    to turn the ``PAGER`` environment variable into an ``argv`` list.
     """
     assert shlex.split(pager_env) == expected_parts
 
@@ -891,11 +890,10 @@ class _FakePagerProcess:
 def test_pipepager_less_raw_mode_detection(
     monkeypatch, cmd_parts, less_env, expected_color, expected_less
 ):
-    """Raw-mode detection parses the option tokens from ``LESS`` and the
-    command line. Filenames and unrelated options carrying the letter ``r``
-    or ``R`` do not request raw mode, and ``_pipepager`` then reports no
-    opinion (``None``) that :func:`get_pager_file` settles to off.
-    {issue}`3416`
+    """Raw-mode detection parses the option tokens from ``LESS`` and the command line.
+    Filenames and unrelated options carrying the letter ``r`` or ``R`` do not request
+    raw mode, and ``_pipepager`` then reports no opinion (``None``) that
+    :func:`get_pager_file` settles to off.
     """
     if less_env is None:
         monkeypatch.delitem(click._termui_impl.os.environ, "LESS", raising=False)
@@ -926,8 +924,8 @@ def test_pipepager_less_raw_mode_detection(
 
 
 def test_echo_via_pager_streams_each_write(monkeypatch):
-    """Each write is flushed so a slow generator streams to the pager
-    incrementally instead of buffering until the end (issues #3242, #2542).
+    """Each write is flushed so a slow generator streams to the pager incrementally
+    instead of buffering until the end.
     """
     calls = []
 
@@ -1006,7 +1004,7 @@ def test_get_pager_file_pager_unset_falls_back_when_no_default(monkeypatch, tmp_
 
 
 def test_get_pager_file_missing_pager_keeps_borrowed_stream_open(monkeypatch):
-    """A missing ``PAGER`` must not close the borrowed stdout (issue #3449).
+    """A missing ``PAGER`` must not close the borrowed stdout.
 
     The ``8.4.0`` regression was only fixed for the no-tty ``_nullpager`` path;
     the ``_pipepager``/``_tempfilepager`` fallbacks (reached in a tty when
@@ -1040,9 +1038,8 @@ def test_get_pager_file_missing_pager_keeps_borrowed_stream_open(monkeypatch):
 def test_echo_via_pager_tty_pager_missing(runner, monkeypatch):
     """``echo_via_pager`` through the tty fallback keeps ``CliRunner`` working.
 
-    Regression for issue #3449 via the pager fallback: a tty with ``PAGER``
-    pointing at a missing binary used to close the runner's stdout, breaking
-    ``CliRunner.invoke``.
+    Regression via the pager fallback: a tty with ``PAGER`` pointing at a missing binary
+    used to close the runner's stdout, breaking ``CliRunner.invoke``.
     """
     monkeypatch.setattr(click._termui_impl, "isatty", lambda _: True)
     monkeypatch.setitem(
@@ -1173,11 +1170,11 @@ def _force_tempfile_pager(monkeypatch, pager_cmd="cat"):
     That backend is only reachable on Windows, so the platform flag and the tty
     probes are faked to exercise it from any runner.
 
-    ``PAGER`` is set to the bare command name, not to the path
-    :func:`shutil.which` resolves it to. ``pager()`` splits ``PAGER`` with
-    :func:`shlex.split` in POSIX mode, where a Windows path loses its
-    backslashes and splits on the space in ``C:\\Program Files``, leaving a
-    command that resolves to nothing. Click resolves the bare name itself.
+    ``PAGER`` is set to the bare command name, not to the path :func:`shutil.which`
+    resolves it to. ``_pager_contextmanager()`` splits ``PAGER`` with
+    :func:`shlex.split` in POSIX mode, where a Windows path loses its backslashes and
+    splits on the space in ``C:\\Program Files``, leaving a command that resolves to
+    nothing. Click resolves the bare name itself.
     """
     cmd = shlex.split(pager_cmd)[0]
     assert shutil.which(cmd) is not None, f"{cmd} not available"
@@ -1204,7 +1201,7 @@ def _page_with_echo_via_pager():
     ],
 )
 def test_tempfile_pager_accepts_text(monkeypatch, capfd, page):
-    """The temp file backend must yield a text stream (issues #3731, #3740).
+    """The temp file backend must yield a text stream.
 
     Regression: a binary-mode temp file handed straight to ``get_pager_file``
     left the caller writing ``str`` to a binary handle, which raises
@@ -1262,11 +1259,11 @@ def test_tempfile_pager_passes_pager_params(monkeypatch, capfd):
 def test_tempfile_pager_closes_file_before_unlink(monkeypatch):
     """An error while paging must not leave the temp file open at unlink time.
 
-    The ``f.close()`` on the success path sits after the ``yield``, so an
-    exception raised while the pager is open used to skip it and reach
-    ``finally: os.unlink(f.name)`` with the handle still open. Windows refuses
-    to unlink an open file, so ``PermissionError: [WinError 32]`` replaced the
-    original error and hid it (issue #3731).
+    The ``f.close()`` on the success path sits after the ``yield``, so an exception
+    raised while the pager is open used to skip it and reach
+    ``finally: os.unlink(f.name)`` with the handle still open. Windows refuses to unlink
+    an open file, so ``PermissionError: [WinError 32]`` replaced the original error and
+    hid it.
     """
     _force_tempfile_pager(monkeypatch)
 
@@ -1430,10 +1427,9 @@ def test_confirmation_prompt(runner, prompt, input, default, expect):
 def test_prompt_and_confirm_ansi_respects_color(
     runner, call, user_input, color, expect
 ):
-    """``confirm`` and ``prompt`` strip ANSI color and style codes from the
-    prompt when color is disabled and keep them when it is enabled, like
-    ``echo``. The prompt is written by ``input`` rather than ``echo``, so it
-    used to keep the codes regardless (issue 3572).
+    """``confirm`` and ``prompt`` strip ANSI color and style codes from the prompt when
+    color is disabled and keep them when it is enabled, like ``echo``. The prompt is
+    written by ``input`` rather than ``echo``, so it used to keep the codes regardless.
     """
 
     @click.command()
@@ -1487,9 +1483,8 @@ def test_false_show_default_cause_no_default_display_in_prompt(runner):
 def test_string_show_default_in_prompt(
     runner, show_default, default, user_input, in_prompt, not_in_prompt
 ):
-    """When show_default is a string, the prompt should display that
-    string in parentheses instead of the actual default value,
-    matching the help text behavior. See pallets/click#2836."""
+    """When show_default is a string, the prompt should display that string in
+    parentheses instead of the actual default value, matching the help text behavior."""
 
     option_kwargs = {"show_default": show_default, "prompt": True}
     if default is not UNSET:
@@ -1617,9 +1612,7 @@ FLAG_VALUE_PROMPT_CASES = [
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "y", True),
     ({"prompt": True, "default": True, "flag_value": True}, [], "[Y/n]", "n", False),
     # For boolean flags, default=True is a literal value, not a sentinel meaning
-    # "activate flag", so the prompt shows [Y/n] with default=True. See:
-    # https://github.com/pallets/click/issues/3111
-    # https://github.com/pallets/click/pull/3239
+    # "activate flag", so the prompt shows [Y/n] with default=True.
     ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "", True),
     ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "y", True),
     ({"prompt": True, "default": True, "flag_value": False}, [], "[Y/n]", "n", False),
@@ -1679,10 +1672,8 @@ FLAG_VALUE_PROMPT_CASES = [
 def test_flag_value_prompt(
     runner, opt_decls, opt_params, args, prompt, input, expected
 ):
-    """Check how flag value are prompted and handled by all combinations of
-    ``prompt``, ``default``, and ``flag_value`` parameters.
-
-    Covers concerns raised in issue https://github.com/pallets/click/issues/1992.
+    """Check how flag value are prompted and handled by all combinations of ``prompt``,
+    ``default``, and ``flag_value`` parameters.
     """
 
     @click.command()
@@ -1747,9 +1738,8 @@ class _CustomTypeWithRawValue(click.ParamType):
 
 
 class _PasswordLengthType(click.ParamType):
-    """Mirrors the issue's original use case: a password validator
-    that references the user-typed value in its error message without
-    quoting it.
+    """A password validator that puts the typed value, unquoted, in its error
+    message.
     """
 
     name = "password"
@@ -1861,14 +1851,14 @@ class _ApostropheReprType(click.ParamType):
             "1",
             "is not in the range",
             None,
-            id="intrange-numeric-substring-falls-back-to-generic",
+            id="intrange-numeric-substring-not-masked",
         ),
         pytest.param(
             _StaticMessageType(),
             "ent",
             "Authentication failed for this account",
             None,
-            id="partial-word-match-falls-back-to-generic",
+            id="partial-word-match-not-masked",
         ),
         # When the raw (unquoted) value appears in the message, mask it instead
         # of replacing the whole message with a generic fallback that throws
@@ -1929,8 +1919,6 @@ class _ApostropheReprType(click.ParamType):
 def test_hide_input_error_message(
     runner, type, user_input, expected_fragment, unexpected_fragment
 ):
-    """https://github.com/pallets/click/issues/2809"""
-
     @click.command()
     @click.option("--password", prompt=True, hide_input=True, type=type)
     def cli(password):

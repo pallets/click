@@ -195,10 +195,10 @@ def test_echo_via_pager_yields_before_exception(monkeypatch, tmp_path):
     """A generator that yields then raises: click writes the partial output to
     the pager stream before propagating the exception.
 
-    The pager file content is intentionally NOT asserted: pipe-drain timing
-    between click and the pager subprocess is outside click's control
-    (#2899, #3470). Spying on ``_PagerWriter.write`` records what click sent
-    to the pager, which is deterministic regardless of scheduling.
+    The pager file content is intentionally NOT asserted: pipe-drain timing between
+    click and the pager subprocess is outside click's control. Spying on
+    ``_PagerWriter.write`` records what click sent to the pager, which is deterministic
+    regardless of scheduling.
     """
     monkeypatch.setitem(os.environ, "PAGER", "cat")
     monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)
@@ -231,9 +231,9 @@ def test_echo_via_pager_yields_before_exception(monkeypatch, tmp_path):
 def test_stress_echo_via_pager_exception_cleanup(_, monkeypatch, tmp_path):
     """Repeated exceptions during ``echo_via_pager`` must not leak subprocesses.
 
-    Regression coverage for the cleanup path in ``_pipepager``'s exception
-    handler (issue #2899, PR #3470). Each iteration spawns a real pager
-    subprocess, raises before any data is written and check there is no leak.
+    Regression coverage for the cleanup path in ``_pipepager``'s exception handler. Each
+    iteration spawns a real pager subprocess, raises before any data is written and
+    check there is no leak.
     """
     monkeypatch.setitem(os.environ, "PAGER", "cat")
     monkeypatch.setattr(click._termui_impl, "isatty", lambda x: True)

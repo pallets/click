@@ -116,16 +116,14 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     assert out == "Prompt to stdin with no suffix"
     assert err == ""
 
-    # On non-Windows the full prompt goes through redirect_stdout so
-    # nothing leaks to stdout when err=True.
-    # https://github.com/pallets/click/issues/2968
+    # The full prompt goes through redirect_stdout so nothing leaks to stdout when
+    # err=True.
     emulate_input("asdlkj\n")
     click.prompt("Prompt to stderr", err=True)
     out, err = capfd.readouterr()
     assert out == ""
     assert err == "Prompt to stderr: "
 
-    # https://github.com/pallets/click/issues/3019
     emulate_input("asdlkj\n")
     click.prompt("Prompt to stderr with no suffix", prompt_suffix="", err=True)
     out, err = capfd.readouterr()
@@ -144,14 +142,12 @@ def test_echo_writing_to_standard_error(capfd, monkeypatch):
     assert out == "Prompt to stdin with no suffix [y/N]"
     assert err == ""
 
-    # https://github.com/pallets/click/issues/2968
     emulate_input("y\n")
     click.confirm("Prompt to stderr", err=True)
     out, err = capfd.readouterr()
     assert out == ""
     assert err == "Prompt to stderr [y/N]: "
 
-    # https://github.com/pallets/click/issues/3019
     emulate_input("y\n")
     click.confirm("Prompt to stderr with no suffix", prompt_suffix="", err=True)
     out, err = capfd.readouterr()

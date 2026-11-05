@@ -13,10 +13,11 @@ import click
 def test_file_surrogates(type, tmp_path):
     """Ensures that the error handling in ``click.File`` is robust.
 
-    ``EILSEQ`` shows up with rootless Podman (FUSE-backed paths) and on filesystems
-    that reject non-UTF-8 names, like ZFS with ``utf8only=on``.
+    ``EILSEQ`` shows up with rootless Podman (FUSE-backed paths) and on filesystems that
+    reject non-UTF-8 names, like ZFS with ``utf8only=on``.
 
-    See: https://github.com/pallets/click/issues/2634
+    The test matches these errors instead of using the skip of ``test_path_surrogates``,
+    which also skips macOS, where this test passes.
     """
     path = tmp_path / "\udcff"
     match = (

@@ -139,10 +139,7 @@ def test_styling_invalid_color(param, value):
 
 
 def test_unstyle_exception_message():
-    """A styled exception message reads back as plain text.
-
-    https://github.com/pallets/click/issues/2419
-    """
+    """A styled exception message reads back as plain text."""
     exception = click.ClickException(click.style("red", fg="red") + " text")
     assert click.unstyle(str(exception)) == "red text"
 

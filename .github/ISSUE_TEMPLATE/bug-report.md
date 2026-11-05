@@ -4,8 +4,8 @@ about: Report a bug in Click (not other projects which depend on Click)
 ---
 
 <!--
-This issue tracker is a tool to address bugs in Click itself. Please use
-GitHub Discussions or the Pallets Discord for questions about your own code.
+This issue tracker is a tool to address bugs in Click itself. Please use the
+Pallets Discord (https://discord.gg/pallets) for questions about your own code.
 
 Replace this comment with a clear outline of what the bug is.
 -->
