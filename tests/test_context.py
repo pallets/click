@@ -182,8 +182,6 @@ def test_make_pass_meta_decorator_doc():
 
 
 def test_hiding_of_unset_sentinel_in_callbacks():
-    """Fix: https://github.com/pallets/click/issues/3136"""
-
     def inspect_other_params(ctx, param, value):
         """A callback that inspects other parameters' values via the context."""
         assert click.get_current_context() is ctx

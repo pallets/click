@@ -148,6 +148,15 @@ You can set the `EDITOR` in your environment with its appropriate flags:
 
 For an editor with no such flag, a workaround is to point `EDITOR` at a small wrapper script that opens the editor and blocks until it exits.
 
+(pager-ctrl-c)=
+### {kbd}`Ctrl+C` in the pager stops the program
+
+`less` follows a stream with {kbd}`F`, and {kbd}`Ctrl+C` leaves follow mode. It also sends `SIGINT` to the command, which stops it.
+
+#### Answer
+
+To quit `less` in follow mode, press {kbd}`Ctrl+X` then {kbd}`q`, which leaves follow mode and closes the pager. Pressing {kbd}`Ctrl+C` instead propagates to Click and quits the command as well.
+
 ### Tab completion during interactive prompts
 
 A command asks for a file path while it runs:

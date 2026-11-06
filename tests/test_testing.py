@@ -313,7 +313,6 @@ def test_with_echo_via_pager():
 
 
 def test_exit_code_and_output_from_sys_exit():
-    # See issue #362
     @click.command()
     def cli_string():
         click.echo("hello world")
@@ -525,9 +524,9 @@ def test_tempdir_replacement_pattern(runner, tmp_path):
 def test_tempdir_isolation_is_thread_safe():
     """The recommended replacement is thread-safe, unlike ``isolated_filesystem()``.
 
-    Each thread owns a ``tempfile.TemporaryDirectory`` and works through
-    absolute paths, so there is no ``os.chdir`` and no process-global CWD race
-    (the reason ``isolated_filesystem()`` is not thread-safe, issue #3501).
+    Each thread owns a ``tempfile.TemporaryDirectory`` and works through absolute paths,
+    so there is no ``os.chdir`` and no process-global CWD race (the reason
+    ``isolated_filesystem()`` is not thread-safe).
 
     ``invoke()`` is deliberately not called concurrently here: it redirects the
     process-global standard streams, so parallel invocations in one process
@@ -696,7 +695,7 @@ def test_capture_fd_os_write():
 
 @needs_fd_capture
 def test_capture_fd_stale_reference():
-    """capture='fd' captures writes from stale stdout references (issue #2874).
+    """capture='fd' captures writes from stale stdout references.
 
     Simulates ``from sys import stdout`` at import time, which grabs
     the real stdout connected to fd 1.  The stale object's underlying
@@ -722,8 +721,8 @@ def test_capture_fd_stale_reference():
 
 @needs_fd_capture
 def test_capture_fd_logging_handler(tmp_path):
-    """capture='fd' captures logging output from a handler holding a stale
-    stderr reference (issue #2827).
+    """capture='fd' captures logging output from a handler holding a stale stderr
+    reference.
 
     stdlib logging.StreamHandler grabs sys.stderr at configuration time.
     Under normal CliRunner (sys-level capture), the handler still writes
@@ -768,7 +767,7 @@ def test_capture_fd_logging_handler(tmp_path):
 
 @needs_fd_capture
 def test_capture_fd_faulthandler():
-    """faulthandler.enable() works with capture='fd' (issue #2865)."""
+    """faulthandler.enable() works with capture='fd'."""
 
     @click.command()
     def cli():
@@ -782,9 +781,8 @@ def test_capture_fd_faulthandler():
 
 
 def test_capture_sys_fileno_raises():
-    """capture='sys' leaves fileno() raising UnsupportedOperation, so user
-    code that does ``os.dup2(w, sys.stdout.fileno())`` cannot mutate the host
-    runner's stdout (issue #3384).
+    """capture='sys' leaves fileno() raising UnsupportedOperation, so user code that
+    does ``os.dup2(w, sys.stdout.fileno())`` cannot mutate the host runner's stdout.
     """
 
     @click.command()

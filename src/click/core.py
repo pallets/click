@@ -536,10 +536,9 @@ class Context:
         self._depth = 0
         self._parameter_source = {}
         # Tracks whether the option that currently owns each parameter slot in
-        # :attr:`params` had its ``default`` set explicitly by the user. Used
-        # to tie-break feature-switch groups where multiple options share a
-        # parameter name and both fall back to their default value.
-        # Refs: https://github.com/pallets/click/issues/3403
+        # :attr:`params` had its ``default`` set explicitly by the user. Used to
+        # tie-break feature-switch groups where multiple options share a parameter name
+        # and both fall back to their default value.
         self._param_default_explicit = {}
         self._exit_stack = ExitStack()
 
@@ -922,10 +921,7 @@ class Context:
                     # We explicitly hide the :attr:`UNSET` value to the user, as we
                     # choose to make it an implementation detail. And because ``invoke``
                     # has been designed as part of Click public API, we return ``None``
-                    # instead. Refs:
-                    # https://github.com/pallets/click/issues/3066
-                    # https://github.com/pallets/click/issues/3065
-                    # https://github.com/pallets/click/pull/3068
+                    # instead.
                     if default_value is UNSET:
                         default_value = None
                     kwargs[param.name] = param.type_cast_value(ctx, default_value)
@@ -1281,7 +1277,7 @@ class Command:
             text = ""
 
         if self.deprecated:
-            text = f"{_(text)} {_format_deprecated_label(self.deprecated)}"
+            text = f"{text} {_format_deprecated_label(self.deprecated)}"
 
         return text.strip()
 
@@ -1314,7 +1310,7 @@ class Command:
 
         if self.deprecated:
             label = _format_deprecated_label(self.deprecated)
-            text = f"{_(text)} {label}" if text else label
+            text = f"{text} {label}" if text else label
 
         if text:
             formatter.write_paragraph()
@@ -1409,9 +1405,6 @@ class Command:
         #
         # Waiting until after the initial parse to convert allows us to treat `UNSET`
         # more like a missing value when multiple params use the same name.
-        # Refs:
-        # https://github.com/pallets/click/issues/3071
-        # https://github.com/pallets/click/pull/3079
         for name, value in ctx.params.items():
             if value is UNSET:
                 ctx.params[name] = None
@@ -2413,11 +2406,9 @@ class Parameter(ABC):
         #   arbitrage the default value of coupled Parameters sharing the same
         #   self.name, like flag options),
         # - and the actual value of the default.
-        # It is confusing and is the source of many issues discussed in:
-        # https://github.com/pallets/click/pull/3030
-        # In the future, we might think of splitting it in two, not unlike
-        # Option.is_flag and Option.flag_value: we could have something like
-        # Parameter.is_default and Parameter.default_value.
+        # It is confusing and is the source of many issues. In the future, we might
+        # think of splitting it in two, not unlike Option.is_flag and Option.flag_value:
+        # we could have something like Parameter.is_default and Parameter.default_value.
         default: t.Any | t.Callable[[], t.Any] | None = UNSET,
         callback: t.Callable[[Context, Parameter, t.Any], t.Any] | None = None,
         nargs: int | None = None,
@@ -2452,11 +2443,10 @@ class Parameter(ABC):
         self.multiple = multiple
         self.expose_value = expose_value
         self.default = default
-        # Whether the user passed ``default`` explicitly to the constructor.
-        # Captured before any auto-derived default (like ``False`` for boolean
-        # flags in :class:`Option`) replaces the :data:`UNSET` sentinel, so it
-        # remains ``False`` when the default was inferred rather than chosen.
-        # Refs: https://github.com/pallets/click/issues/3403
+        # Whether the user passed ``default`` explicitly to the constructor. Captured
+        # before any auto-derived default (like ``0`` for a ``count`` :class:`Option`)
+        # replaces the :data:`UNSET` sentinel, so it remains ``False`` when the default
+        # was inferred rather than chosen.
         self._default_explicit = default is not UNSET
         self.is_eager = is_eager
         self.metavar = metavar
@@ -2813,10 +2803,10 @@ class Parameter(ABC):
         :meta private:
         """
         # shelter `type_cast_value` from ever seeing an `UNSET` value by handling the
-        # cases in which `UNSET` gets special treatment explicitly at this layer
-        #
-        # Refs:
-        # https://github.com/pallets/click/issues/3069
+        # cases in which `UNSET` gets special treatment explicitly at this layer.
+        # Subclasses can override the public `type_cast_value`, so the internal sentinel
+        # must not reach it. A missing value skips the call rather than passing `None`,
+        # which `value_is_missing` would not detect.
         if value is UNSET:
             if self.multiple or self.nargs == -1:
                 value = ()
@@ -2838,12 +2828,8 @@ class Parameter(ABC):
             if not unset_keys:
                 value = self.callback(ctx, self, value)
 
-            # Legacy case: provide a temporarily manipulated context to the callback
-            # to hide UNSET values as None.
-            #
-            # Refs:
-            # https://github.com/pallets/click/issues/3136
-            # https://github.com/pallets/click/pull/3137
+            # Legacy case: provide a temporarily manipulated context to the callback to
+            # hide UNSET values as None.
             else:
                 # Add another layer to the context stack to clearly hint that the
                 # context is temporarily modified.
@@ -2983,8 +2969,8 @@ class Parameter(ABC):
                 # to UNSET, which will be interpreted as a missing value.
                 value = UNSET
 
-        # Arbitrate the slot when several parameters target the same variable
-        # name (feature-switch groups). See: https://github.com/pallets/click/issues/3403
+        # Arbitrate the slot when several parameters target the same variable name
+        # (feature-switch groups).
         slot_empty = existing_value is UNSET
         more_explicit = existing_source is not None and source < existing_source
         same_source = existing_source is not None and source == existing_source
@@ -3208,9 +3194,8 @@ class Option(Parameter):
         # sentinel when the user didn't pass them. Auto-derived values are resolved
         # lazily in :meth:`_resolve_lazy_default` and :attr:`flag_activation_value`.
         # Keeping the raw values means ``is UNSET`` reliably answers "did the user pass
-        # this?": #3403 needs it for arbitration, and any future feature needing the
-        # same distinction can reuse it without reintroducing parallel "was it
-        # explicit?" tracking.
+        # this?", and any future feature needing the same distinction can reuse it
+        # without reintroducing parallel "was it explicit?" tracking.
         self.flag_value = flag_value
         self.count = count
         if count and self.default is UNSET:
@@ -3252,11 +3237,11 @@ class Option(Parameter):
         """Resolve ``is_flag`` and the parser hint ``_flag_needs_value``.
 
         Returns ``(is_flag, flag_needs_value)``, where ``_flag_needs_value`` tells the
-        parser this option is a flag that cannot be used standalone and needs a value.
-        The parser uses it to decide whether to treat the next CLI token as the flag's
-        value or as a new option. If ``prompt`` is enabled with
-        ``prompt_required=False``, it opens the door for an interactive value, hence the
-        initial condition. Ref: https://github.com/pallets/click/issues/3084
+        parser that the value of this option can be omitted: the option then prompts for
+        a value if ``prompt`` is set, and otherwise uses its flag value. The parser uses
+        it to decide whether to treat the next CLI token as the option's value or as a
+        new option. If ``prompt`` is enabled with ``prompt_required=False``, it opens
+        the door for an interactive value, hence the initial condition.
         """
         needs_value = self.prompt is not None and not self.prompt_required
 
@@ -3394,9 +3379,8 @@ class Option(Parameter):
         Several auto-derived defaults are resolved lazily here rather than eagerly in
         :meth:`__init__`. This keeps :attr:`default` raw at construction time, so
         ``self.default is UNSET`` reliably answers "did the user pass a default?" for
-        feature-switch-group arbitration and for anything else that needs to distinguish
-        "absent" from a chosen value. The resolution rules live in
-        :meth:`_resolve_lazy_default`.
+        anything that needs to distinguish "absent" from a chosen value. The resolution
+        rules live in :meth:`_resolve_lazy_default`.
 
         .. versionchanged:: 8.5.0
             ``UNSET`` defaults for boolean and multi flags are now resolved here instead
@@ -3414,16 +3398,19 @@ class Option(Parameter):
         # Only invoke the value as a callable when the lazy resolver passed it through
         # unchanged. If the resolver substituted ``True`` -> :attr:`flag_value`, the
         # result is the programmer-supplied ``flag_value`` (often a class or enum),
-        # which must NOT be instantiated here. See
-        # https://github.com/pallets/click/issues/3121.
+        # which must NOT be instantiated here.
         if value is raw and call and callable(value):
             value = value()
         return value
 
     def get_error_hint(self, ctx: Context | None) -> str:
         result = super().get_error_hint(ctx)
-        if self.show_envvar and self.envvar is not None:
-            result += f" (env var: '{self.envvar}')"
+        if self.show_envvar and self.envvar:
+            envvars = [self.envvar] if isinstance(self.envvar, str) else self.envvar
+            # An environment variable is allowed to feature a space or a comma on all
+            # platforms, hence the quotes around each.
+            var_str = ", ".join(f"'{var}'" for var in envvars)
+            result += f" (env var: {var_str})"
         return result
 
     def _check_name_is_normalized(self, name: str, decls: cabc.Sequence[str]) -> None:
@@ -3617,15 +3604,14 @@ class Option(Parameter):
         if self.show_envvar:
             envvar = self.envvar
 
-            if envvar is None:
-                if (
-                    self.allow_from_autoenv
-                    and ctx.auto_envvar_prefix is not None
-                    and self.name
-                ):
-                    envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
+            if not envvar and (
+                self.allow_from_autoenv
+                and ctx.auto_envvar_prefix is not None
+                and self.name
+            ):
+                envvar = f"{ctx.auto_envvar_prefix}_{self.name.upper()}"
 
-            if envvar is not None:
+            if envvar:
                 if isinstance(envvar, str):
                     extra["envvars"] = (envvar,)
                 else:
@@ -3719,9 +3705,8 @@ class Option(Parameter):
             # 3) still declare a non-boolean default.
             # This forced casting into a boolean is necessary to align any non-boolean
             # default to the prompt, which is going to be a [y/n]-style confirmation
-            # because the option is still a boolean flag. That way, instead of [y/n],
-            # we get [Y/n] or [y/N] depending on the truthy value of the default.
-            # Refs: https://github.com/pallets/click/pull/3030#discussion_r2289180249
+            # because the option is still a boolean flag. That way, instead of [y/n], we
+            # get [Y/n] or [y/N] depending on the truthy value of the default.
             else:
                 default = bool(default)
             return confirm(self.prompt, default)
@@ -3876,9 +3861,6 @@ class Option(Parameter):
     def process_value(self, ctx: Context, value: t.Any) -> t.Any:
         # process_value has to be overridden on Options in order to capture
         # `value == UNSET` cases before `type_cast_value()` gets called.
-        #
-        # Refs:
-        # https://github.com/pallets/click/issues/3069
         if self.is_flag and not self.required and self.is_bool_flag and value is UNSET:
             value = False
 

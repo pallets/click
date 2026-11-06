@@ -25,7 +25,7 @@ Unreleased
 
 ## Version 8.5.1
 
-Unreleased
+Released 2026-11-09
 
 - Fix `copy.deepcopy()` and `pickle` on a `Parameter`, `Option` or `Command`. {pr}`3805`
 - A `KeyboardInterrupt` arriving while `Command.main()` reports an abort or an error,
@@ -49,6 +49,13 @@ Unreleased
 - A command's short help no longer stops at an abbreviation such as `vs.` or `e.g.`
   inside the first sentence. A period ends the sentence only when it closes the text
   or the next word does not start in lowercase. {pr}`3865`
+- With `show_envvar=True`, an option's error message now prints all variables of an
+  `envvar` sequence instead of the `repr` of the sequence. {pr}`3884`
+- An empty `envvar`, such as `[]` or `""`, shows the same help and error message as
+  no `envvar` when `show_envvar=True`. The help screen used to show `[env var: ]`.
+  {pr}`3884`
+- Align command's deprecated help text to options and arguments: do not translate the
+  command's own help text, only the `(DEPRECATED)` label. {pr}`3901`
 
 ## Version 8.5.0
 
@@ -72,8 +79,7 @@ Released 2026-08-24
   convention. {issue}`2877` {pr}`3642`
 - Add {func}`custom_version_option`, a `--version` option whose output is
   produced by a callback, covering cases {func}`version_option` intentionally
-  does not. The feature set of {func}`version_option` is now frozen; see
-  [discussion #3527](https://github.com/pallets/click/discussions/3527). {pr}`3581`
+  does not. The feature set of {func}`version_option` is now frozen. {pr}`3581`
 - `style()` and `secho()` no longer silently drop the 256-color index `0`
   (black) passed as `fg` or `bg`, and now validate color arguments. Invalid
   colors raise a `ValueError` instead of a `TypeError`. {pr}`3677`

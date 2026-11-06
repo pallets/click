@@ -1,18 +1,14 @@
-"""A second Ctrl-C while ``Command.main()`` reported an abort or an error used
-to escape as an unhandled traceback: the message and the exit both ran in
-``except`` clauses, outside every ``try`` that caught ``KeyboardInterrupt``.
-https://github.com/pallets/click/issues/3802
+"""A second Ctrl-C while ``Command.main()`` reported an abort or an error used to escape
+as an unhandled traceback: the message and the exit both ran in ``except`` clauses,
+outside every ``try`` that caught ``KeyboardInterrupt``.
 
-The fix holds one policy, the one the pager has followed since
-https://github.com/pallets/click/pull/351: a late interrupt must not replace
-the intended outcome. In standalone mode the collected exit code wins, for
-aborts, errors and success alike, and the message is best effort. Without
-standalone mode the interrupt propagates to the caller. Two settled contracts
-stay in place: the first interrupt reaches a non-standalone caller as
-``Abort`` (https://github.com/pallets/click/pull/2380), and the ``Aborted!``
-message stays as it is (declined in
-https://github.com/pallets/click/issues/1447 and
-https://github.com/pallets/click/issues/2584).
+The fix holds one policy, the one the pager already follows: a late interrupt must not
+replace the intended outcome. In standalone mode the collected exit code wins, for
+aborts, errors and success alike, and the message is best effort. Without standalone
+mode the interrupt propagates to the caller. Two settled contracts stay in place: the
+first interrupt reaches a non-standalone caller as ``Abort``, and the ``Aborted!``
+message stays as it is. A program that wants another message runs with
+``standalone_mode=False`` and prints its own.
 """
 
 import sys
@@ -26,8 +22,8 @@ class RecordingStderr:
     """A stderr stand-in that records what is written to it.
 
     With ``interrupt_at=N``, the ``N``-th ``isatty()`` call raises
-    ``KeyboardInterrupt``. ``echo()`` calls ``isatty()`` before writing, which
-    is where the traceback in issue #3802 ended.
+    ``KeyboardInterrupt``. ``echo()`` calls ``isatty()`` before writing, which is where
+    the unhandled traceback ended.
     """
 
     def __init__(self, interrupt_at=None):

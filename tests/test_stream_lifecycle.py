@@ -1,10 +1,14 @@
 """Tests for ``CliRunner`` stream lifecycle and ownership.
 
-Covers the stream management bugs tracked across:
-- Issue #824: ``ValueError`` on closed file when logging interacts with ``CliRunner``
-- Issue #2993: Race condition in ``StreamMixer`` finalization (multi-threaded)
-- Issue #3110: Regression from PR #2991's ``__del__`` fix breaking logging
-- PR #3139: The fix - prevent ``_NamedTextIOWrapper`` from closing owned buffers
+Covers these stream management bugs:
+- ``ValueError`` on closed file when logging interacts with ``CliRunner``
+- Race condition in ``StreamMixer`` finalization (multi-threaded)
+- Regression from a ``StreamMixer.__del__`` fix breaking logging
+
+The fix prevents ``_NamedTextIOWrapper`` from closing owned buffers.
+
+The closed-file ``ValueError`` shows only when pytest displays live logs
+(``--log-cli-level``): a default run passes the logging tests even without the fix.
 
 The tests are organized by category:
 
@@ -155,7 +159,7 @@ def test_getvalue_after_isolation_exit():
 def test_no_streammixer_del():
     """``StreamMixer`` should not have a ``__del__`` method.
 
-    PR #2991 added ``__del__`` which caused issue #3110. PR #3139 removes it.
+    A ``__del__`` used to close buffers that logging still referenced.
     """
     has_del = hasattr(StreamMixer, "__del__")
     if has_del:
@@ -182,7 +186,7 @@ def test_bytesiocopy_flush_propagates():
 
 
 # ---------------------------------------------------------------------------
-# Category 3: Logging interaction (issues #824, #3110)
+# Category 3: Logging interaction
 # ---------------------------------------------------------------------------
 
 
@@ -202,7 +206,7 @@ def test_invoke_with_logger_warning():
 
 
 def test_invoke_with_logger_and_prompt():
-    """Logging + prompt (the exact #824 reproducer)."""
+    """Logging + prompt (the closed-file ``ValueError`` reproducer)."""
     logger = logging.getLogger("test_invoke_with_logger_and_prompt")
 
     @click.command()
@@ -218,11 +222,11 @@ def test_invoke_with_logger_and_prompt():
 
 
 def test_sequential_invokes_with_logging():
-    """Multiple sequential ``invoke()`` calls with logging (#3110 reproducer).
+    """Multiple sequential ``invoke()`` calls with logging.
 
-    Issue #3110: the ``__del__`` from PR #2991 caused logging failures on
-    the second invocation because the first ``StreamMixer``'s ``__del__`` would
-    close buffers that logging still referenced.
+    A former ``__del__`` caused logging failures on the second invocation because the
+    first ``StreamMixer``'s ``__del__`` would close buffers that logging still
+    referenced.
     """
     logger = logging.getLogger("test_sequential_invokes_with_logging")
 
@@ -261,11 +265,10 @@ def test_invoke_with_stream_handler_on_stderr():
 
 
 def test_logging_with_cli_log_level():
-    """Simulate what ``--log-cli-level`` does: add a handler to root
-    before invoke.
+    """Add a handler to the root logger before ``invoke()``.
 
-    This reproduces the original #824 scenario without needing pytest
-    CLI flags.
+    This does not reproduce the closed-file ``ValueError`` by itself: that needs pytest
+    to display live logs (``--log-cli-level``).
     """
     root_logger = logging.getLogger()
     handler = logging.StreamHandler(sys.stderr)
@@ -290,7 +293,7 @@ def test_logging_with_cli_log_level():
 
 
 # ---------------------------------------------------------------------------
-# Category 4: Multi-threaded safety (issue #2993)
+# Category 4: Multi-threaded safety
 # ---------------------------------------------------------------------------
 
 
@@ -335,7 +338,12 @@ def test_invoke_with_threads_writing_to_streams():
 
 
 def test_invoke_with_thread_pool_and_exit():
-    """``ThreadPoolExecutor`` + ``SystemExit`` (the exact #2993 reproducer)."""
+    """``ThreadPoolExecutor`` + ``SystemExit`` (the finalization race reproducer).
+
+    The race shows as a ``PytestUnraisableExceptionWarning`` from a
+    ``_NamedTextIOWrapper`` finalizer, not as a failed assertion:
+    ``filterwarnings = ["error"]`` in ``pyproject.toml`` turns it into a failure.
+    """
 
     @click.command()
     @click.argument("args", nargs=-1)
@@ -493,7 +501,10 @@ def test_sys_streams_restored_after_exception():
 @pytest.mark.stress
 @pytest.mark.parametrize("_", range(10_000))
 def test_stress_thread_pool_with_exit(_):
-    """Exact #2993 reproducer: ``ThreadPoolExecutor`` + ``SystemExit``."""
+    """Finalization race reproducer: ``ThreadPoolExecutor`` + ``SystemExit``.
+
+    A free-threaded Python build hits the race much more often.
+    """
 
     @click.command()
     @click.argument("args", nargs=-1)
@@ -510,7 +521,7 @@ def test_stress_thread_pool_with_exit(_):
 @pytest.mark.stress
 @pytest.mark.parametrize("_", range(10_000))
 def test_stress_logging_sequential_invocations(_):
-    """#3110/#824 reproducer: sequential invocations with logging."""
+    """Sequential invocations with logging."""
     logger = logging.getLogger("stress_sequential")
 
     @click.command()
