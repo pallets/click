@@ -19,7 +19,7 @@ and use ``briefcase --help`` to understand what features are available.
 
 Install Briefcase in the virtual environment:
 
-```console
+```shell-session
 pip install briefcase
 ```
 
@@ -106,12 +106,12 @@ if __name__ == "__main__":
     main()
 ```
 
-## Running
+## Running from the Source Tree
 
-Use ``briefcase dev`` to run the application directly from the source
-tree. Pass command line arguments after ``--``:
+Use ``briefcase dev`` to start the application from the source tree.
+Pass command line arguments after ``--``:
 
-```console
+```shell-session
 $ briefcase dev -- World
 Hello, World!
 $ briefcase dev -- World --count 2
@@ -123,7 +123,7 @@ Hello, World!
 
 To create a distributable executable, run the following commands:
 
-```console
+```shell-session
 briefcase create
 briefcase build
 briefcase package
@@ -139,7 +139,7 @@ On macOS, this produces a ``.pkg`` installer. On Windows, it produces a
 
 Once installed, users can run the application directly from the terminal:
 
-```console
+```shell-session
 $ hello-cli World
 Hello, World!
 $ hello-cli World --count 2

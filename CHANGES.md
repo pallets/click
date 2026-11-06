@@ -31,6 +31,7 @@ Unreleased
   {pr}`3884`
 - Align command's deprecated help text to options and arguments: do not translate the
   command's own help text, only the `(DEPRECATED)` label. {pr}`3901`
+- Document how to build a standalone application with Nuitka. {issue}`2757` {pr}`3897`
 
 ## Version 8.5.0
 
