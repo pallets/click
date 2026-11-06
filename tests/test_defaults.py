@@ -189,9 +189,8 @@ def test_shared_param_prefers_first_default(runner):
     ],
 )
 def test_lookup_default_returns_hides_sentinel(default_map, key, expected):
-    """``lookup_default()`` should return ``None`` for missing keys, not :attr:`UNSET`.
-
-    Regression test for https://github.com/pallets/click/issues/3145.
+    """``lookup_default()`` should return ``None`` for missing keys, not
+    :attr:`UNSET`.
     """
     cmd = click.Command("test")
     ctx = click.Context(cmd)
@@ -273,10 +272,7 @@ def test_default_map_source(runner, args, default_map, expected_value, expected_
 
 
 def test_parameter_source_during_paramtype_convert(runner):
-    """``get_parameter_source()`` is available during ``ParamType.convert``.
-
-    Uses the reproducer from https://github.com/pallets/click/issues/3458.
-    """
+    """``get_parameter_source()`` is available during ``ParamType.convert``."""
 
     class Source(click.ParamType):
         name = "source"
@@ -316,10 +312,7 @@ def test_parameter_source_during_paramtype_convert(runner):
 
 
 def test_parameter_source_during_eager_callback(runner):
-    """``get_parameter_source()`` is available during eager callbacks.
-
-    Regression test for https://github.com/pallets/click/issues/3458.
-    """
+    """``get_parameter_source()`` is available during eager callbacks."""
 
     def eager_cb(ctx, param, value):
         source = ctx.get_parameter_source(param.name)
@@ -351,8 +344,7 @@ def test_parameter_source_during_eager_callback(runner):
 def test_flask_debug_env_not_stomped_by_default_flag(runner, monkeypatch):
     """Eager callback must not overwrite env when the flag used its default.
 
-    Covers the Flask ``_set_debug`` pattern (pallets/flask#6025). Regression test
-    for https://github.com/pallets/click/issues/3458.
+    Covers the Flask ``_set_debug`` pattern.
     """
 
     monkeypatch.delenv("APP_DEBUG", raising=False)
@@ -423,12 +415,8 @@ def test_lookup_default_override_respected(runner):
     """A subclass override of ``lookup_default()`` should be called by Click
     internals, not bypassed by a private method.
 
-    Reproduce exactly https://github.com/pallets/click/issues/3145 in which a
-    subclass that falls back to prefix-based lookup when the parent returns
-    ``None``.
-
-    Previous attempts in https://github.com/pallets/click/pr/3199 were entirely
-    bypassing the user's overridden method.
+    Reproduce the case of a subclass that falls back to prefix-based lookup when the
+    parent returns ``None``.
     """
 
     class CustomContext(click.Context):
@@ -482,7 +470,7 @@ class _Marker:
         (None, ["--opt"], _Marker),
         # Static value in default_map overrides the auto-aligned flag_value.
         ({"value": "from-map"}, [], "from-map"),
-        # Callable in default_map is still invoked (not suppressed by the fix).
+        # Callable in default_map is still invoked, unlike the auto-aligned flag_value.
         ({"value": lambda: "lazy-map"}, [], "lazy-map"),
         # None in default_map overrides the flag_value.
         ({"value": None}, [], None),
@@ -493,9 +481,6 @@ class _Marker:
 def test_default_map_with_callable_flag_value(runner, default_map, args, expected):
     """``default_map`` entries should override the auto-aligned callable ``flag_value``,
     and callable entries in ``default_map`` should still be invoked.
-
-    Verifies the fix for https://github.com/pallets/click/issues/3121 does not
-    break ``default_map`` precedence.
     """
 
     @click.command()
@@ -532,10 +517,8 @@ def test_default_map_with_callable_flag_value(runner, default_map, args, expecte
     ],
 )
 def test_default_map_nargs(runner, default_map, option_kwargs, cli_args, expected):
-    """A string in ``default_map`` for an option with ``nargs > 1`` should be
-    split the same way an environment variable string is split.
-
-    Regression test for https://github.com/pallets/click/issues/2745.
+    """A string in ``default_map`` for an option with ``nargs > 1`` should be split the
+    same way an environment variable string is split.
     """
 
     @click.command()
@@ -549,10 +532,8 @@ def test_default_map_nargs(runner, default_map, option_kwargs, cli_args, expecte
 
 
 def test_unset_in_default_map(runner):
-    """An ``UNSET`` value in ``default_map`` should be treated as if
-    the key is absent, and so fallback to the parameter's own default.
-
-    Refs: https://github.com/pallets/click/pull/3224#issuecomment-3968643305
+    """An ``UNSET`` value in ``default_map`` should be treated as if the key is absent,
+    and so fallback to the parameter's own default.
     """
 
     @click.command(

@@ -596,7 +596,6 @@ def test_nargs_specified_plus_star_ordering(runner):
         # Arguments overrides the default.
         [{"nargs": 2, "default": (1, 2)}, ["3", "4"], (3, 4)],
         # Unbounded arguments are allowed to have a default.
-        # See: https://github.com/pallets/click/issues/2164
         [{"nargs": -1, "default": [42]}, [], (42,)],
         [{"nargs": -1, "default": None}, [], ()],
         [{"nargs": -1, "default": {1, 2, 3, 4, 5}}, [], (1, 2, 3, 4, 5)],

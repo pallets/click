@@ -164,7 +164,6 @@ def test_formatting_usage_error(runner):
 def test_formatting_usage_error_metavar_missing_arg(runner):
     """
     :author: @r-m-n
-    Including attribution to #612
     """
 
     @click.command()
@@ -285,10 +284,8 @@ def test_formatting_usage_custom_help(runner):
 def test_formatting_usage_error_help_hint(
     runner, help_names, extra_options, expected_hint
 ):
-    """The error hint should only show non-shadowed help option names,
-    picking the longest for readability.
-
-    https://github.com/pallets/click/issues/2790
+    """The error hint should only show non-shadowed help option names, picking the
+    longest for readability.
     """
 
     @click.group(context_settings={"help_option_names": help_names})
@@ -520,9 +517,9 @@ def test_write_usage_styled_prefix_keeps_options_on_one_line():
 @pytest.mark.parametrize(
     ("formatter_kwargs", "current_indent", "prog", "args", "prefix", "expected"),
     [
-        # Issue #3360: the default prefix used to emit only
-        # a blank line because ``wrap_text("", initial_indent=usage_prefix)``
-        # returned ``""`` and discarded the prefix.
+        # The default prefix used to emit only a blank line because
+        # ``wrap_text("", initial_indent=usage_prefix)`` returned ``""`` and discarded
+        # the prefix.
         pytest.param(
             {},
             0,
@@ -606,8 +603,8 @@ def test_help_formatter_write_usage_without_args_styled_prefix():
 @pytest.mark.parametrize(
     ("command_kwargs", "expected_usage_line"),
     [
-        # End-to-end regression for #3360: an empty ``options_metavar`` with
-        # no parameters used to render a blank usage line.
+        # End-to-end regression: an empty ``options_metavar`` with no parameters used to
+        # render a blank usage line.
         pytest.param(
             {"options_metavar": ""},
             "Usage: cli",

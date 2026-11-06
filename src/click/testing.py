@@ -338,11 +338,10 @@ class CliRunner:
         ``fd`` is not supported on Windows.
 
     .. versionchanged:: 8.4.0
-        Added the ``capture`` parameter. The default ``sys`` mode no longer
-        exposes the original fd through :meth:`fileno`, reverting the change
-        introduced in ``8.3.3`` that broke Pytest's ``fd``-level capture
-        teardown. Use ``capture="fd"`` to restore that behavior with proper
-        isolation. :issue:`3384`
+        Added the ``capture`` parameter. The default ``sys`` mode no longer exposes the
+        original fd through :meth:`fileno`, reverting the change introduced in ``8.3.3``
+        that broke Pytest's ``fd``-level capture teardown. Use ``capture="fd"`` to
+        restore that behavior with proper isolation.
 
     .. versionchanged:: 8.2
         Added the ``catch_exceptions`` parameter.
@@ -748,15 +747,14 @@ class CliRunner:
         interfering with each other.
 
         .. warning::
-            This helper predates Python 3 and modern pytest, and is not
-            thread-safe: it relies on :func:`os.chdir`, which mutates
-            process-global state, and :meth:`invoke` swaps the
-            process-global standard streams too. Parallelize tests with
-            processes (``pytest-xdist``), not threads. Locking the
-            runner (:pr:`3511`, :pr:`3520`, :pr:`3530`) and a
-            ``set_filesystem()`` API (:issue:`3123`) were declined:
-            neither removes the global-state mutation. See :issue:`3700`
-            and :issue:`3501`.
+            This helper predates Python 3 and modern pytest, and is not thread-safe: it
+            relies on :func:`os.chdir`, which mutates process-global state, and
+            :meth:`invoke` swaps the process-global standard streams too. Parallelize
+            tests with processes (``pytest-xdist``), not threads. Locking the runner was
+            declined: a lock leaves the global-state mutation in place, and serializing
+            thread-unsafe tests is the job of the test framework. A ``set_filesystem()``
+            API was declined as unneeded: pytest's ``tmp_path`` and
+            ``monkeypatch.chdir()`` cover that case.
 
         :param temp_dir: Create the temporary directory under this
             directory. If given, the created directory is not removed

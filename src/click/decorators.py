@@ -441,14 +441,12 @@ def version_option(
     resolves to the ``Pillow`` distribution.
 
     .. note::
-        The parameters and message variables accepted by this option are
-        frozen: no new slots will be added, to keep the common case simple
-        and predictable. If you need values it does not expose, such as a
-        file path, the Python version, or git metadata, use
-        :func:`custom_version_option` to render the output yourself.
-
-        Rationale: `discussion #3527
-        <https://github.com/pallets/click/discussions/3527>`_.
+        The parameters and message variables accepted by this option are frozen: no new
+        slots will be added, to keep the common case simple and predictable. Extra
+        values have no single right format: a path can point to the entry point or to
+        the module, and a Python version can be the full string or only ``X.Y``. If you
+        need values it does not expose, such as a file path, the Python version, or git
+        metadata, use :func:`custom_version_option` to render the output yourself.
 
     :param version: The version number to show. If not provided, Click
         will try to detect it.

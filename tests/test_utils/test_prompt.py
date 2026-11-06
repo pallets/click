@@ -53,7 +53,7 @@ def test_prompts_abort(monkeypatch, capsys):
         click.echo("interrupted")
 
     out, err = capsys.readouterr()
-    # On non-Windows, prompt is passed directly to getpass, not echoed separately
+    # The prompt is passed directly to getpass, not echoed separately.
     assert out == "\ninterrupted\n"
 
 
@@ -69,11 +69,8 @@ def test_prompts_abort(monkeypatch, capsys):
     ids=["prompt", "prompt-hidden", "prompt-custom-suffix", "confirm"],
 )
 def test_full_prompt_passed_to_readline(monkeypatch, call, expected_prompt):
-    """On non-Windows, prompt and confirm pass the full prompt text to the
-    underlying prompt function so readline handles editing correctly.
-
-    https://github.com/pallets/click/issues/2968
-    https://github.com/pallets/click/pull/2969
+    """Prompt and confirm pass the full prompt text to the underlying prompt function so
+    readline handles editing correctly.
     """
     received = []
 
