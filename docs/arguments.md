@@ -51,6 +51,21 @@ recognized, otherwise {data}`STRING` is used. If no default value is
 provided, the type is assumed to be {data}`STRING`. See
 {ref}`type-inference` for the types that are recognized.
 
+(argument-names)=
+
+## Argument Names
+
+An argument takes exactly one declaration. An option takes several, and
+{ref}`picks one of them <option-names>`. An argument raises {exc}`TypeError`
+when it gets more than one declaration.
+
+Both kinds then derive the name the same way. See the
+{ref}`name transform <name-transform>` for the rules and the examples,
+including the {ref}`reserved keywords <keyword-names>` rule.
+
+The name check also applies when `expose_value=False`. The name is also the key
+that the parser uses to store the value.
+
 ```{admonition} Note on Required Arguments
 :class: note
 
