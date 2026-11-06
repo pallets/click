@@ -53,6 +53,10 @@ def wrap_text(
     :param preserve_paragraphs: if this flag is set then the wrapping will
                                 intelligently handle paragraphs.
 
+    .. versionchanged:: 8.5.1
+        Lines no longer break within a hyphenated word or a long word. A word
+        wider than ``width`` goes on a line of its own.
+
     .. versionchanged:: 8.4.0
         Width is measured in visible characters. ANSI escape sequences in
         ``text``, ``initial_indent``, or ``subsequent_indent`` no longer
@@ -62,11 +66,15 @@ def wrap_text(
     from ._textwrap import TextWrapper
 
     text = text.expandtabs()
+    # Lines break between words only. A break after a hyphen or inside a long
+    # word would show one term, like an option name, as two.
     wrapper = TextWrapper(
         width,
         initial_indent=initial_indent,
         subsequent_indent=subsequent_indent,
         replace_whitespace=False,
+        break_on_hyphens=False,
+        break_long_words=False,
     )
     if not preserve_paragraphs:
         return wrapper.fill(text)
