@@ -1,6 +1,6 @@
 ## Version 8.5.1
 
-Unreleased
+Released 2026-11-09
 
 - Fix `copy.deepcopy()` and `pickle` on a `Parameter`, `Option` or `Command`. {pr}`3805`
 - A `KeyboardInterrupt` arriving while `Command.main()` reports an abort or an error,
@@ -31,7 +31,6 @@ Unreleased
   {pr}`3884`
 - Align command's deprecated help text to options and arguments: do not translate the
   command's own help text, only the `(DEPRECATED)` label. {pr}`3901`
-- Document how to build a standalone application with Nuitka. {issue}`2757` {pr}`3897`
 
 ## Version 8.5.0
 
