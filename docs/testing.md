@@ -222,6 +222,39 @@ Prompts will be emulated so they write the input data to
 the output stream as well. If hidden input is expected then this
 does not happen.
 
+Set `echo_stdin=True` on the runner to echo every read from `<stdin>` to
+`<stdout>`. The echo translate the bytes that end `<stdin>` and print them
+in the terminal as their key, and does not pass them to the command.
+
+| `<stdin>` byte | Echoed to `<stdout>` as | Pressed keys             |
+|----------------|-------------------------|--------------------------|
+| `\x04`         | `^D\n`                  | {kbd}`Ctrl+D` on Unix    |
+| `\x1a`         | `^Z\n`                  | {kbd}`Ctrl+Z` on Windows |
+
+```{code-block} python
+:caption: shout.py
+
+import sys
+import click
+
+@click.command()
+def shout():
+   click.echo(sys.stdin.read().upper(), nl=False)
+```
+
+```{code-block} python
+:caption: test_shout.py
+
+from click.testing import CliRunner
+from shout import shout
+
+def test_shout():
+   runner = CliRunner(echo_stdin=True)
+   result = runner.invoke(shout, input='hello\n\x04')
+   assert not result.exception
+   assert result.output == 'hello\n^D\nHELLO\n'
+```
+
 ## Capture modes
 
 {class}`CliRunner` captures output by replacing `sys.stdout` and `sys.stderr`

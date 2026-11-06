@@ -1,3 +1,28 @@
+## Version 8.6.0
+
+Unreleased
+
+- A parameter name that is not a valid Python identifier, or that is a Python
+  keyword, is deprecated and raises `TypeError` in Click 9.0. {pr}`3866`
+- An {class}`Option` name written as a Python identifier is deprecated when it
+  is not already lower-cased. {pr}`3866`
+- Add {attr}`Parameter.spec`, which returns how the user spells the parameter on
+  the command line: `--times` for an option declared as `-t`, `--times`, and
+  `FILENAME` for an argument declared as `filename`. {pr}`3877`
+- Move {meth}`get_help_spec` from {class}`Option` to {class}`Parameter`, and give
+  {class}`Argument` an override that returns its metavar. {pr}`3877`
+- Error messages and deprecation warnings name an option by its spec instead of
+  its internal name, so they read `The option '--my-option' is deprecated.` where
+  they read `The option 'my_option' is deprecated.` before. {pr}`3877`
+- {attr}`Parameter.human_readable_name` is deprecated and will be removed in
+  Click 9.0. Use {attr}`Parameter.spec` instead. It returned the internal name
+  for options, so its value changes from `my_option` to `--my-option`. Click no
+  longer reads it, and a subclass that overrides it gets a warning when the class
+  is defined. {pr}`3877`
+- With `echo_stdin=True`, {class}`CliRunner` echoes the `\x04` and `\x1a`
+  `<stdin>` bytes to `<stdout>` as `^D` and `^Z`, and no longer passes them to
+  the command. {pr}`3878`
+
 ## Version 8.5.1
 
 Released 2026-11-09

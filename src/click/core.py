@@ -18,6 +18,7 @@ from functools import update_wrapper
 from gettext import gettext as _
 from gettext import ngettext
 from itertools import repeat
+from types import FrameType
 from types import TracebackType
 
 from . import types
@@ -102,6 +103,30 @@ def _check_nested_chain(
 def _echo_aborted() -> None:
     """Write the final abort message to standard error."""
     echo(_("Aborted!"), file=sys.stderr)
+
+
+def _outside_click_stacklevel(skip: cabc.Container[str] = ()) -> int:
+    """Depth of the first stack frame outside Click.
+
+    :param skip: Other module names to walk past. ``abc`` is one: it sits
+        between ``__init_subclass__`` and the ``class`` statement that the
+        warning must point at.
+
+    .. versionadded:: 8.6.0
+    """
+    frame: FrameType | None = sys._getframe(1)
+    level = 1
+
+    while frame is not None:
+        module = frame.f_globals.get("__name__", "")
+
+        if module != "click" and not module.startswith("click.") and module not in skip:
+            return level
+
+        frame = frame.f_back
+        level += 1
+
+    return level
 
 
 def _format_deprecated_label(deprecated: bool | str) -> str:
@@ -2214,6 +2239,17 @@ class Parameter(ABC):
 
     Some settings are supported by both options and arguments.
 
+    Three distinct strings designate a parameter, each with its own audience:
+
+    ``decls``
+        What the developer passes to the constructor as ``param_decls``.
+    ``spec``
+        What the user reads in ``--help`` and types on the command line. See
+        :attr:`spec` and :meth:`get_help_spec`.
+    ``name``
+        What Click uses internally to identify the parameter and to pass its
+        value to the command callback. See :attr:`name`.
+
     :param param_decls: the parameter declarations for this option or
                         argument.  This is a list of flags or argument
                         names.
@@ -2306,8 +2342,29 @@ class Parameter(ABC):
     param_type_name = "parameter"
 
     name: str
+    """What Click uses internally to identify the parameter, and the Python
+    argument name it passes to the command callback. Click derives it from the
+    declarations, lower cased and with dashes replaced by underscores. An
+    :class:`Option` takes the declaration with the longest prefix, so
+    ``"-t", "--times"`` names ``times``, while an :class:`Argument` takes its
+    single declaration.
+    """
     opts: list[str]
+    """Every command-line spelling that designates this parameter.
+
+    For an :class:`Option` these are the prefixed declarations the parser
+    matches, in declaration order: ``["-t", "--times"]``. :attr:`spec` is the
+    canonical one.
+
+    For an :class:`Argument` this holds the single declaration the developer
+    wrote, ``["filename"]``. The parser never reads it: it binds the value by
+    :attr:`name`. The string the user reads is :attr:`spec`, ``FILENAME``.
+    """
     secondary_opts: list[str]
+    """The spellings that set a boolean :class:`Option` to ``False``, taken from
+    the right side of a ``--color/--no-color`` declaration. Always empty for an
+    :class:`Argument`.
+    """
     # `Parameter.type` is annotated in `__init__` to avoid confusing mypy
     required: bool
     callback: t.Callable[[Context, Parameter, t.Any], t.Any] | None
@@ -2324,6 +2381,20 @@ class Parameter(ABC):
     )
     deprecated: bool | str
     help: str | None
+
+    def __init_subclass__(cls, **kwargs: t.Any) -> None:
+        super().__init_subclass__(**kwargs)
+
+        if "human_readable_name" in cls.__dict__:
+            import warnings
+
+            warnings.warn(
+                f"{cls.__name__} overrides 'human_readable_name'. Click no"
+                " longer reads that property. Override 'spec' instead. Click"
+                " will remove 'human_readable_name' in 9.0.",
+                DeprecationWarning,
+                stacklevel=_outside_click_stacklevel(skip=("abc",)),
+            )
 
     def __init__(
         self,
@@ -2401,7 +2472,7 @@ class Parameter(ABC):
 
             if required and deprecated:
                 raise ValueError(
-                    f"The {self.param_type_name} '{self.human_readable_name}' "
+                    f"The {self.param_type_name} '{self.spec}' "
                     "is deprecated and still required. A deprecated "
                     f"{self.param_type_name} cannot be required."
                 )
@@ -2448,12 +2519,93 @@ class Parameter(ABC):
         self, decls: cabc.Sequence[str], expose_value: bool
     ) -> tuple[str, list[str], list[str]]: ...
 
+    def _check_name_is_usable(self, name: str, decls: cabc.Sequence[str]) -> None:
+        """Warn about a name Click 9.0 will refuse.
+
+        A name is refused for one of two reasons, and never for both: it is not
+        an identifier (``0-file``), or it is a keyword (``from``).
+        ``str.isidentifier`` accepts a keyword, so ``--from`` names a parameter
+        ``from`` today. No callback can declare that, which leaves the value
+        reachable through ``**kwargs`` alone.
+
+        Soft keywords such as ``match`` and ``type`` are contextual and name a
+        parameter fine, so :func:`keyword.iskeyword` passes them.
+
+        Both imports are local because neither :mod:`keyword` nor
+        :mod:`warnings` is on the allow-list ``tests/test_imports.py`` holds
+        Click's import footprint to.
+
+        .. versionadded:: 8.6.0
+        """
+        import keyword
+
+        if keyword.iskeyword(name):
+            reason = "which is a Python keyword"
+        elif not name.isidentifier():
+            reason = "which is not a valid Python identifier"
+        else:
+            return
+
+        import warnings
+
+        warnings.warn(
+            f"{self.param_type_name.capitalize()} {list(decls)!r} uses {name!r}"
+            f" as its name, {reason}. This is deprecated and will raise a"
+            " TypeError in Click 9.0.",
+            DeprecationWarning,
+            stacklevel=_outside_click_stacklevel(),
+        )
+
+    @property
+    def spec(self) -> str:
+        """Returns how the user spells this parameter on the command line.
+
+        This is the declaration with the longest prefix, so an option declared
+        as ``"-t", "--times"`` returns ``--times``. Click derives :attr:`name`
+        from that same declaration, unless the developer passed an explicit
+        name. A parameter without declarations returns its :attr:`name`.
+
+        .. versionadded:: 8.6.0
+        """
+        if not self.opts:
+            return self.name
+
+        return max(self.opts, key=lambda opt: len(_split_opt(opt)[0]))
+
     @property
     def human_readable_name(self) -> str:
-        """Returns the human readable name of this parameter.  This is the
-        same as the name for options, but the metavar for arguments.
+        """Returns how the user spells this parameter on the command line.
+
+        .. deprecated:: 8.6.0
+            Will be removed in Click 9.0. Use :attr:`spec` instead. For an
+            option this returned the internal :attr:`name`, so the value
+            changes from ``times`` to ``--times``. Click no longer reads this
+            property, so an override in a subclass has no effect.
         """
-        return self.name
+        import warnings
+
+        warnings.warn(
+            "'human_readable_name' is deprecated and will be removed in Click"
+            " 9.0. Use 'spec' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.spec
+
+    def get_help_spec(self, ctx: Context) -> str:
+        """Returns the left column of this parameter's help record.
+
+        This implementation returns :attr:`spec`. :class:`Option` returns every
+        spelling, plus the metavar when the option takes a value.
+        :class:`Argument` returns its metavar, which already carries the markers
+        for an optional, repeated or deprecated value.
+
+        Unlike ``get_help_record()``, the spec is produced even when the
+        parameter is left out of the help page, like a hidden option.
+
+        .. versionadded:: 8.6.0
+        """
+        return self.spec
 
     def make_metavar(self, ctx: Context) -> str:
         if self.metavar is not None:
@@ -2801,7 +2953,7 @@ class Parameter(ABC):
                     "{extra_message}"
                 ).format(
                     param_type=self.param_type_name,
-                    name=self.human_readable_name,
+                    name=self.spec,
                     extra_message=_format_deprecated_suffix(self.deprecated),
                 )
                 echo(style(message, fg="red"), err=True)
@@ -2861,7 +3013,7 @@ class Parameter(ABC):
         .. versionchanged:: 8.4.0
             ``ctx`` can be ``None``.
         """
-        hint_list = self.opts or [self.human_readable_name]
+        hint_list = self.opts or [self.spec]
         return " / ".join(f"'{x}'" for x in hint_list)
 
     def shell_complete(self, ctx: Context, incomplete: str) -> list[CompletionItem]:
@@ -3261,19 +3413,40 @@ class Option(Parameter):
             result += f" (env var: {var_str})"
         return result
 
+    def _check_name_is_normalized(self, name: str, decls: cabc.Sequence[str]) -> None:
+        """Warn about an explicit name Click 9.0 will spell differently.
+
+        .. versionadded:: 8.6.0
+        """
+        normalized = name.lower()
+
+        if normalized == name:
+            return
+
+        import warnings
+
+        warnings.warn(
+            f"Option {list(decls)!r} uses {name!r} as its name. Click 9.0"
+            f" lower cases an explicit name like any other declaration, naming"
+            f" {normalized!r} instead.",
+            DeprecationWarning,
+            stacklevel=_outside_click_stacklevel(),
+        )
+
     def _parse_decls(
         self, decls: cabc.Sequence[str], expose_value: bool
     ) -> tuple[str, list[str], list[str]]:
         opts = []
         secondary_opts = []
         name = None
+        explicit_name = None
         possible_names = []
 
         for decl in decls:
             if decl.isidentifier():
                 if name is not None:
                     raise TypeError(_("Name '{name}' defined twice").format(name=name))
-                name = decl
+                name = explicit_name = decl
             else:
                 split_char = ";" if decl[:1] == "/" else "/"
                 if split_char in decl:
@@ -3299,12 +3472,12 @@ class Option(Parameter):
         if name is None and possible_names:
             possible_names.sort(key=lambda x: -len(x[0]))  # group long options first
             name = possible_names[0][1].replace("-", "_").lower()
-            if not name.isidentifier():
-                name = None
 
-        if name is None:
+        if name is None or not name.isidentifier():
             if not expose_value:
+                self._check_name_is_usable(name or "", decls)
                 return "", opts, secondary_opts
+
             raise TypeError(
                 _(
                     "Could not determine name for option with declarations {decls!r}"
@@ -3319,6 +3492,11 @@ class Option(Parameter):
                     " you mean to pass '--{name}'?"
                 ).format(name=name)
             )
+
+        if explicit_name is not None:
+            self._check_name_is_normalized(explicit_name, decls)
+
+        self._check_name_is_usable(name, decls)
 
         return name, opts, secondary_opts
 
@@ -3733,7 +3911,14 @@ class Argument(Parameter):
         super().__init__(param_decls, required=required, help=help, **attrs)
 
     @property
-    def human_readable_name(self) -> str:
+    def spec(self) -> str:
+        """Returns the argument's metavar, which is how the user reads it in
+        ``--help``. An argument has no flag to spell, so this is the
+        :attr:`metavar` if one was given, and the uppercased :attr:`name`
+        otherwise.
+
+        .. versionadded:: 8.6.0
+        """
         if self.metavar is not None:
             return self.metavar
         return self.name.upper()
@@ -3762,6 +3947,7 @@ class Argument(Parameter):
     ) -> tuple[str, list[str], list[str]]:
         if not decls:
             if not expose_value:
+                self._check_name_is_usable("", decls)
                 return "", [], []
             raise TypeError("Argument is marked as exposed, but does not have a name.")
         if len(decls) == 1:
@@ -3774,10 +3960,19 @@ class Argument(Parameter):
                     " {length}: {decls}."
                 ).format(length=len(decls), decls=decls)
             )
+        self._check_name_is_usable(name, decls)
         return name, [arg], []
 
     def get_usage_pieces(self, ctx: Context) -> list[str]:
         return [self.make_metavar(ctx)]
+
+    def get_help_spec(self, ctx: Context) -> str:
+        """Returns the left column of the argument's help record: its metavar,
+        like ``FILENAME`` or ``[FILENAME]``.
+
+        .. versionadded:: 8.6.0
+        """
+        return self.make_metavar(ctx)
 
     def get_help_record(self, ctx: Context) -> tuple[str, str]:
         """Returns the argument's help row: its metavar and its help text.
@@ -3790,12 +3985,12 @@ class Argument(Parameter):
             Always returns a tuple. It used to return ``None`` when ``help`` was
             not set.
         """
-        return self.make_metavar(ctx), self.help or ""
+        return self.get_help_spec(ctx), self.help or ""
 
     def get_error_hint(self, ctx: Context | None) -> str:
         if ctx is not None:
-            return f"'{self.make_metavar(ctx)}'"
-        return f"'{self.human_readable_name}'"
+            return f"'{self.get_help_spec(ctx)}'"
+        return f"'{self.spec}'"
 
     def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
         parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)

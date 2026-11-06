@@ -31,25 +31,47 @@ On each principle type you can specify {ref}`parameter-types`. Specifying these 
 
 ## Parameter Names
 
-Parameters (options and arguments) have a name that will be used as
-the Python argument name when calling the decorated function with
-values.
+Three distinct strings designate a parameter, and each one has its own audience:
 
-In the example, the argument's name is `filename`. The name must match the python arg name. To provide a different name for use in help text, see {ref}`doc-meta-variables`.
-The option's names are `-t` and `--times`. More names are available for options and are covered in {ref}`options`.
+- `decls` are the declarations you pass to the decorator. Click parses them to derive every other string in this section.
+- `spec` is what the user reads in `--help` and types on the command line. Read it from {attr}`Parameter.spec`, or from {meth}`Parameter.get_help_spec` for the longer form the help page lays out in its left column.
+- `name` is what Click uses internally to identify the parameter. It is used as a Python argument and is passed to the decorated function. Read it from {attr}`Parameter.name`.
+
+Click also keeps the parsed declarations on the parameter. {attr}`Parameter.opts` holds every spelling an option answers to, and {attr}`Parameter.secondary_opts` the ones that set a boolean flag to false.
 
 ```{eval-rst}
 .. click:example::
 
     @click.command()
-    @click.argument('filename')
-    @click.option('-t', '--times', type=int)
-    def multi_echo(filename, times):
-        """Print value filename multiple times."""
-        for x in range(times):
-            click.echo(filename)
+    @click.argument('recipe')
+    @click.option('-g', '--gluten-free/--no-gluten-free', default=False)
+    def bake(recipe, gluten_free):
+        """Bake the RECIPE, with or without gluten."""
+        note = 'no gluten' if gluten_free else 'with gluten'
+        click.echo(f'{recipe}: {note}')
 
 .. click:run::
 
-    invoke(multi_echo, ['--times=3', 'index.txt'], prog_name='multi_echo')
+    invoke(bake, ['--gluten-free', 'brioche'], prog_name='bake')
+
+
+.. click:run::
+
+    invoke(bake, ['--help'], prog_name='bake')
 ```
+
+The example holds one argument and one option. The table lists all five strings for each of them:
+
+| | `@click.argument('recipe')` | `@click.option('-g', '--gluten-free/--no-gluten-free')` |
+|---|---|---|
+| `decls` | `('recipe',)` | `('-g', '--gluten-free/--no-gluten-free')` |
+| `spec` | `RECIPE` | `--gluten-free` |
+| `name` | `recipe` | `gluten_free` |
+| `opts` | `['recipe']` | `['-g', '--gluten-free']` |
+| `secondary_opts` | `[]` | `['--no-gluten-free']` |
+
+Click derives an option's `name` from the declaration with the longest prefix, so it picks `--gluten-free` over `-g`. It then lowercases that declaration and replaces its dashes with underscores, which gives `gluten_free`. The name must match the Python argument name of the decorated function. More declarations are available for options and are covered in {ref}`options`.
+
+An argument has a single declaration. It becomes the only entry in `opts`, and `name` is that declaration lowercased, with dashes replaced by underscores. The `spec` is the name in upper case. `secondary_opts` stays empty, since the parser binds an argument by name and never matches a spelling. To choose the spec an argument shows in help text, see {ref}`doc-meta-variables`.
+
+The help page above shows each `spec` where the user reads it: `RECIPE` in the usage line, and `-g, --gluten-free / --no-gluten-free` in the left column of the options list, which is the longer form {meth}`Parameter.get_help_spec` returns.
