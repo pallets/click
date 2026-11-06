@@ -16,17 +16,18 @@ jobs:
       matrix:
         branch: [main, stable]
         config:
+          - {name: Random 3.15, python: '3.15', tox: random}
+          - {name: Random 3.15t, python: '3.15t', tox: random}
           - {name: Random 3.14, python: '3.14', tox: random}
-          - {name: Random 3.14t, python: '3.14t', tox: random}
           - {name: Random 3.13, python: '3.13', tox: random}
           - {name: Random 3.12, python: '3.12', tox: random}
           - {name: Random 3.11, python: '3.11', tox: random}
           - {name: Random 3.10, python: '3.10', tox: random}
-          - {name: Random Windows, python: '3.14', tox: random, os: windows-latest}
-          - {name: Random Mac, python: '3.14', tox: random, os: macos-latest}
-          - {name: Stress 3.14, python: '3.14', tox: stress-py3.14}
-          - {name: Stress 3.14t, python: '3.14t', tox: stress-py3.14t}
-          - {name: Stress Mac 3.14t, python: '3.14t', tox: stress-py3.14t, os: macos-latest}
+          - {name: Random Windows, python: '3.15', tox: random, os: windows-latest}
+          - {name: Random Mac, python: '3.15', tox: random, os: macos-latest}
+          - {name: Stress 3.15, python: '3.15', tox: stress-py3.15}
+          - {name: Stress 3.15t, python: '3.15t', tox: stress-py3.15t}
+          - {name: Stress Mac 3.15t, python: '3.15t', tox: stress-py3.15t, os: macos-latest}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
