@@ -1,6 +1,6 @@
 (contrib)=
 
-# click-contrib
+# Related projects
 
 As the user number of Click grows, more and more major feature requests are
 made. To users, it may seem reasonable to include those features with Click;
@@ -8,23 +8,32 @@ however, many of them are experimental or aren't practical to support
 generically. Maintainers have to choose what is reasonable to maintain in Click
 core.
 
-The [click-contrib](https://github.com/click-contrib/) GitHub organization exists as a place to collect third-party
-packages that extend Click's features. It is also meant to ease the effort of
-searching for such extensions.
+Please note that the quality and stability of the projects below may be different from
+Click itself. They are separate from Click and the Pallets maintainers.
 
-Please note that the quality and stability of those packages may be different
-from Click itself. While published under a common organization, they are still
-separate from Click and the Pallets maintainers.
+## `click-contrib`
+
+The [`click-contrib`](https://github.com/click-contrib/) GitHub organization exists as a
+place to collect third-party packages that extend Click's features. It is also meant to
+ease the effort of searching for such extensions.
+
+| Project                                                         | Description                                | Popularity                                                                                                   | Activity                                                                                                          |
+|-----------------------------------------------------------------|--------------------------------------------|--------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------|
+| [click-spinner](https://github.com/click-contrib/click-spinner) | Show a spinner while a command runs.       | ![GitHub stars](https://img.shields.io/github/stars/click-contrib/click-spinner?label=%20&style=flat-square) | ![Last commit](https://img.shields.io/github/last-commit/click-contrib/click-spinner?label=%20&style=flat-square) |
+| [click-repl](https://github.com/click-contrib/click-repl)       | Run subcommands in a REPL.                 | ![GitHub stars](https://img.shields.io/github/stars/click-contrib/click-repl?label=%20&style=flat-square)    | ![Last commit](https://img.shields.io/github/last-commit/click-contrib/click-repl?label=%20&style=flat-square)    |
+| [sphinx-click](https://github.com/click-contrib/sphinx-click)   | Document Click applications with Sphinx.   | ![GitHub stars](https://img.shields.io/github/stars/click-contrib/sphinx-click?label=%20&style=flat-square)  | ![Last commit](https://img.shields.io/github/last-commit/click-contrib/sphinx-click?label=%20&style=flat-square)  |
+| [click-man](https://github.com/click-contrib/click-man)         | Generate man pages for Click applications. | ![GitHub stars](https://img.shields.io/github/stars/click-contrib/click-man?label=%20&style=flat-square)     | ![Last commit](https://img.shields.io/github/last-commit/click-contrib/click-man?label=%20&style=flat-square)     |
+| [click-plugins](https://github.com/click-contrib/click-plugins) | Register commands through entry points.    | ![GitHub stars](https://img.shields.io/github/stars/click-contrib/click-plugins?label=%20&style=flat-square) | ![Last commit](https://img.shields.io/github/last-commit/click-contrib/click-plugins?label=%20&style=flat-square) |
+| [click-aliases](https://github.com/click-contrib/click-aliases) | Add aliases to commands.                   | ![GitHub stars](https://img.shields.io/github/stars/click-contrib/click-aliases?label=%20&style=flat-square) | ![Last commit](https://img.shields.io/github/last-commit/click-contrib/click-aliases?label=%20&style=flat-square) |
 
 ## Third-party projects
 
-Other projects that extend Click's features are available outside the
-[click-contrib](https://github.com/click-contrib/) organization.
-
-Some of the most popular and actively maintained are listed below:
+Other projects that extend Click are available. Here are some of the most popular and
+actively maintained ones:
 
 | Project                                                 | Description                                                                          | Popularity                                                                                             | Activity                                                                                                    |
 |---------------------------------------------------------|--------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| [tqdm](https://github.com/tqdm/tqdm)                    | Fast, extensible progress bars.                                                      | ![GitHub stars](https://img.shields.io/github/stars/tqdm/tqdm?label=%20&style=flat-square)             | ![Last commit](https://img.shields.io/github/last-commit/tqdm/tqdm?label=%20&style=flat-square)             |
 | [Typer](https://github.com/fastapi/typer)               | Use Python type hints to create CLI apps.                                            | ![GitHub stars](https://img.shields.io/github/stars/fastapi/typer?label=%20&style=flat-square)         | ![Last commit](https://img.shields.io/github/last-commit/fastapi/typer?label=%20&style=flat-square)         |
 | [rich-click](https://github.com/ewels/rich-click)       | Format help output with Rich.                                                        | ![GitHub stars](https://img.shields.io/github/stars/ewels/rich-click?label=%20&style=flat-square)      | ![Last commit](https://img.shields.io/github/last-commit/ewels/rich-click?label=%20&style=flat-square)      |
 | [shtab](https://github.com/tqdm/shtab)                  | Speed up tab completion scripts and support more shells.                             | ![GitHub stars](https://img.shields.io/github/stars/tqdm/shtab?label=%20&style=flat-square)            | ![Last commit](https://img.shields.io/github/last-commit/tqdm/shtab?label=%20&style=flat-square)            |
@@ -45,7 +54,7 @@ Click reads a prompt with the built-in {func}`input` and embeds no line editor o
 To make it into any of the lists above, a project:
 
 - must be actively maintained (at least one commit in the last year)
-- must have a reasonable number of stars (at least 20)
+- must have a reasonable number of stars (at least 50)
 
 If you have a project that meets these criteria, please open a pull request
 to add it to the list.
