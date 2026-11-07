@@ -25,12 +25,12 @@ Unreleased
 
 ## Version 8.5.1
 
-Released 2026-11-09
+Released 2026-11-06
 
 - Fix `copy.deepcopy()` and `pickle` on a `Parameter`, `Option` or `Command`. {pr}`3805`
 - A `KeyboardInterrupt` arriving while `Command.main()` reports an abort or an error,
   or while it exits, no longer escapes as an unhandled traceback. The command still
-  exits with the intended code; only the message may be lost. {issue}`3802`
+  exits with the intended code; only the message may be lost. {issue}`3802` {pr}`3818`
 - Add {meth}`Option.get_help_spec`, which returns the option's left help
   column even when the option is hidden. {meth}`Option.get_help_record` still
   returns `None` for hidden options, so help screens are unchanged. {pr}`3821`
