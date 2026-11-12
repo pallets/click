@@ -18,6 +18,9 @@ Click supports working with files with the {class}`File` type. Some notable feat
   This is a common pattern for POSIX command line utilities.
 - Deals with `str` and `bytes` correctly for all versions of Python.
 
+The command receives each file as a file object, which it can read or write directly. To get the path given on the
+command line, use the {class}`Path` type.
+
 Example:
 
 ```{eval-rst}
