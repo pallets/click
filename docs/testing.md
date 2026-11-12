@@ -53,6 +53,69 @@ def test_hello_world():
   assert result.output == 'Hello Peter!\n'
 ```
 
+## Exceptions
+
+{meth}`CliRunner.invoke` catches any exception that the command raises. It stores the
+exception in `result.exception` and sets the exit code to `1`. This command raises a
+{exc}`KeyError` for a city it does not know:
+
+```{code-block} python
+:caption: weather.py
+
+import click
+
+TEMPERATURES = {'Oslo': 7, 'Paris': 18}
+
+@click.command()
+@click.argument('city')
+def weather(city):
+   click.echo(f'{city}: {TEMPERATURES[city]} degrees')
+```
+
+```{code-block} python
+:caption: test_weather.py
+
+from click.testing import CliRunner
+from weather import weather
+
+def test_weather():
+   runner = CliRunner()
+   result = runner.invoke(weather, ['Lima'])
+   assert result.exit_code == 0
+```
+
+The test fails on the exit code. Its report names the exception, but not the line that
+raised it:
+
+```text
+E      AssertionError: assert 1 == 0
+E       +  where 1 = <Result KeyError('Lima')>.exit_code
+```
+
+Create the runner with `catch_exceptions=False` to let the exception propagate to the
+test. Pytest then shows the full traceback, down to the line of the command that raised
+the exception. With `pytest --pdb`, the debugger opens on that line.
+
+```python
+runner = CliRunner(catch_exceptions=False)
+```
+
+To change one call only, pass `catch_exceptions=False` to {meth}`CliRunner.invoke`.
+
+Click reports its own errors with {exc}`SystemExit`, which the runner always catches.
+`result.exception` then holds that {exc}`SystemExit`, not the Click exception.
+With `catch_exceptions=False`, an invalid parameter value or a
+{exc}`~click.ClickException` still sets the exit code and writes its message to
+`result.output`.
+
+To see the traceback and keep the default runner, print it from `result.exc_info`:
+
+```python
+import traceback
+
+traceback.print_exception(*result.exc_info)
+```
+
 ## Subcommands
 
 A subcommand name must be specified in the `args` parameter
