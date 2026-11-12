@@ -21,11 +21,7 @@ from ._compat import text_streams
 from ._compat import WIN
 from .globals import resolve_color_default
 
-if t.TYPE_CHECKING:
-    import typing_extensions as te
-
-    P = te.ParamSpec("P")
-
+P = t.ParamSpec("P")
 R = t.TypeVar("R")
 
 

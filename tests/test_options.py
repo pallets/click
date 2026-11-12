@@ -8,9 +8,6 @@ import warnings
 from contextlib import nullcontext
 from typing import Literal
 
-if sys.version_info < (3, 11):
-    enum.StrEnum = enum.Enum  # type: ignore[assignment]
-
 import pytest
 
 import click

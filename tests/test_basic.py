@@ -555,7 +555,7 @@ def test_choice_argument(runner):
 
 
 def test_choice_argument_enum(runner):
-    class MyEnum(str, enum.Enum):
+    class MyEnum(enum.StrEnum):
         FOO = "foo-value"
         BAR = "bar-value"
         BAZ = "baz-value"
