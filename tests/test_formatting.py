@@ -1,3 +1,5 @@
+import threading
+
 import pytest
 
 import click
@@ -437,12 +439,12 @@ def test_help_formatter_write_text():
     ("body", "width", "initial_indent"),
     [
         # Styled ``initial_indent`` must be measured by visible width, so the
-        # ``Usage:`` prefix shouldn't push ``[OPTIONS]`` to the second line.
+        # ``Usage:`` prefix shouldn't push ``CITY`` to the second line.
         # Regression for the asymmetry between ``HelpFormatter.write_usage``
         # (which sized the prefix with ``term_len``) and ``wrap_text``
         # (which previously used raw ``len``).
         pytest.param(
-            "[OPTIONS]",
+            "[OPTIONS] CITY",
             30,
             "\x1b[38;2;38;139;210m\x1b[1mUsage:\x1b[0m ",
             id="styled-initial-indent-does-not-break-body",
@@ -454,14 +456,6 @@ def test_help_formatter_write_text():
             15,
             "",
             id="styled-body-wraps-on-visible-width",
-        ),
-        # ``_handle_long_word`` cuts a styled token between visible
-        # characters; the ANSI escape sequence must not be split.
-        pytest.param(
-            "\x1b[31mabcdefghij\x1b[0m",
-            5,
-            "",
-            id="styled-long-word-breaks-on-visible-width",
         ),
         # Colon-delimited true-color (ISO 8613-6) escapes are excluded from the
         # width budget too.
@@ -485,9 +479,9 @@ def test_wrap_text_visible_width(body, width, initial_indent):
     """``wrap_text`` of styled input produces the same line layout as
     ``wrap_text`` of the ANSI-stripped input.
 
-    ANSI escape bytes must not count toward the width budget, regardless
-    of whether they appear in the body, in ``initial_indent``, or when a
-    styled token has to be broken in the middle.
+    ANSI escape bytes must not count toward the width budget, whether they
+    appear in the body or in ``initial_indent``. Wrapping moves or drops
+    whitespace only: every escape sequence survives, in order.
     """
     styled = click.formatting.wrap_text(
         body, width=width, initial_indent=initial_indent
@@ -498,20 +492,84 @@ def test_wrap_text_visible_width(body, width, initial_indent):
 
     styled_visible = [strip_ansi(line) for line in styled.splitlines()]
     assert styled_visible == plain.splitlines()
+    assert "".join(styled.split()) == "".join((initial_indent + body).split())
 
 
-def test_write_usage_styled_prefix_keeps_options_on_one_line():
+@pytest.mark.parametrize(
+    ("text", "width", "expected"),
+    [
+        # A line breaks between words, never after a hyphen inside one.
+        pytest.param(
+            "Add --avoid-motorways to stay on country roads.",
+            20,
+            ["Add", "--avoid-motorways to", "stay on country", "roads."],
+            id="hyphenated-word",
+        ),
+        # A word wider than the line is not cut: it goes on a line of its own.
+        pytest.param(
+            "Visit Llanfairpwllgwyngyll in Wales.",
+            10,
+            ["Visit", "Llanfairpwllgwyngyll", "in Wales."],
+            id="long-word",
+        ),
+        # A styled word wider than the line stays whole with its escape
+        # sequences.
+        pytest.param(
+            "Visit \x1b[31mLlanfairpwllgwyngyll\x1b[0m in Wales.",
+            10,
+            ["Visit", "\x1b[31mLlanfairpwllgwyngyll\x1b[0m", "in Wales."],
+            id="styled-long-word",
+        ),
+    ],
+)
+def test_wrap_text_keeps_words_whole(text, width, expected):
+    """``wrap_text`` breaks lines between words only."""
+    assert click.formatting.wrap_text(text, width).splitlines() == expected
+
+
+def test_wrap_text_rejects_width_below_one():
+    """``wrap_text`` raises an error for a width that leaves no room for text."""
+    with pytest.raises(ValueError, match="invalid width 0"):
+        click.formatting.wrap_text("Rain in Paris.", 0)
+
+
+@pytest.mark.parametrize(
+    ("wrap", "expected"),
+    [
+        pytest.param(
+            lambda: click.formatting.wrap_text(
+                " rain", 5, initial_indent=" " * 8, subsequent_indent=" " * 8
+            ),
+            "        rain",
+            id="wrap_text",
+        ),
+    ],
+)
+def test_wrap_under_indent_wider_than_width_returns(wrap, expected):
+    """Text that starts with a space wraps under an indent wider than the width."""
+    result = []
+    # The standard library's TextWrapper loops forever on this input with
+    # ``break_long_words=True``, on Python 3.10 to 3.16. Run the call in a thread,
+    # so a regression fails the test instead of an infinite loop.
+    thread = threading.Thread(target=lambda: result.append(wrap()), daemon=True)
+    thread.start()
+    thread.join(timeout=5)
+    assert not thread.is_alive(), "wrapping did not return"
+    assert result == [expected]
+
+
+def test_write_usage_styled_prefix_keeps_arguments_on_one_line():
     """End-to-end: a downstream-styled ``Usage:`` prefix should not split
-    ``[OPTIONS]`` across two lines.
+    the arguments across two lines.
     """
     styled_prefix = "\x1b[38;2;38;139;210m\x1b[1mUsage:\x1b[0m "
 
     formatter = click.HelpFormatter(width=40)
-    formatter.write_usage("cli", "[OPTIONS]", prefix=styled_prefix)
+    formatter.write_usage("cli", "[OPTIONS] CITY", prefix=styled_prefix)
     rendered = formatter.getvalue()
 
     visible = strip_ansi(rendered)
-    assert visible == "Usage: cli [OPTIONS]\n"
+    assert visible == "Usage: cli [OPTIONS] CITY\n"
 
 
 @pytest.mark.parametrize(
@@ -598,6 +656,77 @@ def test_help_formatter_write_usage_without_args_styled_prefix():
     rendered = f.getvalue()
     assert strip_ansi(rendered) == "Usage: cli\n"
     assert "\x1b[" in rendered
+
+
+@pytest.mark.parametrize(
+    ("width", "args", "expected"),
+    [
+        # A line breaks between option names, never after a hyphen inside one.
+        pytest.param(
+            65,
+            "--max-daily-temperature --min-nightly-temperature --wind-speed-unit"
+            " --rain-gauge-location --cloud-cover-percentage --sea-level-pressure"
+            " --snow-depth-threshold --dew-point-offset",
+            [
+                "Usage: forecast --max-daily-temperature --min-nightly-temperature",
+                "                --wind-speed-unit --rain-gauge-location",
+                "                --cloud-cover-percentage --sea-level-pressure",
+                "                --snow-depth-threshold --dew-point-offset",
+            ],
+            id="hyphenated-options",
+        ),
+        # An argument wider than the line is written whole on its own line,
+        # instead of being cut at a hyphen or between two letters.
+        pytest.param(
+            40,
+            "[OPTIONS] --minimum-nightly-temperature CITY",
+            [
+                "Usage: forecast [OPTIONS]",
+                "                --minimum-nightly-temperature",
+                "                CITY",
+            ],
+            id="argument-wider-than-line",
+        ),
+        # When the arguments go below the program name, each one stays whole
+        # too.
+        pytest.param(
+            16,
+            "[OPTIONS] --minimum-nightly-temperature CITY",
+            [
+                "Usage: forecast",
+                "           [OPTIONS]",
+                "           --minimum-nightly-temperature",
+                "           CITY",
+            ],
+            id="arguments-below-program-name",
+        ),
+    ],
+)
+def test_help_formatter_write_usage_keeps_arguments_whole(width, args, expected):
+    """``HelpFormatter.write_usage`` breaks lines between arguments only."""
+    f = click.HelpFormatter(width=width)
+    f.write_usage("forecast", args)
+    # Only line breaks are checked: the program name line can end with a space.
+    assert [line.rstrip() for line in f.getvalue().splitlines()] == expected
+
+
+@pytest.mark.parametrize(
+    "write",
+    [
+        pytest.param(lambda f, text: f.write_usage("forecast", text), id="write_usage"),
+        pytest.param(lambda f, text: f.write_text(text), id="write_text"),
+        pytest.param(lambda f, text: f.write_dl([("--city", text)]), id="write_dl"),
+    ],
+)
+def test_help_formatter_keeps_words_whole(write):
+    """Each ``HelpFormatter`` method that wraps text breaks lines between
+    words only.
+    """
+    words = "Add --avoid-motorways to visit Llanfairpwllgwyngyll by bus.".split()
+    f = click.HelpFormatter(width=15)
+    write(f, " ".join(words))
+    # The usage line and the definition list put a term before the words.
+    assert f.getvalue().split()[-len(words) :] == words
 
 
 @pytest.mark.parametrize(
