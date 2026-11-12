@@ -1096,6 +1096,17 @@ def test_bad_defaults_for_nargs(runner, default, message):
     assert message in result.stderr
 
 
+def test_partial_values_for_nargs(runner):
+    @click.command()
+    @click.argument("a", nargs=2, type=int, default=(1, 2))
+    def cmd(a):
+        click.echo(repr(a))
+
+    result = runner.invoke(cmd, ["3"])
+    assert result.exception is not None
+    assert "Argument '[A]...' requires 2 values but 1 was given." in result.output
+
+
 def test_multiple_param_decls_not_allowed(runner):
     with pytest.raises(TypeError):
 

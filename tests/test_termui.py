@@ -1331,7 +1331,7 @@ def test_editor_unclosed_quote():
     ("prompt_required", "required", "args", "expect"),
     [
         (True, False, None, "prompt"),
-        (True, False, ["-v"], "Option '-v' requires an argument."),
+        (True, False, ["-v"], "Option '-v' requires a value."),
         (False, True, None, "prompt"),
         (False, True, ["-v"], "prompt"),
     ],

@@ -2370,14 +2370,26 @@ class EnumSentinel(enum.Enum):
     (
         # Option default to None.
         ([], None),
-        # Config has no default value, and no flag value, so it requires an argument.
+        # Config has no default value, and no flag value, so it requires a value.
         (
             ["--config"],
-            re.compile(re.escape("Error: Option '--config' requires an argument.\n")),
+            re.compile(
+                re.escape(
+                    "Usage: main [OPTIONS]\n"
+                    "Try 'main --help' for help.\n\n"
+                    "Error: Option '--config' requires a value.\n"
+                )
+            ),
         ),
         (
             ["--no-config", "--config"],
-            re.compile(re.escape("Error: Option '--config' requires an argument.\n")),
+            re.compile(
+                re.escape(
+                    "Usage: main [OPTIONS]\n"
+                    "Try 'main --help' for help.\n\n"
+                    "Error: Option '--config' requires a value.\n"
+                )
+            ),
         ),
         # Passing --no-config defaults to the sentinel value because of the flag_value,
         # and then the custom type receives that sentinel and returns a message.
@@ -2519,11 +2531,17 @@ class Class2:
             EngineType.OSS,
         ),
         # The option has not enough parameters to be detected as flag-like, so it
-        # requires an argument.
+        # requires a value.
         (
             {"type": EngineType, "default": EngineType.OSS},
             ["--pro"],
-            re.compile(re.escape("Error: Option '--pro' requires an argument.\n")),
+            re.compile(
+                re.escape(
+                    "Usage: scan [OPTIONS]\n"
+                    "Try 'scan --help' for help.\n\n"
+                    "Error: Option '--pro' requires a value.\n"
+                )
+            ),
         ),
         ({"type": EngineType, "default": EngineType.OSS}, [], EngineType.OSS),
         # If a flag value is set, it is returned instead of the default value.

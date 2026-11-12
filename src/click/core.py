@@ -11,6 +11,7 @@ from abc import ABC
 from abc import abstractmethod
 from collections import abc
 from collections import Counter
+from collections import defaultdict
 from contextlib import AbstractContextManager
 from contextlib import contextmanager
 from contextlib import ExitStack
@@ -25,18 +26,20 @@ from . import types
 from ._utils import FLAG_NEEDS_VALUE
 from ._utils import UNSET
 from .exceptions import Abort
+from .exceptions import BadArgumentUsage
+from .exceptions import BadOptionUsage
 from .exceptions import BadParameter
 from .exceptions import ClickException
 from .exceptions import Exit
 from .exceptions import MissingParameter
 from .exceptions import NoArgsIsHelpError
 from .exceptions import NoSuchCommand
+from .exceptions import NoSuchOption
 from .exceptions import UsageError
 from .formatting import HelpFormatter
 from .formatting import join_options
 from .globals import pop_context
 from .globals import push_context
-from .parser import _OptionParser
 from .parser import _split_opt
 from .termui import confirm
 from .termui import prompt
@@ -46,7 +49,6 @@ from .utils import _expand_args
 from .utils import _make_default_short_help
 from .utils import _PacifyFlushWrapper
 from .utils import echo
-from .utils import make_str
 
 if t.TYPE_CHECKING:
     from typing_extensions import Self
@@ -344,7 +346,6 @@ class Context:
     info_name: str | None
     params: dict[str, t.Any]
     args: list[str]
-    _protected_args: list[str]
     _opt_prefixes: set[str]
     obj: t.Any
     _meta: dict[str, t.Any]
@@ -397,11 +398,6 @@ class Context:
         self.params = {}
         #: the leftover arguments.
         self.args = []
-        #: protected arguments.  These are arguments that are prepended
-        #: to `args` when certain parsing scenarios are encountered but
-        #: must be never propagated to another arguments.  This is used
-        #: to implement nested parsing.
-        self._protected_args = []
         #: the collected prefixes of the command's options.
         self._opt_prefixes = set(parent._opt_prefixes) if parent else set()
 
@@ -552,7 +548,7 @@ class Context:
             DeprecationWarning,
             stacklevel=2,
         )
-        return self._protected_args
+        return []
 
     def to_info_dict(self) -> dict[str, t.Any]:
         """Gather information that could be useful for a tool generating
@@ -1249,13 +1245,6 @@ class Command:
 
         return self._help_option
 
-    def make_parser(self, ctx: Context) -> _OptionParser:
-        """Creates the underlying option parser for this command."""
-        parser = _OptionParser(ctx)
-        for param in self.get_params(ctx):
-            param.add_to_parser(parser, ctx)
-        return parser
-
     def get_help(self, ctx: Context) -> str:
         """Formats the help into a string and returns it.
 
@@ -1393,11 +1382,296 @@ class Command:
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
             raise NoArgsIsHelpError(ctx)
 
-        parser = self.make_parser(ctx)
-        opts, args, param_order = parser.parse_args(args=args)
+        token_normalize_func = ctx.token_normalize_func
 
-        for param in iter_params_for_processing(param_order, self.get_params(ctx)):
-            _, args = param.handle_parse_result(ctx, opts, args)
+        def normalize(name: str) -> str:
+            if token_normalize_func is None:
+                return name
+
+            prefix, name = _split_opt(name)
+            return f"{prefix}{token_normalize_func(name)}"
+
+        params = self.get_params(ctx)
+        # Map each short and long option flag to their option objects, and collect the
+        # order of positional arguments. The one and two character prefixes used by
+        # options are collected to check if a token looks like an option.
+        opt_prefixes: set[str] = {"-", "--"}
+        short_opts: dict[str, Option] = {}
+        long_opts: dict[str, Option] = {}
+        # Normalized secondary names, for easier comparison during parsing.
+        secondary_opts: set[str] = set()
+        arg_params: list[Argument] = []
+
+        for param in params:
+            if isinstance(param, Option):
+                names = list(param.opts)
+
+                if param.is_bool_flag and param.secondary_opts:
+                    names.extend(param.secondary_opts)
+                    secondary_opts.update(normalize(n) for n in param.secondary_opts)
+
+                for name in names:
+                    name = normalize(name)
+                    prefix, value = _split_opt(name)
+                    opt_prefixes.add(prefix[0])
+
+                    if len(prefix) == 1 and len(value) == 1:
+                        # -a is a short opt
+                        short_opts[name] = param
+                    else:
+                        # --a is a long opt, -ab is a long opt with a short prefix
+                        opt_prefixes.add(prefix)
+                        long_opts[name] = param
+
+            elif isinstance(param, Argument):
+                arg_params.append(param)
+
+        def looks_like_opt(token: str) -> bool:
+            return len(token) > 1 and token[:1] in opt_prefixes
+
+        def flag_value(opt: Option, name: str) -> t.Any:
+            if opt.count:
+                # Each occurrence records the running count, the last one is used.
+                return len(values[opt.name]) + 1
+
+            if opt.is_bool_flag and opt.secondary_opts:
+                return name not in secondary_opts
+
+            return opt.flag_activation_value
+
+        # Map parameter names to collected values.
+        values: defaultdict[str, list[t.Any]] = defaultdict(list)
+        # Track what order parameters were seen.
+        param_order: list[Parameter] = []
+        # After mapping arguments to values, any extra values will still be here.
+        rest: list[str] = []
+        # Track what the parser should do with the current token.
+        lf_any = 0
+        lf_value_or_opt = 1
+        lf_value = 2
+        looking_for = lf_any
+        # Tracks the current option that needs a value.
+        looking_opt: Option | None = None
+        looking_opt_name: str | None = None
+        # Treat tokens as a stack, with the first token at the top.
+        tokens = list(reversed(args))
+
+        try:
+            while tokens:
+                token = tokens.pop()
+
+                if looking_for == lf_any:
+                    if token == "--":
+                        # All tokens after -- are considered arguments.
+                        rest.extend(reversed(tokens))
+                        tokens.clear()
+                    elif looks_like_opt(token):
+                        original_name, long_sep, value = token.partition("=")
+                        name = normalize(original_name)
+
+                        if name in long_opts:
+                            # any prefix, matching long opt
+                            opt = long_opts[name]
+                            param_order.append(opt)
+                            takes_value = not (opt.is_flag or opt.count)
+
+                            if long_sep:
+                                # key=value, only valid if the option takes a value
+                                if not takes_value:
+                                    message = _(
+                                        "Option {name!r} does not take a value."
+                                    ).format(name=original_name)
+                                    raise BadOptionUsage(
+                                        original_name, message, ctx=ctx
+                                    )
+
+                                tokens.append(value)
+                                looking_opt = opt
+                                looking_opt_name = original_name
+                                looking_for = lf_value
+                            elif not takes_value:
+                                # no attached value, and no value needed
+                                values[opt.name].append(flag_value(opt, name))
+                            else:
+                                # no attached value, and a value may be needed
+                                looking_opt = opt
+                                looking_opt_name = original_name
+
+                                if opt._flag_needs_value:
+                                    looking_for = lf_value_or_opt
+                                else:
+                                    looking_for = lf_value
+                        elif token[:2] in opt_prefixes:
+                            # long prefix, no matching long opt
+                            if not ctx.ignore_unknown_options:
+                                raise NoSuchOption(
+                                    original_name, possibilities=long_opts, ctx=ctx
+                                )
+
+                            rest.append(token)
+                        else:
+                            # short prefix, try short opts
+                            prefix = token[0]
+                            chars = token[1:]
+                            unmatched = []
+
+                            for i, c in enumerate(chars, 1):
+                                original_name = f"{prefix}{c}"
+                                name = normalize(original_name)
+
+                                if name not in short_opts:
+                                    if not ctx.ignore_unknown_options:
+                                        raise NoSuchOption(name, ctx=ctx)
+
+                                    unmatched.append(c)
+                                    continue
+
+                                opt = short_opts[name]
+                                param_order.append(opt)
+
+                                if opt.is_flag or opt.count:
+                                    # Record the flag, then continue trying short opts.
+                                    values[opt.name].append(flag_value(opt, name))
+                                    continue
+
+                                # Not a flag, stop trying short options and begin
+                                # looking for values.
+                                looking_opt = opt
+                                looking_opt_name = original_name
+                                value = chars[i:]
+
+                                if value:
+                                    # Use any remaining chars as a value.
+                                    tokens.append(value)
+                                    looking_for = lf_value
+                                elif opt._flag_needs_value:
+                                    looking_for = lf_value_or_opt
+                                else:
+                                    looking_for = lf_value
+
+                                break
+
+                            if unmatched:
+                                # If unknown options are allowed, add any unused chars
+                                # back as a single name with the same prefix.
+                                rest.append(f"{prefix}{''.join(unmatched)}")
+                    else:
+                        # an argument
+                        rest.append(token)
+
+                        if not ctx.allow_interspersed_args:
+                            # If interspersed isn't allowed, all remaining
+                            # tokens are considered arguments.
+                            rest.extend(reversed(tokens))
+                            tokens.clear()
+                elif looking_for == lf_value_or_opt:
+                    # The current opt optionally takes a value. Look at the
+                    # token then put it back.
+                    assert looking_opt is not None
+                    tokens.append(token)
+
+                    if (looking_opt.nargs == 1 and looks_like_opt(token)) or len(
+                        tokens
+                    ) < looking_opt.nargs:
+                        # Next token is an opt, or there aren't enough tokens left.
+                        # Mark the current opt as needing a value, handled during
+                        # processing.
+                        values[looking_opt.name].append(FLAG_NEEDS_VALUE)
+                        looking_opt = looking_opt_name = None
+                        looking_for = lf_any
+                    else:
+                        # Next token will be used as a value.
+                        looking_for = lf_value
+                elif looking_for == lf_value:
+                    # The current opt requires at least one value.
+                    assert looking_opt is not None and looking_opt_name is not None
+
+                    if looking_opt.nargs == 1:
+                        # Exactly one value required
+                        values[looking_opt.name].append(token)
+                    else:
+                        # More than one value required
+                        need_n = looking_opt.nargs - 1
+
+                        if len(tokens) < need_n:
+                            message = ngettext(
+                                "Option {name!r} requires {nargs} values"
+                                " but 1 was given.",
+                                "Option {name!r} requires {nargs} values"
+                                " but {len} were given.",
+                                len(tokens) + 1,
+                            ).format(
+                                name=looking_opt_name,
+                                nargs=looking_opt.nargs,
+                                len=len(tokens) + 1,
+                            )
+                            raise BadOptionUsage(looking_opt_name, message, ctx=ctx)
+
+                        values[looking_opt.name].append(
+                            (token, *reversed(tokens[-need_n:]))
+                        )
+                        del tokens[-need_n:]
+
+                    looking_opt = looking_opt_name = None
+                    looking_for = lf_any
+
+            if looking_for == lf_value_or_opt:
+                # No more tokens, mark the current opt to get a value later.
+                assert looking_opt is not None
+                values[looking_opt.name].append(FLAG_NEEDS_VALUE)
+            elif looking_for == lf_value:
+                # No more tokens, but the current opt still required a value.
+                assert looking_opt is not None and looking_opt_name is not None
+                message = ngettext(
+                    "Option {name!r} requires a value.",
+                    "Option {name!r} requires {nargs} values.",
+                    looking_opt.nargs,
+                ).format(name=looking_opt_name, nargs=looking_opt.nargs)
+                raise BadOptionUsage(looking_opt_name, message, ctx=ctx)
+
+            # Treat args as a stack, with the first at the top.
+            arg_params.reverse()
+
+            while arg_params:
+                arg = arg_params.pop()
+                param_order.append(arg)
+
+                # Missing values aren't recorded, so the value can come from an env
+                # var or default, or be reported as missing during processing.
+                if arg.nargs == -1:
+                    need_n = sum(p.nargs for p in arg_params if p.nargs > 0)
+
+                    if need_n:
+                        buffer = rest[:-need_n]
+                        rest = rest[-need_n:]
+                    else:
+                        buffer = rest
+                        rest = []
+
+                    if buffer:
+                        values[arg.name].append(tuple(buffer))
+                elif arg.nargs == 1:
+                    if rest:
+                        values[arg.name].append(rest.pop(0))
+                elif len(rest) >= arg.nargs:
+                    values[arg.name].append(tuple(rest[: arg.nargs]))
+                    rest = rest[arg.nargs :]
+                elif rest:
+                    message = ngettext(
+                        "Argument {name!r} requires {nargs} values but 1 was given.",
+                        "Argument {name!r} requires {nargs} values"
+                        " but {len} were given.",
+                        len(rest),
+                    ).format(name=arg.make_metavar(ctx), nargs=arg.nargs, len=len(rest))
+                    raise BadArgumentUsage(message, ctx=ctx)
+        except UsageError:
+            if not ctx.resilient_parsing:
+                raise
+
+        args = rest
+
+        for param in iter_params_for_processing(param_order, params):
+            args = param.handle_parse_result(ctx, values, args)[1]
 
         # We now have all parameters' values into `ctx.params`, but the data may contain
         # the `UNSET` sentinel.
@@ -1410,16 +1684,15 @@ class Command:
                 ctx.params[name] = None
 
         if args and not ctx.allow_extra_args and not ctx.resilient_parsing:
-            ctx.fail(
-                ngettext(
-                    "Got unexpected extra argument ({args})",
-                    "Got unexpected extra arguments ({args})",
-                    len(args),
-                ).format(args=" ".join(map(str, args)))
-            )
+            message = ngettext(
+                "Got unexpected extra argument ({args})",
+                "Got unexpected extra arguments ({args})",
+                len(args),
+            ).format(args=" ".join(args))
+            raise BadArgumentUsage(message, ctx=ctx)
 
         ctx.args = args
-        ctx._opt_prefixes.update(parser._opt_prefixes)
+        ctx._opt_prefixes.update(opt_prefixes)
         return args
 
     def invoke(self, ctx: Context) -> t.Any:
@@ -1480,7 +1753,7 @@ class Command:
                 results.extend(
                     CompletionItem(name, help=command.get_short_help_str())
                     for name, command in _complete_visible_commands(ctx, incomplete)
-                    if name not in ctx._protected_args
+                    if name not in ctx.args
                 )
 
         return results
@@ -2028,27 +2301,13 @@ class Group(Command):
                 with formatter.section(_("Commands")):
                     formatter.write_dl(rows)
 
-    def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
-        if not args and self.no_args_is_help and not ctx.resilient_parsing:
-            raise NoArgsIsHelpError(ctx)
-
-        rest = super().parse_args(ctx, args)
-
-        if self.chain:
-            ctx._protected_args = rest
-            ctx.args = []
-        elif rest:
-            ctx._protected_args, ctx.args = rest[:1], rest[1:]
-
-        return ctx.args
-
     def invoke(self, ctx: Context) -> t.Any:
         def _process_result(value: t.Any) -> t.Any:
             if self._result_callback is not None:
                 value = ctx.invoke(self._result_callback, value, **ctx.params)
             return value
 
-        if not ctx._protected_args:
+        if not ctx.args:
             if self.invoke_without_command:
                 # No subcommand was invoked, so the result callback is
                 # invoked with the group return value for regular
@@ -2058,10 +2317,8 @@ class Group(Command):
                     return _process_result([] if self.chain else rv)
             ctx.fail(_("Missing command."))
 
-        # Fetch args back out
-        args = [*ctx._protected_args, *ctx.args]
+        args = ctx.args
         ctx.args = []
-        ctx._protected_args = []
 
         # If we're not in chain mode, we only allow the invocation of a
         # single command but we also inform the current context about the
@@ -2113,28 +2370,26 @@ class Group(Command):
     def resolve_command(
         self, ctx: Context, args: list[str]
     ) -> tuple[str | None, Command | None, list[str]]:
-        cmd_name = make_str(args[0])
+        name = original_name = args[0]
+        cmd = self.get_command(ctx, name)
 
-        # Get the command
-        cmd = self.get_command(ctx, cmd_name)
-
-        # If we can't find the command but there is a normalization
-        # function available, we try with that one.
+        # If there's no exact match, try matching the normalized name.
         if cmd is None and ctx.token_normalize_func is not None:
-            cmd_name = ctx.token_normalize_func(cmd_name)
-            cmd = self.get_command(ctx, cmd_name)
+            name = ctx.token_normalize_func(name)
+            cmd = self.get_command(ctx, name)
 
-        # If we don't find the command we want to show an error message
-        # to the user that it was not provided.  However, there is
-        # something else we should do: if the first argument looks like
-        # an option we want to kick off parsing again for arguments to
-        # resolve things like --help which now should go to the main
-        # place.
-        if cmd is None and not ctx.resilient_parsing:
-            if _split_opt(cmd_name)[0]:
+        if cmd is None:
+            if ctx.resilient_parsing:
+                return None, None, args[1:]
+
+            # Parsing stops at the first argument, so options like --help may be
+            # left over. Parse them again so they can be handled.
+            if _split_opt(original_name)[0]:
                 self.parse_args(ctx, args)
-            raise NoSuchCommand(cmd_name, possibilities=self.commands, ctx=ctx)
-        return cmd_name if cmd else None, cmd, args[1:]
+
+            raise NoSuchCommand(original_name, possibilities=self.commands, ctx=ctx)
+
+        return name, cmd, args[1:]
 
     def shell_complete(self, ctx: Context, incomplete: str) -> list[CompletionItem]:
         """Return a list of completions for the incomplete value. Looks
@@ -2664,11 +2919,8 @@ class Parameter(ABC):
 
         return value
 
-    @abstractmethod
-    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None: ...
-
     def consume_value(
-        self, ctx: Context, opts: cabc.Mapping[str, t.Any]
+        self, ctx: Context, opts: cabc.Mapping[str, list[t.Any]]
     ) -> tuple[t.Any, ParameterSource]:
         """Returns the parameter value produced by the parser.
 
@@ -2681,7 +2933,12 @@ class Parameter(ABC):
         :meta private:
         """
         # Collect from the parse the value passed by the user to the CLI.
-        value = opts.get(self.name, UNSET)
+        value: t.Any = opts.get(self.name, UNSET)
+
+        if value is not UNSET and not self.multiple:
+            # Use only the last occurrence of the option if multiple isn't enabled.
+            value = value[-1]
+
         # If the value is set, it means it was sourced from the command line by the
         # parser, otherwise it left unset by default.
         source = (
@@ -3223,7 +3480,7 @@ class Option(Parameter):
         """Value the function receives when this flag is activated on the command line.
 
         Resolves a missing :attr:`flag_value` to ``True`` for actual flag options and
-        ``None`` otherwise. Used by the parser bridge (:meth:`add_to_parser`) and the
+        ``None`` otherwise. Used by the parser (:meth:`Command.parse_args`) and the
         runtime (:meth:`consume_value`) so :attr:`flag_value` can keep the :data:`UNSET`
         sentinel for "did the user pass one?" introspection.
         """
@@ -3500,48 +3757,6 @@ class Option(Parameter):
 
         return name, opts, secondary_opts
 
-    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
-        if self.multiple:
-            action = "append"
-        elif self.count:
-            action = "count"
-        else:
-            action = "store"
-
-        if self.is_flag:
-            action = f"{action}_const"
-
-            if self.is_bool_flag and self.secondary_opts:
-                parser.add_option(
-                    obj=self, opts=self.opts, dest=self.name, action=action, const=True
-                )
-                parser.add_option(
-                    obj=self,
-                    opts=self.secondary_opts,
-                    dest=self.name,
-                    action=action,
-                    const=False,
-                )
-            else:
-                parser.add_option(
-                    obj=self,
-                    opts=self.opts,
-                    dest=self.name,
-                    action=action,
-                    # ``flag_activation_value`` resolves UNSET to the right parser-store
-                    # constant (``True`` for bool flags) so the raw :attr:`flag_value`
-                    # can keep the sentinel.
-                    const=self.flag_activation_value,
-                )
-        else:
-            parser.add_option(
-                obj=self,
-                opts=self.opts,
-                dest=self.name,
-                action=action,
-                nargs=self.nargs,
-            )
-
     def get_help_spec(self, ctx: Context) -> str:
         """Returns the left column of the option's help record: its spellings
         and metavar, like ``-v, --verbose`` or ``-c, --config TEXT``.
@@ -3803,7 +4018,7 @@ class Option(Parameter):
         return rv
 
     def consume_value(
-        self, ctx: Context, opts: cabc.Mapping[str, Parameter]
+        self, ctx: Context, opts: cabc.Mapping[str, list[t.Any]]
     ) -> tuple[t.Any, ParameterSource]:
         """For :class:`Option`, the value can be collected from an interactive prompt
         if the option is a flag that needs a value (and the :attr:`prompt` property is
@@ -3991,9 +4206,6 @@ class Argument(Parameter):
         if ctx is not None:
             return f"'{self.get_help_spec(ctx)}'"
         return f"'{self.spec}'"
-
-    def add_to_parser(self, parser: _OptionParser, ctx: Context) -> None:
-        parser.add_argument(dest=self.name, nargs=self.nargs, obj=self)
 
 
 def __getattr__(name: str) -> object:
