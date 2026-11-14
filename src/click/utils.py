@@ -176,7 +176,7 @@ class _LazyFile:
         if self.should_close:
             self.close()
 
-    def __enter__(self) -> _LazyFile:
+    def __enter__(self) -> t.Self:
         return self
 
     def __exit__(
@@ -215,7 +215,7 @@ class _KeepOpenFile:
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
 
-    def __enter__(self) -> _KeepOpenFile:
+    def __enter__(self) -> t.Self:
         return self
 
     def __exit__(

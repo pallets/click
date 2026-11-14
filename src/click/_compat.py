@@ -473,7 +473,7 @@ class _AtomicFile:
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._f, name)
 
-    def __enter__(self) -> _AtomicFile:
+    def __enter__(self) -> t.Self:
         return self
 
     def __exit__(
