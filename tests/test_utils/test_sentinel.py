@@ -59,6 +59,12 @@ def test_unset_sentinel():
 
 
 @pytest.mark.parametrize("sentinel", tuple(Sentinel))
+def test_sentinel_value_is_a_bare_object(sentinel):
+    """A sentinel's ``value`` must never look like data."""
+    assert type(sentinel.value) is object
+
+
+@pytest.mark.parametrize("sentinel", tuple(Sentinel))
 @pytest.mark.parametrize(
     "duplicate",
     (
@@ -71,9 +77,8 @@ def test_unset_sentinel():
 def test_sentinel_duplication_preserves_identity(sentinel, duplicate):
     """Sentinels are singletons: copying or pickling one returns the member.
 
-    The default ``Enum`` reduction is ``(cls, (member.value,))``, which cannot
-    round-trip a bare ``object()`` value: the copy or the unpickled value is a
-    new object and ``Sentinel()`` rejects it.
+    Pickling by value cannot rebuild a bare ``object()``: it unpickles as a new object,
+    which ``Sentinel()`` rejects. ``Sentinel`` pickles its members by name.
     """
     assert duplicate(sentinel) is sentinel
 

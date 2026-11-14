@@ -97,8 +97,7 @@ def test_parameter_human_readable_name_override_deprecated(base):
 @pytest.mark.parametrize("base", [click.Parameter, click.Option, click.Argument])
 def test_parameter_subclass_without_override_is_silent(base):
     """The warning names a subclass that overrides the property, and no other."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("error", DeprecationWarning)
+    with warnings.catch_warnings(action="error", category=DeprecationWarning):
 
         class Custom(base):  # type: ignore[misc, valid-type]
             pass
@@ -250,6 +249,5 @@ def test_normalized_explicit_name_not_deprecated(recwarn, decls):
 def test_unnormalized_name_on_a_refused_option_is_silent():
     """An option that cannot be built at all warns about nothing."""
     with pytest.raises(TypeError, match="No options defined"):
-        with warnings.catch_warnings():
-            warnings.simplefilter("error", DeprecationWarning)
+        with warnings.catch_warnings(action="error", category=DeprecationWarning):
             click.Option(["Foo_Bar"])

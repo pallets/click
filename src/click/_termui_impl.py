@@ -112,7 +112,7 @@ class ProgressBar(t.Generic[V]):
         self._is_atty = isatty(self.file)
         self._last_line: str | None = None
 
-    def __enter__(self) -> ProgressBar[V]:
+    def __enter__(self) -> t.Self:
         self.entered = True
         self.render_progress()
         return self
