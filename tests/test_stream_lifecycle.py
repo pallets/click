@@ -17,7 +17,7 @@ The tests are organized by category:
 3. Logging interaction: ``CliRunner`` works with active logging handlers
 4. Multi-threaded safety: concurrent threads don't cause I/O-on-closed-file
 5. Sequential invocations: multiple ``invoke()`` calls don't corrupt state
-6. Stress tests (marked ``stress``): high-iteration reproducers for races
+6. Stress tests (``stress``, ``stress_long``): high-iteration reproducers for races
 
 How to run locally
 ------------------
@@ -28,11 +28,17 @@ Standard tests (fast, ~0.8s) with stress tests excluded by default:
 
     $ pytest tests/test_stream_lifecycle.py -v
 
-Stress tests only (30k iterations, ~52min):
+Short stress tests only (20k iterations, ~11s):
 
 .. code-block:: shell-session
 
     $ pytest tests/test_stream_lifecycle.py -m stress -x --override-ini="addopts="
+
+Long stress tests only (10k iterations, ~11min):
+
+.. code-block:: shell-session
+
+    $ pytest tests/test_stream_lifecycle.py -m stress_long -x --override-ini="addopts="
 
 Everything:
 
@@ -491,10 +497,11 @@ def test_sys_streams_restored_after_exception():
 # ---------------------------------------------------------------------------
 # Category 6: Stress tests - high-iteration reproducers for race conditions
 #
-# These are marked with ``pytest.mark.stress`` so they can be included or
-# excluded independently. The ``tox -e stress`` env collects every
-# ``pytest.mark.stress`` test across the suite (not just this file), so
-# stress regressions for other components live alongside their unit tests.
+# These are marked with ``pytest.mark.stress``, or ``pytest.mark.stress_long`` when they
+# take minutes, so they can be included or excluded independently. The ``tox -e stress``
+# and ``tox -e stress-long`` envs collect every test with their marker across the suite
+# (not just this file), so stress regressions for other components live alongside their
+# unit tests.
 # ---------------------------------------------------------------------------
 
 
@@ -534,10 +541,14 @@ def test_stress_logging_sequential_invocations(_):
     assert result.exit_code == 0
 
 
-@pytest.mark.stress
+@pytest.mark.stress_long
 @pytest.mark.parametrize("_", range(10_000))
 def test_stress_gc_between_invocations(_):
-    """Force GC after each invocation to provoke finalizer races."""
+    """Force GC after each invocation to provoke finalizer races.
+
+    Each full collection walks every object of the pytest session, so this test
+    takes minutes.
+    """
 
     @click.command()
     def cli():

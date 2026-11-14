@@ -18,6 +18,13 @@ Click includes some extra test environments:
     $ tox r -e stress
     ```
 
+-   `tox r -e stress-long` runs the stress tests that take
+    minutes.
+
+    ```shell-session
+    $ tox r -e stress-long
+    ```
+
 -   `tox r -e random` runs tests in parallel in a random
     order to detect test pollution.
 
