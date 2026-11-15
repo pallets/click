@@ -87,8 +87,9 @@ filterwarnings = [
 ]
 markers = [
     "stress: high-iteration stress tests for race conditions (deselect with '-m \"not stress\"')",
+    "stress_long: high-iteration stress tests that take minutes (deselect with '-m \"not stress_long\"')",
 ]
-addopts = "-m 'not stress'"
+addopts = "-m 'not stress and not stress_long'"
 
 [tool.coverage.run]
 branch = true
@@ -147,7 +148,6 @@ env_list = [
     "py3.15", "py3.14", "py3.13", "py3.12", "py3.11", "py3.10",
     "py3.15t",
     "pypy3.11",
-    "stress-py3.15", "stress-py3.15t",
     "style",
     "typing",
     "docs",
@@ -179,6 +179,15 @@ commands = [[
 description = "high-iteration stress tests for race conditions"
 commands = [[
     "pytest", "-v", "--tb=short", "-x", "-m", "stress",
+    "--basetemp={env_tmp_dir}",
+    "--override-ini=addopts=",
+    {replace = "posargs", default = [], extend = true},
+]]
+
+[tool.tox.env.stress-long]
+description = "high-iteration stress tests that take minutes"
+commands = [[
+    "pytest", "-v", "--tb=short", "-x", "-m", "stress_long",
     "--basetemp={env_tmp_dir}",
     "--override-ini=addopts=",
     {replace = "posargs", default = [], extend = true},
