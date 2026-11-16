@@ -55,6 +55,7 @@ tests-random = [
 ]
 typing = [
     "mypy",
+    "pyrefly>=1.2.0",
     "pyright",
     "pytest",
 ]
@@ -196,6 +197,7 @@ dependency_groups = ["typing"]
 commands = [
     ["mypy"],
     ["pyright", "--ignoreexternal", "--verifytypes", "click"],
+    ["pyrefly", "check"],
 ]
 
 [tool.tox.env.docs]
@@ -229,3 +231,17 @@ dependency_groups = []
 no_default_groups = true
 skip_install = true
 commands = [["uv", "lock", {replace = "posargs", default = ["-U"], extend = true}]]
+
+[tool.pyrefly]
+project-includes = [
+    "src",
+    "tests/typing",
+]
+# Windows-only module (guarded by `assert sys.platform == "win32"`); mypy and
+# pyright both skip it as unreachable on other platforms, but pyrefly does
+# not, so it is excluded here to avoid noise from missing Windows stubs.
+project-excludes = [
+    "src/click/_winconsole.py",
+]
+python-version = "3.10.0"
+preset = "legacy"
