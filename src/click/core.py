@@ -865,7 +865,7 @@ class Context:
         """
         return self.command.get_help(self)
 
-    def _make_sub_context(self, command: Command) -> Context:
+    def _make_sub_context(self, command: Command) -> t.Self:
         """Create a new context of the same type as this context, but
         for a new command.
 

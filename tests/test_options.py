@@ -1512,8 +1512,7 @@ def test_option_name_case_variants_share_one_parameter(runner):
 
     assert [p.name for p in cmd.params] == ["foo_bar"] * 3
 
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
+    with warnings.catch_warnings(record=True, action="always") as caught:
         result = runner.invoke(cmd, ["--help"], catch_exceptions=False)
 
     assert not [w for w in caught if issubclass(w.category, UserWarning)]
