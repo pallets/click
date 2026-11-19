@@ -314,14 +314,6 @@ classes and functions.
 .. autofunction:: wrap_text
 ```
 
-## Parsing
-
-```{eval-rst}
-.. autoclass:: OptionParser
-   :members:
-
-```
-
 ## Shell Completion
 
 See {doc}`/shell-completion` for information about enabling and

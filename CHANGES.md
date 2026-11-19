@@ -2,6 +2,16 @@
 
 Unreleased
 
+- The old parser, deprecated in 8.2, is removed. {meth}`Command.parse_args`
+  parses arguments directly. {issue}`2205`
+
+  - `OptionParser` is removed from `click` and `click.parser`, along with
+    `click.parser.Option`, `Argument`, `ParsingState`, and `normalize_opt`.
+    Use `optparse` from the standard library if you need the old parser.
+  - `Command.make_parser` and `Parameter.add_to_parser` are removed.
+  - `Context.protected_args` always returns an empty list. The subcommand
+    name and its arguments are in `Context.args`.
+
 - A parameter name that is not a valid Python identifier, or that is a Python
   keyword, is deprecated and raises `TypeError` in Click 9.0. {pr}`3866`
 - An {class}`Option` name written as a Python identifier is deprecated when it

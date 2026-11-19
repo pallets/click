@@ -23,15 +23,8 @@ import click.utils
         (click, "MultiCommand", click.core._MultiCommand),
         (click.core, "BaseCommand", click.core._BaseCommand),
         (click.core, "MultiCommand", click.core._MultiCommand),
-        # Old parser API (moved to `optparse`); `OptionParser` is also
-        # re-exported from the top-level `click` namespace.
-        (click, "OptionParser", click.parser._OptionParser),
-        (click.parser, "OptionParser", click.parser._OptionParser),
-        (click.parser, "Argument", click.parser._Argument),
-        (click.parser, "Option", click.parser._Option),
+        # Remaining `click.parser` helpers.
         (click.parser, "split_opt", click.parser._split_opt),
-        (click.parser, "normalize_opt", click.parser._normalize_opt),
-        (click.parser, "ParsingState", click.parser._ParsingState),
         (click.parser, "split_arg_string", click.shell_completion.split_arg_string),
         # Deprecated `click.utils` utilities.
         (click.utils, "LazyFile", click.utils._LazyFile),

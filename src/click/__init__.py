@@ -98,17 +98,6 @@ def __getattr__(name: str) -> object:
         )
         return _MultiCommand
 
-    if name == "OptionParser":
-        from .parser import _OptionParser
-
-        warnings.warn(
-            "'OptionParser' is deprecated and will be removed in Click 9.0. The"
-            " old parser is available in 'optparse'.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return _OptionParser
-
     if name == "__version__":
         import importlib.metadata
 
