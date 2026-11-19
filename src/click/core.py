@@ -15,6 +15,7 @@ from collections import defaultdict
 from contextlib import AbstractContextManager
 from contextlib import contextmanager
 from contextlib import ExitStack
+from dataclasses import dataclass
 from functools import update_wrapper
 from gettext import gettext as _
 from gettext import ngettext
@@ -976,6 +977,30 @@ class Context:
         return self._parameter_source.get(name)
 
 
+@dataclass
+class _OptTables:
+    """A command's parameters arranged for looking up tokens during parsing.
+    Option names are normalized with the context's ``token_normalize_func``.
+    """
+
+    short_opts: dict[str, Option]
+    """Map each short name, like ``-a``, to its option."""
+
+    long_opts: dict[str, Option]
+    """Map each long name, like ``--a`` or ``-ab``, to its option."""
+
+    secondary_opts: set[str]
+    """The secondary names of boolean flags, like ``--no-a``."""
+
+    opt_prefixes: set[str]
+    """The one and two character prefixes used by options, to check if a token
+    looks like an option.
+    """
+
+    arg_params: list[Argument]
+    """The positional arguments, in order."""
+
+
 class Command:
     """Commands are the basic building block of command line interfaces in
     Click.  A basic command handles command line parsing and might dispatch
@@ -1393,12 +1418,10 @@ class Command:
             return f"{prefix}{token_normalize_func(name)}"
 
         params = self.get_params(ctx)
-        short_opts, long_opts, secondary_opts, opt_prefixes, arg_params = (
-            self._build_opt_tables(params, normalize)
-        )
+        tables = self._build_opt_tables(params, normalize)
 
         def looks_like_opt(token: str) -> bool:
-            return len(token) > 1 and token[:1] in opt_prefixes
+            return len(token) > 1 and token[:1] in tables.opt_prefixes
 
         def flag_value(opt: Option, name: str) -> t.Any:
             if opt.count:
@@ -1406,7 +1429,7 @@ class Command:
                 return len(values[opt.name]) + 1
 
             if opt.is_bool_flag and opt.secondary_opts:
-                return name not in secondary_opts
+                return name not in tables.secondary_opts
 
             return opt.flag_activation_value
 
@@ -1440,9 +1463,9 @@ class Command:
                         original_name, long_sep, value = token.partition("=")
                         name = normalize(original_name)
 
-                        if name in long_opts:
+                        if name in tables.long_opts:
                             # any prefix, matching long opt
-                            opt = long_opts[name]
+                            opt = tables.long_opts[name]
                             param_order.append(opt)
                             takes_value = not (opt.is_flag or opt.count)
 
@@ -1472,11 +1495,13 @@ class Command:
                                     looking_for = lf_value_or_opt
                                 else:
                                     looking_for = lf_value
-                        elif token[:2] in opt_prefixes:
+                        elif token[:2] in tables.opt_prefixes:
                             # long prefix, no matching long opt
                             if not ctx.ignore_unknown_options:
                                 raise NoSuchOption(
-                                    original_name, possibilities=long_opts, ctx=ctx
+                                    original_name,
+                                    possibilities=tables.long_opts,
+                                    ctx=ctx,
                                 )
 
                             rest.append(token)
@@ -1490,14 +1515,14 @@ class Command:
                                 original_name = f"{prefix}{c}"
                                 name = normalize(original_name)
 
-                                if name not in short_opts:
+                                if name not in tables.short_opts:
                                     if not ctx.ignore_unknown_options:
                                         raise NoSuchOption(name, ctx=ctx)
 
                                     unmatched.append(c)
                                     continue
 
-                                opt = short_opts[name]
+                                opt = tables.short_opts[name]
                                 param_order.append(opt)
 
                                 if opt.is_flag or opt.count:
@@ -1600,7 +1625,7 @@ class Command:
                 ).format(name=looking_opt_name, nargs=looking_opt.nargs)
                 raise BadOptionUsage(looking_opt_name, message, ctx=ctx)
 
-            self._assign_args(ctx, arg_params, rest, values, param_order)
+            self._assign_args(ctx, tables.arg_params, rest, values, param_order)
         except UsageError:
             if not ctx.resilient_parsing:
                 raise
@@ -1629,7 +1654,7 @@ class Command:
             raise BadArgumentUsage(message, ctx=ctx)
 
         ctx.args = args
-        ctx._opt_prefixes.update(opt_prefixes)
+        ctx._opt_prefixes.update(tables.opt_prefixes)
         return args
 
     @staticmethod
@@ -1686,15 +1711,9 @@ class Command:
     @staticmethod
     def _build_opt_tables(
         params: cabc.Sequence[Parameter], normalize: cabc.Callable[[str], str]
-    ) -> tuple[
-        dict[str, Option], dict[str, Option], set[str], set[str], list[Argument]
-    ]:
+    ) -> _OptTables:
         """Map each normalized short and long option name to its option, and collect
         the positional arguments in order.
-
-        Returns the short options, long options, normalized secondary names, option
-        prefixes, and arguments. The one and two character prefixes used by options
-        are collected to check if a token looks like an option.
 
         :raise TypeError: Two different option names normalize to the same name.
         """
@@ -1752,7 +1771,13 @@ class Command:
             elif isinstance(param, Argument):
                 arg_params.append(param)
 
-        return short_opts, long_opts, secondary_opts, opt_prefixes, arg_params
+        return _OptTables(
+            short_opts=short_opts,
+            long_opts=long_opts,
+            secondary_opts=secondary_opts,
+            opt_prefixes=opt_prefixes,
+            arg_params=arg_params,
+        )
 
     def invoke(self, ctx: Context) -> t.Any:
         """Given a context, this invokes the attached callback (if it exists)
