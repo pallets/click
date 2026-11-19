@@ -1393,62 +1393,9 @@ class Command:
             return f"{prefix}{token_normalize_func(name)}"
 
         params = self.get_params(ctx)
-        # Map each short and long option flag to their option objects, and collect the
-        # order of positional arguments. The one and two character prefixes used by
-        # options are collected to check if a token looks like an option.
-        opt_prefixes: set[str] = {"-", "--"}
-        short_opts: dict[str, Option] = {}
-        long_opts: dict[str, Option] = {}
-        # Normalized secondary names, for easier comparison during parsing.
-        secondary_opts: set[str] = set()
-        arg_params: list[Argument] = []
-        # Normalized name to the option, declared spelling, and whether it's a
-        # secondary name, to detect spellings that only collide after normalizing.
-        claimed: dict[str, tuple[Option, str, bool]] = {}
-
-        for param in params:
-            if isinstance(param, Option):
-                names = [(n, False) for n in param.opts]
-
-                if param.is_bool_flag and param.secondary_opts:
-                    names.extend((n, True) for n in param.secondary_opts)
-                    secondary_opts.update(normalize(n) for n in param.secondary_opts)
-
-                for original, is_secondary in names:
-                    name = normalize(original)
-
-                    if name in claimed:
-                        other, other_original, other_is_secondary = claimed[name]
-
-                        # An identical spelling is a duplicate declaration, which
-                        # get_params warns about, and the last one keeps winning.
-                        if original != other_original and (
-                            other is not param or other_is_secondary != is_secondary
-                        ):
-                            raise TypeError(
-                                _(
-                                    "The option names {first!r} and {second!r} both"
-                                    " normalize to {name!r}. Give them names that"
-                                    " stay distinct after 'token_normalize_func'."
-                                ).format(
-                                    first=other_original, second=original, name=name
-                                )
-                            )
-
-                    claimed[name] = (param, original, is_secondary)
-                    prefix, value = _split_opt(name)
-                    opt_prefixes.add(prefix[0])
-
-                    if len(prefix) == 1 and len(value) == 1:
-                        # -a is a short opt
-                        short_opts[name] = param
-                    else:
-                        # --a is a long opt, -ab is a long opt with a short prefix
-                        opt_prefixes.add(prefix)
-                        long_opts[name] = param
-
-            elif isinstance(param, Argument):
-                arg_params.append(param)
+        short_opts, long_opts, secondary_opts, opt_prefixes, arg_params = (
+            self._build_opt_tables(params, normalize)
+        )
 
         def looks_like_opt(token: str) -> bool:
             return len(token) > 1 and token[:1] in opt_prefixes
@@ -1718,6 +1665,76 @@ class Command:
         ctx.args = args
         ctx._opt_prefixes.update(opt_prefixes)
         return args
+
+    def _build_opt_tables(
+        self, params: cabc.Sequence[Parameter], normalize: cabc.Callable[[str], str]
+    ) -> tuple[
+        dict[str, Option], dict[str, Option], set[str], set[str], list[Argument]
+    ]:
+        """Map each normalized short and long option name to its option, and collect
+        the positional arguments in order.
+
+        Returns the short options, long options, normalized secondary names, option
+        prefixes, and arguments. The one and two character prefixes used by options
+        are collected to check if a token looks like an option.
+
+        :raise TypeError: Two different option names normalize to the same name.
+        """
+        opt_prefixes: set[str] = {"-", "--"}
+        short_opts: dict[str, Option] = {}
+        long_opts: dict[str, Option] = {}
+        # Normalized secondary names, for easier comparison during parsing.
+        secondary_opts: set[str] = set()
+        arg_params: list[Argument] = []
+        # Normalized name to the option, declared spelling, and whether it's a
+        # secondary name, to detect spellings that only collide after normalizing.
+        claimed: dict[str, tuple[Option, str, bool]] = {}
+
+        for param in params:
+            if isinstance(param, Option):
+                names = [(n, False) for n in param.opts]
+
+                if param.is_bool_flag and param.secondary_opts:
+                    names.extend((n, True) for n in param.secondary_opts)
+                    secondary_opts.update(normalize(n) for n in param.secondary_opts)
+
+                for original, is_secondary in names:
+                    name = normalize(original)
+
+                    if name in claimed:
+                        other, other_original, other_is_secondary = claimed[name]
+
+                        # An identical spelling is a duplicate declaration, which
+                        # get_params warns about, and the last one keeps winning.
+                        if original != other_original and (
+                            other is not param or other_is_secondary != is_secondary
+                        ):
+                            raise TypeError(
+                                _(
+                                    "The option names {first!r} and {second!r} both"
+                                    " normalize to {name!r}. Give them names that"
+                                    " stay distinct after 'token_normalize_func'."
+                                ).format(
+                                    first=other_original, second=original, name=name
+                                )
+                            )
+
+                    claimed[name] = (param, original, is_secondary)
+                    prefix, value = _split_opt(name)
+                    opt_prefixes.add(prefix[0])
+
+                    if len(prefix) == 1 and len(value) == 1:
+                        # -a is a short opt
+                        short_opts[name] = param
+                    else:
+                        # --a is a long opt, -ab is a long opt with a short prefix
+                        opt_prefixes.add(prefix)
+                        long_opts[name] = param
+
+            elif isinstance(param, Argument):
+                arg_params.append(param)
+
+        return short_opts, long_opts, secondary_opts, opt_prefixes, arg_params
 
     def invoke(self, ctx: Context) -> t.Any:
         """Given a context, this invokes the attached callback (if it exists)
