@@ -1377,6 +1377,9 @@ class Command:
         return ctx
 
     def parse_args(self, ctx: Context, args: list[str]) -> list[str]:
+        return self._parse_args(ctx, args)
+
+    def _parse_args(self, ctx: Context, args: list[str]) -> list[str]:
         if not args and self.no_args_is_help and not ctx.resilient_parsing:
             raise NoArgsIsHelpError(ctx)
 
