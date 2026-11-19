@@ -4,8 +4,8 @@ import collections.abc as cabc
 from contextlib import contextmanager
 from gettext import gettext as _
 
+from ._base_utils import _split_opt
 from ._compat import term_len
-from ._parser import _split_opt
 
 # Can force a width.  This is used by the test system
 FORCED_WIDTH: int | None = None
