@@ -611,6 +611,25 @@ def test_resilient_parsing_suppresses_usage_errors(args, params, extra):
     assert ctx.args == extra
 
 
+def test_resilient_parsing_keeps_consumed_args():
+    """When a later argument has partial values, the values already assigned to
+    earlier arguments aren't left over as extra args.
+    """
+
+    @click.command()
+    @click.argument("a", nargs=2)
+    @click.argument("b", nargs=2)
+    def cli(a, b):
+        pass
+
+    with pytest.raises(click.UsageError):
+        cli.make_context("cli", ["x", "y", "z"])
+
+    ctx = cli.make_context("cli", ["x", "y", "z"], resilient_parsing=True)
+    assert ctx.params == {"a": ("x", "y"), "b": None}
+    assert ctx.args == ["z"]
+
+
 @pytest.mark.parametrize("doc", ["CLI HELP", None])
 @pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])
 def test_deprecated_in_help_messages(runner, doc, deprecated):

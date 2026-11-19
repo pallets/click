@@ -1600,41 +1600,7 @@ class Command:
                 ).format(name=looking_opt_name, nargs=looking_opt.nargs)
                 raise BadOptionUsage(looking_opt_name, message, ctx=ctx)
 
-            # Treat args as a stack, with the first at the top.
-            arg_params.reverse()
-
-            while arg_params:
-                arg = arg_params.pop()
-                param_order.append(arg)
-
-                # Missing values aren't recorded, so the value can come from an env
-                # var or default, or be reported as missing during processing.
-                if arg.nargs == -1:
-                    need_n = sum(p.nargs for p in arg_params if p.nargs > 0)
-
-                    if need_n:
-                        buffer = rest[:-need_n]
-                        rest = rest[-need_n:]
-                    else:
-                        buffer = rest
-                        rest = []
-
-                    if buffer:
-                        values[arg.name].append(tuple(buffer))
-                elif arg.nargs == 1:
-                    if rest:
-                        values[arg.name].append(rest.pop(0))
-                elif len(rest) >= arg.nargs:
-                    values[arg.name].append(tuple(rest[: arg.nargs]))
-                    rest = rest[arg.nargs :]
-                elif rest:
-                    message = ngettext(
-                        "Argument {name!r} requires {nargs} values but 1 was given.",
-                        "Argument {name!r} requires {nargs} values"
-                        " but {len} were given.",
-                        len(rest),
-                    ).format(name=arg.make_metavar(ctx), nargs=arg.nargs, len=len(rest))
-                    raise BadArgumentUsage(message, ctx=ctx)
+            self._assign_args(ctx, arg_params, rest, values, param_order)
         except UsageError:
             if not ctx.resilient_parsing:
                 raise
@@ -1665,6 +1631,57 @@ class Command:
         ctx.args = args
         ctx._opt_prefixes.update(opt_prefixes)
         return args
+
+    @staticmethod
+    def _assign_args(
+        ctx: Context,
+        arg_params: list[Argument],
+        rest: list[str],
+        values: defaultdict[str, list[t.Any]],
+        param_order: list[Parameter],
+    ) -> None:
+        """Assign the remaining tokens to the positional arguments in order.
+
+        Consumes ``arg_params`` and ``rest`` in place, so that if an error is
+        raised and ignored for resilient parsing, ``rest`` still holds the
+        tokens that weren't assigned.
+
+        :raise BadArgumentUsage: An argument has some but not all of its values.
+        """
+        # Treat args as a stack, with the first at the top.
+        arg_params.reverse()
+
+        while arg_params:
+            arg = arg_params.pop()
+            param_order.append(arg)
+
+            # Missing values aren't recorded, so the value can come from an env
+            # var or default, or be reported as missing during processing.
+            if arg.nargs == -1:
+                need_n = sum(p.nargs for p in arg_params if p.nargs > 0)
+
+                if need_n:
+                    buffer = rest[:-need_n]
+                    del rest[:-need_n]
+                else:
+                    buffer = rest[:]
+                    rest.clear()
+
+                if buffer:
+                    values[arg.name].append(tuple(buffer))
+            elif arg.nargs == 1:
+                if rest:
+                    values[arg.name].append(rest.pop(0))
+            elif len(rest) >= arg.nargs:
+                values[arg.name].append(tuple(rest[: arg.nargs]))
+                del rest[: arg.nargs]
+            elif rest:
+                message = ngettext(
+                    "Argument {name!r} requires {nargs} values but 1 was given.",
+                    "Argument {name!r} requires {nargs} values but {len} were given.",
+                    len(rest),
+                ).format(name=arg.make_metavar(ctx), nargs=arg.nargs, len=len(rest))
+                raise BadArgumentUsage(message, ctx=ctx)
 
     @staticmethod
     def _build_opt_tables(
