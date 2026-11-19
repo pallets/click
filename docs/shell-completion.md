@@ -238,13 +238,13 @@ must return a `(args, incomplete)` tuple.
 
 ```python
 import os
-from click.parser import split_arg_string
+import click
 
 class MyshComplete(ShellComplete):
     ...
 
     def get_completion_args(self):
-        args = split_arg_string(os.environ["COMP_WORDS"])
+        args = click.split_arg_string(os.environ["COMP_WORDS"])
 
         if os.environ["COMP_PARTIAL"] == "1":
             incomplete = args.pop()

@@ -338,6 +338,10 @@ customizing Click's shell completion system.
 
 ```
 
+```{eval-rst}
+.. autofunction:: click.split_arg_string
+```
+
 (testing)=
 
 ## Testing

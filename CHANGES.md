@@ -1,4 +1,4 @@
-## Version 8.6.0
+## Version 9.0.0
 
 Unreleased
 
@@ -6,7 +6,9 @@ Unreleased
   parses arguments directly. {issue}`2205`
 
   - `OptionParser` is removed from `click` and `click.parser`, along with
-    `click.parser.Option`, `Argument`, `ParsingState`, and `normalize_opt`.
+    `click.parser.Option`, `Argument`, `ParsingState`, `normalize_opt`, and
+    `split_opt`. `split_arg_string` is available as
+    {func}`click.split_arg_string`.
     Use `optparse` from the standard library if you need the old parser.
   - `Command.make_parser` and `Parameter.add_to_parser` are removed.
   - `Context.protected_args` always returns an empty list. The subcommand

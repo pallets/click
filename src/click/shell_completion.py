@@ -610,6 +610,9 @@ def split_arg_string(string: str) -> list[str]:
 
     :param string: String to split.
 
+    .. versionchanged:: 9.0
+        Available as ``click.split_arg_string``.
+
     .. versionchanged:: 8.2
         Moved to ``shell_completion`` from ``parser``.
     """
