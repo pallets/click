@@ -3784,6 +3784,90 @@ def test_flag_group_competition_duplicate_option_name(runner):
         runner.invoke(cli, [])
 
 
+@pytest.mark.parametrize(
+    ("params", "first", "second"),
+    [
+        pytest.param(
+            [click.Option(["-s/-S"], default=None)], "-s", "-S", id="secondary"
+        ),
+        pytest.param(
+            [
+                click.Option(["-v", "verbose"], is_flag=True),
+                click.Option(["-V", "version"], is_flag=True),
+            ],
+            "-v",
+            "-V",
+            id="separate options",
+        ),
+        pytest.param(
+            [
+                click.Option(["-V", "version"], is_flag=True),
+                click.Option(["-v", "verbose"], is_flag=True),
+            ],
+            "-V",
+            "-v",
+            id="separate options reversed",
+        ),
+    ],
+)
+def test_option_names_collide_after_normalization(params, first, second):
+    """Names that only become equal after normalization would silently make one
+    of them unreachable.
+    """
+    cli = click.Command(
+        "cli", params=params, context_settings={"token_normalize_func": str.lower}
+    )
+
+    with pytest.raises(TypeError, match=f"'{first}' and '{second}' both normalize"):
+        cli.make_context("cli", [])
+
+
+@pytest.mark.parametrize("args", [["--Foo", "1"], ["--foo", "1"], ["--FOO", "1"]])
+def test_option_names_of_same_option_normalize_together(args):
+    """Spellings of the same option that normalize to one name are harmless."""
+    cli = click.Command(
+        "cli",
+        params=[click.Option(["--Foo", "--foo"])],
+        context_settings={"token_normalize_func": str.lower},
+    )
+    assert cli.make_context("cli", args).params == {"foo": "1"}
+
+
+def test_duplicate_option_name_with_normalization_only_warns():
+    """An identical spelling declared twice keeps warning instead of raising,
+    and the parser still uses the last declaration.
+    """
+    cli = click.Command(
+        "cli",
+        params=[click.Option(["--xyz"]), click.Option(["--xyz"])],
+        context_settings={"token_normalize_func": str.lower},
+    )
+
+    with pytest.warns(UserWarning, match="used more than once"):
+        ctx = cli.make_context("cli", ["--XYZ", "value"])
+
+    assert ctx.params == {"xyz": "value"}
+
+
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        (["-v"], {"verbose": True, "version": False}),
+        (["-V"], {"verbose": False, "version": True}),
+    ],
+)
+def test_option_names_differing_in_case_without_normalization(args, expect):
+    """Without a normalize function, names that differ only in case are distinct."""
+    cli = click.Command(
+        "cli",
+        params=[
+            click.Option(["-v", "verbose"], is_flag=True),
+            click.Option(["-V", "version"], is_flag=True),
+        ],
+    )
+    assert cli.make_context("cli", args).params == expect
+
+
 def test_argument_sharing_param_name_warning(runner):
     """An argument sharing its storage name with an option makes both
     silently overwrite each other's value, which triggers a warning.

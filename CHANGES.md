@@ -12,6 +12,11 @@ Unreleased
   - `Context.protected_args` always returns an empty list. The subcommand
     name and its arguments are in `Context.args`.
 
+- Option names that only become equal after `token_normalize_func`, such as
+  `-v` and `-V` with a lower-casing function, raise a `TypeError` when parsing
+  instead of one silently making the other unreachable. This includes the on
+  and off names of a boolean flag, such as `-s/-S`.
+
 - A parameter name that is not a valid Python identifier, or that is a Python
   keyword, is deprecated and raises `TypeError` in Click 9.0. {pr}`3866`
 - An {class}`Option` name written as a Python identifier is deprecated when it

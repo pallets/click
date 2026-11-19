@@ -1401,17 +1401,40 @@ class Command:
         # Normalized secondary names, for easier comparison during parsing.
         secondary_opts: set[str] = set()
         arg_params: list[Argument] = []
+        # Normalized name to the option, declared spelling, and whether it's a
+        # secondary name, to detect spellings that only collide after normalizing.
+        claimed: dict[str, tuple[Option, str, bool]] = {}
 
         for param in params:
             if isinstance(param, Option):
-                names = list(param.opts)
+                names = [(n, False) for n in param.opts]
 
                 if param.is_bool_flag and param.secondary_opts:
-                    names.extend(param.secondary_opts)
+                    names.extend((n, True) for n in param.secondary_opts)
                     secondary_opts.update(normalize(n) for n in param.secondary_opts)
 
-                for name in names:
-                    name = normalize(name)
+                for original, is_secondary in names:
+                    name = normalize(original)
+
+                    if name in claimed:
+                        other, other_original, other_is_secondary = claimed[name]
+
+                        # An identical spelling is a duplicate declaration, which
+                        # get_params warns about, and the last one keeps winning.
+                        if original != other_original and (
+                            other is not param or other_is_secondary != is_secondary
+                        ):
+                            raise TypeError(
+                                _(
+                                    "The option names {first!r} and {second!r} both"
+                                    " normalize to {name!r}. Give them names that"
+                                    " stay distinct after 'token_normalize_func'."
+                                ).format(
+                                    first=other_original, second=original, name=name
+                                )
+                            )
+
+                    claimed[name] = (param, original, is_secondary)
                     prefix, value = _split_opt(name)
                     opt_prefixes.add(prefix[0])
 
