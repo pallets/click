@@ -189,7 +189,7 @@ def test_group_from_list(runner):
     [
         ([], "S:[no value]"),
         (["--s=42"], "S:[42]"),
-        (["--s"], "Error: Option '--s' requires an argument."),
+        (["--s"], "Error: Option '--s' requires a value."),
         (["--s="], "S:[]"),
         (["--s=\N{SNOWMAN}"], "S:[\N{SNOWMAN}]"),
     ],
@@ -308,6 +308,57 @@ def test_boolean_switch(runner, args, default, expect):
 
     result = runner.invoke(cli, args, standalone_mode=False)
     assert result.return_value is expect
+
+
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        (["-s"], True),
+        (["-S"], False),
+        (["--no-shout"], False),
+        # The last occurrence wins, whichever name is used.
+        (["-s", "-S"], False),
+        # Short and long names map to the same option.
+        (["-S", "--shout"], True),
+        # Switching back and forth between names, an "on" name doesn't stick.
+        (["--no-shout", "-s", "--no-shout"], False),
+        # Bundled short names are read in order, the last one wins.
+        (["-sS"], False),
+        (["-Ss"], True),
+    ],
+)
+def test_boolean_switch_secondary_names(runner, args, expect):
+    @click.command()
+    @click.option("-s/-S", "--shout/--no-shout", default=None)
+    def cli(shout):
+        return shout
+
+    result = runner.invoke(cli, args, standalone_mode=False, catch_exceptions=False)
+    assert result.return_value is expect
+
+
+@pytest.mark.parametrize(
+    ("args", "expect"), [(["--SHOUT"], True), (["--No-Shout"], False)]
+)
+def test_boolean_switch_secondary_names_normalized(runner, args, expect):
+    @click.command(context_settings={"token_normalize_func": str.lower})
+    @click.option("--shout/--no-shout", default=None)
+    def cli(shout):
+        return shout
+
+    result = runner.invoke(cli, args, standalone_mode=False, catch_exceptions=False)
+    assert result.return_value is expect
+
+
+def test_boolean_switch_secondary_does_not_take_value(runner):
+    @click.command()
+    @click.option("--shout/--no-shout")
+    def cli(shout):
+        pass
+
+    result = runner.invoke(cli, ["--no-shout=1"])
+    assert result.exit_code == 2
+    assert "Option '--no-shout' does not take a value." in result.output
 
 
 @pytest.mark.parametrize(

@@ -13,8 +13,8 @@ import pytest
 import click
 from click import Option
 from click import UNPROCESSED
+from click._base_utils import _split_opt
 from click._utils import UNSET
-from click.parser import _split_opt
 from click.testing import CliRunner
 
 
@@ -224,6 +224,67 @@ def test_suggest_possible_options(runner, value, expect):
     )
     result = runner.invoke(cli, [value])
     assert expect in result.output
+
+
+@pytest.mark.parametrize(
+    "opt_params", [{"is_flag": True}, {"count": True}], ids=["flag", "count"]
+)
+def test_flag_does_not_take_value(runner, opt_params):
+    @click.command()
+    @click.option("--flag", **opt_params)
+    def cli(flag):
+        pass
+
+    result = runner.invoke(cli, ["--flag=value"])
+    assert result.exit_code == 2
+    assert "Error: Option '--flag' does not take a value." in result.output
+
+
+@pytest.mark.parametrize(
+    ("nargs", "args", "expect"),
+    [
+        (2, ["--point", "1"], "Option '--point' requires 2 values but 1 was given."),
+        (
+            3,
+            ["--point", "1", "2"],
+            "Option '--point' requires 3 values but 2 were given.",
+        ),
+        (3, ["--point=1", "2"], "Option '--point' requires 3 values but 2 were given."),
+        (2, ["-p1"], "Option '-p' requires 2 values but 1 was given."),
+        (2, ["--point"], "Option '--point' requires 2 values."),
+    ],
+)
+def test_nargs_too_few_values(runner, nargs, args, expect):
+    @click.command()
+    @click.option("-p", "--point", nargs=nargs, type=int)
+    def cli(point):
+        pass
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 2
+    assert f"Error: {expect}" in result.output
+
+
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        (["-ab"], (True, True, None)),
+        (["-ba"], (True, True, None)),
+        (["-abo", "value"], (True, True, "value")),
+        (["-abovalue"], (True, True, "value")),
+        (["-aovalue"], (True, False, "value")),
+    ],
+)
+def test_bundled_short_flags(runner, args, expect):
+    @click.command()
+    @click.option("-a", is_flag=True)
+    @click.option("-b", is_flag=True)
+    @click.option("-o")
+    def cli(a, b, o):
+        return a, b, o
+
+    result = runner.invoke(cli, args, standalone_mode=False, catch_exceptions=False)
+    assert result.return_value == expect
 
 
 def test_multiple_required(runner):
@@ -2366,14 +2427,26 @@ class EnumSentinel(enum.Enum):
     (
         # Option default to None.
         ([], None),
-        # Config has no default value, and no flag value, so it requires an argument.
+        # Config has no default value, and no flag value, so it requires a value.
         (
             ["--config"],
-            re.compile(re.escape("Error: Option '--config' requires an argument.\n")),
+            re.compile(
+                re.escape(
+                    "Usage: main [OPTIONS]\n"
+                    "Try 'main --help' for help.\n\n"
+                    "Error: Option '--config' requires a value.\n"
+                )
+            ),
         ),
         (
             ["--no-config", "--config"],
-            re.compile(re.escape("Error: Option '--config' requires an argument.\n")),
+            re.compile(
+                re.escape(
+                    "Usage: main [OPTIONS]\n"
+                    "Try 'main --help' for help.\n\n"
+                    "Error: Option '--config' requires a value.\n"
+                )
+            ),
         ),
         # Passing --no-config defaults to the sentinel value because of the flag_value,
         # and then the custom type receives that sentinel and returns a message.
@@ -2515,11 +2588,17 @@ class Class2:
             EngineType.OSS,
         ),
         # The option has not enough parameters to be detected as flag-like, so it
-        # requires an argument.
+        # requires a value.
         (
             {"type": EngineType, "default": EngineType.OSS},
             ["--pro"],
-            re.compile(re.escape("Error: Option '--pro' requires an argument.\n")),
+            re.compile(
+                re.escape(
+                    "Usage: scan [OPTIONS]\n"
+                    "Try 'scan --help' for help.\n\n"
+                    "Error: Option '--pro' requires a value.\n"
+                )
+            ),
         ),
         ({"type": EngineType, "default": EngineType.OSS}, [], EngineType.OSS),
         # If a flag value is set, it is returned instead of the default value.
@@ -3699,6 +3778,90 @@ def test_flag_group_competition_duplicate_option_name(runner):
 
     with pytest.warns(UserWarning, match="used more than once"):
         runner.invoke(cli, [])
+
+
+@pytest.mark.parametrize(
+    ("params", "first", "second"),
+    [
+        pytest.param(
+            [click.Option(["-s/-S"], default=None)], "-s", "-S", id="secondary"
+        ),
+        pytest.param(
+            [
+                click.Option(["-v", "verbose"], is_flag=True),
+                click.Option(["-V", "version"], is_flag=True),
+            ],
+            "-v",
+            "-V",
+            id="separate options",
+        ),
+        pytest.param(
+            [
+                click.Option(["-V", "version"], is_flag=True),
+                click.Option(["-v", "verbose"], is_flag=True),
+            ],
+            "-V",
+            "-v",
+            id="separate options reversed",
+        ),
+    ],
+)
+def test_option_names_collide_after_normalization(params, first, second):
+    """Names that only become equal after normalization would silently make one
+    of them unreachable.
+    """
+    cli = click.Command(
+        "cli", params=params, context_settings={"token_normalize_func": str.lower}
+    )
+
+    with pytest.raises(TypeError, match=f"'{first}' and '{second}' both normalize"):
+        cli.make_context("cli", [])
+
+
+@pytest.mark.parametrize("args", [["--Foo", "1"], ["--foo", "1"], ["--FOO", "1"]])
+def test_option_names_of_same_option_normalize_together(args):
+    """Spellings of the same option that normalize to one name are harmless."""
+    cli = click.Command(
+        "cli",
+        params=[click.Option(["--Foo", "--foo"])],
+        context_settings={"token_normalize_func": str.lower},
+    )
+    assert cli.make_context("cli", args).params == {"foo": "1"}
+
+
+def test_duplicate_option_name_with_normalization_only_warns():
+    """An identical spelling declared twice keeps warning instead of raising,
+    and the parser still uses the last declaration.
+    """
+    cli = click.Command(
+        "cli",
+        params=[click.Option(["--xyz"]), click.Option(["--xyz"])],
+        context_settings={"token_normalize_func": str.lower},
+    )
+
+    with pytest.warns(UserWarning, match="used more than once"):
+        ctx = cli.make_context("cli", ["--XYZ", "value"])
+
+    assert ctx.params == {"xyz": "value"}
+
+
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        (["-v"], {"verbose": True, "version": False}),
+        (["-V"], {"verbose": False, "version": True}),
+    ],
+)
+def test_option_names_differing_in_case_without_normalization(args, expect):
+    """Without a normalize function, names that differ only in case are distinct."""
+    cli = click.Command(
+        "cli",
+        params=[
+            click.Option(["-v", "verbose"], is_flag=True),
+            click.Option(["-V", "version"], is_flag=True),
+        ],
+    )
+    assert cli.make_context("cli", args).params == expect
 
 
 def test_argument_sharing_param_name_warning(runner):

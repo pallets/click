@@ -610,6 +610,9 @@ def split_arg_string(string: str) -> list[str]:
 
     :param string: String to split.
 
+    .. versionchanged:: 9.0
+        Available as ``click.split_arg_string``.
+
     .. versionchanged:: 8.2
         Moved to ``shell_completion`` from ``parser``.
     """
@@ -704,7 +707,7 @@ def _resolve_context(
     """
     ctx_args["resilient_parsing"] = True
     with cli.make_context(prog_name, args.copy(), **ctx_args) as ctx:
-        args = ctx._protected_args + ctx.args
+        args = ctx.args
 
         while args:
             command = ctx.command
@@ -720,7 +723,7 @@ def _resolve_context(
                         name, args, parent=ctx, resilient_parsing=True
                     ) as sub_ctx:
                         ctx = sub_ctx
-                        args = ctx._protected_args + ctx.args
+                        args = ctx.args
                 else:
                     sub_ctx = ctx
 
@@ -741,8 +744,12 @@ def _resolve_context(
                             sub_ctx = sub_sub_ctx
                             args = sub_ctx.args
 
+                        # A group resolves its own subcommand from the remaining args.
+                        if isinstance(cmd, Group):
+                            break
+
                     ctx = sub_ctx
-                    args = [*sub_ctx._protected_args, *sub_ctx.args]
+                    args = sub_ctx.args
             else:
                 break
 

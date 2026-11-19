@@ -314,14 +314,6 @@ classes and functions.
 .. autofunction:: wrap_text
 ```
 
-## Parsing
-
-```{eval-rst}
-.. autoclass:: OptionParser
-   :members:
-
-```
-
 ## Shell Completion
 
 See {doc}`/shell-completion` for information about enabling and
@@ -344,6 +336,10 @@ customizing Click's shell completion system.
 ```{eval-rst}
 .. autofunction:: add_completion_class
 
+```
+
+```{eval-rst}
+.. autofunction:: click.split_arg_string
 ```
 
 (testing)=

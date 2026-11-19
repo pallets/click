@@ -1,6 +1,23 @@
-## Version 8.6.0
+## Version 9.0.0
 
 Unreleased
+
+- The old parser, deprecated in 8.2, is removed. {meth}`Command.parse_args`
+  parses arguments directly. {issue}`2205`
+
+  - `OptionParser` is removed from `click` and `click.parser`, along with
+    `click.parser.Option`, `Argument`, `ParsingState`, `normalize_opt`, and
+    `split_opt`. `split_arg_string` is available as
+    {func}`click.split_arg_string`.
+    Use `optparse` from the standard library if you need the old parser.
+  - `Command.make_parser` and `Parameter.add_to_parser` are removed.
+  - `Context.protected_args` always returns an empty list. The subcommand
+    name and its arguments are in `Context.args`.
+
+- Option names that only become equal after `token_normalize_func`, such as
+  `-v` and `-V` with a lower-casing function, raise a `TypeError` when parsing
+  instead of one silently making the other unreachable. This includes the on
+  and off names of a boolean flag, such as `-s/-S`.
 
 - Drop support for Python 3.10. {pr}`3920` {pr}`3921`
 - A parameter name that is not a valid Python identifier, or that is a Python

@@ -549,6 +549,87 @@ def test_unprocessed_options(runner):
     ]
 
 
+@pytest.mark.parametrize(
+    ("interspersed", "args", "expect"),
+    [
+        (True, ["a", "-v", "b"], (True, ("a", "b"))),
+        (True, ["-v", "a", "b"], (True, ("a", "b"))),
+        (False, ["-v", "a", "b"], (True, ("a", "b"))),
+        (False, ["a", "-v", "b"], (False, ("a", "-v", "b"))),
+        # Parsing stops at the first positional, so the later known option isn't
+        # parsed and the unknown one isn't an error. Groups rely on this to pass
+        # a subcommand's options through untouched.
+        (False, ["-v", "a", "-v", "--nope"], (True, ("a", "-v", "--nope"))),
+    ],
+)
+def test_allow_interspersed_args(runner, interspersed, args, expect):
+    @click.command(context_settings={"allow_interspersed_args": interspersed})
+    @click.option("-v", is_flag=True)
+    @click.argument("args", nargs=-1)
+    def cli(v, args):
+        return v, args
+
+    result = runner.invoke(cli, args, standalone_mode=False, catch_exceptions=False)
+    assert result.return_value == expect
+
+
+@pytest.mark.parametrize(
+    ("args", "params", "extra"),
+    [
+        pytest.param(["-a", "--nope"], {"opt": None, "point": None}, [], id="unknown"),
+        pytest.param(
+            ["-a", "--opt"], {"opt": None, "point": None}, [], id="missing value"
+        ),
+        pytest.param(
+            ["-a", "--flag=1"], {"opt": None, "point": None}, [], id="flag value"
+        ),
+        pytest.param(
+            ["-a", "1"], {"opt": None, "point": None}, ["1"], id="partial nargs"
+        ),
+        pytest.param(
+            ["-a", "1", "2", "3"],
+            {"opt": None, "point": ("1", "2")},
+            ["3"],
+            id="extra args",
+        ),
+    ],
+)
+def test_resilient_parsing_suppresses_usage_errors(args, params, extra):
+    @click.command()
+    @click.option("-a", is_flag=True)
+    @click.option("--opt")
+    @click.option("--flag", is_flag=True)
+    @click.argument("point", nargs=2, required=False)
+    def cli(a, opt, flag, point):
+        pass
+
+    with pytest.raises(click.UsageError):
+        cli.make_context("cli", args.copy())
+
+    ctx = cli.make_context("cli", args, resilient_parsing=True)
+    assert ctx.params == {"a": True, "flag": False, **params}
+    assert ctx.args == extra
+
+
+def test_resilient_parsing_keeps_consumed_args():
+    """When a later argument has partial values, the values already assigned to
+    earlier arguments aren't left over as extra args.
+    """
+
+    @click.command()
+    @click.argument("a", nargs=2)
+    @click.argument("b", nargs=2)
+    def cli(a, b):
+        pass
+
+    with pytest.raises(click.UsageError):
+        cli.make_context("cli", ["x", "y", "z"])
+
+    ctx = cli.make_context("cli", ["x", "y", "z"], resilient_parsing=True)
+    assert ctx.params == {"a": ("x", "y"), "b": None}
+    assert ctx.args == ["z"]
+
+
 @pytest.mark.parametrize("doc", ["CLI HELP", None])
 @pytest.mark.parametrize("deprecated", [True, "USE OTHER COMMAND INSTEAD"])
 def test_deprecated_in_help_messages(runner, doc, deprecated):

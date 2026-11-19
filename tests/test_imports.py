@@ -33,6 +33,7 @@ ALLOWED_IMPORTS = {
     "collections.abc",
     "configparser",
     "contextlib",
+    "dataclasses",
     "datetime",
     "enum",
     "errno",

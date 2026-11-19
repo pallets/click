@@ -1,7 +1,6 @@
 import pytest
 
 import click
-from click.parser import _OptionParser
 from click.shell_completion import split_arg_string
 
 
@@ -19,14 +18,17 @@ def test_split_arg_string(value, expect):
     assert split_arg_string(value) == expect
 
 
-def test_parser_default_prefixes():
-    parser = _OptionParser()
-    assert parser._opt_prefixes == {"-", "--"}
+def test_command_default_prefixes():
+    ctx = click.Command("cli").make_context("cli", [])
+    assert ctx._opt_prefixes == {"-", "--"}
 
 
-def test_parser_collects_prefixes():
-    ctx = click.Context(click.Command("test"))
-    parser = _OptionParser(ctx)
-    click.Option("+p", is_flag=True).add_to_parser(parser, ctx)
-    click.Option("!e", is_flag=True).add_to_parser(parser, ctx)
-    assert parser._opt_prefixes == {"-", "--", "+", "!"}
+def test_command_collects_prefixes():
+    @click.command()
+    @click.option("+p", is_flag=True)
+    @click.option("!e", is_flag=True)
+    def cli(p, e):
+        pass
+
+    ctx = cli.make_context("cli", [])
+    assert ctx._opt_prefixes == {"-", "--", "+", "!"}

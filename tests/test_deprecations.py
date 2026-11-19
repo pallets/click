@@ -5,8 +5,6 @@ import pytest
 
 import click
 import click.core
-import click.parser
-import click.shell_completion
 import click.utils
 
 
@@ -23,16 +21,6 @@ import click.utils
         (click, "MultiCommand", click.core._MultiCommand),
         (click.core, "BaseCommand", click.core._BaseCommand),
         (click.core, "MultiCommand", click.core._MultiCommand),
-        # Old parser API (moved to `optparse`); `OptionParser` is also
-        # re-exported from the top-level `click` namespace.
-        (click, "OptionParser", click.parser._OptionParser),
-        (click.parser, "OptionParser", click.parser._OptionParser),
-        (click.parser, "Argument", click.parser._Argument),
-        (click.parser, "Option", click.parser._Option),
-        (click.parser, "split_opt", click.parser._split_opt),
-        (click.parser, "normalize_opt", click.parser._normalize_opt),
-        (click.parser, "ParsingState", click.parser._ParsingState),
-        (click.parser, "split_arg_string", click.shell_completion.split_arg_string),
         # Deprecated `click.utils` utilities.
         (click.utils, "LazyFile", click.utils._LazyFile),
         (click.utils, "KeepOpenFile", click.utils._KeepOpenFile),
@@ -53,7 +41,7 @@ def test_attr_deprecated(module, name, target):
 
 @pytest.mark.parametrize(
     "module",
-    [click, click.core, click.parser, click.utils],
+    [click, click.core, click.utils],
     ids=lambda m: m.__name__,
 )
 def test_unknown_attribute_raises(module):
