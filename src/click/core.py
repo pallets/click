@@ -1666,8 +1666,9 @@ class Command:
         ctx._opt_prefixes.update(opt_prefixes)
         return args
 
+    @staticmethod
     def _build_opt_tables(
-        self, params: cabc.Sequence[Parameter], normalize: cabc.Callable[[str], str]
+        params: cabc.Sequence[Parameter], normalize: cabc.Callable[[str], str]
     ) -> tuple[
         dict[str, Option], dict[str, Option], set[str], set[str], list[Argument]
     ]:
