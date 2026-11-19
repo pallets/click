@@ -21,11 +21,7 @@ from ._compat import text_streams
 from ._compat import WIN
 from .globals import resolve_color_default
 
-if t.TYPE_CHECKING:
-    import typing_extensions as te
-
-    P = te.ParamSpec("P")
-
+P = t.ParamSpec("P")
 R = t.TypeVar("R")
 
 
@@ -180,7 +176,7 @@ class _LazyFile:
         if self.should_close:
             self.close()
 
-    def __enter__(self) -> _LazyFile:
+    def __enter__(self) -> t.Self:
         return self
 
     def __exit__(
@@ -219,7 +215,7 @@ class _KeepOpenFile:
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._file, name)
 
-    def __enter__(self) -> _KeepOpenFile:
+    def __enter__(self) -> t.Self:
         return self
 
     def __exit__(

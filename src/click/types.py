@@ -247,18 +247,8 @@ class CompositeParamType(ParamType[_ValueT_co]):
     def arity(self) -> int: ...  # type: ignore[override]
 
 
-if t.TYPE_CHECKING:
-    # on Python 3.10 this will raise a TypeError
-
-    class FuncParamTypeInfoDict(
-        ParamTypeInfoDict,
-        t.Generic[_ValueT_contra, _ValueT_co],
-    ):
-        func: t.Callable[[_ValueT_contra], _ValueT_co]
-else:
-
-    class FuncParamTypeInfoDict(ParamTypeInfoDict):
-        func: t.Callable[[t.Any], t.Any]
+class FuncParamTypeInfoDict(ParamTypeInfoDict, t.Generic[_ValueT_contra, _ValueT_co]):
+    func: t.Callable[[_ValueT_contra], _ValueT_co]
 
 
 class FuncParamType(ParamType[_ValueT_co], t.Generic[_ValueT_contra, _ValueT_co]):
@@ -326,17 +316,9 @@ class StringParamType(ParamType[str]):
         return "STRING"
 
 
-if t.TYPE_CHECKING:
-    # on Python 3.10 this will raise a TypeError
-
-    class ChoiceInfoDict(ParamTypeInfoDict, t.Generic[_ValueT_co]):
-        choices: tuple[_ValueT_co, ...]
-        case_sensitive: bool
-else:
-
-    class ChoiceInfoDict(ParamTypeInfoDict):
-        choices: tuple[t.Any, ...]
-        case_sensitive: bool
+class ChoiceInfoDict(ParamTypeInfoDict, t.Generic[_ValueT_co]):
+    choices: tuple[_ValueT_co, ...]
+    case_sensitive: bool
 
 
 class Choice(ParamType[_ValueT_co], t.Generic[_ValueT_co]):
@@ -610,23 +592,12 @@ class _NumberParamTypeBase(
             )
 
 
-if t.TYPE_CHECKING:
-    # on Python 3.10 this will raise a TypeError
-
-    class NumberRangeInfoDict(ParamTypeInfoDict, t.Generic[_FloatValueT_co]):
-        min: _FloatValueT_co | None
-        max: _FloatValueT_co | None
-        min_open: bool
-        max_open: bool
-        clamp: bool
-else:
-
-    class NumberRangeInfoDict(ParamTypeInfoDict):
-        min: t.Any | None
-        max: t.Any | None
-        min_open: bool
-        max_open: bool
-        clamp: bool
+class NumberRangeInfoDict(ParamTypeInfoDict, t.Generic[_FloatValueT_co]):
+    min: _FloatValueT_co | None
+    max: _FloatValueT_co | None
+    min_open: bool
+    max_open: bool
+    clamp: bool
 
 
 class _NumberRangeBase(

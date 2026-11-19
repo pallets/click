@@ -51,8 +51,6 @@ from .utils import _PacifyFlushWrapper
 from .utils import echo
 
 if t.TYPE_CHECKING:
-    from typing_extensions import Self
-
     from .shell_completion import CompletionItem
 
 F = t.TypeVar("F", bound="t.Callable[..., t.Any]")
@@ -571,7 +569,7 @@ class Context:
             "auto_envvar_prefix": self.auto_envvar_prefix,
         }
 
-    def __enter__(self) -> Self:
+    def __enter__(self) -> t.Self:
         self._depth += 1
         push_context(self)
         return self
@@ -863,7 +861,7 @@ class Context:
         """
         return self.command.get_help(self)
 
-    def _make_sub_context(self, command: Command) -> Context:
+    def _make_sub_context(self, command: Command) -> t.Self:
         """Create a new context of the same type as this context, but
         for a new command.
 

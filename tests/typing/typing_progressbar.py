@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing_extensions import assert_type
+from typing import assert_type
 
 from click import progressbar
 from click._termui_impl import ProgressBar

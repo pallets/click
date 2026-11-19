@@ -19,6 +19,7 @@ Unreleased
   instead of one silently making the other unreachable. This includes the on
   and off names of a boolean flag, such as `-s/-S`.
 
+- Drop support for Python 3.10. {pr}`3920` {pr}`3921`
 - A parameter name that is not a valid Python identifier, or that is a Python
   keyword, is deprecated and raises `TypeError` in Click 9.0. {pr}`3866`
 - An {class}`Option` name written as a Python identifier is deprecated when it
@@ -42,6 +43,8 @@ Unreleased
 - {meth}`CliRunner.invoke` accepts a new `context_settings` argument, to allow
   passing settings to the {class}`Context` of the command which cannot be given as extra
   keyword arguments like `color`. {issue}`2110` {pr}`3896`
+- Help pages no longer break a line within a hyphenated word, like an option
+  name, or within a long word. {issue}`3362` {pr}`3902`
 
 ## Version 8.5.1
 

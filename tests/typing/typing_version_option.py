@@ -2,7 +2,7 @@
 From https://click.palletsprojects.com/en/stable/options/#callbacks-and-eager-options.
 """
 
-from typing_extensions import assert_type
+from typing import assert_type
 
 import click
 

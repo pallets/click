@@ -168,9 +168,7 @@ def test_parameter_name_is_an_identifier_or_deprecated(count, expose_value):
 
     for decls in itertools.product(NAME_SWEEP_DECLS, repeat=count):
         for cls in (click.Option, click.Argument):
-            with warnings.catch_warnings(record=True) as caught:
-                warnings.simplefilter("always")
-
+            with warnings.catch_warnings(record=True, action="always") as caught:
                 try:
                     param = cls(list(decls), expose_value=expose_value)
                 except (TypeError, ValueError):

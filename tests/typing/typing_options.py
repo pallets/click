@@ -1,6 +1,6 @@
 """From https://click.palletsprojects.com/en/stable/quickstart/#adding-parameters"""
 
-from typing_extensions import assert_type
+from typing import assert_type
 
 import click
 

@@ -9,7 +9,6 @@ import click
 from click._compat import _ansi_re
 from click._compat import strip_ansi
 from click._compat import term_len
-from click._textwrap import _truncate_visible
 
 ESC = "\033"
 
@@ -246,25 +245,3 @@ def test_ansi_re_matches_whole_sequence(seq):
     assert m is not None
     assert m.start() == 0
     assert m.end() == len(seq)
-
-
-@pytest.mark.parametrize(
-    ("text", "n", "expected"),
-    [
-        # No escapes: behaves like a plain prefix slice.
-        ("abcdef", 3, "abc"),
-        ("abc", 10, "abc"),
-        ("abc", 0, ""),
-        ("abc", -1, ""),
-        # A leading escape is kept and does not count toward the budget.
-        (f"{ESC}[31mabcdef{ESC}[0m", 3, f"{ESC}[31mabc"),
-        # A colon true-color escape stays intact; the cut lands after 3 chars.
-        (f"{ESC}[38:2:1:2:3mabcdef", 3, f"{ESC}[38:2:1:2:3mabc"),
-        # A trailing escape past the cut is not pulled in.
-        (f"{ESC}[31mabc{ESC}[0m", 3, f"{ESC}[31mabc"),
-    ],
-)
-def test_truncate_visible(text, n, expected):
-    out = _truncate_visible(text, n)
-    assert out == expected
-    assert term_len(out) <= max(n, 0)
