@@ -229,6 +229,67 @@ def test_suggest_possible_options(runner, value, expect):
     assert expect in result.output
 
 
+@pytest.mark.parametrize(
+    "opt_params", [{"is_flag": True}, {"count": True}], ids=["flag", "count"]
+)
+def test_flag_does_not_take_value(runner, opt_params):
+    @click.command()
+    @click.option("--flag", **opt_params)
+    def cli(flag):
+        pass
+
+    result = runner.invoke(cli, ["--flag=value"])
+    assert result.exit_code == 2
+    assert "Error: Option '--flag' does not take a value." in result.output
+
+
+@pytest.mark.parametrize(
+    ("nargs", "args", "expect"),
+    [
+        (2, ["--point", "1"], "Option '--point' requires 2 values but 1 was given."),
+        (
+            3,
+            ["--point", "1", "2"],
+            "Option '--point' requires 3 values but 2 were given.",
+        ),
+        (3, ["--point=1", "2"], "Option '--point' requires 3 values but 2 were given."),
+        (2, ["-p1"], "Option '-p' requires 2 values but 1 was given."),
+        (2, ["--point"], "Option '--point' requires 2 values."),
+    ],
+)
+def test_nargs_too_few_values(runner, nargs, args, expect):
+    @click.command()
+    @click.option("-p", "--point", nargs=nargs, type=int)
+    def cli(point):
+        pass
+
+    result = runner.invoke(cli, args)
+    assert result.exit_code == 2
+    assert f"Error: {expect}" in result.output
+
+
+@pytest.mark.parametrize(
+    ("args", "expect"),
+    [
+        (["-ab"], (True, True, None)),
+        (["-ba"], (True, True, None)),
+        (["-abo", "value"], (True, True, "value")),
+        (["-abovalue"], (True, True, "value")),
+        (["-aovalue"], (True, False, "value")),
+    ],
+)
+def test_bundled_short_flags(runner, args, expect):
+    @click.command()
+    @click.option("-a", is_flag=True)
+    @click.option("-b", is_flag=True)
+    @click.option("-o")
+    def cli(a, b, o):
+        return a, b, o
+
+    result = runner.invoke(cli, args, standalone_mode=False, catch_exceptions=False)
+    assert result.return_value == expect
+
+
 def test_multiple_required(runner):
     @click.command()
     @click.option("-m", "--message", multiple=True, required=True)
