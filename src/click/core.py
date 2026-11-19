@@ -23,6 +23,7 @@ from types import FrameType
 from types import TracebackType
 
 from . import types
+from ._parser import _split_opt
 from ._utils import FLAG_NEEDS_VALUE
 from ._utils import UNSET
 from .exceptions import Abort
@@ -40,7 +41,6 @@ from .formatting import HelpFormatter
 from .formatting import join_options
 from .globals import pop_context
 from .globals import push_context
-from .parser import _split_opt
 from .termui import confirm
 from .termui import prompt
 from .termui import style

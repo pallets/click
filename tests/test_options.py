@@ -13,8 +13,8 @@ import pytest
 import click
 from click import Option
 from click import UNPROCESSED
+from click._parser import _split_opt
 from click._utils import UNSET
-from click.parser import _split_opt
 from click.testing import CliRunner
 
 
