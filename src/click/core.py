@@ -1420,211 +1420,15 @@ class Command:
         params = self.get_params(ctx)
         tables = self._build_opt_tables(params, normalize)
 
-        def looks_like_opt(token: str) -> bool:
-            return len(token) > 1 and token[:1] in tables.opt_prefixes
-
-        def flag_value(opt: Option, name: str) -> t.Any:
-            if opt.count:
-                # Each occurrence records the running count, the last one is used.
-                return len(values[opt.name]) + 1
-
-            if opt.is_bool_flag and opt.secondary_opts:
-                return name not in tables.secondary_opts
-
-            return opt.flag_activation_value
-
         # Map parameter names to collected values.
         values: defaultdict[str, list[t.Any]] = defaultdict(list)
         # Track what order parameters were seen.
         param_order: list[Parameter] = []
         # After mapping arguments to values, any extra values will still be here.
         rest: list[str] = []
-        # Track what the parser should do with the current token.
-        lf_any = 0
-        lf_value_or_opt = 1
-        lf_value = 2
-        looking_for = lf_any
-        # Tracks the current option that needs a value.
-        looking_opt: Option | None = None
-        looking_opt_name: str | None = None
-        # Treat tokens as a stack, with the first token at the top.
-        tokens = list(reversed(args))
 
         try:
-            while tokens:
-                token = tokens.pop()
-
-                if looking_for == lf_any:
-                    if token == "--":
-                        # All tokens after -- are considered arguments.
-                        rest.extend(reversed(tokens))
-                        tokens.clear()
-                    elif looks_like_opt(token):
-                        original_name, long_sep, value = token.partition("=")
-                        name = normalize(original_name)
-
-                        if name in tables.long_opts:
-                            # any prefix, matching long opt
-                            opt = tables.long_opts[name]
-                            param_order.append(opt)
-                            takes_value = not (opt.is_flag or opt.count)
-
-                            if long_sep:
-                                # key=value, only valid if the option takes a value
-                                if not takes_value:
-                                    message = _(
-                                        "Option {name!r} does not take a value."
-                                    ).format(name=original_name)
-                                    raise BadOptionUsage(
-                                        original_name, message, ctx=ctx
-                                    )
-
-                                tokens.append(value)
-                                looking_opt = opt
-                                looking_opt_name = original_name
-                                looking_for = lf_value
-                            elif not takes_value:
-                                # no attached value, and no value needed
-                                values[opt.name].append(flag_value(opt, name))
-                            else:
-                                # no attached value, and a value may be needed
-                                looking_opt = opt
-                                looking_opt_name = original_name
-
-                                if opt._flag_needs_value:
-                                    looking_for = lf_value_or_opt
-                                else:
-                                    looking_for = lf_value
-                        elif token[:2] in tables.opt_prefixes:
-                            # long prefix, no matching long opt
-                            if not ctx.ignore_unknown_options:
-                                raise NoSuchOption(
-                                    original_name,
-                                    possibilities=tables.long_opts,
-                                    ctx=ctx,
-                                )
-
-                            rest.append(token)
-                        else:
-                            # short prefix, try short opts
-                            prefix = token[0]
-                            chars = token[1:]
-                            unmatched = []
-
-                            for i, c in enumerate(chars, 1):
-                                original_name = f"{prefix}{c}"
-                                name = normalize(original_name)
-
-                                if name not in tables.short_opts:
-                                    if not ctx.ignore_unknown_options:
-                                        raise NoSuchOption(name, ctx=ctx)
-
-                                    unmatched.append(c)
-                                    continue
-
-                                opt = tables.short_opts[name]
-                                param_order.append(opt)
-
-                                if opt.is_flag or opt.count:
-                                    # Record the flag, then continue trying short opts.
-                                    values[opt.name].append(flag_value(opt, name))
-                                    continue
-
-                                # Not a flag, stop trying short options and begin
-                                # looking for values.
-                                looking_opt = opt
-                                looking_opt_name = original_name
-                                value = chars[i:]
-
-                                if value:
-                                    # Use any remaining chars as a value.
-                                    tokens.append(value)
-                                    looking_for = lf_value
-                                elif opt._flag_needs_value:
-                                    looking_for = lf_value_or_opt
-                                else:
-                                    looking_for = lf_value
-
-                                break
-
-                            if unmatched:
-                                # If unknown options are allowed, add any unused chars
-                                # back as a single name with the same prefix.
-                                rest.append(f"{prefix}{''.join(unmatched)}")
-                    else:
-                        # an argument
-                        rest.append(token)
-
-                        if not ctx.allow_interspersed_args:
-                            # If interspersed isn't allowed, all remaining
-                            # tokens are considered arguments.
-                            rest.extend(reversed(tokens))
-                            tokens.clear()
-                elif looking_for == lf_value_or_opt:
-                    # The current opt optionally takes a value. Look at the
-                    # token then put it back.
-                    assert looking_opt is not None
-                    tokens.append(token)
-
-                    if (looking_opt.nargs == 1 and looks_like_opt(token)) or len(
-                        tokens
-                    ) < looking_opt.nargs:
-                        # Next token is an opt, or there aren't enough tokens left.
-                        # Mark the current opt as needing a value, handled during
-                        # processing.
-                        values[looking_opt.name].append(FLAG_NEEDS_VALUE)
-                        looking_opt = looking_opt_name = None
-                        looking_for = lf_any
-                    else:
-                        # Next token will be used as a value.
-                        looking_for = lf_value
-                elif looking_for == lf_value:
-                    # The current opt requires at least one value.
-                    assert looking_opt is not None and looking_opt_name is not None
-
-                    if looking_opt.nargs == 1:
-                        # Exactly one value required
-                        values[looking_opt.name].append(token)
-                    else:
-                        # More than one value required
-                        need_n = looking_opt.nargs - 1
-
-                        if len(tokens) < need_n:
-                            message = ngettext(
-                                "Option {name!r} requires {nargs} values"
-                                " but 1 was given.",
-                                "Option {name!r} requires {nargs} values"
-                                " but {len} were given.",
-                                len(tokens) + 1,
-                            ).format(
-                                name=looking_opt_name,
-                                nargs=looking_opt.nargs,
-                                len=len(tokens) + 1,
-                            )
-                            raise BadOptionUsage(looking_opt_name, message, ctx=ctx)
-
-                        values[looking_opt.name].append(
-                            (token, *reversed(tokens[-need_n:]))
-                        )
-                        del tokens[-need_n:]
-
-                    looking_opt = looking_opt_name = None
-                    looking_for = lf_any
-
-            if looking_for == lf_value_or_opt:
-                # No more tokens, mark the current opt to get a value later.
-                assert looking_opt is not None
-                values[looking_opt.name].append(FLAG_NEEDS_VALUE)
-            elif looking_for == lf_value:
-                # No more tokens, but the current opt still required a value.
-                assert looking_opt is not None and looking_opt_name is not None
-                message = ngettext(
-                    "Option {name!r} requires a value.",
-                    "Option {name!r} requires {nargs} values.",
-                    looking_opt.nargs,
-                ).format(name=looking_opt_name, nargs=looking_opt.nargs)
-                raise BadOptionUsage(looking_opt_name, message, ctx=ctx)
-
+            self._scan_tokens(ctx, args, tables, normalize, values, param_order, rest)
             self._assign_args(ctx, tables.arg_params, rest, values, param_order)
         except UsageError:
             if not ctx.resilient_parsing:
@@ -1656,6 +1460,224 @@ class Command:
         ctx.args = args
         ctx._opt_prefixes.update(tables.opt_prefixes)
         return args
+
+    @staticmethod
+    def _scan_tokens(
+        ctx: Context,
+        args: list[str],
+        tables: _OptTables,
+        normalize: cabc.Callable[[str], str],
+        values: defaultdict[str, list[t.Any]],
+        param_order: list[Parameter],
+        rest: list[str],
+    ) -> None:
+        """Match option tokens to their options and collect their values, leaving
+        any other tokens in ``rest`` to be assigned to arguments.
+
+        Fills ``values``, ``param_order``, and ``rest`` in place, so that if an
+        error is raised and ignored for resilient parsing, everything collected so
+        far is still processed.
+
+        :raise NoSuchOption: An unknown option was given and
+            ``ignore_unknown_options`` is off.
+        :raise BadOptionUsage: A flag was given a value, or an option got too few
+            values.
+        """
+
+        def looks_like_opt(token: str) -> bool:
+            return len(token) > 1 and token[:1] in tables.opt_prefixes
+
+        def flag_value(opt: Option, name: str) -> t.Any:
+            if opt.count:
+                # Each occurrence records the running count, the last one is used.
+                return len(values[opt.name]) + 1
+
+            if opt.is_bool_flag and opt.secondary_opts:
+                return name not in tables.secondary_opts
+
+            return opt.flag_activation_value
+
+        # Track what the parser should do with the current token.
+        lf_any = 0
+        lf_value_or_opt = 1
+        lf_value = 2
+        looking_for = lf_any
+        # Tracks the current option that needs a value.
+        looking_opt: Option | None = None
+        looking_opt_name: str | None = None
+        # Treat tokens as a stack, with the first token at the top.
+        tokens = list(reversed(args))
+
+        while tokens:
+            token = tokens.pop()
+
+            if looking_for == lf_any:
+                if token == "--":
+                    # All tokens after -- are considered arguments.
+                    rest.extend(reversed(tokens))
+                    tokens.clear()
+                elif looks_like_opt(token):
+                    original_name, long_sep, value = token.partition("=")
+                    name = normalize(original_name)
+
+                    if name in tables.long_opts:
+                        # any prefix, matching long opt
+                        opt = tables.long_opts[name]
+                        param_order.append(opt)
+                        takes_value = not (opt.is_flag or opt.count)
+
+                        if long_sep:
+                            # key=value, only valid if the option takes a value
+                            if not takes_value:
+                                message = _(
+                                    "Option {name!r} does not take a value."
+                                ).format(name=original_name)
+                                raise BadOptionUsage(original_name, message, ctx=ctx)
+
+                            tokens.append(value)
+                            looking_opt = opt
+                            looking_opt_name = original_name
+                            looking_for = lf_value
+                        elif not takes_value:
+                            # no attached value, and no value needed
+                            values[opt.name].append(flag_value(opt, name))
+                        else:
+                            # no attached value, and a value may be needed
+                            looking_opt = opt
+                            looking_opt_name = original_name
+
+                            if opt._flag_needs_value:
+                                looking_for = lf_value_or_opt
+                            else:
+                                looking_for = lf_value
+                    elif token[:2] in tables.opt_prefixes:
+                        # long prefix, no matching long opt
+                        if not ctx.ignore_unknown_options:
+                            raise NoSuchOption(
+                                original_name,
+                                possibilities=tables.long_opts,
+                                ctx=ctx,
+                            )
+
+                        rest.append(token)
+                    else:
+                        # short prefix, try short opts
+                        prefix = token[0]
+                        chars = token[1:]
+                        unmatched = []
+
+                        for i, c in enumerate(chars, 1):
+                            original_name = f"{prefix}{c}"
+                            name = normalize(original_name)
+
+                            if name not in tables.short_opts:
+                                if not ctx.ignore_unknown_options:
+                                    raise NoSuchOption(name, ctx=ctx)
+
+                                unmatched.append(c)
+                                continue
+
+                            opt = tables.short_opts[name]
+                            param_order.append(opt)
+
+                            if opt.is_flag or opt.count:
+                                # Record the flag, then continue trying short opts.
+                                values[opt.name].append(flag_value(opt, name))
+                                continue
+
+                            # Not a flag, stop trying short options and begin
+                            # looking for values.
+                            looking_opt = opt
+                            looking_opt_name = original_name
+                            value = chars[i:]
+
+                            if value:
+                                # Use any remaining chars as a value.
+                                tokens.append(value)
+                                looking_for = lf_value
+                            elif opt._flag_needs_value:
+                                looking_for = lf_value_or_opt
+                            else:
+                                looking_for = lf_value
+
+                            break
+
+                        if unmatched:
+                            # If unknown options are allowed, add any unused chars
+                            # back as a single name with the same prefix.
+                            rest.append(f"{prefix}{''.join(unmatched)}")
+                else:
+                    # an argument
+                    rest.append(token)
+
+                    if not ctx.allow_interspersed_args:
+                        # If interspersed isn't allowed, all remaining
+                        # tokens are considered arguments.
+                        rest.extend(reversed(tokens))
+                        tokens.clear()
+            elif looking_for == lf_value_or_opt:
+                # The current opt optionally takes a value. Look at the
+                # token then put it back.
+                assert looking_opt is not None
+                tokens.append(token)
+
+                if (looking_opt.nargs == 1 and looks_like_opt(token)) or len(
+                    tokens
+                ) < looking_opt.nargs:
+                    # Next token is an opt, or there aren't enough tokens left.
+                    # Mark the current opt as needing a value, handled during
+                    # processing.
+                    values[looking_opt.name].append(FLAG_NEEDS_VALUE)
+                    looking_opt = looking_opt_name = None
+                    looking_for = lf_any
+                else:
+                    # Next token will be used as a value.
+                    looking_for = lf_value
+            elif looking_for == lf_value:
+                # The current opt requires at least one value.
+                assert looking_opt is not None and looking_opt_name is not None
+
+                if looking_opt.nargs == 1:
+                    # Exactly one value required
+                    values[looking_opt.name].append(token)
+                else:
+                    # More than one value required
+                    need_n = looking_opt.nargs - 1
+
+                    if len(tokens) < need_n:
+                        message = ngettext(
+                            "Option {name!r} requires {nargs} values but 1 was given.",
+                            "Option {name!r} requires {nargs} values"
+                            " but {len} were given.",
+                            len(tokens) + 1,
+                        ).format(
+                            name=looking_opt_name,
+                            nargs=looking_opt.nargs,
+                            len=len(tokens) + 1,
+                        )
+                        raise BadOptionUsage(looking_opt_name, message, ctx=ctx)
+
+                    values[looking_opt.name].append(
+                        (token, *reversed(tokens[-need_n:]))
+                    )
+                    del tokens[-need_n:]
+
+                looking_opt = looking_opt_name = None
+                looking_for = lf_any
+
+        if looking_for == lf_value_or_opt:
+            # No more tokens, mark the current opt to get a value later.
+            assert looking_opt is not None
+            values[looking_opt.name].append(FLAG_NEEDS_VALUE)
+        elif looking_for == lf_value:
+            # No more tokens, but the current opt still required a value.
+            assert looking_opt is not None and looking_opt_name is not None
+            message = ngettext(
+                "Option {name!r} requires a value.",
+                "Option {name!r} requires {nargs} values.",
+                looking_opt.nargs,
+            ).format(name=looking_opt_name, nargs=looking_opt.nargs)
+            raise BadOptionUsage(looking_opt_name, message, ctx=ctx)
 
     @staticmethod
     def _assign_args(
